@@ -1,0 +1,19 @@
+{
+  "channel": {
+    "id": "channel:order.created",
+    "type": "channel",
+    "label": "order.created",
+    "loc": "src/orders/orders.service.ts:49",
+    "service": "orders"
+  },
+  "consumers": [
+    {
+      "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "type": "consumer",
+      "label": "InvoicesConsumer.onOrderCreated",
+      "loc": "src/invoices/invoices.consumer.ts:17",
+      "service": "billing",
+      "kind": "event"
+    }
+  ]
+}

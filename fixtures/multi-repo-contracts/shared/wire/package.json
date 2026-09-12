@@ -1,0 +1,9 @@
+{
+  "name": "@fixture/wire",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The one shared declaration of the contracts fixture. No build step: the tool reads src/*.ts directly.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
+}

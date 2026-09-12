@@ -1,0 +1,817 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-broker-markers",
+  "generatedAt": "2026-09-10T15:40:39.408Z",
+  "nodes": [
+    {
+      "id": "channel:order.archived",
+      "type": "channel",
+      "label": "order.archived",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 54,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "event-bus"
+        ]
+      }
+    },
+    {
+      "id": "channel:order.cancelled",
+      "type": "channel",
+      "label": "order.cancelled",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 62,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "event-bus"
+        ]
+      }
+    },
+    {
+      "id": "channel:order.created",
+      "type": "channel",
+      "label": "order.created",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 27,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "event-bus"
+        ]
+      }
+    },
+    {
+      "id": "channel:order.exported",
+      "type": "channel",
+      "label": "order.exported",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 44,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "event-bus"
+        ]
+      }
+    },
+    {
+      "id": "consumer:nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCancelled",
+      "type": "consumer",
+      "label": "ProjectionsService.onOrderCancelled",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/projections.service.ts",
+      "line": 32,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "event-bus",
+        "decorator": "Consumes",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCreated",
+      "type": "consumer",
+      "label": "ProjectionsService.onOrderCreated",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/projections.service.ts",
+      "line": 25,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "event-bus",
+        "decorator": "Consumes",
+        "entryId": null
+      }
+    },
+    {
+      "id": "entry:nest-broker-markers:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-broker-markers#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-broker-markers",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "EventBusService",
+          "OrdersService",
+          "ProjectionsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-broker-markers#src/bus/event-bus.service.ts:EventBusService",
+      "type": "provider",
+      "label": "EventBusService",
+      "repo": "nest-broker-markers",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-broker-markers#src/bus/event-bus.service.ts:EventBusService.on",
+      "type": "method",
+      "label": "EventBusService.on",
+      "repo": "nest-broker-markers",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 23
+    },
+    {
+      "id": "nest-broker-markers#src/bus/event-bus.service.ts:EventBusService.publish",
+      "type": "method",
+      "label": "EventBusService.publish",
+      "repo": "nest-broker-markers",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 17
+    },
+    {
+      "id": "nest-broker-markers#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-broker-markers#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11
+    },
+    {
+      "id": "nest-broker-markers#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 19,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.archive",
+      "type": "method",
+      "label": "OrdersService.archive",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 54,
+      "meta": {
+        "markers": [
+          {
+            "name": "Emits",
+            "args": [
+              "order.archived"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 61
+    },
+    {
+      "id": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.channelFor",
+      "type": "method",
+      "label": "OrdersService.channelFor",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 66
+    },
+    {
+      "id": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "id": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.createAndNotify",
+      "type": "method",
+      "label": "OrdersService.createAndNotify",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 35,
+      "meta": {
+        "markers": [
+          {
+            "name": "Emits",
+            "args": [
+              "order.created"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.exportAll",
+      "type": "method",
+      "label": "OrdersService.exportAll",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 44,
+      "meta": {
+        "markers": [
+          {
+            "name": "Emits",
+            "args": [
+              "order.exported"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService",
+      "type": "provider",
+      "label": "ProjectionsService",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/projections.service.ts",
+      "line": 14,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onModuleInit",
+      "type": "method",
+      "label": "ProjectionsService.onModuleInit",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/projections.service.ts",
+      "line": 18
+    },
+    {
+      "id": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCancelled",
+      "type": "method",
+      "label": "ProjectionsService.onOrderCancelled",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/projections.service.ts",
+      "line": 32,
+      "meta": {
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "order.cancelled"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCreated",
+      "type": "method",
+      "label": "ProjectionsService.onOrderCreated",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/projections.service.ts",
+      "line": 25,
+      "meta": {
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "order.created"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "producer:nest-broker-markers#src/orders/orders.service.ts:27:5",
+      "type": "producer",
+      "label": "event order.created",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 27,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "event-bus",
+        "channelVia": "literal",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "producer:nest-broker-markers#src/orders/orders.service.ts:37:5",
+      "type": "producer",
+      "label": "event order.created",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 37,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "event-bus",
+        "channelVia": "literal",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "producer:nest-broker-markers#src/orders/orders.service.ts:44:0",
+      "type": "producer",
+      "label": "event order.exported",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 44,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "event-bus",
+        "channelVia": "marker",
+        "method": "Emits"
+      }
+    },
+    {
+      "id": "producer:nest-broker-markers#src/orders/orders.service.ts:54:0",
+      "type": "producer",
+      "label": "event order.archived",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 54,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "event-bus",
+        "channelVia": "marker",
+        "method": "Emits"
+      }
+    },
+    {
+      "id": "producer:nest-broker-markers#src/orders/orders.service.ts:56:5",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 56,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "event-bus",
+        "channelVia": "unresolved",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "producer:nest-broker-markers#src/orders/orders.service.ts:62:5",
+      "type": "producer",
+      "label": "event order.cancelled",
+      "repo": "nest-broker-markers",
+      "file": "src/orders/orders.service.ts",
+      "line": 62,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "event-bus",
+        "channelVia": "literal",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "repo:nest-broker-markers",
+      "type": "repo",
+      "label": "nest-broker-markers",
+      "repo": "nest-broker-markers",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:order.cancelled",
+      "to": "consumer:nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCancelled",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/orders/projections.service.ts",
+      "line": 32
+    },
+    {
+      "from": "channel:order.created",
+      "to": "consumer:nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCreated",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/orders/projections.service.ts",
+      "line": 25
+    },
+    {
+      "from": "consumer:nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCancelled",
+      "to": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCancelled",
+      "type": "handles",
+      "confidence": "marker",
+      "file": "src/orders/projections.service.ts",
+      "line": 32
+    },
+    {
+      "from": "consumer:nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCreated",
+      "to": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCreated",
+      "type": "handles",
+      "confidence": "marker",
+      "file": "src/orders/projections.service.ts",
+      "line": 25
+    },
+    {
+      "from": "entry:nest-broker-markers:http:POST:/orders",
+      "to": "nest-broker-markers#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11,
+      "params": [
+        "type:nest-broker-markers#OrderCreatedEvent"
+      ],
+      "returns": "{accepted:true}",
+      "meta": {
+        "body": "type:nest-broker-markers#OrderCreatedEvent"
+      }
+    },
+    {
+      "from": "nest-broker-markers#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-broker-markers#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-broker-markers#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "params": [
+        "type:nest-broker-markers#OrderCreatedEvent"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-broker-markers#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-broker-markers#src/bus/event-bus.service.ts:EventBusService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 21
+    },
+    {
+      "from": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.archive",
+      "to": "nest-broker-markers#src/bus/event-bus.service.ts:EventBusService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 56,
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.archive",
+      "to": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.channelFor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 56,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.archive",
+      "to": "producer:nest-broker-markers#src/orders/orders.service.ts:54:0",
+      "type": "calls",
+      "confidence": "marker",
+      "file": "src/orders/orders.service.ts",
+      "line": 54
+    },
+    {
+      "from": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.archive",
+      "to": "producer:nest-broker-markers#src/orders/orders.service.ts:56:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 56
+    },
+    {
+      "from": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "nest-broker-markers#src/bus/event-bus.service.ts:EventBusService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 62,
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "producer:nest-broker-markers#src/orders/orders.service.ts:62:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 62
+    },
+    {
+      "from": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.create",
+      "to": "nest-broker-markers#src/bus/event-bus.service.ts:EventBusService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 27,
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.create",
+      "to": "producer:nest-broker-markers#src/orders/orders.service.ts:27:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 27
+    },
+    {
+      "from": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.createAndNotify",
+      "to": "nest-broker-markers#src/bus/event-bus.service.ts:EventBusService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 37,
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.createAndNotify",
+      "to": "producer:nest-broker-markers#src/orders/orders.service.ts:37:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "from": "nest-broker-markers#src/orders/orders.service.ts:OrdersService.exportAll",
+      "to": "producer:nest-broker-markers#src/orders/orders.service.ts:44:0",
+      "type": "calls",
+      "confidence": "marker",
+      "file": "src/orders/orders.service.ts",
+      "line": 44
+    },
+    {
+      "from": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService",
+      "to": "nest-broker-markers#src/bus/event-bus.service.ts:EventBusService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/projections.service.ts",
+      "line": 16
+    },
+    {
+      "from": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onModuleInit",
+      "to": "nest-broker-markers#src/bus/event-bus.service.ts:EventBusService.on",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/projections.service.ts",
+      "line": 19,
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onModuleInit",
+      "to": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCancelled",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/projections.service.ts",
+      "line": 20,
+      "params": [
+        "type:nest-broker-markers#OrderCancelledEvent"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onModuleInit",
+      "to": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCreated",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/projections.service.ts",
+      "line": 19,
+      "params": [
+        "type:nest-broker-markers#OrderCreatedEvent"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "producer:nest-broker-markers#src/orders/orders.service.ts:27:5",
+      "to": "channel:order.created",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 27,
+      "params": [
+        "type:nest-broker-markers#OrderCreatedEvent"
+      ]
+    },
+    {
+      "from": "producer:nest-broker-markers#src/orders/orders.service.ts:37:5",
+      "to": "channel:order.created",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 37,
+      "params": [
+        "type:nest-broker-markers#OrderCreatedEvent"
+      ]
+    },
+    {
+      "from": "producer:nest-broker-markers#src/orders/orders.service.ts:44:0",
+      "to": "channel:order.exported",
+      "type": "emits",
+      "confidence": "marker",
+      "file": "src/orders/orders.service.ts",
+      "line": 44
+    },
+    {
+      "from": "producer:nest-broker-markers#src/orders/orders.service.ts:54:0",
+      "to": "channel:order.archived",
+      "type": "emits",
+      "confidence": "marker",
+      "file": "src/orders/orders.service.ts",
+      "line": 54
+    },
+    {
+      "from": "producer:nest-broker-markers#src/orders/orders.service.ts:62:5",
+      "to": "channel:order.cancelled",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 62,
+      "params": [
+        "type:nest-broker-markers#OrderCancelledEvent"
+      ]
+    }
+  ],
+  "types": {
+    "type:nest-broker-markers#OrderArchivedEvent": {
+      "name": "OrderArchivedEvent",
+      "kind": "object",
+      "declaredIn": "nest-broker-markers#src/orders/order.dto.ts",
+      "structuralHash": "0785f08433adf4c6",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "archivedAt",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-broker-markers#OrderCancelledEvent": {
+      "name": "OrderCancelledEvent",
+      "kind": "object",
+      "declaredIn": "nest-broker-markers#src/orders/order.dto.ts",
+      "structuralHash": "fb48963ae9ad6b6c",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-broker-markers#OrderCreatedEvent": {
+      "name": "OrderCreatedEvent",
+      "kind": "object",
+      "declaredIn": "nest-broker-markers#src/orders/order.dto.ts",
+      "structuralHash": "8b901c442cafa618",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-broker-markers#OrderExport": {
+      "name": "OrderExport",
+      "kind": "object",
+      "declaredIn": "nest-broker-markers#src/orders/order.dto.ts",
+      "structuralHash": "d575705e7b012b42",
+      "fields": [
+        {
+          "name": "rows",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/bus/event-bus.service.ts",
+      "line": 17,
+      "reason": "type-generic-uninstantiated",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "level": "info"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 56,
+      "reason": "channel-dynamic",
+      "hint": "The channel name cannot be read here. Annotate OrdersService.archive with the channel it uses.",
+      "symbol": "OrdersService.archive -> this.channelFor('archived')"
+    }
+  ]
+}

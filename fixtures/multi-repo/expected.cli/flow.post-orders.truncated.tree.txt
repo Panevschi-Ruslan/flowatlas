@@ -1,0 +1,7 @@
+@  POST /orders               orders/src/orders/orders.controller.ts:31
+  -> OrdersController.create  orders/src/orders/orders.controller.ts:31
+    -> OrdersService.create   orders/src/orders/orders.service.ts:40
+      [] write Order          orders/src/orders/orders.service.ts:41
+      ~  event order.created  orders/src/orders/orders.service.ts:49
+... truncated: 5 more nodes (raise --max-nodes or lower --depth)
+unresolved on this path: 0

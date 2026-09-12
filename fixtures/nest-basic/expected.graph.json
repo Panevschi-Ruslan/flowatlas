@@ -1,0 +1,612 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-basic",
+  "generatedAt": "2026-09-10T15:40:35.454Z",
+  "nodes": [
+    {
+      "id": "entry:nest-basic:http:DELETE:/api/orders/:param",
+      "type": "entry",
+      "label": "DELETE /api/orders/:param",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.controller.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:orderId",
+        "globalPrefix": "api",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-basic:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "globalPrefix": "api",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-basic:http:GET:/api/orders/:param",
+      "type": "entry",
+      "label": "GET /api/orders/:param",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:id",
+        "globalPrefix": "api",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-basic:http:GET:/api/users",
+      "type": "entry",
+      "label": "GET /api/users",
+      "repo": "nest-basic",
+      "file": "src/users/users.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/users",
+        "rawPath": "/api/users",
+        "globalPrefix": "api",
+        "controller": "UsersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-basic:http:POST:/api/orders",
+      "type": "entry",
+      "label": "POST /api/orders",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.controller.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "globalPrefix": "api",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-basic#node_modules/@nestjs/common:Logger",
+      "type": "provider",
+      "label": "Logger",
+      "repo": "nest-basic",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-basic#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-basic",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-basic#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "kind": "controller",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-basic#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.controller.ts",
+      "line": 23
+    },
+    {
+      "id": "nest-basic#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "method",
+      "label": "OrdersController.findAll",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-basic#src/orders/orders.controller.ts:OrdersController.findLegacy",
+      "type": "method",
+      "label": "OrdersController.findLegacy",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.controller.ts",
+      "line": 35
+    },
+    {
+      "id": "nest-basic#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "method",
+      "label": "OrdersController.findOne",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18
+    },
+    {
+      "id": "nest-basic#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "method",
+      "label": "OrdersController.remove",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.controller.ts",
+      "line": 28
+    },
+    {
+      "id": "nest-basic#src/orders/orders.module.ts:OrdersModule",
+      "type": "module",
+      "label": "OrdersModule",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService",
+          "Logger"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-basic#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-basic#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.service.ts",
+      "line": 31
+    },
+    {
+      "id": "nest-basic#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "method",
+      "label": "OrdersService.findAll",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.service.ts",
+      "line": 20
+    },
+    {
+      "id": "nest-basic#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "method",
+      "label": "OrdersService.findOne",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.service.ts",
+      "line": 25
+    },
+    {
+      "id": "nest-basic#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "method",
+      "label": "OrdersService.remove",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.service.ts",
+      "line": 36
+    },
+    {
+      "id": "nest-basic#src/orders/orders.service.ts:OrdersService.runHook",
+      "type": "method",
+      "label": "OrdersService.runHook",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.service.ts",
+      "line": 47
+    },
+    {
+      "id": "nest-basic#src/orders/orders.service.ts:OrdersService.validate",
+      "type": "method",
+      "label": "OrdersService.validate",
+      "repo": "nest-basic",
+      "file": "src/orders/orders.service.ts",
+      "line": 41
+    },
+    {
+      "id": "nest-basic#src/users/users.controller.ts:UsersController",
+      "type": "provider",
+      "label": "UsersController",
+      "repo": "nest-basic",
+      "file": "src/users/users.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "UsersModule"
+      }
+    },
+    {
+      "id": "nest-basic#src/users/users.controller.ts:UsersController.findAll",
+      "type": "method",
+      "label": "UsersController.findAll",
+      "repo": "nest-basic",
+      "file": "src/users/users.controller.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-basic#src/users/users.module.ts:UsersModule",
+      "type": "module",
+      "label": "UsersModule",
+      "repo": "nest-basic",
+      "file": "src/users/users.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "UsersController"
+        ],
+        "providers": [
+          "UsersService"
+        ],
+        "exports": [
+          "UsersService"
+        ]
+      }
+    },
+    {
+      "id": "nest-basic#src/users/users.service.ts:UsersService",
+      "type": "provider",
+      "label": "UsersService",
+      "repo": "nest-basic",
+      "file": "src/users/users.service.ts",
+      "line": 3,
+      "kind": "injectable",
+      "meta": {
+        "module": "UsersModule"
+      }
+    },
+    {
+      "id": "nest-basic#src/users/users.service.ts:UsersService.findAll",
+      "type": "method",
+      "label": "UsersService.findAll",
+      "repo": "nest-basic",
+      "file": "src/users/users.service.ts",
+      "line": 5
+    },
+    {
+      "id": "nest-basic#src/users/users.service.ts:UsersService.findOne",
+      "type": "method",
+      "label": "UsersService.findOne",
+      "repo": "nest-basic",
+      "file": "src/users/users.service.ts",
+      "line": 9
+    },
+    {
+      "id": "repo:nest-basic",
+      "type": "repo",
+      "label": "nest-basic",
+      "repo": "nest-basic",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "classes": 7,
+          "skippedExternalCalls": {
+            "@nestjs/common": 2
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "globalPrefix": "api",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-basic:http:DELETE:/api/orders/:param",
+      "to": "nest-basic#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 28,
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "meta": {
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:nest-basic:http:GET:/api/orders",
+      "to": "nest-basic#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "params": [],
+      "returns": "string[]"
+    },
+    {
+      "from": "entry:nest-basic:http:GET:/api/orders/:param",
+      "to": "nest-basic#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18,
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-basic:http:GET:/api/users",
+      "to": "nest-basic#src/users/users.controller.ts:UsersController.findAll",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/users/users.controller.ts",
+      "line": 9,
+      "params": [],
+      "returns": "string[]"
+    },
+    {
+      "from": "entry:nest-basic:http:POST:/api/orders",
+      "to": "nest-basic#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 23,
+      "params": [
+        "{userId:string}"
+      ],
+      "returns": "string",
+      "meta": {
+        "body": "{userId:string}"
+      }
+    },
+    {
+      "from": "nest-basic#src/app.module.ts:AppModule",
+      "to": "nest-basic#src/orders/orders.module.ts:OrdersModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 6
+    },
+    {
+      "from": "nest-basic#src/app.module.ts:AppModule",
+      "to": "nest-basic#src/users/users.module.ts:UsersModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 6
+    },
+    {
+      "from": "nest-basic#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-basic#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "nest-basic#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "nest-basic#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-basic#src/orders/orders.controller.ts:OrdersController.findAll",
+      "to": "nest-basic#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "params": [],
+      "returns": "string[]"
+    },
+    {
+      "from": "nest-basic#src/orders/orders.controller.ts:OrdersController.findLegacy",
+      "to": "nest-basic#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 37,
+      "params": [],
+      "returns": "string[]"
+    },
+    {
+      "from": "nest-basic#src/orders/orders.controller.ts:OrdersController.findOne",
+      "to": "nest-basic#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-basic#src/orders/orders.controller.ts:OrdersController.remove",
+      "to": "nest-basic#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 30,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-basic#src/orders/orders.module.ts:OrdersModule",
+      "to": "nest-basic#src/users/users.module.ts:UsersModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/orders/orders.module.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-basic#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-basic#node_modules/@nestjs/common:Logger",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "nest-basic#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-basic#src/users/users.service.ts:UsersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 12
+    },
+    {
+      "from": "nest-basic#src/orders/orders.service.ts:OrdersService.create",
+      "to": "nest-basic#src/orders/orders.service.ts:OrdersService.runHook",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 32,
+      "params": [],
+      "returns": "void"
+    },
+    {
+      "from": "nest-basic#src/orders/orders.service.ts:OrdersService.create",
+      "to": "nest-basic#src/users/users.service.ts:UsersService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 33,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-basic#src/orders/orders.service.ts:OrdersService.findOne",
+      "to": "nest-basic#src/orders/orders.service.ts:OrdersService.validate",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 26,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-basic#src/orders/orders.service.ts:OrdersService.findOne",
+      "to": "nest-basic#src/users/users.service.ts:UsersService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 27,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-basic#src/orders/orders.service.ts:OrdersService.remove",
+      "to": "nest-basic#src/orders/orders.service.ts:OrdersService.validate",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 37,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-basic#src/users/users.controller.ts:UsersController",
+      "to": "nest-basic#src/users/users.service.ts:UsersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/users/users.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-basic#src/users/users.controller.ts:UsersController.findAll",
+      "to": "nest-basic#src/users/users.service.ts:UsersService.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/users/users.controller.ts",
+      "line": 11,
+      "params": [],
+      "returns": "string[]"
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/orders/orders.controller.ts",
+      "line": 35,
+      "reason": "route-path-dynamic",
+      "hint": "Use a string literal or a const string; a computed path cannot be matched against callers.",
+      "symbol": "OrdersController.findLegacy",
+      "adapter": "nestjs-http"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "reason": "di-type-unresolved",
+      "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
+      "symbol": "OrdersService.constructor[2]"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 49,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The method is chosen at run time; nothing static to point at.",
+      "symbol": "OrdersService.runHook -> this[this.hook]"
+    }
+  ]
+}

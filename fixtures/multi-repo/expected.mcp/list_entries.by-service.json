@@ -1,0 +1,45 @@
+{
+  "entries": [
+    {
+      "id": "entry:orders:http:GET:/a/:param",
+      "type": "entry",
+      "label": "GET /a/:param",
+      "loc": "src/aliases/current-aliases.controller.ts:11",
+      "service": "orders",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/orders.controller.ts:25",
+      "service": "orders",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/latest",
+      "type": "entry",
+      "label": "GET /orders/latest",
+      "loc": "src/orders/orders.controller.ts:19",
+      "service": "orders",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "loc": "src/orders/orders.controller.ts:31",
+      "service": "orders",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/:param/archive",
+      "type": "entry",
+      "label": "POST /orders/:param/archive",
+      "loc": "src/orders/orders.controller.ts:42",
+      "service": "orders",
+      "kind": "http"
+    }
+  ],
+  "total": 5
+}

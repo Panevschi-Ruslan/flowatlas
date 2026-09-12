@@ -1,0 +1,80 @@
+{
+  "name": "@flowatlas/cli",
+  "version": "0.1.1",
+  "description": "One map of a project that lives in several repositories: read them, join them, ask questions.",
+  "license": "MIT",
+  "author": {
+    "name": "Ruslan Panevschi",
+    "url": "https://github.com/Panevschi-Ruslan"
+  },
+  "homepage": "https://github.com/Panevschi-Ruslan/flowatlas#readme",
+  "bugs": {
+    "url": "https://github.com/Panevschi-Ruslan/flowatlas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Panevschi-Ruslan/flowatlas.git",
+    "directory": "packages/cli"
+  },
+  "keywords": [
+    "monorepo",
+    "polyrepo",
+    "static-analysis",
+    "dependency-graph",
+    "typescript",
+    "nestjs",
+    "angular",
+    "mcp",
+    "architecture"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "flowatlas": "./bin/flowatlas.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node ../../scripts/bundle.mjs && mkdir -p dist/visualise && cp src/visualise/page.html dist/visualise/page.html",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@angular/compiler": "^19.2.0",
+    "@inquirer/prompts": "^8.7.2",
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "better-sqlite3": "^13.0.3",
+    "chokidar": "^5.0.0",
+    "commander": "^15.0.0",
+    "ts-morph": "^28.0.0",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "@flowatlas/adapters-broker": "workspace:*",
+    "@flowatlas/adapters-db": "workspace:*",
+    "@flowatlas/adapters-entry": "workspace:*",
+    "@flowatlas/contracts": "workspace:*",
+    "@flowatlas/core": "workspace:*",
+    "@flowatlas/extractor-angular": "workspace:*",
+    "@flowatlas/extractor-nestjs": "workspace:*",
+    "@flowatlas/linker": "workspace:*",
+    "@flowatlas/mcp": "workspace:*"
+  }
+}

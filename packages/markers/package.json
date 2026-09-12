@@ -1,0 +1,54 @@
+{
+  "name": "@flowatlas/markers",
+  "version": "0.1.1",
+  "description": "Annotations that tell flowatlas what static reading cannot work out.",
+  "license": "MIT",
+  "author": {
+    "name": "Ruslan Panevschi",
+    "url": "https://github.com/Panevschi-Ruslan"
+  },
+  "homepage": "https://github.com/Panevschi-Ruslan/flowatlas#readme",
+  "bugs": {
+    "url": "https://github.com/Panevschi-Ruslan/flowatlas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Panevschi-Ruslan/flowatlas.git",
+    "directory": "packages/markers"
+  },
+  "keywords": [
+    "monorepo",
+    "polyrepo",
+    "static-analysis",
+    "dependency-graph",
+    "typescript",
+    "nestjs",
+    "angular",
+    "mcp",
+    "architecture"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  }
+}

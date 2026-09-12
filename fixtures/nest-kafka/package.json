@@ -1,0 +1,14 @@
+{
+  "name": "nest-kafka",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@fixture/events": "workspace:*",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/microservices": "^11.0.0",
+    "kafkajs": "^2.2.4",
+    "rxjs": "^7.8.0"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "a comment is added and nothing else",
+  "expect": {
+    "mode": "partial",
+    "files": ["src/orders/orders.controller.ts", "src/orders/orders.module.ts"]
+  },
+  "changes": [
+    { "file": "src/orders/orders.controller.ts", "append": "\n// Nothing here changes the graph.\n" }
+  ]
+}

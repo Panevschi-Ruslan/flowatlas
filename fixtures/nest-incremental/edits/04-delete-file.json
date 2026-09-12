@@ -1,0 +1,12 @@
+{
+  "name": "the billing client is deleted",
+  "expect": {
+    "mode": "partial",
+    "files": [
+      "src/billing/billing.client.ts",
+      "src/orders/orders.module.ts",
+      "src/orders/orders.service.ts"
+    ]
+  },
+  "changes": [{ "file": "src/billing/billing.client.ts", "delete": true }]
+}

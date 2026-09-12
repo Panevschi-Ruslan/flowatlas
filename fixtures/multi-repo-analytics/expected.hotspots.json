@@ -1,0 +1,138 @@
+{
+  "analyticsFormatVersion": 1,
+  "rows": [
+    {
+      "id": "entry:orders:http:POST:/orders/create",
+      "type": "entry",
+      "service": "orders",
+      "label": "POST /orders/create",
+      "inDegree": 4,
+      "callerServices": [
+        "admin",
+        "billing",
+        "gateway"
+      ],
+      "byEdgeType": {
+        "http_calls": 4
+      }
+    },
+    {
+      "id": "orders#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "service": "orders",
+      "label": "ConfigService",
+      "inDegree": 3,
+      "callerServices": [
+        "orders"
+      ],
+      "byEdgeType": {
+        "injects": 3
+      }
+    },
+    {
+      "id": "billing#src/invoices/invoices.service.ts:InvoicesService",
+      "type": "provider",
+      "service": "billing",
+      "label": "InvoicesService",
+      "inDegree": 2,
+      "callerServices": [
+        "billing"
+      ],
+      "byEdgeType": {
+        "injects": 2
+      }
+    },
+    {
+      "id": "gateway#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "service": "gateway",
+      "label": "ConfigService",
+      "inDegree": 2,
+      "callerServices": [
+        "gateway"
+      ],
+      "byEdgeType": {
+        "injects": 2
+      }
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient",
+      "type": "provider",
+      "service": "gateway",
+      "label": "OrdersClient",
+      "inDegree": 2,
+      "callerServices": [
+        "gateway"
+      ],
+      "byEdgeType": {
+        "injects": 2
+      }
+    },
+    {
+      "id": "orders#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "service": "orders",
+      "label": "HttpService",
+      "inDegree": 2,
+      "callerServices": [
+        "orders"
+      ],
+      "byEdgeType": {
+        "injects": 2
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "service": "orders",
+      "label": "OrdersService",
+      "inDegree": 2,
+      "callerServices": [
+        "orders"
+      ],
+      "byEdgeType": {
+        "injects": 2
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.normalise",
+      "type": "method",
+      "service": "orders",
+      "label": "OrdersService.normalise",
+      "inDegree": 2,
+      "callerServices": [
+        "orders"
+      ],
+      "byEdgeType": {
+        "calls": 2
+      }
+    },
+    {
+      "id": "admin#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "service": "admin",
+      "label": "HttpService",
+      "inDegree": 1,
+      "callerServices": [
+        "admin"
+      ],
+      "byEdgeType": {
+        "injects": 1
+      }
+    },
+    {
+      "id": "admin#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "service": "admin",
+      "label": "ConfigService",
+      "inDegree": 1,
+      "callerServices": [
+        "admin"
+      ],
+      "byEdgeType": {
+        "injects": 1
+      }
+    }
+  ],
+  "ranked": 57
+}

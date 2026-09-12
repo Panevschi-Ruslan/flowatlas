@@ -1,0 +1,949 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-12T17:47:47.306Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 11,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "EventsController"
+        ],
+        "providers": [
+          "Broadcaster",
+          "EventBus",
+          "Metrics",
+          "OrdersService",
+          "EVENT_PUBLISHER"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/events/broadcaster.service.ts:Broadcaster",
+      "type": "provider",
+      "label": "Broadcaster",
+      "repo": "api",
+      "file": "src/events/broadcaster.service.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/events/broadcaster.service.ts:Broadcaster.pSubscribe",
+      "type": "method",
+      "label": "Broadcaster.pSubscribe",
+      "repo": "api",
+      "file": "src/events/broadcaster.service.ts",
+      "line": 21
+    },
+    {
+      "id": "api#src/events/broadcaster.service.ts:Broadcaster.publish",
+      "type": "method",
+      "label": "Broadcaster.publish",
+      "repo": "api",
+      "file": "src/events/broadcaster.service.ts",
+      "line": 15
+    },
+    {
+      "id": "api#src/events/event-bus.service.ts:EventBus",
+      "type": "provider",
+      "label": "EventBus",
+      "repo": "api",
+      "file": "src/events/event-bus.service.ts",
+      "line": 16,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/events/event-bus.service.ts:EventBus.count",
+      "type": "method",
+      "label": "EventBus.count",
+      "repo": "api",
+      "file": "src/events/event-bus.service.ts",
+      "line": 48
+    },
+    {
+      "id": "api#src/events/event-bus.service.ts:EventBus.forDepot",
+      "type": "method",
+      "label": "EventBus.forDepot",
+      "repo": "api",
+      "file": "src/events/event-bus.service.ts",
+      "line": 52
+    },
+    {
+      "id": "api#src/events/event-bus.service.ts:EventBus.listenTo",
+      "type": "method",
+      "label": "EventBus.listenTo",
+      "repo": "api",
+      "file": "src/events/event-bus.service.ts",
+      "line": 38
+    },
+    {
+      "id": "api#src/events/event-bus.service.ts:EventBus.onModuleInit",
+      "type": "method",
+      "label": "EventBus.onModuleInit",
+      "repo": "api",
+      "file": "src/events/event-bus.service.ts",
+      "line": 25
+    },
+    {
+      "id": "api#src/events/event-bus.service.ts:EventBus.receive",
+      "type": "method",
+      "label": "EventBus.receive",
+      "repo": "api",
+      "file": "src/events/event-bus.service.ts",
+      "line": 44
+    },
+    {
+      "id": "api#src/events/metrics.service.ts:Metrics",
+      "type": "provider",
+      "label": "Metrics",
+      "repo": "api",
+      "file": "src/events/metrics.service.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/events/metrics.service.ts:Metrics.pSubscribe",
+      "type": "method",
+      "label": "Metrics.pSubscribe",
+      "repo": "api",
+      "file": "src/events/metrics.service.ts",
+      "line": 11
+    },
+    {
+      "id": "api#src/orders/events.controller.ts:EventsController",
+      "type": "provider",
+      "label": "EventsController",
+      "repo": "api",
+      "file": "src/orders/events.controller.ts",
+      "line": 14,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/events.controller.ts:EventsController.stream",
+      "type": "method",
+      "label": "EventsController.stream",
+      "repo": "api",
+      "file": "src/orders/events.controller.ts",
+      "line": 18
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "method",
+      "label": "OrdersController.cancel",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "id": "channel:depot:*:events",
+      "type": "channel",
+      "label": "depot:*:events",
+      "repo": "api",
+      "file": "src/events/event-bus.service.ts",
+      "line": 30,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "house-bus"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:api#src/events/event-bus.service.ts:EventBus.receive",
+      "type": "consumer",
+      "label": "EventBus.receive",
+      "repo": "api",
+      "file": "src/events/event-bus.service.ts",
+      "line": 30,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "house-bus",
+        "decorator": "pSubscribe",
+        "entryId": null
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/depots/:param/events",
+      "type": "entry",
+      "label": "GET /depots/:param/events",
+      "repo": "api",
+      "file": "src/orders/events.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/depots/:param/events",
+        "rawPath": "/depots/:depotId/events",
+        "controller": "EventsController",
+        "decorators": [
+          {
+            "name": "Sse",
+            "args": []
+          }
+        ],
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/depots/:param/orders/:param/cancel",
+      "type": "entry",
+      "label": "POST /depots/:param/orders/:param/cancel",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/depots/:param/orders/:param/cancel",
+        "rawPath": "/depots/:depotId/orders/:orderId/cancel",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "producer:api#src/orders/orders.service.ts:16:11",
+      "type": "producer",
+      "label": "event depot:*:events",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "house-bus",
+        "channelVia": "template",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "classes": 7,
+          "skippedExternalCalls": {
+            "rxjs": 3
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "classes": 6,
+          "templates": 1,
+          "skippedExternalCalls": {
+            "rxjs": 3,
+            "@angular/common": 1
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/orders.component.ts:13:13",
+      "type": "ui_action",
+      "label": "click=\"watch()\"",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 13,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "watch()",
+        "component": "web#src/app/orders.component.ts:OrdersComponent",
+        "template": "src/app/orders.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/orders.component.ts:14:13",
+      "type": "ui_action",
+      "label": "click=\"cancel()\"",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 14,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "cancel()",
+        "component": "web#src/app/orders.component.ts:OrdersComponent",
+        "template": "src/app/orders.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/live-events.service.ts:29:20",
+      "type": "ui_api_call",
+      "label": "GET /depots/:param/events",
+      "repo": "web",
+      "file": "src/app/live-events.service.ts",
+      "line": 29,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/depots/:param/events",
+        "path": "/depots/:param/events",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/live-events.service.ts:48:20",
+      "type": "ui_api_call",
+      "label": "GET /depots/:param/events${…}",
+      "repo": "web",
+      "file": "src/app/live-events.service.ts",
+      "line": 48,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/depots/:param/events${…}",
+        "path": "/depots/:param/events${…}",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:12:12",
+      "type": "ui_api_call",
+      "label": "POST /depots/:param/orders/:param/cancel",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/depots/:param/orders/:param/cancel",
+        "path": "/depots/:param/orders/:param/cancel",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": "object",
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/stream-wrapper.service.ts:17:19",
+      "type": "ui_api_call",
+      "label": "GET ?",
+      "repo": "web",
+      "file": "src/app/stream-wrapper.service.ts",
+      "line": 17,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": null
+      }
+    },
+    {
+      "id": "web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "web#src/app/live-events.service.ts:LiveEventsService",
+      "type": "provider",
+      "label": "LiveEventsService",
+      "repo": "web",
+      "file": "src/app/live-events.service.ts",
+      "line": 18,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "method",
+      "label": "LiveEventsService.open",
+      "repo": "web",
+      "file": "src/app/live-events.service.ts",
+      "line": 27
+    },
+    {
+      "id": "web#src/app/live-events.service.ts:LiveEventsService.openWithToken",
+      "type": "method",
+      "label": "LiveEventsService.openWithToken",
+      "repo": "web",
+      "file": "src/app/live-events.service.ts",
+      "line": 44
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "provider",
+      "label": "OrdersApiService",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.cancel",
+      "type": "method",
+      "label": "OrdersApiService.cancel",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 11
+    },
+    {
+      "id": "web#src/app/orders.component.ts:OrdersComponent",
+      "type": "ui_component",
+      "label": "OrdersComponent",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 9,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-orders"
+      }
+    },
+    {
+      "id": "web#src/app/orders.component.ts:OrdersComponent.cancel",
+      "type": "method",
+      "label": "OrdersComponent.cancel",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 27
+    },
+    {
+      "id": "web#src/app/orders.component.ts:OrdersComponent.watch",
+      "type": "method",
+      "label": "OrdersComponent.watch",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 23
+    },
+    {
+      "id": "web#src/app/replay.service.ts:ReplayService",
+      "type": "provider",
+      "label": "ReplayService",
+      "repo": "web",
+      "file": "src/app/replay.service.ts",
+      "line": 19,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/stream-wrapper.service.ts:StreamWrapperService",
+      "type": "provider",
+      "label": "StreamWrapperService",
+      "repo": "web",
+      "file": "src/app/stream-wrapper.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/stream-wrapper.service.ts:StreamWrapperService.open",
+      "type": "method",
+      "label": "StreamWrapperService.open",
+      "repo": "web",
+      "file": "src/app/stream-wrapper.service.ts",
+      "line": 16
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/events/event-bus.service.ts:EventBus",
+      "to": "api#src/events/broadcaster.service.ts:Broadcaster",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/events/event-bus.service.ts",
+      "line": 21
+    },
+    {
+      "from": "api#src/events/event-bus.service.ts:EventBus",
+      "to": "api#src/events/metrics.service.ts:Metrics",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/events/event-bus.service.ts",
+      "line": 22
+    },
+    {
+      "from": "api#src/events/event-bus.service.ts:EventBus.listenTo",
+      "to": "api#src/events/broadcaster.service.ts:Broadcaster.pSubscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/events/event-bus.service.ts",
+      "line": 41
+    },
+    {
+      "from": "api#src/events/event-bus.service.ts:EventBus.listenTo",
+      "to": "api#src/events/event-bus.service.ts:EventBus.receive",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/events/event-bus.service.ts",
+      "line": 41
+    },
+    {
+      "from": "api#src/events/event-bus.service.ts:EventBus.onModuleInit",
+      "to": "api#src/events/broadcaster.service.ts:Broadcaster.pSubscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/events/event-bus.service.ts",
+      "line": 30
+    },
+    {
+      "from": "api#src/events/event-bus.service.ts:EventBus.onModuleInit",
+      "to": "api#src/events/event-bus.service.ts:EventBus.count",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/events/event-bus.service.ts",
+      "line": 34
+    },
+    {
+      "from": "api#src/events/event-bus.service.ts:EventBus.onModuleInit",
+      "to": "api#src/events/event-bus.service.ts:EventBus.receive",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/events/event-bus.service.ts",
+      "line": 30
+    },
+    {
+      "from": "api#src/events/event-bus.service.ts:EventBus.onModuleInit",
+      "to": "api#src/events/metrics.service.ts:Metrics.pSubscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/events/event-bus.service.ts",
+      "line": 34
+    },
+    {
+      "from": "api#src/orders/events.controller.ts:EventsController",
+      "to": "api#src/events/event-bus.service.ts:EventBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/events.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "api#src/orders/events.controller.ts:EventsController.stream",
+      "to": "api#src/events/event-bus.service.ts:EventBus.forDepot",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#DepotEvent",
+      "file": "src/orders/events.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController",
+      "to": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "to": "api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService",
+      "to": "api#src/events/broadcaster.service.ts:Broadcaster",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 11
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "api#src/events/broadcaster.service.ts:Broadcaster.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "type:api#DepotEvent"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "producer:api#src/orders/orders.service.ts:16:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "from": "channel:depot:*:events",
+      "to": "consumer:api#src/events/event-bus.service.ts:EventBus.receive",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/events/event-bus.service.ts",
+      "line": 30
+    },
+    {
+      "from": "consumer:api#src/events/event-bus.service.ts:EventBus.receive",
+      "to": "api#src/events/event-bus.service.ts:EventBus.receive",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/events/event-bus.service.ts",
+      "line": 30
+    },
+    {
+      "from": "entry:api:http:GET:/depots/:param/events",
+      "to": "api#src/orders/events.controller.ts:EventsController.stream",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/orders/events.controller.ts",
+      "line": 18,
+      "meta": {
+        "params": "{depotId:string}"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/depots/:param/orders/:param/cancel",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "meta": {
+        "params": "{depotId:string;orderId:string}"
+      }
+    },
+    {
+      "from": "producer:api#src/orders/orders.service.ts:16:11",
+      "to": "channel:depot:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:api#DepotEvent"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_action:web#src/app/orders.component.ts:13:13",
+      "to": "web#src/app/orders.component.ts:OrdersComponent.watch",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 13
+    },
+    {
+      "from": "ui_action:web#src/app/orders.component.ts:14:13",
+      "to": "web#src/app/orders.component.ts:OrdersComponent.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 14
+    },
+    {
+      "from": "ui_api_call:web#src/app/live-events.service.ts:29:20",
+      "to": "entry:api:http:GET:/depots/:param/events",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 29,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:12:12",
+      "to": "entry:api:http:POST:/depots/:param/orders/:param/cancel",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 12,
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "web#src/app/live-events.service.ts:LiveEventsService.open",
+      "to": "ui_api_call:web#src/app/live-events.service.ts:29:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 29
+    },
+    {
+      "from": "web#src/app/live-events.service.ts:LiveEventsService.openWithToken",
+      "to": "ui_api_call:web#src/app/live-events.service.ts:48:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 48
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "to": "web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 9
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.cancel",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:12:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 12
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent",
+      "to": "web#src/app/live-events.service.ts:LiveEventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 19
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 20
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent.cancel",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 28
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent.watch",
+      "to": "web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 24
+    },
+    {
+      "from": "web#src/app/stream-wrapper.service.ts:StreamWrapperService.open",
+      "to": "ui_api_call:web#src/app/stream-wrapper.service.ts:17:19",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/app/stream-wrapper.service.ts",
+      "line": 17
+    }
+  ],
+  "types": {
+    "type:api#DepotEvent": {
+      "name": "DepotEvent",
+      "kind": "object",
+      "declaredIn": "api#src/events/depot-event.ts",
+      "structuralHash": "8aad4895d5f9429b",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "depotId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/events/event-bus.service.ts",
+      "line": 41,
+      "reason": "channel-const-unresolved",
+      "hint": "The channel name cannot be read here. Annotate EventBus.listenTo with the channel it uses.",
+      "symbol": "EventBus.listenTo -> pattern",
+      "service": "api"
+    },
+    {
+      "file": "src/app/stream-wrapper.service.ts",
+      "line": 17,
+      "reason": "api-path-dynamic",
+      "hint": "The address is built at run time. Annotate the method with /** @flowatlas-calls GET /path */.",
+      "symbol": "new EventSource(url)",
+      "service": "web"
+    }
+  ]
+}

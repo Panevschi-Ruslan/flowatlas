@@ -1,0 +1,11 @@
+@  GET /orders/:param
+  -> OrdersController.findOne
+    -> OrdersClient.fetchOne
+      $  ORDERS_URL
+      ^  GET /orders/:param
+        @  GET /orders/:param
+          -> OrdersController.findOne
+            -> OrdersService.findOne
+              [] read Order
+                #  Order
+unresolved on this path: 0

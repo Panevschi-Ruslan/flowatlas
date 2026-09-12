@@ -1,0 +1,12 @@
+{
+  "name": "contracts-orders",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@fx/wire": "file:../shared/wire",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/microservices": "^11.0.0",
+    "rxjs": "^7.8.0"
+  }
+}

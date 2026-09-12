@@ -1,0 +1,113 @@
+{
+  "baselineFormatVersion": 1,
+  "schemaVersion": 3,
+  "flowatlasVersion": "0.0.0",
+  "acceptedAt": "2026-09-09T20:14:00.000Z",
+  "acceptedBy": "fixture",
+  "graph": {
+    "builtAt": "2026-09-09T20:10:02.000Z",
+    "services": {
+      "gateway": {
+        "sha": null
+      },
+      "orders": {
+        "sha": null
+      },
+      "billing": {
+        "sha": null
+      }
+    }
+  },
+  "unresolved": {
+    "total": 18,
+    "byReason": {
+      "channel-from-config": 1,
+      "di-token-unknown": 1,
+      "dynamic-http-url": 3,
+      "marker-route-not-found": 1,
+      "marker-service-unknown": 1,
+      "module-import-dynamic": 3,
+      "target-route-not-found": 1,
+      "unknown-base-url-env": 1,
+      "unknown-db-package": 6
+    },
+    "byService": {
+      "gateway": 9,
+      "orders": 9
+    },
+    "keys": [
+      {
+        "key": "gateway|src/app.module.ts|AppModule imports ConfigModule|module-import-dynamic",
+        "count": 1
+      },
+      {
+        "key": "gateway|src/application.module.ts|AppModule imports HttpModule|module-import-dynamic",
+        "count": 1
+      },
+      {
+        "key": "gateway|src/clients/orders.client.ts|http_out:gateway#src/clients/orders.client.ts:40:12|marker-route-not-found",
+        "count": 1
+      },
+      {
+        "key": "gateway|src/clients/orders.client.ts|http_out:gateway#src/clients/orders.client.ts:49:12|marker-service-unknown",
+        "count": 1
+      },
+      {
+        "key": "gateway|src/clients/orders.client.ts|http_out:gateway#src/clients/orders.client.ts:58:12|target-route-not-found",
+        "count": 1
+      },
+      {
+        "key": "gateway|src/clients/orders.client.ts|http_out:gateway#src/clients/orders.client.ts:66:12|unknown-base-url-env",
+        "count": 1
+      },
+      {
+        "key": "gateway|src/clients/orders.client.ts|this.http.delete(this.endpoint(`orders/${id}/cancel`))|dynamic-http-url",
+        "count": 1
+      },
+      {
+        "key": "gateway|src/clients/orders.client.ts|this.http.post(this.endpoint('restock'), { sku })|dynamic-http-url",
+        "count": 1
+      },
+      {
+        "key": "gateway|src/clients/orders.client.ts|this.http.post<OrderDto>(this.endpoint('orders'), body)|dynamic-http-url",
+        "count": 1
+      },
+      {
+        "key": "orders|src/app.module.ts|AppModule imports ConfigModule|module-import-dynamic",
+        "count": 1
+      },
+      {
+        "key": "orders|src/orders/orders.service.ts|OrdersService.constructor[0]|di-token-unknown",
+        "count": 1
+      },
+      {
+        "key": "orders|src/orders/orders.service.ts|OrdersService.refund -> this.config.get('REFUND_CHANNEL')|channel-from-config",
+        "count": 1
+      },
+      {
+        "key": "orders|src/orders/orders.service.ts|this.rows.drop|unknown-db-package",
+        "count": 1
+      },
+      {
+        "key": "orders|src/orders/orders.service.ts|this.rows.find|unknown-db-package",
+        "count": 4
+      },
+      {
+        "key": "orders|src/orders/orders.service.ts|this.rows.persist|unknown-db-package",
+        "count": 1
+      }
+    ],
+    "info": {
+      "rows": 0,
+      "sites": 0
+    }
+  },
+  "markers": {
+    "warnings": 4
+  },
+  "contracts": {
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 1
+  }
+}

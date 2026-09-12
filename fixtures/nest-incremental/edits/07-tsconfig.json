@@ -1,0 +1,11 @@
+{
+  "name": "the tsconfig changes",
+  "expect": { "mode": "full", "reason": "tsconfig changed" },
+  "changes": [
+    {
+      "file": "tsconfig.json",
+      "replace": "\"skipLibCheck\": true",
+      "with": "\"skipLibCheck\": true,\n    \"removeComments\": true"
+    }
+  ]
+}

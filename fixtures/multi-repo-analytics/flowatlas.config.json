@@ -1,0 +1,39 @@
+{
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "baseUrlEnv": [
+        "GATEWAY_URL"
+      ]
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "baseUrlEnv": [
+        "ORDERS_URL"
+      ]
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "baseUrlEnv": [
+        "BILLING_URL"
+      ]
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular"
+    }
+  ],
+  "output": ".flowatlas"
+}

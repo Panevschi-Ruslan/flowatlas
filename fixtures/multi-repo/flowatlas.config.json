@@ -1,0 +1,30 @@
+{
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "baseUrlEnv": ["ORDERS_URL"]
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "baseUrlEnv": ["BILLING_URL"]
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl", "ordersUrl"],
+      "apiTarget": { "apiUrl": "gateway" }
+    }
+  ],
+  "sharedPackages": ["@fx/contracts"],
+  "output": ".flowatlas"
+}

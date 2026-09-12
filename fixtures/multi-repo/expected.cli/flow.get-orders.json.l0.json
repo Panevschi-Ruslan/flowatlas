@@ -1,0 +1,128 @@
+{
+  "entry": "entry:gateway:http:GET:/orders/:param",
+  "unresolvedOnPath": 0,
+  "root": {
+    "node": {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param"
+    },
+    "children": [
+      {
+        "node": {
+          "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
+          "type": "method",
+          "label": "OrdersController.findOne"
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+              "type": "method",
+              "label": "OrdersClient.fetchOne"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "config_key:gateway#ORDERS_URL",
+                  "type": "config_key",
+                  "label": "ORDERS_URL"
+                },
+                "edge": {
+                  "type": "reads_config",
+                  "confidence": "static"
+                },
+                "children": []
+              },
+              {
+                "node": {
+                  "id": "http_out:gateway#src/clients/orders.client.ts:33:12",
+                  "type": "http_out",
+                  "label": "GET /orders/:param"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "entry:orders:http:GET:/orders/:param",
+                      "type": "entry",
+                      "label": "GET /orders/:param"
+                    },
+                    "edge": {
+                      "type": "http_calls",
+                      "confidence": "static"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+                          "type": "method",
+                          "label": "OrdersController.findOne"
+                        },
+                        "edge": {
+                          "type": "handles",
+                          "confidence": "static"
+                        },
+                        "children": [
+                          {
+                            "node": {
+                              "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+                              "type": "method",
+                              "label": "OrdersService.findOne"
+                            },
+                            "edge": {
+                              "type": "calls",
+                              "confidence": "static"
+                            },
+                            "children": [
+                              {
+                                "node": {
+                                  "id": "db_query:orders#src/orders/orders.service.ts:26:23",
+                                  "type": "db_query",
+                                  "label": "read Order"
+                                },
+                                "edge": {
+                                  "type": "calls",
+                                  "confidence": "static"
+                                },
+                                "children": [
+                                  {
+                                    "node": {
+                                      "id": "table:orders#Order",
+                                      "type": "table",
+                                      "label": "Order"
+                                    },
+                                    "edge": {
+                                      "type": "queries",
+                                      "confidence": "static"
+                                    },
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

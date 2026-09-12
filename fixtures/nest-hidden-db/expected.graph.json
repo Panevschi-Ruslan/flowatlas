@@ -1,0 +1,379 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-hidden-db",
+  "generatedAt": "2026-09-10T16:11:46.005Z",
+  "nodes": [
+    {
+      "id": "config_key:nest-hidden-db#MONGO_URL",
+      "type": "config_key",
+      "label": "MONGO_URL",
+      "repo": "nest-hidden-db",
+      "file": "src/orders/orders.service.ts",
+      "line": 23,
+      "meta": {
+        "key": "MONGO_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:nest-hidden-db:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "nest-hidden-db",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-hidden-db:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "nest-hidden-db",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-hidden-db#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-hidden-db",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService",
+          "OrderStore"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-hidden-db#src/data/mongo-store.ts:MongoStore",
+      "type": "provider",
+      "label": "MongoStore",
+      "repo": "nest-hidden-db",
+      "file": "src/data/mongo-store.ts",
+      "line": 6,
+      "kind": "injectable"
+    },
+    {
+      "id": "nest-hidden-db#src/data/mongo-store.ts:MongoStore.one",
+      "type": "method",
+      "label": "MongoStore.one",
+      "repo": "nest-hidden-db",
+      "file": "src/data/mongo-store.ts",
+      "line": 11
+    },
+    {
+      "id": "nest-hidden-db#src/data/mongo-store.ts:MongoStore.put",
+      "type": "method",
+      "label": "MongoStore.put",
+      "repo": "nest-hidden-db",
+      "file": "src/data/mongo-store.ts",
+      "line": 15
+    },
+    {
+      "id": "nest-hidden-db#src/orders/order.store.ts:OrderStore",
+      "type": "provider",
+      "label": "OrderStore",
+      "repo": "nest-hidden-db",
+      "file": "src/orders/order.store.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-hidden-db#src/orders/order.store.ts:OrderStore.findById",
+      "type": "method",
+      "label": "OrderStore.findById",
+      "repo": "nest-hidden-db",
+      "file": "src/orders/order.store.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-hidden-db#src/orders/order.store.ts:OrderStore.save",
+      "type": "method",
+      "label": "OrderStore.save",
+      "repo": "nest-hidden-db",
+      "file": "src/orders/order.store.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-hidden-db#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-hidden-db",
+      "file": "src/orders/orders.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-hidden-db#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "nest-hidden-db",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14
+    },
+    {
+      "id": "nest-hidden-db#src/orders/orders.controller.ts:OrdersController.get",
+      "type": "method",
+      "label": "OrdersController.get",
+      "repo": "nest-hidden-db",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-hidden-db#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-hidden-db",
+      "file": "src/orders/orders.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-hidden-db#src/orders/orders.service.ts:OrdersService.connection",
+      "type": "method",
+      "label": "OrdersService.connection",
+      "repo": "nest-hidden-db",
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "id": "nest-hidden-db#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-hidden-db",
+      "file": "src/orders/orders.service.ts",
+      "line": 18
+    },
+    {
+      "id": "nest-hidden-db#src/orders/orders.service.ts:OrdersService.get",
+      "type": "method",
+      "label": "OrdersService.get",
+      "repo": "nest-hidden-db",
+      "file": "src/orders/orders.service.ts",
+      "line": 14
+    },
+    {
+      "id": "repo:nest-hidden-db",
+      "type": "repo",
+      "label": "nest-hidden-db",
+      "repo": "nest-hidden-db",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-hidden-db:http:GET:/orders/:param",
+      "to": "nest-hidden-db#src/orders/orders.controller.ts:OrdersController.get",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-hidden-db#Order",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-hidden-db:http:POST:/orders",
+      "to": "nest-hidden-db#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "params": [
+        "type:nest-hidden-db#Order"
+      ],
+      "returns": "type:nest-hidden-db#Order",
+      "meta": {
+        "body": "type:nest-hidden-db#Order"
+      }
+    },
+    {
+      "from": "nest-hidden-db#src/orders/order.store.ts:OrderStore.findById",
+      "to": "nest-hidden-db#src/data/mongo-store.ts:MongoStore.one",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/order.store.ts",
+      "line": 10,
+      "params": [
+        "string"
+      ],
+      "returns": "T"
+    },
+    {
+      "from": "nest-hidden-db#src/orders/order.store.ts:OrderStore.save",
+      "to": "nest-hidden-db#src/data/mongo-store.ts:MongoStore.put",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/order.store.ts",
+      "line": 14,
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "T"
+    },
+    {
+      "from": "nest-hidden-db#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-hidden-db#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-hidden-db#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "nest-hidden-db#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 16,
+      "params": [
+        "type:nest-hidden-db#Order"
+      ],
+      "returns": "type:nest-hidden-db#Order"
+    },
+    {
+      "from": "nest-hidden-db#src/orders/orders.controller.ts:OrdersController.get",
+      "to": "nest-hidden-db#src/orders/orders.service.ts:OrdersService.get",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-hidden-db#Order"
+    },
+    {
+      "from": "nest-hidden-db#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-hidden-db#src/orders/order.store.ts:OrderStore",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 12
+    },
+    {
+      "from": "nest-hidden-db#src/orders/orders.service.ts:OrdersService.connection",
+      "to": "config_key:nest-hidden-db#MONGO_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 23
+    },
+    {
+      "from": "nest-hidden-db#src/orders/orders.service.ts:OrdersService.create",
+      "to": "nest-hidden-db#src/orders/order.store.ts:OrderStore.save",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 19,
+      "params": [
+        "type:nest-hidden-db#Order"
+      ],
+      "returns": "type:nest-hidden-db#Order"
+    },
+    {
+      "from": "nest-hidden-db#src/orders/orders.service.ts:OrdersService.get",
+      "to": "nest-hidden-db#src/orders/order.store.ts:OrderStore.findById",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 15,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-hidden-db#Order"
+    }
+  ],
+  "types": {
+    "type:nest-hidden-db#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "nest-hidden-db#src/orders/order.ts",
+      "structuralHash": "e752b571a9fb0fb7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/data/mongo-store.ts",
+      "line": 6,
+      "reason": "db-layer-unread",
+      "message": "MongoStore reads as a data layer, and nothing was read through it.",
+      "hint": "Add \"MongoStore\" to adapters.db.localBaseClasses in flowatlas.config.json, so calls through it are recorded as data access.",
+      "symbol": "MongoStore",
+      "adapter": "local-base"
+    },
+    {
+      "file": "src/data/mongo-store.ts",
+      "line": 11,
+      "reason": "type-generic-uninstantiated",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "level": "info",
+      "sites": 2
+    }
+  ]
+}

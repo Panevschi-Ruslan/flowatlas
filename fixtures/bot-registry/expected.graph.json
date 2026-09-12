@@ -1,0 +1,444 @@
+{
+  "schemaVersion": 3,
+  "repo": "bot-registry",
+  "generatedAt": "2026-09-10T16:11:34.504Z",
+  "nodes": [
+    {
+      "id": "bot-registry#src/actions/cancel-order.action.ts:confirmCancelHandler",
+      "type": "function",
+      "label": "confirmCancelHandler",
+      "repo": "bot-registry",
+      "file": "src/actions/cancel-order.action.ts",
+      "line": 5
+    },
+    {
+      "id": "bot-registry#src/actions/cancel-order.action.ts:viewOrderHandler",
+      "type": "function",
+      "label": "viewOrderHandler",
+      "repo": "bot-registry",
+      "file": "src/actions/cancel-order.action.ts",
+      "line": 11
+    },
+    {
+      "id": "bot-registry#src/actions/summary.ts:summarise",
+      "type": "function",
+      "label": "summarise",
+      "repo": "bot-registry",
+      "file": "src/actions/summary.ts",
+      "line": 9
+    },
+    {
+      "id": "bot-registry#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "bot-registry",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "Bot",
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "bot-registry#src/bot.ts:Bot",
+      "type": "provider",
+      "label": "Bot",
+      "repo": "bot-registry",
+      "file": "src/bot.ts",
+      "line": 15,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "bot-registry#src/bot.ts:Bot.greet",
+      "type": "method",
+      "label": "Bot.greet",
+      "repo": "bot-registry",
+      "file": "src/bot.ts",
+      "line": 30
+    },
+    {
+      "id": "bot-registry#src/bot.ts:Bot.setup",
+      "type": "method",
+      "label": "Bot.setup",
+      "repo": "bot-registry",
+      "file": "src/bot.ts",
+      "line": 21
+    },
+    {
+      "id": "bot-registry#src/commands/menu.command.ts:registerMenuHandlers",
+      "type": "function",
+      "label": "registerMenuHandlers",
+      "repo": "bot-registry",
+      "file": "src/commands/menu.command.ts",
+      "line": 11
+    },
+    {
+      "id": "bot-registry#src/commands/menu.command.ts:showMenu",
+      "type": "function",
+      "label": "showMenu",
+      "repo": "bot-registry",
+      "file": "src/commands/menu.command.ts",
+      "line": 20
+    },
+    {
+      "id": "bot-registry#src/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "bot-registry",
+      "file": "src/orders.service.ts",
+      "line": 3,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "bot-registry#src/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "repo": "bot-registry",
+      "file": "src/orders.service.ts",
+      "line": 5
+    },
+    {
+      "id": "bot-registry#src/orders.service.ts:OrdersService.find",
+      "type": "method",
+      "label": "OrdersService.find",
+      "repo": "bot-registry",
+      "file": "src/orders.service.ts",
+      "line": 9
+    },
+    {
+      "id": "entry:bot-registry:bot_callback:back_to_main",
+      "type": "entry",
+      "label": "bot_callback back_to_main",
+      "repo": "bot-registry",
+      "file": "src/commands/menu.command.ts",
+      "line": 14,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "back_to_main",
+        "adapter": "telegraf-calls",
+        "registration": "action",
+        "trigger": "'back_to_main'",
+        "handlerVia": "registration"
+      }
+    },
+    {
+      "id": "entry:bot-registry:bot_callback:confirm_cancel",
+      "type": "entry",
+      "label": "bot_callback confirm_cancel",
+      "repo": "bot-registry",
+      "file": "src/actions/cancel-order.action.ts",
+      "line": 15,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "confirm_cancel",
+        "adapter": "entry-registries",
+        "registry": "callbacks",
+        "registration": "callbackRegistry.register",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:bot-registry:bot_callback:keep_order",
+      "type": "entry",
+      "label": "bot_callback keep_order",
+      "repo": "bot-registry",
+      "file": "src/actions/cancel-order.action.ts",
+      "line": 19,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "keep_order",
+        "adapter": "entry-registries",
+        "registry": "callbacks",
+        "registration": "callbackRegistry.register",
+        "handlerVia": "anonymous"
+      }
+    },
+    {
+      "id": "entry:bot-registry:bot_callback:view_order",
+      "type": "entry",
+      "label": "bot_callback view_order",
+      "repo": "bot-registry",
+      "file": "src/actions/cancel-order.action.ts",
+      "line": 16,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "view_order",
+        "adapter": "entry-registries",
+        "registry": "callbacks",
+        "registration": "callbackRegistry.register",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:bot-registry:bot_command:menu",
+      "type": "entry",
+      "label": "bot_command menu",
+      "repo": "bot-registry",
+      "file": "src/commands/menu.command.ts",
+      "line": 12,
+      "kind": "bot_command",
+      "meta": {
+        "key": "menu",
+        "adapter": "telegraf-calls",
+        "registration": "command",
+        "trigger": "'menu'",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:bot-registry:bot_command:start",
+      "type": "entry",
+      "label": "bot_command start",
+      "repo": "bot-registry",
+      "file": "src/bot.ts",
+      "line": 22,
+      "kind": "bot_command",
+      "meta": {
+        "key": "start",
+        "adapter": "telegraf-calls",
+        "registration": "start",
+        "trigger": "start",
+        "updateClass": "Bot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:bot-registry:bot_event:callback_query",
+      "type": "entry",
+      "label": "bot_event callback_query",
+      "repo": "bot-registry",
+      "file": "src/bot.ts",
+      "line": 25,
+      "kind": "bot_event",
+      "meta": {
+        "key": "callback_query",
+        "adapter": "telegraf-calls",
+        "registration": "on",
+        "trigger": "'callback_query'",
+        "updateClass": "Bot",
+        "handlerVia": "registration"
+      }
+    },
+    {
+      "id": "repo:bot-registry",
+      "type": "repo",
+      "label": "bot-registry",
+      "repo": "bot-registry",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "telegraf": 4
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "telegraf-calls",
+            "entry-registries"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "bot-registry#src/actions/cancel-order.action.ts:confirmCancelHandler",
+      "to": "bot-registry#src/orders.service.ts:OrdersService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/actions/cancel-order.action.ts",
+      "line": 7,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "bot-registry#src/actions/cancel-order.action.ts:viewOrderHandler",
+      "to": "bot-registry#src/actions/summary.ts:summarise",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/actions/cancel-order.action.ts",
+      "line": 12
+    },
+    {
+      "from": "bot-registry#src/actions/summary.ts:summarise",
+      "to": "bot-registry#src/orders.service.ts:OrdersService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/actions/summary.ts",
+      "line": 10,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "bot-registry#src/bot.ts:Bot",
+      "to": "bot-registry#src/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/bot.ts",
+      "line": 19
+    },
+    {
+      "from": "bot-registry#src/bot.ts:Bot.greet",
+      "to": "bot-registry#src/orders.service.ts:OrdersService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/bot.ts",
+      "line": 31,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "bot-registry#src/bot.ts:Bot.setup",
+      "to": "bot-registry#src/bot.ts:Bot.greet",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/bot.ts",
+      "line": 22,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "bot-registry#src/commands/menu.command.ts:registerMenuHandlers",
+      "to": "bot-registry#src/commands/menu.command.ts:showMenu",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/commands/menu.command.ts",
+      "line": 12
+    },
+    {
+      "from": "bot-registry#src/commands/menu.command.ts:registerMenuHandlers",
+      "to": "bot-registry#src/orders.service.ts:OrdersService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/commands/menu.command.ts",
+      "line": 15,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "bot-registry#src/commands/menu.command.ts:showMenu",
+      "to": "bot-registry#src/orders.service.ts:OrdersService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/commands/menu.command.ts",
+      "line": 21,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "entry:bot-registry:bot_callback:back_to_main",
+      "to": "bot-registry#src/commands/menu.command.ts:registerMenuHandlers",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/commands/menu.command.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:bot-registry:bot_callback:confirm_cancel",
+      "to": "bot-registry#src/actions/cancel-order.action.ts:confirmCancelHandler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/actions/cancel-order.action.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:bot-registry:bot_callback:view_order",
+      "to": "bot-registry#src/actions/cancel-order.action.ts:viewOrderHandler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/actions/cancel-order.action.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:bot-registry:bot_command:menu",
+      "to": "bot-registry#src/commands/menu.command.ts:showMenu",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/commands/menu.command.ts",
+      "line": 20
+    },
+    {
+      "from": "entry:bot-registry:bot_command:start",
+      "to": "bot-registry#src/bot.ts:Bot.greet",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/bot.ts",
+      "line": 30,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:bot-registry:bot_event:callback_query",
+      "to": "bot-registry#src/bot.ts:Bot.setup",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/bot.ts",
+      "line": 21,
+      "params": [],
+      "returns": "void"
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/actions/cancel-order.action.ts",
+      "line": 19,
+      "reason": "registry-handler-anonymous",
+      "hint": "Give the handler a name and register that, so the code behind this can be pointed at.",
+      "symbol": "callbacks:keep_order",
+      "adapter": "entry-registries"
+    },
+    {
+      "file": "src/actions/cancel-order.action.ts",
+      "line": 24,
+      "reason": "registry-key-dynamic",
+      "hint": "Register with a string literal so the way in can be named, or drop callbacks from adapters.entry.registries.",
+      "symbol": "`rate_${String(Date.now())}`",
+      "adapter": "entry-registries"
+    },
+    {
+      "file": "src/bot.ts",
+      "line": 26,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "Bot.setup -> callbackRegistry.dispatch"
+    },
+    {
+      "file": "src/handlers/text-registry.ts",
+      "line": 18,
+      "reason": "entry-registry-unconfigured",
+      "message": "2 handlers registered through textRegistry.on, which nothing here understands.",
+      "hint": "Name it under adapters.entry.registries so each registration becomes an entry point.",
+      "symbol": "textRegistry.on",
+      "adapter": "entry-registries",
+      "meta": {
+        "registrations": 2
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "name": "@flowatlas/extractor-angular",
+  "version": "0.1.0",
+  "description": "Reads an Angular repository into a flowatlas graph. Compiled into the `flowatlas` command; not published on its own.",
+  "license": "MIT",
+  "author": {
+    "name": "Ruslan Panevschi",
+    "url": "https://github.com/Panevschi-Ruslan"
+  },
+  "homepage": "https://github.com/Panevschi-Ruslan/flowatlas#readme",
+  "bugs": {
+    "url": "https://github.com/Panevschi-Ruslan/flowatlas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Panevschi-Ruslan/flowatlas.git",
+    "directory": "packages/extractor-angular"
+  },
+  "keywords": [
+    "monorepo",
+    "polyrepo",
+    "static-analysis",
+    "dependency-graph",
+    "typescript",
+    "nestjs",
+    "angular",
+    "mcp",
+    "architecture"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@angular/compiler": "^19.2.0",
+    "@flowatlas/core": "workspace:*",
+    "ts-morph": "^28.0.0"
+  },
+  "private": true
+}

@@ -1,0 +1,69 @@
+{
+  "target": "orders#src/orders/orders.service.ts:OrdersService.create",
+  "reached": 2,
+  "reachable": [
+    {
+      "kind": "http",
+      "count": 1,
+      "services": [
+        "orders"
+      ]
+    }
+  ],
+  "entries": [
+    "entry:orders:http:POST:/orders"
+  ],
+  "services": [
+    "orders"
+  ],
+  "servicesWithoutEntry": [],
+  "root": {
+    "node": {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "loc": "src/orders/orders.service.ts:40",
+      "service": "orders"
+    },
+    "children": [
+      {
+        "node": {
+          "id": "orders#src/orders/orders.controller.ts:OrdersController.create",
+          "type": "method",
+          "label": "OrdersController.create",
+          "loc": "src/orders/orders.controller.ts:31",
+          "service": "orders"
+        },
+        "edge": {
+          "type": "calls",
+          "confidence": "static",
+          "params": [
+            "type:@fx/contracts#CreateOrderDto"
+          ],
+          "returns": "type:@fx/contracts#OrderDto"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "entry:orders:http:POST:/orders",
+              "type": "entry",
+              "label": "POST /orders",
+              "loc": "src/orders/orders.controller.ts:31",
+              "service": "orders",
+              "kind": "http"
+            },
+            "edge": {
+              "type": "handles",
+              "confidence": "static",
+              "params": [
+                "type:@fx/contracts#CreateOrderDto"
+              ],
+              "returns": "type:@fx/contracts#OrderDto"
+            },
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+}

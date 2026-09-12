@@ -1,0 +1,21 @@
+{
+  "edge": {
+    "from": "http_out:gateway#src/clients/billing.client.ts:33:12",
+    "to": "entry:billing:http:POST:/invoices",
+    "type": "http_calls",
+    "confidence": "marker"
+  },
+  "status": "hash_differs",
+  "request": {
+    "status": "unchecked",
+    "left": "object",
+    "right": "type:billing#CreateInvoiceDto",
+    "note": "the sending side declares no named type"
+  },
+  "response": {
+    "status": "hash_differs",
+    "left": "type:gateway#InvoiceDto",
+    "right": "type:billing#InvoiceDto"
+  },
+  "findings": []
+}

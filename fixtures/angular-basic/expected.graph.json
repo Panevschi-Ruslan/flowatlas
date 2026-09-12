@@ -1,0 +1,1023 @@
+{
+  "schemaVersion": 3,
+  "repo": "angular-basic",
+  "generatedAt": "2026-09-10T18:28:09.131Z",
+  "nodes": [
+    {
+      "id": "angular-basic#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "angular-basic",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "angular-basic#src/app/auth.service.ts:AuthService",
+      "type": "provider",
+      "label": "AuthService",
+      "repo": "angular-basic",
+      "file": "src/app/auth.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "angular-basic#src/app/auth.service.ts:AuthService.token",
+      "type": "method",
+      "label": "AuthService.token",
+      "repo": "angular-basic",
+      "file": "src/app/auth.service.ts",
+      "line": 6
+    },
+    {
+      "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+      "type": "ui_component",
+      "label": "CheckoutComponent",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 15,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-checkout"
+      }
+    },
+    {
+      "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.ngOnInit",
+      "type": "method",
+      "label": "CheckoutComponent.ngOnInit",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 42
+    },
+    {
+      "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.onChange",
+      "type": "method",
+      "label": "CheckoutComponent.onChange",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 54
+    },
+    {
+      "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.onInput",
+      "type": "method",
+      "label": "CheckoutComponent.onInput",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 58
+    },
+    {
+      "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.save",
+      "type": "method",
+      "label": "CheckoutComponent.save",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 50
+    },
+    {
+      "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.submit",
+      "type": "method",
+      "label": "CheckoutComponent.submit",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 46
+    },
+    {
+      "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.token",
+      "type": "method",
+      "label": "CheckoutComponent.token",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 62
+    },
+    {
+      "id": "angular-basic#src/app/legacy-panel.component.ts:LegacyPanelComponent",
+      "type": "ui_component",
+      "label": "LegacyPanelComponent",
+      "repo": "angular-basic",
+      "file": "src/app/legacy-panel.component.ts",
+      "line": 10,
+      "kind": "declared",
+      "meta": {
+        "standalone": false,
+        "module": "OrdersModule",
+        "selector": "app-legacy-panel",
+        "templateUrl": "./legacy-panel.component.html"
+      }
+    },
+    {
+      "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "provider",
+      "label": "OrdersApiService",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 16,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.create",
+      "type": "method",
+      "label": "OrdersApiService.create",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 26
+    },
+    {
+      "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.list",
+      "type": "method",
+      "label": "OrdersApiService.list",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 31
+    },
+    {
+      "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.onOrderUpdated",
+      "type": "method",
+      "label": "OrdersApiService.onOrderUpdated",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 60
+    },
+    {
+      "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.refresh",
+      "type": "method",
+      "label": "OrdersApiService.refresh",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 41
+    },
+    {
+      "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.remove",
+      "type": "method",
+      "label": "OrdersApiService.remove",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 36
+    },
+    {
+      "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.send",
+      "type": "method",
+      "label": "OrdersApiService.send",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 50
+    },
+    {
+      "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.updateStatus",
+      "type": "method",
+      "label": "OrdersApiService.updateStatus",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 55
+    },
+    {
+      "id": "angular-basic#src/app/orders-list.component.ts:OrdersListComponent",
+      "type": "ui_component",
+      "label": "OrdersListComponent",
+      "repo": "angular-basic",
+      "file": "src/app/orders-list.component.ts",
+      "line": 6,
+      "kind": "declared",
+      "meta": {
+        "standalone": false,
+        "module": "OrdersModule",
+        "selector": "app-orders-list",
+        "templateUrl": "./orders-list.component.html"
+      }
+    },
+    {
+      "id": "angular-basic#src/app/orders-list.component.ts:OrdersListComponent.reload",
+      "type": "method",
+      "label": "OrdersListComponent.reload",
+      "repo": "angular-basic",
+      "file": "src/app/orders-list.component.ts",
+      "line": 13
+    },
+    {
+      "id": "angular-basic#src/app/orders.module.ts:OrdersModule",
+      "type": "module",
+      "label": "OrdersModule",
+      "repo": "angular-basic",
+      "file": "src/app/orders.module.ts",
+      "line": 9,
+      "kind": "ngmodule",
+      "meta": {
+        "providers": [
+          "angular-basic#src/app/auth.service.ts:AuthService"
+        ]
+      }
+    },
+    {
+      "id": "angular-basic#src/app/profile.component.ts:ProfileComponent",
+      "type": "ui_component",
+      "label": "ProfileComponent",
+      "repo": "angular-basic",
+      "file": "src/app/profile.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-profile"
+      }
+    },
+    {
+      "id": "angular-basic#src/app/reports.component.ts:ReportsComponent",
+      "type": "ui_component",
+      "label": "ReportsComponent",
+      "repo": "angular-basic",
+      "file": "src/app/reports.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-reports"
+      }
+    },
+    {
+      "id": "angular-basic#src/app/settings.component.ts:SettingsComponent",
+      "type": "ui_component",
+      "label": "SettingsComponent",
+      "repo": "angular-basic",
+      "file": "src/app/settings.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-settings"
+      }
+    },
+    {
+      "id": "angular-basic#src/app/shared.module.ts:SharedModule",
+      "type": "module",
+      "label": "SharedModule",
+      "repo": "angular-basic",
+      "file": "src/app/shared.module.ts",
+      "line": 4,
+      "kind": "ngmodule"
+    },
+    {
+      "id": "channel:order.updated",
+      "type": "channel",
+      "label": "order.updated",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 60,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "marker"
+        ]
+      }
+    },
+    {
+      "id": "consumer:angular-basic#src/app/orders-api.service.ts:OrdersApiService.onOrderUpdated",
+      "type": "consumer",
+      "label": "OrdersApiService.onOrderUpdated",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 60,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "adapter": "marker",
+        "decorator": "flowatlas-consumes",
+        "entryId": null
+      }
+    },
+    {
+      "id": "repo:angular-basic",
+      "type": "repo",
+      "label": "angular-basic",
+      "repo": "angular-basic",
+      "meta": {
+        "stats": {
+          "files": 15,
+          "classes": 10,
+          "templates": 5,
+          "skippedExternalCalls": {
+            "@angular/common": 4
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:20:11",
+      "type": "ui_action",
+      "label": "ngSubmit=\"save(form)\"",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 20,
+      "kind": "submit",
+      "meta": {
+        "event": "ngSubmit",
+        "handler": "save(form)",
+        "component": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts",
+        "args": [
+          "form"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:21:14",
+      "type": "ui_action",
+      "label": "change=\"onChange($event)\"",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 21,
+      "kind": "change",
+      "meta": {
+        "event": "change",
+        "handler": "onChange($event)",
+        "component": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts",
+        "args": [
+          "$event"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:21:42",
+      "type": "ui_action",
+      "label": "input=\"onInput($event)\"",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 21,
+      "kind": "input",
+      "meta": {
+        "event": "input",
+        "handler": "onInput($event)",
+        "component": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts",
+        "args": [
+          "$event"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:21:68",
+      "type": "ui_action",
+      "label": "keyup.enter=\"submit()\"",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 21,
+      "kind": "keyup",
+      "meta": {
+        "event": "keyup.enter",
+        "handler": "submit()",
+        "component": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:22:15",
+      "type": "ui_action",
+      "label": "click=\"submit()\"",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 22,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "submit()",
+        "component": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:23:15",
+      "type": "ui_action",
+      "label": "click=\"orders.refresh()\"",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 23,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "orders.refresh()",
+        "component": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:24:15",
+      "type": "ui_action",
+      "label": "click=\"sumbit()\"",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 24,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "sumbit()",
+        "component": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:25:15",
+      "type": "ui_action",
+      "label": "click=\"open = !open\"",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 25,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "open = !open",
+        "component": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:26:10",
+      "type": "ui_action",
+      "label": "routerLink=\"/orders/:id\"",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 26,
+      "kind": "route",
+      "meta": {
+        "event": "routerLink",
+        "handler": "/orders/:id",
+        "component": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts",
+        "route": "/orders/:id"
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:27:10",
+      "type": "ui_action",
+      "label": "routerLink=\"/settings\"",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 27,
+      "kind": "route",
+      "meta": {
+        "event": "routerLink",
+        "handler": "/settings",
+        "component": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts",
+        "route": "/settings"
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:28:10",
+      "type": "ui_action",
+      "label": "routerLink=\"/reports\"",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 28,
+      "kind": "route",
+      "meta": {
+        "event": "routerLink",
+        "handler": "/reports",
+        "component": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts",
+        "route": "/reports"
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:29:10",
+      "type": "ui_action",
+      "label": "routerLink=\"/profile\"",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 29,
+      "kind": "route",
+      "meta": {
+        "event": "routerLink",
+        "handler": "/profile",
+        "component": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts",
+        "route": "/profile"
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:30:10",
+      "type": "ui_action",
+      "label": "routerLink=\"/archive\"",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 30,
+      "kind": "route",
+      "meta": {
+        "event": "routerLink",
+        "handler": "/archive",
+        "component": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts",
+        "route": "/archive"
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:42:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "angular-basic",
+      "file": "src/app/checkout.component.ts",
+      "line": 42,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/orders-list.component.html:3:13",
+      "type": "ui_action",
+      "label": "click=\"reload()\"",
+      "repo": "angular-basic",
+      "file": "src/app/orders-list.component.html",
+      "line": 3,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "reload()",
+        "component": "angular-basic#src/app/orders-list.component.ts:OrdersListComponent",
+        "template": "src/app/orders-list.component.html"
+      }
+    },
+    {
+      "id": "ui_api_call:angular-basic#src/app/orders-api.service.ts:27:12",
+      "type": "ui_api_call",
+      "label": "POST /orders",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:angular-basic#OrderDto",
+        "bodyType": "type:angular-basic#CreateOrderDto",
+        "package": "@angular/common/http",
+        "via": "template-env"
+      }
+    },
+    {
+      "id": "ui_api_call:angular-basic#src/app/orders-api.service.ts:32:12",
+      "type": "ui_api_call",
+      "label": "GET /orders",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 32,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": "type:angular-basic#OrderDto[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "const"
+      }
+    },
+    {
+      "id": "ui_api_call:angular-basic#src/app/orders-api.service.ts:37:12",
+      "type": "ui_api_call",
+      "label": "DELETE /orders/:param",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 37,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "${apiUrl}/orders/:param",
+        "path": "/orders/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env"
+      }
+    },
+    {
+      "id": "ui_api_call:angular-basic#src/app/orders-api.service.ts:51:12",
+      "type": "ui_api_call",
+      "label": "GET ?",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 51,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": "unknown",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": null
+      }
+    },
+    {
+      "id": "ui_api_call:angular-basic#src/app/orders-api.service.ts:55:3",
+      "type": "ui_api_call",
+      "label": "PATCH /orders/:param/status",
+      "repo": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 55,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "url": "/orders/:param/status",
+        "path": "/orders/:param/status",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "marker"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+      "to": "angular-basic#src/app/auth.service.ts:AuthService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 38,
+      "meta": {
+        "via": "field-inject"
+      }
+    },
+    {
+      "from": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+      "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 40
+    },
+    {
+      "from": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
+      "to": "angular-basic#src/app/shared.module.ts:SharedModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 18
+    },
+    {
+      "from": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.ngOnInit",
+      "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 43
+    },
+    {
+      "from": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.save",
+      "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 51
+    },
+    {
+      "from": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.submit",
+      "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 47
+    },
+    {
+      "from": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.token",
+      "to": "angular-basic#src/app/auth.service.ts:AuthService.token",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 63
+    },
+    {
+      "from": "angular-basic#src/app/orders-api.service.ts:OrdersApiService",
+      "to": "angular-basic#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 21
+    },
+    {
+      "from": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.create",
+      "to": "ui_api_call:angular-basic#src/app/orders-api.service.ts:27:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 27
+    },
+    {
+      "from": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.list",
+      "to": "ui_api_call:angular-basic#src/app/orders-api.service.ts:32:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 32
+    },
+    {
+      "from": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.refresh",
+      "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 42
+    },
+    {
+      "from": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.remove",
+      "to": "ui_api_call:angular-basic#src/app/orders-api.service.ts:37:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 37
+    },
+    {
+      "from": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.send",
+      "to": "ui_api_call:angular-basic#src/app/orders-api.service.ts:51:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 51
+    },
+    {
+      "from": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.updateStatus",
+      "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.send",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 56
+    },
+    {
+      "from": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.updateStatus",
+      "to": "ui_api_call:angular-basic#src/app/orders-api.service.ts:55:3",
+      "type": "calls",
+      "confidence": "marker",
+      "file": "src/app/orders-api.service.ts",
+      "line": 55
+    },
+    {
+      "from": "angular-basic#src/app/orders-list.component.ts:OrdersListComponent",
+      "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders-list.component.ts",
+      "line": 11
+    },
+    {
+      "from": "angular-basic#src/app/orders-list.component.ts:OrdersListComponent.reload",
+      "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-list.component.ts",
+      "line": 14
+    },
+    {
+      "from": "angular-basic#src/app/orders.module.ts:OrdersModule",
+      "to": "angular-basic#src/app/shared.module.ts:SharedModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app/orders.module.ts",
+      "line": 11
+    },
+    {
+      "from": "channel:order.updated",
+      "to": "consumer:angular-basic#src/app/orders-api.service.ts:OrdersApiService.onOrderUpdated",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/app/orders-api.service.ts",
+      "line": 60
+    },
+    {
+      "from": "consumer:angular-basic#src/app/orders-api.service.ts:OrdersApiService.onOrderUpdated",
+      "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.onOrderUpdated",
+      "type": "handles",
+      "confidence": "marker",
+      "file": "src/app/orders-api.service.ts",
+      "line": 60
+    },
+    {
+      "from": "ui_action:angular-basic#src/app/checkout.component.ts:20:11",
+      "to": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.save",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 20
+    },
+    {
+      "from": "ui_action:angular-basic#src/app/checkout.component.ts:21:14",
+      "to": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.onChange",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 21
+    },
+    {
+      "from": "ui_action:angular-basic#src/app/checkout.component.ts:21:42",
+      "to": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.onInput",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 21
+    },
+    {
+      "from": "ui_action:angular-basic#src/app/checkout.component.ts:21:68",
+      "to": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.submit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 21
+    },
+    {
+      "from": "ui_action:angular-basic#src/app/checkout.component.ts:22:15",
+      "to": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.submit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 22
+    },
+    {
+      "from": "ui_action:angular-basic#src/app/checkout.component.ts:23:15",
+      "to": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.refresh",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 23
+    },
+    {
+      "from": "ui_action:angular-basic#src/app/checkout.component.ts:26:10",
+      "to": "angular-basic#src/app/orders-list.component.ts:OrdersListComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 26
+    },
+    {
+      "from": "ui_action:angular-basic#src/app/checkout.component.ts:27:10",
+      "to": "angular-basic#src/app/settings.component.ts:SettingsComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 27
+    },
+    {
+      "from": "ui_action:angular-basic#src/app/checkout.component.ts:28:10",
+      "to": "angular-basic#src/app/reports.component.ts:ReportsComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 28
+    },
+    {
+      "from": "ui_action:angular-basic#src/app/checkout.component.ts:29:10",
+      "to": "angular-basic#src/app/profile.component.ts:ProfileComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 29
+    },
+    {
+      "from": "ui_action:angular-basic#src/app/checkout.component.ts:42:3",
+      "to": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 42
+    },
+    {
+      "from": "ui_action:angular-basic#src/app/orders-list.component.html:3:13",
+      "to": "angular-basic#src/app/orders-list.component.ts:OrdersListComponent.reload",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders-list.component.html",
+      "line": 3
+    }
+  ],
+  "types": {
+    "type:angular-basic#CreateOrderDto": {
+      "name": "CreateOrderDto",
+      "kind": "object",
+      "declaredIn": "angular-basic#src/app/order.dto.ts",
+      "structuralHash": "f01d0678ad28409a",
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:angular-basic#OrderDto": {
+      "name": "OrderDto",
+      "kind": "object",
+      "declaredIn": "angular-basic#src/app/order.dto.ts",
+      "structuralHash": "049458765787b28c",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app/app.routes.ts",
+      "line": 31,
+      "reason": "route-loader-unread",
+      "hint": "Which screen this route loads was not read, so no link to it reaches one. A loader written as () => import('./x').then((m) => m.X) is followed; a specifier built at run time is not.",
+      "symbol": "/archive"
+    },
+    {
+      "file": "src/app/checkout.component.ts",
+      "line": 24,
+      "reason": "handler-not-found",
+      "hint": "No method named sumbit is declared on CheckoutComponent.",
+      "symbol": "CheckoutComponent (click)=\"sumbit()\""
+    },
+    {
+      "file": "src/app/checkout.component.ts",
+      "line": 25,
+      "reason": "handler-not-a-method",
+      "level": "info",
+      "hint": "The binding is an assignment, or a call on something that is not an injected class, so no method node answers it.",
+      "symbol": "CheckoutComponent (click)=\"open = !open\""
+    },
+    {
+      "file": "src/app/checkout.component.ts",
+      "line": 30,
+      "reason": "route-screen-unread",
+      "level": "info",
+      "hint": "A route answers this link, but nothing in the configuration said which component it shows — a redirect, or a loader that was not read.",
+      "symbol": "CheckoutComponent /archive"
+    },
+    {
+      "file": "src/app/legacy-panel.component.ts",
+      "line": 12,
+      "reason": "template-not-found",
+      "hint": "Could not read ./legacy-panel.component.html. Check templateUrl relative to the component file.",
+      "symbol": "LegacyPanelComponent"
+    },
+    {
+      "file": "src/app/orders-api.service.ts",
+      "line": 22,
+      "reason": "inject-token-unresolved",
+      "level": "info",
+      "hint": "The token is not a class, so there is nothing to point an edge at. Expected for an InjectionToken.",
+      "symbol": "OrdersApiService.constructor[1]"
+    },
+    {
+      "file": "src/app/orders-api.service.ts",
+      "line": 51,
+      "reason": "api-path-dynamic",
+      "hint": "The address is built at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.",
+      "symbol": "this.http.get<unknown>(this.base + path)"
+    }
+  ]
+}

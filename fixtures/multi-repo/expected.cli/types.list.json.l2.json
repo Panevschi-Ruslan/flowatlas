@@ -1,0 +1,229 @@
+{
+  "types": [
+    {
+      "id": "type:billing#CreateInvoiceDto",
+      "name": "CreateInvoiceDto",
+      "kind": "object",
+      "declaredIn": "billing#src/invoices/invoice.dto.ts",
+      "structuralHash": "7b74f42d53219fdf",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "id": "type:@fx/contracts#CreateOrderDto",
+      "name": "CreateOrderDto",
+      "kind": "object",
+      "declaredIn": "@fx/contracts",
+      "structuralHash": "b192e84bf006733f",
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "type:@fx/contracts#Money",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "id": "type:billing#InvoiceDto",
+      "name": "InvoiceDto",
+      "kind": "object",
+      "declaredIn": "billing#src/invoices/invoice.dto.ts",
+      "structuralHash": "98b4593efb5a62b5",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "id": "type:gateway#InvoiceDto",
+      "name": "InvoiceDto",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/invoice.dto.ts",
+      "structuralHash": "78dbe5b1e055a99c",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "id": "type:billing#InvoiceRequestedEvent",
+      "name": "InvoiceRequestedEvent",
+      "kind": "object",
+      "declaredIn": "billing#src/invoices/invoice.dto.ts",
+      "structuralHash": "7b74f42d53219fdf",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "id": "type:@fx/contracts#Money",
+      "name": "Money",
+      "kind": "object",
+      "declaredIn": "@fx/contracts",
+      "structuralHash": "fe1facfc23710e30",
+      "fields": [
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "id": "type:billing#OrderCreatedEvent",
+      "name": "OrderCreatedEvent",
+      "kind": "object",
+      "declaredIn": "billing#src/invoices/invoice.dto.ts",
+      "structuralHash": "13c4f1b476f94b6d",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "{amount:number;currency:string}",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "id": "type:@fx/contracts#OrderDto",
+      "name": "OrderDto",
+      "kind": "object",
+      "declaredIn": "@fx/contracts",
+      "structuralHash": "1fe9aae8bb47c53c",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "type:@fx/contracts#OrderStatus",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "type:@fx/contracts#Money",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "id": "type:web#OrderDto",
+      "name": "OrderDto",
+      "kind": "object",
+      "declaredIn": "web#src/app/order.dto.ts",
+      "structuralHash": "13c4f1b476f94b6d",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "{amount:number;currency:string}",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "id": "type:@fx/contracts#OrderStatus",
+      "name": "OrderStatus",
+      "kind": "union",
+      "declaredIn": "@fx/contracts",
+      "structuralHash": "3961cde6eaf5d2f0",
+      "fields": []
+    }
+  ],
+  "total": 10
+}

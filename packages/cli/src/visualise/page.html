@@ -1,0 +1,1004 @@
+<title>__TITLE__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ground: #e9ecea;
+    --paper: #f6f8f6;
+    --raise: #ffffff;
+    --ink: #171b19;
+    --muted: #5f6d67;
+    --faint: #8b9891;
+    --rule: #cbd3ce;
+    --rule-soft: #dde3df;
+    --accent: #0d5c55;
+    --accent-soft: #d3e5e1;
+
+    --good: #3f7d3f;
+    --warn: #97701a;
+    --bad: #a03626;
+
+    --s-0: #2f6f8f;
+    --s-1: #a2542f;
+    --s-2: #5b6e2f;
+    --s-3: #7a3f6d;
+    --s-4: #b08424;
+
+    --f-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --f-ui: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --f-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --gap: 18px;
+    --radius: 3px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --ground: #101412;
+      --paper: #171d1a;
+      --raise: #1e2622;
+      --ink: #e4e9e6;
+      --muted: #94a39c;
+      --faint: #6d7b74;
+      --rule: #2b3531;
+      --rule-soft: #222b27;
+      --accent: #5ec7bb;
+      --accent-soft: #123833;
+
+      --good: #7bbb72;
+      --warn: #d8ac52;
+      --bad: #e08573;
+
+      --s-0: #6fb2d4;
+      --s-1: #e0916a;
+      --s-2: #a4bd6a;
+      --s-3: #c68fb8;
+      --s-4: #e0bd63;
+    }
+  }
+
+  :root[data-theme='dark'] {
+    --ground: #101412;
+    --paper: #171d1a;
+    --raise: #1e2622;
+    --ink: #e4e9e6;
+    --muted: #94a39c;
+    --faint: #6d7b74;
+    --rule: #2b3531;
+    --rule-soft: #222b27;
+    --accent: #5ec7bb;
+    --accent-soft: #123833;
+
+    --good: #7bbb72;
+    --warn: #d8ac52;
+    --bad: #e08573;
+
+    --s-0: #6fb2d4;
+    --s-1: #e0916a;
+    --s-2: #a4bd6a;
+    --s-3: #c68fb8;
+    --s-4: #e0bd63;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-ui);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .shell {
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 26px 24px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  /* ── masthead ───────────────────────────────────────────────────────── */
+
+  .masthead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .wordmark {
+    font-family: var(--f-display);
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    margin: 4px 0 0;
+    color: var(--muted);
+    max-width: 62ch;
+  }
+
+  .built {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--faint);
+    text-align: right;
+    line-height: 1.7;
+  }
+
+  /* ── the reconciliation band ────────────────────────────────────────── */
+
+  .band {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+    gap: 1px;
+    background: var(--rule-soft);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .stat {
+    background: var(--paper);
+    padding: 12px 14px 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .stat dt {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--faint);
+    font-weight: 500;
+  }
+
+  .stat dd {
+    margin: 0;
+    font-family: var(--f-mono);
+    font-size: 21px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.15;
+  }
+
+  .stat small {
+    color: var(--muted);
+    font-size: 11.5px;
+    font-family: var(--f-ui);
+  }
+
+  .stat.is-good dd { color: var(--good); }
+  .stat.is-warn dd { color: var(--warn); }
+
+  /* ── service rail ───────────────────────────────────────────────────── */
+
+  .fleet {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .ship {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 6px 11px 6px 9px;
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--hue);
+    border-radius: var(--radius);
+    background: var(--paper);
+    font-size: 12.5px;
+    cursor: pointer;
+    color: inherit;
+    font-family: inherit;
+  }
+
+  .ship[aria-pressed='true'] {
+    background: var(--raise);
+    border-color: var(--hue);
+  }
+
+  .ship[aria-pressed='false'] { opacity: 0.5; }
+
+  .ship b { font-weight: 600; }
+
+  .ship span {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ship em {
+    font-style: normal;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--faint);
+  }
+
+  /* ── working area ───────────────────────────────────────────────────── */
+
+  .work {
+    display: grid;
+    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+    gap: var(--gap);
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .work { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  .panel {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--rule-soft);
+    flex-wrap: wrap;
+  }
+
+  .panel-head h2 {
+    font-family: var(--f-display);
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .hint {
+    font-size: 11.5px;
+    color: var(--faint);
+    font-family: var(--f-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type='search'],
+  select {
+    font-family: var(--f-ui);
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--raise);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 6px 9px;
+  }
+
+  input[type='search'] { width: 100%; }
+
+  .filters {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    max-height: 560px;
+  }
+
+  .list li + li { border-top: 1px solid var(--rule-soft); }
+
+  .row {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: 0;
+    border-left: 3px solid var(--hue);
+    padding: 8px 12px;
+    cursor: pointer;
+    color: inherit;
+    font-family: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .row:hover { background: var(--raise); }
+  .row[aria-current='true'] { background: var(--accent-soft); }
+
+  .row-name {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    word-break: break-word;
+  }
+
+  .row-meta {
+    font-size: 11px;
+    color: var(--faint);
+  }
+
+  .verb {
+    font-weight: 500;
+    color: var(--hue);
+  }
+
+  /* ── the walk ───────────────────────────────────────────────────────── */
+
+  .tabs {
+    display: flex;
+    gap: 2px;
+  }
+
+  .tab {
+    font-family: inherit;
+    font-size: 12px;
+    padding: 5px 11px;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    color: var(--muted);
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+
+  .tab[aria-selected='true'] {
+    background: var(--raise);
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+
+  .walk {
+    overflow: auto;
+    max-height: 620px;
+    padding: 4px 0 12px;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 10px;
+    padding: 3px 14px 3px 0;
+    padding-left: calc(var(--level) * 15px + 14px);
+    white-space: nowrap;
+    position: relative;
+  }
+
+  /* One hairline per level of depth, so the shape of the walk is readable
+     without spending characters on drawing it. */
+  .step[data-level]:not([data-level='0'])::before {
+    content: '';
+    position: absolute;
+    left: calc(var(--level) * 15px + 4px);
+    top: 0;
+    bottom: 0;
+    border-left: 1px solid var(--rule);
+  }
+
+  .step:hover { background: var(--raise); }
+
+  .via {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .via.is-marker { color: var(--warn); }
+  .via.is-heuristic { color: var(--warn); }
+  .via.is-runtime { color: var(--bad); }
+
+  .what {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 7px;
+    min-width: 0;
+  }
+
+  .glyph {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--raise);
+    background: var(--hue);
+    border-radius: 2px;
+    padding: 1px 4px;
+    flex: none;
+  }
+
+  .label {
+    font-family: var(--f-mono);
+    font-size: 12.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .where {
+    font-size: 11px;
+    color: var(--faint);
+    font-family: var(--f-mono);
+    text-align: right;
+  }
+
+  .crossing {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 5px 14px 5px 0;
+    padding: 4px 10px;
+    border-left: 3px solid var(--hue);
+    background: var(--raise);
+    border-radius: var(--radius);
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  .crossing b {
+    font-weight: 600;
+    color: var(--hue);
+    font-family: var(--f-ui);
+  }
+
+  .repeat { color: var(--faint); font-style: italic; }
+
+  .cut {
+    margin: 8px 14px 0 0;
+    padding: 7px 11px;
+    border: 1px dashed var(--rule);
+    border-radius: var(--radius);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ── tables ─────────────────────────────────────────────────────────── */
+
+  .sheet { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+
+  th {
+    text-align: left;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+    font-weight: 500;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+  }
+
+  td.mono {
+    font-family: var(--f-mono);
+    font-size: 11.5px;
+    word-break: break-word;
+  }
+
+  td.num {
+    font-family: var(--f-mono);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  tr:hover td { background: var(--raise); }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--f-mono);
+    font-size: 10.5px;
+    padding: 1px 6px;
+    border-radius: 2px;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .tag.is-good { color: var(--good); border-color: var(--good); }
+  .tag.is-warn { color: var(--warn); border-color: var(--warn); }
+  .tag.is-bad { color: var(--bad); border-color: var(--bad); }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 11.5px;
+    color: var(--muted);
+    padding: 10px 12px;
+    border-top: 1px solid var(--rule-soft);
+  }
+
+  .legend span { display: inline-flex; align-items: baseline; gap: 6px; }
+
+  .colophon {
+    color: var(--faint);
+    font-size: 12px;
+    border-top: 1px solid var(--rule);
+    padding-top: 14px;
+    max-width: 72ch;
+  }
+
+  .colophon code {
+    font-family: var(--f-mono);
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="shell">
+  <header class="masthead">
+    <div>
+      <h1 class="wordmark">__TITLE__</h1>
+      <p class="standfirst" id="standfirst"></p>
+    </div>
+    <div class="built" id="built"></div>
+  </header>
+
+  <dl class="band" id="band"></dl>
+
+  <div class="fleet" id="fleet"></div>
+
+  <div class="work">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Ways in</h2>
+        <span class="hint" id="entry-count"></span>
+      </div>
+      <div class="filters">
+        <input type="search" id="search" placeholder="Filter by path, name or service" aria-label="Filter ways in">
+        <select id="kind" aria-label="Kind of entry">
+          <option value="">All kinds</option>
+        </select>
+      </div>
+      <ul class="list" id="entries"></ul>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 id="walk-title">The walk</h2>
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" data-view="walk" aria-selected="true">Walk</button>
+          <button class="tab" role="tab" data-view="crossings" aria-selected="false">Crossings</button>
+          <button class="tab" role="tab" data-view="missing" aria-selected="false">Not joined</button>
+        </div>
+      </div>
+      <div class="filters" id="walk-controls">
+        <label class="hint" style="display:flex;align-items:center;gap:6px">
+          depth
+          <select id="depth">
+            <option>3</option><option>4</option><option>5</option>
+            <option selected>6</option><option>8</option><option>10</option>
+          </select>
+        </label>
+        <label class="hint" style="display:flex;align-items:center;gap:6px">
+          most nodes
+          <select id="cap">
+            <option>40</option><option selected>90</option><option>200</option><option>500</option>
+          </select>
+        </label>
+      </div>
+      <div class="walk" id="walk"></div>
+      <div class="legend" id="legend"></div>
+    </section>
+  </div>
+
+  <p class="colophon" id="colophon"></p>
+</div>
+
+<script type="application/json" id="graph">__DATA__</script>
+
+<script>
+  (() => {
+    const data = JSON.parse(document.getElementById('graph').textContent);
+    const { types, repos, kinds, files, edgeTypes, confidences } = data.dicts;
+
+    /* Node fields, as packed: type, label, repo, kind, file, line, meta. A node
+       is known by its position; only the ways in keep a name, in entryIds. */
+    const TY = 0, LB = 1, RP = 2, KD = 3, FL = 4, LN = 5, MT = 6;
+    const nodes = data.nodes;
+
+    const hueOf = (repoIndex) => `var(--s-${repoIndex % 5})`;
+    const repoName = (i) => repos[nodes[i][RP]];
+    const typeName = (i) => types[nodes[i][TY]];
+
+    /* Edges a walk follows outward. Guards hang off the entry, never descended. */
+    const FORWARD = new Set(['handles', 'calls', 'queries', 'caches', 'emits', 'consumes',
+      'http_calls', 'hits', 'triggers', 'reads_config']);
+    const CROSSES = new Set(['http_calls', 'hits']);
+
+    const out = nodes.map(() => []);
+    const guards = nodes.map(() => []);
+    for (const e of data.edges) {
+      const name = edgeTypes[e[2]];
+      if (name === 'guarded_by') guards[e[0]].push(e);
+      else if (FORWARD.has(name)) out[e[0]].push(e);
+    }
+
+    /* Short, readable stand-ins for node types; the vocabulary is the subject's. */
+    const GLYPH = {
+      entry: 'in', method: 'fn', provider: 'cls', db_query: 'db', table: 'tbl',
+      channel: 'ch', producer: 'pub', consumer: 'sub', http_out: 'out',
+      ui_component: 'view', ui_action: 'act', ui_api_call: 'req',
+      config_key: 'cfg', external_api: 'ext', module: 'mod', repo: 'repo',
+      guard: 'grd', interceptor: 'int', pipe: 'pipe',
+    };
+
+    /* ── the reconciliation band ─────────────────────────────────────── */
+
+    const r = data.report;
+    const band = document.getElementById('band');
+    const stat = (label, value, note, tone) => {
+      const el = document.createElement('div');
+      el.className = 'stat' + (tone ? ' is-' + tone : '');
+      el.innerHTML = `<dt>${label}</dt><dd>${value}</dd><small>${note}</small>`;
+      band.append(el);
+    };
+
+    stat('Graph', r.totals.nodes.toLocaleString() + ' nodes',
+      r.totals.edges.toLocaleString() + ' edges, ' + r.types.total.toLocaleString() + ' types');
+    stat('Service calls', r.httpOut.linked + ' / ' + r.httpOut.total + ' joined',
+      r.httpOut.external + ' third party, ' + r.httpOut.dynamic + ' built at run time',
+      r.httpOut.linked > 0 ? 'good' : null);
+    if (r.ui) {
+      stat('Browser calls', r.ui.resolved + ' / ' + r.ui.total + ' joined',
+        r.ui.unresolved + ' still unmatched', r.ui.resolved > 0 ? 'warn' : null);
+    }
+    stat('Routes reached', r.routes.called + ' / ' + r.routes.total,
+      (r.routes.total - r.routes.called) + ' nothing calls');
+    stat('Channels', r.channels.linked + ' / ' + r.channels.total + ' joined',
+      r.channels.noConsumers.length + ' with no handler',
+      r.channels.linked === 0 ? 'warn' : 'good');
+    stat('Left unresolved', r.totals.unresolved.toLocaleString(),
+      'each one recorded with a reason');
+
+    const read = r.services.filter((s) => s.skipped === null).length;
+    document.getElementById('standfirst').textContent =
+      `${read} of ${r.services.length} repositories read and joined into one graph. Pick a way in ` +
+      'on the left and follow it; a rule across the walk marks every point where it leaves one ' +
+      'service for another.';
+
+    document.getElementById('built').innerHTML =
+      'built ' + new Date(data.builtAt).toISOString().replace('T', ' ').slice(0, 19) + ' UTC<br>' +
+      r.services.map((s) => s.durationMs + 'ms ' + s.name).join(' &middot; ');
+
+    /* ── service rail, doubling as the filter ────────────────────────── */
+
+    const shown = new Set(repos);
+    const fleet = document.getElementById('fleet');
+    repos.forEach((name, i) => {
+      const summary = r.services.find((s) => s.name === name);
+      const b = document.createElement('button');
+      b.className = 'ship';
+      b.style.setProperty('--hue', hueOf(i));
+      b.setAttribute('aria-pressed', 'true');
+      b.innerHTML = `<b>${name}</b><em>${summary ? summary.type : ''}</em>` +
+        `<span>${summary ? summary.nodes.toLocaleString() : '0'} nodes</span>`;
+      b.addEventListener('click', () => {
+        if (shown.has(name)) shown.delete(name); else shown.add(name);
+        b.setAttribute('aria-pressed', String(shown.has(name)));
+        drawEntries();
+      });
+      fleet.append(b);
+    });
+
+    /* ── ways in ─────────────────────────────────────────────────────── */
+
+    const entryIx = [];
+    for (let i = 0; i < nodes.length; i += 1) {
+      const t = typeName(i);
+      if (t === 'entry' || t === 'ui_action') entryIx.push(i);
+    }
+    entryIx.sort((a, b) => {
+      const ra = repoName(a), rb = repoName(b);
+      if (ra !== rb) return ra < rb ? -1 : 1;
+      return nodes[a][LB] < nodes[b][LB] ? -1 : 1;
+    });
+
+    const kindSelect = document.getElementById('kind');
+    for (const k of [...new Set(entryIx.map((i) => kinds[nodes[i][KD]]).filter(Boolean))].sort()) {
+      const o = document.createElement('option');
+      o.value = k; o.textContent = k;
+      kindSelect.append(o);
+    }
+
+    const search = document.getElementById('search');
+    const listEl = document.getElementById('entries');
+    const countEl = document.getElementById('entry-count');
+    let current = null;
+
+    const matches = () => {
+      const q = search.value.trim().toLowerCase();
+      const kind = kindSelect.value;
+      return entryIx.filter((i) => {
+        if (!shown.has(repoName(i))) return false;
+        if (kind && kinds[nodes[i][KD]] !== kind) return false;
+        if (!q) return true;
+        return nodes[i][LB].toLowerCase().includes(q);
+      });
+    };
+
+    function drawEntries() {
+      const found = matches();
+      countEl.textContent = found.length.toLocaleString() + ' of ' + entryIx.length.toLocaleString();
+      listEl.replaceChildren();
+      const frag = document.createDocumentFragment();
+      for (const i of found.slice(0, 400)) {
+        const li = document.createElement('li');
+        const b = document.createElement('button');
+        b.className = 'row';
+        b.style.setProperty('--hue', hueOf(nodes[i][RP]));
+        if (i === current) b.setAttribute('aria-current', 'true');
+        const meta = nodes[i][MT] || {};
+        const name = meta.m
+          ? `<span class="verb">${meta.m}</span> ${meta.p || ''}`
+          : nodes[i][LB];
+        b.innerHTML = `<span class="row-name">${name}</span>` +
+          `<span class="row-meta">${repoName(i)} &middot; ${kinds[nodes[i][KD]] || typeName(i)}` +
+          (files[nodes[i][FL]] ? ' &middot; ' + files[nodes[i][FL]].split('/').pop() : '') + '</span>';
+        b.addEventListener('click', () => { current = i; drawEntries(); drawWalk(); });
+        li.append(b);
+        frag.append(li);
+      }
+      if (found.length > 400) {
+        const li = document.createElement('li');
+        li.innerHTML = `<div class="cut" style="margin:8px 12px">${(found.length - 400).toLocaleString()} more. Narrow the filter.</div>`;
+        frag.append(li);
+      }
+      listEl.append(frag);
+    }
+
+    /* ── the walk ────────────────────────────────────────────────────── */
+
+    const walkEl = document.getElementById('walk');
+    const titleEl = document.getElementById('walk-title');
+    const depthSel = document.getElementById('depth');
+    const capSel = document.getElementById('cap');
+
+
+    function drawWalk() {
+      if (current === null) return;
+      const depth = Number(depthSel.value);
+      const cap = Number(capSel.value);
+      walkEl.replaceChildren();
+      titleEl.textContent = nodes[current][LB];
+
+      const frag = document.createDocumentFragment();
+      let used = 0, over = 0;
+
+      const emit = (i, level, edge, path) => {
+        const row = document.createElement('div');
+        row.className = 'step';
+        row.style.setProperty('--hue', hueOf(nodes[i][RP]));
+        row.style.setProperty('--level', String(level));
+        row.dataset.level = String(level);
+        const t = typeName(i);
+        const meta = nodes[i][MT] || {};
+        const label = meta.m ? `${meta.m} ${meta.p || ''}` : nodes[i][LB];
+        const conf = edge ? confidences[edge[3]] : '';
+        row.innerHTML =
+          `<span class="what">` +
+            `<span class="glyph">${GLYPH[t] || t.slice(0, 4)}</span>` +
+            `<span class="label">${label}</span>` +
+          `</span>` +
+          `<span class="where">` +
+            (edge ? `<span class="via is-${conf}">${edgeTypes[edge[2]]}${conf === 'static' ? '' : ' &middot; ' + conf}</span>  ` : '') +
+            (files[nodes[i][FL]] ? files[nodes[i][FL]].split('/').pop() + (nodes[i][LN] ? ':' + nodes[i][LN] : '') : '') +
+          `</span>`;
+        frag.append(row);
+
+        const guarded = guards[i];
+        if (guarded.length > 0) {
+          const g = document.createElement('div');
+          g.className = 'crossing';
+          g.style.setProperty('--hue', hueOf(nodes[i][RP]));
+          g.style.marginLeft = (level * 15 + 28) + 'px';
+          g.innerHTML = '<b>runs first</b>' + guarded
+            .slice()
+            .sort((a, b) => a[0] - b[0])
+            .map((e) => nodes[e[1]][LB].replace(/\(.*/, ''))
+            .join(', ');
+          frag.append(g);
+        }
+      };
+
+      const queue = [{ i: current, level: 0, path: new Set([current]), edge: null }];
+      emit(current, 0, null);
+      used = 1;
+
+      while (queue.length > 0) {
+        const item = queue.shift();
+        if (item.level >= depth) continue;
+        const edges = out[item.i].slice().sort((a, b) => a[1] - b[1]);
+        for (const e of edges) {
+          const to = e[1];
+          if (item.path.has(to)) {
+            if (used < cap) {
+              used += 1;
+              const row = document.createElement('div');
+              row.className = 'step';
+              row.style.setProperty('--hue', hueOf(nodes[to][RP]));
+              row.style.setProperty('--level', String(item.level + 1));
+              row.dataset.level = String(item.level + 1);
+              row.innerHTML =
+                `<span class="what"><span class="repeat">already on this path: ${nodes[to][LB]}</span></span><span></span>`;
+              frag.append(row);
+            } else over += 1;
+            continue;
+          }
+          if (used >= cap) { over += 1; continue; }
+
+          if (CROSSES.has(edgeTypes[e[2]])) {
+            const cross = document.createElement('div');
+            cross.className = 'crossing';
+            cross.style.setProperty('--hue', hueOf(nodes[to][RP]));
+            cross.style.marginLeft = (item.level * 15 + 28) + 'px';
+            cross.innerHTML = `<b>${repoName(item.i)} &rarr; ${repoName(to)}</b>` +
+              `over ${edgeTypes[e[2]]}, ${confidences[e[3]]}`;
+            frag.append(cross);
+          }
+
+          used += 1;
+          emit(to, item.level + 1, e);
+          queue.push({ i: to, level: item.level + 1, path: new Set([...item.path, to]) });
+        }
+      }
+
+      if (over > 0) {
+        const cut = document.createElement('div');
+        cut.className = 'cut';
+        cut.textContent = over + ' more nodes. Raise the cap, or narrow the depth.';
+        frag.append(cut);
+      }
+      walkEl.append(frag);
+    }
+
+    /* ── crossings: every edge that leaves a service ─────────────────── */
+
+    function drawCrossings() {
+      titleEl.textContent = 'Every crossing';
+      const rows = data.edges
+        .filter((e) => CROSSES.has(edgeTypes[e[2]]))
+        .sort((a, b) => repoName(a[0]) < repoName(b[0]) ? -1 : 1);
+
+      const table = document.createElement('table');
+      table.innerHTML = '<thead><tr><th>From</th><th>To</th><th>Route</th><th>Trust</th></tr></thead>';
+      const body = document.createElement('tbody');
+      for (const e of rows) {
+        const from = nodes[e[0]], to = nodes[e[1]];
+        const meta = to[MT] || {};
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          `<td class="mono"><span class="tag" style="color:${hueOf(from[RP])};border-color:${hueOf(from[RP])}">${repos[from[RP]]}</span> ${files[from[FL]] ? files[from[FL]].split('/').pop() + ':' + from[LN] : from[LB]}</td>` +
+          `<td class="mono"><span class="tag" style="color:${hueOf(to[RP])};border-color:${hueOf(to[RP])}">${repos[to[RP]]}</span></td>` +
+          `<td class="mono">${meta.m || ''} ${meta.p || to[LB]}</td>` +
+          `<td><span class="tag is-${confidences[e[3]] === 'static' ? 'good' : 'warn'}">${edgeTypes[e[2]]} &middot; ${confidences[e[3]]}</span></td>`;
+        body.append(tr);
+      }
+      table.append(body);
+      const sheet = document.createElement('div');
+      sheet.className = 'sheet';
+      sheet.append(table);
+      walkEl.replaceChildren(sheet);
+    }
+
+    /* ── what did not join, and why ──────────────────────────────────── */
+
+    function drawMissing() {
+      titleEl.textContent = 'What did not join';
+      const table = document.createElement('table');
+      table.innerHTML = '<thead><tr><th>Reason</th><th class="num">Count</th><th>One of them</th></tr></thead>';
+      const body = document.createElement('tbody');
+      for (const u of data.unresolved) {
+        const tr = document.createElement('tr');
+        const tone = u.reason.includes('not-found') ? 'bad' : u.reason.includes('dynamic') ? 'warn' : '';
+        tr.innerHTML =
+          `<td><span class="tag${tone ? ' is-' + tone : ''}">${u.reason}</span></td>` +
+          `<td class="num">${u.count.toLocaleString()}</td>` +
+          `<td class="mono">${u.service ? u.service + ' &middot; ' : ''}${u.example}</td>`;
+        body.append(tr);
+      }
+      table.append(body);
+      const sheet = document.createElement('div');
+      sheet.className = 'sheet';
+      sheet.append(table);
+      walkEl.replaceChildren(sheet);
+    }
+
+    /* ── wiring ──────────────────────────────────────────────────────── */
+
+    const controls = document.getElementById('walk-controls');
+    let view = 'walk';
+    for (const tab of document.querySelectorAll('.tab')) {
+      tab.addEventListener('click', () => {
+        view = tab.dataset.view;
+        for (const other of document.querySelectorAll('.tab')) {
+          other.setAttribute('aria-selected', String(other === tab));
+        }
+        controls.hidden = view !== 'walk';
+        if (view === 'walk') drawWalk();
+        else if (view === 'crossings') drawCrossings();
+        else drawMissing();
+      });
+    }
+
+    search.addEventListener('input', drawEntries);
+    kindSelect.addEventListener('change', drawEntries);
+    depthSel.addEventListener('change', drawWalk);
+    capSel.addEventListener('change', drawWalk);
+
+    document.getElementById('legend').innerHTML =
+      '<span><b>Trust</b> static, read from the code &middot; marker, an annotation said so &middot; heuristic, a guess</span>' +
+      '<span><b>:param</b> a route hole, so one address matches every id</span>';
+
+    document.getElementById('colophon').innerHTML =
+      'Everything here was read from source, never run. A path shown as <code>/orders/:param/cancel</code> ' +
+      'is the route as registered; a caller writes a real id there. Where a call could not be ' +
+      'followed, it appears under <b>Not joined</b> with the reason rather than being dropped, which is the ' +
+      'difference between a map and a guess.';
+
+    /* Open on a way in that actually leaves a service rather than on an empty
+       shell. Which one that is gets computed from the graph in hand: walk the
+       forward edges backwards from every crossing, and take the first way in
+       the walk reached. Naming a route here would only ever fit one project. */
+    const reachesCrossing = (() => {
+      const back = nodes.map(() => []);
+      const seen = new Uint8Array(nodes.length);
+      const queue = [];
+      for (const e of data.edges) {
+        const name = edgeTypes[e[2]];
+        if (FORWARD.has(name)) back[e[1]].push(e[0]);
+        if (CROSSES.has(name) && !seen[e[0]]) { seen[e[0]] = 1; queue.push(e[0]); }
+      }
+      for (let head = 0; head < queue.length; head += 1) {
+        for (const prev of back[queue[head]]) {
+          if (!seen[prev]) { seen[prev] = 1; queue.push(prev); }
+        }
+      }
+      return seen;
+    })();
+
+    current = entryIx.find((i) => reachesCrossing[i]) ?? entryIx[0];
+    drawEntries();
+    drawWalk();
+  })();
+</script>

@@ -1,0 +1,677 @@
+#!/usr/bin/env node
+// Writes docs/index.html: the walkthrough as one page, for GitHub Pages.
+//
+//   node scripts/demo/page.mjs                 the site
+//   node scripts/demo/page.mjs one-file.html   the same page, self-contained
+//
+// On the site the recordings are referenced from `media/` beside the page, so it
+// is a few kilobytes and a browser caches each recording once. The second form
+// inlines them instead, for somewhere that can only take one file. Run it again
+// after `scripts/demo/record.sh` changes any of them.
+import { readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const REPO = 'https://github.com/Panevschi-Ruslan/flowatlas';
+const BLOB = `${REPO}/blob/main`;
+
+/** A recording, with the commands it runs named above it. */
+const rec = (file, commands, alt) => `
+  <figure class="rec">
+    <div class="rec-bar">${commands.map((c) => `<span>${c}</span>`).join('')}</div>
+    <img src="media/${file}" alt="${alt}" loading="lazy">
+  </figure>`;
+
+const steps = [
+  ['01', 'Point it at the repositories'],
+  ['02', 'Build'],
+  ['03', 'Ask what it could not read'],
+  ['04', 'Answer it in the configuration'],
+  ['05', 'Follow one request'],
+  ['06', 'Ask the other direction'],
+  ['07', 'Compare what crosses a boundary'],
+  ['08', 'See the shape of the whole thing'],
+  ['09', 'Ask what a branch changes'],
+  ['10', 'Give it to an agent'],
+];
+
+const toc = steps
+  .map(([n, t]) => `<a href="#s${n}"><span class="n">${n}</span><span>${t}</span></a>`)
+  .join('');
+
+const h2 = (n, t) => `<h2 id="s${n}"><span class="n">${n}</span>${t}</h2>`;
+
+const page = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>flowatlas walkthrough</title>
+<meta name="description" content="Ten recorded steps taking flowatlas from an empty directory to one graph across four repositories.">
+<meta property="og:title" content="flowatlas walkthrough">
+<meta property="og:description" content="One map of a project that lives in several repositories. Ten recorded steps.">
+<meta property="og:image" content="${REPO}/raw/main/docs/media/10-visualise.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>🗺️</text></svg>">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+:root {
+  --paper: #f2f2f3;
+  --surface: #ffffff;
+  --ink: #1a1b1e;
+  --muted: #64666c;
+  --rule: #d9dadd;
+  --accent: #7d2fa0;
+  --accent-soft: #efe5f4;
+  --good: #2f7415;
+  --term-bg: #121314;
+  --term-fg: #cccccc;
+  --term-dim: #6e6e6f;
+  --shadow: 0 1px 2px rgba(20,18,24,.06), 0 8px 28px rgba(20,18,24,.07);
+  --sans: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0b0c0d;
+    --surface: #17181a;
+    --ink: #e7e7e9;
+    --muted: #93959b;
+    --rule: #27292c;
+    --accent: #c77ae6;
+    --accent-soft: #23162b;
+    --good: #7cc45c;
+    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.45);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0b0c0d;
+  --surface: #17181a;
+  --ink: #e7e7e9;
+  --muted: #93959b;
+  --rule: #27292c;
+  --accent: #c77ae6;
+  --accent-soft: #23162b;
+  --good: #7cc45c;
+  --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.45);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 17.5px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; }
+.wrap { max-width: 1140px; margin: 0 auto; padding: 0 28px 120px; }
+.col { max-width: 68ch; }
+
+/* ---- top bar ---- */
+.bar {
+  display: flex; gap: 20px; align-items: center; justify-content: space-between;
+  padding: 20px 0 0; font-family: var(--mono); font-size: 12.5px;
+}
+.bar a { color: var(--muted); text-decoration: none; }
+.bar a:hover { color: var(--accent); }
+.bar .links { display: flex; gap: 20px; align-items: center; }
+button.theme {
+  font: inherit; font-family: var(--mono); color: var(--muted);
+  background: none; border: 1px solid var(--rule); border-radius: 6px;
+  padding: 4px 10px; cursor: pointer;
+}
+button.theme:hover { color: var(--accent); border-color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* ---- masthead ---- */
+header { padding: 56px 0 0; }
+.eyebrow {
+  font-family: var(--mono); font-size: 12px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted); margin: 0 0 18px;
+}
+h1 {
+  font-family: var(--sans); font-weight: 800; font-size: clamp(40px, 6vw, 68px);
+  line-height: 1.02; letter-spacing: -.028em; margin: 0 0 20px;
+  text-wrap: balance;
+}
+.lede { font-size: 21px; line-height: 1.52; margin: 0 0 8px; max-width: 62ch; }
+.lede em { font-style: normal; color: var(--accent); }
+.sub { color: var(--muted); max-width: 62ch; }
+
+/* ---- questions ---- */
+.asks {
+  margin: 40px 0 0; padding: 0; list-style: none;
+  display: grid; gap: 1px; background: var(--rule);
+  border: 1px solid var(--rule); border-radius: 10px; overflow: hidden;
+}
+.asks li {
+  background: var(--surface); padding: 13px 18px;
+  font-family: var(--mono); font-size: 13.5px; line-height: 1.5;
+}
+.asks li::before { content: "? "; color: var(--accent); }
+
+/* ---- the real project ---- */
+.figures { margin: 52px 0 0; }
+.figures .eyebrow { margin-bottom: 10px; }
+.fig-lede { max-width: 62ch; }
+.tiles {
+  display: grid; gap: 1px; margin: 24px 0 0;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  background: var(--rule); border: 1px solid var(--rule);
+  border-radius: 10px; overflow: hidden;
+}
+.tiles div { background: var(--surface); padding: 18px 20px 16px; }
+.tiles b {
+  display: block; font-family: var(--sans); font-weight: 800;
+  font-size: clamp(30px, 3.4vw, 40px); line-height: 1.05;
+  letter-spacing: -.03em; font-variant-numeric: tabular-nums;
+}
+.tiles span { display: block; margin-top: 6px; color: var(--muted); font-size: 14.5px; }
+.tiles .lead b { color: var(--accent); }
+.fig-note { margin: 22px 0 0; max-width: 62ch; }
+.pair {
+  display: grid; gap: 34px 48px; margin: 34px 0 0;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+}
+.pair h3 {
+  font-family: var(--mono); font-weight: 500; font-size: 11.5px;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  margin: 0 0 10px;
+}
+.pair table { width: 100%; min-width: 0; }
+.pair td:last-child {
+  text-align: right; white-space: nowrap; font-family: var(--mono);
+  font-size: 13.5px; font-variant-numeric: tabular-nums;
+}
+
+/* ---- contents ---- */
+nav.toc {
+  margin: 56px 0 0; display: grid; gap: 1px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  background: var(--rule); border: 1px solid var(--rule); border-radius: 10px;
+  overflow: hidden;
+}
+nav.toc a {
+  background: var(--surface); padding: 12px 16px; text-decoration: none;
+  color: var(--ink); display: flex; gap: 12px; align-items: baseline;
+  font-size: 15.5px;
+}
+nav.toc a:hover { background: var(--accent-soft); }
+nav.toc .n {
+  font-family: var(--mono); font-size: 12px; color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- sections ---- */
+section { margin: 64px 0 0; }
+h2 {
+  font-family: var(--sans); font-weight: 600; font-size: 27px;
+  letter-spacing: -.018em; line-height: 1.2; margin: 0 0 6px;
+  display: flex; gap: 14px; align-items: baseline; scroll-margin-top: 24px;
+}
+h2 .n {
+  font-family: var(--mono); font-size: 13px; color: var(--accent);
+  font-variant-numeric: tabular-nums; font-weight: 500;
+}
+p { margin: 0 0 16px; }
+a { color: var(--accent); text-underline-offset: 3px; }
+code {
+  font-family: var(--mono); font-size: .86em;
+  background: var(--accent-soft); padding: 1px 5px; border-radius: 4px;
+}
+
+/* ---- recordings ---- */
+.rec {
+  margin: 26px 0 30px; border-radius: 10px; overflow: hidden;
+  background: var(--term-bg); box-shadow: var(--shadow);
+}
+.rec-bar {
+  display: flex; flex-wrap: wrap; gap: 8px 18px;
+  padding: 11px 16px; border-bottom: 1px solid #232426;
+  font-family: var(--mono); font-size: 12px; color: var(--term-dim);
+}
+.rec-bar span::before { content: "$ "; color: #4ebf22; }
+.rec img { display: block; width: 100%; height: auto; }
+
+/* ---- terminal blocks ---- */
+pre {
+  font-family: var(--mono); font-size: 13px; line-height: 1.55;
+  background: var(--term-bg); color: var(--term-fg);
+  padding: 16px 18px; border-radius: 8px; overflow-x: auto; margin: 0 0 18px;
+}
+pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+pre .c { color: var(--term-dim); }
+
+/* ---- tables ---- */
+.tw { overflow-x: auto; margin: 0 0 20px; }
+table { border-collapse: collapse; font-size: 15px; min-width: 420px; }
+th, td { text-align: left; padding: 8px 22px 8px 0; border-bottom: 1px solid var(--rule); }
+th {
+  font-family: var(--mono); font-size: 11.5px; font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+}
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 14px; }
+td.good { color: var(--good); }
+
+/* ---- callout ---- */
+.note {
+  border-left: 2px solid var(--accent); padding: 2px 0 2px 18px;
+  color: var(--muted); font-size: 16px; margin: 0 0 20px;
+}
+
+footer {
+  margin: 96px 0 0; padding: 28px 0 0; border-top: 1px solid var(--rule);
+  color: var(--muted); font-size: 15px;
+}
+@media (max-width: 620px) {
+  body { font-size: 16.5px; }
+  .wrap { padding: 0 18px 80px; }
+  header { padding-top: 36px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="bar">
+  <a href="${REPO}">github.com/Panevschi-Ruslan/flowatlas</a>
+  <span class="links">
+    <a href="${BLOB}/docs/CLI.md">command reference</a>
+    <a href="${BLOB}/docs/ci.md">in CI</a>
+    <button class="theme" type="button" id="theme">theme</button>
+  </span>
+</div>
+
+<header>
+  <p class="eyebrow">flowatlas &middot; a walkthrough in ten steps</p>
+  <h1>One map of a project that lives in several repositories</h1>
+  <p class="lede">A command-line tool that reads several TypeScript
+    repositories with the compiler's own checker, <em>without running them</em>,
+    and joins them into one graph you can query — from a terminal or from a
+    coding agent. It knows NestJS and Angular, Telegraf and Hono, TypeORM,
+    Prisma, Mongo, Redis, Kafka and RabbitMQ.</p>
+  <p class="sub">A request made in one service is matched to the route that
+    answers it in another, a message published in one to whatever handles it, a
+    button in a browser to the endpoint it calls. <code>madge</code>,
+    <code>dependency-cruiser</code> and <code>nx graph</code> draw the imports
+    inside one repository, which is what a compiler already sees. This joins the
+    repositories. If your project is one repository, you do not need it.</p>
+  <pre style="margin-top:22px"><code>npm install -g @flowatlas/cli
+flowatlas init --dir .   <span class="c"># find the repositories under here</span>
+flowatlas build          <span class="c"># read them all and join them</span></code></pre>
+  <ul class="asks">
+    <li>If I change this method, which routes break, and whose?</li>
+    <li>Which service calls this endpoint, and does it still exist?</li>
+    <li>Who handles this event, and does anyone?</li>
+    <li>Which settings does this one request actually depend on?</li>
+    <li>What does the browser call that the server no longer serves?</li>
+  </ul>
+</header>
+
+<section class="figures">
+  <p class="eyebrow">measured on a real project</p>
+  <p class="fig-lede">Five repositories that ship as one product: three NestJS
+    services and two Angular frontends, with a shared package of types between
+    them. Read in full, from cold, in about five seconds. It is the project this
+    was built against — reproducible, and from one codebase whose author also
+    wrote the tool.</p>
+
+  <div class="tiles">
+    <div><b>251,056</b><span>lines of TypeScript and templates, over 1,443 files</span></div>
+    <div><b>11,239</b><span>nodes, joined by 19,710 edges</span></div>
+    <div class="lead"><b>376</b><span>of those edges cross a repository boundary</span></div>
+    <div><b>5.3s</b><span>to read all five; 0.6s when nothing changed</span></div>
+  </div>
+
+  <p class="fig-note">The third figure is the one that matters. Three hundred
+    and seventy six connections that no compiler in any of those five checkouts
+    can see, because each one only ever reads its own. 19,325 of the edges were
+    read from the code and 385 were inferred and marked <code>heuristic</code>;
+    none needed an annotation. Every edge says which of the three it is.</p>
+
+  <div class="pair">
+    <div>
+      <h3>ways in</h3>
+      <div class="tw"><table>
+        <tr><td>HTTP routes</td><td>615</td></tr>
+        <tr><td>bot commands, callbacks and events</td><td>65</td></tr>
+        <tr><td>routes something in the project reaches</td><td>353</td></tr>
+        <tr><td>routes nothing it can see calls</td><td>262</td></tr>
+      </table></div>
+    </div>
+    <div>
+      <h3>joined — first build, then after two settings</h3>
+      <div class="tw"><table>
+        <tr><td>browser requests matched to their route</td><td>333 → 333 / 356</td></tr>
+        <tr><td>calls between services matched</td><td>0 → 43 / 55</td></tr>
+        <tr><td>routes something reaches</td><td>322 → 353</td></tr>
+        <tr><td>message channels with a handler</td><td>0 → 2 / 12</td></tr>
+      </table></div>
+    </div>
+    <div>
+      <h3>found once they were joined</h3>
+      <div class="tw"><table>
+        <tr><td>contract errors, over 351 boundaries</td><td>107</td></tr>
+        <tr><td>names declared more than one way</td><td>55</td></tr>
+        <tr><td>channels handled nowhere</td><td>10</td></tr>
+        <tr><td>routes claimed by two handlers</td><td>4</td></tr>
+      </table></div>
+    </div>
+    <div>
+      <h3>what it says it cannot see</h3>
+      <div class="tw"><table>
+        <tr><td>findings to act on</td><td>40</td></tr>
+        <tr><td>places static reading cannot reach</td><td>750</td></tr>
+        <tr><td>rows they are folded into</td><td>19</td></tr>
+        <tr><td>edges inferred, and marked so</td><td>385</td></tr>
+      </table></div>
+    </div>
+  </div>
+
+  <p class="fig-note">The first column is what a first build gives you. The two
+    settings behind the second say which settings key addresses a service and
+    where a frontend's key points: a string in one repository and a route in
+    another are joined by a fact only the person who deployed them knows, and
+    <code>flowatlas doctor</code> names both with the line that wants them.</p>
+
+  <p class="fig-note">Nothing in that last table is dropped or rounded away.
+    Each row carries a file, a line, a reason and the one thing to change.
+    <code>flowatlas stats</code> prints these figures for your own project, and
+    <code>flowatlas doctor</code> prints the list behind them.</p>
+</section>
+
+<section>
+  <div class="col">
+    <p class="sub">The rest of this page is a walkthrough, recorded against
+      <a href="${BLOB}/fixtures/multi-repo"><code>fixtures/multi-repo</code></a>
+      rather than the project above: four services that do not share a
+      repository, small enough to read in a sitting, and already carrying the
+      same kinds of problem. A scene is a shell script, so what is on screen is
+      what actually ran.</p>
+  </div>
+  <nav class="toc">${toc}</nav>
+</section>
+
+<section class="col">
+  ${h2('01', 'Point it at the repositories')}
+  <p>Put yourself in a directory with the repositories under it, or beside them,
+    and run <code>init</code>. It reads each manifest, works out the name and the
+    kind, and writes <code>flowatlas.config.json</code>. It also registers the
+    graph server in every repository, so an agent working in any one of them can
+    ask about all of them.</p>
+  <pre><code>npm install -g @flowatlas/cli
+
+flowatlas init          <span class="c"># find the repositories and ask</span>
+flowatlas init --dir .  <span class="c"># look under this one, not beside it</span></code></pre>
+  <p class="note"><code>flowatlas init</code> with no <code>--dir</code> scans the
+    <em>parent</em> directory, which is what you want when the configuration
+    lives inside one of the repositories, and not what you want when it lives
+    above them.</p>
+</section>
+
+<section>
+  <div class="col">
+    ${h2('02', 'Build')}
+    <p><code>build</code> reads every repository in its own process and joins the
+      readings. A first build is rarely all green, and it is not supposed to
+      be.</p>
+  </div>
+  ${rec('01-init.gif', ['ls', 'flowatlas init --dir . --yes', 'flowatlas build'],
+        'flowatlas init finding four repositories, then flowatlas build joining them')}
+  <div class="col">
+    <p>Four requests leave the gateway for an address flowatlas cannot attribute to
+      any service, and only one of six browser requests found its route. Nothing
+      was guessed; all of it was recorded, with a file and a line.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    ${h2('03', 'Ask what it could not read')}
+    <p><code>doctor</code> turns those counts into a list of things to do. Every
+      row names the reason, the file, the line, the call, and what to change.</p>
+  </div>
+  ${rec('02-doctor.gif', ['flowatlas doctor --section desync --service gateway'],
+        'flowatlas doctor naming four calls rooted at a settings key no service claims')}
+  <div class="col">
+    <p>All four rows here say the same thing: a request is rooted at a settings
+      key, and no service in the configuration claims that key.</p>
+    <pre><code>flowatlas doctor --section unresolved  <span class="c"># what could not be read</span>
+flowatlas doctor --section desync      <span class="c"># calls matching no route</span>
+flowatlas doctor --section markers     <span class="c"># annotations gone stale</span>
+flowatlas doctor --strict              <span class="c"># exit 1 on a problem</span></code></pre>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    ${h2('04', 'Answer it in the configuration')}
+    <p>Two settings close four of the eleven findings, and three of the five
+      browser requests that had nowhere to go.</p>
+    <p><strong>baseUrlEnv</strong> is what turns a request into an edge: a
+      service declares the settings keys other services use to address it.
+      Without it, a request is recorded and joined to nothing.
+      <strong>apiTarget</strong> does the same for a browser, saying which
+      service a frontend's settings key points at.</p>
+  </div>
+  ${rec('03-configure.gif', ["jq -c '.services[]' flowatlas.config.json", 'flowatlas build'],
+        'the services array before and after two settings, and the build that follows')}
+  <div class="col">
+    <div class="tw"><table>
+      <tr><th></th><th>first build</th><th>after two settings</th></tr>
+      <tr><td>calls between services linked</td><td class="num">1</td><td class="num good">2</td></tr>
+      <tr><td>browser requests joined to a route</td><td class="num">1</td><td class="num good">3</td></tr>
+      <tr><td>routes something reaches</td><td class="num">2</td><td class="num good">4</td></tr>
+      <tr><td>rows left unread</td><td class="num">11</td><td class="num good">7</td></tr>
+    </table></div>
+    <p>What survives is no longer missing configuration. It is the project
+      disagreeing with itself, which is the thing worth knowing.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    ${h2('05', 'Follow one request')}
+    <p><code>flow</code> takes any way in and follows it until it stops.</p>
+  </div>
+  ${rec('04-flow.gif',
+        ["flowatlas flow 'ui_action:web#…' --format tree --depth 20",
+         "flowatlas config 'ui_action:web#…'"],
+        'a click in an Angular template followed through the gateway into the orders service')}
+  <div class="col">
+    <p>The first trace starts at a <code>(click)</code> in an Angular template
+      and ends at a row in a table in a different repository, crossing two
+      service boundaries on the way, with <code>unresolved on this path: 0</code>
+      to say nothing along it was guessed.</p>
+    <p>The second shows the other case. <code>BillingClient</code> builds its
+      address at run time from a registry, so nothing can be read from the
+      source; an annotation on the method declares where it goes, and the edge
+      is recorded with <code>confidence: marker</code> rather than
+      <code>static</code>, so it is always clear which edges were told rather
+      than found.</p>
+    <p>An entry can be named however you would say it aloud. These three are the
+      same route:</p>
+    <pre><code>flowatlas flow "POST /orders/12345"
+flowatlas flow "POST /orders/:param"
+flowatlas flow "entry:orders:http:POST:/orders/:param"</code></pre>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    ${h2('06', 'Ask the other direction')}
+    <p><code>impact</code> starts at a symbol and walks backwards to every way in
+      that reaches it. Give it a table and it tells you which routes would have
+      to be retested.</p>
+  </div>
+  ${rec('05-impact.gif',
+        ["flowatlas impact 'table:orders#Order' --format tree",
+         'flowatlas hotspots --type entry --max 5',
+         'flowatlas channel order.created --format tree'],
+        'impact walking backwards from a table, hotspots, and both ends of a channel')}
+  <div class="col">
+    <p><code>hotspots</code> ranks what the most things point at, and
+      <code>channel</code> shows both ends of a message channel — here, one with
+      a handler and no publisher anywhere in the project.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    ${h2('07', 'Compare what crosses a boundary')}
+    <p>Two services agree about a shape until one of them changes.
+      <code>contracts</code> compares what each side of every crossing declares,
+      field by field.</p>
+  </div>
+  ${rec('06-contracts.gif',
+        ['flowatlas contracts --severity error --max-nodes 4',
+         'flowatlas types --drift --format tree'],
+        'contract errors between the gateway and the web app, and two types declared twice')}
+  <div class="col">
+    <p>The frontend declares an <code>OrderDto</code> with four required fields,
+      and the gateway answers that route with none of them: it sends a wrapper
+      whose only field is <code>data</code>, of an unreadable shape. Nobody wrote
+      that down anywhere and no test covers it, because the two sides live in
+      different repositories.</p>
+    <p>The <code>unchecked</code> list matters as much as the findings. It says
+      which boundaries could not be compared and what to do about each, rather
+      than reporting them as agreement.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    ${h2('08', 'See the shape of the whole thing')}
+  </div>
+  ${rec('07-explore.gif',
+        ['flowatlas stats --format tree', 'flowatlas dead --kind channels', 'flowatlas cycles'],
+        'what the graph is made of, what nothing reaches, and no cycles')}
+  <div class="col">
+    <p><code>dead</code> is the one to read carefully. It says so itself: nothing
+      in it is proof, every row is a heuristic with the reason it fired
+      attached.</p>
+    <p><code>visualise</code> writes one self-contained page: no server, nothing
+      to fetch, nothing to install. It opens on the reconciliation, lists every
+      way in, and follows any one of them across service boundaries, marking
+      each crossing with what it was joined by and how much to trust it.</p>
+  </div>
+  <figure class="rec">
+    <div class="rec-bar"><span>flowatlas visualise --title "flowatlas demo"</span></div>
+    <img src="media/10-visualise.png" loading="lazy"
+         alt="the generated page, following a route from the gateway into the orders service">
+  </figure>
+  <div class="col">
+    <p>It is a report you can click, not a viewer you keep running. Attach it to
+      a review, or keep it beside a decision.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    ${h2('09', 'Ask what a branch changes')}
+    <p><code>diff</code> builds the graph at two revisions and reports what moved
+      between them.</p>
+  </div>
+  ${rec('08-diff.gif', ['git -C orders diff -U0', 'flowatlas diff HEAD'],
+        'one renamed route, and the gateway entry and browser button that depended on it')}
+  <div class="col">
+    <p>One route is renamed in the orders service. flowatlas names the gateway
+      route that called it and the browser button above that, in two
+      repositories the change does not touch. The output is markdown because its
+      destination is a pull request comment;
+      <code>--fail-on-contract-break</code> makes it a build failure instead.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    ${h2('10', 'Give it to an agent')}
+    <p><code>init</code> already registered the server in each repository. An
+      agent in any one of them gets the whole project over the Model Context
+      Protocol.</p>
+  </div>
+  ${rec('09-mcp.gif',
+        ['cat orders/.mcp.json', 'tools/list', 'find_symbol', 'impact'],
+        'the registered server, its ten tools, and two of them answering')}
+  <div class="col">
+    <p>Ten tools, and only one of them returns source code. A trace never drags
+      in the body of every method along it; the agent asks the graph which name
+      to look at, then asks for that one name.</p>
+    <pre><code>flowatlas mcp --install   <span class="c"># register everywhere, merging</span>
+flowatlas mcp --install --dry-run</code></pre>
+    <p>After that, <code>claude mcp list</code> shows <code>flowatlas</code>.
+      <a href="${BLOB}/docs/mcp.md">docs/mcp.md</a> is the whole thing: setup
+      for Claude Code, Cursor, VS Code and Claude Desktop, what each tool takes,
+      the order to call them in, and what to check when a client will not list
+      the server.</p>
+  </div>
+</section>
+
+<footer class="col">
+  <p>Reproduce every recording on this page from a clean checkout:</p>
+  <pre><code>brew install asciinema agg
+scripts/demo/record.sh        <span class="c"># all of them, into docs/media</span>
+scripts/demo/record.sh 04 09  <span class="c"># just those two</span></code></pre>
+  <p>The same walkthrough as markdown is
+    <a href="${BLOB}/docs/getting-started.md">docs/getting-started.md</a>. Every
+    flag of every command is in the
+    <a href="${BLOB}/docs/CLI.md">command reference</a>. MIT licensed.</p>
+</footer>
+
+</div>
+<script>
+  // Three states, as the platform has them: an explicit choice, or neither and
+  // the operating system decides.
+  const root = document.documentElement;
+  const stored = (() => { try { return localStorage.getItem('theme'); } catch { return null; } })();
+  if (stored === 'dark' || stored === 'light') root.dataset.theme = stored;
+  document.getElementById('theme').addEventListener('click', () => {
+    const dark = getComputedStyle(root).colorScheme === 'dark';
+    root.dataset.theme = dark ? 'light' : 'dark';
+    try { localStorage.setItem('theme', root.dataset.theme); } catch {}
+  });
+</script>
+</body>
+</html>
+`;
+
+writeFileSync(join(ROOT, 'docs', 'index.html'), page);
+
+// The self-contained form, for a place that takes one file and no folder beside
+// it. Same page: the document wrapper comes off and every recording moves into
+// the markup, so the two can never say different things.
+const selfContained = () => {
+  const uri = (file) => {
+    const kind = file.endsWith('.gif') ? 'image/gif' : 'image/png';
+    const bytes = readFileSync(join(ROOT, 'docs', 'media', file));
+    return `data:${kind};base64,${bytes.toString('base64')}`;
+  };
+  return page
+    .slice(page.indexOf('<title>'))
+    .replace('</head>\n<body>\n', '')
+    .replace(/<\/body>\n<\/html>\n?$/, '')
+    .replace(/ loading="lazy"/g, '')
+    .replace(/src="media\/([^"]+)"/g, (_, file) => `src="${uri(file)}"`);
+};
+
+const [, , inlineOut] = process.argv;
+if (inlineOut) {
+  const one = selfContained();
+  writeFileSync(inlineOut, one);
+  console.log(`${inlineOut}  ${(one.length / 1024 / 1024).toFixed(2)}MB`);
+}
+// GitHub Pages runs Jekyll over the folder unless told not to, which would try
+// to build the markdown beside this page and drop anything starting with `_`.
+writeFileSync(join(ROOT, 'docs', '.nojekyll'), '');
+console.log(`docs/index.html  ${(page.length / 1024).toFixed(0)}KB`);

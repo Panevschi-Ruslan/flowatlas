@@ -1,0 +1,7 @@
+~  order.created                          src/orders/orders.service.ts:49
+  -  producers (1)
+    ~  event order.created                orders/src/orders/orders.service.ts:49
+  -  consumers (1)
+    ~  InvoicesConsumer.onOrderCreated    billing/src/invoices/invoices.consumer.ts:17
+      -> InvoicesConsumer.onOrderCreated  billing/src/invoices/invoices.consumer.ts:17
+        -> InvoicesService.create         billing/src/invoices/invoices.service.ts:10

@@ -1,0 +1,716 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-leaves",
+  "generatedAt": "2026-09-09T22:29:14.529Z",
+  "nodes": [
+    {
+      "id": "cache_op:nest-leaves#src/orders/orders.service.ts:19:12",
+      "type": "cache_op",
+      "label": "get orders:index",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 19,
+      "meta": {
+        "op": "get",
+        "keyPattern": "orders:index",
+        "package": "ioredis",
+        "method": "get"
+      }
+    },
+    {
+      "id": "cache_op:nest-leaves#src/orders/orders.service.ts:24:12",
+      "type": "cache_op",
+      "label": "get orders:*",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 24,
+      "meta": {
+        "op": "get",
+        "keyPattern": "orders:*",
+        "package": "ioredis",
+        "method": "get"
+      }
+    },
+    {
+      "id": "cache_op:nest-leaves#src/orders/orders.service.ts:28:12",
+      "type": "cache_op",
+      "label": "set orders:*",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 28,
+      "meta": {
+        "op": "set",
+        "keyPattern": "orders:*",
+        "package": "ioredis",
+        "method": "set"
+      }
+    },
+    {
+      "id": "cache_op:nest-leaves#src/orders/orders.service.ts:32:12",
+      "type": "cache_op",
+      "label": "del orders:*",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 32,
+      "meta": {
+        "op": "del",
+        "keyPattern": "orders:*",
+        "package": "ioredis",
+        "method": "del"
+      }
+    },
+    {
+      "id": "cache_op:nest-leaves#src/orders/orders.service.ts:38:12",
+      "type": "cache_op",
+      "label": "del ?",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 38,
+      "meta": {
+        "op": "del",
+        "keyPattern": null,
+        "package": "ioredis",
+        "method": "del"
+      }
+    },
+    {
+      "id": "config_key:nest-leaves#FEATURE_X",
+      "type": "config_key",
+      "label": "FEATURE_X",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 70,
+      "meta": {
+        "key": "FEATURE_X",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:nest-leaves#NODE_ENV",
+      "type": "config_key",
+      "label": "NODE_ENV",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 72,
+      "meta": {
+        "key": "NODE_ENV",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:nest-leaves#ORDERS_URL",
+      "type": "config_key",
+      "label": "ORDERS_URL",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 44,
+      "meta": {
+        "key": "ORDERS_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:nest-leaves#TIMEOUT_MS",
+      "type": "config_key",
+      "label": "TIMEOUT_MS",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 71,
+      "meta": {
+        "key": "TIMEOUT_MS",
+        "source": "config.get",
+        "defaultValue": "5000"
+      }
+    },
+    {
+      "id": "entry:nest-leaves:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-leaves:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "external_api:api.stripe.com",
+      "type": "external_api",
+      "label": "api.stripe.com",
+      "repo": "nest-leaves",
+      "meta": {
+        "host": "api.stripe.com"
+      }
+    },
+    {
+      "id": "external_api:example.test",
+      "type": "external_api",
+      "label": "example.test",
+      "repo": "nest-leaves",
+      "meta": {
+        "host": "example.test"
+      }
+    },
+    {
+      "id": "http_out:nest-leaves#src/orders/orders.service.ts:44:12",
+      "type": "http_out",
+      "label": "GET /orders/:param",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 44,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/orders/${…}",
+        "path": "/orders/:param",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:nest-leaves#OrderDto",
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:nest-leaves#src/orders/orders.service.ts:49:12",
+      "type": "http_out",
+      "label": "POST /orders",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 49,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:nest-leaves#OrderDto",
+        "bodyType": "type:nest-leaves#OrderDto"
+      }
+    },
+    {
+      "id": "http_out:nest-leaves#src/orders/orders.service.ts:54:12",
+      "type": "http_out",
+      "label": "POST /v1/charges",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 54,
+      "meta": {
+        "method": "POST",
+        "url": "https://api.stripe.com/v1/charges",
+        "path": "/v1/charges",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "object",
+        "host": "api.stripe.com"
+      }
+    },
+    {
+      "id": "http_out:nest-leaves#src/orders/orders.service.ts:60:12",
+      "type": "http_out",
+      "label": "GET ?",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 60,
+      "meta": {
+        "method": "GET",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:nest-leaves#src/orders/orders.service.ts:65:12",
+      "type": "http_out",
+      "label": "HEAD /health",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 65,
+      "meta": {
+        "method": "HEAD",
+        "url": "https://example.test/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "example.test"
+      }
+    },
+    {
+      "id": "nest-leaves#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "nest-leaves",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-leaves#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "nest-leaves",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-leaves#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-leaves",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "method",
+      "label": "OrdersController.findOne",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.controller.ts:OrdersController.settings",
+      "type": "method",
+      "label": "OrdersController.settings",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.byId",
+      "type": "method",
+      "label": "OrdersService.byId",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 23
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.callAnything",
+      "type": "method",
+      "label": "OrdersService.callAnything",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 59
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.charge",
+      "type": "method",
+      "label": "OrdersService.charge",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 53
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 48
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.drop",
+      "type": "method",
+      "label": "OrdersService.drop",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 31
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.dropComputed",
+      "type": "method",
+      "label": "OrdersService.dropComputed",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.dynamicSetting",
+      "type": "method",
+      "label": "OrdersService.dynamicSetting",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 78
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.fetchOne",
+      "type": "method",
+      "label": "OrdersService.fetchOne",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 43
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.ping",
+      "type": "method",
+      "label": "OrdersService.ping",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 64
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.put",
+      "type": "method",
+      "label": "OrdersService.put",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 27
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.settings",
+      "type": "method",
+      "label": "OrdersService.settings",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 69
+    },
+    {
+      "id": "nest-leaves#src/orders/orders.service.ts:OrdersService.warm",
+      "type": "method",
+      "label": "OrdersService.warm",
+      "repo": "nest-leaves",
+      "file": "src/orders/orders.service.ts",
+      "line": 18
+    },
+    {
+      "id": "repo:nest-leaves",
+      "type": "repo",
+      "label": "nest-leaves",
+      "repo": "nest-leaves",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "ioredis": 5,
+            "@nestjs/axios": 2,
+            "@nestjs/config": 5,
+            "axios": 2
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-leaves:http:GET:/orders",
+      "to": "nest-leaves#src/orders/orders.controller.ts:OrdersController.settings",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "entry:nest-leaves:http:GET:/orders/:param",
+      "to": "nest-leaves#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "params": [
+        "string"
+      ],
+      "returns": "{data:unknown}",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "http_out:nest-leaves#src/orders/orders.service.ts:54:12",
+      "to": "external_api:api.stripe.com",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 54
+    },
+    {
+      "from": "http_out:nest-leaves#src/orders/orders.service.ts:65:12",
+      "to": "external_api:example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 65
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-leaves#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.controller.ts:OrdersController.findOne",
+      "to": "nest-leaves#src/orders/orders.service.ts:OrdersService.fetchOne",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "params": [
+        "string"
+      ],
+      "returns": "{data:unknown}"
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.controller.ts:OrdersController.settings",
+      "to": "nest-leaves#src/orders/orders.service.ts:OrdersService.settings",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-leaves#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 13
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-leaves#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 14
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.byId",
+      "to": "cache_op:nest-leaves#src/orders/orders.service.ts:24:12",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 24
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.callAnything",
+      "to": "http_out:nest-leaves#src/orders/orders.service.ts:60:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 60
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.charge",
+      "to": "http_out:nest-leaves#src/orders/orders.service.ts:54:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 54
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.create",
+      "to": "config_key:nest-leaves#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 49
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.create",
+      "to": "http_out:nest-leaves#src/orders/orders.service.ts:49:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 49
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.drop",
+      "to": "cache_op:nest-leaves#src/orders/orders.service.ts:32:12",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 32
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.dropComputed",
+      "to": "cache_op:nest-leaves#src/orders/orders.service.ts:38:12",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 38
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.fetchOne",
+      "to": "config_key:nest-leaves#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 44
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.fetchOne",
+      "to": "http_out:nest-leaves#src/orders/orders.service.ts:44:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 44
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.ping",
+      "to": "http_out:nest-leaves#src/orders/orders.service.ts:65:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 65
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.put",
+      "to": "cache_op:nest-leaves#src/orders/orders.service.ts:28:12",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 28
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.settings",
+      "to": "config_key:nest-leaves#FEATURE_X",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 70
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.settings",
+      "to": "config_key:nest-leaves#NODE_ENV",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 72
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.settings",
+      "to": "config_key:nest-leaves#TIMEOUT_MS",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 71
+    },
+    {
+      "from": "nest-leaves#src/orders/orders.service.ts:OrdersService.warm",
+      "to": "cache_op:nest-leaves#src/orders/orders.service.ts:19:12",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 19
+    }
+  ],
+  "types": {
+    "type:nest-leaves#OrderDto": {
+      "name": "OrderDto",
+      "kind": "object",
+      "declaredIn": "nest-leaves#src/orders/order.dto.ts",
+      "structuralHash": "e752b571a9fb0fb7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 38,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "this.cache.del"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 60,
+      "reason": "dynamic-http-url",
+      "hint": "The address is built at run time. Annotate the call with the service and route it reaches.",
+      "symbol": "axios.get(url)"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 79,
+      "reason": "dynamic-config-key",
+      "hint": "The key is computed, so nothing can be recorded. Use a literal key.",
+      "symbol": "this.config.get(name)"
+    }
+  ]
+}

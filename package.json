@@ -1,0 +1,38 @@
+{
+  "name": "flowatlas-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Workspace for flowatlas. Never published; the command is packages/cli.",
+  "license": "MIT",
+  "packageManager": "pnpm@10.30.3",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "invariants": "bash scripts/invariants.sh",
+    "fixtures:check": "node scripts/fixtures-check.mjs && node scripts/mcp-snapshots.mjs && node scripts/cli-snapshots.mjs",
+    "flowatlas": "node packages/cli/bin/flowatlas.js",
+    "mcp:snapshots": "node scripts/mcp-snapshots.mjs",
+    "cli:snapshots": "node scripts/cli-snapshots.mjs",
+    "check": "pnpm clean && pnpm -r build && pnpm -r typecheck && pnpm fixtures:run && pnpm -r test && pnpm invariants && pnpm fixtures:check",
+    "fixtures:run": "node scripts/fixtures-run.mjs",
+    "clean": "node scripts/clean.mjs"
+  },
+  "devDependencies": {
+    "@flowatlas/core": "workspace:*",
+    "@flowatlas/mcp": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "@types/node": "^26.5.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Panevschi-Ruslan/flowatlas.git"
+  }
+}

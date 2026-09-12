@@ -1,0 +1,6 @@
+{
+  "services": [{ "name": "nest-kafka", "repo": ".", "type": "nestjs" }],
+  "sharedPackages": ["@fixture/events"],
+  "output": ".flowatlas",
+  "types": { "maxDepth": 3 }
+}

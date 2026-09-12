@@ -1,0 +1,80 @@
+{
+  "type": {
+    "id": "type:@fx/contracts#OrderDto",
+    "name": "OrderDto",
+    "kind": "object",
+    "declaredIn": "@fx/contracts",
+    "structuralHash": "1fe9aae8bb47c53c",
+    "fields": [
+      {
+        "name": "id",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "customerId",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "status",
+        "type": "type:@fx/contracts#OrderStatus",
+        "optional": false
+      },
+      {
+        "name": "total",
+        "type": "type:@fx/contracts#Money",
+        "optional": false
+      }
+    ],
+    "meta": {
+      "declKind": "interface",
+      "exported": true,
+      "sharedPackage": "@fx/contracts"
+    }
+  },
+  "nested": {
+    "type:@fx/contracts#OrderStatus": {
+      "id": "type:@fx/contracts#OrderStatus",
+      "name": "OrderStatus",
+      "kind": "union",
+      "declaredIn": "@fx/contracts",
+      "structuralHash": "3961cde6eaf5d2f0",
+      "fields": [],
+      "members": [
+        "'created'",
+        "'paid'",
+        "'cancelled'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true,
+        "sharedPackage": "@fx/contracts"
+      }
+    },
+    "type:@fx/contracts#Money": {
+      "id": "type:@fx/contracts#Money",
+      "name": "Money",
+      "kind": "object",
+      "declaredIn": "@fx/contracts",
+      "structuralHash": "fe1facfc23710e30",
+      "fields": [
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true,
+        "sharedPackage": "@fx/contracts"
+      }
+    }
+  }
+}

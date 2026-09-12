@@ -1,0 +1,11 @@
+{
+  "name": "client",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@nestjs/axios": "^4.0.0",
+    "@nestjs/common": "^12.0.0",
+    "@nestjs/config": "^4.0.0",
+    "@nestjs/core": "^12.0.0"
+  }
+}

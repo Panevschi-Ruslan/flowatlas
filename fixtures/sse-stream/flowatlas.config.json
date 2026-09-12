@@ -1,0 +1,45 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "api" }
+    }
+  ],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "house-bus",
+          "channelKind": "channel",
+          "producers": [
+            {
+              "receiverType": ["EventPublisher", "Broadcaster"],
+              "method": "publish",
+              "channelArg": 0,
+              "payloadArg": 1,
+              "kind": "event"
+            }
+          ],
+          "subscribers": [
+            {
+              "receiverType": ["Broadcaster"],
+              "method": "pSubscribe",
+              "channelArg": 0,
+              "handlerArg": 1,
+              "kind": "event"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

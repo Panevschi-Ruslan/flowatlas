@@ -1,0 +1,19 @@
+{
+  "channel": {
+    "id": "channel:order.created",
+    "type": "channel",
+    "label": "order.created",
+    "loc": "src/orders/orders.service.ts:49",
+    "service": "orders"
+  },
+  "producers": [
+    {
+      "id": "producer:orders#src/orders/orders.service.ts:49:5",
+      "type": "producer",
+      "label": "event order.created",
+      "loc": "src/orders/orders.service.ts:49",
+      "service": "orders",
+      "kind": "event"
+    }
+  ]
+}

@@ -1,0 +1,541 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-pg",
+  "generatedAt": "2026-09-09T22:29:15.045Z",
+  "nodes": [
+    {
+      "id": "db_query:nest-pg#src/orders/orders.service.ts:10:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 10,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:nest-pg#src/orders/orders.service.ts:15:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 15,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders",
+          "customers"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:nest-pg#src/orders/orders.service.ts:23:12",
+      "type": "db_query",
+      "label": "write orders",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 23,
+      "meta": {
+        "op": "write",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:nest-pg#src/orders/orders.service.ts:28:12",
+      "type": "db_query",
+      "label": "write orders",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 28,
+      "meta": {
+        "op": "write",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:nest-pg#src/orders/orders.service.ts:33:12",
+      "type": "db_query",
+      "label": "delete orders",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 33,
+      "meta": {
+        "op": "delete",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:nest-pg#src/orders/orders.service.ts:38:12",
+      "type": "db_query",
+      "label": "read invoices",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 38,
+      "meta": {
+        "op": "read",
+        "table": "invoices",
+        "tables": [
+          "invoices"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:nest-pg#src/orders/orders.service.ts:44:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 44,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:nest-pg#src/orders/orders.service.ts:52:12",
+      "type": "db_query",
+      "label": "access ?",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 52,
+      "meta": {
+        "op": null,
+        "table": null,
+        "tables": [],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "entry:nest-pg:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-pg:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-pg#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-pg",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-pg#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-pg#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-pg#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "method",
+      "label": "OrdersController.findAll",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "id": "nest-pg#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-pg#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "id": "nest-pg#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "method",
+      "label": "OrdersService.findAll",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-pg#src/orders/orders.service.ts:OrdersService.findWithCustomer",
+      "type": "method",
+      "label": "OrdersService.findWithCustomer",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 14
+    },
+    {
+      "id": "nest-pg#src/orders/orders.service.ts:OrdersService.invoices",
+      "type": "method",
+      "label": "OrdersService.invoices",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "id": "nest-pg#src/orders/orders.service.ts:OrdersService.markPaid",
+      "type": "method",
+      "label": "OrdersService.markPaid",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 27
+    },
+    {
+      "id": "nest-pg#src/orders/orders.service.ts:OrdersService.recentTotals",
+      "type": "method",
+      "label": "OrdersService.recentTotals",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 43
+    },
+    {
+      "id": "nest-pg#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "method",
+      "label": "OrdersService.remove",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 32
+    },
+    {
+      "id": "nest-pg#src/orders/orders.service.ts:OrdersService.search",
+      "type": "method",
+      "label": "OrdersService.search",
+      "repo": "nest-pg",
+      "file": "src/orders/orders.service.ts",
+      "line": 51
+    },
+    {
+      "id": "repo:nest-pg",
+      "type": "repo",
+      "label": "nest-pg",
+      "repo": "nest-pg",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "pg": 8
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:nest-pg#customers",
+      "type": "table",
+      "label": "customers",
+      "repo": "nest-pg"
+    },
+    {
+      "id": "table:nest-pg#invoices",
+      "type": "table",
+      "label": "invoices",
+      "repo": "nest-pg"
+    },
+    {
+      "id": "table:nest-pg#orders",
+      "type": "table",
+      "label": "orders",
+      "repo": "nest-pg"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:nest-pg#src/orders/orders.service.ts:10:12",
+      "to": "table:nest-pg#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 10
+    },
+    {
+      "from": "db_query:nest-pg#src/orders/orders.service.ts:15:12",
+      "to": "table:nest-pg#customers",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "db_query:nest-pg#src/orders/orders.service.ts:15:12",
+      "to": "table:nest-pg#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "db_query:nest-pg#src/orders/orders.service.ts:23:12",
+      "to": "table:nest-pg#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 23
+    },
+    {
+      "from": "db_query:nest-pg#src/orders/orders.service.ts:28:12",
+      "to": "table:nest-pg#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 28
+    },
+    {
+      "from": "db_query:nest-pg#src/orders/orders.service.ts:33:12",
+      "to": "table:nest-pg#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 33
+    },
+    {
+      "from": "db_query:nest-pg#src/orders/orders.service.ts:38:12",
+      "to": "table:nest-pg#invoices",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 38
+    },
+    {
+      "from": "db_query:nest-pg#src/orders/orders.service.ts:44:12",
+      "to": "table:nest-pg#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 44
+    },
+    {
+      "from": "entry:nest-pg:http:GET:/orders",
+      "to": "nest-pg#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "entry:nest-pg:http:POST:/orders",
+      "to": "nest-pg#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-pg#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-pg#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "nest-pg#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "nest-pg#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "params": [
+        "number"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-pg#src/orders/orders.controller.ts:OrdersController.findAll",
+      "to": "nest-pg#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-pg#src/orders/orders.service.ts:OrdersService.create",
+      "to": "db_query:nest-pg#src/orders/orders.service.ts:23:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 23
+    },
+    {
+      "from": "nest-pg#src/orders/orders.service.ts:OrdersService.findAll",
+      "to": "db_query:nest-pg#src/orders/orders.service.ts:10:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 10
+    },
+    {
+      "from": "nest-pg#src/orders/orders.service.ts:OrdersService.findWithCustomer",
+      "to": "db_query:nest-pg#src/orders/orders.service.ts:15:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "nest-pg#src/orders/orders.service.ts:OrdersService.invoices",
+      "to": "db_query:nest-pg#src/orders/orders.service.ts:38:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 38
+    },
+    {
+      "from": "nest-pg#src/orders/orders.service.ts:OrdersService.markPaid",
+      "to": "db_query:nest-pg#src/orders/orders.service.ts:28:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 28
+    },
+    {
+      "from": "nest-pg#src/orders/orders.service.ts:OrdersService.recentTotals",
+      "to": "db_query:nest-pg#src/orders/orders.service.ts:44:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 44
+    },
+    {
+      "from": "nest-pg#src/orders/orders.service.ts:OrdersService.remove",
+      "to": "db_query:nest-pg#src/orders/orders.service.ts:33:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 33
+    },
+    {
+      "from": "nest-pg#src/orders/orders.service.ts:OrdersService.search",
+      "to": "db_query:nest-pg#src/orders/orders.service.ts:52:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 52
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 52,
+      "reason": "sql-parse-failed",
+      "hint": "The query is not a literal, so the tables it touches cannot be read. Use a literal, or annotate the call.",
+      "symbol": "this.pool.query"
+    }
+  ]
+}

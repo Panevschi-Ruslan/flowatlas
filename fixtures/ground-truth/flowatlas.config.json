@@ -1,0 +1,16 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "baseUrlEnv": ["API_URL"]
+    },
+    {
+      "name": "client",
+      "repo": "./client",
+      "type": "nestjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

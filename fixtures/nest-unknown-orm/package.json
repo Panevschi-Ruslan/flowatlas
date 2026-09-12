@@ -1,0 +1,10 @@
+{
+  "name": "nest-unknown-orm",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "fake-orm": "^1.0.0"
+  }
+}

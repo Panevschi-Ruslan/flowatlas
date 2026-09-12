@@ -1,0 +1,527 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-entries",
+  "generatedAt": "2026-09-09T22:29:12.896Z",
+  "nodes": [
+    {
+      "id": "channel:order.created",
+      "type": "channel",
+      "label": "order.created",
+      "repo": "nest-entries",
+      "file": "src/events/events.controller.ts",
+      "line": 6,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ]
+      }
+    },
+    {
+      "id": "channel:{\"cmd\":\"sum\"}",
+      "type": "channel",
+      "label": "{\"cmd\":\"sum\"}",
+      "repo": "nest-entries",
+      "file": "src/events/events.controller.ts",
+      "line": 11,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ]
+      }
+    },
+    {
+      "id": "consumer:nest-entries#src/events/events.controller.ts:EventsController.handleOrderCreated",
+      "type": "consumer",
+      "label": "EventsController.handleOrderCreated",
+      "repo": "nest-entries",
+      "file": "src/events/events.controller.ts",
+      "line": 6,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:nest-entries:event:order.created"
+      }
+    },
+    {
+      "id": "consumer:nest-entries#src/events/events.controller.ts:EventsController.sum",
+      "type": "consumer",
+      "label": "EventsController.sum",
+      "repo": "nest-entries",
+      "file": "src/events/events.controller.ts",
+      "line": 11,
+      "kind": "rpc",
+      "meta": {
+        "kind": "rpc",
+        "adapter": "nestjs-kafka",
+        "decorator": "MessagePattern",
+        "entryId": "entry:nest-entries:rpc:{\"cmd\":\"sum\"}"
+      }
+    },
+    {
+      "id": "entry:nest-entries:cron:TasksService.everyFiveMinutes",
+      "type": "entry",
+      "label": "cron TasksService.everyFiveMinutes",
+      "repo": "nest-entries",
+      "file": "src/tasks/tasks.service.ts",
+      "line": 8,
+      "kind": "cron",
+      "meta": {
+        "expression": "*/5 * * * *",
+        "trigger": "Cron",
+        "adapter": "nestjs-schedule"
+      }
+    },
+    {
+      "id": "entry:nest-entries:cron:TasksService.everyHour",
+      "type": "entry",
+      "label": "cron TasksService.everyHour",
+      "repo": "nest-entries",
+      "file": "src/tasks/tasks.service.ts",
+      "line": 13,
+      "kind": "cron",
+      "meta": {
+        "expression": "0 0-23/1 * * *",
+        "trigger": "Cron",
+        "adapter": "nestjs-schedule"
+      }
+    },
+    {
+      "id": "entry:nest-entries:cron:TasksService.ticker",
+      "type": "entry",
+      "label": "cron TasksService.ticker",
+      "repo": "nest-entries",
+      "file": "src/tasks/tasks.service.ts",
+      "line": 18,
+      "kind": "cron",
+      "meta": {
+        "intervalMs": 5000,
+        "trigger": "Interval",
+        "adapter": "nestjs-schedule"
+      }
+    },
+    {
+      "id": "entry:nest-entries:cron:TasksService.warmUp",
+      "type": "entry",
+      "label": "cron TasksService.warmUp",
+      "repo": "nest-entries",
+      "file": "src/tasks/tasks.service.ts",
+      "line": 23,
+      "kind": "cron",
+      "meta": {
+        "timeoutMs": 1000,
+        "trigger": "Timeout",
+        "adapter": "nestjs-schedule"
+      }
+    },
+    {
+      "id": "entry:nest-entries:event:order.created",
+      "type": "entry",
+      "label": "event order.created",
+      "repo": "nest-entries",
+      "file": "src/events/events.controller.ts",
+      "line": 6,
+      "kind": "event",
+      "meta": {
+        "pattern": "order.created",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "entry:nest-entries:http:ALL:/catalog/*",
+      "type": "entry",
+      "label": "ALL /catalog/*",
+      "repo": "nest-entries",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/catalog/*",
+        "rawPath": "/catalog/*",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-entries:http:GET:/catalog/a",
+      "type": "entry",
+      "label": "GET /catalog/a",
+      "repo": "nest-entries",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/catalog/a",
+        "rawPath": "/catalog/a",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-entries:http:GET:/catalog/b",
+      "type": "entry",
+      "label": "GET /catalog/b",
+      "repo": "nest-entries",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/catalog/b",
+        "rawPath": "/catalog/b",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-entries:http:GET:/catalog/detail",
+      "type": "entry",
+      "label": "GET /catalog/detail",
+      "repo": "nest-entries",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/catalog/detail",
+        "rawPath": "/catalog/detail",
+        "version": "2",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-entries:rpc:{\"cmd\":\"sum\"}",
+      "type": "entry",
+      "label": "rpc {\"cmd\":\"sum\"}",
+      "repo": "nest-entries",
+      "file": "src/events/events.controller.ts",
+      "line": 11,
+      "kind": "rpc",
+      "meta": {
+        "pattern": {
+          "cmd": "sum"
+        },
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "nest-entries#node_modules/@nestjs/schedule:ScheduleModule",
+      "type": "module",
+      "label": "ScheduleModule",
+      "repo": "nest-entries",
+      "file": "node_modules/@nestjs/schedule",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/schedule",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-entries#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-entries",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "CatalogController",
+          "EventsController"
+        ],
+        "providers": [
+          "TasksService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-entries#src/catalog/catalog.controller.ts:CatalogController",
+      "type": "provider",
+      "label": "CatalogController",
+      "repo": "nest-entries",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 3,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-entries#src/catalog/catalog.controller.ts:CatalogController.detail",
+      "type": "method",
+      "label": "CatalogController.detail",
+      "repo": "nest-entries",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 12
+    },
+    {
+      "id": "nest-entries#src/catalog/catalog.controller.ts:CatalogController.fallback",
+      "type": "method",
+      "label": "CatalogController.fallback",
+      "repo": "nest-entries",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 18
+    },
+    {
+      "id": "nest-entries#src/catalog/catalog.controller.ts:CatalogController.variants",
+      "type": "method",
+      "label": "CatalogController.variants",
+      "repo": "nest-entries",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-entries#src/events/events.controller.ts:EventsController",
+      "type": "provider",
+      "label": "EventsController",
+      "repo": "nest-entries",
+      "file": "src/events/events.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-entries#src/events/events.controller.ts:EventsController.handleOrderCreated",
+      "type": "method",
+      "label": "EventsController.handleOrderCreated",
+      "repo": "nest-entries",
+      "file": "src/events/events.controller.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-entries#src/events/events.controller.ts:EventsController.sum",
+      "type": "method",
+      "label": "EventsController.sum",
+      "repo": "nest-entries",
+      "file": "src/events/events.controller.ts",
+      "line": 11
+    },
+    {
+      "id": "nest-entries#src/tasks/tasks.service.ts:TasksService",
+      "type": "provider",
+      "label": "TasksService",
+      "repo": "nest-entries",
+      "file": "src/tasks/tasks.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-entries#src/tasks/tasks.service.ts:TasksService.everyFiveMinutes",
+      "type": "method",
+      "label": "TasksService.everyFiveMinutes",
+      "repo": "nest-entries",
+      "file": "src/tasks/tasks.service.ts",
+      "line": 8
+    },
+    {
+      "id": "nest-entries#src/tasks/tasks.service.ts:TasksService.everyHour",
+      "type": "method",
+      "label": "TasksService.everyHour",
+      "repo": "nest-entries",
+      "file": "src/tasks/tasks.service.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-entries#src/tasks/tasks.service.ts:TasksService.ticker",
+      "type": "method",
+      "label": "TasksService.ticker",
+      "repo": "nest-entries",
+      "file": "src/tasks/tasks.service.ts",
+      "line": 18
+    },
+    {
+      "id": "nest-entries#src/tasks/tasks.service.ts:TasksService.warmUp",
+      "type": "method",
+      "label": "TasksService.warmUp",
+      "repo": "nest-entries",
+      "file": "src/tasks/tasks.service.ts",
+      "line": 23
+    },
+    {
+      "id": "repo:nest-entries",
+      "type": "repo",
+      "label": "nest-entries",
+      "repo": "nest-entries",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "classes": 4,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "nestjs-microservice",
+            "nestjs-schedule"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:order.created",
+      "to": "consumer:nest-entries#src/events/events.controller.ts:EventsController.handleOrderCreated",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/events/events.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "channel:{\"cmd\":\"sum\"}",
+      "to": "consumer:nest-entries#src/events/events.controller.ts:EventsController.sum",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/events/events.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "consumer:nest-entries#src/events/events.controller.ts:EventsController.handleOrderCreated",
+      "to": "nest-entries#src/events/events.controller.ts:EventsController.handleOrderCreated",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/events/events.controller.ts",
+      "line": 6,
+      "returns": "void"
+    },
+    {
+      "from": "consumer:nest-entries#src/events/events.controller.ts:EventsController.sum",
+      "to": "nest-entries#src/events/events.controller.ts:EventsController.sum",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/events/events.controller.ts",
+      "line": 11,
+      "returns": "number"
+    },
+    {
+      "from": "entry:nest-entries:cron:TasksService.everyFiveMinutes",
+      "to": "nest-entries#src/tasks/tasks.service.ts:TasksService.everyFiveMinutes",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/tasks/tasks.service.ts",
+      "line": 8,
+      "params": [],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-entries:cron:TasksService.everyHour",
+      "to": "nest-entries#src/tasks/tasks.service.ts:TasksService.everyHour",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/tasks/tasks.service.ts",
+      "line": 13,
+      "params": [],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-entries:cron:TasksService.ticker",
+      "to": "nest-entries#src/tasks/tasks.service.ts:TasksService.ticker",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/tasks/tasks.service.ts",
+      "line": 18,
+      "params": [],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-entries:cron:TasksService.warmUp",
+      "to": "nest-entries#src/tasks/tasks.service.ts:TasksService.warmUp",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/tasks/tasks.service.ts",
+      "line": 23,
+      "params": [],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-entries:event:order.created",
+      "to": "nest-entries#src/events/events.controller.ts:EventsController.handleOrderCreated",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/events/events.controller.ts",
+      "line": 6,
+      "params": [
+        "{orderId:string}"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-entries:http:ALL:/catalog/*",
+      "to": "nest-entries#src/catalog/catalog.controller.ts:CatalogController.fallback",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 18,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-entries:http:GET:/catalog/a",
+      "to": "nest-entries#src/catalog/catalog.controller.ts:CatalogController.variants",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 6,
+      "params": [],
+      "returns": "string[]"
+    },
+    {
+      "from": "entry:nest-entries:http:GET:/catalog/b",
+      "to": "nest-entries#src/catalog/catalog.controller.ts:CatalogController.variants",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 6,
+      "params": [],
+      "returns": "string[]"
+    },
+    {
+      "from": "entry:nest-entries:http:GET:/catalog/detail",
+      "to": "nest-entries#src/catalog/catalog.controller.ts:CatalogController.detail",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 12,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-entries:rpc:{\"cmd\":\"sum\"}",
+      "to": "nest-entries#src/events/events.controller.ts:EventsController.sum",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/events/events.controller.ts",
+      "line": 11,
+      "params": [
+        "number[]"
+      ],
+      "returns": "number"
+    },
+    {
+      "from": "nest-entries#src/app.module.ts:AppModule",
+      "to": "nest-entries#node_modules/@nestjs/schedule:ScheduleModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "meta": {
+        "moduleKind": "external"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": []
+}

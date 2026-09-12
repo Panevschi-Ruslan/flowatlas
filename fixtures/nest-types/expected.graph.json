@@ -1,0 +1,1571 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-types",
+  "generatedAt": "2026-09-10T15:40:37.196Z",
+  "nodes": [
+    {
+      "id": "entry:nest-types:http:GET:/catalog/categories",
+      "type": "entry",
+      "label": "GET /catalog/categories",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/catalog/categories",
+        "rawPath": "/catalog/categories",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-types:http:GET:/catalog/cycle",
+      "type": "entry",
+      "label": "GET /catalog/cycle",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/catalog/cycle",
+        "rawPath": "/catalog/cycle",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-types:http:GET:/catalog/deep",
+      "type": "entry",
+      "label": "GET /catalog/deep",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/catalog/deep",
+        "rawPath": "/catalog/deep",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-types:http:GET:/catalog/shapes",
+      "type": "entry",
+      "label": "GET /catalog/shapes",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/catalog/shapes",
+        "rawPath": "/catalog/shapes",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-types:http:GET:/catalog/status",
+      "type": "entry",
+      "label": "GET /catalog/status",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/catalog/status",
+        "rawPath": "/catalog/status",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-types:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "nest-types",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-types:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "nest-types",
+      "file": "src/orders/orders.controller.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-types:http:GET:/orders/stream",
+      "type": "entry",
+      "label": "GET /orders/stream",
+      "repo": "nest-types",
+      "file": "src/orders/orders.controller.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/stream",
+        "rawPath": "/orders/stream",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-types:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "nest-types",
+      "file": "src/orders/orders.controller.ts",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-types:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "label": "POST /orders/:param/cancel",
+      "repo": "nest-types",
+      "file": "src/orders/orders.controller.ts",
+      "line": 45,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/cancel",
+        "rawPath": "/orders/:id/cancel",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-types:http:PUT:/orders/:param",
+      "type": "entry",
+      "label": "PUT /orders/:param",
+      "repo": "nest-types",
+      "file": "src/orders/orders.controller.ts",
+      "line": 39,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-types#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-types",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-types#src/catalog/catalog.controller.ts:CatalogController",
+      "type": "provider",
+      "label": "CatalogController",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 10,
+      "kind": "controller",
+      "meta": {
+        "module": "CatalogModule"
+      }
+    },
+    {
+      "id": "nest-types#src/catalog/catalog.controller.ts:CatalogController.categories",
+      "type": "method",
+      "label": "CatalogController.categories",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 14
+    },
+    {
+      "id": "nest-types#src/catalog/catalog.controller.ts:CatalogController.classify",
+      "type": "method",
+      "label": "CatalogController.classify",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 35
+    },
+    {
+      "id": "nest-types#src/catalog/catalog.controller.ts:CatalogController.cycle",
+      "type": "method",
+      "label": "CatalogController.cycle",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 19
+    },
+    {
+      "id": "nest-types#src/catalog/catalog.controller.ts:CatalogController.deep",
+      "type": "method",
+      "label": "CatalogController.deep",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 29
+    },
+    {
+      "id": "nest-types#src/catalog/catalog.controller.ts:CatalogController.shapes",
+      "type": "method",
+      "label": "CatalogController.shapes",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 24
+    },
+    {
+      "id": "nest-types#src/catalog/catalog.module.ts:CatalogModule",
+      "type": "module",
+      "label": "CatalogModule",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "CatalogController"
+        ],
+        "providers": [
+          "CatalogService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-types#src/catalog/catalog.service.ts:CatalogService",
+      "type": "provider",
+      "label": "CatalogService",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "CatalogModule"
+      }
+    },
+    {
+      "id": "nest-types#src/catalog/catalog.service.ts:CatalogService.categories",
+      "type": "method",
+      "label": "CatalogService.categories",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.service.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-types#src/catalog/catalog.service.ts:CatalogService.classify",
+      "type": "method",
+      "label": "CatalogService.classify",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.service.ts",
+      "line": 37
+    },
+    {
+      "id": "nest-types#src/catalog/catalog.service.ts:CatalogService.cycle",
+      "type": "method",
+      "label": "CatalogService.cycle",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.service.ts",
+      "line": 18
+    },
+    {
+      "id": "nest-types#src/catalog/catalog.service.ts:CatalogService.deep",
+      "type": "method",
+      "label": "CatalogService.deep",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.service.ts",
+      "line": 29
+    },
+    {
+      "id": "nest-types#src/catalog/catalog.service.ts:CatalogService.shapes",
+      "type": "method",
+      "label": "CatalogService.shapes",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.service.ts",
+      "line": 24
+    },
+    {
+      "id": "nest-types#src/catalog/catalog.service.ts:CatalogService.wrap",
+      "type": "method",
+      "label": "CatalogService.wrap",
+      "repo": "nest-types",
+      "file": "src/catalog/catalog.service.ts",
+      "line": 45
+    },
+    {
+      "id": "nest-types#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-types",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "kind": "controller",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-types#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "method",
+      "label": "OrdersController.cancel",
+      "repo": "nest-types",
+      "file": "src/orders/orders.controller.ts",
+      "line": 45
+    },
+    {
+      "id": "nest-types#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "nest-types",
+      "file": "src/orders/orders.controller.ts",
+      "line": 33
+    },
+    {
+      "id": "nest-types#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "method",
+      "label": "OrdersController.findOne",
+      "repo": "nest-types",
+      "file": "src/orders/orders.controller.ts",
+      "line": 27
+    },
+    {
+      "id": "nest-types#src/orders/orders.controller.ts:OrdersController.list",
+      "type": "method",
+      "label": "OrdersController.list",
+      "repo": "nest-types",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15
+    },
+    {
+      "id": "nest-types#src/orders/orders.controller.ts:OrdersController.stream",
+      "type": "method",
+      "label": "OrdersController.stream",
+      "repo": "nest-types",
+      "file": "src/orders/orders.controller.ts",
+      "line": 21
+    },
+    {
+      "id": "nest-types#src/orders/orders.controller.ts:OrdersController.update",
+      "type": "method",
+      "label": "OrdersController.update",
+      "repo": "nest-types",
+      "file": "src/orders/orders.controller.ts",
+      "line": 39
+    },
+    {
+      "id": "nest-types#src/orders/orders.module.ts:OrdersModule",
+      "type": "module",
+      "label": "OrdersModule",
+      "repo": "nest-types",
+      "file": "src/orders/orders.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-types#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-types",
+      "file": "src/orders/orders.service.ts",
+      "line": 16,
+      "kind": "injectable",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-types#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "repo": "nest-types",
+      "file": "src/orders/orders.service.ts",
+      "line": 42
+    },
+    {
+      "id": "nest-types#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-types",
+      "file": "src/orders/orders.service.ts",
+      "line": 32
+    },
+    {
+      "id": "nest-types#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "method",
+      "label": "OrdersService.findOne",
+      "repo": "nest-types",
+      "file": "src/orders/orders.service.ts",
+      "line": 28
+    },
+    {
+      "id": "nest-types#src/orders/orders.service.ts:OrdersService.fromLegacy",
+      "type": "method",
+      "label": "OrdersService.fromLegacy",
+      "repo": "nest-types",
+      "file": "src/orders/orders.service.ts",
+      "line": 58
+    },
+    {
+      "id": "nest-types#src/orders/orders.service.ts:OrdersService.list",
+      "type": "method",
+      "label": "OrdersService.list",
+      "repo": "nest-types",
+      "file": "src/orders/orders.service.ts",
+      "line": 19
+    },
+    {
+      "id": "nest-types#src/orders/orders.service.ts:OrdersService.logTo",
+      "type": "method",
+      "label": "OrdersService.logTo",
+      "repo": "nest-types",
+      "file": "src/orders/orders.service.ts",
+      "line": 63
+    },
+    {
+      "id": "nest-types#src/orders/orders.service.ts:OrdersService.stream",
+      "type": "method",
+      "label": "OrdersService.stream",
+      "repo": "nest-types",
+      "file": "src/orders/orders.service.ts",
+      "line": 24
+    },
+    {
+      "id": "nest-types#src/orders/orders.service.ts:OrdersService.stub",
+      "type": "method",
+      "label": "OrdersService.stub",
+      "repo": "nest-types",
+      "file": "src/orders/orders.service.ts",
+      "line": 67
+    },
+    {
+      "id": "nest-types#src/orders/orders.service.ts:OrdersService.toEvent",
+      "type": "method",
+      "label": "OrdersService.toEvent",
+      "repo": "nest-types",
+      "file": "src/orders/orders.service.ts",
+      "line": 47
+    },
+    {
+      "id": "nest-types#src/orders/orders.service.ts:OrdersService.update",
+      "type": "method",
+      "label": "OrdersService.update",
+      "repo": "nest-types",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "id": "repo:nest-types",
+      "type": "repo",
+      "label": "nest-types",
+      "repo": "nest-types",
+      "meta": {
+        "stats": {
+          "files": 18,
+          "classes": 10,
+          "skippedExternalCalls": {
+            "@nestjs/common": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-types:http:GET:/catalog/categories",
+      "to": "nest-types#src/catalog/catalog.controller.ts:CatalogController.categories",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 14,
+      "params": [],
+      "returns": "type:nest-types#Category[]"
+    },
+    {
+      "from": "entry:nest-types:http:GET:/catalog/cycle",
+      "to": "nest-types#src/catalog/catalog.controller.ts:CatalogController.cycle",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 19,
+      "params": [],
+      "returns": "type:nest-types#A"
+    },
+    {
+      "from": "entry:nest-types:http:GET:/catalog/deep",
+      "to": "nest-types#src/catalog/catalog.controller.ts:CatalogController.deep",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 29,
+      "params": [],
+      "returns": "type:nest-types#L0"
+    },
+    {
+      "from": "entry:nest-types:http:GET:/catalog/shapes",
+      "to": "nest-types#src/catalog/catalog.controller.ts:CatalogController.shapes",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 24,
+      "params": [],
+      "returns": "type:nest-types#Shape2"
+    },
+    {
+      "from": "entry:nest-types:http:GET:/catalog/status",
+      "to": "nest-types#src/catalog/catalog.controller.ts:CatalogController.classify",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 35,
+      "params": [
+        "type:nest-types#Kind"
+      ],
+      "returns": "type:nest-types#Status",
+      "meta": {
+        "query": "{kind:type:nest-types#Kind}"
+      }
+    },
+    {
+      "from": "entry:nest-types:http:GET:/orders",
+      "to": "nest-types#src/orders/orders.controller.ts:OrdersController.list",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "params": [
+        "type:nest-types#ListQuery"
+      ],
+      "returns": "type:nest-types#Paginated<type:nest-types#Order>",
+      "meta": {
+        "query": "type:nest-types#ListQuery"
+      }
+    },
+    {
+      "from": "entry:nest-types:http:GET:/orders/:param",
+      "to": "nest-types#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 27,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-types#Order",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-types:http:GET:/orders/stream",
+      "to": "nest-types#src/orders/orders.controller.ts:OrdersController.stream",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 21,
+      "params": [],
+      "returns": "type:nest-types#Order[]"
+    },
+    {
+      "from": "entry:nest-types:http:POST:/orders",
+      "to": "nest-types#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 33,
+      "params": [
+        "type:nest-types#CreateOrderDto"
+      ],
+      "returns": "type:nest-types#Order",
+      "meta": {
+        "body": "type:nest-types#CreateOrderDto"
+      }
+    },
+    {
+      "from": "entry:nest-types:http:POST:/orders/:param/cancel",
+      "to": "nest-types#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 45,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "meta": {
+        "params": "{id:string}",
+        "body": "{reason:string}"
+      }
+    },
+    {
+      "from": "entry:nest-types:http:PUT:/orders/:param",
+      "to": "nest-types#src/orders/orders.controller.ts:OrdersController.update",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 39,
+      "params": [
+        "string",
+        "{customerId:string;status:type:nest-types#Status;kind:type:nest-types#Kind;lines:type:nest-types#OrderLine[];note?:string;id:string;createdAt:Date}"
+      ],
+      "returns": "type:nest-types#Order",
+      "meta": {
+        "params": "{id:string}",
+        "body": "{customerId:string;status:type:nest-types#Status;kind:type:nest-types#Kind;lines:type:nest-types#OrderLine[];note?:string;id:string;createdAt:Date}"
+      }
+    },
+    {
+      "from": "nest-types#src/app.module.ts:AppModule",
+      "to": "nest-types#src/catalog/catalog.module.ts:CatalogModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 6
+    },
+    {
+      "from": "nest-types#src/app.module.ts:AppModule",
+      "to": "nest-types#src/orders/orders.module.ts:OrdersModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 6
+    },
+    {
+      "from": "nest-types#src/catalog/catalog.controller.ts:CatalogController",
+      "to": "nest-types#src/catalog/catalog.service.ts:CatalogService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "nest-types#src/catalog/catalog.controller.ts:CatalogController.categories",
+      "to": "nest-types#src/catalog/catalog.service.ts:CatalogService.categories",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 16,
+      "params": [],
+      "returns": "type:nest-types#Category[]"
+    },
+    {
+      "from": "nest-types#src/catalog/catalog.controller.ts:CatalogController.classify",
+      "to": "nest-types#src/catalog/catalog.service.ts:CatalogService.classify",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 37,
+      "params": [
+        "type:nest-types#Kind"
+      ],
+      "returns": "type:nest-types#Status"
+    },
+    {
+      "from": "nest-types#src/catalog/catalog.controller.ts:CatalogController.cycle",
+      "to": "nest-types#src/catalog/catalog.service.ts:CatalogService.cycle",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 21,
+      "params": [],
+      "returns": "type:nest-types#A"
+    },
+    {
+      "from": "nest-types#src/catalog/catalog.controller.ts:CatalogController.deep",
+      "to": "nest-types#src/catalog/catalog.service.ts:CatalogService.deep",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 31,
+      "params": [],
+      "returns": "type:nest-types#L0"
+    },
+    {
+      "from": "nest-types#src/catalog/catalog.controller.ts:CatalogController.shapes",
+      "to": "nest-types#src/catalog/catalog.service.ts:CatalogService.shapes",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 26,
+      "params": [
+        "type:nest-types#Shape1"
+      ],
+      "returns": "type:nest-types#Shape2"
+    },
+    {
+      "from": "nest-types#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-types#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "nest-types#src/orders/orders.controller.ts:OrdersController.cancel",
+      "to": "nest-types#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 47,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-types#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "nest-types#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 35,
+      "params": [
+        "type:nest-types#CreateOrderDto"
+      ],
+      "returns": "type:nest-types#Order"
+    },
+    {
+      "from": "nest-types#src/orders/orders.controller.ts:OrdersController.findOne",
+      "to": "nest-types#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 29,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-types#Order"
+    },
+    {
+      "from": "nest-types#src/orders/orders.controller.ts:OrdersController.list",
+      "to": "nest-types#src/orders/orders.service.ts:OrdersService.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17,
+      "params": [
+        "type:nest-types#ListQuery"
+      ],
+      "returns": "type:nest-types#Paginated<type:nest-types#Order>"
+    },
+    {
+      "from": "nest-types#src/orders/orders.controller.ts:OrdersController.stream",
+      "to": "nest-types#src/orders/orders.service.ts:OrdersService.stream",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 23,
+      "params": [],
+      "returns": "type:nest-types#Order[]"
+    },
+    {
+      "from": "nest-types#src/orders/orders.controller.ts:OrdersController.update",
+      "to": "nest-types#src/orders/orders.service.ts:OrdersService.update",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 41,
+      "params": [
+        "string",
+        "{customerId:string;status:type:nest-types#Status;kind:type:nest-types#Kind;lines:type:nest-types#OrderLine[];note?:string;id:string;createdAt:Date}"
+      ],
+      "returns": "type:nest-types#Order"
+    },
+    {
+      "from": "nest-types#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "nest-types#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 43,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-types#Order"
+    },
+    {
+      "from": "nest-types#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "nest-types#src/orders/orders.service.ts:OrdersService.logTo",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 43,
+      "params": [
+        "type:@nestjs/common#Logger",
+        "type:nest-types#Order"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-types#src/orders/orders.service.ts:OrdersService.create",
+      "to": "nest-types#src/orders/orders.service.ts:OrdersService.stub",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 33,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-types#Order"
+    },
+    {
+      "from": "nest-types#src/orders/orders.service.ts:OrdersService.findOne",
+      "to": "nest-types#src/orders/orders.service.ts:OrdersService.stub",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 29,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-types#Order"
+    },
+    {
+      "from": "nest-types#src/orders/orders.service.ts:OrdersService.fromLegacy",
+      "to": "nest-types#src/orders/orders.service.ts:OrdersService.stub",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 59,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-types#Order"
+    },
+    {
+      "from": "nest-types#src/orders/orders.service.ts:OrdersService.update",
+      "to": "nest-types#src/orders/orders.service.ts:OrdersService.stub",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 38,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-types#Order"
+    }
+  ],
+  "types": {
+    "type:@fixture/contracts#SharedMoney": {
+      "name": "SharedMoney",
+      "kind": "object",
+      "declaredIn": "@fixture/contracts",
+      "structuralHash": "fe1facfc23710e30",
+      "fields": [
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:@fixture/contracts#SharedOrderEvent": {
+      "name": "SharedOrderEvent",
+      "kind": "object",
+      "declaredIn": "@fixture/contracts",
+      "structuralHash": "f8fbae774cfbe7bc",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "type:@fixture/contracts#SharedOrderStatus",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "type:@fixture/contracts#SharedMoney",
+          "optional": false
+        },
+        {
+          "name": "occurredAt",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:@fixture/contracts#SharedOrderStatus": {
+      "name": "SharedOrderStatus",
+      "kind": "union",
+      "declaredIn": "@fixture/contracts",
+      "structuralHash": "3961cde6eaf5d2f0",
+      "members": [
+        "'created'",
+        "'paid'",
+        "'cancelled'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
+    "type:@nestjs/common#Logger": {
+      "name": "Logger",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "bc602de455ede1bb",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    },
+    "type:nest-types#A": {
+      "name": "A",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/cycle.ts",
+      "structuralHash": "c7b7a40aa85eb1e6",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "type:nest-types#B",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-types#B": {
+      "name": "B",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/cycle.ts",
+      "structuralHash": "220642eec4cad5cc",
+      "fields": [
+        {
+          "name": "code",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "a",
+          "type": "type:nest-types#A",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-types#BaseEntity": {
+      "name": "BaseEntity",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/base-entity.ts",
+      "structuralHash": "ee4069a151983588",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-types#Category": {
+      "name": "Category",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/category.ts",
+      "structuralHash": "3751c7c2e58ce97d",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "children",
+          "type": "type:nest-types#Category[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-types#CreateOrderDto": {
+      "name": "CreateOrderDto",
+      "kind": "object",
+      "declaredIn": "nest-types#src/orders/dto/create-order.dto.ts",
+      "structuralHash": "bb14067efbd835f2",
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "expose": true,
+            "exposeAs": "customer_id",
+            "validators": [
+              "IsString"
+            ]
+          }
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "validators": [
+              "IsOptional",
+              "IsString"
+            ],
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "items",
+          "type": "type:nest-types#OrderItemDto[]",
+          "optional": false,
+          "meta": {
+            "validateNested": true,
+            "typeFn": "type:nest-types#OrderItemDto",
+            "validators": [
+              "ArrayNotEmpty",
+              "ValidateNested"
+            ]
+          }
+        },
+        {
+          "name": "secret",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "exclude": true
+          }
+        },
+        {
+          "name": "couponCode",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "transform": true
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:nest-types#Kind": {
+      "name": "Kind",
+      "kind": "union",
+      "declaredIn": "nest-types#src/types/order.ts",
+      "structuralHash": "2c985a02bf57ca6c",
+      "members": [
+        "'retail'",
+        "'wholesale'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
+    "type:nest-types#L0": {
+      "name": "L0",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/deep.ts",
+      "structuralHash": "12a01931b57467f2",
+      "fields": [
+        {
+          "name": "next",
+          "type": "type:nest-types#L1",
+          "optional": false
+        },
+        {
+          "name": "inline",
+          "type": "{a:{b:object}}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-types#L1": {
+      "name": "L1",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/deep.ts",
+      "structuralHash": "e79d855ea4fdbf65",
+      "fields": [
+        {
+          "name": "next",
+          "type": "type:nest-types#L2",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-types#L2": {
+      "name": "L2",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/deep.ts",
+      "structuralHash": "2b05b8192fd55a11",
+      "fields": [
+        {
+          "name": "next",
+          "type": "type:nest-types#L3",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-types#L3": {
+      "name": "L3",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/deep.ts",
+      "structuralHash": "e0c7b10d0b71c56a",
+      "fields": [
+        {
+          "name": "next",
+          "type": "type:nest-types#L4",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-types#L4": {
+      "name": "L4",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/deep.ts",
+      "structuralHash": "cb0bea6bd589e318",
+      "fields": [
+        {
+          "name": "value",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-types#ListQuery": {
+      "name": "ListQuery",
+      "kind": "object",
+      "declaredIn": "nest-types#src/orders/dto/list-query.dto.ts",
+      "structuralHash": "7fdb53a7f7ad7310",
+      "fields": [
+        {
+          "name": "status",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "validators": [
+              "IsOptional",
+              "IsString"
+            ],
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "limit",
+          "type": "number",
+          "optional": true,
+          "meta": {
+            "validators": [
+              "IsOptional",
+              "IsInt"
+            ],
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:nest-types#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/order.ts",
+      "structuralHash": "38ee937f070f5fef",
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "type:nest-types#Status",
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": "type:nest-types#Kind",
+          "optional": false
+        },
+        {
+          "name": "lines",
+          "type": "type:nest-types#OrderLine[]",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true,
+        "extends": [
+          "type:nest-types#BaseEntity"
+        ]
+      }
+    },
+    "type:nest-types#OrderItemDto": {
+      "name": "OrderItemDto",
+      "kind": "object",
+      "declaredIn": "nest-types#src/orders/dto/create-order.dto.ts",
+      "structuralHash": "a379d6fa9fe8e967",
+      "fields": [
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "validators": [
+              "IsString"
+            ]
+          }
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "optional": false,
+          "meta": {
+            "validators": [
+              "IsInt"
+            ]
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:nest-types#OrderLine": {
+      "name": "OrderLine",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/order.ts",
+      "structuralHash": "a379d6fa9fe8e967",
+      "fields": [
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-types#Paginated": {
+      "name": "Paginated",
+      "kind": "generic",
+      "declaredIn": "nest-types#src/types/paginated.ts",
+      "structuralHash": "07add9ec84a5bad7",
+      "fields": [
+        {
+          "name": "items",
+          "type": "T[]",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "page",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      },
+      "typeParams": [
+        "T"
+      ]
+    },
+    "type:nest-types#Paginated<T>": {
+      "name": "Paginated",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/paginated.ts",
+      "structuralHash": "772e379432ce5e34",
+      "fields": [
+        {
+          "name": "items",
+          "type": "T[]",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "page",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true,
+        "typeArgs": [
+          "T"
+        ]
+      }
+    },
+    "type:nest-types#Paginated<type:nest-types#Order>": {
+      "name": "Paginated",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/paginated.ts",
+      "structuralHash": "9527f24f321a6201",
+      "fields": [
+        {
+          "name": "items",
+          "type": "type:nest-types#Order[]",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "page",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true,
+        "typeArgs": [
+          "type:nest-types#Order"
+        ]
+      }
+    },
+    "type:nest-types#Shape1": {
+      "name": "Shape1",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/shapes.ts",
+      "structuralHash": "297ebf8267380012",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "tags",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-types#Shape2": {
+      "name": "Shape2",
+      "kind": "object",
+      "declaredIn": "nest-types#src/types/shapes.ts",
+      "structuralHash": "297ebf8267380012",
+      "fields": [
+        {
+          "name": "tags",
+          "type": "string[]",
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-types#Status": {
+      "name": "Status",
+      "kind": "enum",
+      "declaredIn": "nest-types#src/types/order.ts",
+      "structuralHash": "ab7fabda7dd538e2",
+      "members": [
+        "new",
+        "paid",
+        "shipped"
+      ],
+      "meta": {
+        "declKind": "enum",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/catalog/catalog.service.ts",
+      "line": 45,
+      "reason": "type-generic-uninstantiated",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "level": "info",
+      "sites": 2
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 58,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "LegacyOrder"
+    },
+    {
+      "file": "src/types/deep.ts",
+      "line": 28,
+      "reason": "type-depth-exceeded",
+      "hint": "Nesting is written out to 3 levels. Raise types.maxDepth to see further.",
+      "symbol": "{ c: string; }",
+      "level": "info"
+    }
+  ]
+}

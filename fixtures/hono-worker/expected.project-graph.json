@@ -1,0 +1,842 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-12T17:47:29.514Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "method",
+      "label": "OrdersController.cancel",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.list",
+      "type": "method",
+      "label": "OrdersController.list",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.changesFor",
+      "type": "method",
+      "label": "OrdersService.changesFor",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 23
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.list",
+      "type": "method",
+      "label": "OrdersService.list",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 12
+    },
+    {
+      "id": "api#src/stream/sse.ts:adminEvents",
+      "type": "function",
+      "label": "adminEvents",
+      "repo": "api",
+      "file": "src/stream/sse.ts",
+      "line": 24
+    },
+    {
+      "id": "api#src/stream/sse.ts:menuStream",
+      "type": "function",
+      "label": "menuStream",
+      "repo": "api",
+      "file": "src/stream/sse.ts",
+      "line": 18
+    },
+    {
+      "id": "api#src/stream/sse.ts:orderStream",
+      "type": "function",
+      "label": "orderStream",
+      "repo": "api",
+      "file": "src/stream/sse.ts",
+      "line": 11
+    },
+    {
+      "id": "api#src/worker.ts:acceptUpdate",
+      "type": "function",
+      "label": "acceptUpdate",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 67
+    },
+    {
+      "id": "api#src/worker.ts:forwardToNest",
+      "type": "function",
+      "label": "forwardToNest",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 73
+    },
+    {
+      "id": "entry:api:http:ALL:/api/*",
+      "type": "entry",
+      "label": "ALL /api/*",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 65,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/*",
+        "rawPath": "/api/*",
+        "adapter": "hono-routes",
+        "registration": "app.all",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:api:http:DELETE:/api/depots/:param/cache",
+      "type": "entry",
+      "label": "DELETE /api/depots/:param/cache",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 42,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/depots/:param/cache",
+        "rawPath": "/api/depots/:depotId/cache",
+        "adapter": "hono-routes",
+        "registration": "app.on",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/admin/events",
+      "type": "entry",
+      "label": "GET /api/admin/events",
+      "repo": "api",
+      "file": "src/admin/admin.routes.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/admin/events",
+        "rawPath": "/api/admin/events",
+        "adapter": "hono-routes",
+        "registration": "adminRoutes.get",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/admin/orders/:param",
+      "type": "entry",
+      "label": "GET /api/admin/orders/:param",
+      "repo": "api",
+      "file": "src/admin/admin.routes.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/admin/orders/:param",
+        "rawPath": "/api/admin/orders/:orderId",
+        "adapter": "hono-routes",
+        "registration": "adminRoutes.get",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/depots/:param/menu-stream",
+      "type": "entry",
+      "label": "GET /api/depots/:param/menu-stream",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/depots/:param/menu-stream",
+        "rawPath": "/api/depots/:depotId/menu-stream",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/depots/:param/orders",
+      "type": "entry",
+      "label": "GET /api/depots/:param/orders",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/depots/:param/orders",
+        "rawPath": "/api/depots/:depotId/orders",
+        "globalPrefix": "api",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/depots/:param/stream",
+      "type": "entry",
+      "label": "GET /api/depots/:param/stream",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/depots/:param/stream",
+        "rawPath": "/api/depots/:depotId/stream",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/api/depots/:param/orders/:param/cancel",
+      "type": "entry",
+      "label": "POST /api/depots/:param/orders/:param/cancel",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/depots/:param/orders/:param/cancel",
+        "rawPath": "/api/depots/:depotId/orders/:orderId/cancel",
+        "globalPrefix": "api",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/api/messenger/webhook",
+      "type": "entry",
+      "label": "POST /api/messenger/webhook",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 34,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/messenger/webhook",
+        "rawPath": "/api/messenger/webhook",
+        "adapter": "hono-routes",
+        "registration": "app.post",
+        "middleware": [
+          "withNest"
+        ],
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/internal/reload",
+      "type": "entry",
+      "label": "POST /internal/reload",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 52,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/internal/reload",
+        "rawPath": "/internal/reload",
+        "adapter": "hono-routes",
+        "registration": "internal.post",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "hono": 13
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "globalPrefix": "api",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "hono-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "classes": 3,
+          "templates": 1,
+          "skippedExternalCalls": {
+            "rxjs": 2,
+            "@angular/common": 1
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/orders.component.ts:10:13",
+      "type": "ui_action",
+      "label": "click=\"watch()\"",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 10,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "watch()",
+        "component": "web#src/app/orders.component.ts:OrdersComponent",
+        "template": "src/app/orders.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/orders.component.ts:11:13",
+      "type": "ui_action",
+      "label": "click=\"load()\"",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 11,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "load()",
+        "component": "web#src/app/orders.component.ts:OrdersComponent",
+        "template": "src/app/orders.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/live-events.service.ts:26:20",
+      "type": "ui_api_call",
+      "label": "GET /depots/:param/stream",
+      "repo": "web",
+      "file": "src/app/live-events.service.ts",
+      "line": 26,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/depots/:param/stream",
+        "path": "/depots/:param/stream",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:17:12",
+      "type": "ui_api_call",
+      "label": "GET /depots/:param/orders",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/depots/:param/orders",
+        "path": "/depots/:param/orders",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "web#src/app/live-events.service.ts:LiveEventsService",
+      "type": "provider",
+      "label": "LiveEventsService",
+      "repo": "web",
+      "file": "src/app/live-events.service.ts",
+      "line": 17,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "method",
+      "label": "LiveEventsService.open",
+      "repo": "web",
+      "file": "src/app/live-events.service.ts",
+      "line": 24
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "provider",
+      "label": "OrdersApiService",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.list",
+      "type": "method",
+      "label": "OrdersApiService.list",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 16
+    },
+    {
+      "id": "web#src/app/orders.component.ts:OrdersComponent",
+      "type": "ui_component",
+      "label": "OrdersComponent",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-orders"
+      }
+    },
+    {
+      "id": "web#src/app/orders.component.ts:OrdersComponent.load",
+      "type": "method",
+      "label": "OrdersComponent.load",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 24
+    },
+    {
+      "id": "web#src/app/orders.component.ts:OrdersComponent.watch",
+      "type": "method",
+      "label": "OrdersComponent.watch",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 20
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController",
+      "to": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "to": "api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 24
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController.list",
+      "to": "api#src/orders/orders.service.ts:OrdersService.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#Order[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "api#src/stream/sse.ts:adminEvents",
+      "to": "api#src/orders/orders.service.ts:OrdersService.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#Order[]",
+      "file": "src/stream/sse.ts",
+      "line": 26
+    },
+    {
+      "from": "api#src/stream/sse.ts:menuStream",
+      "to": "api#src/orders/orders.service.ts:OrdersService.changesFor",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/stream/sse.ts",
+      "line": 20
+    },
+    {
+      "from": "api#src/stream/sse.ts:orderStream",
+      "to": "api#src/orders/orders.service.ts:OrdersService.changesFor",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/stream/sse.ts",
+      "line": 13
+    },
+    {
+      "from": "api#src/worker.ts:acceptUpdate",
+      "to": "api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/worker.ts",
+      "line": 69
+    },
+    {
+      "from": "entry:api:http:ALL:/api/*",
+      "to": "api#src/worker.ts:forwardToNest",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 73
+    },
+    {
+      "from": "entry:api:http:GET:/api/admin/events",
+      "to": "api#src/stream/sse.ts:adminEvents",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stream/sse.ts",
+      "line": 24
+    },
+    {
+      "from": "entry:api:http:GET:/api/depots/:param/menu-stream",
+      "to": "api#src/stream/sse.ts:menuStream",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stream/sse.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:api:http:GET:/api/depots/:param/orders",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#Order[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "meta": {
+        "params": "{depotId:string}"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/depots/:param/stream",
+      "to": "api#src/stream/sse.ts:orderStream",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stream/sse.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:api:http:POST:/api/depots/:param/orders/:param/cancel",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "params": "{depotId:string;orderId:string}"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/internal/reload",
+      "to": "api#src/worker.ts:acceptUpdate",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 67
+    },
+    {
+      "from": "ui_action:web#src/app/orders.component.ts:10:13",
+      "to": "web#src/app/orders.component.ts:OrdersComponent.watch",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 10
+    },
+    {
+      "from": "ui_action:web#src/app/orders.component.ts:11:13",
+      "to": "web#src/app/orders.component.ts:OrdersComponent.load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 11
+    },
+    {
+      "from": "ui_api_call:web#src/app/live-events.service.ts:26:20",
+      "to": "entry:api:http:GET:/api/depots/:param/stream",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 26,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:17:12",
+      "to": "entry:api:http:GET:/api/depots/:param/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 17,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "web#src/app/live-events.service.ts:LiveEventsService.open",
+      "to": "ui_api_call:web#src/app/live-events.service.ts:26:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 26
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "to": "web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 14
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.list",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:17:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 17
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent",
+      "to": "web#src/app/live-events.service.ts:LiveEventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 16
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 17
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent.load",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 25
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent.watch",
+      "to": "web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 21
+    }
+  ],
+  "types": {
+    "type:api#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "api#src/orders/orders.service.ts",
+      "structuralHash": "384f398a6d65c109",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "depotId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/admin/admin.routes.ts",
+      "line": 15,
+      "reason": "route-handler-anonymous",
+      "level": "info",
+      "sites": 4,
+      "message": "4 routes answer with a function written in the declaration, so nothing can be pointed at as the code behind them.",
+      "hint": "Give the handler a name and register that, or have the one written in place return what a single named function answers with.",
+      "symbol": "hono",
+      "adapter": "hono-routes",
+      "service": "api"
+    },
+    {
+      "file": "src/admin/reports.routes.ts",
+      "line": 12,
+      "reason": "route-path-dynamic",
+      "message": "app is mounted somewhere this cannot read, so /daily is not the path it is served at.",
+      "hint": "Mount the application at a literal path, or declare its routes on the application that is served.",
+      "symbol": "GET /daily",
+      "adapter": "hono-routes",
+      "service": "api"
+    },
+    {
+      "file": "src/worker.ts",
+      "line": 45,
+      "reason": "route-path-dynamic",
+      "hint": "Give the route a string literal or a const string; a computed path cannot be matched against callers.",
+      "symbol": "app.get(pathFor('stats'))",
+      "adapter": "hono-routes",
+      "service": "api"
+    }
+  ]
+}

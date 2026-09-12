@@ -1,0 +1,7 @@
+{
+  "name": "the entry file is touched",
+  "expect": { "mode": "full", "reason": "global file src/main.ts" },
+  "changes": [
+    { "file": "src/main.ts", "append": "\n// The port is decided elsewhere now.\n" }
+  ]
+}

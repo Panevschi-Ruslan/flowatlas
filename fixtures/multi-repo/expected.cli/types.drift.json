@@ -1,0 +1,22 @@
+{
+  "drift": [
+    {
+      "name": "InvoiceDto",
+      "declarations": [
+        {
+          "id": "type:billing#InvoiceDto",
+          "service": "billing",
+          "structuralHash": "98b4593efb5a62b5",
+          "declaredIn": "billing#src/invoices/invoice.dto.ts"
+        },
+        {
+          "id": "type:gateway#InvoiceDto",
+          "service": "gateway",
+          "structuralHash": "78dbe5b1e055a99c",
+          "declaredIn": "gateway#src/clients/invoice.dto.ts"
+        }
+      ]
+    }
+  ],
+  "note": "hash-only; run flowatlas contracts for a field-by-field comparison"
+}

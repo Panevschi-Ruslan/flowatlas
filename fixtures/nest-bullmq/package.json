@@ -1,0 +1,12 @@
+{
+  "name": "nest-bullmq",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@nestjs/bull": "^10.2.0",
+    "@nestjs/bullmq": "^10.2.0",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "bullmq": "^5.12.0"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "a file nothing imports yet is added",
+  "expect": { "mode": "partial", "files": ["src/orders/orders.audit.ts"] },
+  "changes": [
+    {
+      "file": "src/orders/orders.audit.ts",
+      "create": "import { Injectable } from '@nestjs/common';\n\nimport type { OrderDto } from './dto/create-order.dto';\n\n@Injectable()\nexport class OrdersAudit {\n  record(order: OrderDto): string {\n    return order.id;\n  }\n}\n"
+    }
+  ]
+}

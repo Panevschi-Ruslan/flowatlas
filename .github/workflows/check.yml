@@ -1,0 +1,26 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # A clean checkout has no build output and no fixture graphs, which is the
+      # state this workflow exists to keep passing. `check` runs the five gates
+      # in the one order that works: build, typecheck, fixture graph, test,
+      # invariants, snapshots.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check

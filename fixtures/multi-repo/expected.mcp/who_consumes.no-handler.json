@@ -1,0 +1,10 @@
+{
+  "channel": {
+    "id": "channel:order.archived",
+    "type": "channel",
+    "label": "order.archived",
+    "loc": "src/orders/orders.service.ts:61",
+    "service": "orders"
+  },
+  "consumers": []
+}

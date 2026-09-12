@@ -1,0 +1,11 @@
+{
+  "matches": [
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+      "type": "method",
+      "label": "OrdersClient.fetchOne",
+      "loc": "src/clients/orders.client.ts:32",
+      "service": "gateway"
+    }
+  ]
+}

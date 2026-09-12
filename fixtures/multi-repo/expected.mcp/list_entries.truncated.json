@@ -1,0 +1,30 @@
+{
+  "entries": [
+    {
+      "id": "entry:billing:event:invoice.requested",
+      "type": "entry",
+      "label": "event invoice.requested",
+      "loc": "src/invoices/invoices.consumer.ts:28",
+      "service": "billing",
+      "kind": "event"
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "type": "entry",
+      "label": "event order.created",
+      "loc": "src/invoices/invoices.consumer.ts:17",
+      "service": "billing",
+      "kind": "event"
+    },
+    {
+      "id": "entry:billing:http:GET:/invoices/:param",
+      "type": "entry",
+      "label": "GET /invoices/:param",
+      "loc": "src/invoices/invoices.controller.ts:26",
+      "service": "billing",
+      "kind": "http"
+    }
+  ],
+  "total": 14,
+  "truncated": "11 more nodes, increase depth or narrow scope"
+}

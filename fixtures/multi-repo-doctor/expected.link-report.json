@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-10T21:22:24.560Z",
+  "configHash": "9376cf8f01b0",
+  "services": [
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 7,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 753
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 21,
+      "edges": 15,
+      "types": 2,
+      "unresolved": 5,
+      "durationMs": 811
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 34,
+      "edges": 29,
+      "types": 3,
+      "unresolved": 9,
+      "durationMs": 785
+    }
+  ],
+  "httpOut": {
+    "total": 6,
+    "linked": 2,
+    "byMarker": 1,
+    "unknownEnv": 1,
+    "noRoute": 1,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 2
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 3,
+    "linked": 2,
+    "noConsumers": [
+      "channel:order.audited"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 2,
+    "uncalled": [
+      "entry:orders:http:GET:/orders/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 6,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 40,
+      "reason": "marker-route-not-found",
+      "message": "@CallsService points at DELETE /orders/:id/void, which orders does not serve",
+      "hint": "Check orders's controllers, or correct the annotation.",
+      "symbol": "http_out:gateway#src/clients/orders.client.ts:40:12"
+    },
+    {
+      "service": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 49,
+      "reason": "marker-service-unknown",
+      "message": "@CallsService names warehouse, which is not a configured service",
+      "hint": "Add warehouse to services[] in flowatlas.config.json, or correct the annotation.",
+      "symbol": "http_out:gateway#src/clients/orders.client.ts:49:12"
+    },
+    {
+      "service": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 58,
+      "reason": "target-route-not-found",
+      "message": "target service orders has no route DELETE /orders/:param/void",
+      "hint": "Route renamed? Check orders's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:gateway#src/clients/orders.client.ts:58:12"
+    },
+    {
+      "service": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 66,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares LEGACY_URL",
+      "hint": "Add LEGACY_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:gateway#src/clients/orders.client.ts:66:12"
+    }
+  ],
+  "totals": {
+    "nodes": 65,
+    "edges": 53,
+    "types": 6,
+    "unresolved": 18
+  }
+}

@@ -1,0 +1,57 @@
+107 nodes, 88 edges, 10 types, 6 unresolved
+
+nodes by type
+  repo          4
+  module        4
+  entry         14
+  provider      17
+  method        39
+  db_query      4
+  table         1
+  channel       3
+  producer      2
+  consumer      2
+  http_out      6
+  external_api  1
+  ui_component  1
+  ui_action     1
+  ui_api_call   6
+  config_key    2
+
+nodes by service
+  billing  18
+  gateway  37
+  orders   32
+  web      20
+
+edges by type
+  imports       1
+  injects       15
+  calls         37
+  handles       18
+  queries       4
+  emits         2
+  consumes      2
+  http_calls    2
+  hits          3
+  reads_config  4
+
+edges by confidence
+  static     85
+  marker     1
+  heuristic  2
+
+unresolved by reason, counted by site
+  ambiguous-route-target  1
+  di-token-unknown        1
+  dynamic-http-url        1
+  target-route-not-found  2
+  unknown-base-url-env    1
+
+link report
+  calls out: 6 total, 2 linked (33%), 1 no route, 1 unknown setting, 0 ambiguous, 1 third party, 1 dynamic
+  channels with no handler: 1
+    channel:order.archived
+  channels with no publisher: 1
+    channel:invoice.requested
+  routes never called: 8 of 12

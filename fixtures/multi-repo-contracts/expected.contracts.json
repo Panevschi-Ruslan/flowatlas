@@ -1,0 +1,1893 @@
+{
+  "contractsFormatVersion": 1,
+  "schemaVersion": 3,
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
+            "to": "entry:orders:http:POST:/orders",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CreateOrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateOrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+          },
+          "typeId": "type:orders#CreateOrderDto",
+          "field": "channel",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
+            "to": "entry:orders:http:POST:/orders",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CreateOrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateOrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+          },
+          "typeId": "type:orders#CreateOrderDto",
+          "field": "debugId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender gateway sends `debugId: string`; receiver orders declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
+            "to": "entry:orders:http:POST:/orders",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CreateOrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateOrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+          },
+          "typeId": "type:orders#CreateOrderDto",
+          "field": "note",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`note` may be left out by sender gateway and is required by receiver orders; the sender marks it optional by question",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#OrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
+            "to": "entry:orders:http:POST:/orders",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+          "direction": "response",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#OrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+          },
+          "receiver": {
+            "service": "gateway",
+            "typeId": "type:gateway#OrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+          },
+          "typeId": "type:gateway#OrderDto",
+          "field": "total",
+          "expected": "string",
+          "actual": "number",
+          "rule": null,
+          "message": "sender orders sends `total` as `number`; receiver gateway declares it `string`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "date-string:placedAt"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:30:12",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:30:12|http_calls|entry:orders:http:GET:/orders/:param",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#OrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:30:12",
+            "to": "entry:orders:http:GET:/orders/:param",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:30:12|http_calls|entry:orders:http:GET:/orders/:param",
+          "direction": "response",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#OrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+          },
+          "receiver": {
+            "service": "gateway",
+            "typeId": "type:gateway#OrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne"
+          },
+          "typeId": "type:gateway#OrderDto",
+          "field": "total",
+          "expected": "string",
+          "actual": "number",
+          "rule": null,
+          "message": "sender orders sends `total` as `number`; receiver gateway declares it `string`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "date-string:placedAt"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:35:12",
+        "to": "entry:orders:http:POST:/orders/prices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:35:12|http_calls|entry:orders:http:POST:/orders/prices",
+      "direction": "request",
+      "status": "shared",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:@fx/wire#MoneyDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.price"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:@fx/wire#MoneyDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.price"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:35:12",
+        "to": "entry:orders:http:POST:/orders/prices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:35:12|http_calls|entry:orders:http:POST:/orders/prices",
+      "direction": "response",
+      "status": "shared",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:@fx/wire#MoneyDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.price"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:@fx/wire#MoneyDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.price"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:40:12",
+        "to": "entry:orders:http:POST:/orders/addresses",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:40:12|http_calls|entry:orders:http:POST:/orders/addresses",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#AddressDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.address"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#AddressDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.address"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:40:12",
+        "to": "entry:orders:http:POST:/orders/addresses",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:40:12|http_calls|entry:orders:http:POST:/orders/addresses",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#AddressDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.address"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#AddressDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.address"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
+        "to": "entry:orders:http:POST:/orders/legacy",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
+            "to": "entry:orders:http:POST:/orders/legacy",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CreateOrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateOrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+          },
+          "typeId": "type:orders#CreateOrderDto",
+          "field": "channel",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+          "ignored": true,
+          "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
+            "to": "entry:orders:http:POST:/orders/legacy",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CreateOrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateOrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+          },
+          "typeId": "type:orders#CreateOrderDto",
+          "field": "debugId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender gateway sends `debugId: string`; receiver orders declares no such field",
+          "ignored": true,
+          "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+        },
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
+            "to": "entry:orders:http:POST:/orders/legacy",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CreateOrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateOrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+          },
+          "typeId": "type:orders#CreateOrderDto",
+          "field": "note",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`note` may be left out by sender gateway and is required by receiver orders; the sender marks it optional by question",
+          "ignored": true,
+          "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
+        "to": "entry:orders:http:POST:/orders/legacy",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#OrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
+            "to": "entry:orders:http:POST:/orders/legacy",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+          "direction": "response",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#OrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+          },
+          "receiver": {
+            "service": "gateway",
+            "typeId": "type:gateway#OrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+          },
+          "typeId": "type:gateway#OrderDto",
+          "field": "total",
+          "expected": "string",
+          "actual": "number",
+          "rule": null,
+          "message": "sender orders sends `total` as `number`; receiver gateway declares it `string`",
+          "ignored": true,
+          "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+        }
+      ],
+      "rulesApplied": [
+        "date-string:placedAt"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
+        "to": "entry:orders:http:POST:/wire",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#WireDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.send"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#WireDto",
+        "symbol": "orders#src/wire/wire.controller.ts:WireController.accept"
+      },
+      "findings": [
+        {
+          "severity": "warning",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
+            "to": "entry:orders:http:POST:/wire",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#WireDto",
+            "symbol": "gateway#src/clients/wire.client.ts:WireClient.send"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#WireDto",
+            "symbol": "orders#src/wire/wire.controller.ts:WireController.accept"
+          },
+          "typeId": "type:orders#WireDto",
+          "field": "counts",
+          "expected": "object",
+          "actual": "Record<string,number>",
+          "rule": "set-map-json",
+          "message": "`counts` is a Set or a Map; JSON carries neither, so what receiver orders reads is whatever a replacer wrote by hand",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
+            "to": "entry:orders:http:POST:/wire",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#WireDto",
+            "symbol": "gateway#src/clients/wire.client.ts:WireClient.send"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#WireDto",
+            "symbol": "orders#src/wire/wire.controller.ts:WireController.accept"
+          },
+          "typeId": "type:orders#WireDto",
+          "field": "internalNote",
+          "expected": null,
+          "actual": "string",
+          "rule": "class-transformer",
+          "message": "sender gateway sends `internalNote: string`; receiver orders declares no such field; the receiver excludes it, so what arrives is thrown away",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "warning",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
+            "to": "entry:orders:http:POST:/wire",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#WireDto",
+            "symbol": "gateway#src/clients/wire.client.ts:WireClient.send"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#WireDto",
+            "symbol": "orders#src/wire/wire.controller.ts:WireController.accept"
+          },
+          "typeId": "type:orders#WireDto",
+          "field": "tags",
+          "expected": "string[]",
+          "actual": "string[]",
+          "rule": "set-map-json",
+          "message": "`tags` is a Set or a Map; JSON carries neither, so what receiver orders reads is whatever a replacer wrote by hand",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "any-unknown-skip:extras",
+        "bigint-string:reference",
+        "buffer-string:signature",
+        "class-transformer:customerId",
+        "class-transformer:internalNote",
+        "class-transformer:secret",
+        "class-transformer:shippingCity",
+        "class-transformer:transform:coupon",
+        "class-transformer:transform:score",
+        "date-string:placedAt",
+        "set-map-json:counts",
+        "set-map-json:tags"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:23:12",
+        "to": "entry:orders:http:POST:/wire/broken",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:23:12|http_calls|entry:orders:http:POST:/wire/broken",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#WireBrokenDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendBroken"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#WireBrokenDto",
+        "symbol": "orders#src/wire/wire.controller.ts:WireController.broken"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:gateway#src/clients/wire.client.ts:23:12",
+            "to": "entry:orders:http:POST:/wire/broken",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/wire.client.ts:23:12|http_calls|entry:orders:http:POST:/wire/broken",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#WireBrokenDto",
+            "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendBroken"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#WireBrokenDto",
+            "symbol": "orders#src/wire/wire.controller.ts:WireController.broken"
+          },
+          "typeId": "type:orders#WireBrokenDto",
+          "field": "delivery",
+          "expected": "'post'",
+          "actual": "Delivery",
+          "rule": null,
+          "message": "sender gateway sends `delivery` as `Delivery`; receiver orders declares it `'post'`; 'courier' is not among the values the receiver accepts",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:gateway#src/clients/wire.client.ts:23:12",
+            "to": "entry:orders:http:POST:/wire/broken",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/wire.client.ts:23:12|http_calls|entry:orders:http:POST:/wire/broken",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#WireBrokenDto",
+            "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendBroken"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#WireBrokenDto",
+            "symbol": "orders#src/wire/wire.controller.ts:WireController.broken"
+          },
+          "typeId": "type:orders#WireBrokenDto",
+          "field": "placedAt",
+          "expected": "number",
+          "actual": "string",
+          "rule": null,
+          "message": "sender gateway sends `placedAt` as `string`; receiver orders declares it `number`",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:gateway#src/clients/wire.client.ts:23:12",
+            "to": "entry:orders:http:POST:/wire/broken",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/wire.client.ts:23:12|http_calls|entry:orders:http:POST:/wire/broken",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#WireBrokenDto",
+            "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendBroken"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#WireBrokenDto",
+            "symbol": "orders#src/wire/wire.controller.ts:WireController.broken"
+          },
+          "typeId": "type:orders#WireBrokenDto",
+          "field": "reference",
+          "expected": "string",
+          "actual": null,
+          "rule": "undefined-vanishes",
+          "message": "receiver orders requires `reference: string`; sender gateway does not send it; the sender declares it as holding nothing, and nothing is ever written",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "date-string:placedAt",
+        "undefined-vanishes:reference"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:28:12",
+        "to": "entry:orders:http:POST:/deep",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:28:12|http_calls|entry:orders:http:POST:/deep",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#DeepDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendDeep"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#DeepDto",
+        "symbol": "orders#src/deep/deep.controller.ts:DeepController.accept"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:gateway#src/clients/wire.client.ts:28:12",
+            "to": "entry:orders:http:POST:/deep",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/wire.client.ts:28:12|http_calls|entry:orders:http:POST:/deep",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#DeepDto",
+            "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendDeep"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#DeepDto",
+            "symbol": "orders#src/deep/deep.controller.ts:DeepController.accept"
+          },
+          "typeId": "type:orders#DeepDto",
+          "field": "label",
+          "expected": "string",
+          "actual": "number",
+          "rule": null,
+          "message": "sender gateway sends `label` as `number`; receiver orders declares it `string`",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:gateway#src/clients/wire.client.ts:28:12",
+            "to": "entry:orders:http:POST:/deep",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/wire.client.ts:28:12|http_calls|entry:orders:http:POST:/deep",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#DeepDto",
+            "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendDeep"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#DeepDto",
+            "symbol": "orders#src/deep/deep.controller.ts:DeepController.accept"
+          },
+          "typeId": "type:orders#DeepDto",
+          "field": "next.next.next",
+          "expected": "DeepL3",
+          "actual": "DeepL3",
+          "rule": null,
+          "message": "sender gateway sends `next.next.next` as `DeepL3`; receiver orders declares it `DeepL3`; their shapes differ below the depth this run compared; raise --depth to see which field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "depth-cap:next.next.next"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:33:12",
+        "to": "entry:orders:http:POST:/deep/categories",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:33:12|http_calls|entry:orders:http:POST:/deep/categories",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CategoryDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendCategory"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CategoryDto",
+        "symbol": "orders#src/deep/deep.controller.ts:DeepController.categories"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/wire.client.ts:33:12",
+            "to": "entry:orders:http:POST:/deep/categories",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/wire.client.ts:33:12|http_calls|entry:orders:http:POST:/deep/categories",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CategoryDto",
+            "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendCategory"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CategoryDto",
+            "symbol": "orders#src/deep/deep.controller.ts:DeepController.categories"
+          },
+          "typeId": "type:orders#CategoryDto",
+          "field": "code",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender gateway sends `code: string`; receiver orders declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:gateway#src/clients/wire.client.ts:33:12",
+            "to": "entry:orders:http:POST:/deep/categories",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/wire.client.ts:33:12|http_calls|entry:orders:http:POST:/deep/categories",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CategoryDto",
+            "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendCategory"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CategoryDto",
+            "symbol": "orders#src/deep/deep.controller.ts:DeepController.categories"
+          },
+          "typeId": "type:orders#CategoryDto",
+          "field": "id",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver orders requires `id: string`; sender gateway does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "cycle:children[]"
+      ]
+    },
+    {
+      "edge": {
+        "from": "producer:billing#src/invoices/orders.rpc.client.ts:15:12",
+        "to": "consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+        "type": "emits"
+      },
+      "edgeKey": "producer:billing#src/invoices/orders.rpc.client.ts:15:12|emits|consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#GetOrderQuery",
+        "symbol": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient.ask"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#GetOrderQuery",
+        "symbol": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "producer:billing#src/invoices/orders.rpc.client.ts:15:12",
+            "to": "consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+            "type": "emits"
+          },
+          "edgeKey": "producer:billing#src/invoices/orders.rpc.client.ts:15:12|emits|consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+          "direction": "payload",
+          "sender": {
+            "service": "billing",
+            "typeId": "type:billing#GetOrderQuery",
+            "symbol": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient.ask"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#GetOrderQuery",
+            "symbol": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get"
+          },
+          "typeId": "type:orders#GetOrderQuery",
+          "field": "includeItems",
+          "expected": "boolean",
+          "actual": null,
+          "rule": null,
+          "message": "receiver orders requires `includeItems: boolean`; sender billing does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:billing#src/invoices/orders.rpc.client.ts:15:12",
+            "to": "consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+            "type": "emits"
+          },
+          "edgeKey": "producer:billing#src/invoices/orders.rpc.client.ts:15:12|emits|consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+          "direction": "payload",
+          "sender": {
+            "service": "billing",
+            "typeId": "type:billing#GetOrderQuery",
+            "symbol": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient.ask"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#GetOrderQuery",
+            "symbol": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get"
+          },
+          "typeId": "type:orders#GetOrderQuery",
+          "field": "includeRefunds",
+          "expected": null,
+          "actual": "boolean",
+          "rule": null,
+          "message": "sender billing sends `includeRefunds: boolean`; receiver orders declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:39:5",
+        "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/orders.service.ts:39:5|emits|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderCreatedEvent",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.create"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#OrderCreatedEvent",
+        "symbol": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "producer:orders#src/orders/orders.service.ts:39:5",
+            "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+            "type": "emits"
+          },
+          "edgeKey": "producer:orders#src/orders/orders.service.ts:39:5|emits|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+          "direction": "payload",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#OrderCreatedEvent",
+            "symbol": "orders#src/orders/orders.service.ts:OrdersService.create"
+          },
+          "receiver": {
+            "service": "billing",
+            "typeId": "type:billing#OrderCreatedEvent",
+            "symbol": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+          },
+          "typeId": "type:billing#OrderCreatedEvent",
+          "field": "customerId",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver billing requires `customerId: string`; sender orders does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "date-string:placedAt"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:21:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:21:12|hits|entry:orders:http:POST:/orders",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "type:web#CreateOrderDto",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "ui_api_call:web#src/app/orders-api.service.ts:21:12",
+            "to": "entry:orders:http:POST:/orders",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:21:12|hits|entry:orders:http:POST:/orders",
+          "direction": "request",
+          "sender": {
+            "service": "web",
+            "typeId": "type:web#CreateOrderDto",
+            "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateOrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+          },
+          "typeId": "type:orders#CreateOrderDto",
+          "field": "shipTo.postcode",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver orders requires `shipTo.postcode: string`; sender web does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:21:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:21:12|hits|entry:orders:http:POST:/orders",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#OrderDto",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "ui_api_call:web#src/app/orders-api.service.ts:21:12",
+            "to": "entry:orders:http:POST:/orders",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:21:12|hits|entry:orders:http:POST:/orders",
+          "direction": "response",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#OrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+          },
+          "receiver": {
+            "service": "web",
+            "typeId": "type:web#OrderDto",
+            "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create"
+          },
+          "typeId": "type:web#OrderDto",
+          "field": "total",
+          "expected": "string",
+          "actual": "number",
+          "rule": null,
+          "message": "sender orders sends `total` as `number`; receiver web declares it `string`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "date-string:placedAt"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "typeId": "type:orders#CreateOrderDto",
+      "field": "channel",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "typeId": "type:orders#CreateOrderDto",
+      "field": "debugId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender gateway sends `debugId: string`; receiver orders declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "typeId": "type:orders#CreateOrderDto",
+      "field": "note",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`note` may be left out by sender gateway and is required by receiver orders; the sender marks it optional by question",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+      "direction": "response",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#OrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+      },
+      "typeId": "type:gateway#OrderDto",
+      "field": "total",
+      "expected": "string",
+      "actual": "number",
+      "rule": null,
+      "message": "sender orders sends `total` as `number`; receiver gateway declares it `string`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:30:12",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:30:12|http_calls|entry:orders:http:GET:/orders/:param",
+      "direction": "response",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#OrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne"
+      },
+      "typeId": "type:gateway#OrderDto",
+      "field": "total",
+      "expected": "string",
+      "actual": "number",
+      "rule": null,
+      "message": "sender orders sends `total` as `number`; receiver gateway declares it `string`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
+        "to": "entry:orders:http:POST:/wire",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#WireDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.send"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#WireDto",
+        "symbol": "orders#src/wire/wire.controller.ts:WireController.accept"
+      },
+      "typeId": "type:orders#WireDto",
+      "field": "counts",
+      "expected": "object",
+      "actual": "Record<string,number>",
+      "rule": "set-map-json",
+      "message": "`counts` is a Set or a Map; JSON carries neither, so what receiver orders reads is whatever a replacer wrote by hand",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
+        "to": "entry:orders:http:POST:/wire",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#WireDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.send"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#WireDto",
+        "symbol": "orders#src/wire/wire.controller.ts:WireController.accept"
+      },
+      "typeId": "type:orders#WireDto",
+      "field": "internalNote",
+      "expected": null,
+      "actual": "string",
+      "rule": "class-transformer",
+      "message": "sender gateway sends `internalNote: string`; receiver orders declares no such field; the receiver excludes it, so what arrives is thrown away",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
+        "to": "entry:orders:http:POST:/wire",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#WireDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.send"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#WireDto",
+        "symbol": "orders#src/wire/wire.controller.ts:WireController.accept"
+      },
+      "typeId": "type:orders#WireDto",
+      "field": "tags",
+      "expected": "string[]",
+      "actual": "string[]",
+      "rule": "set-map-json",
+      "message": "`tags` is a Set or a Map; JSON carries neither, so what receiver orders reads is whatever a replacer wrote by hand",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:23:12",
+        "to": "entry:orders:http:POST:/wire/broken",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:23:12|http_calls|entry:orders:http:POST:/wire/broken",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#WireBrokenDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendBroken"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#WireBrokenDto",
+        "symbol": "orders#src/wire/wire.controller.ts:WireController.broken"
+      },
+      "typeId": "type:orders#WireBrokenDto",
+      "field": "delivery",
+      "expected": "'post'",
+      "actual": "Delivery",
+      "rule": null,
+      "message": "sender gateway sends `delivery` as `Delivery`; receiver orders declares it `'post'`; 'courier' is not among the values the receiver accepts",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:23:12",
+        "to": "entry:orders:http:POST:/wire/broken",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:23:12|http_calls|entry:orders:http:POST:/wire/broken",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#WireBrokenDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendBroken"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#WireBrokenDto",
+        "symbol": "orders#src/wire/wire.controller.ts:WireController.broken"
+      },
+      "typeId": "type:orders#WireBrokenDto",
+      "field": "placedAt",
+      "expected": "number",
+      "actual": "string",
+      "rule": null,
+      "message": "sender gateway sends `placedAt` as `string`; receiver orders declares it `number`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:23:12",
+        "to": "entry:orders:http:POST:/wire/broken",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:23:12|http_calls|entry:orders:http:POST:/wire/broken",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#WireBrokenDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendBroken"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#WireBrokenDto",
+        "symbol": "orders#src/wire/wire.controller.ts:WireController.broken"
+      },
+      "typeId": "type:orders#WireBrokenDto",
+      "field": "reference",
+      "expected": "string",
+      "actual": null,
+      "rule": "undefined-vanishes",
+      "message": "receiver orders requires `reference: string`; sender gateway does not send it; the sender declares it as holding nothing, and nothing is ever written",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:28:12",
+        "to": "entry:orders:http:POST:/deep",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:28:12|http_calls|entry:orders:http:POST:/deep",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#DeepDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendDeep"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#DeepDto",
+        "symbol": "orders#src/deep/deep.controller.ts:DeepController.accept"
+      },
+      "typeId": "type:orders#DeepDto",
+      "field": "label",
+      "expected": "string",
+      "actual": "number",
+      "rule": null,
+      "message": "sender gateway sends `label` as `number`; receiver orders declares it `string`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:28:12",
+        "to": "entry:orders:http:POST:/deep",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:28:12|http_calls|entry:orders:http:POST:/deep",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#DeepDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendDeep"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#DeepDto",
+        "symbol": "orders#src/deep/deep.controller.ts:DeepController.accept"
+      },
+      "typeId": "type:orders#DeepDto",
+      "field": "next.next.next",
+      "expected": "DeepL3",
+      "actual": "DeepL3",
+      "rule": null,
+      "message": "sender gateway sends `next.next.next` as `DeepL3`; receiver orders declares it `DeepL3`; their shapes differ below the depth this run compared; raise --depth to see which field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:33:12",
+        "to": "entry:orders:http:POST:/deep/categories",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:33:12|http_calls|entry:orders:http:POST:/deep/categories",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CategoryDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendCategory"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CategoryDto",
+        "symbol": "orders#src/deep/deep.controller.ts:DeepController.categories"
+      },
+      "typeId": "type:orders#CategoryDto",
+      "field": "code",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender gateway sends `code: string`; receiver orders declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:33:12",
+        "to": "entry:orders:http:POST:/deep/categories",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:33:12|http_calls|entry:orders:http:POST:/deep/categories",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CategoryDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendCategory"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CategoryDto",
+        "symbol": "orders#src/deep/deep.controller.ts:DeepController.categories"
+      },
+      "typeId": "type:orders#CategoryDto",
+      "field": "id",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver orders requires `id: string`; sender gateway does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "producer:billing#src/invoices/orders.rpc.client.ts:15:12",
+        "to": "consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+        "type": "emits"
+      },
+      "edgeKey": "producer:billing#src/invoices/orders.rpc.client.ts:15:12|emits|consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+      "direction": "payload",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#GetOrderQuery",
+        "symbol": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient.ask"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#GetOrderQuery",
+        "symbol": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get"
+      },
+      "typeId": "type:orders#GetOrderQuery",
+      "field": "includeItems",
+      "expected": "boolean",
+      "actual": null,
+      "rule": null,
+      "message": "receiver orders requires `includeItems: boolean`; sender billing does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:billing#src/invoices/orders.rpc.client.ts:15:12",
+        "to": "consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+        "type": "emits"
+      },
+      "edgeKey": "producer:billing#src/invoices/orders.rpc.client.ts:15:12|emits|consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+      "direction": "payload",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#GetOrderQuery",
+        "symbol": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient.ask"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#GetOrderQuery",
+        "symbol": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get"
+      },
+      "typeId": "type:orders#GetOrderQuery",
+      "field": "includeRefunds",
+      "expected": null,
+      "actual": "boolean",
+      "rule": null,
+      "message": "sender billing sends `includeRefunds: boolean`; receiver orders declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:39:5",
+        "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/orders.service.ts:39:5|emits|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "direction": "payload",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderCreatedEvent",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.create"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#OrderCreatedEvent",
+        "symbol": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+      },
+      "typeId": "type:billing#OrderCreatedEvent",
+      "field": "customerId",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver billing requires `customerId: string`; sender orders does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:21:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:21:12|hits|entry:orders:http:POST:/orders",
+      "direction": "request",
+      "sender": {
+        "service": "web",
+        "typeId": "type:web#CreateOrderDto",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "typeId": "type:orders#CreateOrderDto",
+      "field": "shipTo.postcode",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver orders requires `shipTo.postcode: string`; sender web does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:21:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:21:12|hits|entry:orders:http:POST:/orders",
+      "direction": "response",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#OrderDto",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create"
+      },
+      "typeId": "type:web#OrderDto",
+      "field": "total",
+      "expected": "string",
+      "actual": "number",
+      "rule": null,
+      "message": "sender orders sends `total` as `number`; receiver web declares it `string`",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
+        "to": "entry:orders:http:POST:/orders/legacy",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+      },
+      "typeId": "type:orders#CreateOrderDto",
+      "field": "channel",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+      "ignored": true,
+      "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
+        "to": "entry:orders:http:POST:/orders/legacy",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+      },
+      "typeId": "type:orders#CreateOrderDto",
+      "field": "debugId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender gateway sends `debugId: string`; receiver orders declares no such field",
+      "ignored": true,
+      "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
+        "to": "entry:orders:http:POST:/orders/legacy",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+      },
+      "typeId": "type:orders#CreateOrderDto",
+      "field": "note",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`note` may be left out by sender gateway and is required by receiver orders; the sender marks it optional by question",
+      "ignored": true,
+      "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
+        "to": "entry:orders:http:POST:/orders/legacy",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "direction": "response",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#OrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+      },
+      "typeId": "type:gateway#OrderDto",
+      "field": "total",
+      "expected": "string",
+      "actual": "number",
+      "rule": null,
+      "message": "sender orders sends `total` as `number`; receiver gateway declares it `string`",
+      "ignored": true,
+      "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+    }
+  ],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:30:12",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:30:12|http_calls|entry:orders:http:GET:/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
+        "to": "entry:orders:http:POST:/wire",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/wire/wire.controller.ts:WireController.accept declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:23:12",
+        "to": "entry:orders:http:POST:/wire/broken",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:23:12|http_calls|entry:orders:http:POST:/wire/broken",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/wire/wire.controller.ts:WireController.broken declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:28:12",
+        "to": "entry:orders:http:POST:/deep",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:28:12|http_calls|entry:orders:http:POST:/deep",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/deep/deep.controller.ts:DeepController.accept declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:33:12",
+        "to": "entry:orders:http:POST:/deep/categories",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:33:12|http_calls|entry:orders:http:POST:/deep/categories",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/deep/deep.controller.ts:DeepController.categories declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    }
+  ],
+  "summary": {
+    "edges": 17,
+    "shared": 2,
+    "identical": 2,
+    "hash_differs": 13,
+    "unchecked": 5,
+    "errors": 13,
+    "warnings": 3,
+    "infos": 4,
+    "ignored": 4
+  }
+}

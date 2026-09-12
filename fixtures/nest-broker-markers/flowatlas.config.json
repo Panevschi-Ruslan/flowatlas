@@ -1,0 +1,28 @@
+{
+  "services": [{ "name": "nest-broker-markers", "repo": ".", "type": "nestjs" }],
+  "sharedPackages": [],
+  "adapters": {
+    "auto": true,
+    "force": {},
+    "broker": {
+      "custom": [
+        {
+          "name": "event-bus",
+          "channelKind": "channel",
+          "producers": [
+            {
+              "receiverType": ["EventBusService"],
+              "method": "publish",
+              "channelArg": 0,
+              "payloadArg": 1,
+              "kind": "event"
+            }
+          ],
+          "consumers": []
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas",
+  "types": { "maxDepth": 3 }
+}

@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-12T17:47:29.514Z",
+  "configHash": "37634076a802",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 25,
+      "edges": 14,
+      "types": 1,
+      "unresolved": 3,
+      "durationMs": 611
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 13,
+      "edges": 9,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 490
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 2,
+    "resolved": 2,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 11,
+    "called": 2,
+    "uncalled": [
+      "entry:api:http:ALL:/api/*",
+      "entry:api:http:DELETE:/api/depots/:param/cache",
+      "entry:api:http:GET:/api/admin/events",
+      "entry:api:http:GET:/api/admin/orders/:param",
+      "entry:api:http:GET:/api/depots/:param/menu-stream",
+      "entry:api:http:GET:/health",
+      "entry:api:http:POST:/api/depots/:param/orders/:param/cancel",
+      "entry:api:http:POST:/api/messenger/webhook",
+      "entry:api:http:POST:/internal/reload"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 38,
+    "edges": 25,
+    "types": 1,
+    "unresolved": 3
+  }
+}

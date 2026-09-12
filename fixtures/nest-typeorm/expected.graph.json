@@ -1,0 +1,525 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-typeorm",
+  "generatedAt": "2026-09-09T22:29:17.190Z",
+  "nodes": [
+    {
+      "id": "db_query:nest-typeorm#src/orders/orders.service.ts:22:12",
+      "type": "db_query",
+      "label": "read Order",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.service.ts",
+      "line": 22,
+      "meta": {
+        "op": "read",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "this.orders",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-typeorm#src/orders/orders.service.ts:27:12",
+      "type": "db_query",
+      "label": "write Order",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.service.ts",
+      "line": 27,
+      "meta": {
+        "op": "write",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "typeorm",
+        "method": "save",
+        "receiver": "this.orders",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-typeorm#src/orders/orders.service.ts:32:12",
+      "type": "db_query",
+      "label": "delete Order",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.service.ts",
+      "line": 32,
+      "meta": {
+        "op": "delete",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "typeorm",
+        "method": "delete",
+        "receiver": "this.orders",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-typeorm#src/orders/orders.service.ts:38:12",
+      "type": "db_query",
+      "label": "read Order",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.service.ts",
+      "line": 38,
+      "meta": {
+        "op": "read",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "typeorm",
+        "method": "createQueryBuilder",
+        "receiver": "this.orderCache",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "entry:nest-typeorm:http:DELETE:/orders/:param",
+      "type": "entry",
+      "label": "DELETE /orders/:param",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-typeorm:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-typeorm:http:GET:/orders/recent",
+      "type": "entry",
+      "label": "GET /orders/recent",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/recent",
+        "rawPath": "/orders/recent",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-typeorm:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-typeorm#node_modules/typeorm:Repository",
+      "type": "provider",
+      "label": "Repository",
+      "repo": "nest-typeorm",
+      "file": "node_modules/typeorm",
+      "kind": "external",
+      "meta": {
+        "package": "typeorm",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-typeorm#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-typeorm",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-typeorm#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20
+    },
+    {
+      "id": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "method",
+      "label": "OrdersController.findAll",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "id": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.recent",
+      "type": "method",
+      "label": "OrdersController.recent",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15
+    },
+    {
+      "id": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "method",
+      "label": "OrdersController.remove",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25
+    },
+    {
+      "id": "nest-typeorm#src/orders/orders.module.ts:OrdersModule",
+      "type": "module",
+      "label": "OrdersModule",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.module.ts",
+      "line": 9,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-typeorm#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-typeorm#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "id": "nest-typeorm#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "method",
+      "label": "OrdersService.findAll",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.service.ts",
+      "line": 21
+    },
+    {
+      "id": "nest-typeorm#src/orders/orders.service.ts:OrdersService.recent",
+      "type": "method",
+      "label": "OrdersService.recent",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "id": "nest-typeorm#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "method",
+      "label": "OrdersService.remove",
+      "repo": "nest-typeorm",
+      "file": "src/orders/orders.service.ts",
+      "line": 31
+    },
+    {
+      "id": "repo:nest-typeorm",
+      "type": "repo",
+      "label": "nest-typeorm",
+      "repo": "nest-typeorm",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "classes": 5,
+          "skippedExternalCalls": {
+            "typeorm": 4
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:nest-typeorm#Order",
+      "type": "table",
+      "label": "Order",
+      "repo": "nest-typeorm"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:nest-typeorm#src/orders/orders.service.ts:22:12",
+      "to": "table:nest-typeorm#Order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "from": "db_query:nest-typeorm#src/orders/orders.service.ts:27:12",
+      "to": "table:nest-typeorm#Order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 27
+    },
+    {
+      "from": "db_query:nest-typeorm#src/orders/orders.service.ts:32:12",
+      "to": "table:nest-typeorm#Order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 32
+    },
+    {
+      "from": "db_query:nest-typeorm#src/orders/orders.service.ts:38:12",
+      "to": "table:nest-typeorm#Order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 38
+    },
+    {
+      "from": "entry:nest-typeorm:http:DELETE:/orders/:param",
+      "to": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-typeorm:http:GET:/orders",
+      "to": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "params": [],
+      "returns": "type:nest-typeorm#Order[]"
+    },
+    {
+      "from": "entry:nest-typeorm:http:GET:/orders/recent",
+      "to": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.recent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "entry:nest-typeorm:http:POST:/orders",
+      "to": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "params": [
+        "type:nest-typeorm#Order"
+      ],
+      "returns": "type:nest-typeorm#Order",
+      "meta": {
+        "body": "type:nest-typeorm#Order"
+      }
+    },
+    {
+      "from": "nest-typeorm#src/app.module.ts:AppModule",
+      "to": "nest-typeorm#src/orders/orders.module.ts:OrdersModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 5
+    },
+    {
+      "from": "nest-typeorm#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-typeorm#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "nest-typeorm#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22,
+      "params": [
+        "type:nest-typeorm#Order"
+      ],
+      "returns": "type:nest-typeorm#Order"
+    },
+    {
+      "from": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.findAll",
+      "to": "nest-typeorm#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12,
+      "params": [],
+      "returns": "type:nest-typeorm#Order[]"
+    },
+    {
+      "from": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.recent",
+      "to": "nest-typeorm#src/orders/orders.service.ts:OrdersService.recent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-typeorm#src/orders/orders.controller.ts:OrdersController.remove",
+      "to": "nest-typeorm#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 27,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-typeorm#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-typeorm#node_modules/typeorm:Repository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-typeorm#src/orders/orders.service.ts:OrdersService.create",
+      "to": "db_query:nest-typeorm#src/orders/orders.service.ts:27:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 27
+    },
+    {
+      "from": "nest-typeorm#src/orders/orders.service.ts:OrdersService.findAll",
+      "to": "db_query:nest-typeorm#src/orders/orders.service.ts:22:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "from": "nest-typeorm#src/orders/orders.service.ts:OrdersService.recent",
+      "to": "db_query:nest-typeorm#src/orders/orders.service.ts:38:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 38
+    },
+    {
+      "from": "nest-typeorm#src/orders/orders.service.ts:OrdersService.remove",
+      "to": "db_query:nest-typeorm#src/orders/orders.service.ts:32:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 32
+    }
+  ],
+  "types": {
+    "type:nest-typeorm#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "nest-typeorm#src/orders/order.entity.ts",
+      "structuralHash": "66571ed2e8a475e5",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "userId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": []
+}

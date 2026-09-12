@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 3,
+  "repo": "smoke",
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "nodes": [
+    {
+      "id": "entry:smoke:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "smoke",
+      "file": "src/health.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "controller": "HealthController"
+      }
+    },
+    {
+      "id": "smoke#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "smoke",
+      "file": "src/app.module.ts",
+      "line": 4
+    },
+    {
+      "id": "smoke#src/health.controller.ts:HealthController",
+      "type": "provider",
+      "label": "HealthController",
+      "repo": "smoke",
+      "file": "src/health.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "smoke#src/health.controller.ts:HealthController.check",
+      "type": "method",
+      "label": "HealthController.check",
+      "repo": "smoke",
+      "file": "src/health.controller.ts",
+      "line": 9
+    },
+    {
+      "id": "smoke#src/health.service.ts:HealthService",
+      "type": "provider",
+      "label": "HealthService",
+      "repo": "smoke",
+      "file": "src/health.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:smoke:http:GET:/health",
+      "to": "smoke#src/health.controller.ts:HealthController.check",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:smoke#HealthStatus",
+      "file": "src/health.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "smoke#src/health.controller.ts:HealthController",
+      "to": "smoke#src/health.service.ts:HealthService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/health.controller.ts",
+      "line": 6
+    }
+  ],
+  "types": {
+    "type:smoke#HealthStatus": {
+      "name": "HealthStatus",
+      "kind": "object",
+      "declaredIn": "smoke#src/health.status.ts",
+      "structuralHash": "3f1c9a7e",
+      "fields": [
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "uptime",
+          "type": "number",
+          "optional": true
+        }
+      ]
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/health.service.ts",
+      "line": 11,
+      "reason": "dynamic-config-key",
+      "hint": "The key is built at run time. Use a literal, or record it with a marker.",
+      "symbol": "HealthService.ping",
+      "adapter": "schema-smoke"
+    }
+  ]
+}

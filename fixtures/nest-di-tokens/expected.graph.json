@@ -1,0 +1,468 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-di-tokens",
+  "generatedAt": "2026-09-09T22:29:12.351Z",
+  "nodes": [
+    {
+      "id": "db_query:nest-di-tokens#src/orders/orders.service.ts:37:10",
+      "type": "db_query",
+      "label": "access ?",
+      "repo": "nest-di-tokens",
+      "file": "src/orders/orders.service.ts",
+      "line": 37,
+      "meta": {
+        "op": null,
+        "table": null,
+        "tables": [],
+        "package": null,
+        "method": "get",
+        "receiver": "this.store",
+        "source": "none"
+      }
+    },
+    {
+      "id": "nest-di-tokens#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-di-tokens",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-di-tokens#src/cache/alt-cache.module.ts:AltCacheModule",
+      "type": "module",
+      "label": "AltCacheModule",
+      "repo": "nest-di-tokens",
+      "file": "src/cache/alt-cache.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "STORE"
+        ],
+        "exports": [
+          "STORE"
+        ]
+      }
+    },
+    {
+      "id": "nest-di-tokens#src/cache/cache.module.ts:CacheModule",
+      "type": "module",
+      "label": "CacheModule",
+      "repo": "nest-di-tokens",
+      "file": "src/cache/cache.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "MemoryCache",
+          "CACHE",
+          "CACHE_ALIAS",
+          "STORE"
+        ],
+        "exports": [
+          "MemoryCache",
+          "CACHE",
+          "CACHE_ALIAS",
+          "STORE"
+        ]
+      }
+    },
+    {
+      "id": "nest-di-tokens#src/cache/memory-cache.ts:MemoryCache",
+      "type": "provider",
+      "label": "MemoryCache",
+      "repo": "nest-di-tokens",
+      "file": "src/cache/memory-cache.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "CacheModule"
+      }
+    },
+    {
+      "id": "nest-di-tokens#src/cache/memory-cache.ts:MemoryCache.get",
+      "type": "method",
+      "label": "MemoryCache.get",
+      "repo": "nest-di-tokens",
+      "file": "src/cache/memory-cache.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-di-tokens#src/cache/redis-cache.ts:RedisCache",
+      "type": "provider",
+      "label": "RedisCache",
+      "repo": "nest-di-tokens",
+      "file": "src/cache/redis-cache.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AltCacheModule"
+      }
+    },
+    {
+      "id": "nest-di-tokens#src/cache/redis-cache.ts:RedisCache.get",
+      "type": "method",
+      "label": "RedisCache.get",
+      "repo": "nest-di-tokens",
+      "file": "src/cache/redis-cache.ts",
+      "line": 7
+    },
+    {
+      "id": "nest-di-tokens#src/config/config.module.ts:CLIENT",
+      "type": "provider",
+      "label": "CLIENT",
+      "repo": "nest-di-tokens",
+      "file": "src/config/config.module.ts",
+      "line": 10,
+      "kind": "factory",
+      "meta": {
+        "token": "CLIENT"
+      }
+    },
+    {
+      "id": "nest-di-tokens#src/config/config.module.ts:CONFIG",
+      "type": "provider",
+      "label": "CONFIG",
+      "repo": "nest-di-tokens",
+      "file": "src/config/config.module.ts",
+      "line": 8,
+      "kind": "value",
+      "meta": {
+        "token": "CONFIG"
+      }
+    },
+    {
+      "id": "nest-di-tokens#src/config/config.module.ts:ConfigModule",
+      "type": "module",
+      "label": "ConfigModule",
+      "repo": "nest-di-tokens",
+      "file": "src/config/config.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "CONFIG",
+          "CLIENT"
+        ],
+        "exports": [
+          "CONFIG",
+          "CLIENT"
+        ]
+      }
+    },
+    {
+      "id": "nest-di-tokens#src/orders/orders.module.ts:OrdersModule",
+      "type": "module",
+      "label": "OrdersModule",
+      "repo": "nest-di-tokens",
+      "file": "src/orders/orders.module.ts",
+      "line": 9,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": [
+          "OrdersService"
+        ]
+      }
+    },
+    {
+      "id": "nest-di-tokens#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-di-tokens",
+      "file": "src/orders/orders.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-di-tokens#src/orders/orders.service.ts:OrdersService.describe",
+      "type": "method",
+      "label": "OrdersService.describe",
+      "repo": "nest-di-tokens",
+      "file": "src/orders/orders.service.ts",
+      "line": 27
+    },
+    {
+      "id": "nest-di-tokens#src/orders/orders.service.ts:OrdersService.place",
+      "type": "method",
+      "label": "OrdersService.place",
+      "repo": "nest-di-tokens",
+      "file": "src/orders/orders.service.ts",
+      "line": 31
+    },
+    {
+      "id": "nest-di-tokens#src/payments/payments.module.ts:PaymentsModule",
+      "type": "module",
+      "label": "PaymentsModule",
+      "repo": "nest-di-tokens",
+      "file": "src/payments/payments.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "PaymentsService"
+        ],
+        "exports": [
+          "PaymentsService"
+        ]
+      }
+    },
+    {
+      "id": "nest-di-tokens#src/payments/payments.service.ts:PaymentsService",
+      "type": "provider",
+      "label": "PaymentsService",
+      "repo": "nest-di-tokens",
+      "file": "src/payments/payments.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "PaymentsModule"
+      }
+    },
+    {
+      "id": "nest-di-tokens#src/payments/payments.service.ts:PaymentsService.charge",
+      "type": "method",
+      "label": "PaymentsService.charge",
+      "repo": "nest-di-tokens",
+      "file": "src/payments/payments.service.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-di-tokens#src/payments/payments.service.ts:PaymentsService.refund",
+      "type": "method",
+      "label": "PaymentsService.refund",
+      "repo": "nest-di-tokens",
+      "file": "src/payments/payments.service.ts",
+      "line": 17
+    },
+    {
+      "id": "repo:nest-di-tokens",
+      "type": "repo",
+      "label": "nest-di-tokens",
+      "repo": "nest-di-tokens",
+      "meta": {
+        "stats": {
+          "files": 12,
+          "classes": 10,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "nest-di-tokens#src/app.module.ts:AppModule",
+      "to": "nest-di-tokens#src/orders/orders.module.ts:OrdersModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 6
+    },
+    {
+      "from": "nest-di-tokens#src/app.module.ts:AppModule",
+      "to": "nest-di-tokens#src/payments/payments.module.ts:PaymentsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 6
+    },
+    {
+      "from": "nest-di-tokens#src/orders/orders.module.ts:OrdersModule",
+      "to": "nest-di-tokens#src/cache/alt-cache.module.ts:AltCacheModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/orders/orders.module.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-di-tokens#src/orders/orders.module.ts:OrdersModule",
+      "to": "nest-di-tokens#src/cache/cache.module.ts:CacheModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/orders/orders.module.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-di-tokens#src/orders/orders.module.ts:OrdersModule",
+      "to": "nest-di-tokens#src/config/config.module.ts:ConfigModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/orders/orders.module.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-di-tokens#src/orders/orders.module.ts:OrdersModule",
+      "to": "nest-di-tokens#src/payments/payments.module.ts:PaymentsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/orders/orders.module.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-di-tokens#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-di-tokens#src/cache/memory-cache.ts:MemoryCache",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 10
+    },
+    {
+      "from": "nest-di-tokens#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-di-tokens#src/config/config.module.ts:CLIENT",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 19,
+      "meta": {
+        "token": "CLIENT",
+        "provider": "useFactory"
+      }
+    },
+    {
+      "from": "nest-di-tokens#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-di-tokens#src/config/config.module.ts:CONFIG",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "meta": {
+        "token": "CONFIG",
+        "provider": "useValue"
+      }
+    },
+    {
+      "from": "nest-di-tokens#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-di-tokens#src/payments/payments.service.ts:PaymentsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 23
+    },
+    {
+      "from": "nest-di-tokens#src/orders/orders.service.ts:OrdersService.describe",
+      "to": "nest-di-tokens#src/cache/memory-cache.ts:MemoryCache.get",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 28,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-di-tokens#src/orders/orders.service.ts:OrdersService.place",
+      "to": "db_query:nest-di-tokens#src/orders/orders.service.ts:37:10",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "from": "nest-di-tokens#src/orders/orders.service.ts:OrdersService.place",
+      "to": "nest-di-tokens#src/cache/memory-cache.ts:MemoryCache.get",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 36,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-di-tokens#src/orders/orders.service.ts:OrdersService.place",
+      "to": "nest-di-tokens#src/payments/payments.service.ts:PaymentsService.charge",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 38,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-di-tokens#src/payments/payments.module.ts:PaymentsModule",
+      "to": "nest-di-tokens#src/orders/orders.module.ts:OrdersModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/payments/payments.module.ts",
+      "line": 6
+    },
+    {
+      "from": "nest-di-tokens#src/payments/payments.service.ts:PaymentsService",
+      "to": "nest-di-tokens#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/payments/payments.service.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-di-tokens#src/payments/payments.service.ts:PaymentsService.refund",
+      "to": "nest-di-tokens#src/orders/orders.service.ts:OrdersService.describe",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/payments/payments.service.ts",
+      "line": 18,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 15,
+      "reason": "di-token-ambiguous",
+      "hint": "Token STORE is registered with 2 different classes; the one in effect depends on module order.",
+      "symbol": "OrdersService.constructor[2]"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 21,
+      "reason": "di-token-unknown",
+      "hint": "No module in this repository provides METRICS. Register it with { provide, useClass } or force the adapter that does.",
+      "symbol": "OrdersService.constructor[5]"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 35,
+      "reason": "call-through-token",
+      "hint": "Cannot follow a value provided for CLIENT; provide it with useClass to make calls visible.",
+      "symbol": "OrdersService.place -> this.client.send"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 37,
+      "reason": "db-receiver-name-only",
+      "hint": "this.store is typed as Cache, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
+      "symbol": "this.store.get"
+    }
+  ]
+}

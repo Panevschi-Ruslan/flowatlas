@@ -1,0 +1,13 @@
+{
+  "name": "orders",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@fx/contracts": "file:../shared/contracts",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/microservices": "^11.0.0",
+    "rxjs": "^7.8.0",
+    "typeorm": "^0.3.20"
+  }
+}

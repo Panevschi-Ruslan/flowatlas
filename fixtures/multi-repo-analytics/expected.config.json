@@ -1,0 +1,58 @@
+{
+  "analyticsFormatVersion": 1,
+  "flow": {
+    "selector": "POST /orders",
+    "entry": "entry:gateway:http:POST:/orders"
+  },
+  "services": {
+    "gateway": [
+      {
+        "key": "JWT_SECRET",
+        "readAt": [
+          {
+            "file": "src/auth/auth.guard.ts",
+            "line": 15,
+            "symbol": "AuthGuard.canActivate"
+          }
+        ],
+        "via": "config.get"
+      },
+      {
+        "key": "ORDERS_URL",
+        "readAt": [
+          {
+            "file": "src/clients/orders.client.ts",
+            "line": 15,
+            "symbol": "OrdersClient.create"
+          }
+        ],
+        "via": "config.get"
+      }
+    ],
+    "orders": [
+      {
+        "key": "BILLING_URL",
+        "readAt": [
+          {
+            "file": "src/clients/billing.client.ts",
+            "line": 14,
+            "symbol": "BillingClient.requestInvoice"
+          }
+        ],
+        "via": "config.get"
+      },
+      {
+        "key": "ORDERS_DB_URL",
+        "readAt": [
+          {
+            "file": "src/orders/orders.repository.ts",
+            "line": 10,
+            "symbol": "OrdersRepository.save"
+          }
+        ],
+        "via": "config.get"
+      }
+    ]
+  },
+  "unresolvedAlongFlow": 0
+}

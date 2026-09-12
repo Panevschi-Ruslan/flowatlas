@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    // The one repository that asks for it: without it `string | undefined`
+    // collapses to `string` before the extractor ever sees it, and the rule
+    // about a field that admits nothing has nothing left to fire on.
+    "strict": true,
+    "skipLibCheck": true,
+    // `Buffer` is one of the shapes the wire rules are about, and it is a Node
+    // global rather than a language type, so this one repository asks for them.
+    "types": ["node"]
+  },
+  "include": ["src"]
+}

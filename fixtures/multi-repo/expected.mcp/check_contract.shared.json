@@ -1,0 +1,21 @@
+{
+  "edge": {
+    "from": "http_out:gateway#src/clients/orders.client.ts:33:12",
+    "to": "entry:orders:http:GET:/orders/:param",
+    "type": "http_calls",
+    "confidence": "static"
+  },
+  "status": "unchecked",
+  "request": {
+    "status": "unchecked",
+    "right": "string",
+    "note": "the sending side declares no named type"
+  },
+  "response": {
+    "status": "shared",
+    "left": "type:@fx/contracts#OrderDto",
+    "right": "type:@fx/contracts#OrderDto",
+    "note": "both sides import it from @fx/contracts"
+  },
+  "findings": []
+}

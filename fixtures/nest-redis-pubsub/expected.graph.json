@@ -1,0 +1,788 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-redis-pubsub",
+  "generatedAt": "2026-09-09T22:29:16.673Z",
+  "nodes": [
+    {
+      "id": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:19:12",
+      "type": "cache_op",
+      "label": "other cache.invalidate",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 19,
+      "meta": {
+        "op": "other",
+        "keyPattern": "cache.invalidate",
+        "package": "ioredis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:25:12",
+      "type": "cache_op",
+      "label": "other cache.warm",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 25,
+      "meta": {
+        "op": "other",
+        "keyPattern": "cache.warm",
+        "package": "ioredis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:34:9",
+      "type": "cache_op",
+      "label": "other cache.invalidate",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 34,
+      "meta": {
+        "op": "other",
+        "keyPattern": "cache.invalidate",
+        "package": "ioredis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:43:12",
+      "type": "cache_op",
+      "label": "other cache.raw",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 43,
+      "meta": {
+        "op": "other",
+        "keyPattern": "cache.raw",
+        "package": "ioredis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:50:12",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 50,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "ioredis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:23:11",
+      "type": "cache_op",
+      "label": "other cache.invalidate",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 23,
+      "meta": {
+        "op": "other",
+        "keyPattern": "cache.invalidate",
+        "package": "ioredis",
+        "method": "subscribe"
+      }
+    },
+    {
+      "id": "cache_op:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:24:5",
+      "type": "cache_op",
+      "label": "other message",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 24,
+      "meta": {
+        "op": "other",
+        "keyPattern": "message",
+        "package": "ioredis",
+        "method": "on"
+      }
+    },
+    {
+      "id": "cache_op:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:30:11",
+      "type": "cache_op",
+      "label": "other cache.raw",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 30,
+      "meta": {
+        "op": "other",
+        "keyPattern": "cache.raw",
+        "package": "ioredis",
+        "method": "subscribe"
+      }
+    },
+    {
+      "id": "cache_op:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:31:5",
+      "type": "cache_op",
+      "label": "other message",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 31,
+      "meta": {
+        "op": "other",
+        "keyPattern": "message",
+        "package": "ioredis",
+        "method": "on"
+      }
+    },
+    {
+      "id": "channel:cache.invalidate",
+      "type": "channel",
+      "label": "cache.invalidate",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 19,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ]
+      }
+    },
+    {
+      "id": "channel:cache.raw",
+      "type": "channel",
+      "label": "cache.raw",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 43,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ]
+      }
+    },
+    {
+      "id": "channel:cache.warm",
+      "type": "channel",
+      "label": "cache.warm",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 25,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ]
+      }
+    },
+    {
+      "id": "consumer:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.handleInvalidation",
+      "type": "consumer",
+      "label": "CacheSubscriberService.handleInvalidation",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 23,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "decorator": "subscribe",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.onModuleInit",
+      "type": "consumer",
+      "label": "CacheSubscriberService.onModuleInit",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 30,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "decorator": "subscribe",
+        "entryId": null
+      }
+    },
+    {
+      "id": "entry:nest-redis-pubsub:http:POST:/cache/invalidate",
+      "type": "entry",
+      "label": "POST /cache/invalidate",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/cache/invalidate",
+        "rawPath": "/cache/invalidate",
+        "controller": "CacheController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-redis-pubsub#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-redis-pubsub",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "CacheController"
+        ],
+        "providers": [
+          "CachePublisherService",
+          "CacheSubscriberService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService",
+      "type": "provider",
+      "label": "CachePublisherService",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.forward",
+      "type": "method",
+      "label": "CachePublisherService.forward",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 42
+    },
+    {
+      "id": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.invalidate",
+      "type": "method",
+      "label": "CachePublisherService.invalidate",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 18
+    },
+    {
+      "id": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.invalidateAll",
+      "type": "method",
+      "label": "CachePublisherService.invalidateAll",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 31
+    },
+    {
+      "id": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.publishTo",
+      "type": "method",
+      "label": "CachePublisherService.publishTo",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 49
+    },
+    {
+      "id": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.warm",
+      "type": "method",
+      "label": "CachePublisherService.warm",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 24
+    },
+    {
+      "id": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService",
+      "type": "provider",
+      "label": "CacheSubscriberService",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.audit",
+      "type": "method",
+      "label": "CacheSubscriberService.audit",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 43
+    },
+    {
+      "id": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.handleInvalidation",
+      "type": "method",
+      "label": "CacheSubscriberService.handleInvalidation",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 38
+    },
+    {
+      "id": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.handleRaw",
+      "type": "method",
+      "label": "CacheSubscriberService.handleRaw",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 48
+    },
+    {
+      "id": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.onModuleInit",
+      "type": "method",
+      "label": "CacheSubscriberService.onModuleInit",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 18
+    },
+    {
+      "id": "nest-redis-pubsub#src/cache/cache.controller.ts:CacheController",
+      "type": "provider",
+      "label": "CacheController",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-redis-pubsub#src/cache/cache.controller.ts:CacheController.invalidate",
+      "type": "method",
+      "label": "CacheController.invalidate",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache.controller.ts",
+      "line": 11
+    },
+    {
+      "id": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:19:12",
+      "type": "producer",
+      "label": "message cache.invalidate",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 19,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "literal",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:25:12",
+      "type": "producer",
+      "label": "message cache.warm",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 25,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "const",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:34:9",
+      "type": "producer",
+      "label": "message cache.invalidate",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 34,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "literal",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:43:12",
+      "type": "producer",
+      "label": "message cache.raw",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 43,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "literal",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:50:12",
+      "type": "producer",
+      "label": "message ?",
+      "repo": "nest-redis-pubsub",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 50,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "unresolved",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "repo:nest-redis-pubsub",
+      "type": "repo",
+      "label": "nest-redis-pubsub",
+      "repo": "nest-redis-pubsub",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "classes": 4,
+          "skippedExternalCalls": {
+            "ioredis": 9
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:cache.invalidate",
+      "to": "consumer:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.handleInvalidation",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 23
+    },
+    {
+      "from": "channel:cache.raw",
+      "to": "consumer:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.onModuleInit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 30
+    },
+    {
+      "from": "consumer:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.handleInvalidation",
+      "to": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.handleInvalidation",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 23
+    },
+    {
+      "from": "consumer:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.onModuleInit",
+      "to": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.onModuleInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 30
+    },
+    {
+      "from": "entry:nest-redis-pubsub:http:POST:/cache/invalidate",
+      "to": "nest-redis-pubsub#src/cache/cache.controller.ts:CacheController.invalidate",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/cache/cache.controller.ts",
+      "line": 11,
+      "params": [
+        "type:nest-redis-pubsub#CacheInvalidated"
+      ],
+      "returns": "{published:number}",
+      "meta": {
+        "body": "type:nest-redis-pubsub#CacheInvalidated"
+      }
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.forward",
+      "to": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:43:12",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 43
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.forward",
+      "to": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:43:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 43
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.invalidate",
+      "to": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:19:12",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 19
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.invalidate",
+      "to": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:19:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 19
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.invalidateAll",
+      "to": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:34:9",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 34
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.invalidateAll",
+      "to": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:34:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 34
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.publishTo",
+      "to": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:50:12",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 50
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.publishTo",
+      "to": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:50:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 50
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.warm",
+      "to": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:25:12",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 25
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.warm",
+      "to": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:25:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 25
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.onModuleInit",
+      "to": "cache_op:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:23:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 23
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.onModuleInit",
+      "to": "cache_op:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:24:5",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 24
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.onModuleInit",
+      "to": "cache_op:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:30:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 30
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.onModuleInit",
+      "to": "cache_op:nest-redis-pubsub#src/cache/cache-subscriber.service.ts:31:5",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 31
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.onModuleInit",
+      "to": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.audit",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 32,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.onModuleInit",
+      "to": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.handleInvalidation",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 24,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.onModuleInit",
+      "to": "nest-redis-pubsub#src/cache/cache-subscriber.service.ts:CacheSubscriberService.handleRaw",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 33,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache.controller.ts:CacheController",
+      "to": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/cache/cache.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-redis-pubsub#src/cache/cache.controller.ts:CacheController.invalidate",
+      "to": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.invalidate",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/cache/cache.controller.ts",
+      "line": 13,
+      "params": [
+        "type:nest-redis-pubsub#CacheInvalidated"
+      ],
+      "returns": "number"
+    },
+    {
+      "from": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:19:12",
+      "to": "channel:cache.invalidate",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 19,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:25:12",
+      "to": "channel:cache.warm",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 25,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:34:9",
+      "to": "channel:cache.invalidate",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 34,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:43:12",
+      "to": "channel:cache.raw",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 43,
+      "params": [
+        "string"
+      ]
+    }
+  ],
+  "types": {
+    "type:nest-redis-pubsub#CacheInvalidated": {
+      "name": "CacheInvalidated",
+      "kind": "object",
+      "declaredIn": "nest-redis-pubsub#src/cache/cache-events.ts",
+      "structuralHash": "9bddd05590921e86",
+      "fields": [
+        {
+          "name": "entity",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "at",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-redis-pubsub#CacheWarmed": {
+      "name": "CacheWarmed",
+      "kind": "object",
+      "declaredIn": "nest-redis-pubsub#src/cache/cache-events.ts",
+      "structuralHash": "30091b561c917a92",
+      "fields": [
+        {
+          "name": "entity",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 50,
+      "reason": "channel-const-unresolved",
+      "hint": "The channel name cannot be read here. Annotate CachePublisherService.publishTo with the channel it uses.",
+      "symbol": "CachePublisherService.publishTo -> channel"
+    },
+    {
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 50,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "this.redis.publish"
+    },
+    {
+      "file": "src/cache/cache-subscriber.service.ts",
+      "line": 30,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "CacheSubscriberService.onModuleInit"
+    }
+  ]
+}

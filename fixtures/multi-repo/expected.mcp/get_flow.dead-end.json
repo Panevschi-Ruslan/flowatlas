@@ -1,0 +1,101 @@
+{
+  "root": {
+    "node": {
+      "id": "entry:gateway:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "label": "POST /orders/:param/cancel",
+      "loc": "src/orders/orders.controller.ts:35",
+      "service": "gateway",
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/cancel",
+        "rawPath": "/orders/:id/cancel",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    "children": [
+      {
+        "node": {
+          "id": "gateway#src/orders/orders.controller.ts:OrdersController.cancel",
+          "type": "method",
+          "label": "OrdersController.cancel",
+          "loc": "src/orders/orders.controller.ts:35",
+          "service": "gateway"
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static",
+          "params": [
+            "string"
+          ],
+          "returns": "{data:unknown}"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "gateway#src/clients/orders.client.ts:OrdersClient.cancel",
+              "type": "method",
+              "label": "OrdersClient.cancel",
+              "loc": "src/clients/orders.client.ts:43",
+              "service": "gateway"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "string"
+              ],
+              "returns": "{data:unknown}"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "config_key:gateway#ORDERS_URL",
+                  "type": "config_key",
+                  "label": "ORDERS_URL",
+                  "loc": "src/clients/orders.client.ts:33",
+                  "service": "gateway",
+                  "meta": {
+                    "key": "ORDERS_URL",
+                    "source": "config.get"
+                  }
+                },
+                "edge": {
+                  "type": "reads_config",
+                  "confidence": "static"
+                },
+                "children": []
+              },
+              {
+                "node": {
+                  "id": "http_out:gateway#src/clients/orders.client.ts:44:12",
+                  "type": "http_out",
+                  "label": "POST /orders/:param/cancel",
+                  "loc": "src/clients/orders.client.ts:44",
+                  "service": "gateway",
+                  "meta": {
+                    "method": "POST",
+                    "url": "${ORDERS_URL}/orders/${…}/cancel",
+                    "path": "/orders/:param/cancel",
+                    "baseUrlEnv": "ORDERS_URL",
+                    "responseType": "type:@fx/contracts#OrderDto",
+                    "bodyType": "object",
+                    "targetService": "orders"
+                  }
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 1
+}

@@ -1,0 +1,599 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-rabbitmq",
+  "generatedAt": "2026-09-09T22:29:16.127Z",
+  "nodes": [
+    {
+      "id": "channel:order.cancelled",
+      "type": "channel",
+      "label": "order.cancelled",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka",
+          "nestjs-rabbitmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:order.created",
+      "type": "channel",
+      "label": "order.created",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 21,
+      "meta": {
+        "channelKind": "exchange",
+        "adapters": [
+          "nestjs-rabbitmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:order.refunded",
+      "type": "channel",
+      "label": "order.refunded",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 33,
+      "meta": {
+        "channelKind": "exchange",
+        "adapters": [
+          "nestjs-rabbitmq"
+        ]
+      }
+    },
+    {
+      "id": "consumer:nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderCreated",
+      "type": "consumer",
+      "label": "OrdersConsumer.onOrderCreated",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 21,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "nestjs-rabbitmq",
+        "decorator": "RabbitSubscribe",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderRefunded",
+      "type": "consumer",
+      "label": "OrdersConsumer.onOrderRefunded",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 33,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "nestjs-rabbitmq",
+        "decorator": "RabbitSubscribe",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:nest-rabbitmq#src/orders/orders.controller.ts:OrdersController.onOrderCancelled",
+      "type": "consumer",
+      "label": "OrdersController.onOrderCancelled",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:nest-rabbitmq:event:order.cancelled"
+      }
+    },
+    {
+      "id": "entry:nest-rabbitmq:event:order.cancelled",
+      "type": "entry",
+      "label": "event order.cancelled",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "pattern": "order.cancelled",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "nest-rabbitmq#node_modules/@golevelup/nestjs-rabbitmq:AmqpConnection",
+      "type": "provider",
+      "label": "AmqpConnection",
+      "repo": "nest-rabbitmq",
+      "file": "node_modules/@golevelup/nestjs-rabbitmq",
+      "kind": "external",
+      "meta": {
+        "package": "@golevelup/nestjs-rabbitmq",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-rabbitmq#node_modules/@golevelup/nestjs-rabbitmq:RabbitMQModule",
+      "type": "module",
+      "label": "RabbitMQModule",
+      "repo": "nest-rabbitmq",
+      "file": "node_modules/@golevelup/nestjs-rabbitmq",
+      "kind": "external",
+      "meta": {
+        "package": "@golevelup/nestjs-rabbitmq",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-rabbitmq#node_modules/@nestjs/microservices:ClientsModule",
+      "type": "module",
+      "label": "ClientsModule",
+      "repo": "nest-rabbitmq",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-rabbitmq#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-rabbitmq",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService",
+          "OrdersConsumer"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer",
+      "type": "provider",
+      "label": "OrdersConsumer",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 16,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderCreated",
+      "type": "method",
+      "label": "OrdersConsumer.onOrderCreated",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 21
+    },
+    {
+      "id": "nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderRefunded",
+      "type": "method",
+      "label": "OrdersConsumer.onOrderRefunded",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 33
+    },
+    {
+      "id": "nest-rabbitmq#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-rabbitmq#src/orders/orders.controller.ts:OrdersController.onOrderCancelled",
+      "type": "method",
+      "label": "OrdersController.onOrderCancelled",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.service.ts",
+      "line": 21,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.service.ts",
+      "line": 54
+    },
+    {
+      "id": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.service.ts",
+      "line": 33
+    },
+    {
+      "id": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService.publishTo",
+      "type": "method",
+      "label": "OrdersService.publishTo",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.service.ts",
+      "line": 47
+    },
+    {
+      "id": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService.refund",
+      "type": "method",
+      "label": "OrdersService.refund",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.service.ts",
+      "line": 40
+    },
+    {
+      "id": "producer:nest-rabbitmq#src/orders/orders.service.ts:34:12",
+      "type": "producer",
+      "label": "message order.created",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.service.ts",
+      "line": 34,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "nestjs-rabbitmq",
+        "channelVia": "literal",
+        "method": "publish",
+        "exchange": "orders-x"
+      }
+    },
+    {
+      "id": "producer:nest-rabbitmq#src/orders/orders.service.ts:41:12",
+      "type": "producer",
+      "label": "message order.refunded",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.service.ts",
+      "line": 41,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "nestjs-rabbitmq",
+        "channelVia": "enum",
+        "method": "publish",
+        "exchange": "orders-x"
+      }
+    },
+    {
+      "id": "producer:nest-rabbitmq#src/orders/orders.service.ts:48:12",
+      "type": "producer",
+      "label": "message ?",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.service.ts",
+      "line": 48,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "nestjs-rabbitmq",
+        "channelVia": "unresolved",
+        "method": "publish",
+        "exchange": "orders-x"
+      }
+    },
+    {
+      "id": "producer:nest-rabbitmq#src/orders/orders.service.ts:55:5",
+      "type": "producer",
+      "label": "event order.cancelled",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.service.ts",
+      "line": 55,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "repo:nest-rabbitmq",
+      "type": "repo",
+      "label": "nest-rabbitmq",
+      "repo": "nest-rabbitmq",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "classes": 4,
+          "skippedExternalCalls": {
+            "@golevelup/nestjs-rabbitmq": 3
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "nestjs-microservice"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:order.cancelled",
+      "to": "consumer:nest-rabbitmq#src/orders/orders.controller.ts:OrdersController.onOrderCancelled",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "channel:order.created",
+      "to": "consumer:nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderCreated",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 21
+    },
+    {
+      "from": "channel:order.refunded",
+      "to": "consumer:nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderRefunded",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 33
+    },
+    {
+      "from": "consumer:nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderCreated",
+      "to": "nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderCreated",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 21,
+      "returns": "void"
+    },
+    {
+      "from": "consumer:nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderRefunded",
+      "to": "nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderRefunded",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 33,
+      "returns": "void"
+    },
+    {
+      "from": "consumer:nest-rabbitmq#src/orders/orders.controller.ts:OrdersController.onOrderCancelled",
+      "to": "nest-rabbitmq#src/orders/orders.controller.ts:OrdersController.onOrderCancelled",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-rabbitmq:event:order.cancelled",
+      "to": "nest-rabbitmq#src/orders/orders.controller.ts:OrdersController.onOrderCancelled",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "params": [
+        "type:nest-rabbitmq#OrderCancelledEvent"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-rabbitmq#src/app.module.ts:AppModule",
+      "to": "nest-rabbitmq#node_modules/@golevelup/nestjs-rabbitmq:RabbitMQModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "nest-rabbitmq#src/app.module.ts:AppModule",
+      "to": "nest-rabbitmq#node_modules/@nestjs/microservices:ClientsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-rabbitmq#node_modules/@golevelup/nestjs-rabbitmq:AmqpConnection",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "producer:nest-rabbitmq#src/orders/orders.service.ts:55:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 55
+    },
+    {
+      "from": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService.create",
+      "to": "producer:nest-rabbitmq#src/orders/orders.service.ts:34:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 34
+    },
+    {
+      "from": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService.publishTo",
+      "to": "producer:nest-rabbitmq#src/orders/orders.service.ts:48:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 48
+    },
+    {
+      "from": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService.refund",
+      "to": "producer:nest-rabbitmq#src/orders/orders.service.ts:41:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 41
+    },
+    {
+      "from": "producer:nest-rabbitmq#src/orders/orders.service.ts:34:12",
+      "to": "channel:order.created",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 34,
+      "params": [
+        "type:nest-rabbitmq#OrderCreatedEvent"
+      ]
+    },
+    {
+      "from": "producer:nest-rabbitmq#src/orders/orders.service.ts:41:12",
+      "to": "channel:order.refunded",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 41,
+      "params": [
+        "type:nest-rabbitmq#OrderRefundedEvent"
+      ]
+    },
+    {
+      "from": "producer:nest-rabbitmq#src/orders/orders.service.ts:55:5",
+      "to": "channel:order.cancelled",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 55,
+      "params": [
+        "type:nest-rabbitmq#OrderCancelledEvent"
+      ]
+    }
+  ],
+  "types": {
+    "type:amqplib#ConsumeMessage": {
+      "name": "ConsumeMessage",
+      "kind": "external",
+      "declaredIn": "amqplib",
+      "structuralHash": "c7c80fdd4e54a54d",
+      "meta": {
+        "declKind": "external",
+        "package": "amqplib"
+      }
+    },
+    "type:nest-rabbitmq#OrderCancelledEvent": {
+      "name": "OrderCancelledEvent",
+      "kind": "object",
+      "declaredIn": "nest-rabbitmq#src/orders/order.dto.ts",
+      "structuralHash": "fb48963ae9ad6b6c",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-rabbitmq#OrderCreatedEvent": {
+      "name": "OrderCreatedEvent",
+      "kind": "object",
+      "declaredIn": "nest-rabbitmq#src/orders/order.dto.ts",
+      "structuralHash": "5f43cf68ce830d20",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-rabbitmq#OrderRefundedEvent": {
+      "name": "OrderRefundedEvent",
+      "kind": "object",
+      "declaredIn": "nest-rabbitmq#src/orders/order.dto.ts",
+      "structuralHash": "7b74f42d53219fdf",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 27,
+      "reason": "di-token-unknown",
+      "hint": "No module in this repository provides RMQ_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
+      "symbol": "OrdersService.constructor[1]"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 48,
+      "reason": "channel-const-unresolved",
+      "hint": "The channel name cannot be read here. Annotate OrdersService.publishTo with the channel it uses.",
+      "symbol": "OrdersService.publishTo -> routingKey"
+    }
+  ]
+}

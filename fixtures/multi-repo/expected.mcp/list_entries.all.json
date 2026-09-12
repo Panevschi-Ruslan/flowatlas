@@ -1,0 +1,117 @@
+{
+  "entries": [
+    {
+      "id": "entry:billing:event:invoice.requested",
+      "type": "entry",
+      "label": "event invoice.requested",
+      "loc": "src/invoices/invoices.consumer.ts:28",
+      "service": "billing",
+      "kind": "event"
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "type": "entry",
+      "label": "event order.created",
+      "loc": "src/invoices/invoices.consumer.ts:17",
+      "service": "billing",
+      "kind": "event"
+    },
+    {
+      "id": "entry:billing:http:GET:/invoices/:param",
+      "type": "entry",
+      "label": "GET /invoices/:param",
+      "loc": "src/invoices/invoices.controller.ts:26",
+      "service": "billing",
+      "kind": "http"
+    },
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "type": "entry",
+      "label": "POST /invoices",
+      "loc": "src/invoices/invoices.controller.ts:15",
+      "service": "billing",
+      "kind": "http"
+    },
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/orders.controller.ts:30",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "label": "POST /orders/:param/cancel",
+      "loc": "src/orders/orders.controller.ts:35",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "type": "entry",
+      "label": "POST /orders/:param/invoice",
+      "loc": "src/orders/orders.controller.ts:40",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/charge",
+      "type": "entry",
+      "label": "POST /orders/charge",
+      "loc": "src/orders/orders.controller.ts:50",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/pay",
+      "type": "entry",
+      "label": "POST /orders/pay",
+      "loc": "src/orders/orders.controller.ts:45",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:GET:/a/:param",
+      "type": "entry",
+      "label": "GET /a/:param",
+      "loc": "src/aliases/current-aliases.controller.ts:11",
+      "service": "orders",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/orders.controller.ts:25",
+      "service": "orders",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/latest",
+      "type": "entry",
+      "label": "GET /orders/latest",
+      "loc": "src/orders/orders.controller.ts:19",
+      "service": "orders",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "loc": "src/orders/orders.controller.ts:31",
+      "service": "orders",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/:param/archive",
+      "type": "entry",
+      "label": "POST /orders/:param/archive",
+      "loc": "src/orders/orders.controller.ts:42",
+      "service": "orders",
+      "kind": "http"
+    }
+  ],
+  "total": 14
+}

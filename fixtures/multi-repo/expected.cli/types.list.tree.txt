@@ -1,0 +1,11 @@
+type:billing#CreateInvoiceDto                object   7b74f42d5321  billing#src/invoices/invoice.dto.ts
+type:@fx/contracts#CreateOrderDto            object   b192e84bf006  @fx/contracts
+type:billing#InvoiceDto                      object   98b4593efb5a  billing#src/invoices/invoice.dto.ts
+type:gateway#InvoiceDto                      object   78dbe5b1e055  gateway#src/clients/invoice.dto.ts
+type:billing#InvoiceRequestedEvent           object   7b74f42d5321  billing#src/invoices/invoice.dto.ts
+type:@fx/contracts#Money                     object   fe1facfc2371  @fx/contracts
+type:billing#OrderCreatedEvent               object   13c4f1b476f9  billing#src/invoices/invoice.dto.ts
+type:@fx/contracts#OrderDto                  object   1fe9aae8bb47  @fx/contracts
+type:web#OrderDto                            object   13c4f1b476f9  web#src/app/order.dto.ts
+type:@fx/contracts#OrderStatus               union    3961cde6eaf5  @fx/contracts
+10 type(s)

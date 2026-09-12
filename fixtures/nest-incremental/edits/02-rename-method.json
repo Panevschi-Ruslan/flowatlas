@@ -1,0 +1,18 @@
+{
+  "name": "a method the service calls is renamed",
+  "expect": {
+    "mode": "partial",
+    "files": [
+      "src/orders/orders.module.ts",
+      "src/orders/orders.repository.ts",
+      "src/orders/orders.service.ts"
+    ]
+  },
+  "changes": [
+    {
+      "file": "src/orders/orders.repository.ts",
+      "replace": "  find(id: string): OrderDto {",
+      "with": "  findById(id: string): OrderDto {"
+    }
+  ]
+}

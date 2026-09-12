@@ -1,0 +1,61 @@
+{
+  "name": "@flowatlas/mcp",
+  "version": "0.1.0",
+  "description": "Serves a flowatlas project graph to an agent over the Model Context Protocol. Compiled into the `flowatlas` command; not published on its own.",
+  "license": "MIT",
+  "author": {
+    "name": "Ruslan Panevschi",
+    "url": "https://github.com/Panevschi-Ruslan"
+  },
+  "homepage": "https://github.com/Panevschi-Ruslan/flowatlas#readme",
+  "bugs": {
+    "url": "https://github.com/Panevschi-Ruslan/flowatlas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Panevschi-Ruslan/flowatlas.git",
+    "directory": "packages/mcp"
+  },
+  "keywords": [
+    "monorepo",
+    "polyrepo",
+    "static-analysis",
+    "dependency-graph",
+    "typescript",
+    "nestjs",
+    "angular",
+    "mcp",
+    "architecture"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "flowatlas-mcp": "./bin/flowatlas-mcp.js"
+  },
+  "files": [
+    "dist",
+    "bin"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@flowatlas/core": "workspace:*",
+    "@flowatlas/linker": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "zod": "^4.5.4"
+  },
+  "private": true
+}

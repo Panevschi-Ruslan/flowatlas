@@ -1,0 +1,18 @@
+{
+  "name": "a service body gains a call",
+  "expect": {
+    "mode": "partial",
+    "files": [
+      "src/orders/orders.controller.ts",
+      "src/orders/orders.module.ts",
+      "src/orders/orders.service.ts"
+    ]
+  },
+  "changes": [
+    {
+      "file": "src/orders/orders.service.ts",
+      "replace": "    this.billing.charge(order.id);",
+      "with": "    this.billing.charge(order.id);\n    this.billing.refund(order.id);"
+    }
+  ]
+}

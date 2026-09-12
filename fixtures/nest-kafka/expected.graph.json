@@ -1,0 +1,1497 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-kafka",
+  "generatedAt": "2026-09-09T22:29:13.997Z",
+  "nodes": [
+    {
+      "id": "channel:get.order",
+      "type": "channel",
+      "label": "get.order",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 55,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ]
+      }
+    },
+    {
+      "id": "channel:get.order.raw",
+      "type": "channel",
+      "label": "get.order.raw",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 62,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ]
+      }
+    },
+    {
+      "id": "channel:order.archived",
+      "type": "channel",
+      "label": "order.archived",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 72,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ]
+      }
+    },
+    {
+      "id": "channel:order.audit",
+      "type": "channel",
+      "label": "order.audit",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 47,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ]
+      }
+    },
+    {
+      "id": "channel:order.computed",
+      "type": "channel",
+      "label": "order.computed",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 78,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ]
+      }
+    },
+    {
+      "id": "channel:order.created",
+      "type": "channel",
+      "label": "order.created",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ]
+      }
+    },
+    {
+      "id": "channel:order.legacy",
+      "type": "channel",
+      "label": "order.legacy",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 91,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ]
+      }
+    },
+    {
+      "id": "channel:order.paid",
+      "type": "channel",
+      "label": "order.paid",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ]
+      }
+    },
+    {
+      "id": "channel:order.shipped",
+      "type": "channel",
+      "label": "order.shipped",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 66,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ]
+      }
+    },
+    {
+      "id": "channel:{\"cmd\":\"order.sync\"}",
+      "type": "channel",
+      "label": "{\"cmd\":\"order.sync\"}",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 32,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ]
+      }
+    },
+    {
+      "id": "config_key:nest-kafka#ORDER_TOPIC",
+      "type": "config_key",
+      "label": "ORDER_TOPIC",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 99,
+      "meta": {
+        "key": "ORDER_TOPIC",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrder",
+      "type": "consumer",
+      "label": "OrdersController.getOrder",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 55,
+      "kind": "rpc",
+      "meta": {
+        "kind": "rpc",
+        "adapter": "nestjs-kafka",
+        "decorator": "MessagePattern",
+        "entryId": "entry:nest-kafka:rpc:get.order"
+      }
+    },
+    {
+      "id": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrderRaw",
+      "type": "consumer",
+      "label": "OrdersController.getOrderRaw",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 62,
+      "kind": "rpc",
+      "meta": {
+        "kind": "rpc",
+        "adapter": "nestjs-kafka",
+        "decorator": "MessagePattern",
+        "entryId": "entry:nest-kafka:rpc:get.order.raw"
+      }
+    },
+    {
+      "id": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onAnything",
+      "type": "consumer",
+      "label": "OrdersController.onAnything",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 39,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onAudit",
+      "type": "consumer",
+      "label": "OrdersController.onAudit",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 47,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:nest-kafka:event:order.audit"
+      }
+    },
+    {
+      "id": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderCreated",
+      "type": "consumer",
+      "label": "OrdersController.onOrderCreated",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:nest-kafka:event:order.created"
+      }
+    },
+    {
+      "id": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderPaid",
+      "type": "consumer",
+      "label": "OrdersController.onOrderPaid",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:nest-kafka:event:order.paid"
+      }
+    },
+    {
+      "id": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderSync",
+      "type": "consumer",
+      "label": "OrdersController.onOrderSync",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 32,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:nest-kafka:event:{\"cmd\":\"order.sync\"}"
+      }
+    },
+    {
+      "id": "entry:nest-kafka:event:order.audit",
+      "type": "entry",
+      "label": "event order.audit",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 47,
+      "kind": "event",
+      "meta": {
+        "pattern": "order.audit",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "entry:nest-kafka:event:order.created",
+      "type": "entry",
+      "label": "event order.created",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "pattern": "order.created",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "entry:nest-kafka:event:order.paid",
+      "type": "entry",
+      "label": "event order.paid",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "kind": "event",
+      "meta": {
+        "pattern": "order.paid",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "entry:nest-kafka:event:{\"cmd\":\"order.sync\"}",
+      "type": "entry",
+      "label": "event {\"cmd\":\"order.sync\"}",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 32,
+      "kind": "event",
+      "meta": {
+        "pattern": {
+          "cmd": "order.sync"
+        },
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "entry:nest-kafka:rpc:get.order",
+      "type": "entry",
+      "label": "rpc get.order",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 55,
+      "kind": "rpc",
+      "meta": {
+        "pattern": "get.order",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "entry:nest-kafka:rpc:get.order.raw",
+      "type": "entry",
+      "label": "rpc get.order.raw",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 62,
+      "kind": "rpc",
+      "meta": {
+        "pattern": "get.order.raw",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "nest-kafka#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "nest-kafka",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-kafka#node_modules/@nestjs/microservices:ClientsModule",
+      "type": "module",
+      "label": "ClientsModule",
+      "repo": "nest-kafka",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-kafka#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-kafka",
+      "file": "src/app.module.ts",
+      "line": 13,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService",
+          "TelemetryService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrder",
+      "type": "method",
+      "label": "OrdersController.getOrder",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 55
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrderRaw",
+      "type": "method",
+      "label": "OrdersController.getOrderRaw",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 62
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onAnything",
+      "type": "method",
+      "label": "OrdersController.onAnything",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 39
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onAudit",
+      "type": "method",
+      "label": "OrdersController.onAudit",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 47
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderCreated",
+      "type": "method",
+      "label": "OrdersController.onOrderCreated",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderPaid",
+      "type": "method",
+      "label": "OrdersController.onOrderPaid",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderSync",
+      "type": "method",
+      "label": "OrdersController.onOrderSync",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 32
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 25,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.archive",
+      "type": "method",
+      "label": "OrdersService.archive",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 71
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 34
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitConfigured",
+      "type": "method",
+      "label": "OrdersService.emitConfigured",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 98
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitDynamic",
+      "type": "method",
+      "label": "OrdersService.emitDynamic",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 103
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitLegacy",
+      "type": "method",
+      "label": "OrdersService.emitLegacy",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 90
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitRegional",
+      "type": "method",
+      "label": "OrdersService.emitRegional",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 84
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitSpread",
+      "type": "method",
+      "label": "OrdersService.emitSpread",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 109
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.getAnything",
+      "type": "method",
+      "label": "OrdersService.getAnything",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 122
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.getOrder",
+      "type": "method",
+      "label": "OrdersService.getOrder",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 116
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.importAll",
+      "type": "method",
+      "label": "OrdersService.importAll",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 48
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.markPaid",
+      "type": "method",
+      "label": "OrdersService.markPaid",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 58
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.replay",
+      "type": "method",
+      "label": "OrdersService.replay",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 41
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.ship",
+      "type": "method",
+      "label": "OrdersService.ship",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 65
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.sync",
+      "type": "method",
+      "label": "OrdersService.sync",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 77
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.track",
+      "type": "method",
+      "label": "OrdersService.track",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 129
+    },
+    {
+      "id": "nest-kafka#src/orders/telemetry.service.ts:TelemetryService",
+      "type": "provider",
+      "label": "TelemetryService",
+      "repo": "nest-kafka",
+      "file": "src/orders/telemetry.service.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-kafka#src/orders/telemetry.service.ts:TelemetryService.emit",
+      "type": "method",
+      "label": "TelemetryService.emit",
+      "repo": "nest-kafka",
+      "file": "src/orders/telemetry.service.ts",
+      "line": 13
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:104:5",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 104,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "unresolved",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:110:5",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 110,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "unresolved",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:117:27",
+      "type": "producer",
+      "label": "rpc get.order",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 117,
+      "kind": "rpc",
+      "meta": {
+        "kind": "rpc",
+        "adapter": "nestjs-kafka",
+        "channelVia": "literal",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:123:12",
+      "type": "producer",
+      "label": "rpc get.order.raw",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 123,
+      "kind": "rpc",
+      "meta": {
+        "kind": "rpc",
+        "adapter": "nestjs-kafka",
+        "channelVia": "literal",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:35:5",
+      "type": "producer",
+      "label": "event order.created",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 35,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:42:5",
+      "type": "producer",
+      "label": "event order.created",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 42,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:51:9",
+      "type": "producer",
+      "label": "event order.created",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 51,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:59:5",
+      "type": "producer",
+      "label": "event order.paid",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 59,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "enum",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:66:5",
+      "type": "producer",
+      "label": "event order.shipped",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 66,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "shared-package",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:72:5",
+      "type": "producer",
+      "label": "event order.archived",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 72,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "shared-package",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:78:5",
+      "type": "producer",
+      "label": "event order.computed",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 78,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "const",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:85:5",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 85,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "unresolved",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:91:5",
+      "type": "producer",
+      "label": "event order.legacy",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 91,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "shared-package",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:99:5",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 99,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "unresolved",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "repo:nest-kafka",
+      "type": "repo",
+      "label": "nest-kafka",
+      "repo": "nest-kafka",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "classes": 4,
+          "skippedExternalCalls": {
+            "@nestjs/microservices": 1,
+            "@nestjs/config": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "nestjs-microservice"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:get.order",
+      "to": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrder",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 55
+    },
+    {
+      "from": "channel:get.order.raw",
+      "to": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrderRaw",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 62
+    },
+    {
+      "from": "channel:order.audit",
+      "to": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onAudit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 47
+    },
+    {
+      "from": "channel:order.created",
+      "to": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderCreated",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18
+    },
+    {
+      "from": "channel:order.paid",
+      "to": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderPaid",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25
+    },
+    {
+      "from": "channel:{\"cmd\":\"order.sync\"}",
+      "to": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderSync",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 32
+    },
+    {
+      "from": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrder",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 55,
+      "returns": "type:nest-kafka#Order"
+    },
+    {
+      "from": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrderRaw",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrderRaw",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 62,
+      "returns": "any"
+    },
+    {
+      "from": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onAnything",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onAnything",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 39,
+      "returns": "void"
+    },
+    {
+      "from": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onAudit",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onAudit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 47,
+      "returns": "void"
+    },
+    {
+      "from": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderCreated",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderCreated",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18,
+      "returns": "void"
+    },
+    {
+      "from": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderPaid",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderPaid",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "returns": "void"
+    },
+    {
+      "from": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderSync",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderSync",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 32,
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-kafka:event:order.audit",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onAudit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 47,
+      "params": [
+        "type:nest-kafka#OrderCreatedEvent",
+        "type:@nestjs/microservices#KafkaContext"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-kafka:event:order.created",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderCreated",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18,
+      "params": [
+        "type:nest-kafka#OrderCreatedEvent"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-kafka:event:order.paid",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderPaid",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "params": [
+        "type:nest-kafka#OrderPaidEvent"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-kafka:event:{\"cmd\":\"order.sync\"}",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderSync",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 32,
+      "params": [
+        "type:nest-kafka#OrderCreatedEvent"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-kafka:rpc:get.order",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 55,
+      "params": [
+        "type:nest-kafka#OrderQuery"
+      ],
+      "returns": "type:nest-kafka#Order"
+    },
+    {
+      "from": "entry:nest-kafka:rpc:get.order.raw",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrderRaw",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 62,
+      "params": [
+        "type:nest-kafka#OrderQuery"
+      ],
+      "returns": "any"
+    },
+    {
+      "from": "nest-kafka#src/app.module.ts:AppModule",
+      "to": "nest-kafka#node_modules/@nestjs/microservices:ClientsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 13,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-kafka#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 29
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-kafka#src/orders/telemetry.service.ts:TelemetryService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 30
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.archive",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:72:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 72
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.create",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:35:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 35
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitConfigured",
+      "to": "config_key:nest-kafka#ORDER_TOPIC",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 99
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitConfigured",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:99:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 99
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitDynamic",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:104:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 104
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitLegacy",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:91:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 91
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitRegional",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:85:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 85
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitSpread",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:110:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 110
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.getAnything",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:123:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 123
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.getOrder",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:117:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 117
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.importAll",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:51:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 51
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.markPaid",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:59:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 59
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.replay",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:42:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 42
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.ship",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:66:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 66
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.sync",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:78:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 78
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.track",
+      "to": "nest-kafka#src/orders/telemetry.service.ts:TelemetryService.emit",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 130,
+      "params": [
+        "string",
+        "object"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "producer:nest-kafka#src/orders/orders.service.ts:117:27",
+      "to": "channel:get.order",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 117,
+      "params": [
+        "type:nest-kafka#OrderQuery"
+      ]
+    },
+    {
+      "from": "producer:nest-kafka#src/orders/orders.service.ts:123:12",
+      "to": "channel:get.order.raw",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 123,
+      "params": [
+        "type:nest-kafka#OrderQuery"
+      ]
+    },
+    {
+      "from": "producer:nest-kafka#src/orders/orders.service.ts:35:5",
+      "to": "channel:order.created",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 35,
+      "params": [
+        "type:nest-kafka#OrderCreatedEvent"
+      ]
+    },
+    {
+      "from": "producer:nest-kafka#src/orders/orders.service.ts:42:5",
+      "to": "channel:order.created",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 42,
+      "params": [
+        "type:nest-kafka#OrderCreatedEvent"
+      ]
+    },
+    {
+      "from": "producer:nest-kafka#src/orders/orders.service.ts:51:9",
+      "to": "channel:order.created",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 51,
+      "params": [
+        "type:nest-kafka#OrderCreatedEvent"
+      ]
+    },
+    {
+      "from": "producer:nest-kafka#src/orders/orders.service.ts:59:5",
+      "to": "channel:order.paid",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 59,
+      "params": [
+        "type:nest-kafka#OrderPaidEvent"
+      ]
+    },
+    {
+      "from": "producer:nest-kafka#src/orders/orders.service.ts:66:5",
+      "to": "channel:order.shipped",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 66,
+      "params": [
+        "type:nest-kafka#OrderShippedEvent"
+      ]
+    },
+    {
+      "from": "producer:nest-kafka#src/orders/orders.service.ts:72:5",
+      "to": "channel:order.archived",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 72,
+      "params": [
+        "type:nest-kafka#OrderArchivedEvent"
+      ]
+    },
+    {
+      "from": "producer:nest-kafka#src/orders/orders.service.ts:78:5",
+      "to": "channel:order.computed",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 78,
+      "params": [
+        "type:nest-kafka#OrderCreatedEvent"
+      ]
+    },
+    {
+      "from": "producer:nest-kafka#src/orders/orders.service.ts:91:5",
+      "to": "channel:order.legacy",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 91,
+      "params": [
+        "type:nest-kafka#OrderCreatedEvent"
+      ]
+    }
+  ],
+  "types": {
+    "type:@nestjs/microservices#KafkaContext": {
+      "name": "KafkaContext",
+      "kind": "external",
+      "declaredIn": "@nestjs/microservices",
+      "structuralHash": "786cc69d6558d39d",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/microservices"
+      }
+    },
+    "type:nest-kafka#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "nest-kafka#src/orders/order.dto.ts",
+      "structuralHash": "3c4fe8edcbdd8134",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "'created'|'paid'|'shipped'",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-kafka#OrderArchivedEvent": {
+      "name": "OrderArchivedEvent",
+      "kind": "object",
+      "declaredIn": "nest-kafka#src/orders/order.dto.ts",
+      "structuralHash": "821f0bf2c4755576",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-kafka#OrderCreatedEvent": {
+      "name": "OrderCreatedEvent",
+      "kind": "object",
+      "declaredIn": "nest-kafka#src/orders/order.dto.ts",
+      "structuralHash": "5f43cf68ce830d20",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-kafka#OrderPaidEvent": {
+      "name": "OrderPaidEvent",
+      "kind": "object",
+      "declaredIn": "nest-kafka#src/orders/order.dto.ts",
+      "structuralHash": "d7e4d5f13c1a3ace",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "paidAt",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-kafka#OrderQuery": {
+      "name": "OrderQuery",
+      "kind": "object",
+      "declaredIn": "nest-kafka#src/orders/order.dto.ts",
+      "structuralHash": "821f0bf2c4755576",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-kafka#OrderShippedEvent": {
+      "name": "OrderShippedEvent",
+      "kind": "object",
+      "declaredIn": "nest-kafka#src/orders/order.dto.ts",
+      "structuralHash": "36ba3765801c82c7",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "carrier",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/orders/orders.controller.ts",
+      "line": 39,
+      "reason": "channel-dynamic",
+      "hint": "The channel name cannot be read here. Annotate OrdersController.onAnything with the channel it uses.",
+      "symbol": "OrdersController.onAnything -> EventPattern"
+    },
+    {
+      "file": "src/orders/orders.controller.ts",
+      "line": 39,
+      "reason": "decorator-arg-dynamic",
+      "hint": "Use a literal or a const pattern; a computed one cannot be matched to a producer.",
+      "symbol": "OrdersController.onAnything",
+      "adapter": "nestjs-microservice"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 28,
+      "reason": "di-token-unknown",
+      "hint": "No module in this repository provides KAFKA_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
+      "symbol": "OrdersService.constructor[0]"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 85,
+      "reason": "channel-const-unresolved",
+      "hint": "The channel name cannot be read here. Annotate OrdersService.emitRegional with the channel it uses.",
+      "symbol": "OrdersService.emitRegional -> REGION_TOPIC"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 99,
+      "reason": "channel-from-config",
+      "hint": "The channel name cannot be read here. Annotate OrdersService.emitConfigured with the channel it uses.",
+      "symbol": "OrdersService.emitConfigured -> this.config.get('ORDER_TOPIC')"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 104,
+      "reason": "channel-const-unresolved",
+      "hint": "The channel name cannot be read here. Annotate OrdersService.emitDynamic with the channel it uses.",
+      "symbol": "OrdersService.emitDynamic -> topic"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 110,
+      "reason": "channel-dynamic",
+      "hint": "The channel name cannot be read here. Annotate OrdersService.emitSpread with the channel it uses.",
+      "symbol": "OrdersService.emitSpread -> ...args"
+    }
+  ]
+}

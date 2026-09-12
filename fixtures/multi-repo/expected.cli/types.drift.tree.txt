@@ -1,0 +1,4 @@
+InvoiceDto  declared 2 ways
+  billing        98b4593efb5a  billing#src/invoices/invoice.dto.ts
+  gateway        78dbe5b1e055  gateway#src/clients/invoice.dto.ts
+hash-only; run flowatlas contracts for a field-by-field comparison

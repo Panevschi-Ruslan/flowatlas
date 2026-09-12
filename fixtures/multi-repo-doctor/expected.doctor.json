@@ -1,0 +1,571 @@
+{
+  "doctorFormatVersion": 1,
+  "schemaVersion": 3,
+  "flowatlasVersion": "0.1.1",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "strict": false,
+  "baselinePath": "<root>/fixtures/multi-repo-doctor/baseline.accepted.json",
+  "sections": [
+    "unresolved",
+    "markers",
+    "desync",
+    "contracts",
+    "baseline"
+  ],
+  "note": null,
+  "unresolved": {
+    "status": "ok",
+    "total": 18,
+    "rows": 18,
+    "sites": 18,
+    "info": {
+      "rows": 0,
+      "sites": 0
+    },
+    "excluded": {
+      "reasons": [],
+      "sites": 0
+    },
+    "byReason": [
+      {
+        "reason": "unknown-db-package",
+        "level": "action",
+        "count": 6,
+        "sites": 6,
+        "known": true,
+        "excluded": false,
+        "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
+        "rows": [
+          {
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 35,
+            "symbol": "this.rows.persist",
+            "level": "action",
+            "sites": 1,
+            "message": "unknown-db-package",
+            "hint": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          {
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 46,
+            "symbol": "this.rows.find",
+            "level": "action",
+            "sites": 1,
+            "message": "unknown-db-package",
+            "hint": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          {
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 55,
+            "symbol": "this.rows.drop",
+            "level": "action",
+            "sites": 1,
+            "message": "unknown-db-package",
+            "hint": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          {
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 74,
+            "symbol": "this.rows.find",
+            "level": "action",
+            "sites": 1,
+            "message": "unknown-db-package",
+            "hint": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          {
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 83,
+            "symbol": "this.rows.find",
+            "level": "action",
+            "sites": 1,
+            "message": "unknown-db-package",
+            "hint": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          {
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 87,
+            "symbol": "this.rows.find",
+            "level": "action",
+            "sites": 1,
+            "message": "unknown-db-package",
+            "hint": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          }
+        ]
+      },
+      {
+        "reason": "dynamic-http-url",
+        "level": "action",
+        "count": 3,
+        "sites": 3,
+        "known": true,
+        "excluded": false,
+        "hint": "The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes.",
+        "rows": [
+          {
+            "service": "gateway",
+            "file": "src/clients/orders.client.ts",
+            "line": 31,
+            "symbol": "this.http.post<OrderDto>(this.endpoint('orders'), body)",
+            "level": "action",
+            "sites": 1,
+            "message": "dynamic-http-url",
+            "hint": "The address is built at run time, and an annotation on this method already says where it goes — orders. Nothing to do here."
+          },
+          {
+            "service": "gateway",
+            "file": "src/clients/orders.client.ts",
+            "line": 40,
+            "symbol": "this.http.delete(this.endpoint(`orders/${id}/cancel`))",
+            "level": "action",
+            "sites": 1,
+            "message": "dynamic-http-url",
+            "hint": "The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes."
+          },
+          {
+            "service": "gateway",
+            "file": "src/clients/orders.client.ts",
+            "line": 49,
+            "symbol": "this.http.post(this.endpoint('restock'), { sku })",
+            "level": "action",
+            "sites": 1,
+            "message": "dynamic-http-url",
+            "hint": "The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes."
+          }
+        ]
+      },
+      {
+        "reason": "module-import-dynamic",
+        "level": "action",
+        "count": 3,
+        "sites": 3,
+        "known": true,
+        "excluded": false,
+        "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+        "rows": [
+          {
+            "service": "gateway",
+            "file": "src/app.module.ts",
+            "line": 8,
+            "symbol": "AppModule imports HttpModule",
+            "level": "action",
+            "sites": 1,
+            "message": "module-import-dynamic",
+            "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed."
+          },
+          {
+            "service": "gateway",
+            "file": "src/app.module.ts",
+            "line": 8,
+            "symbol": "AppModule imports ConfigModule",
+            "level": "action",
+            "sites": 1,
+            "message": "module-import-dynamic",
+            "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed."
+          },
+          {
+            "service": "orders",
+            "file": "src/app.module.ts",
+            "line": 10,
+            "symbol": "AppModule imports ConfigModule",
+            "level": "action",
+            "sites": 1,
+            "message": "module-import-dynamic",
+            "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed."
+          }
+        ]
+      },
+      {
+        "reason": "channel-from-config",
+        "level": "action",
+        "count": 1,
+        "sites": 1,
+        "known": true,
+        "excluded": false,
+        "hint": "The channel name cannot be read here. Annotate OrdersService.refund with the channel it uses.",
+        "rows": [
+          {
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 65,
+            "symbol": "OrdersService.refund -> this.config.get('REFUND_CHANNEL')",
+            "level": "action",
+            "sites": 1,
+            "message": "channel-from-config",
+            "hint": "The channel name cannot be read here. Annotate OrdersService.refund with the channel it uses."
+          }
+        ]
+      },
+      {
+        "reason": "di-token-unknown",
+        "level": "action",
+        "count": 1,
+        "sites": 1,
+        "known": true,
+        "excluded": false,
+        "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
+        "rows": [
+          {
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 24,
+            "symbol": "OrdersService.constructor[0]",
+            "level": "action",
+            "sites": 1,
+            "message": "di-token-unknown",
+            "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does."
+          }
+        ]
+      },
+      {
+        "reason": "marker-route-not-found",
+        "level": "action",
+        "count": 1,
+        "sites": 1,
+        "known": true,
+        "excluded": false,
+        "hint": "Check orders's controllers, or correct the annotation.",
+        "rows": [
+          {
+            "service": "gateway",
+            "file": "src/clients/orders.client.ts",
+            "line": 40,
+            "symbol": "http_out:gateway#src/clients/orders.client.ts:40:12",
+            "level": "action",
+            "sites": 1,
+            "message": "@CallsService points at DELETE /orders/:id/void, which orders does not serve",
+            "hint": "Check orders's controllers, or correct the annotation."
+          }
+        ]
+      },
+      {
+        "reason": "marker-service-unknown",
+        "level": "action",
+        "count": 1,
+        "sites": 1,
+        "known": true,
+        "excluded": false,
+        "hint": "Add warehouse to services[] in flowatlas.config.json, or correct the annotation.",
+        "rows": [
+          {
+            "service": "gateway",
+            "file": "src/clients/orders.client.ts",
+            "line": 49,
+            "symbol": "http_out:gateway#src/clients/orders.client.ts:49:12",
+            "level": "action",
+            "sites": 1,
+            "message": "@CallsService names warehouse, which is not a configured service",
+            "hint": "Add warehouse to services[] in flowatlas.config.json, or correct the annotation."
+          }
+        ]
+      },
+      {
+        "reason": "target-route-not-found",
+        "level": "action",
+        "count": 1,
+        "sites": 1,
+        "known": true,
+        "excluded": false,
+        "hint": "Route renamed? Check orders's controllers, or annotate the call with @CallsService.",
+        "rows": [
+          {
+            "service": "gateway",
+            "file": "src/clients/orders.client.ts",
+            "line": 58,
+            "symbol": "http_out:gateway#src/clients/orders.client.ts:58:12",
+            "level": "action",
+            "sites": 1,
+            "message": "target service orders has no route DELETE /orders/:param/void",
+            "hint": "Route renamed? Check orders's controllers, or annotate the call with @CallsService."
+          }
+        ]
+      },
+      {
+        "reason": "unknown-base-url-env",
+        "level": "action",
+        "count": 1,
+        "sites": 1,
+        "known": true,
+        "excluded": false,
+        "hint": "Add LEGACY_URL to services[].baseUrlEnv of whichever service answers it.",
+        "rows": [
+          {
+            "service": "gateway",
+            "file": "src/clients/orders.client.ts",
+            "line": 66,
+            "symbol": "http_out:gateway#src/clients/orders.client.ts:66:12",
+            "level": "action",
+            "sites": 1,
+            "message": "no service declares LEGACY_URL",
+            "hint": "Add LEGACY_URL to services[].baseUrlEnv of whichever service answers it."
+          }
+        ]
+      }
+    ],
+    "unknownReasons": []
+  },
+  "markers": {
+    "status": "ok",
+    "note": null,
+    "errors": 5,
+    "warnings": 4,
+    "issues": [
+      {
+        "code": "marker-consumes-shadowed",
+        "severity": "warning",
+        "marker": "Consumes",
+        "argument": "order.created",
+        "symbol": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+        "service": "billing",
+        "file": "src/invoices/invoices.consumer.ts",
+        "line": 18,
+        "message": "@Consumes(\"order.created\") on InvoicesConsumer.onOrderCreated says what the code already says",
+        "hint": "Static reading finds this subscription on its own, so the annotation adds nothing. Remove it."
+      },
+      {
+        "code": "marker-consumes-without-consumer",
+        "severity": "error",
+        "marker": "Consumes",
+        "argument": "order.refunded",
+        "symbol": "billing#src/invoices/invoices.service.ts:InvoicesService.onOrderRefunded",
+        "service": "billing",
+        "file": "src/invoices/invoices.service.ts",
+        "line": 18,
+        "message": "@Consumes(\"order.refunded\") on InvoicesService.onOrderRefunded, which nothing subscribes and nothing calls",
+        "hint": "Remove the annotation, or register the method as a handler. Nothing in the repository connects it to a message."
+      },
+      {
+        "code": "marker-callsservice-route-missing",
+        "severity": "error",
+        "marker": "CallsService",
+        "argument": "orders, DELETE /orders/:id/void",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.cancel",
+        "service": "gateway",
+        "file": "src/clients/orders.client.ts",
+        "line": 38,
+        "message": "@CallsService points at DELETE /orders/:id/void, which orders does not serve",
+        "hint": "Did you mean POST /orders? Otherwise check orders's controllers."
+      },
+      {
+        "code": "marker-callsservice-unknown-service",
+        "severity": "error",
+        "marker": "CallsService",
+        "argument": "warehouse, POST /restock",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.restock",
+        "service": "gateway",
+        "file": "src/clients/orders.client.ts",
+        "line": 47,
+        "message": "@CallsService names warehouse, which is not a configured service",
+        "hint": "Add warehouse to services[] in flowatlas.config.json, or correct the annotation."
+      },
+      {
+        "code": "marker-emits-shadowed",
+        "severity": "warning",
+        "marker": "Emits",
+        "argument": "order.created",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.create",
+        "service": "orders",
+        "file": "src/orders/orders.service.ts",
+        "line": 33,
+        "message": "@Emits(\"order.created\") on OrdersService.create says what the code already says",
+        "hint": "Static reading finds this publish on its own, so the annotation adds nothing and will not be corrected when the channel is renamed. Remove it."
+      },
+      {
+        "code": "marker-emits-without-emit",
+        "severity": "error",
+        "marker": "Emits",
+        "argument": "order.audited",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.audit",
+        "service": "orders",
+        "file": "src/orders/orders.service.ts",
+        "line": 44,
+        "message": "@Emits(\"order.audited\") on OrdersService.audit, which publishes nothing",
+        "hint": "Remove the annotation, or publish from this method. Nothing else in it puts a message on any channel."
+      },
+      {
+        "code": "marker-unknown-arg",
+        "severity": "error",
+        "marker": "Emits",
+        "argument": "channelFor('archived')",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.archive",
+        "service": "orders",
+        "file": "src/orders/orders.service.ts",
+        "line": 53,
+        "message": "@Emits on OrdersService.archive was given channelFor('archived'), which could not be read",
+        "hint": "Marker arguments must be string literals, or consts from a package listed in sharedPackages."
+      },
+      {
+        "code": "marker-flowentry-not-handler",
+        "severity": "warning",
+        "marker": "FlowEntry",
+        "argument": "checkout",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.settle",
+        "service": "orders",
+        "file": "src/orders/orders.service.ts",
+        "line": 72,
+        "message": "@FlowEntry names a flow on OrdersService.settle, which nothing enters the service through",
+        "hint": "Move it to the handler that starts the flow — the controller method, the bot handler, the message handler."
+      },
+      {
+        "code": "marker-contractignore-unused",
+        "severity": "warning",
+        "marker": "ContractIgnore",
+        "argument": null,
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.reconcile",
+        "service": "orders",
+        "file": "src/orders/orders.service.ts",
+        "line": 81,
+        "message": "@ContractIgnore on OrdersService.reconcile, which is not on either end of any boundary",
+        "hint": "Nothing here crosses a service boundary, so nothing is being excused. Remove it, or move it to the method that makes the call."
+      }
+    ]
+  },
+  "desync": {
+    "status": "ok",
+    "rows": [
+      {
+        "call": "http_out:gateway#src/clients/orders.client.ts:58:12",
+        "service": "gateway",
+        "method": "DELETE",
+        "path": "/orders/:param/void",
+        "baseUrlEnv": "ORDERS_URL",
+        "targetService": "orders",
+        "reason": "target-route-not-found",
+        "file": "src/clients/orders.client.ts",
+        "line": 58,
+        "message": "target service orders has no route DELETE /orders/:param/void",
+        "hint": "Route renamed? Check orders's controllers, or annotate the call with @CallsService."
+      },
+      {
+        "call": "http_out:gateway#src/clients/orders.client.ts:66:12",
+        "service": "gateway",
+        "method": "GET",
+        "path": "/orders/:param/history",
+        "baseUrlEnv": "LEGACY_URL",
+        "targetService": null,
+        "reason": "unknown-base-url-env",
+        "file": "src/clients/orders.client.ts",
+        "line": 66,
+        "message": "no service declares LEGACY_URL",
+        "hint": "Add LEGACY_URL to services[].baseUrlEnv of whichever service answers it."
+      }
+    ]
+  },
+  "contracts": {
+    "status": "ok",
+    "note": null,
+    "errors": [
+      {
+        "severity": "error",
+        "kind": "missing_required",
+        "edge": {
+          "from": "http_out:gateway#src/clients/orders.client.ts:31:12",
+          "to": "entry:orders:http:POST:/orders",
+          "type": "http_calls"
+        },
+        "edgeKey": "http_out:gateway#src/clients/orders.client.ts:31:12|http_calls|entry:orders:http:POST:/orders",
+        "direction": "request",
+        "sender": {
+          "service": "gateway",
+          "typeId": "type:gateway#CreateOrderDto",
+          "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+        },
+        "receiver": {
+          "service": "orders",
+          "typeId": "type:orders#CreateOrderDto",
+          "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+        },
+        "typeId": "type:orders#CreateOrderDto",
+        "field": "channel",
+        "expected": "string",
+        "actual": null,
+        "rule": null,
+        "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+        "ignored": false,
+        "ignoredBy": null
+      }
+    ],
+    "errorCount": 1,
+    "ignored": 1,
+    "unchecked": 3
+  },
+  "baseline": {
+    "status": "ok",
+    "note": null,
+    "total": {
+      "baseline": 18,
+      "current": 18,
+      "delta": 0
+    },
+    "byReason": [
+      {
+        "reason": "channel-from-config",
+        "baseline": 1,
+        "current": 1,
+        "delta": 0
+      },
+      {
+        "reason": "di-token-unknown",
+        "baseline": 1,
+        "current": 1,
+        "delta": 0
+      },
+      {
+        "reason": "dynamic-http-url",
+        "baseline": 3,
+        "current": 3,
+        "delta": 0
+      },
+      {
+        "reason": "marker-route-not-found",
+        "baseline": 1,
+        "current": 1,
+        "delta": 0
+      },
+      {
+        "reason": "marker-service-unknown",
+        "baseline": 1,
+        "current": 1,
+        "delta": 0
+      },
+      {
+        "reason": "module-import-dynamic",
+        "baseline": 3,
+        "current": 3,
+        "delta": 0
+      },
+      {
+        "reason": "target-route-not-found",
+        "baseline": 1,
+        "current": 1,
+        "delta": 0
+      },
+      {
+        "reason": "unknown-base-url-env",
+        "baseline": 1,
+        "current": 1,
+        "delta": 0
+      },
+      {
+        "reason": "unknown-db-package",
+        "baseline": 6,
+        "current": 6,
+        "delta": 0
+      }
+    ],
+    "newKeys": [],
+    "goneKeys": []
+  },
+  "verdict": {
+    "exitCode": 0,
+    "reasons": [
+      "5 annotations the graph contradicts",
+      "1 contract error nothing excused"
+    ]
+  }
+}

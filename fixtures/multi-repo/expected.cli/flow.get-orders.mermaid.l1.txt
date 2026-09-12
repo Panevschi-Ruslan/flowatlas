@@ -1,0 +1,25 @@
+flowchart LR
+  subgraph sg_gateway["gateway"]
+    n_config_key_gateway_ORDERS_URL["ORDERS_URL"]
+    n_entry_gateway_http_GET__orders__param(["GET /orders/:param"])
+    n_gateway_src_clients_orders_client_ts_OrdersClient_fetchOne["OrdersClient.fetchOne"]
+    n_gateway_src_orders_orders_controller_ts_OrdersController_findOne["OrdersController.findOne"]
+    n_http_out_gateway_src_clients_orders_client_ts_33_12["GET /orders/:param"]
+  end
+  subgraph sg_orders["orders"]
+    n_db_query_orders_src_orders_orders_service_ts_26_23[("read Order")]
+    n_entry_orders_http_GET__orders__param(["GET /orders/:param"])
+    n_orders_src_orders_orders_controller_ts_OrdersController_findOne["OrdersController.findOne"]
+    n_orders_src_orders_orders_service_ts_OrdersService_findOne["OrdersService.findOne"]
+    n_table_orders_Order[("Order")]
+  end
+  n_db_query_orders_src_orders_orders_service_ts_26_23 -->|"queries"| n_table_orders_Order
+  n_entry_gateway_http_GET__orders__param -->|"handles"| n_gateway_src_orders_orders_controller_ts_OrdersController_findOne
+  n_entry_orders_http_GET__orders__param -->|"handles"| n_orders_src_orders_orders_controller_ts_OrdersController_findOne
+  n_gateway_src_clients_orders_client_ts_OrdersClient_fetchOne -->|"reads_config"| n_config_key_gateway_ORDERS_URL
+  n_gateway_src_clients_orders_client_ts_OrdersClient_fetchOne -->|"calls"| n_http_out_gateway_src_clients_orders_client_ts_33_12
+  n_gateway_src_orders_orders_controller_ts_OrdersController_findOne -->|"calls"| n_gateway_src_clients_orders_client_ts_OrdersClient_fetchOne
+  n_http_out_gateway_src_clients_orders_client_ts_33_12 -->|"http_calls"| n_entry_orders_http_GET__orders__param
+  n_orders_src_orders_orders_controller_ts_OrdersController_findOne -->|"calls"| n_orders_src_orders_orders_service_ts_OrdersService_findOne
+  n_orders_src_orders_orders_service_ts_OrdersService_findOne -->|"calls"| n_db_query_orders_src_orders_orders_service_ts_26_23
+  %% unresolved on this path: 0

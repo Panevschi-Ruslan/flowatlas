@@ -1,0 +1,5 @@
+~  order.archived            src/orders/orders.service.ts:61
+  -  producers (1)
+    ~  event order.archived  orders/src/orders/orders.service.ts:61
+  -  consumers (0)
+! no consumers

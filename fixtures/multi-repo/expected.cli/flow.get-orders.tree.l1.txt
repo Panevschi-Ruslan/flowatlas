@@ -1,0 +1,11 @@
+@  GET /orders/:param                    gateway/src/orders/orders.controller.ts:30
+  -> OrdersController.findOne            gateway/src/orders/orders.controller.ts:30
+    -> OrdersClient.fetchOne             gateway/src/clients/orders.client.ts:32
+      $  ORDERS_URL                      gateway/src/clients/orders.client.ts:33
+      ^  GET /orders/:param              gateway/src/clients/orders.client.ts:33
+        => orders @  GET /orders/:param  orders/src/orders/orders.controller.ts:25
+          -> OrdersController.findOne    orders/src/orders/orders.controller.ts:25
+            -> OrdersService.findOne     orders/src/orders/orders.service.ts:25
+              [] read Order              orders/src/orders/orders.service.ts:26
+                #  Order
+unresolved on this path: 0

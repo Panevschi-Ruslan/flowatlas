@@ -1,0 +1,102 @@
+{
+  "channel": "channel:order.created",
+  "producers": 1,
+  "consumers": 1,
+  "root": {
+    "node": {
+      "id": "channel:order.created",
+      "type": "channel",
+      "label": "order.created",
+      "loc": "src/orders/orders.service.ts:49",
+      "service": "orders"
+    },
+    "children": [
+      {
+        "node": {
+          "id": "channel:order.created#producers",
+          "type": "group",
+          "label": "producers (1)"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "producer:orders#src/orders/orders.service.ts:49:5",
+              "type": "producer",
+              "label": "event order.created",
+              "loc": "src/orders/orders.service.ts:49",
+              "service": "orders",
+              "kind": "event"
+            },
+            "edge": {
+              "type": "emits",
+              "confidence": "static",
+              "params": [
+                "type:@fx/contracts#OrderDto"
+              ]
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "node": {
+          "id": "channel:order.created#consumers",
+          "type": "group",
+          "label": "consumers (1)"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+              "type": "consumer",
+              "label": "InvoicesConsumer.onOrderCreated",
+              "loc": "src/invoices/invoices.consumer.ts:17",
+              "service": "billing",
+              "kind": "event"
+            },
+            "edge": {
+              "type": "consumes",
+              "confidence": "static"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+                  "type": "method",
+                  "label": "InvoicesConsumer.onOrderCreated",
+                  "loc": "src/invoices/invoices.consumer.ts:17",
+                  "service": "billing"
+                },
+                "edge": {
+                  "type": "handles",
+                  "confidence": "static",
+                  "returns": "void"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+                      "type": "method",
+                      "label": "InvoicesService.create",
+                      "loc": "src/invoices/invoices.service.ts:10",
+                      "service": "billing"
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static",
+                      "params": [
+                        "type:billing#CreateInvoiceDto"
+                      ],
+                      "returns": "type:billing#InvoiceDto"
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

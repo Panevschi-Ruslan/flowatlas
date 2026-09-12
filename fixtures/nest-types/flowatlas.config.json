@@ -1,0 +1,1 @@
+{"services":[{"name":"nest-types","repo":".","type":"nestjs"}],"sharedPackages":["@fixture/contracts"],"output":".flowatlas","types":{"maxDepth":3}}

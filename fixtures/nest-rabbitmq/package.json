@@ -1,0 +1,12 @@
+{
+  "name": "nest-rabbitmq",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@golevelup/nestjs-rabbitmq": "^5.4.0",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/microservices": "^11.0.0",
+    "amqplib": "^0.10.4"
+  }
+}

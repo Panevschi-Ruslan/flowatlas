@@ -1,0 +1,49 @@
+.idea/
+node_modules/
+# Fixture repositories ship tiny type stubs so the checker can resolve their
+# imports without an install. The shared fixture node_modules stays ignored.
+!fixtures/*/node_modules/
+!fixtures/*/node_modules/**
+!fixtures/*/*/node_modules/
+!fixtures/*/*/node_modules/**
+# A fixture holding two revisions of a project is one level deeper again.
+!fixtures/*/*/*/node_modules/
+!fixtures/*/*/*/node_modules/**
+dist/
+*.tsbuildinfo
+.flowatlas/
+coverage/
+*.log
+.DS_Store
+
+# Agent worktrees are checkouts of this repository, not content of it.
+.claude/worktrees/
+# Copies of fixture repositories that tests edit; removed when they finish.
+fixtures/.scratch-*/
+graph.html
+# A project commits its own baseline; see docs/ci.md. This repository is the
+# tool rather than a project being read, and the configuration here points at
+# somebody's five repositories, so a baseline of them belongs to nobody.
+flowatlas.baseline.json
+# The marker two test processes use to agree who builds the fixture graph.
+fixtures/multi-repo/.build-lock/
+
+# Internal: the phase and defect tickets, the original plan, and a configuration
+# that names somebody's own repositories. Kept beside the checkout rather than
+# in it — none of it ever shipped in the package, and none of it belongs to
+# anyone who clones this.
+# Anchored to the root, every one of them. Unanchored, `flowatlas.config.json`
+# matches at any depth and quietly swallowed all twelve fixture configurations,
+# which the gate here could not see and the one on GitHub caught on its first
+# run.
+/roadmap/
+# Both names: the tool was renamed and the file on disk was not, so the
+# pattern stopped matching and one `git add -A` published 756 lines of
+# internal planning to a public repository.
+/flowatlas-plan.md
+/flowmap-plan.md
+/flowatlas.config.json
+
+# Terminal recordings the demo driver keeps; the GIFs it renders are committed.
+.demo-casts/
+

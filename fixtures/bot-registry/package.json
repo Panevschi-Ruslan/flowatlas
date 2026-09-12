@@ -1,0 +1,10 @@
+{
+  "name": "bot-registry",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "telegraf": "^4.16.3"
+  }
+}

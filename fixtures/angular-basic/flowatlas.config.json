@@ -1,0 +1,11 @@
+{
+  "services": [
+    {
+      "name": "angular-basic",
+      "repo": ".",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"]
+    }
+  ],
+  "output": ".flowatlas"
+}

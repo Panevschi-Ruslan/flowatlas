@@ -1,0 +1,174 @@
+{
+  "analyticsFormatVersion": 1,
+  "cycles": [
+    {
+      "id": "billing#src/invoices/invoices.service.ts:InvoicesService.sync",
+      "length": 8,
+      "crossService": true,
+      "services": [
+        "billing",
+        "orders"
+      ],
+      "confidence": "static",
+      "nodes": [
+        "billing#src/invoices/invoices.service.ts:InvoicesService.sync",
+        "billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+        "consumer:billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+        "consumer:orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+        "orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+        "orders#src/orders/orders.service.ts:OrdersService.sync",
+        "producer:billing#src/invoices/invoices.service.ts:20:5",
+        "producer:orders#src/orders/orders.service.ts:55:5"
+      ],
+      "edges": [
+        {
+          "from": "producer:billing#src/invoices/invoices.service.ts:20:5",
+          "to": "consumer:orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+          "type": "channel",
+          "confidence": "static",
+          "via": "channel:invoice.changed"
+        },
+        {
+          "from": "consumer:orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+          "to": "orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+          "type": "handles",
+          "confidence": "static"
+        },
+        {
+          "from": "orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+          "to": "orders#src/orders/orders.service.ts:OrdersService.sync",
+          "type": "calls",
+          "confidence": "static"
+        },
+        {
+          "from": "orders#src/orders/orders.service.ts:OrdersService.sync",
+          "to": "producer:orders#src/orders/orders.service.ts:55:5",
+          "type": "calls",
+          "confidence": "static"
+        },
+        {
+          "from": "producer:orders#src/orders/orders.service.ts:55:5",
+          "to": "consumer:billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+          "type": "channel",
+          "confidence": "static",
+          "via": "channel:order.changed"
+        },
+        {
+          "from": "consumer:billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+          "to": "billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+          "type": "handles",
+          "confidence": "static"
+        },
+        {
+          "from": "billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+          "to": "billing#src/invoices/invoices.service.ts:InvoicesService.sync",
+          "type": "calls",
+          "confidence": "static"
+        },
+        {
+          "from": "billing#src/invoices/invoices.service.ts:InvoicesService.sync",
+          "to": "producer:billing#src/invoices/invoices.service.ts:20:5",
+          "type": "calls",
+          "confidence": "static"
+        }
+      ]
+    },
+    {
+      "id": "entry:gateway:http:GET:/accounts/:param",
+      "length": 8,
+      "crossService": true,
+      "services": [
+        "gateway",
+        "orders"
+      ],
+      "confidence": "static",
+      "nodes": [
+        "entry:gateway:http:GET:/accounts/:param",
+        "entry:orders:http:GET:/orders/recent",
+        "gateway#src/accounts/accounts.controller.ts:AccountsController.findOne",
+        "gateway#src/accounts/accounts.service.ts:AccountsService.find",
+        "gateway#src/clients/orders.client.ts:OrdersClient.recent",
+        "http_out:gateway#src/clients/orders.client.ts:27:12",
+        "http_out:orders#src/orders/orders.controller.ts:18:12",
+        "orders#src/orders/orders.controller.ts:OrdersController.recent"
+      ],
+      "edges": [
+        {
+          "from": "http_out:gateway#src/clients/orders.client.ts:27:12",
+          "to": "entry:orders:http:GET:/orders/recent",
+          "type": "http_calls",
+          "confidence": "static"
+        },
+        {
+          "from": "entry:orders:http:GET:/orders/recent",
+          "to": "orders#src/orders/orders.controller.ts:OrdersController.recent",
+          "type": "handles",
+          "confidence": "static"
+        },
+        {
+          "from": "orders#src/orders/orders.controller.ts:OrdersController.recent",
+          "to": "http_out:orders#src/orders/orders.controller.ts:18:12",
+          "type": "calls",
+          "confidence": "static"
+        },
+        {
+          "from": "http_out:orders#src/orders/orders.controller.ts:18:12",
+          "to": "entry:gateway:http:GET:/accounts/:param",
+          "type": "http_calls",
+          "confidence": "static"
+        },
+        {
+          "from": "entry:gateway:http:GET:/accounts/:param",
+          "to": "gateway#src/accounts/accounts.controller.ts:AccountsController.findOne",
+          "type": "handles",
+          "confidence": "static"
+        },
+        {
+          "from": "gateway#src/accounts/accounts.controller.ts:AccountsController.findOne",
+          "to": "gateway#src/accounts/accounts.service.ts:AccountsService.find",
+          "type": "calls",
+          "confidence": "static"
+        },
+        {
+          "from": "gateway#src/accounts/accounts.service.ts:AccountsService.find",
+          "to": "gateway#src/clients/orders.client.ts:OrdersClient.recent",
+          "type": "calls",
+          "confidence": "static"
+        },
+        {
+          "from": "gateway#src/clients/orders.client.ts:OrdersClient.recent",
+          "to": "http_out:gateway#src/clients/orders.client.ts:27:12",
+          "type": "calls",
+          "confidence": "static"
+        }
+      ]
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.expand",
+      "length": 2,
+      "crossService": false,
+      "services": [
+        "orders"
+      ],
+      "confidence": "static",
+      "nodes": [
+        "orders#src/orders/orders.service.ts:OrdersService.expand",
+        "orders#src/orders/orders.service.ts:OrdersService.normalise"
+      ],
+      "edges": [
+        {
+          "from": "orders#src/orders/orders.service.ts:OrdersService.expand",
+          "to": "orders#src/orders/orders.service.ts:OrdersService.normalise",
+          "type": "calls",
+          "confidence": "static"
+        },
+        {
+          "from": "orders#src/orders/orders.service.ts:OrdersService.normalise",
+          "to": "orders#src/orders/orders.service.ts:OrdersService.expand",
+          "type": "calls",
+          "confidence": "static"
+        }
+      ]
+    }
+  ]
+}

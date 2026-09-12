@@ -1,0 +1,6 @@
+{
+  "candidates": [
+    "type:billing#InvoiceDto",
+    "type:gateway#InvoiceDto"
+  ]
+}

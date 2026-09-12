@@ -1,0 +1,19 @@
+{
+  "services": [{ "name": "bot-registry", "repo": ".", "type": "nestjs" }],
+  "adapters": {
+    "entry": {
+      "registries": [
+        {
+          "name": "callbacks",
+          "receiver": "callbackRegistry",
+          "method": "register",
+          "keyArg": 0,
+          "handlerArg": 1,
+          "kind": "bot_callback"
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas",
+  "types": { "maxDepth": 3 }
+}

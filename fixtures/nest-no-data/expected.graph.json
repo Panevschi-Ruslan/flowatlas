@@ -1,0 +1,282 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-no-data",
+  "generatedAt": "2026-09-10T16:11:50.838Z",
+  "nodes": [
+    {
+      "id": "entry:nest-no-data:http:DELETE:/notifications/:param",
+      "type": "entry",
+      "label": "DELETE /notifications/:param",
+      "repo": "nest-no-data",
+      "file": "src/notifications/notifications.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/notifications/:param",
+        "rawPath": "/notifications/:name",
+        "controller": "NotificationsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-no-data:http:POST:/notifications/:param",
+      "type": "entry",
+      "label": "POST /notifications/:param",
+      "repo": "nest-no-data",
+      "file": "src/notifications/notifications.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/notifications/:param",
+        "rawPath": "/notifications/:name",
+        "controller": "NotificationsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-no-data#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-no-data",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "NotificationsController"
+        ],
+        "providers": [
+          "NotificationsService",
+          "TemplatesService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-no-data#src/notifications/notifications.controller.ts:NotificationsController",
+      "type": "provider",
+      "label": "NotificationsController",
+      "repo": "nest-no-data",
+      "file": "src/notifications/notifications.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-no-data#src/notifications/notifications.controller.ts:NotificationsController.dismiss",
+      "type": "method",
+      "label": "NotificationsController.dismiss",
+      "repo": "nest-no-data",
+      "file": "src/notifications/notifications.controller.ts",
+      "line": 14
+    },
+    {
+      "id": "nest-no-data#src/notifications/notifications.controller.ts:NotificationsController.greet",
+      "type": "method",
+      "label": "NotificationsController.greet",
+      "repo": "nest-no-data",
+      "file": "src/notifications/notifications.controller.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-no-data#src/notifications/notifications.service.ts:NotificationsService",
+      "type": "provider",
+      "label": "NotificationsService",
+      "repo": "nest-no-data",
+      "file": "src/notifications/notifications.service.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-no-data#src/notifications/notifications.service.ts:NotificationsService.dismiss",
+      "type": "method",
+      "label": "NotificationsService.dismiss",
+      "repo": "nest-no-data",
+      "file": "src/notifications/notifications.service.ts",
+      "line": 21
+    },
+    {
+      "id": "nest-no-data#src/notifications/notifications.service.ts:NotificationsService.greet",
+      "type": "method",
+      "label": "NotificationsService.greet",
+      "repo": "nest-no-data",
+      "file": "src/notifications/notifications.service.ts",
+      "line": 15
+    },
+    {
+      "id": "nest-no-data#src/notifications/templates.service.ts:TemplatesService",
+      "type": "provider",
+      "label": "TemplatesService",
+      "repo": "nest-no-data",
+      "file": "src/notifications/templates.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-no-data#src/notifications/templates.service.ts:TemplatesService.farewell",
+      "type": "method",
+      "label": "TemplatesService.farewell",
+      "repo": "nest-no-data",
+      "file": "src/notifications/templates.service.ts",
+      "line": 10
+    },
+    {
+      "id": "nest-no-data#src/notifications/templates.service.ts:TemplatesService.greeting",
+      "type": "method",
+      "label": "TemplatesService.greeting",
+      "repo": "nest-no-data",
+      "file": "src/notifications/templates.service.ts",
+      "line": 6
+    },
+    {
+      "id": "repo:nest-no-data",
+      "type": "repo",
+      "label": "nest-no-data",
+      "repo": "nest-no-data",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "classes": 4,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-no-data:http:DELETE:/notifications/:param",
+      "to": "nest-no-data#src/notifications/notifications.controller.ts:NotificationsController.dismiss",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/notifications/notifications.controller.ts",
+      "line": 14,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-no-data#Message",
+      "meta": {
+        "params": "{name:string}"
+      }
+    },
+    {
+      "from": "entry:nest-no-data:http:POST:/notifications/:param",
+      "to": "nest-no-data#src/notifications/notifications.controller.ts:NotificationsController.greet",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/notifications/notifications.controller.ts",
+      "line": 9,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-no-data#Message",
+      "meta": {
+        "params": "{name:string}"
+      }
+    },
+    {
+      "from": "nest-no-data#src/notifications/notifications.controller.ts:NotificationsController",
+      "to": "nest-no-data#src/notifications/notifications.service.ts:NotificationsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/notifications/notifications.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-no-data#src/notifications/notifications.controller.ts:NotificationsController.dismiss",
+      "to": "nest-no-data#src/notifications/notifications.service.ts:NotificationsService.dismiss",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/notifications/notifications.controller.ts",
+      "line": 16,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-no-data#Message"
+    },
+    {
+      "from": "nest-no-data#src/notifications/notifications.controller.ts:NotificationsController.greet",
+      "to": "nest-no-data#src/notifications/notifications.service.ts:NotificationsService.greet",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/notifications/notifications.controller.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-no-data#Message"
+    },
+    {
+      "from": "nest-no-data#src/notifications/notifications.service.ts:NotificationsService",
+      "to": "nest-no-data#src/notifications/templates.service.ts:TemplatesService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/notifications/notifications.service.ts",
+      "line": 13
+    },
+    {
+      "from": "nest-no-data#src/notifications/notifications.service.ts:NotificationsService.dismiss",
+      "to": "nest-no-data#src/notifications/templates.service.ts:TemplatesService.farewell",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/notifications/notifications.service.ts",
+      "line": 22,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-no-data#src/notifications/notifications.service.ts:NotificationsService.greet",
+      "to": "nest-no-data#src/notifications/templates.service.ts:TemplatesService.greeting",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/notifications/notifications.service.ts",
+      "line": 16,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    }
+  ],
+  "types": {
+    "type:nest-no-data#Message": {
+      "name": "Message",
+      "kind": "object",
+      "declaredIn": "nest-no-data#src/notifications/message.ts",
+      "structuralHash": "d6e0ac5c6061c4a7",
+      "fields": [
+        {
+          "name": "to",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": []
+}

@@ -1,0 +1,575 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-incremental",
+  "generatedAt": "2026-09-10T15:42:45.968Z",
+  "nodes": [
+    {
+      "id": "config_key:nest-incremental#BILLING_URL",
+      "type": "config_key",
+      "label": "BILLING_URL",
+      "repo": "nest-incremental",
+      "file": "src/billing/billing.client.ts",
+      "line": 14,
+      "meta": {
+        "key": "BILLING_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "entry:nest-incremental:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "nest-incremental",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-incremental:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "nest-incremental",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "http_out:nest-incremental#src/billing/billing.client.ts:14:12",
+      "type": "http_out",
+      "label": "POST /invoices",
+      "repo": "nest-incremental",
+      "file": "src/billing/billing.client.ts",
+      "line": 14,
+      "meta": {
+        "method": "POST",
+        "url": "${BILLING_URL}/invoices",
+        "path": "/invoices",
+        "baseUrlEnv": "BILLING_URL",
+        "responseType": null,
+        "bodyType": "object"
+      }
+    },
+    {
+      "id": "http_out:nest-incremental#src/billing/billing.client.ts:18:12",
+      "type": "http_out",
+      "label": "POST /refunds",
+      "repo": "nest-incremental",
+      "file": "src/billing/billing.client.ts",
+      "line": 18,
+      "meta": {
+        "method": "POST",
+        "url": "${BILLING_URL}/refunds",
+        "path": "/refunds",
+        "baseUrlEnv": "BILLING_URL",
+        "responseType": null,
+        "bodyType": "object"
+      }
+    },
+    {
+      "id": "nest-incremental#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "nest-incremental",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-incremental#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "nest-incremental",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-incremental#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-incremental",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-incremental#src/billing/billing.client.ts:BillingClient",
+      "type": "provider",
+      "label": "BillingClient",
+      "repo": "nest-incremental",
+      "file": "src/billing/billing.client.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-incremental#src/billing/billing.client.ts:BillingClient.charge",
+      "type": "method",
+      "label": "BillingClient.charge",
+      "repo": "nest-incremental",
+      "file": "src/billing/billing.client.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-incremental#src/billing/billing.client.ts:BillingClient.refund",
+      "type": "method",
+      "label": "BillingClient.refund",
+      "repo": "nest-incremental",
+      "file": "src/billing/billing.client.ts",
+      "line": 17
+    },
+    {
+      "id": "nest-incremental#src/guards/api-key.guard.ts:ApiKeyGuard",
+      "type": "guard",
+      "label": "ApiKeyGuard",
+      "repo": "nest-incremental",
+      "file": "src/guards/api-key.guard.ts",
+      "line": 3
+    },
+    {
+      "id": "nest-incremental#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-incremental",
+      "file": "src/orders/orders.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-incremental#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "nest-incremental",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17
+    },
+    {
+      "id": "nest-incremental#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "method",
+      "label": "OrdersController.findOne",
+      "repo": "nest-incremental",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12
+    },
+    {
+      "id": "nest-incremental#src/orders/orders.module.ts:OrdersModule",
+      "type": "module",
+      "label": "OrdersModule",
+      "repo": "nest-incremental",
+      "file": "src/orders/orders.module.ts",
+      "line": 9,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService",
+          "OrdersRepository",
+          "BILLING_CLIENT"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-incremental#src/orders/orders.repository.ts:OrdersRepository",
+      "type": "provider",
+      "label": "OrdersRepository",
+      "repo": "nest-incremental",
+      "file": "src/orders/orders.repository.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-incremental#src/orders/orders.repository.ts:OrdersRepository.find",
+      "type": "method",
+      "label": "OrdersRepository.find",
+      "repo": "nest-incremental",
+      "file": "src/orders/orders.repository.ts",
+      "line": 8
+    },
+    {
+      "id": "nest-incremental#src/orders/orders.repository.ts:OrdersRepository.save",
+      "type": "method",
+      "label": "OrdersRepository.save",
+      "repo": "nest-incremental",
+      "file": "src/orders/orders.repository.ts",
+      "line": 12
+    },
+    {
+      "id": "nest-incremental#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-incremental",
+      "file": "src/orders/orders.service.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "module": "OrdersModule"
+      }
+    },
+    {
+      "id": "nest-incremental#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-incremental",
+      "file": "src/orders/orders.service.ts",
+      "line": 19
+    },
+    {
+      "id": "nest-incremental#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "method",
+      "label": "OrdersService.findOne",
+      "repo": "nest-incremental",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "id": "repo:nest-incremental",
+      "type": "repo",
+      "label": "nest-incremental",
+      "repo": "nest-incremental",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "classes": 7,
+          "skippedExternalCalls": {
+            "@nestjs/axios": 2,
+            "@nestjs/config": 2,
+            "@nestjs/common": 2
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-incremental:http:GET:/orders/:param",
+      "to": "nest-incremental#src/guards/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "bootstrap",
+        "applications": [
+          {
+            "order": 0,
+            "scope": "global",
+            "source": "bootstrap"
+          },
+          {
+            "order": 1,
+            "scope": "class",
+            "source": "UseGuards"
+          }
+        ]
+      }
+    },
+    {
+      "from": "entry:nest-incremental:http:GET:/orders/:param",
+      "to": "nest-incremental#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-incremental#OrderDto",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-incremental:http:POST:/orders",
+      "to": "nest-incremental#src/guards/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "bootstrap",
+        "applications": [
+          {
+            "order": 0,
+            "scope": "global",
+            "source": "bootstrap"
+          },
+          {
+            "order": 1,
+            "scope": "class",
+            "source": "UseGuards"
+          }
+        ]
+      }
+    },
+    {
+      "from": "entry:nest-incremental:http:POST:/orders",
+      "to": "nest-incremental#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17,
+      "params": [
+        "type:nest-incremental#CreateOrderDto"
+      ],
+      "returns": "type:nest-incremental#OrderDto",
+      "meta": {
+        "body": "type:nest-incremental#CreateOrderDto"
+      }
+    },
+    {
+      "from": "nest-incremental#src/app.module.ts:AppModule",
+      "to": "nest-incremental#src/orders/orders.module.ts:OrdersModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 5
+    },
+    {
+      "from": "nest-incremental#src/billing/billing.client.ts:BillingClient",
+      "to": "nest-incremental#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/billing/billing.client.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-incremental#src/billing/billing.client.ts:BillingClient",
+      "to": "nest-incremental#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/billing/billing.client.ts",
+      "line": 10
+    },
+    {
+      "from": "nest-incremental#src/billing/billing.client.ts:BillingClient.charge",
+      "to": "config_key:nest-incremental#BILLING_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/billing/billing.client.ts",
+      "line": 14
+    },
+    {
+      "from": "nest-incremental#src/billing/billing.client.ts:BillingClient.charge",
+      "to": "http_out:nest-incremental#src/billing/billing.client.ts:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing/billing.client.ts",
+      "line": 14
+    },
+    {
+      "from": "nest-incremental#src/billing/billing.client.ts:BillingClient.refund",
+      "to": "config_key:nest-incremental#BILLING_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/billing/billing.client.ts",
+      "line": 18
+    },
+    {
+      "from": "nest-incremental#src/billing/billing.client.ts:BillingClient.refund",
+      "to": "http_out:nest-incremental#src/billing/billing.client.ts:18:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing/billing.client.ts",
+      "line": 18
+    },
+    {
+      "from": "nest-incremental#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-incremental#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "nest-incremental#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "nest-incremental#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "params": [
+        "type:nest-incremental#CreateOrderDto"
+      ],
+      "returns": "type:nest-incremental#OrderDto"
+    },
+    {
+      "from": "nest-incremental#src/orders/orders.controller.ts:OrdersController.findOne",
+      "to": "nest-incremental#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-incremental#OrderDto"
+    },
+    {
+      "from": "nest-incremental#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-incremental#src/billing/billing.client.ts:BillingClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 11
+    },
+    {
+      "from": "nest-incremental#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-incremental#src/orders/orders.repository.ts:OrdersRepository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 12
+    },
+    {
+      "from": "nest-incremental#src/orders/orders.service.ts:OrdersService.create",
+      "to": "nest-incremental#src/billing/billing.client.ts:BillingClient.charge",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 26,
+      "params": [
+        "string"
+      ],
+      "returns": "{data:unknown}"
+    },
+    {
+      "from": "nest-incremental#src/orders/orders.service.ts:OrdersService.create",
+      "to": "nest-incremental#src/orders/orders.repository.ts:OrdersRepository.save",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 20,
+      "params": [
+        "type:nest-incremental#OrderDto"
+      ],
+      "returns": "type:nest-incremental#OrderDto"
+    },
+    {
+      "from": "nest-incremental#src/orders/orders.service.ts:OrdersService.findOne",
+      "to": "nest-incremental#src/orders/orders.repository.ts:OrdersRepository.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 16,
+      "params": [
+        "string"
+      ],
+      "returns": "type:nest-incremental#OrderDto"
+    }
+  ],
+  "types": {
+    "type:nest-incremental#CreateOrderDto": {
+      "name": "CreateOrderDto",
+      "kind": "object",
+      "declaredIn": "nest-incremental#src/orders/dto/create-order.dto.ts",
+      "structuralHash": "f01d0678ad28409a",
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-incremental#OrderDto": {
+      "name": "OrderDto",
+      "kind": "object",
+      "declaredIn": "nest-incremental#src/orders/dto/create-order.dto.ts",
+      "structuralHash": "049458765787b28c",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/orders/orders.repository.ts",
+      "line": 6,
+      "reason": "db-layer-unread",
+      "message": "OrdersRepository reads as a data layer, and nothing was read through it.",
+      "hint": "Add \"OrdersRepository\" to adapters.db.localBaseClasses in flowatlas.config.json, so calls through it are recorded as data access.",
+      "symbol": "OrdersRepository",
+      "adapter": "local-base"
+    }
+  ]
+}

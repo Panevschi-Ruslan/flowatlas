@@ -1,0 +1,7 @@
+~  invoice.requested                          src/invoices/invoices.consumer.ts:28
+  -  producers (0)
+  -  consumers (1)
+    ~  InvoicesConsumer.onInvoiceRequested    billing/src/invoices/invoices.consumer.ts:28
+      -> InvoicesConsumer.onInvoiceRequested  billing/src/invoices/invoices.consumer.ts:28
+        -> InvoicesService.create             billing/src/invoices/invoices.service.ts:10
+! no producers

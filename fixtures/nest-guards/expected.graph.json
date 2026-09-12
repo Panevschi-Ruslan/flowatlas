@@ -1,0 +1,805 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-guards",
+  "generatedAt": "2026-09-09T22:29:13.430Z",
+  "nodes": [
+    {
+      "id": "entry:nest-guards:http:GET:/admin/stats",
+      "type": "entry",
+      "label": "GET /admin/stats",
+      "repo": "nest-guards",
+      "file": "src/admin/admin.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/admin/stats",
+        "rawPath": "/admin/stats",
+        "controller": "AdminController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-guards:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "nest-guards",
+      "file": "src/orders/orders.controller.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "decorators": [
+          {
+            "name": "Roles",
+            "args": [
+              "admin"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-guards:http:GET:/orders/health",
+      "type": "entry",
+      "label": "GET /orders/health",
+      "repo": "nest-guards",
+      "file": "src/orders/orders.controller.ts",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/health",
+        "rawPath": "/orders/health",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-guards:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "nest-guards",
+      "file": "src/orders/orders.controller.ts",
+      "line": 38,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
+      "type": "pipe",
+      "label": "ValidationPipe",
+      "repo": "nest-guards",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-guards#node_modules/@nestjs/core:Reflector",
+      "type": "provider",
+      "label": "Reflector",
+      "repo": "nest-guards",
+      "file": "node_modules/@nestjs/core",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/core",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-guards#node_modules/@nestjs/passport:AuthGuard",
+      "type": "guard",
+      "label": "AuthGuard",
+      "repo": "nest-guards",
+      "file": "node_modules/@nestjs/passport",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/passport",
+        "external": true,
+        "factoryArgs": [
+          "jwt"
+        ]
+      }
+    },
+    {
+      "id": "nest-guards#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+      "type": "guard",
+      "label": "AuthGuard(\"jwt\")",
+      "repo": "nest-guards",
+      "file": "node_modules/@nestjs/passport",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/passport",
+        "external": true,
+        "factoryArgs": [
+          "jwt"
+        ]
+      }
+    },
+    {
+      "id": "nest-guards#src/admin/admin.controller.ts:AdminController",
+      "type": "provider",
+      "label": "AdminController",
+      "repo": "nest-guards",
+      "file": "src/admin/admin.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-guards#src/admin/admin.controller.ts:AdminController.stats",
+      "type": "method",
+      "label": "AdminController.stats",
+      "repo": "nest-guards",
+      "file": "src/admin/admin.controller.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-guards#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-guards",
+      "file": "src/app.module.ts",
+      "line": 16,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "AdminController"
+        ],
+        "providers": [
+          "OrdersService",
+          "APP_INTERCEPTOR"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-guards#src/app.module.ts:requestIdMiddleware",
+      "type": "middleware",
+      "label": "requestIdMiddleware",
+      "repo": "nest-guards",
+      "file": "src/app.module.ts",
+      "line": 27,
+      "kind": "function"
+    },
+    {
+      "id": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+      "type": "guard",
+      "label": "ApiKeyGuard",
+      "repo": "nest-guards",
+      "file": "src/guards/api-key.guard.ts",
+      "line": 3
+    },
+    {
+      "id": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
+      "type": "guard",
+      "label": "RolesGuard",
+      "repo": "nest-guards",
+      "file": "src/guards/roles.guard.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-guards#src/guards/throttle.guard.ts:ThrottleGuard",
+      "type": "guard",
+      "label": "ThrottleGuard",
+      "repo": "nest-guards",
+      "file": "src/guards/throttle.guard.ts",
+      "line": 3
+    },
+    {
+      "id": "nest-guards#src/interceptors/logging.interceptor.ts:LoggingInterceptor",
+      "type": "interceptor",
+      "label": "LoggingInterceptor",
+      "repo": "nest-guards",
+      "file": "src/interceptors/logging.interceptor.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-guards#src/interceptors/metrics.interceptor.ts:MetricsInterceptor",
+      "type": "interceptor",
+      "label": "MetricsInterceptor",
+      "repo": "nest-guards",
+      "file": "src/interceptors/metrics.interceptor.ts",
+      "line": 10,
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-guards#src/interceptors/metrics.interceptor.ts:MetricsInterceptor.intercept",
+      "type": "method",
+      "label": "MetricsInterceptor.intercept",
+      "repo": "nest-guards",
+      "file": "src/interceptors/metrics.interceptor.ts",
+      "line": 12
+    },
+    {
+      "id": "nest-guards#src/middleware/logger.middleware.ts:LoggerMiddleware",
+      "type": "middleware",
+      "label": "LoggerMiddleware",
+      "repo": "nest-guards",
+      "file": "src/middleware/logger.middleware.ts",
+      "line": 3,
+      "kind": "class"
+    },
+    {
+      "id": "nest-guards#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-guards",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-guards#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "nest-guards",
+      "file": "src/orders/orders.controller.ts",
+      "line": 38
+    },
+    {
+      "id": "nest-guards#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "method",
+      "label": "OrdersController.findAll",
+      "repo": "nest-guards",
+      "file": "src/orders/orders.controller.ts",
+      "line": 24
+    },
+    {
+      "id": "nest-guards#src/orders/orders.controller.ts:OrdersController.health",
+      "type": "method",
+      "label": "OrdersController.health",
+      "repo": "nest-guards",
+      "file": "src/orders/orders.controller.ts",
+      "line": 33
+    },
+    {
+      "id": "nest-guards#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-guards",
+      "file": "src/orders/orders.service.ts",
+      "line": 3,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-guards#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-guards",
+      "file": "src/orders/orders.service.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-guards#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "method",
+      "label": "OrdersService.findAll",
+      "repo": "nest-guards",
+      "file": "src/orders/orders.service.ts",
+      "line": 5
+    },
+    {
+      "id": "repo:nest-guards",
+      "type": "repo",
+      "label": "nest-guards",
+      "repo": "nest-guards",
+      "meta": {
+        "stats": {
+          "files": 13,
+          "classes": 10,
+          "skippedExternalCalls": {
+            "@nestjs/common": 8,
+            "@nestjs/core": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-guards:http:GET:/admin/stats",
+      "to": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 10,
+      "meta": {
+        "order": 3,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/admin/stats",
+      "to": "nest-guards#src/admin/admin.controller.ts:AdminController.stats",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/admin/admin.controller.ts",
+      "line": 6,
+      "params": [],
+      "returns": "number"
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/admin/stats",
+      "to": "nest-guards#src/app.module.ts:requestIdMiddleware",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 27,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "configure"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/admin/stats",
+      "to": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "guard",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/admin/stats",
+      "to": "nest-guards#src/interceptors/metrics.interceptor.ts:MetricsInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 20,
+      "meta": {
+        "order": 2,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "APP_INTERCEPTOR"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders",
+      "to": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 10,
+      "meta": {
+        "order": 7,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap",
+        "applications": [
+          {
+            "order": 7,
+            "scope": "global",
+            "source": "bootstrap"
+          },
+          {
+            "order": 8,
+            "scope": "method",
+            "source": "UsePipes"
+          }
+        ]
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders",
+      "to": "nest-guards#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "order": 2,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders",
+      "to": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "guard",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders",
+      "to": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "order": 3,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders",
+      "to": "nest-guards#src/guards/throttle.guard.ts:ThrottleGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "meta": {
+        "order": 4,
+        "scope": "method",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders",
+      "to": "nest-guards#src/interceptors/logging.interceptor.ts:LoggingInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "meta": {
+        "order": 6,
+        "scope": "class",
+        "layer": "interceptor",
+        "source": "UseInterceptors"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders",
+      "to": "nest-guards#src/interceptors/metrics.interceptor.ts:MetricsInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 20,
+      "meta": {
+        "order": 5,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "APP_INTERCEPTOR"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders",
+      "to": "nest-guards#src/middleware/logger.middleware.ts:LoggerMiddleware",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 25,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "configure"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders",
+      "to": "nest-guards#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 24,
+      "params": [],
+      "returns": "string[]"
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders/health",
+      "to": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 10,
+      "meta": {
+        "order": 6,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders/health",
+      "to": "nest-guards#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "order": 2,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders/health",
+      "to": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "guard",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders/health",
+      "to": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "order": 3,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders/health",
+      "to": "nest-guards#src/interceptors/logging.interceptor.ts:LoggingInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "meta": {
+        "order": 5,
+        "scope": "class",
+        "layer": "interceptor",
+        "source": "UseInterceptors"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders/health",
+      "to": "nest-guards#src/interceptors/metrics.interceptor.ts:MetricsInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 20,
+      "meta": {
+        "order": 4,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "APP_INTERCEPTOR"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders/health",
+      "to": "nest-guards#src/middleware/logger.middleware.ts:LoggerMiddleware",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 25,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "configure"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/orders/health",
+      "to": "nest-guards#src/orders/orders.controller.ts:OrdersController.health",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 33,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-guards:http:POST:/orders",
+      "to": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 10,
+      "meta": {
+        "order": 6,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:POST:/orders",
+      "to": "nest-guards#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "order": 2,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:POST:/orders",
+      "to": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "guard",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:POST:/orders",
+      "to": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "order": 3,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:POST:/orders",
+      "to": "nest-guards#src/interceptors/logging.interceptor.ts:LoggingInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "meta": {
+        "order": 5,
+        "scope": "class",
+        "layer": "interceptor",
+        "source": "UseInterceptors"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:POST:/orders",
+      "to": "nest-guards#src/interceptors/metrics.interceptor.ts:MetricsInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 20,
+      "meta": {
+        "order": 4,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "APP_INTERCEPTOR"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:POST:/orders",
+      "to": "nest-guards#src/middleware/logger.middleware.ts:LoggerMiddleware",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 25,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "configure"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:POST:/orders",
+      "to": "nest-guards#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 38,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
+      "to": "nest-guards#node_modules/@nestjs/core:Reflector",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/guards/roles.guard.ts",
+      "line": 8
+    },
+    {
+      "from": "nest-guards#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-guards#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22
+    },
+    {
+      "from": "nest-guards#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "nest-guards#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 40,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "nest-guards#src/orders/orders.controller.ts:OrdersController.findAll",
+      "to": "nest-guards#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 29,
+      "params": [],
+      "returns": "string[]"
+    }
+  ],
+  "types": {
+    "type:@nestjs/common#CallHandler<any>": {
+      "name": "CallHandler",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "7398ff7b62cfd6d1",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    },
+    "type:@nestjs/common#ExecutionContext": {
+      "name": "ExecutionContext",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "87dd582cc69bf62e",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    }
+  },
+  "unresolved": []
+}

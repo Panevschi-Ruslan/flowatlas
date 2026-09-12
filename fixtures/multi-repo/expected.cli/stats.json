@@ -1,0 +1,97 @@
+{
+  "totals": {
+    "nodes": 107,
+    "edges": 88,
+    "types": 10,
+    "unresolved": 6
+  },
+  "nodesByType": {
+    "repo": 4,
+    "module": 4,
+    "entry": 14,
+    "provider": 17,
+    "method": 39,
+    "db_query": 4,
+    "table": 1,
+    "channel": 3,
+    "producer": 2,
+    "consumer": 2,
+    "http_out": 6,
+    "external_api": 1,
+    "ui_component": 1,
+    "ui_action": 1,
+    "ui_api_call": 6,
+    "config_key": 2
+  },
+  "nodesByService": {
+    "billing": 18,
+    "gateway": 37,
+    "orders": 32,
+    "web": 20
+  },
+  "edgesByType": {
+    "imports": 1,
+    "injects": 15,
+    "calls": 37,
+    "handles": 18,
+    "queries": 4,
+    "emits": 2,
+    "consumes": 2,
+    "http_calls": 2,
+    "hits": 3,
+    "reads_config": 4
+  },
+  "edgesByConfidence": {
+    "static": 85,
+    "marker": 1,
+    "heuristic": 2
+  },
+  "unresolvedByReason": {
+    "ambiguous-route-target": 1,
+    "di-token-unknown": 1,
+    "dynamic-http-url": 1,
+    "target-route-not-found": 2,
+    "unknown-base-url-env": 1
+  },
+  "unresolvedSites": {
+    "ambiguous-route-target": 1,
+    "di-token-unknown": 1,
+    "dynamic-http-url": 1,
+    "target-route-not-found": 2,
+    "unknown-base-url-env": 1
+  },
+  "link": {
+    "httpOut": {
+      "total": 6,
+      "linked": 2,
+      "byMarker": 1,
+      "unknownEnv": 1,
+      "noRoute": 1,
+      "ambiguous": 0,
+      "external": 1,
+      "dynamic": 1
+    },
+    "channels": {
+      "noConsumers": [
+        "channel:order.archived"
+      ],
+      "noProducers": [
+        "channel:invoice.requested"
+      ]
+    },
+    "routes": {
+      "total": 12,
+      "uncalled": [
+        "entry:billing:http:GET:/invoices/:param",
+        "entry:gateway:http:POST:/orders/:param/cancel",
+        "entry:gateway:http:POST:/orders/charge",
+        "entry:gateway:http:POST:/orders/pay",
+        "entry:orders:http:GET:/a/:param",
+        "entry:orders:http:GET:/orders/latest",
+        "entry:orders:http:POST:/orders",
+        "entry:orders:http:POST:/orders/:param/archive"
+      ]
+    },
+    "recomputed": false
+  }
+}

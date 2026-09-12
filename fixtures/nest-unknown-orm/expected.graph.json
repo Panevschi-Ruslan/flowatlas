@@ -1,0 +1,269 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-unknown-orm",
+  "generatedAt": "2026-09-09T22:29:18.234Z",
+  "nodes": [
+    {
+      "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:16:12",
+      "type": "db_query",
+      "label": "access Order",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.service.ts",
+      "line": 16,
+      "meta": {
+        "op": null,
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "fake-orm",
+        "method": "find",
+        "receiver": "this.orderRepo",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:20:12",
+      "type": "db_query",
+      "label": "access Order",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.service.ts",
+      "line": 20,
+      "meta": {
+        "op": null,
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "fake-orm",
+        "method": "persist",
+        "receiver": "this.orderRepo",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:26:12",
+      "type": "db_query",
+      "label": "access ?",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.service.ts",
+      "line": 26,
+      "meta": {
+        "op": null,
+        "table": null,
+        "tables": [],
+        "package": null,
+        "method": "find",
+        "receiver": "this.localRepo",
+        "source": "none"
+      }
+    },
+    {
+      "id": "nest-unknown-orm#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-unknown-orm",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "OrdersService",
+          "OrdersRepository"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-unknown-orm#src/orders/orders.repository.ts:OrdersRepository",
+      "type": "provider",
+      "label": "OrdersRepository",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.repository.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-unknown-orm#src/orders/orders.repository.ts:OrdersRepository.find",
+      "type": "method",
+      "label": "OrdersRepository.find",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.repository.ts",
+      "line": 12
+    },
+    {
+      "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listFromLibrary",
+      "type": "method",
+      "label": "OrdersService.listFromLibrary",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listLocally",
+      "type": "method",
+      "label": "OrdersService.listLocally",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.service.ts",
+      "line": 25
+    },
+    {
+      "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.store",
+      "type": "method",
+      "label": "OrdersService.store",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.service.ts",
+      "line": 19
+    },
+    {
+      "id": "repo:nest-unknown-orm",
+      "type": "repo",
+      "label": "nest-unknown-orm",
+      "repo": "nest-unknown-orm",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "fake-orm": 2
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:nest-unknown-orm#Order",
+      "type": "table",
+      "label": "Order",
+      "repo": "nest-unknown-orm"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:nest-unknown-orm#src/orders/orders.service.ts:16:12",
+      "to": "table:nest-unknown-orm#Order",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "from": "db_query:nest-unknown-orm#src/orders/orders.service.ts:20:12",
+      "to": "table:nest-unknown-orm#Order",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 20
+    },
+    {
+      "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-unknown-orm#src/orders/orders.repository.ts:OrdersRepository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 13
+    },
+    {
+      "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listFromLibrary",
+      "to": "db_query:nest-unknown-orm#src/orders/orders.service.ts:16:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listLocally",
+      "to": "db_query:nest-unknown-orm#src/orders/orders.service.ts:26:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listLocally",
+      "to": "nest-unknown-orm#src/orders/orders.repository.ts:OrdersRepository.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 26,
+      "params": [],
+      "returns": "type:nest-unknown-orm#Order[]"
+    },
+    {
+      "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.store",
+      "to": "db_query:nest-unknown-orm#src/orders/orders.service.ts:20:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 20
+    }
+  ],
+  "types": {
+    "type:nest-unknown-orm#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "nest-unknown-orm#src/orders/order.ts",
+      "structuralHash": "e752b571a9fb0fb7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 16,
+      "reason": "unknown-db-package",
+      "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
+      "symbol": "this.orderRepo.find"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 20,
+      "reason": "unknown-db-package",
+      "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
+      "symbol": "this.orderRepo.persist"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 26,
+      "reason": "db-receiver-name-only",
+      "hint": "this.localRepo is typed as OrdersRepository, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
+      "symbol": "this.localRepo.find"
+    }
+  ]
+}

@@ -1,0 +1,1166 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-telegraf",
+  "generatedAt": "2026-09-10T16:11:59.929Z",
+  "nodes": [
+    {
+      "id": "entry:nest-telegraf:bot_callback:/^order_(\\d+)$/",
+      "type": "entry",
+      "label": "bot_callback /^order_(\\d+)$/",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 52,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "/^order_(\\d+)$/",
+        "decorator": "Action",
+        "trigger": "/^order_(\\d+)$/",
+        "callbackData": {
+          "regex": "^order_(\\d+)$",
+          "flags": ""
+        },
+        "updateClass": "OrdersUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_callback:/^page_(\\d+)$/",
+      "type": "entry",
+      "label": "bot_callback /^page_(\\d+)$/",
+      "repo": "nest-telegraf",
+      "file": "src/direct.bot.ts",
+      "line": 28,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "/^page_(\\d+)$/",
+        "adapter": "telegraf-calls",
+        "registration": "action",
+        "trigger": "['refresh', /^page_(\\d+)$/]",
+        "updateClass": "DirectBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_callback:checkout",
+      "type": "entry",
+      "label": "bot_callback checkout",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 57,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "checkout",
+        "decorator": "Action",
+        "trigger": "dynamicKey()",
+        "updateClass": "OrdersUpdate",
+        "confidence": "marker",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_callback:order_cancel",
+      "type": "entry",
+      "label": "bot_callback order_cancel",
+      "repo": "nest-telegraf",
+      "file": "src/payments.update.ts",
+      "line": 7,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "order_cancel",
+        "decorator": "Action",
+        "trigger": "CB.CANCEL",
+        "callbackData": "order_cancel",
+        "updateClass": "PaymentsUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_callback:order_confirm",
+      "type": "entry",
+      "label": "bot_callback order_confirm",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 46,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "order_confirm",
+        "decorator": "Action",
+        "trigger": "'order_confirm'",
+        "callbackData": "order_confirm",
+        "updateClass": "OrdersUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_callback:refresh",
+      "type": "entry",
+      "label": "bot_callback refresh",
+      "repo": "nest-telegraf",
+      "file": "src/direct.bot.ts",
+      "line": 28,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "refresh",
+        "adapter": "telegraf-calls",
+        "registration": "action",
+        "trigger": "['refresh', /^page_(\\d+)$/]",
+        "updateClass": "DirectBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_command:/^hi/i",
+      "type": "entry",
+      "label": "bot_command /^hi/i",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 40,
+      "kind": "bot_command",
+      "meta": {
+        "key": "/^hi/i",
+        "decorator": "Hears",
+        "trigger": "/^hi/i",
+        "updateClass": "OrdersUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_command:help",
+      "type": "entry",
+      "label": "bot_command help",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 18,
+      "kind": "bot_command",
+      "meta": {
+        "key": "help",
+        "decorator": "Help",
+        "updateClass": "OrdersUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_command:i",
+      "type": "entry",
+      "label": "bot_command i",
+      "repo": "nest-telegraf",
+      "file": "src/direct.bot.ts",
+      "line": 23,
+      "kind": "bot_command",
+      "meta": {
+        "key": "i",
+        "adapter": "telegraf-calls",
+        "registration": "command",
+        "trigger": "['inbox', 'i']",
+        "updateClass": "DirectBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_command:inbox",
+      "type": "entry",
+      "label": "bot_command inbox",
+      "repo": "nest-telegraf",
+      "file": "src/direct.bot.ts",
+      "line": 23,
+      "kind": "bot_command",
+      "meta": {
+        "key": "inbox",
+        "adapter": "telegraf-calls",
+        "registration": "command",
+        "trigger": "['inbox', 'i']",
+        "updateClass": "DirectBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_command:menu",
+      "type": "entry",
+      "label": "bot_command menu",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 23,
+      "kind": "bot_command",
+      "meta": {
+        "key": "menu",
+        "decorator": "Command",
+        "trigger": "'menu'",
+        "updateClass": "OrdersUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_command:o",
+      "type": "entry",
+      "label": "bot_command o",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 29,
+      "kind": "bot_command",
+      "meta": {
+        "key": "o",
+        "decorator": "Command",
+        "trigger": "['orders', 'o']",
+        "updateClass": "OrdersUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_command:orders",
+      "type": "entry",
+      "label": "bot_command orders",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 29,
+      "kind": "bot_command",
+      "meta": {
+        "key": "orders",
+        "decorator": "Command",
+        "trigger": "['orders', 'o']",
+        "updateClass": "OrdersUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_command:settings",
+      "type": "entry",
+      "label": "bot_command settings",
+      "repo": "nest-telegraf",
+      "file": "src/direct.bot.ts",
+      "line": 31,
+      "kind": "bot_command",
+      "meta": {
+        "key": "settings",
+        "adapter": "telegraf-calls",
+        "registration": "settings",
+        "trigger": "settings",
+        "updateClass": "DirectBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_command:start",
+      "type": "entry",
+      "label": "bot_command start",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 13,
+      "kind": "bot_command",
+      "meta": {
+        "key": "start",
+        "decorator": "Start",
+        "updateClass": "OrdersUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_command:Меню",
+      "type": "entry",
+      "label": "bot_command Меню",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 35,
+      "kind": "bot_command",
+      "meta": {
+        "key": "Меню",
+        "decorator": "Hears",
+        "trigger": "'Меню'",
+        "updateClass": "OrdersUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_event:callback_query",
+      "type": "entry",
+      "label": "bot_event callback_query",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 69,
+      "kind": "bot_event",
+      "meta": {
+        "key": "callback_query",
+        "decorator": "On",
+        "trigger": "'callback_query'",
+        "updateType": "callback_query",
+        "updateClass": "OrdersUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_event:checkout/text",
+      "type": "entry",
+      "label": "bot_event checkout/text",
+      "repo": "nest-telegraf",
+      "file": "src/checkout.scene.ts",
+      "line": 11,
+      "kind": "bot_event",
+      "meta": {
+        "key": "checkout/text",
+        "decorator": "On",
+        "trigger": "'text'",
+        "updateType": "text",
+        "scene": "checkout",
+        "updateClass": "CheckoutScene",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_event:edited_message",
+      "type": "entry",
+      "label": "bot_event edited_message",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 74,
+      "kind": "bot_event",
+      "meta": {
+        "key": "edited_message",
+        "decorator": "On",
+        "trigger": "['message', 'edited_message']",
+        "updateType": "edited_message",
+        "updateClass": "OrdersUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_event:message",
+      "type": "entry",
+      "label": "bot_event message",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 74,
+      "kind": "bot_event",
+      "meta": {
+        "key": "message",
+        "decorator": "On",
+        "trigger": "['message', 'edited_message']",
+        "updateType": "message",
+        "updateClass": "OrdersUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:scene_step:checkout#enter",
+      "type": "entry",
+      "label": "scene_step checkout#enter",
+      "repo": "nest-telegraf",
+      "file": "src/checkout.scene.ts",
+      "line": 6,
+      "kind": "scene_step",
+      "meta": {
+        "key": "checkout#enter",
+        "decorator": "SceneEnter",
+        "scene": "checkout",
+        "updateClass": "CheckoutScene",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:scene_step:checkout#leave",
+      "type": "entry",
+      "label": "scene_step checkout#leave",
+      "repo": "nest-telegraf",
+      "file": "src/checkout.scene.ts",
+      "line": 16,
+      "kind": "scene_step",
+      "meta": {
+        "key": "checkout#leave",
+        "decorator": "SceneLeave",
+        "scene": "checkout",
+        "updateClass": "CheckoutScene",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:scene_step:register#1",
+      "type": "entry",
+      "label": "scene_step register#1",
+      "repo": "nest-telegraf",
+      "file": "src/register.wizard.ts",
+      "line": 6,
+      "kind": "scene_step",
+      "meta": {
+        "key": "register#1",
+        "decorator": "WizardStep",
+        "scene": "register",
+        "step": 1,
+        "updateClass": "RegisterWizard",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:scene_step:register#2",
+      "type": "entry",
+      "label": "scene_step register#2",
+      "repo": "nest-telegraf",
+      "file": "src/register.wizard.ts",
+      "line": 11,
+      "kind": "scene_step",
+      "meta": {
+        "key": "register#2",
+        "decorator": "WizardStep",
+        "scene": "register",
+        "step": 2,
+        "updateClass": "RegisterWizard",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:scene_step:register#4",
+      "type": "entry",
+      "label": "scene_step register#4",
+      "repo": "nest-telegraf",
+      "file": "src/register.wizard.ts",
+      "line": 16,
+      "kind": "scene_step",
+      "meta": {
+        "key": "register#4",
+        "decorator": "WizardStep",
+        "scene": "register",
+        "step": 4,
+        "updateClass": "RegisterWizard",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "nest-telegraf#src/admin.guard.ts:AdminGuard",
+      "type": "guard",
+      "label": "AdminGuard",
+      "repo": "nest-telegraf",
+      "file": "src/admin.guard.ts",
+      "line": 4,
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-telegraf#src/admin.guard.ts:AdminGuard.canActivate",
+      "type": "method",
+      "label": "AdminGuard.canActivate",
+      "repo": "nest-telegraf",
+      "file": "src/admin.guard.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-telegraf#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-telegraf",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "AdminGuard",
+          "CheckoutScene",
+          "DirectBot",
+          "NotificationsService",
+          "OrdersService",
+          "OrdersUpdate",
+          "PaymentsUpdate",
+          "RegisterWizard"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-telegraf#src/checkout.scene.ts:CheckoutScene",
+      "type": "provider",
+      "label": "CheckoutScene",
+      "repo": "nest-telegraf",
+      "file": "src/checkout.scene.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-telegraf#src/checkout.scene.ts:CheckoutScene.address",
+      "type": "method",
+      "label": "CheckoutScene.address",
+      "repo": "nest-telegraf",
+      "file": "src/checkout.scene.ts",
+      "line": 11
+    },
+    {
+      "id": "nest-telegraf#src/checkout.scene.ts:CheckoutScene.enter",
+      "type": "method",
+      "label": "CheckoutScene.enter",
+      "repo": "nest-telegraf",
+      "file": "src/checkout.scene.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-telegraf#src/checkout.scene.ts:CheckoutScene.leave",
+      "type": "method",
+      "label": "CheckoutScene.leave",
+      "repo": "nest-telegraf",
+      "file": "src/checkout.scene.ts",
+      "line": 16
+    },
+    {
+      "id": "nest-telegraf#src/direct.bot.ts:DirectBot",
+      "type": "provider",
+      "label": "DirectBot",
+      "repo": "nest-telegraf",
+      "file": "src/direct.bot.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-telegraf#src/direct.bot.ts:DirectBot.list",
+      "type": "method",
+      "label": "DirectBot.list",
+      "repo": "nest-telegraf",
+      "file": "src/direct.bot.ts",
+      "line": 36
+    },
+    {
+      "id": "nest-telegraf#src/direct.bot.ts:DirectBot.page",
+      "type": "method",
+      "label": "DirectBot.page",
+      "repo": "nest-telegraf",
+      "file": "src/direct.bot.ts",
+      "line": 41
+    },
+    {
+      "id": "nest-telegraf#src/direct.bot.ts:DirectBot.setup",
+      "type": "method",
+      "label": "DirectBot.setup",
+      "repo": "nest-telegraf",
+      "file": "src/direct.bot.ts",
+      "line": 19
+    },
+    {
+      "id": "nest-telegraf#src/notifications.service.ts:NotificationsService",
+      "type": "provider",
+      "label": "NotificationsService",
+      "repo": "nest-telegraf",
+      "file": "src/notifications.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-telegraf#src/notifications.service.ts:NotificationsService.onEnter",
+      "type": "method",
+      "label": "NotificationsService.onEnter",
+      "repo": "nest-telegraf",
+      "file": "src/notifications.service.ts",
+      "line": 7
+    },
+    {
+      "id": "nest-telegraf#src/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-telegraf",
+      "file": "src/orders.service.ts",
+      "line": 3,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-telegraf#src/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-telegraf",
+      "file": "src/orders.service.ts",
+      "line": 5
+    },
+    {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate",
+      "type": "provider",
+      "label": "OrdersUpdate",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.anyButton",
+      "type": "method",
+      "label": "OrdersUpdate.anyButton",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 69
+    },
+    {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.anyMessage",
+      "type": "method",
+      "label": "OrdersUpdate.anyMessage",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 74
+    },
+    {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.byId",
+      "type": "method",
+      "label": "OrdersUpdate.byId",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 52
+    },
+    {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.checkout",
+      "type": "method",
+      "label": "OrdersUpdate.checkout",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 57,
+      "meta": {
+        "markers": [
+          {
+            "name": "FlowEntry",
+            "args": [
+              "checkout"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.confirm",
+      "type": "method",
+      "label": "OrdersUpdate.confirm",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 46
+    },
+    {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.greet",
+      "type": "method",
+      "label": "OrdersUpdate.greet",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 40
+    },
+    {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.help",
+      "type": "method",
+      "label": "OrdersUpdate.help",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 18
+    },
+    {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.keyboardMenu",
+      "type": "method",
+      "label": "OrdersUpdate.keyboardMenu",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 35
+    },
+    {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.list",
+      "type": "method",
+      "label": "OrdersUpdate.list",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 29
+    },
+    {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.menu",
+      "type": "method",
+      "label": "OrdersUpdate.menu",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 23
+    },
+    {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.projectOrderCreated",
+      "type": "method",
+      "label": "OrdersUpdate.projectOrderCreated",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 80
+    },
+    {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.retry",
+      "type": "method",
+      "label": "OrdersUpdate.retry",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 64
+    },
+    {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.start",
+      "type": "method",
+      "label": "OrdersUpdate.start",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-telegraf#src/payments.update.ts:PaymentsUpdate",
+      "type": "provider",
+      "label": "PaymentsUpdate",
+      "repo": "nest-telegraf",
+      "file": "src/payments.update.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-telegraf#src/payments.update.ts:PaymentsUpdate.cancel",
+      "type": "method",
+      "label": "PaymentsUpdate.cancel",
+      "repo": "nest-telegraf",
+      "file": "src/payments.update.ts",
+      "line": 7
+    },
+    {
+      "id": "nest-telegraf#src/register.wizard.ts:RegisterWizard",
+      "type": "provider",
+      "label": "RegisterWizard",
+      "repo": "nest-telegraf",
+      "file": "src/register.wizard.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-telegraf#src/register.wizard.ts:RegisterWizard.askName",
+      "type": "method",
+      "label": "RegisterWizard.askName",
+      "repo": "nest-telegraf",
+      "file": "src/register.wizard.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-telegraf#src/register.wizard.ts:RegisterWizard.askPhone",
+      "type": "method",
+      "label": "RegisterWizard.askPhone",
+      "repo": "nest-telegraf",
+      "file": "src/register.wizard.ts",
+      "line": 11
+    },
+    {
+      "id": "nest-telegraf#src/register.wizard.ts:RegisterWizard.done",
+      "type": "method",
+      "label": "RegisterWizard.done",
+      "repo": "nest-telegraf",
+      "file": "src/register.wizard.ts",
+      "line": 16
+    },
+    {
+      "id": "repo:nest-telegraf",
+      "type": "repo",
+      "label": "nest-telegraf",
+      "repo": "nest-telegraf",
+      "meta": {
+        "stats": {
+          "files": 12,
+          "classes": 9,
+          "skippedExternalCalls": {
+            "telegraf": 4
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "nestjs-telegraf",
+            "telegraf-calls",
+            "entry-registries"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-telegraf:bot_callback:/^order_(\\d+)$/",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.byId",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 52,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_callback:/^page_(\\d+)$/",
+      "to": "nest-telegraf#src/direct.bot.ts:DirectBot.page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/direct.bot.ts",
+      "line": 41,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_callback:checkout",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.checkout",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 57,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_callback:order_cancel",
+      "to": "nest-telegraf#src/payments.update.ts:PaymentsUpdate.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/payments.update.ts",
+      "line": 7,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_callback:order_confirm",
+      "to": "nest-telegraf#src/admin.guard.ts:AdminGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 47,
+      "meta": {
+        "order": 0,
+        "scope": "method",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-telegraf:bot_callback:order_confirm",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.confirm",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 46,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_callback:refresh",
+      "to": "nest-telegraf#src/direct.bot.ts:DirectBot.page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/direct.bot.ts",
+      "line": 41,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_command:/^hi/i",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.greet",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 40,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_command:help",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.help",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 18,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_command:i",
+      "to": "nest-telegraf#src/direct.bot.ts:DirectBot.list",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/direct.bot.ts",
+      "line": 36,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_command:inbox",
+      "to": "nest-telegraf#src/direct.bot.ts:DirectBot.list",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/direct.bot.ts",
+      "line": 36,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_command:menu",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.menu",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 23,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_command:o",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.list",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 29,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_command:orders",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.list",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 29,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_command:settings",
+      "to": "nest-telegraf#src/direct.bot.ts:DirectBot.page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/direct.bot.ts",
+      "line": 41,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_command:start",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.start",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 13,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_command:Меню",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.keyboardMenu",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 35,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_event:callback_query",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.anyButton",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 69,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_event:checkout/text",
+      "to": "nest-telegraf#src/checkout.scene.ts:CheckoutScene.address",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/checkout.scene.ts",
+      "line": 11,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_event:edited_message",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.anyMessage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 74,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_event:message",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.anyMessage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 74,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:scene_step:checkout#enter",
+      "to": "nest-telegraf#src/checkout.scene.ts:CheckoutScene.enter",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/checkout.scene.ts",
+      "line": 6,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:scene_step:checkout#leave",
+      "to": "nest-telegraf#src/checkout.scene.ts:CheckoutScene.leave",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/checkout.scene.ts",
+      "line": 16,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:scene_step:register#1",
+      "to": "entry:nest-telegraf:scene_step:register#2",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/register.wizard.ts",
+      "line": 6,
+      "meta": {
+        "order": 1
+      }
+    },
+    {
+      "from": "entry:nest-telegraf:scene_step:register#1",
+      "to": "nest-telegraf#src/register.wizard.ts:RegisterWizard.askName",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/register.wizard.ts",
+      "line": 6,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:scene_step:register#2",
+      "to": "entry:nest-telegraf:scene_step:register#4",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/register.wizard.ts",
+      "line": 11,
+      "meta": {
+        "order": 2
+      }
+    },
+    {
+      "from": "entry:nest-telegraf:scene_step:register#2",
+      "to": "nest-telegraf#src/register.wizard.ts:RegisterWizard.askPhone",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/register.wizard.ts",
+      "line": 11,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:scene_step:register#4",
+      "to": "nest-telegraf#src/register.wizard.ts:RegisterWizard.done",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/register.wizard.ts",
+      "line": 16,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "nest-telegraf#src/direct.bot.ts:DirectBot",
+      "to": "nest-telegraf#src/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/direct.bot.ts",
+      "line": 17
+    },
+    {
+      "from": "nest-telegraf#src/direct.bot.ts:DirectBot.list",
+      "to": "nest-telegraf#src/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/direct.bot.ts",
+      "line": 38,
+      "params": [
+        "number"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-telegraf#src/direct.bot.ts:DirectBot.setup",
+      "to": "nest-telegraf#src/direct.bot.ts:DirectBot.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/direct.bot.ts",
+      "line": 23,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-telegraf#src/direct.bot.ts:DirectBot.setup",
+      "to": "nest-telegraf#src/direct.bot.ts:DirectBot.page",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/direct.bot.ts",
+      "line": 28,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-telegraf#src/orders.update.ts:OrdersUpdate",
+      "to": "nest-telegraf#src/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 11
+    },
+    {
+      "from": "nest-telegraf#src/orders.update.ts:OrdersUpdate.confirm",
+      "to": "nest-telegraf#src/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 49,
+      "params": [
+        "number"
+      ],
+      "returns": "string"
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/notifications.service.ts",
+      "line": 7,
+      "reason": "orphan-scene-decorator",
+      "hint": "@SceneEnter/@SceneLeave/@WizardStep must sit in a class decorated with @Scene or @Wizard.",
+      "symbol": "NotificationsService.onEnter",
+      "adapter": "nestjs-telegraf"
+    },
+    {
+      "file": "src/orders.update.ts",
+      "line": 64,
+      "reason": "dynamic-bot-trigger",
+      "hint": "Use a string literal, a const from a shared package, or add @FlowEntry('<name>') to the handler.",
+      "symbol": "OrdersUpdate.retry",
+      "adapter": "nestjs-telegraf"
+    }
+  ]
+}

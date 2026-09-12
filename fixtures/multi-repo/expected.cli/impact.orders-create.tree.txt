@@ -1,0 +1,4 @@
+-> OrdersService.create       orders/src/orders/orders.service.ts:40
+  -> OrdersController.create  orders/src/orders/orders.controller.ts:31
+    @  POST /orders           orders/src/orders/orders.controller.ts:31
+Reachable from: 1 http entry (orders)
