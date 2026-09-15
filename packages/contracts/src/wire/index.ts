@@ -16,6 +16,7 @@ import { bufferString } from './buffer-string.js';
 import { classTransformer } from './class-transformer.js';
 import { dateString } from './date-string.js';
 import { objectidString } from './objectid-string.js';
+import { optionalAcceptsNull } from './optional-accepts-null.js';
 import type { FieldView, WireRule } from './rule.js';
 import { setMapJson } from './set-map-json.js';
 import { undefinedVanishes } from './undefined-vanishes.js';
@@ -23,6 +24,7 @@ import { undefinedVanishes } from './undefined-vanishes.js';
 export const WIRE_RULES: readonly WireRule[] = [
   classTransformer,
   undefinedVanishes,
+  optionalAcceptsNull,
   dateString,
   bigintString,
   bufferString,
@@ -100,6 +102,7 @@ export {
   classTransformer,
   dateString,
   objectidString,
+  optionalAcceptsNull,
   setMapJson,
   undefinedVanishes,
 };

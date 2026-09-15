@@ -428,6 +428,29 @@ services both claim resolves to neither, and says so.
 | `contracts.depth` | number | `3` | how far into nested shapes `flowatlas contracts` compares |
 | `contracts.rules.disable` | string[] | `[]` | rules about the JSON wire this project's wire does not follow |
 | `contracts.ignoreEdges` | string[] | `[]` | boundaries whose drift is deliberate, as `from\|type\|to`, for code you cannot annotate |
+| `doctor.publicDecorators` | string[] | `["Public", "IsPublic", "AllowAnonymous", "SkipAuth"]` | decorators that mark a handler public on purpose, so `route-unguarded` leaves it out |
+| `doctor.publicRoutes` | string[] | `[]` | routes public by decision, as `METHOD /path` with `*` for any run of characters (`* /api/health`, `GET /api/public/*`) |
+| `doctor.nonGateWrappers` | string[] | `["ThrottlerGuard"]` | guards that refuse nobody for who they are, so a route behind only these is still `route-unguarded` |
+| `doctor.skipGuardDecorators` | object | `{}` | decorators that switch a guard off for one handler through the reflector, each mapped to the guard classes it switches off (`{"SkipCustomerAuth": ["CustomerAuthGuard"]}`; `[]` = every guard); a route carrying one is audited as if those guards were absent |
+
+**Checks over the joined routes.** A build also records three findings no single
+repository can see, as ordinary rows under `doctor`'s unresolved section:
+`route-unguarded` (an HTTP route with no guard or middleware in front of it that
+reaches stored data; a guard is read through a decorator of the project's own
+that returns `applyDecorators(UseGuards(...), ...)`, one level deep; a route a worker declares is listed at `info`, because
+middleware a worker installs for a whole prefix is not read yet), `route-shadowed` (a route a worker answers before the
+application, whose guards then never run) and `route-wildcard-only` (a request
+only a catch-all route answers). Accept them into the baseline once reviewed;
+`--strict` then fails only on new ones.
+
+**Rules the contract check applies on top of the wire.** `optional-accepts-null`
+(a field a receiving validator marks `@IsOptional` reads `null` too),
+`null-for-optional` (a `null` sent where an unvalidated receiver declares the
+field optional is a warning, not an error) and `whitelist-strip` (a field sent to
+a route whose `ValidationPipe` whitelists, and which the receiving class does not
+declare or decorate, is a warning: it is removed before the handler runs). A
+request made from a browser service method nothing calls is reported as a
+warning rather than an error, and says so.
 
 ### `adapters`
 

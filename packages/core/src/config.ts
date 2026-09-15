@@ -199,6 +199,27 @@ export const flowatlasConfigSchema = z
         baseline: z.string().min(1).optional(),
         /** Reasons left out of the growth check, still reported. */
         ignoreReasons: z.array(z.string().min(1)).default([]),
+        /**
+         * Decorators that mark a handler as public on purpose, so a route with no
+         * guard in front of it is not reported as unguarded.
+         */
+        publicDecorators: z
+          .array(z.string().min(1))
+          .default(['Public', 'IsPublic', 'AllowAnonymous', 'SkipAuth']),
+        /** Routes public by decision, as `METHOD /path`, with `*` for any run of characters. */
+        publicRoutes: z.array(z.string().min(1)).default([]),
+        /**
+         * Guards that never refuse a request for who is asking — a rate limiter —
+         * so a route with nothing else in front of it is still unguarded.
+         */
+        nonGateWrappers: z.array(z.string().min(1)).default(['ThrottlerGuard']),
+        /**
+         * Decorators that switch a guard off for one handler (a flag the guard
+         * reads through the reflector), each with the guard classes it switches
+         * off; an empty list means every guard. A route carrying one is audited
+         * as if those guards were not there.
+         */
+        skipGuardDecorators: z.record(z.string().min(1), z.array(z.string().min(1))).default({}),
         markers: z
           .strictObject({
             /** Fail a strict run on a redundant annotation, not only a false one. */
@@ -206,7 +227,14 @@ export const flowatlasConfigSchema = z
           })
           .default({ warnAsError: false }),
       })
-      .default({ ignoreReasons: [], markers: { warnAsError: false } }),
+      .default({
+        ignoreReasons: [],
+        publicDecorators: ['Public', 'IsPublic', 'AllowAnonymous', 'SkipAuth'],
+        publicRoutes: [],
+        nonGateWrappers: ['ThrottlerGuard'],
+        skipGuardDecorators: {},
+        markers: { warnAsError: false },
+      }),
     types: z
       .strictObject({
         /** How deep nested type structures are expanded before falling back to a reference. */

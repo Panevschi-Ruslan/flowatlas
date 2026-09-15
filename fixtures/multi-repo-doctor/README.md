@@ -40,9 +40,11 @@ way in and the gateway's copy of `CreateOrderDto` does not declare it. The same
 drift reaches `POST /orders/legacy` through a method carrying `@ContractIgnore`,
 so those findings are counted under `ignored` and fail nothing.
 
-**`unresolved` — 18 places over nine reasons,** enough for the grouping to be
+**`unresolved` — 21 places over ten reasons,** enough for the grouping to be
 worth looking at: a data layer with no descriptor (`fake-orm`), three addresses
-built at run time, a channel read from settings, a token no module provides.
+built at run time, a channel read from settings, a token no module provides,
+and the three `orders` routes that reach stored data with no guard in front of
+them (`route-unguarded`).
 
 **`baseline` — three files, three answers.** See `make-baselines.mjs`:
 

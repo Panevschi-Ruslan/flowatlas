@@ -109,12 +109,13 @@ describe('dead on the analytics fixture', () => {
     expect(lines.join('\n')).toContain('could not be resolved');
   });
 
-  it('asks the contract checker about fields, and finds none unread on this fixture', async () => {
+  it('asks the contract checker about fields, and names the two nobody declares', async () => {
     // It used to answer `contracts-unavailable`, because the checker did not
-    // exist. It does now, and it says nothing goes over a boundary here that
-    // the far side does not declare.
+    // exist, and then nothing, because a body written as an object literal was
+    // read as a shape with no fields. Read field by field, two of the bodies
+    // sent to `POST /orders/create` carry a field its handler never declares.
     const { result } = await runDead({ db });
-    expect(result.fields).toEqual([]);
+    expect(result.fields?.map((row) => row.field)).toEqual(['draft', 'orderId']);
     expect(result.warnings).toBeUndefined();
   });
 

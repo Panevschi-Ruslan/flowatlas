@@ -35,11 +35,9 @@ export class LiveEventsService {
    * The same stream, with credentials in the query string because the client
    * cannot set headers — which is how every one of these is written in practice.
    *
-   * Expected: `ui_api_call` with `path` ending in a hole, counted under
-   * `api-path-partly-read` and joined to nothing. The query is not part of the
-   * route, but a `+` whose right-hand side cannot be read collapses whole, taking
-   * the `?` with it, so nothing is left to cut the path at. That is the address
-   * reader's, not this pass's: see the R08 log.
+   * Expected: `ui_api_call` with `path` `/depots/:param/events`, joined to the
+   * route. The right-hand side of the `+` cannot be read, but it opens with `?`,
+   * so it is a query string and no part of the route.
    */
   openWithToken(depotId: string, token: string): void {
     const url =

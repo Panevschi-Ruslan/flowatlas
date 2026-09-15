@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-10T18:22:33.905Z",
+  "builtAt": "2026-09-14T12:22:43.124Z",
   "configHash": "6bdd35fd6118",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 14,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 1030
+      "durationMs": 703
     },
     {
       "name": "gateway",
@@ -23,7 +23,7 @@
       "edges": 32,
       "types": 4,
       "unresolved": 1,
-      "durationMs": 1085
+      "durationMs": 756
     },
     {
       "name": "orders",
@@ -34,7 +34,7 @@
       "edges": 25,
       "types": 4,
       "unresolved": 1,
-      "durationMs": 985
+      "durationMs": 723
     },
     {
       "name": "web",
@@ -45,7 +45,7 @@
       "edges": 12,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 786
+      "durationMs": 579
     }
   ],
   "httpOut": {
@@ -119,6 +119,42 @@
       "symbol": "http_out:gateway#src/clients/payments.client.ts:24:12"
     },
     {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "reason": "route-unguarded",
+      "message": "GET /orders/latest has no guard in front of it and reaches Order.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "GET /orders/latest"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "reason": "route-unguarded",
+      "message": "GET /orders/:param has no guard in front of it and reaches Order.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "GET /orders/:param"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 31,
+      "reason": "route-unguarded",
+      "message": "POST /orders has no guard in front of it and reaches Order.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "POST /orders"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 42,
+      "reason": "route-unguarded",
+      "message": "POST /orders/:param/archive has no guard in front of it and reaches Order.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "POST /orders/:param/archive"
+    },
+    {
       "service": "web",
       "file": "src/app/orders-api.service.ts",
       "line": 26,
@@ -141,6 +177,6 @@
     "nodes": 107,
     "edges": 88,
     "types": 10,
-    "unresolved": 6
+    "unresolved": 10
   }
 }

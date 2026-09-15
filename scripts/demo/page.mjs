@@ -328,53 +328,52 @@ flowatlas build          <span class="c"># read them all and join them</span></c
     wrote the tool.</p>
 
   <div class="tiles">
-    <div><b>251,056</b><span>lines of TypeScript and templates, over 1,443 files</span></div>
-    <div><b>11,239</b><span>nodes, joined by 19,710 edges</span></div>
-    <div class="lead"><b>376</b><span>of those edges cross a repository boundary</span></div>
-    <div><b>5.3s</b><span>to read all five; 0.6s when nothing changed</span></div>
+    <div><b>259,337</b><span>lines of TypeScript and templates, over 1,523 files</span></div>
+    <div><b>11,307</b><span>nodes, joined by 19,758 edges</span></div>
+    <div class="lead"><b>537</b><span>of those edges cross a repository boundary</span></div>
+    <div><b>5.5s</b><span>to read all five; 0.7s when nothing changed</span></div>
   </div>
 
-  <p class="fig-note">The third figure is the one that matters. Three hundred
-    and seventy six connections that no compiler in any of those five checkouts
-    can see, because each one only ever reads its own. 19,325 of the edges were
-    read from the code and 385 were inferred and marked <code>heuristic</code>;
-    none needed an annotation. Every edge says which of the three it is.</p>
+  <p class="fig-note">The third figure is the one that matters. Five hundred
+    and thirty seven connections that no compiler in any of those five checkouts
+    can see, because each one only ever reads its own. 19,344 of the edges were
+    read from the code, 397 were inferred and marked <code>heuristic</code>, and
+    17 were declared by an annotation. Every edge says which of the three it is.</p>
 
   <div class="pair">
     <div>
       <h3>ways in</h3>
       <div class="tw"><table>
-        <tr><td>HTTP routes</td><td>615</td></tr>
-        <tr><td>bot commands, callbacks and events</td><td>65</td></tr>
-        <tr><td>routes something in the project reaches</td><td>353</td></tr>
-        <tr><td>routes nothing it can see calls</td><td>262</td></tr>
+        <tr><td>HTTP routes</td><td>564</td></tr>
+        <tr><td>bot commands, callbacks and events</td><td>64</td></tr>
+        <tr><td>routes something in the project reaches</td><td>502</td></tr>
+        <tr><td>routes nothing it can see calls</td><td>62</td></tr>
       </table></div>
     </div>
     <div>
       <h3>joined — first build, then after two settings</h3>
       <div class="tw"><table>
-        <tr><td>browser requests matched to their route</td><td>333 → 333 / 356</td></tr>
-        <tr><td>calls between services matched</td><td>0 → 43 / 55</td></tr>
-        <tr><td>routes something reaches</td><td>322 → 353</td></tr>
-        <tr><td>message channels with a handler</td><td>0 → 2 / 12</td></tr>
+        <tr><td>browser requests matched to their route</td><td>489 → 489 / 495</td></tr>
+        <tr><td>calls between services matched</td><td>1 → 41 / 61</td></tr>
+        <tr><td>routes something reaches</td><td>477 → 502</td></tr>
+        <tr><td>message channels with a handler</td><td>0 → 7 / 12</td></tr>
       </table></div>
     </div>
     <div>
       <h3>found once they were joined</h3>
       <div class="tw"><table>
-        <tr><td>contract errors, over 351 boundaries</td><td>107</td></tr>
-        <tr><td>names declared more than one way</td><td>55</td></tr>
-        <tr><td>channels handled nowhere</td><td>10</td></tr>
-        <tr><td>routes claimed by two handlers</td><td>4</td></tr>
-      </table></div>
+        <tr><td>contract errors, over 636 boundaries</td><td>1</td></tr>
+        <tr><td>names declared more than one way</td><td>64</td></tr>
+        <tr><td>channels handled nowhere</td><td>5</td></tr>
+              </table></div>
     </div>
     <div>
       <h3>what it says it cannot see</h3>
       <div class="tw"><table>
-        <tr><td>findings to act on</td><td>40</td></tr>
-        <tr><td>places static reading cannot reach</td><td>750</td></tr>
-        <tr><td>rows they are folded into</td><td>19</td></tr>
-        <tr><td>edges inferred, and marked so</td><td>385</td></tr>
+        <tr><td>findings to act on</td><td>30</td></tr>
+        <tr><td>places static reading cannot reach</td><td>691</td></tr>
+        <tr><td>rows they are folded into</td><td>14</td></tr>
+        <tr><td>edges inferred, and marked so</td><td>397</td></tr>
       </table></div>
     </div>
   </div>
@@ -457,7 +456,7 @@ flowatlas doctor --strict              <span class="c"># exit 1 on a problem</sp
 <section>
   <div class="col">
     ${h2('04', 'Answer it in the configuration')}
-    <p>Two settings close four of the eleven findings, and three of the five
+    <p>Two settings close four of the fifteen findings, and three of the five
       browser requests that had nowhere to go.</p>
     <p><strong>baseUrlEnv</strong> is what turns a request into an edge: a
       service declares the settings keys other services use to address it.
@@ -473,7 +472,7 @@ flowatlas doctor --strict              <span class="c"># exit 1 on a problem</sp
       <tr><td>calls between services linked</td><td class="num">1</td><td class="num good">2</td></tr>
       <tr><td>browser requests joined to a route</td><td class="num">1</td><td class="num good">3</td></tr>
       <tr><td>routes something reaches</td><td class="num">2</td><td class="num good">4</td></tr>
-      <tr><td>rows left unread</td><td class="num">11</td><td class="num good">7</td></tr>
+      <tr><td>rows left unread</td><td class="num">15</td><td class="num good">11</td></tr>
     </table></div>
     <p>What survives is no longer missing configuration. It is the project
       disagreeing with itself, which is the thing worth knowing.</p>

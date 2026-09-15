@@ -72,7 +72,7 @@ supposed to be:
 calls out: 6 total, 1 linked, 1 by annotation, 0 no route, 4 unknown setting, 0 ambiguous, 1 third party, 0 dynamic
 ui calls: 6 total, 1 joined to a route, 5 not (ambiguous-route-target 3, api-path-partly-read 1, target-route-not-found 1)
 routes: 12 total, 2 reached, 10 never called, 1 claimed by two handlers
-unresolved: 11
+unresolved: 15
 ```
 
 Four requests leave the gateway for an address flowatlas cannot attribute to any
@@ -101,7 +101,7 @@ flowatlas doctor --strict                # exit 1 if any of it is a problem
 
 ## 4. Answer it in the configuration
 
-Two settings close four of the eleven findings, and three of the five browser
+Two settings close four of the fifteen findings, and three of the five browser
 requests that had nowhere to go.
 
 **`baseUrlEnv`** is what turns a request into an edge. A service declares the
@@ -120,7 +120,7 @@ The second build is the point of the exercise:
 | calls between services linked | 1 | 2 |
 | browser requests joined to a route | 1 | 3 |
 | routes something reaches | 2 | 4 |
-| rows left unread | 11 | 7 |
+| rows left unread | 15 | 11 |
 
 What survives is no longer missing configuration. It is the project disagreeing
 with itself, which is the thing worth knowing.

@@ -1,4 +1,5 @@
 import {
+  addressAt,
   constantMethodResult,
   constantPropertyValue,
   normalizePath,
@@ -7,6 +8,7 @@ import {
   rootSettingAddress,
   settingKeyIn,
   UNREAD_SPAN,
+  type CallFrame,
   type SettingBehind,
 } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
@@ -171,6 +173,51 @@ export const analyzeApiUrl = (node: TsNode, sharedPackages: readonly string[]): 
     baseUrlEnv: baseUrlEnv ?? null,
     host: null,
     via,
+    guessed,
+  };
+};
+
+/**
+ * Works out what address a request reaches, read at the call site a wrapper was
+ * called from.
+ *
+ * `frames` lead from the request out to that call, innermost first. Every
+ * parameter on the way is bound to what was passed, and a method the base leaves
+ * abstract is answered by the class the caller is, so
+ * `this.api.get('/me/deals')` and `this.delete(id)` in a subclass each read as
+ * the one request they make rather than as the wrapper's single unreadable one.
+ */
+export const analyzeForwardedApiUrl = (
+  node: TsNode,
+  frames: readonly CallFrame[],
+  choices?: ReadonlyMap<TsNode, string>,
+): ApiUrl => {
+  const found = addressAt(node, {
+    readSetting,
+    frames,
+    ...(choices === undefined ? {} : { choices }),
+  });
+  if (found.text.replaceAll(UNREAD_SPAN, '') === '' && found.key === null) return EMPTY;
+  const guessed = found.guessed === true;
+  if (found.key === null) {
+    const absolute = ABSOLUTE.exec(found.text);
+    if (absolute !== null) {
+      return {
+        url: found.text,
+        path: routePathOf(absolute[3] ?? ''),
+        baseUrlEnv: null,
+        host: (absolute[2] ?? '').toLowerCase(),
+        via: 'literal',
+        guessed,
+      };
+    }
+  }
+  return {
+    url: found.key === null ? found.text : `\${${found.key}}${found.text}`,
+    path: routePathOf(found.text),
+    baseUrlEnv: found.key,
+    host: null,
+    via: found.key === null ? 'literal' : 'template-env',
     guessed,
   };
 };

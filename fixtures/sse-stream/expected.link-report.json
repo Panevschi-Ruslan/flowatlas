@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-10T16:12:05.108Z",
+  "builtAt": "2026-09-14T11:57:23.446Z",
   "configHash": "37634076a802",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 20,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 943
+      "durationMs": 598
     },
     {
       "name": "web",
@@ -23,7 +23,7 @@
       "edges": 11,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 779
+      "durationMs": 514
     }
   ],
   "httpOut": {
@@ -38,11 +38,10 @@
   },
   "ui": {
     "total": 4,
-    "resolved": 2,
-    "unresolved": 2,
+    "resolved": 3,
+    "unresolved": 1,
     "byReason": {
-      "api-path-dynamic": 1,
-      "api-path-partly-read": 1
+      "api-path-dynamic": 1
     }
   },
   "channels": {
@@ -64,7 +63,7 @@
   "unresolved": [],
   "totals": {
     "nodes": 43,
-    "edges": 33,
+    "edges": 34,
     "types": 1,
     "unresolved": 2
   }

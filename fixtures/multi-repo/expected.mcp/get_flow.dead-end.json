@@ -81,7 +81,7 @@
                     "path": "/orders/:param/cancel",
                     "baseUrlEnv": "ORDERS_URL",
                     "responseType": "type:@fx/contracts#OrderDto",
-                    "bodyType": "object",
+                    "bodyType": "{reason:string}",
                     "targetService": "orders"
                   }
                 },

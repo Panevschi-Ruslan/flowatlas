@@ -19,6 +19,8 @@ import {
   type RouteIndex,
 } from './http-link.js';
 import { mergeGraphs } from './merge.js';
+import { auditRoutes } from './route-audit.js';
+import { answeredOnlyByWildcard } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
 import type { LinkReport, ServiceReport } from './report.js';
 import { surveyChannels, surveyRoutes } from './survey.js';
@@ -53,15 +55,19 @@ const configHashOf = (config: FlowatlasConfig): string =>
     .digest('hex')
     .slice(0, 12);
 
-/** Reads the annotation that says where a call goes, if the method carries one. */
-const callsServiceOf = (method: GraphNode | undefined): CallsServiceMarker | undefined => {
+/** Reads every annotation that says where a call goes, in the order they are written. */
+const callsServicesOf = (method: GraphNode | undefined): CallsServiceMarker[] => {
   const markers = method?.meta?.['markers'] as Array<{ name: string; args: unknown[] }> | undefined;
-  const marker = markers?.find((item) => item.name === 'CallsService');
-  const [service, route] = marker?.args ?? [];
-  if (typeof service !== 'string' || typeof route !== 'string') return undefined;
-  const [verb, path] = route.trim().split(/\s+/);
-  if (verb === undefined || path === undefined) return undefined;
-  return { service, method: verb.toUpperCase(), path };
+  const found: CallsServiceMarker[] = [];
+  for (const marker of markers ?? []) {
+    if (marker.name !== 'CallsService') continue;
+    const [service, route] = marker.args;
+    if (typeof service !== 'string' || typeof route !== 'string') continue;
+    const [verb, path] = route.trim().split(/\s+/);
+    if (verb === undefined || path === undefined) continue;
+    found.push({ service, method: verb.toUpperCase(), path });
+  }
+  return found;
 };
 
 /** Which routes each service serves, which is what both matchers ask first. */
@@ -115,7 +121,8 @@ const buildRouteIndex = (
         ? (routesByService.get(service) ?? [])
         : undefined,
     claimantsOf: (env) => servicesByEnv.get(env) ?? [],
-    markerOf: (callId) => callsServiceOf(nodes.get(callerOf.get(callId) ?? '')),
+    markerOf: (callId) => callsServicesOf(nodes.get(callerOf.get(callId) ?? ''))[0],
+    markersOf: (callId) => callsServicesOf(nodes.get(callerOf.get(callId) ?? '')),
   };
 };
 
@@ -201,6 +208,17 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
   };
 };
 
+/** What is said about a request only a catch-all answers. */
+const wildcardFinding = (call: GraphNode, entry: GraphNode): Finding => {
+  const asked = `${String(call.meta?.['method'] ?? '?')} ${String(call.meta?.['path'] ?? '?')}`;
+  const route = `${String(entry.meta?.['method'] ?? '?')} ${String(entry.meta?.['path'] ?? '?')}`;
+  return {
+    reason: 'route-wildcard-only',
+    message: `only the catch-all ${route} in ${entry.repo} answers ${asked}`,
+    hint: `No route of ${entry.repo} spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.`,
+  };
+};
+
 /** Which service a call was aimed at, as far as it could be worked out. */
 const aimOf = (outcome: CallOutcome): string | undefined => {
   if (outcome.kind === 'linked') return outcome.entry.repo;
@@ -262,14 +280,20 @@ export const linkGraphs = (
     if (call.type !== 'http_out') continue;
     httpOut.total += 1;
 
-    const { outcome, notes } = resolveCall(call, index);
+    const { outcome, notes, alsoLinked } = resolveCall(call, index);
     for (const note of notes) record(call, note);
 
     if (outcome.kind === 'linked') {
       const edge = callEdge(call, outcome);
       edges.set(edgeKey(edge), edge);
+      for (const entry of alsoLinked ?? []) {
+        const more = callEdge(call, { ...outcome, entry, runnersUp: [] });
+        edges.set(edgeKey(more), more);
+      }
       httpOut.linked += 1;
       if (outcome.via === 'marker') httpOut.byMarker += 1;
+      const routes = routesByService.get(outcome.entry.repo) ?? [];
+      if (answeredOnlyByWildcard(outcome.entry, routes)) record(call, wildcardFinding(call, outcome.entry));
     } else {
       httpOut[outcome.kind] += 1;
     }
@@ -292,6 +316,8 @@ export const linkGraphs = (
       const edge = uiEdge(call, outcome);
       edges.set(edgeKey(edge), edge);
       ui.resolved += 1;
+      const routes = routesByService.get(outcome.targetService) ?? [];
+      if (answeredOnlyByWildcard(outcome.entry, routes)) record(call, wildcardFinding(call, outcome.entry));
       call.meta = { ...call.meta, targetService: outcome.targetService };
       continue;
     }
@@ -304,6 +330,15 @@ export const linkGraphs = (
     const finding = uiFindingFor(outcome);
     if (finding !== undefined) record(call, finding);
   }
+
+  found.push(
+    ...auditRoutes(nodes, edges.values(), {
+      publicDecorators: config.doctor.publicDecorators,
+      publicRoutes: config.doctor.publicRoutes,
+      nonGateWrappers: config.doctor.nonGateWrappers,
+      skipGuardDecorators: config.doctor.skipGuardDecorators,
+    }),
+  );
 
   const channels = surveyChannels(nodes.values(), edges.values());
   const routes = surveyRoutes(nodes.values(), edges.values());

@@ -56,6 +56,10 @@ application that declare no route at all.
 | `registerReports(app)` | 56 | none | `route-path-dynamic` |
 | `app.all('/api/*', …)` | 65 | `ALL /api/*` | `call` |
 
+A route whose `handlerVia` is `inline` is handled by the function written in
+the call: a `function` node named for the route and the line it starts on, such
+as `GET /health@23`, so a walk from the route goes on into what it runs.
+
 The receiver's type is what makes a call a route, and the type has to be the
 application: `c.get('orders')` in `src/stream/sse.ts` is written on a receiver
 from the same package and declares nothing. `app.use` and `app.route` are on the
@@ -104,3 +108,8 @@ handled by methods — exactly what this fixture would produce with the worker
 adapter turned off, which is what
 `packages/cli/src/commands/two-frameworks.test.ts` asserts by reading it both
 ways and comparing.
+
+`main.ts` also installs `ApiKeyGuard` with `app.useGlobalGuards`. Both
+controller routes carry it as a `guarded_by` edge; no worker route does, because
+the worker answers them before the application is asked anything, and a guard
+drawn there would call a route protected by a check that never runs.

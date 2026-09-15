@@ -64,61 +64,83 @@ Five repositories that ship as one product: three NestJS services and two Angula
 frontends, with a shared package of types between them. It is the project this
 was built against, which is worth knowing when you read the numbers: they are
 reproducible, and they are from one codebase whose author also wrote the tool.
+Measured with 0.2.0.
 
 | | |
 |---|---|
-| Source read | 1,443 files, 251,056 lines of TypeScript and templates |
-| Cold build | 5.1 s |
+| Source read | 1,523 files, 259,337 lines of TypeScript and templates |
+| Cold build | 5.5 s |
 | Rebuild with nothing changed | 0.7 s |
-| Graph | 11,239 nodes, 19,710 edges |
-| **Edges that cross a repository boundary** | **376** |
+| Graph | 11,307 nodes, 19,758 edges |
+| **Edges that cross a repository boundary** | **537** |
 
-That last row is the point. Three hundred and seventy six connections that no
+That last row is the point. Five hundred and thirty seven connections that no
 compiler in any of those five checkouts can see, because each one only ever
 reads its own.
 
-**Where the edges come from.** 19,325 were read from the code and 385 were
-inferred and marked `heuristic`; none needed an annotation. Every edge says
-which of the three it is.
+**Where the edges come from.** 19,344 were read from the code, 397 were
+inferred and marked `heuristic`, and 17 were declared by an annotation. Every
+edge says which of the three it is.
 
-**Ways in.** 615 HTTP routes, and 65 more through a bot: 13 commands, 46 button
-callbacks, 6 events. Something in the project reaches 353 of the routes. Nothing
-it can see calls the other 262, which for a public API is expected and for the
+**Ways in.** 564 HTTP routes, and 64 more through a bot: 13 commands, 45 button
+callbacks, 6 events. Something in the project reaches 502 of the routes. Nothing
+it can see calls the other 62, which for a public API is expected and for the
 rest is worth a look.
 
 **What joined across the boundaries.** Two columns, because the first build of
 any project is not the one to judge it by and quoting only the second would be
 selling you something:
 
-| | first build | after two settings |
+| | first build | configured |
 |---|---|---|
-| Browser requests matched to the route that answers them | 333 of 356 | 333 of 356 |
-| Calls between services matched to a route | **0 of 55** | 43 of 55 |
-| Routes something in the project reaches | 322 | 353 |
-| Message channels with a handler | 0 | 2 of 12 |
+| Browser requests matched to the route that answers them | 489 of 495 | 489 of 495 |
+| Calls between services matched to a route | **1 of 61** | 41 of 61 |
+| Routes something in the project reaches | 477 | 502 |
+| Message channels with a handler | 0 | 7 of 12 |
 
-The two settings are `baseUrlEnv`, which says which settings key addresses a
-service, and `apiTarget`, which says where a frontend's key points. Nothing can
-work them out for you: a string in one repository and a route in another are
-joined by a fact only the person who deployed them knows. `flowatlas doctor`
-names both, with the file and the line that wants them, and channels need a
-third — `adapters.broker.custom` — when the bus is your own.
+The configuration behind the second column names the settings key that
+addresses a service (`baseUrlEnv`), the key a frontend's requests are rooted at
+and where it points (`apiBaseEnv`, `apiTarget`), and the shared package of
+types (`sharedPackages`). Nothing can work those out for you: a string in one
+repository and a route in another are joined by a fact only the person who
+deployed them knows. `flowatlas doctor` names what is missing, with the file and
+the line that wants it.
+
+**What 0.2.0 changed, on the same repositories.** The same configuration and the
+same commit of every repository, read by both versions:
+
+| | 0.1.1 | 0.2.0 |
+|---|---|---|
+| Browser requests found | 343 | 495 |
+| …matched to the route that answers them | 318 | 489 |
+| Routes nothing appears to call | 220 | 62 |
+| Edges that cross a repository boundary | 366 | 537 |
+| Boundaries a contract could be compared on | 337 | 636 |
+| Contract errors | 37 | 1 |
+| Contract warnings | 398 | 1,069 |
+
+Most of it is requests made through a wrapper — a pass-through client, a base
+service whose resource a subclass decides — that 0.1.1 followed as far as the
+wrapper and no further. The routes it reported as never called were being called
+all along. The contract rows move in opposite directions on purpose: nearly
+twice as many boundaries can be compared, several kinds of false error were
+removed, and a request from a method nothing references is now a warning rather
+than an error, because nothing proves it runs.
 
 **What it found once they were joined.**
 
 | | |
 |---|---|
-| Contract errors, over 351 compared boundaries | 107 |
-| Names declared more than one way in two repositories | 57 |
-| Channels published to and handled nowhere | 10 |
-| Routes claimed by two handlers at once | 4 |
+| Names declared more than one way in two repositories | 64 |
+| Channels published to and handled nowhere | 5 |
+| Contract errors, over 636 compared boundaries | 1 |
 
-**What it says it cannot see.** 40 findings to act on, and 750 places static
-reading cannot reach at all, folded into 19 rows so the list stays readable.
+**What it says it cannot see.** 30 findings to act on, and 691 places static
+reading cannot reach at all, folded into 14 rows so the list stays readable.
 None of it is guessed at; each row carries a file, a line and a reason.
 
 ```sh
-flowatlas stats     # the table above, for your own project
+flowatlas stats     # the tables above, for your own project
 flowatlas doctor    # the findings, grouped by reason, with what to change
 ```
 
@@ -213,7 +235,7 @@ flowatlas build --no-cache         # read everything again
 flowatlas build --timing           # how long each phase took
 ```
 
-On the 251,000-line project measured above: 5.1 seconds cold, 0.7 seconds when
+On the 259,000-line project measured above: 5.5 seconds cold, 0.7 seconds when
 nothing changed, about two seconds for a one-file edit under `--watch`.
 
 ### Asking
@@ -251,7 +273,17 @@ flowatlas doctor --accept              # write today's numbers as the baseline
 ```
 
 With a baseline, `--strict` fails only on growth, which is what makes it usable
-on a project that starts with findings. `diff` answers the other question a build
+on a project that starts with findings.
+
+Four of `doctor`'s findings are about the gate in front of a route rather than
+the route itself: `route-unguarded`, a route with no guard or middleware in
+front of it that reaches stored data; `route-shadowed`, a route a worker
+answers before the application whose guards would have run; `route-wildcard-only`,
+a request nothing but a catch-all serves; and `whitelist-strip`, a field sent to
+a receiver whose whitelisting `ValidationPipe` removes it on arrival. Routes
+that are public by decision go in `doctor.publicRoutes`, and a decorator that
+switches a guard off through the reflector goes in `doctor.skipGuardDecorators`;
+both are in [the command reference](docs/CLI.md). `diff` answers the other question a build
 asks: given this branch, which entry points in which repositories would notice.
 Its output is markdown because it is meant for a pull request comment, and
 `--fail-on-contract-break` turns a new disagreement into a failure.
@@ -458,7 +490,7 @@ recorded with a reason and a location rather than guessed at or dropped:
 `flowatlas stats` counts them and `flowatlas dead` explains them.
 
 An edge is never drawn on a guess *silently*. Some are drawn on a guess and say
-so: on the project measured above, 19,325 edges were read from the code and 385
+so: on the project measured above, 19,344 edges were read from the code and 397
 were inferred and carry `confidence: "heuristic"`. An inference is a guess with
 its reasoning attached, and the field is there so you can filter on it, not so
 the word can be avoided. What cannot be inferred either is recorded as
@@ -508,6 +540,13 @@ Working and verified against a real five-repository project:
   growth rather than on a number nobody chose.
 - **Comparing revisions**, so a branch reports which entry points in which other
   repositories would notice it.
+- **Wrappers**: a request made through a pass-through client, a base service
+  whose resource a subclass decides, a finite table of paths or a `fetch`
+  variant is followed to where its address was decided. An inline handler —
+  Hono, Telegraf, a callback registry — is a function the flow continues into.
+- **Guards**: composite decorators built from `applyDecorators(UseGuards(...))`
+  are read, and four checks report a route whose gate is missing, bypassed,
+  a catch-all, or silently stripping a field.
 
 Known gaps in what it can read:
 
@@ -543,7 +582,7 @@ Or one at a time:
 pnpm -r build
 pnpm -r typecheck
 pnpm fixtures:run     # run the tool over every fixture
-pnpm -r test          # 1,318 tests
+pnpm -r test          # 1,371 tests
 pnpm invariants       # rules no test can express
 pnpm fixtures:check   # extraction, server and terminal snapshots
 ```

@@ -164,3 +164,25 @@ describe('what the settings reader is asked', () => {
     expect(asked.length).toBeGreaterThan(0);
   });
 });
+
+describe('a value a getter answers with', () => {
+  it('is followed like the initializer of a field', () => {
+    const file = parse(`
+      class Service {
+        private get base(): string { return environment.apiUrl; }
+        list() { return http.get(\`\${this.base}/orders\`); }
+      }
+    `);
+    expect(read(file)).toMatchObject({ value: '/orders', envRefs: ['apiUrl'] });
+  });
+
+  it('is not followed when the getter decides between several', () => {
+    const file = parse(`
+      class Service {
+        private get base(): string { if (Math.random() > 0.5) return environment.apiUrl; return environment.api.baseUrl; }
+        list() { return http.get(\`\${this.base}/orders\`); }
+      }
+    `);
+    expect(read(file)?.envRefs).toEqual([]);
+  });
+});

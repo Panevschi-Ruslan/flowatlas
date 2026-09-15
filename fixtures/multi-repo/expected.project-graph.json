@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-10T18:22:33.905Z",
+  "builtAt": "2026-09-14T15:52:08.168Z",
   "services": [
     {
       "name": "gateway",
@@ -777,7 +777,7 @@
         "path": null,
         "baseUrlEnv": null,
         "responseType": "type:gateway#InvoiceDto",
-        "bodyType": "object",
+        "bodyType": "{orderId:string;amount:number}",
         "targetService": "billing"
       }
     },
@@ -811,7 +811,7 @@
         "path": "/orders/:param/cancel",
         "baseUrlEnv": "ORDERS_URL",
         "responseType": "type:@fx/contracts#OrderDto",
-        "bodyType": "object",
+        "bodyType": "{reason:string}",
         "targetService": "orders"
       }
     },
@@ -845,7 +845,7 @@
         "path": "/pay",
         "baseUrlEnv": "PAYMENTS_URL",
         "responseType": null,
-        "bodyType": "object"
+        "bodyType": "{id:string}"
       }
     },
     {
@@ -861,7 +861,7 @@
         "path": "/v1/charges",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": "object",
+        "bodyType": "{amount:number;currency:string}",
         "host": "api.stripe.com"
       }
     },
@@ -1343,7 +1343,10 @@
       "label": "OrdersApiService.invoice",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 60
+      "line": 60,
+      "meta": {
+        "unreferenced": true
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService.maybeUnder",
@@ -1359,7 +1362,10 @@
       "label": "OrdersApiService.mirror",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 33
+      "line": 33,
+      "meta": {
+        "unreferenced": true
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService.one",
@@ -1367,7 +1373,10 @@
       "label": "OrdersApiService.one",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 72
+      "line": 72,
+      "meta": {
+        "unreferenced": true
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService.order",
@@ -1383,7 +1392,10 @@
       "label": "OrdersApiService.receipt",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "unreferenced": true
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService.summary",
@@ -1391,7 +1403,10 @@
       "label": "OrdersApiService.summary",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 47
+      "line": 47,
+      "meta": {
+        "unreferenced": true
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService.urlFor",
@@ -1989,7 +2004,7 @@
       "file": "src/clients/billing.client.ts",
       "line": 33,
       "params": [
-        "object"
+        "{orderId:string;amount:number}"
       ],
       "returns": "type:gateway#InvoiceDto",
       "meta": {
@@ -2156,7 +2171,7 @@
       "type": "emits",
       "confidence": "static",
       "params": [
-        "object"
+        "{orderId:string;archivedAt:string}"
       ],
       "file": "src/orders/orders.service.ts",
       "line": 61
@@ -2590,6 +2605,42 @@
       "message": "no service declares PAYMENTS_URL",
       "hint": "Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.",
       "symbol": "http_out:gateway#src/clients/payments.client.ts:24:12"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "reason": "route-unguarded",
+      "message": "GET /orders/latest has no guard in front of it and reaches Order.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "GET /orders/latest"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 25,
+      "reason": "route-unguarded",
+      "message": "GET /orders/:param has no guard in front of it and reaches Order.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "GET /orders/:param"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 31,
+      "reason": "route-unguarded",
+      "message": "POST /orders has no guard in front of it and reaches Order.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "POST /orders"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 42,
+      "reason": "route-unguarded",
+      "message": "POST /orders/:param/archive has no guard in front of it and reaches Order.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "POST /orders/:param/archive"
     },
     {
       "file": "src/orders/orders.service.ts",

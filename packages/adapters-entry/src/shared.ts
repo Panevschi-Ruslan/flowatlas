@@ -1,4 +1,10 @@
-import type { EntryHandler, ExtractContext, FunctionHandler, NamedFunction } from '@flowatlas/core';
+import type {
+  EntryHandler,
+  ExtractContext,
+  FunctionHandler,
+  InlineHandler,
+  NamedFunction,
+} from '@flowatlas/core';
 import { namedFunction, normalizeFilePath, originOfValue } from '@flowatlas/core';
 import type { ClassDeclaration, MethodDeclaration, Node as TsNode, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
@@ -188,4 +194,21 @@ export const joinPath = (...segments: ReadonlyArray<string | undefined>): string
     .flatMap((segment) => segment.split('/'))
     .filter((part) => part !== '');
   return parts.length === 0 ? '/' : `/${parts.join('/')}`;
+};
+
+/**
+ * The handler a function written in the registration stands for, found again by
+ * where it starts; undefined when the argument is not one.
+ */
+export const inlineHandlerOf = (
+  argument: TsNode | undefined,
+  label: string,
+  ctx: ExtractContext,
+): InlineHandler | undefined => {
+  if (argument === undefined || (!Node.isArrowFunction(argument) && !Node.isFunctionExpression(argument))) {
+    return undefined;
+  }
+  const sourceFile = argument.getSourceFile();
+  const at = sourceFile.getLineAndColumnAtPos(argument.getStart());
+  return { file: fileOfNode(argument, ctx), line: at.line, column: at.column, label, inline: true };
 };

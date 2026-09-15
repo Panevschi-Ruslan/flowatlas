@@ -118,12 +118,13 @@ export {
 } from './adapters/context.js';
 export type { ExtractContext, LogLevel, Logger, PackageJson } from './adapters/context.js';
 
-export { isFunctionHandler } from './adapters/entry.js';
+export { isFunctionHandler, isInlineHandler } from './adapters/entry.js';
 export type {
   EntryAdapter,
   EntryHandler,
   EntryNode,
   FunctionHandler,
+  InlineHandler,
   MethodHandler,
 } from './adapters/entry.js';
 export { classifyDbCall, operationOf } from './adapters/db.js';
@@ -173,7 +174,7 @@ export { definePass } from './passes.js';
 export type { ExtractorPass } from './passes.js';
 
 export { buildClassIndex, ClassIndex } from './class-index.js';
-export { moduleFunctions, namedFunction } from './functions.js';
+export { functionAt, inlineFunction, memberFunction, moduleFunctions, namedFunction } from './functions.js';
 export type { NamedFunction } from './functions.js';
 export type { BuildClassIndexOptions, IndexedClass } from './class-index.js';
 
@@ -234,19 +235,26 @@ export {
 export type { PrimitiveName, TypeRef, TypeRefAst, TypeRefField } from './types/type-ref.js';
 
 export {
+  addressAt,
+  callSitesOf,
   choosesASegment,
   constantMethodResult,
   constantPropertyValue,
   deref,
+  finiteLookups,
   forwardedFrom,
+  isQueryTail,
   isReadable,
   parameterBehind,
+  readsParameterOf,
   returnedExpression,
   rootSettingAddress,
   rootSettingKey,
   splitAtParameter,
 } from './trace.js';
 export type {
+  CallFrame,
+  FiniteLookup,
   ForwardedCall,
   RootSettingOptions,
   SettingAddress,

@@ -2,6 +2,7 @@ import {
   findMethod,
   forEachCall,
   lineOf,
+  memberFunction,
   namedFunction,
   originOfValue,
   resolveReceiver,
@@ -83,6 +84,22 @@ const walkCalls = (
 
     const receiverExpr = callee.getExpression();
     const calledName = callee.getName();
+
+    // `commands.myOrders(ctx)` on `export const commands = { myOrders: … }` —
+    // a module of functions spelled as an object, followed like a function
+    // called by name.
+    if (onFunctionCall !== undefined && Node.isIdentifier(receiverExpr)) {
+      const origin = originOfValue(receiverExpr);
+      const member =
+        origin.kind === 'local' && Node.isVariableDeclaration(origin.declaration)
+          ? memberFunction(origin.declaration.getNameNode(), calledName)
+          : undefined;
+      if (member !== undefined) {
+        onFunctionCall(member, call);
+        return;
+      }
+    }
+
     const receiver = resolveReceiver(receiverExpr, caller.owner, ctx.di);
 
     // A language built-in says nothing about the shape of the system, and an
@@ -196,6 +213,27 @@ const walkClasses = (ctx: NestExtractContext): void => {
 };
 
 /**
+ * The class `this` means inside a function, when it means one.
+ *
+ * Only an arrow keeps the `this` it was written under. A `function`, and a
+ * method written in an object literal, are handed a `this` of the caller's
+ * choosing, so walking out stops at the first of those; an arrow written in a
+ * class member reads the class.
+ */
+const lexicalClassOf = (declaration: NamedFunction['declaration']): ClassDeclaration | undefined => {
+  const start: TsNode = Node.isPropertyAssignment(declaration) || Node.isVariableDeclaration(declaration)
+    ? (declaration.getInitializer() ?? declaration)
+    : declaration;
+  if (!Node.isArrowFunction(start)) return undefined;
+  for (let at: TsNode | undefined = start.getParent(); at !== undefined; at = at.getParent()) {
+    if (Node.isClassDeclaration(at)) return at;
+    if (Node.isFunctionDeclaration(at) || Node.isFunctionExpression(at)) return undefined;
+    if (Node.isMethodDeclaration(at) && !Node.isClassDeclaration(at.getParent())) return undefined;
+  }
+  return undefined;
+};
+
+/**
  * The functions an entry point names, and what they reach.
  *
  * A project that keeps its handlers in a table of `key -> function` has no class
@@ -219,9 +257,19 @@ const walkHandlerFunctions = (ctx: NestExtractContext): void => {
     const file = ctx.fileOf(fn.declaration);
     const id = ctx.functionIdOf(fn);
 
+    // A function written in a class — a handler passed to a registration made in
+    // a method — still reads `this` as that class, so its calls are followed
+    // exactly as the method's own would be.
+    const owner = lexicalClassOf(fn.declaration);
     walkCalls(
       ctx,
-      { file, label: fn.name, id, ensure: () => ctx.ensureFunctionNode(fn) },
+      {
+        file,
+        label: fn.name,
+        id,
+        ...(owner === undefined ? {} : { owner }),
+        ensure: () => ctx.ensureFunctionNode(fn),
+      },
       fn.body,
       (called, call) => {
         ctx.ensureFunctionNode(fn);

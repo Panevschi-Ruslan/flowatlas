@@ -30,6 +30,13 @@ export interface RouteIndex {
   claimantsOf(env: string): readonly string[];
   /** The annotation on the method that makes this call, if it carries one. */
   markerOf(callId: string): CallsServiceMarker | undefined;
+  /**
+   * Every such annotation, when the method carries more than one.
+   *
+   * A method that sends one request to each of several services in a loop has
+   * one call site and several targets, and says so with one annotation each.
+   */
+  markersOf?(callId: string): CallsServiceMarker[];
 }
 
 /** What each way a call can end carries with it. */
@@ -54,6 +61,8 @@ export type CallOutcome = { [K in OutcomeKind]: { kind: K } & Details[K] }[Outco
 
 export interface Resolution {
   outcome: CallOutcome;
+  /** Further routes the call reaches, named by further annotations on its method. */
+  alsoLinked?: GraphNode[];
   /** Findings that did not decide the outcome, such as an annotation that missed. */
   notes: Finding[];
 }
@@ -150,26 +159,33 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   const env = call.meta?.['baseUrlEnv'];
   const host = call.meta?.['host'];
 
-  const marker = index.markerOf(call.id);
-  if (marker !== undefined) {
+  const single = index.markerOf(call.id);
+  const markers = index.markersOf?.(call.id) ?? (single === undefined ? [] : [single]);
+  const reached: Array<{ entry: GraphNode; runnersUp: readonly string[] }> = [];
+  for (const marker of markers) {
     const routes = index.routesOf(marker.service);
     if (routes === undefined) {
       notes.push(MARKER_FINDINGS.serviceUnknown(marker));
-    } else {
-      const found = matchRoute(marker.method, marker.path, routes);
-      if (isMatch(found)) {
-        return {
-          outcome: {
-            kind: 'linked',
-            via: 'marker',
-            entry: found.entry,
-            runnersUp: found.runnersUp ?? [],
-          },
-          notes,
-        };
-      }
-      notes.push(MARKER_FINDINGS.routeNotFound(marker));
+      continue;
     }
+    let found = matchRoute(marker.method, marker.path, routes);
+    // An annotation is written the way the caller sees the route, which is
+    // without the prefix the service adds to all of them; the same retry an
+    // address read from the code gets.
+    if (!isMatch(found) && found.reason === 'not-found') {
+      const prefixed = withGlobalPrefix(marker.path, routes);
+      if (prefixed !== undefined) found = matchRoute(marker.method, prefixed, routes);
+    }
+    if (isMatch(found)) reached.push({ entry: found.entry, runnersUp: found.runnersUp ?? [] });
+    else notes.push(MARKER_FINDINGS.routeNotFound(marker));
+  }
+  const [first, ...rest] = reached;
+  if (first !== undefined) {
+    return {
+      outcome: { kind: 'linked', via: 'marker', entry: first.entry, runnersUp: first.runnersUp },
+      ...(rest.length === 0 ? {} : { alsoLinked: rest.map((item) => item.entry) }),
+      notes,
+    };
   }
 
   if (typeof env !== 'string') {

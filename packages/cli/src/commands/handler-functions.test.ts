@@ -64,15 +64,19 @@ describe('handlers that are functions rather than methods', () => {
 
   it('finds registrations on the library written outside any class', () => {
     const menu = id('commands/menu.command.ts', 'showMenu');
-    const surrounding = id('commands/menu.command.ts', 'registerMenuHandlers');
+    const written = id('commands/menu.command.ts', 'action back_to_main@14');
     expect(edge('entry:bot-registry:bot_command:menu', 'handles', menu)).toBe(true);
-    expect(edge('entry:bot-registry:bot_callback:back_to_main', 'handles', surrounding)).toBe(true);
+    // The function written in the registration, not the one it is written in:
+    // that runs once at start-up, and this runs every time the button is pressed.
+    expect(edge('entry:bot-registry:bot_callback:back_to_main', 'handles', written)).toBe(true);
+    expect(edge(written, 'calls', id('orders.service.ts', 'OrdersService.find'))).toBe(true);
   });
 
-  it('keeps the button whose handler has no name, and says why it stops there', () => {
+  it('carries the button whose handler has no name into the function written in place', () => {
     const keep = 'entry:bot-registry:bot_callback:keep_order';
-    expect(graph.edges.some((row) => row.from === keep && row.type === 'handles')).toBe(false);
-    expect(graph.unresolved.map((row) => row.reason)).toContain('registry-handler-anonymous');
+    const written = id('actions/cancel-order.action.ts', 'callbacks:keep_order@19');
+    expect(edge(keep, 'handles', written)).toBe(true);
+    expect(graph.unresolved.map((row) => row.reason)).not.toContain('registry-handler-anonymous');
   });
 
   it('makes a node of no function an entry point does not reach', () => {
