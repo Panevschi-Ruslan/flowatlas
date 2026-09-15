@@ -8,7 +8,7 @@ import type {
 import { hasAnyDependency, makeEntryId, originOfValue } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
-import { fileOfNode, handlerOfFunction, repoFunctionOf, repoSources } from './shared.js';
+import { fileOfNode, handlerOfFunction, inlineHandlerOf, repoFunctionOf, repoSources } from './shared.js';
 
 const ADAPTER = 'entry-registries';
 
@@ -135,8 +135,12 @@ const entryOf = (ctx: ExtractContext, { registry, site }: Match): EntryNode | un
   const key = keyArg.getLiteralValue();
   const kind: EntryKind = registry.kind;
   const fn = repoFunctionOf(site.args[registry.handlerArg]);
+  // A function written in the registration has no name, and is the code that
+  // runs all the same: it gets a node of its own rather than a row saying so.
+  const inline =
+    fn === undefined ? inlineHandlerOf(site.args[registry.handlerArg], `${registry.name}:${key}`, ctx) : undefined;
 
-  if (fn === undefined) {
+  if (fn === undefined && inline === undefined) {
     // The way in is real whether or not the code behind it has a name, so the
     // node is made either way and the reason the flow stops here is written down
     // rather than left to be guessed at.
@@ -155,7 +159,11 @@ const entryOf = (ctx: ExtractContext, { registry, site }: Match): EntryNode | un
     kind,
     label: `${kind} ${key}`,
     key,
-    ...(fn === undefined ? {} : { handler: handlerOfFunction(fn, ctx) }),
+    ...(fn !== undefined
+      ? { handler: handlerOfFunction(fn, ctx) }
+      : inline === undefined
+        ? {}
+        : { handler: inline }),
     file,
     line,
     meta: {
@@ -164,7 +172,7 @@ const entryOf = (ctx: ExtractContext, { registry, site }: Match): EntryNode | un
       adapter: ADAPTER,
       registry: registry.name,
       registration: `${site.receiver.getText()}.${registry.method}`,
-      ...(fn === undefined ? { handlerVia: 'anonymous' } : { handlerVia: 'function' }),
+      handlerVia: fn !== undefined ? 'function' : inline !== undefined ? 'inline' : 'anonymous',
     },
   };
 };
@@ -202,6 +210,8 @@ const reportUnclaimed = (ctx: ExtractContext, unclaimed: Map<string, Unclaimed>)
  */
 export const entryRegistriesAdapter: EntryAdapter = {
   name: ADAPTER,
+  // A table the project dispatches from by hand; no request pipeline wraps it.
+  outsideApplication: true,
   detect: (pkg) => hasAnyDependency(pkg, REGISTERED_BY_CALL),
   extractEntries: (ctx: ExtractContext) => {
     const registries = ctx.config.adapters.entry.registries;

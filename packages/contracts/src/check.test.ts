@@ -355,3 +355,126 @@ describe('the report itself', () => {
     expect(bySeverity(report, 'error')).toHaveLength(2);
   });
 });
+
+describe('a request made from a service method nothing calls', () => {
+  const browser = (callers: 'none' | 'called'): ContractReport =>
+    checkContracts(
+      graphOf({
+        nodes: [
+          node('web#a.ts:OrdersApi', 'provider', 'web'),
+          node('web#a.ts:OrdersApi.create', 'method', 'web', callers === 'none' ? { meta: { unreferenced: true } } : {}),
+          node('web#b.ts:Screen.save', 'method', 'web'),
+          node('ui_api_call:web#1', 'ui_api_call', 'web'),
+          node('entry:api:http:POST:/orders', 'entry', 'api', { kind: 'http' }),
+          node('api#Controller.create', 'method', 'api'),
+        ],
+        edges: [
+          ...(callers === 'called' ? [edge('web#b.ts:Screen.save', 'calls', 'web#a.ts:OrdersApi.create')] : []),
+          edge('web#a.ts:OrdersApi.create', 'calls', 'ui_api_call:web#1'),
+          edge('ui_api_call:web#1', 'hits', 'entry:api:http:POST:/orders', {
+            params: ['type:caller#Body'],
+          }),
+          edge('entry:api:http:POST:/orders', 'handles', 'api#Controller.create', {
+            params: ['type:api#Body'],
+            meta: { body: 'type:api#Body' },
+          }),
+        ],
+        types: registry,
+      }),
+      { generatedAt: FIXED },
+    );
+
+  it('is a warning that says nothing reaches it, not an error', () => {
+    const [finding] = browser('none').findings;
+    expect(finding).toMatchObject({ kind: 'missing_required', severity: 'warning' });
+    expect(finding?.message).toContain('nothing in the project calls web#a.ts:OrdersApi.create');
+  });
+
+  it('is an error as soon as something calls it', () => {
+    expect(errorsOf(browser('called')).map((finding) => finding.kind)).toEqual(['missing_required']);
+  });
+});
+
+describe('a field a whitelisting validation pipe removes', () => {
+  const validated = (name: string, validators?: string[]) =>
+    field(name, 'string', false, validators === undefined ? undefined : { validators });
+  const types = {
+    'type:caller#Patch': object('Patch', [field('name', 'string'), field('price', 'string'), field('note', 'string')]),
+    'type:api#PatchDto': object('PatchDto', [validated('name', ['IsString']), validated('price')]),
+  };
+
+  const patch = (pipe: Record<string, unknown> | null): ContractReport =>
+    checkContracts(
+      graphOf({
+        nodes: [
+          node('caller#Client.patch', 'method', 'caller'),
+          node('http_out:caller#1', 'http_out', 'caller'),
+          node('entry:api:http:PATCH:/items', 'entry', 'api', { kind: 'http' }),
+          node('api#Controller.patch', 'method', 'api'),
+          node('api#main.ts:ValidationPipe(x)', 'provider', 'api', {
+            label: 'ValidationPipe(x)',
+            ...(pipe === null ? {} : { meta: { factoryArgs: [pipe] } }),
+          }),
+        ],
+        edges: [
+          edge('caller#Client.patch', 'calls', 'http_out:caller#1'),
+          edge('http_out:caller#1', 'http_calls', 'entry:api:http:PATCH:/items', { params: ['type:caller#Patch'] }),
+          edge('entry:api:http:PATCH:/items', 'handles', 'api#Controller.patch', {
+            params: ['type:api#PatchDto'],
+            meta: { body: 'type:api#PatchDto' },
+          }),
+          edge('entry:api:http:PATCH:/items', 'guarded_by', 'api#main.ts:ValidationPipe(x)', {
+            meta: { layer: 'pipe', scope: 'global' },
+          }),
+        ],
+        types,
+      }),
+      { generatedAt: FIXED },
+    );
+
+  it('warns about a field declared without a decorator and one not declared at all', () => {
+    const stripped = patch({ whitelist: true }).findings.filter((finding) => finding.rule === 'whitelist-strip');
+    expect(stripped.map((finding) => [finding.field, finding.severity])).toEqual([
+      ['note', 'warning'],
+      ['price', 'warning'],
+    ]);
+  });
+
+  it('counts a decorator nobody could classify as a validator of the project own', () => {
+    const custom = checkContracts(
+      graphOf({
+        nodes: [
+          node('caller#C.p', 'method', 'caller'),
+          node('http_out:caller#2', 'http_out', 'caller'),
+          node('entry:api:http:PATCH:/x', 'entry', 'api', { kind: 'http' }),
+          node('api#X.p', 'method', 'api'),
+          node('api#main.ts:ValidationPipe(x)', 'provider', 'api', {
+            label: 'ValidationPipe(x)',
+            meta: { factoryArgs: [{ whitelist: true }] },
+          }),
+        ],
+        edges: [
+          edge('caller#C.p', 'calls', 'http_out:caller#2'),
+          edge('http_out:caller#2', 'http_calls', 'entry:api:http:PATCH:/x', { params: ['type:caller#P'] }),
+          edge('entry:api:http:PATCH:/x', 'handles', 'api#X.p', { meta: { body: 'type:api#P' } }),
+          edge('entry:api:http:PATCH:/x', 'guarded_by', 'api#main.ts:ValidationPipe(x)', { meta: { layer: 'pipe' } }),
+        ],
+        types: {
+          'type:caller#P': object('P', [field('id', 'string'), field('ref', 'string')]),
+          'type:api#P': object('P', [
+            field('id', 'string', false, { validators: ['IsString'] }),
+            field('ref', 'string', false, { unclassified: ['IsObjectId'] }),
+          ]),
+        },
+      }),
+      { generatedAt: FIXED },
+    );
+    expect(custom.findings.filter((finding) => finding.rule === 'whitelist-strip')).toEqual([]);
+  });
+
+  it('says nothing of the kind when the pipe does not whitelist', () => {
+    const report = patch({ transform: true });
+    expect(report.findings.some((finding) => finding.rule === 'whitelist-strip')).toBe(false);
+    expect(report.findings.map((finding) => [finding.field, finding.severity])).toEqual([['note', 'info']]);
+  });
+});

@@ -1,4 +1,12 @@
-import { isFunctionHandler, makeSymbolId, type EntryHandler } from '@flowatlas/core';
+import { join } from 'node:path';
+import {
+  functionAt,
+  inlineFunction,
+  isFunctionHandler,
+  isInlineHandler,
+  makeSymbolId,
+  type EntryHandler,
+} from '@flowatlas/core';
 import type { ClassDeclaration, MethodDeclaration } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
 import { definePass } from './types.js';
@@ -32,6 +40,16 @@ const resolveHandler = (
   handler: EntryHandler | undefined,
 ): ResolvedHandler => {
   if (handler === undefined) return {};
+
+  if (isInlineHandler(handler)) {
+    const sourceFile = ctx.project.getSourceFile(join(ctx.repoDir, handler.file));
+    const written = sourceFile === undefined ? undefined : functionAt(sourceFile, handler.line, handler.column);
+    if (written === undefined) return {};
+    const fn = inlineFunction(written, handler.label);
+    ctx.ensureFunctionNode(fn);
+    ctx.handlerFunctions.push(fn);
+    return { id: ctx.functionIdOf(fn) };
+  }
 
   if (isFunctionHandler(handler)) {
     const fn = ctx.functionAt(handler.file, handler.functionName);
@@ -94,6 +112,7 @@ export const entriesPass = definePass('entries', (ctx: NestExtractContext) => {
       ctx.entries.push({
         node,
         kind: entry.kind,
+        ...(adapter.outsideApplication === true ? { outsideApplication: true } : {}),
         ...(path === undefined ? {} : { path, routePath: stripPrefix(path, globalPrefix) }),
         ...(typeof entry.meta?.['method'] === 'string'
           ? { httpMethod: entry.meta['method'] as string }

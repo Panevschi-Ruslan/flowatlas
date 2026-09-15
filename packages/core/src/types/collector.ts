@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import type { Node as TsNode, Symbol as TsSymbol, Type } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { Node, ts } from 'ts-morph';
 import type { GraphBuilder } from '../builder.js';
 import { makeTypeId, normalizeFilePath } from '../ids.js';
 import type { Unresolved } from '../model/graph.js';
@@ -40,6 +40,37 @@ const PRIMITIVE_NAMED = new Set(['Date', 'Buffer']);
 const ASYNC_WRAPPERS = new Set(['Promise', 'Observable']);
 
 /**
+ * Adds `null` to a reference whose declaration writes it and whose checked type
+ * lost it.
+ *
+ * Without `strictNullChecks` the compiler folds `string | null` into `string`,
+ * so the type says the field never holds null while the declaration says it
+ * does. The declaration is what a reader wrote and what the wire carries, and a
+ * sender dutifully sending the `null` it was promised would otherwise read as
+ * breaking a contract that allows it.
+ */
+const withWrittenNull = (ref: TypeRef, declaration: FieldDeclaration, type: Type): TypeRef => {
+  const written = declaration.getTypeNode();
+  if (written === undefined || !Node.isUnionTypeNode(written)) return ref;
+  const writesNull = written
+    .getTypeNodes()
+    .some((member) => Node.isLiteralTypeNode(member) && member.getText() === 'null');
+  if (!writesNull) return ref;
+  if (type.isNull() || (type.isUnion() && type.getUnionTypes().some((member) => member.isNull()))) {
+    return ref;
+  }
+  let ast;
+  try {
+    ast = parseTypeRef(ref);
+  } catch {
+    return ref;
+  }
+  const members = ast.kind === 'union' ? ast.members : [ast];
+  if (members.some((member) => member.kind === 'primitive' && member.name === 'null')) return ref;
+  return formatTypeRef({ kind: 'union', members: [...members, { kind: 'primitive', name: 'null' }] });
+};
+
+/**
  * Drops `undefined` from a union.
  *
  * A field already carries an optional flag, so repeating it inside the type adds
@@ -59,6 +90,45 @@ const withoutUndefined = (ref: TypeRef): TypeRef => {
   if (kept.length === 0 || kept.length === ast.members.length) return ref;
   return formatTypeRef(kept.length === 1 ? (kept[0] as typeof ast.members[number]) : { kind: 'union', members: kept });
 };
+
+/**
+ * The literal a property of a returned object literal is written as.
+ *
+ * `return { ok: true }` always sends `true`, but the checker widens a literal's
+ * property to `boolean` because the object could be changed later. An object
+ * that is returned where it is written cannot be, so the value written is the
+ * value sent, and a receiver declaring `ok: true` agrees with it.
+ */
+const answeredLiteral = (declaration: TsNode): Type | undefined => {
+  if (!Node.isPropertyAssignment(declaration)) return undefined;
+  const initializer = declaration.getInitializer();
+  if (
+    initializer === undefined ||
+    !(
+      Node.isTrueLiteral(initializer) ||
+      Node.isFalseLiteral(initializer) ||
+      Node.isStringLiteral(initializer) ||
+      Node.isNumericLiteral(initializer)
+    )
+  ) {
+    return undefined;
+  }
+  let holder: TsNode | undefined = declaration.getParent();
+  let above = holder?.getParent();
+  while (above !== undefined && (Node.isParenthesizedExpression(above) || Node.isAsExpression(above))) {
+    holder = above;
+    above = above.getParent();
+  }
+  const returned =
+    above !== undefined &&
+    (Node.isReturnStatement(above) || (Node.isArrowFunction(above) && above.getBody() === holder));
+  return returned ? initializer.getType() : undefined;
+};
+
+/** A property written in an object literal, whether spelled out or shorthand. */
+const isLiteralProperty = (declaration: TsNode | undefined): boolean =>
+  declaration !== undefined &&
+  (Node.isPropertyAssignment(declaration) || Node.isShorthandPropertyAssignment(declaration));
 
 const isDataProperty = (declaration: TsNode | undefined): declaration is FieldDeclaration =>
   declaration !== undefined &&
@@ -474,24 +544,45 @@ export class TypeCollector {
     const fields: TypeField[] = [];
     for (const property of type.getApparentProperties()) {
       const declaration = property.getDeclarations()[0];
-      if (!isDataProperty(declaration)) continue;
-      const propertyType = property.getTypeAtLocation(declaration);
-      const ref = this.collectType(propertyType, declaration, depth + 1);
+      // A property written in an object literal is as much a field as one
+      // declared on a type. Reading only declared ones kept whatever a spread
+      // brought in and dropped every property written beside it, so
+      // `{ ...stats, rate }` read as `stats` alone.
+      if (declaration === undefined) continue;
+      const declared = isDataProperty(declaration) ? declaration : undefined;
+      if (declared === undefined && !isLiteralProperty(declaration)) continue;
+      const propertyType = answeredLiteral(declaration) ?? property.getTypeAtLocation(declaration);
+      const collected = this.collectType(propertyType, declaration, depth + 1);
+      const ref =
+        declared === undefined ? collected : withWrittenNull(collected, declared, propertyType);
 
-      const questionToken = declaration.hasQuestionToken();
+      // A literal has no question mark to write, but a property only one branch
+      // of a spread brings in, `...(on ? { a } : {})`, is optional all the same.
+      const questionToken =
+        declared === undefined
+          ? property.hasFlags(ts.SymbolFlags.Optional)
+          : declared.hasQuestionToken();
+      // `Partial<Order>` makes every property optional without touching the
+      // declarations it maps over, so the question mark is not there to read;
+      // the symbol the mapping produced still says so.
+      const mapped = !questionToken && property.hasFlags(ts.SymbolFlags.Optional);
       const undefinedUnion = propertyType.isUnion()
         ? propertyType.getUnionTypes().some((member) => member.isUndefined())
         : false;
-      const fromReaders = mergeFieldMeta(this.#readers.map((reader) => reader.read(declaration)));
+      const fromReaders = mergeFieldMeta(
+        declared === undefined ? [] : this.#readers.map((reader) => reader.read(declared)),
+      );
 
-      const optional = questionToken || undefinedUnion || fromReaders.optional === true;
+      const optional = questionToken || mapped || undefinedUnion || fromReaders.optional === true;
       const optionalBy = questionToken
         ? 'question'
         : fromReaders.optional === true
           ? 'IsOptional'
-          : undefinedUnion
-            ? 'undefined-union'
-            : undefined;
+          : mapped
+            ? 'mapped'
+            : undefinedUnion
+              ? 'undefined-union'
+              : undefined;
 
       const meta = {
         ...fromReaders.meta,

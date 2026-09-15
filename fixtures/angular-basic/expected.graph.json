@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "angular-basic",
-  "generatedAt": "2026-09-10T18:28:09.131Z",
+  "generatedAt": "2026-09-14T15:52:02.284Z",
   "nodes": [
     {
       "id": "angular-basic#node_modules/@angular/common:HttpClient",
@@ -161,7 +161,10 @@
       "label": "OrdersApiService.remove",
       "repo": "angular-basic",
       "file": "src/app/orders-api.service.ts",
-      "line": 36
+      "line": 36,
+      "meta": {
+        "unreferenced": true
+      }
     },
     {
       "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.send",

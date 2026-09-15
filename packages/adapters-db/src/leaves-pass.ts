@@ -81,6 +81,31 @@ const HTTP_METHODS: Record<string, string> = {
   fetch: 'GET',
 };
 
+/** A local binding that holds the platform's fetch, alone or as a fallback. */
+const isFetchAlias = (callee: TsNode): boolean => {
+  const held = deref(callee);
+  if (held === callee) return false;
+  const isFetch = (node: TsNode): boolean => Node.isIdentifier(node) && node.getText() === 'fetch';
+  if (isFetch(held)) return true;
+  if (!Node.isBinaryExpression(held)) return false;
+  const operator = held.getOperatorToken().getKind();
+  if (operator !== SyntaxKind.QuestionQuestionToken && operator !== SyntaxKind.BarBarToken) return false;
+  return isFetch(held.getRight()) || isFetch(held.getLeft());
+};
+
+/**
+ * The address and options a `Request` was built with, when the call is handed one.
+ *
+ * `fetch(new Request(url, init))` is the same request as `fetch(url, init)`,
+ * written one object further away.
+ */
+const requestParts = (argument: TsNode): { url: TsNode; init?: TsNode } | undefined => {
+  const built = deref(argument);
+  if (!Node.isNewExpression(built) || built.getExpression().getText() !== 'Request') return undefined;
+  const [url, init] = built.getArguments();
+  return url === undefined ? undefined : { url, ...(init === undefined ? {} : { init }) };
+};
+
 /** Whether a value is a function that answers with a `Response`, i.e. fetch. */
 const returnsResponse = (node: TsNode): boolean =>
   node
@@ -466,6 +491,12 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (Node.isIdentifier(callee) && callee.getText() === 'fetch') {
       return { method: 'GET', urlIndex: 0 };
     }
+    // `const send = this.http ?? fetch; send(url)` — a transport a test can
+    // swap, falling back to the platform's. The binding is still fetch, and
+    // every call through it is a request.
+    if (Node.isIdentifier(callee) && isFetchAlias(callee)) {
+      return { method: 'GET', urlIndex: 0 };
+    }
     if (Node.isPropertyAccessExpression(callee)) {
       const origin = resolveTypeOrigin(callee.getExpression());
       if (origin?.package == null || !HTTP_PACKAGES.includes(origin.package)) return null;
@@ -512,13 +543,14 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     method: string,
     owner: { methodId: string; file: string },
     split?: SplitAddress,
+    init?: TsNode,
   ): void => {
     const info = compose(analyzeUrl(urlArg), split);
 
     // A second argument can carry the method for a generic request.
     let verb = method;
     if (verb === 'GET') {
-      const [, optionsArg] = site.getArguments();
+      const optionsArg = init === undefined ? site.getArguments()[1] : deref(init);
       if (optionsArg !== undefined && Node.isObjectLiteralExpression(optionsArg)) {
         const property = optionsArg.getProperty('method');
         if (property !== undefined && Node.isPropertyAssignment(property)) {
@@ -534,7 +566,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     const [typeArgument] = site.getTypeArguments();
     const responseType =
       typeArgument === undefined ? null : ctx.types.collectType(typeArgument.getType(), site);
-    const bodyArgument = site.getArguments()[1];
+    const bodyArgument = init === undefined ? site.getArguments()[1] : undefined;
     const declaredBodyWide = declaredParameterType(site, 1, ctx.checker);
     const declaredBody =
       declaredBodyWide !== undefined && bodyArgument !== undefined
@@ -610,8 +642,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   const emitHttp = (call: CallExpression, methodId: string, file: string): boolean => {
     const recognised = recogniseHttp(call);
     if (recognised === null) return false;
-    const urlArg = call.getArguments()[recognised.urlIndex];
-    if (urlArg === undefined) return false;
+    const written = call.getArguments()[recognised.urlIndex];
+    if (written === undefined) return false;
+    const request = recognised.urlIndex === 0 ? requestParts(written) : undefined;
+    const urlArg = request?.url ?? written;
 
     // The address is not always written where the request is made. A shared
     // client knows the base and takes the path as a parameter, so the request
@@ -632,7 +666,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       if (recorded > 0) return true;
     }
 
-    recordHttp(call, urlArg, recognised.method, { methodId, file });
+    recordHttp(call, urlArg, recognised.method, { methodId, file }, undefined, request?.init);
     return true;
   };
 

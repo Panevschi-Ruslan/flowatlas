@@ -35,7 +35,9 @@ export class OrdersController {
     return 'ok';
   }
 
+  /** A pipe built in place keeps its options: `ValidationPipe({"whitelist":true})`. */
   @Post()
+  @UsePipes(new ValidationPipe({ whitelist: true }))
   create(): string {
     return this.orders.create();
   }

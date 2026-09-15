@@ -236,3 +236,55 @@ describe('the hash short-circuit', () => {
     expect(kinds(compareTypes(sender, receiver, {}))).toEqual(['missing_required id']);
   });
 });
+
+describe('a choice on either side of the wire', () => {
+  const registry: TypeRegistry = {};
+  const page = object('Page', [field('items', 'type:web#Entry[]'), field('total', 'number')], registry);
+  const entry = object('Entry', [field('id', 'string')], registry);
+  const doc = object('Doc', [field('id', 'string'), field('extra', 'string')], registry);
+  registry['type:web#Page'] = page;
+  registry['type:web#Entry'] = entry;
+  registry['type:api#Doc'] = doc;
+
+  it('passes when any shape the receiver declares reads what arrives', () => {
+    const sender = object('Out', [field('data', 'type:api#Doc[]')], registry);
+    const receiver = object('In', [field('data', 'type:web#Entry[]|type:web#Page')], registry);
+    expect(
+      kinds(compareTypes(sender, receiver, registry)).filter(
+        (kind) => kind.startsWith('missing_required') || kind.startsWith('type_mismatch'),
+      ),
+    ).toEqual([]);
+  });
+
+  it('reads every shape the sender may send, and names only the one nothing reads', () => {
+    const sender = object('Out', [field('body', '{refreshToken:string}|{other:number}')], registry);
+    const receiver = object('In', [field('body', '{refreshToken?:string}')], registry);
+    const breaking = (diffs: readonly FieldDiff[]) =>
+      kinds(diffs.filter((diff) => diff.kind === 'missing_required' || diff.kind === 'type_mismatch'));
+    expect(breaking(compareTypes(sender, receiver, registry))).toEqual([]);
+    const strict = object('Strict', [field('body', '{refreshToken:string}')], registry);
+    expect(kinds(compareTypes(sender, strict, registry))).toContain('missing_required body.refreshToken');
+  });
+
+  it('reads a named union of shapes as shapes, not as a list of values', () => {
+    registry['type:api#Result'] = values('Result', 'union', ['type:api#Doc', '{pending:boolean}'], registry);
+    const sender = object('Out', [field('result', 'type:api#Result')], registry);
+    const receiver = object('In', [field('result', '{id?:string;pending?:boolean}')], registry);
+    const found = compareTypes(sender, receiver, registry).filter(
+      (diff) => diff.kind === 'missing_required' || diff.kind === 'type_mismatch',
+    );
+    expect(found).toEqual([]);
+  });
+
+  it('compares what is left once a tolerant receiver has taken its null', () => {
+    const sender = object('Out', [field('sizes', 'type:web#Entry[]')], registry);
+    const receiver = object('In', [field('sizes', 'null|type:api#Doc[]')], registry);
+    expect(kinds(compareTypes(sender, receiver, registry))).toEqual(['missing_required sizes[].extra']);
+  });
+
+  it('accepts a bare null sent to a receiver that declares null', () => {
+    const sender = object('Out', [field('stoppedAt', 'null')], registry);
+    const receiver = object('In', [field('stoppedAt', 'null|string')], registry);
+    expect(kinds(compareTypes(sender, receiver, registry))).toEqual([]);
+  });
+});

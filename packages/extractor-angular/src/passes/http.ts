@@ -7,13 +7,15 @@ import {
   narrowUnionByLiteral,
   resolveTypeOrigin,
   siteOf,
+  type CallFrame,
   type TypeOrigin,
 } from '@flowatlas/core';
-import type { CallExpression, Node as TsNode } from 'ts-morph';
-import { Node } from 'ts-morph';
+import type { CallExpression, MethodDeclaration, Node as TsNode } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
 import type { AngularExtractContext } from '../context.js';
 import { ANGULAR_HTTP } from '../index-classes.js';
-import { analyzeApiUrl } from '../util/url.js';
+import { noteIfUnreferenced, requestIdOf, requestsOf, wrapperOf, type RequestSite } from '../util/forward.js';
+import type { ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
 
 /** What each method of the client sends, and where it writes the address. */
@@ -49,7 +51,6 @@ const isHttpClient = (origin: TypeOrigin | null): boolean =>
  * needs to compare the two sides of that boundary.
  */
 export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
-  const sharedPackages = ctx.config.sharedPackages;
   const apiBaseEnv = ctx.service.apiBaseEnv ?? [];
 
   const verbOf = (call: CallExpression, name: string): string | null => {
@@ -80,18 +81,70 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     return ctx.types.collectType(narrowed ?? argument.getType(), argument);
   };
 
-  const record = (call: CallExpression, name: string, methodId: string, file: string): void => {
+  /**
+   * The body a request carries, followed out to the caller that wrote it.
+   *
+   * A wrapper passes on what it was given — `post(path, body)` sends `body ?? {}`
+   * — so the body only has a shape at the call site. A body the wrapper writes
+   * itself, like the `{}` of a delete sent as a post, is its own.
+   */
+  const bodyThrough = (
+    call: CallExpression,
+    index: number | null,
+    frames: readonly CallFrame[],
+  ): string | null => {
+    if (index === null) return null;
+    let node: TsNode | undefined = call.getArguments()[index];
+    let at: CallExpression = call;
+    let position = index;
+    for (const frame of frames) {
+      if (node === undefined) return null;
+      let value: TsNode = node;
+      while (Node.isParenthesizedExpression(value) || Node.isAsExpression(value)) {
+        value = value.getExpression();
+      }
+      if (
+        Node.isBinaryExpression(value) &&
+        value.getOperatorToken().getKind() === SyntaxKind.QuestionQuestionToken
+      ) {
+        value = value.getLeft();
+      }
+      if (!Node.isIdentifier(value)) break;
+      const declaration = value.getSymbol()?.getDeclarations()[0];
+      const parameterIndex = frame.method
+        .getParameters()
+        .findIndex((parameter) => parameter === declaration);
+      if (parameterIndex < 0) break;
+      node = frame.call.getArguments()[parameterIndex];
+      at = frame.call;
+      position = parameterIndex;
+    }
+    return node === undefined ? null : typeOfBody(at, position);
+  };
+
+  const record = (
+    network: CallExpression,
+    name: string,
+    site: RequestSite,
+    address: ApiUrl,
+    frames: readonly CallFrame[],
+    choice?: string,
+  ): void => {
     const shape = VERBS[name];
     if (shape === undefined) return;
-    const urlArg = call.getArguments()[shape.urlIndex];
-    if (urlArg === undefined) return;
+    const { call, methodId, file } = site;
 
-    const verb = verbOf(call, name);
-    const address = analyzeApiUrl(urlArg, sharedPackages);
+    const verb = verbOf(network, name);
     const at = siteOf(call);
-    const id = makeLeafId('ui_api_call', ctx.repo, file, at.line, at.column);
-    const responseType = typeOfResponse(call);
-    const bodyType = typeOfBody(call, shape.bodyIndex);
+    const leaf = makeLeafId('ui_api_call', ctx.repo, file, at.line, at.column);
+    // One call reaching one of several segments a table spells out is one
+    // request per segment, and each needs a node of its own.
+    const id = requestIdOf(leaf, network, { frames, ...(choice === undefined ? {} : { choice }) });
+    const responseType = Node.isCallExpression(call) ? typeOfResponse(call) : null;
+    const bodyType =
+      frames.length === 0
+        ? typeOfBody(network, shape.bodyIndex)
+        : bodyThrough(network, shape.bodyIndex, frames);
 
     ctx.builder.addNode({
       id,
@@ -115,6 +168,10 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         // a branch was guessed for, and the linker lowers the edge it draws
         // from one. Everything without it was read outright.
         ...(address.guessed ? { guessed: true } : {}),
+        // The request is written in a wrapper and made here. Naming the wrapper
+        // keeps the one line that reaches the network findable from every call.
+        ...(frames.length === 0 ? {} : { through: wrapperOf(network) }),
+        ...(choice === undefined ? {} : { choice }),
       },
     });
     ctx.builder.addEdge({
@@ -178,6 +235,28 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     }
   };
 
+  /**
+   * Records one request, at the call that decides its address.
+   *
+   * Written where the network is reached when it can be read there, and at each
+   * caller of a wrapper when it cannot (see `requestsOf`).
+   */
+  const emit = (
+    network: CallExpression,
+    name: string,
+    method: MethodDeclaration,
+    site: RequestSite,
+    siblings: number,
+  ): void => {
+    const shape = VERBS[name];
+    const urlArg = shape === undefined ? undefined : network.getArguments()[shape.urlIndex];
+    if (shape === undefined || urlArg === undefined) return;
+    for (const request of requestsOf(ctx, urlArg, method, site, siblings)) {
+      noteIfUnreferenced(ctx, request.site);
+      record(network, name, request.site, request.address, request.frames, request.choice);
+    }
+  };
+
   for (const indexed of ctx.classes.all()) {
     if (indexed.role === 'module') continue;
     for (const method of indexed.declaration.getMethods()) {
@@ -186,6 +265,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
       const methodId = ctx.methodIdOf(method);
       if (methodId === undefined) continue;
 
+      const found: Array<{ site: CallExpression; name: string }> = [];
       forEachCall(body, (site: TsNode) => {
         if (!Node.isCallExpression(site)) return;
         const callee = site.getExpression();
@@ -193,9 +273,12 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         const name = callee.getName().toLowerCase();
         if (!Object.hasOwn(VERBS, name)) return;
         if (!isHttpClient(resolveTypeOrigin(callee.getExpression()))) return;
-        ctx.ensureMethodNode(method);
-        record(site, name, methodId, indexed.file);
+        found.push({ site, name });
       });
+      for (const { site, name } of found) {
+        ctx.ensureMethodNode(method);
+        emit(site, name, method, { call: site, methodId, file: indexed.file }, found.length);
+      }
     }
   }
 });

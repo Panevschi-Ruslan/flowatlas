@@ -1,7 +1,7 @@
 {
   "doctorFormatVersion": 1,
   "schemaVersion": 3,
-  "flowatlasVersion": "0.1.1",
+  "flowatlasVersion": "0.2.0",
   "generatedAt": "1970-01-01T00:00:00.000Z",
   "strict": false,
   "baselinePath": "<root>/fixtures/multi-repo-doctor/baseline.accepted.json",
@@ -15,9 +15,9 @@
   "note": null,
   "unresolved": {
     "status": "ok",
-    "total": 18,
-    "rows": 18,
-    "sites": 18,
+    "total": 21,
+    "rows": 21,
+    "sites": 21,
     "info": {
       "rows": 0,
       "sites": 0
@@ -177,6 +177,47 @@
             "sites": 1,
             "message": "module-import-dynamic",
             "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed."
+          }
+        ]
+      },
+      {
+        "reason": "route-unguarded",
+        "level": "action",
+        "count": 3,
+        "sites": 3,
+        "known": true,
+        "excluded": false,
+        "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+        "rows": [
+          {
+            "service": "orders",
+            "file": "src/orders/orders.controller.ts",
+            "line": 11,
+            "symbol": "POST /orders",
+            "level": "action",
+            "sites": 1,
+            "message": "POST /orders has no guard in front of it and reaches Order.",
+            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
+          },
+          {
+            "service": "orders",
+            "file": "src/orders/orders.controller.ts",
+            "line": 16,
+            "symbol": "POST /orders/legacy",
+            "level": "action",
+            "sites": 1,
+            "message": "POST /orders/legacy has no guard in front of it and reaches Order.",
+            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
+          },
+          {
+            "service": "orders",
+            "file": "src/orders/orders.controller.ts",
+            "line": 21,
+            "symbol": "GET /orders/:param",
+            "level": "action",
+            "sites": 1,
+            "message": "GET /orders/:param has no guard in front of it and reaches Order.",
+            "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
           }
         ]
       },
@@ -492,14 +533,14 @@
     ],
     "errorCount": 1,
     "ignored": 1,
-    "unchecked": 3
+    "unchecked": 2
   },
   "baseline": {
     "status": "ok",
     "note": null,
     "total": {
-      "baseline": 18,
-      "current": 18,
+      "baseline": 21,
+      "current": 21,
       "delta": 0
     },
     "byReason": [
@@ -535,6 +576,12 @@
       },
       {
         "reason": "module-import-dynamic",
+        "baseline": 3,
+        "current": 3,
+        "delta": 0
+      },
+      {
+        "reason": "route-unguarded",
         "baseline": 3,
         "current": 3,
         "delta": 0

@@ -26,6 +26,11 @@ export interface CompareOptions {
   depth?: number;
   /** Wire rules to switch off, by id. */
   disableRules?: readonly string[];
+  /**
+   * Whether the receiver runs a validation pipe that strips what its class does
+   * not decorate. Read from the route's wrapping, never assumed.
+   */
+  whitelist?: boolean;
 }
 
 export interface CompareResult {
@@ -38,6 +43,8 @@ export interface CompareResult {
 interface Walk {
   resolve: (id: string) => TypeEntry | undefined;
   disable: readonly string[];
+  /** The receiver strips what its validated class does not decorate. */
+  whitelist: boolean;
   diffs: FieldDiff[];
   rules: Set<string>;
   /** Pairs of types already being compared further up this path. */
@@ -275,6 +282,86 @@ const soleShape = (ast: TypeRefAst, side: Side): TypeRefAst => {
   return real.length === 1 ? (real[0] as TypeRefAst) : ast;
 };
 
+const isNull = (ast: TypeRefAst): boolean =>
+  (ast.kind === 'primitive' && ast.name === 'null') || (ast.kind === 'literal' && ast.value === null);
+
+/** A union with `null` and `undefined` taken out, or undefined when nothing is left. */
+const withoutNothing = (ast: TypeRefAst & { kind: 'union' }): TypeRefAst | undefined => {
+  const rest = ast.members.filter((member) => !isNothing(member));
+  if (rest.length === 0) return undefined;
+  return rest.length === 1 ? (rest[0] as TypeRefAst) : { kind: 'union', members: rest };
+};
+
+/** Whether a reference is a shape, or an array of one. */
+const isStructural = (walk: Walk, ast: TypeRefAst): boolean =>
+  ast.kind === 'array' ? isStructural(walk, ast.element) : fieldsOfRef(walk, ast) !== undefined;
+
+/**
+ * A named union of shapes, written out as the union it names.
+ *
+ * `type ShipmentResult = Paid | Pending` is a choice between two shapes, not a set
+ * of values, and reading its members as values compared a shape against a
+ * list of names.
+ */
+const expandShapeUnion = (walk: Walk, ast: TypeRefAst): TypeRefAst => {
+  if (ast.kind !== 'id') return ast;
+  const entry = walk.resolve(ast.id);
+  if (entry?.kind !== 'union') return ast;
+  const members: TypeRefAst[] = [];
+  for (const member of entry.members ?? []) {
+    try {
+      members.push(normalise(parseTypeRef(member)));
+    } catch {
+      return ast;
+    }
+  }
+  if (members.length < 2 || !members.every((member) => isStructural(walk, member))) return ast;
+  return { kind: 'union', members };
+};
+
+/**
+ * Compares a choice of shapes member by member, when every member is a shape.
+ *
+ * Answers false, having recorded nothing, when either side holds something that
+ * is not a shape or an array of one; the caller then compares the two as it
+ * always has. Otherwise each shape the sender may send is paired with the
+ * receiver member it agrees with best, so a receiver declaring two answers
+ * passes when either reads what arrives, and only a sender shape that no
+ * receiver member reads cleanly leaves findings.
+ */
+const compareShapeChoices = (
+  walk: Walk,
+  senderAst: TypeRefAst,
+  receiverAst: TypeRefAst,
+  path: string,
+  depth: number,
+): boolean => {
+  const senders = senderAst.kind === 'union' ? senderAst.members : [senderAst];
+  const receivers = receiverAst.kind === 'union' ? receiverAst.members : [receiverAst];
+  if (senders.length + receivers.length < 3) return false;
+  const structural = (member: TypeRefAst): boolean => isStructural(walk, member);
+  if (!senders.every(structural) || !receivers.every(structural)) return false;
+
+  // Only what breaks counts when choosing the member a shape agrees with; a
+  // field sent that nobody reads, or one only one side may leave out, does not.
+  const errors = (candidate: Walk): number =>
+    candidate.diffs.filter((diff) => diff.kind === 'missing_required' || diff.kind === 'type_mismatch')
+      .length;
+  for (const sender of senders) {
+    let best: Walk | undefined;
+    for (const receiver of receivers) {
+      const trial: Walk = { ...walk, diffs: [], rules: new Set(), open: new Set(walk.open) };
+      compareRefs(trial, sender, receiver, path, depth);
+      if (best === undefined || errors(trial) < errors(best)) best = trial;
+      if (errors(trial) === 0) break;
+    }
+    if (best === undefined) continue;
+    for (const rule of best.rules) walk.rules.add(rule);
+    walk.diffs.push(...best.diffs);
+  }
+  return true;
+};
+
 /**
  * How many times a choice may be unwrapped before compatibility gives up.
  *
@@ -345,6 +432,19 @@ export const hasWireAnnotation = (entry: TypeEntry | undefined): boolean =>
       /\b(?:Set|Map)</.test(field.type),
   );
 
+/** The validation decorators the extractor recorded on a field. */
+const validatorsOf = (meta: Record<string, unknown> | undefined): readonly unknown[] => {
+  // A decorator the extractor could not classify may be a validator of the
+  // project's own; counted as one, so a field is never called undecorated on a
+  // guess.
+  const validators = meta?.['validators'];
+  const unclassified = meta?.['unclassified'];
+  return [
+    ...(Array.isArray(validators) ? validators : []),
+    ...(Array.isArray(unclassified) ? unclassified : []),
+  ];
+};
+
 /** The two ways a field the sender declares never reaches the wire at all. */
 const DROPS = new Map<string, string>([
   ['class-transformer', 'the sender excludes it from serialisation'],
@@ -379,6 +479,35 @@ const compareRefs = (
   if (makesNoClaim(senderAst) || makesNoClaim(receiverAst)) {
     walk.rules.add(at('any-unknown-skip', path));
     return;
+  }
+
+  // A receiver that also accepts nothing at all is only being tolerant, and a
+  // sender's `null` is then among what it accepts. What is left on both sides is
+  // the comparison worth making: `null | Size[]` against `Size[]` is two arrays.
+  // Only a written `null`: a receiver declaring `T | undefined` does not read a
+  // `null`, which JSON keeps.
+  if (receiverAst.kind === 'union' && receiverAst.members.some(isNull)) {
+    const want = withoutNothing(receiverAst);
+    // A sender that only ever writes `null` sends exactly what was allowed.
+    const have = senderAst.kind === 'union' ? withoutNothing(senderAst) : isNothing(senderAst) ? undefined : senderAst;
+    if (want === undefined || have === undefined) return;
+    compareRefs(walk, have, want, path, depth);
+    return;
+  }
+
+  // A choice between shapes on either side. Each shape the sender may send has
+  // to be read by some shape the receiver declares; comparing the unions as
+  // wholes reported every handler with two returns, and every receiver declaring
+  // two answers, as disagreeing with the other side entirely.
+  {
+    const senderChoice = expandShapeUnion(walk, senderAst);
+    const receiverChoice = expandShapeUnion(walk, receiverAst);
+    if (
+      (senderChoice.kind === 'union' || receiverChoice.kind === 'union') &&
+      compareShapeChoices(walk, senderChoice, receiverChoice, path, depth)
+    ) {
+      return;
+    }
   }
 
   // An array is its element repeated, so the two are compared once and the path
@@ -486,6 +615,12 @@ const compareFields = (
     sent.set(view.name, view);
   }
 
+  // A validation pipe that whitelists removes, before the handler runs, every
+  // property its class does not decorate. Only the top of a body is judged:
+  // below it, stripping depends on nested validation this does not follow.
+  const stripping =
+    walk.whitelist && path === '' && receiverFields.some((field) => validatorsOf(field.meta).length > 0);
+
   const declared = new Set<string>();
   const droppedByReceiver = new Set<string>();
   for (const field of receiverFields) {
@@ -513,6 +648,18 @@ const compareFields = (
         actual: null,
         rule: took ?? null,
         ...(took === undefined ? {} : { note: DROPS.get(took) as string }),
+      });
+      continue;
+    }
+
+    if (stripping && validatorsOf(want.meta).length === 0) {
+      record(walk, {
+        kind: 'extra_field',
+        path: here,
+        expected: formatTypeRef(want.type),
+        actual: formatTypeRef(have.type),
+        rule: 'whitelist-strip',
+        note: 'the receiver declares it without a validation decorator, so its whitelisting validation pipe removes it before the handler reads it',
       });
       continue;
     }
@@ -559,22 +706,74 @@ const compareFields = (
       });
       continue;
     }
+    if (nullOnlyForOptional(walk, have, want, here, depth)) continue;
     compareRefs(walk, have.type, want.type, here, depth);
   }
 
   for (const [name, view] of sent) {
     if (declared.has(name) || view.dropped) continue;
+    const excluded = droppedByReceiver.has(name);
     record(walk, {
       kind: 'extra_field',
       path: joinPath(path, name),
       expected: null,
       actual: formatTypeRef(view.type),
-      rule: droppedByReceiver.has(name) ? 'class-transformer' : null,
-      ...(droppedByReceiver.has(name)
+      rule: excluded ? 'class-transformer' : stripping ? 'whitelist-strip' : null,
+      ...(excluded
         ? { note: 'the receiver excludes it, so what arrives is thrown away' }
-        : {}),
+        : stripping
+          ? {
+              note: 'the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it',
+            }
+          : {}),
     });
   }
+};
+
+/**
+ * A sender that may write `null` where the receiver declares the field optional,
+ * and agrees with it about everything else.
+ *
+ * JSON keeps a `null`, so the receiver reads `null` rather than nothing, and a
+ * declaration of `stoppedAt?: string` is imprecise about that. Nothing checks it
+ * at run time unless a validator does, so on a receiver no validator reads it is
+ * a warning; a validated field that does not skip empty values really does
+ * refuse the request, and stays an error.
+ *
+ * Answers true when it settled the field, recording what it found.
+ */
+const nullOnlyForOptional = (
+  walk: Walk,
+  have: FieldView,
+  want: FieldView,
+  path: string,
+  depth: number,
+): boolean => {
+  if (!want.optional) return false;
+  const sentAst = normalise(have.type);
+  if (sentAst.kind !== 'union' || !sentAst.members.some(isNothing)) return false;
+  const wantAst = normalise(want.type);
+  const wantMembers = wantAst.kind === 'union' ? wantAst.members : [wantAst];
+  if (wantMembers.some(isNothing) || makesNoClaim(wantAst)) return false;
+  const rest = sentAst.members.filter((member) => !isNothing(member));
+  const withoutNull: TypeRefAst =
+    rest.length === 1 ? (rest[0] as TypeRefAst) : { kind: 'union', members: rest };
+  const inner: Walk = { ...walk, diffs: [], rules: new Set(walk.rules), open: new Set(walk.open) };
+  compareRefs(inner, withoutNull, want.type, path, depth);
+  if (inner.diffs.length > 0) return false;
+  for (const rule of inner.rules) walk.rules.add(rule);
+  const validated = Array.isArray(want.meta['validators']) && want.meta['validators'].length > 0;
+  record(walk, {
+    kind: 'type_mismatch',
+    path,
+    expected: formatTypeRef(want.type),
+    actual: formatTypeRef(have.type),
+    rule: validated ? null : 'null-for-optional',
+    note: validated
+      ? 'the sender may send null, and the receiving validator does not skip empty values'
+      : 'the sender may send null where the receiver declares the field optional; JSON keeps the null',
+  });
+  return true;
 };
 
 const compareEntries = (
@@ -593,7 +792,11 @@ const compareEntries = (
   // a pair with equal hashes is sometimes still walked.
   const sameShape = senderEntry.structuralHash === receiverEntry.structuralHash;
   const annotated = hasWireAnnotation(senderEntry) || hasWireAnnotation(receiverEntry);
-  if (sameShape && !annotated && depth <= DEFAULT_HASH_DEPTH) return;
+  // Two classes of one shape can still lose a field on the way in, when the
+  // receiver strips what it does not decorate; that is not in the hash either.
+  const stripped =
+    walk.whitelist && (receiverEntry.fields ?? []).some((field) => validatorsOf(field.meta).length > 0);
+  if (sameShape && !annotated && !stripped && depth <= DEFAULT_HASH_DEPTH) return;
 
   if (
     isOpaqueEntry(senderEntry) ||
@@ -625,7 +828,7 @@ const compareEntries = (
   const key = pairKey(senderEntry, receiverEntry);
   if (walk.open.has(key)) {
     // The same pair again on the same path: a shape that contains itself. The
-    // hashes above already settled it, so stopping here loses nothing.
+    // hashes above already settled it, so ssticker here loses nothing.
     walk.rules.add(at('cycle', path));
     return;
   }
@@ -690,6 +893,7 @@ export const diffTypes = (
   const walk: Walk = {
     resolve,
     disable: options.disableRules ?? [],
+    whitelist: options.whitelist === true,
     diffs: [],
     rules: new Set(),
     open: new Set(),
@@ -715,6 +919,7 @@ export const diffRefs = (
   const walk: Walk = {
     resolve,
     disable: options.disableRules ?? [],
+    whitelist: options.whitelist === true,
     diffs: [],
     rules: new Set(),
     open: new Set(),

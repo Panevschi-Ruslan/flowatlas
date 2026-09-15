@@ -101,6 +101,16 @@ const assignmentsIn = (name: string, declaration: ClassNode): TsNode[] => {
   const initializer = declaration.getProperty(name)?.getInitializer();
   if (initializer !== undefined) found.push(initializer);
 
+  // `get base() { return `https://api.example.com/v2`; }` holds its one return
+  // every time it is read, which is what an initializer says too. A getter that
+  // decides between several is a hole, as a reassigned field is.
+  const getter = declaration.getGetAccessor(name);
+  if (getter !== undefined) {
+    const returns = ownReturns(getter);
+    const returned = returns.length === 1 ? returns[0]?.asKind(SyntaxKind.ReturnStatement)?.getExpression() : undefined;
+    if (returned !== undefined) found.push(returned);
+  }
+
   for (const constructor of declaration.getConstructors()) {
     const body = constructor.getBody();
     if (body === undefined) continue;
@@ -185,6 +195,11 @@ interface Scope {
   readSetting: (node: TsNode) => string | null;
   self: ClassNode | undefined;
   bound: ReadonlyMap<ParameterDeclaration, Bound>;
+  /**
+   * A value picked for each lookup into a fixed table, when the reader is
+   * enumerating what the table can give rather than reading one answer.
+   */
+  choices?: ReadonlyMap<TsNode, string>;
 }
 
 /** An argument, and the scope it was written in, since it may be a name there. */
@@ -279,6 +294,9 @@ const readString = (value: TsNode, scope: Scope, budget: number): string | null 
   const direct = evaluateExpression(node);
   if (direct.resolved && typeof direct.value === 'string') return direct.value;
 
+  const chosen = scope.choices?.get(node);
+  if (chosen !== undefined) return chosen;
+
   if (Node.isTemplateExpression(node)) {
     let text = node.getHead().getLiteralText();
     for (const span of node.getTemplateSpans()) {
@@ -335,7 +353,10 @@ const ABSOLUTE = /^[a-z][a-z0-9+.-]*:\/\//i;
  * A value naming a host is refused. That is a base address rather than a piece
  * of a path, and where it came from is a question for the settings trace.
  */
-export const constantPropertyValue = (node: TsNode): string | null => {
+export const constantPropertyValue = (
+  node: TsNode,
+  options: { allowHost?: boolean } = {},
+): string | null => {
   const access = unwrap(node);
   if (!Node.isPropertyAccessExpression(access)) return null;
   if (access.getExpression().getKind() !== SyntaxKind.ThisKeyword) return null;
@@ -343,7 +364,9 @@ export const constantPropertyValue = (node: TsNode): string | null => {
   for (const assigned of assignmentsTo(access.getName(), enclosingClass(access))) {
     const value = evaluateExpression(assigned);
     if (!value.resolved || typeof value.value !== 'string') return null;
-    if (ABSOLUTE.test(value.value)) return null;
+    // A caller reading the opening of an address may ask for the host too:
+    // where there is no setting behind it, the host written down is the answer.
+    if (options.allowHost !== true && ABSOLUTE.test(value.value)) return null;
     values.add(value.value);
   }
   return values.size === 1 ? (([...values][0] as string) ?? null) : null;
@@ -457,13 +480,16 @@ const pathOf = (
 ): string => {
   const exact = readString(value, scope, budget);
   if (exact !== null) return exact;
+  // The tail of an address that is only ever a query string adds nothing to the
+  // route it reaches.
+  if (last && after === '' && queryOnly(value, scope, budget)) return '';
   const hole = (node: TsNode): string =>
     choosesASegment(node) ? UNREAD_SPAN : holeIn(before, after, last);
   if (budget <= 0) return hole(value);
 
   const node = unwrap(value);
   if (Node.isTemplateExpression(node)) {
-    const spans = node.getTemplateSpans();
+    const spans = node.getTemplateSpans().slice(0, spansThatCount(node, scope, budget));
     let text = node.getHead().getLiteralText();
     spans.forEach((span, index) => {
       const literal = span.getLiteral().getLiteralText();
@@ -492,6 +518,26 @@ const pathOf = (
   return hole(node);
 };
 
+/**
+ * How many of a template's holes add to the route, counted from the front.
+ *
+ * Trailing holes that are only ever a query string or nothing, with no text
+ * after them, are not counted: `/deals/${id}${query}` ends at `id` as far as the
+ * route is concerned, and `id` fills a segment of its own.
+ */
+const spansThatCount = (template: TemplateExpression, scope: Scope, budget: number): number => {
+  const spans = template.getTemplateSpans();
+  let end = spans.length;
+  while (end > 0) {
+    const span = spans[end - 1];
+    if (span === undefined || span.getLiteral().getLiteralText() !== '') break;
+    if (evaluateExpression(span.getExpression()).resolved) break;
+    if (!queryOnly(span.getExpression(), scope, budget - 1)) break;
+    end -= 1;
+  }
+  return end;
+};
+
 /** The literal text a template writes after the hole at `from`, holes included. */
 const tailFrom = (
   template: TemplateExpression,
@@ -500,12 +546,13 @@ const tailFrom = (
   budget: number,
 ): string => {
   const spans = template.getTemplateSpans();
+  const end = spansThatCount(template, scope, budget);
   let text = spans[from]?.getLiteral().getLiteralText() ?? '';
-  for (let index = from + 1; index < spans.length; index += 1) {
+  for (let index = from + 1; index < end; index += 1) {
     const span = spans[index];
     if (span === undefined) continue;
     const literal = span.getLiteral().getLiteralText();
-    const last = index === spans.length - 1;
+    const last = index === end - 1;
     text += pathOf(span.getExpression(), scope, budget - 1, text, literal, last) + literal;
   }
   return text;
@@ -548,7 +595,34 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
     // `base.replace(...)` and friends reshape the base, which is the half being
     // dropped anyway, so nothing is added to what follows it.
     if (PRESERVING.has(callee.getName())) return addressOf(callee.getExpression(), scope, budget - 1);
-    if (callee.getExpression().getKind() !== SyntaxKind.ThisKeyword) return null;
+    if (callee.getExpression().getKind() !== SyntaxKind.ThisKeyword) {
+      // `this.crate.exportUrl(id)` — a helper on another object of this
+      // repository assembles the address, and its own class answers `this`.
+      const declared = callee.getExpression().getType().getSymbol()?.getDeclarations()[0];
+      if (declared === undefined || !Node.isClassDeclaration(declared)) return null;
+      if (declared.getSourceFile().isInNodeModules() || declared.getSourceFile().isDeclarationFile()) {
+        return null;
+      }
+      for (const owner of classChain(declared)) {
+        const method = owner.getMethod(callee.getName());
+        if (method === undefined) continue;
+        // Every return of the method's own, and they have to agree: a helper
+        // on another object that answers differently per branch is a hole,
+        // not whichever branch happens to read first.
+        const inside: Scope = { ...scope, self: declared, bound: bindings(method, node, scope) };
+        const answers = ownReturns(method).map((statement) => {
+          const returned = statement.asKind(SyntaxKind.ReturnStatement)?.getExpression();
+          return returned === undefined ? null : addressOf(returned, inside, budget - 1);
+        });
+        const [first] = answers;
+        if (first === null || first === undefined) return null;
+        const same = answers.every(
+          (answer) => answer !== null && answer.key === first.key && answer.prefix === first.prefix,
+        );
+        return same ? first : null;
+      }
+      return null;
+    }
     for (const owner of chainFrom(scope, node)) {
       const method = owner.getMethod(callee.getName());
       if (method === undefined) continue;
@@ -595,8 +669,13 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
     if (operator === SyntaxKind.PlusToken) {
       const left = addressOf(node.getLeft(), scope, budget - 1);
       if (left === null) return null;
-      const right = readString(node.getRight(), scope, budget - 1);
-      return { ...left, prefix: left.prefix + (right ?? holeIn(left.prefix, '', true)) };
+      // `base + path` is a wrapper's whole address, and the path is read as far
+      // as it can be, holes and all, rather than dropped whole at the first one.
+      const right = node.getRight();
+      const tail = queryOnly(right, scope, budget - 1)
+        ? ''
+        : pathOf(right, scope, budget - 1, left.prefix, '', true);
+      return { ...left, prefix: left.prefix + tail };
     }
     return null;
   }
@@ -659,13 +738,260 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
  */
 export const rootSettingAddress = (
   value: TsNode,
-  options: RootSettingOptions,
+  options: RootSettingOptions & { frames?: readonly CallFrame[] },
 ): SettingAddress | null =>
-  addressOf(
-    value,
-    { readSetting: options.readSetting, self: enclosingClass(value), bound: NOTHING },
-    options.budget ?? BUDGET,
-  );
+  addressOf(value, scopeOf(value, options.readSetting, options.frames), options.budget ?? BUDGET);
+
+/**
+ * One step outward from where an address is written: a call, and the method it
+ * calls.
+ *
+ * A shared client writes its request once, inside a method that takes the path
+ * as a parameter, and the address only exists once somebody calls it. A list of
+ * these, innermost first, is how a reader stands at the call site and reads the
+ * request as that caller makes it: every parameter bound to what was passed, and
+ * an abstract method answered by the class the caller actually is.
+ */
+export interface CallFrame {
+  call: CallExpression;
+  method: MethodDeclaration;
+}
+
+/** The class a call reaches, which is the class that answers `this` inside it. */
+const selfAcross = (
+  call: CallExpression,
+  method: MethodDeclaration,
+  caller: Scope,
+): ClassNode | undefined => {
+  const callee = unwrap(call.getExpression());
+  // `this.get(...)` stays in the object that made the call. When that object is
+  // a subclass, the subclass is the one that overrides whatever the base leaves
+  // abstract, so it has to stay at the bottom of the stack.
+  if (
+    Node.isPropertyAccessExpression(callee) &&
+    callee.getExpression().getKind() === SyntaxKind.ThisKeyword
+  ) {
+    return caller.self ?? enclosingClass(call);
+  }
+  // `this.api.get(...)` reaches another object, whose own class answers.
+  const receiver = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : undefined;
+  const declared = receiver?.getType().getSymbol()?.getDeclarations()[0];
+  if (declared !== undefined && Node.isClassDeclaration(declared)) return declared;
+  return enclosingClass(method);
+};
+
+/** The scope an address is read in, standing at the outermost of the frames. */
+const scopeOf = (
+  value: TsNode,
+  readSetting: Scope['readSetting'],
+  frames: readonly CallFrame[] | undefined,
+  choices?: ReadonlyMap<TsNode, string>,
+): Scope => {
+  const picked = choices === undefined ? {} : { choices };
+  if (frames === undefined || frames.length === 0) {
+    return { readSetting, self: enclosingClass(value), bound: NOTHING, ...picked };
+  }
+  const outermost = frames[frames.length - 1] as CallFrame;
+  let scope: Scope = {
+    readSetting,
+    self: enclosingClass(outermost.call),
+    bound: NOTHING,
+    ...picked,
+  };
+  for (let index = frames.length - 1; index >= 0; index -= 1) {
+    const frame = frames[index] as CallFrame;
+    scope = {
+      readSetting,
+      self: selfAcross(frame.call, frame.method, scope),
+      bound: bindings(frame.method, frame.call, scope),
+      ...picked,
+    };
+  }
+  return scope;
+};
+
+/**
+ * What an address is, read at the call site the frames lead out to.
+ *
+ * The settings key comes back when the address is rooted at one, and `null`
+ * when it is not; the path is read either way, holed where nothing can read it.
+ * Unlike `rootSettingAddress` this answers for an address that names no setting
+ * at all — a relative path, or one naming its host outright — because a request
+ * made through a wrapper is still a request when the wrapper hard-codes its base.
+ */
+export const addressAt = (
+  value: TsNode,
+  options: RootSettingOptions & {
+    frames?: readonly CallFrame[];
+    choices?: ReadonlyMap<TsNode, string>;
+  },
+): { key: string | null; text: string; guessed?: boolean } => {
+  // Reading from a call site walks back through every wrapper on the way before
+  // it reaches the wrapper's own helpers, so it is given the room those take.
+  const budget = options.budget ?? BUDGET + 4;
+  const scope = scopeOf(value, options.readSetting, options.frames, options.choices);
+  const rooted = addressOf(value, scope, budget);
+  if (rooted !== null) {
+    return {
+      key: rooted.key,
+      text: rooted.prefix,
+      ...(rooted.guessed === true ? { guessed: true } : {}),
+    };
+  }
+  return { key: null, text: pathOf(value, scope, budget, '', '', true) };
+};
+
+/**
+ * Everywhere a method is called, as a call expression.
+ *
+ * A reference that is not the callee — the method passed as a value, or named
+ * in a type — is not a call and is left out.
+ */
+export const callSitesOf = (method: MethodDeclaration): CallExpression[] => {
+  const sites: CallExpression[] = [];
+  const seen = new Set<string>();
+  for (const reference of method.findReferencesAsNodes()) {
+    const access = reference.getParent();
+    if (access === undefined || !Node.isPropertyAccessExpression(access)) continue;
+    if (access.getNameNode() !== reference) continue;
+    const call = access.getParent();
+    if (call === undefined || !Node.isCallExpression(call) || call.getExpression() !== access) {
+      continue;
+    }
+    const key = `${call.getSourceFile().getFilePath()}:${call.getStart()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    sites.push(call);
+  }
+  return sites;
+};
+
+/**
+ * Whether a value depends on what a method was called with.
+ *
+ * Looked for in the value and in the local bindings it names, since
+ * `const url = this.url(path)` and then `http.get(url)` depends on `path` just as
+ * much as writing it in place does.
+ */
+export const readsParameterOf = (value: TsNode, method: MethodDeclaration, budget = 4): boolean => {
+  if (budget <= 0) return false;
+  const parameters = new Set<TsNode>(method.getParameters());
+  const identifiers = Node.isIdentifier(value)
+    ? [value]
+    : value.getDescendantsOfKind(SyntaxKind.Identifier);
+  for (const identifier of identifiers) {
+    const declaration = identifier.getSymbol()?.getDeclarations()[0];
+    if (declaration === undefined) continue;
+    if (parameters.has(declaration)) return true;
+    if (
+      Node.isVariableDeclaration(declaration) &&
+      declaration.getFirstAncestorByKind(SyntaxKind.MethodDeclaration) === method
+    ) {
+      const initializer = declaration.getInitializer();
+      if (initializer !== undefined && readsParameterOf(initializer, method, budget - 1)) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+/** The returns that belong to a function itself, not to one nested inside it. */
+const ownReturns = (owner: TsNode): TsNode[] =>
+  owner.getDescendantsOfKind(SyntaxKind.ReturnStatement).filter((statement) => {
+    const nearest = statement.getFirstAncestor(
+      (ancestor) =>
+        Node.isFunctionDeclaration(ancestor) ||
+        Node.isMethodDeclaration(ancestor) ||
+        Node.isArrowFunction(ancestor) ||
+        Node.isFunctionExpression(ancestor) ||
+        Node.isGetAccessorDeclaration(ancestor),
+    );
+    return nearest === owner;
+  });
+
+/**
+ * Whether every value a piece of an address can take is a query string or
+ * nothing.
+ *
+ * `/reviews${qs}` is the route `/reviews` whether `qs` is `''` or `?page=2`: a
+ * query string is an argument to a route, not part of it. Where that is
+ * provable — each branch a literal that is empty or opens with `?`, or a helper
+ * whose every return is — the hole is dropped rather than left to make the whole
+ * address unreadable. Anything the reader cannot prove stays a hole.
+ */
+const queryOnly = (value: TsNode, scope: Scope, budget: number): boolean => {
+  if (budget <= 0) return false;
+  const node = unwrap(value);
+
+  const direct = evaluateExpression(node);
+  if (direct.resolved) {
+    return typeof direct.value === 'string' && (direct.value === '' || direct.value.startsWith('?'));
+  }
+  if (Node.isTemplateExpression(node)) return node.getHead().getLiteralText().startsWith('?');
+  if (Node.isConditionalExpression(node)) {
+    return (
+      queryOnly(node.getWhenTrue(), scope, budget - 1) &&
+      queryOnly(node.getWhenFalse(), scope, budget - 1)
+    );
+  }
+  if (Node.isIdentifier(node)) {
+    const declaration = node.getSymbol()?.getDeclarations()[0];
+    if (declaration === undefined) return false;
+    if (Node.isParameterDeclaration(declaration)) {
+      const bound = scope.bound.get(declaration);
+      return bound !== undefined && queryOnly(bound.node, bound.scope, budget - 1);
+    }
+    if (
+      Node.isVariableDeclaration(declaration) &&
+      declaration.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const
+    ) {
+      const initializer = declaration.getInitializer();
+      return initializer !== undefined && queryOnly(initializer, scope, budget - 1);
+    }
+    return false;
+  }
+  if (Node.isCallExpression(node)) {
+    const callee = unwrap(node.getExpression());
+    let body: TsNode | undefined;
+    let inside = scope;
+    if (
+      Node.isPropertyAccessExpression(callee) &&
+      callee.getExpression().getKind() === SyntaxKind.ThisKeyword
+    ) {
+      for (const owner of chainFrom(scope, node)) {
+        const method = owner.getMethod(callee.getName());
+        if (method?.getBody() === undefined) continue;
+        body = method;
+        inside = { ...scope, bound: bindings(method, node, scope) };
+        break;
+      }
+    } else if (Node.isIdentifier(callee)) {
+      const declaration = callee.getSymbol()?.getDeclarations()[0];
+      if (declaration !== undefined && Node.isFunctionDeclaration(declaration)) {
+        body = declaration;
+        inside = { ...scope, bound: NOTHING };
+      }
+    }
+    if (body === undefined) return false;
+    const returns = ownReturns(body);
+    return (
+      returns.length > 0 &&
+      returns.every((statement) => {
+        const returned = statement.asKind(SyntaxKind.ReturnStatement)?.getExpression();
+        return returned !== undefined && queryOnly(returned, inside, budget - 1);
+      })
+    );
+  }
+  return false;
+};
+
+/**
+ * Whether the tail of an address is only ever a query string or nothing, read
+ * where it is written with nothing bound.
+ */
+export const isQueryTail = (value: TsNode): boolean =>
+  queryOnly(value, { readSetting: () => null, self: enclosingClass(value), bound: NOTHING }, BUDGET);
 
 /** The key alone, for callers with nothing to do with the path. */
 export const rootSettingKey = (value: TsNode, options: RootSettingOptions): string | null =>
@@ -919,4 +1245,92 @@ export const returnedExpression = (node: TsNode): TsNode | null => {
     return returns[0]?.getExpression() ?? null;
   }
   return null;
+};
+
+/** A lookup into a fixed table of strings, and every value it can give. */
+export interface FiniteLookup {
+  node: TsNode;
+  values: string[];
+}
+
+/** The most values one table may give before enumerating stops being useful. */
+const MOST_CHOICES = 12;
+
+/** The object a table expression always holds, when it is written down whole. */
+const tableOf = (expression: TsNode): Record<string, unknown> | null => {
+  const node = unwrap(expression);
+  const value = evaluateExpression(node);
+  if (value.resolved) {
+    return value.value !== null && typeof value.value === 'object' && !Array.isArray(value.value)
+      ? (value.value as Record<string, unknown>)
+      : null;
+  }
+  // `private readonly paths = { ... }` is a table kept in a field, which the
+  // evaluator does not follow; a field nothing reassigns holds its initializer.
+  if (Node.isPropertyAccessExpression(node) && node.getExpression().getKind() === SyntaxKind.ThisKeyword) {
+    const declaration = node.getSymbol()?.getDeclarations()[0];
+    if (declaration === undefined || !Node.isPropertyDeclaration(declaration)) return null;
+    if (!declaration.isReadonly()) return null;
+    const initializer = declaration.getInitializer();
+    return initializer === undefined ? null : tableOf(initializer);
+  }
+  return null;
+};
+
+/**
+ * Every lookup into a fixed table an address depends on.
+ *
+ * `ENTITY_PATH[entityType]` is not a value filling a route parameter: it is one
+ * of the handful of segments the table spells out. The table is written down, so
+ * the segments can be listed; when the key is typed as a union of literals only
+ * the entries it can name are. The request reaches one of them per run, and the
+ * reader is the one who has to say which edges that makes, so each value comes
+ * back and nothing is picked.
+ */
+export const finiteLookups = (value: TsNode, budget = 4): FiniteLookup[] => {
+  const found = new Map<TsNode, string[]>();
+  const visit = (node: TsNode, left: number): void => {
+    if (left <= 0) return;
+    const candidates = Node.isElementAccessExpression(node)
+      ? [node, ...node.getDescendantsOfKind(SyntaxKind.ElementAccessExpression)]
+      : node.getDescendantsOfKind(SyntaxKind.ElementAccessExpression);
+    for (const access of candidates) {
+      if (found.has(access) || !Node.isElementAccessExpression(access)) continue;
+      const table = tableOf(access.getExpression());
+      const key = access.getArgumentExpression();
+      if (table === null || key === undefined) continue;
+      const entries = Object.entries(table);
+      if (entries.length === 0 || entries.some(([, item]) => typeof item !== 'string')) continue;
+      const keyType = key.getType();
+      const named = keyType.isUnion()
+        ? keyType.getUnionTypes()
+        : keyType.isStringLiteral()
+          ? [keyType]
+          : [];
+      const keys = named.every((member) => member.isStringLiteral())
+        ? new Set(named.map((member) => String(member.getLiteralValue())))
+        : new Set<string>();
+      const values = [
+        ...new Set(
+          entries
+            .filter(([name]) => keys.size === 0 || keys.has(name))
+            .map(([, item]) => item as string),
+        ),
+      ].sort();
+      if (values.length === 0 || values.length > MOST_CHOICES) continue;
+      found.set(access, values);
+    }
+    const identifiers = Node.isIdentifier(node)
+      ? [node]
+      : node.getDescendantsOfKind(SyntaxKind.Identifier);
+    for (const identifier of identifiers) {
+      const declaration = identifier.getSymbol()?.getDeclarations()[0];
+      if (declaration === undefined || !Node.isVariableDeclaration(declaration)) continue;
+      if (declaration.getSourceFile() !== node.getSourceFile()) continue;
+      const initializer = declaration.getInitializer();
+      if (initializer !== undefined) visit(initializer, left - 1);
+    }
+  };
+  visit(value, budget);
+  return [...found].map(([node, values]) => ({ node, values }));
 };

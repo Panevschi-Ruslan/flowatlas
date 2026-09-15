@@ -1,6 +1,7 @@
 import {
   GraphBuilder,
   isFunctionHandler,
+  isInlineHandler,
   noAdapters,
   parseConfig,
   silentLogger,
@@ -56,6 +57,7 @@ const ids = (entries: readonly EntryNode[]): string[] => entries.map((entry) => 
 const handlerName = (entry: EntryNode | undefined): string | undefined => {
   const handler = entry?.handler;
   if (handler === undefined) return undefined;
+  if (isInlineHandler(handler)) return handler.label;
   return isFunctionHandler(handler) ? handler.functionName : handler.methodName;
 };
 
@@ -113,7 +115,7 @@ describe('a bot written against the library directly', () => {
     expect(entries[0]?.meta?.['handlerVia']).toBe('call');
   });
 
-  it('points at the registration when the handler runs several, and says so', () => {
+  it('points at the function written in place when it runs several, and says so', () => {
     const { entries } = extract(`
       export class Bot {
         private bot = new Telegraf();
@@ -127,8 +129,8 @@ describe('a bot written against the library directly', () => {
         reply(ctx: unknown) {}
       }
     `);
-    expect(handlerName(entries[0])).toBe('setup');
-    expect(entries[0]?.meta?.['handlerVia']).toBe('registration');
+    expect(handlerName(entries[0])).toBe('on text');
+    expect(entries[0]?.meta?.['handlerVia']).toBe('inline');
   });
 
   it('keeps a pattern as written, since that is what the button carries', () => {
@@ -260,7 +262,7 @@ describe('a bot that registers outside any class', () => {
     expect(entries[0]?.meta?.['handlerVia']).toBe('call');
   });
 
-  it('falls back to the function the registration is written in', () => {
+  it('points at the function written in place rather than the one around the registration', () => {
     const { entries } = extract(`
       export function registerMenu(bot: Telegraf) {
         bot.action('back', () => { first(); second(); });
@@ -268,8 +270,8 @@ describe('a bot that registers outside any class', () => {
       function first() {}
       function second() {}
     `);
-    expect(handlerName(entries[0])).toBe('registerMenu');
-    expect(entries[0]?.meta?.['handlerVia']).toBe('registration');
+    expect(handlerName(entries[0])).toBe('action back');
+    expect(entries[0]?.meta?.['handlerVia']).toBe('inline');
     expect(entries[0]?.meta?.['updateClass']).toBeUndefined();
   });
 });

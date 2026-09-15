@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from './app.module';
+import { ApiKeyGuard } from './auth/api-key.guard';
 
 /**
  * The prefix the Nest side is served under.
@@ -12,6 +13,7 @@ import { AppModule } from './app.module';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
+  app.useGlobalGuards(new ApiKeyGuard());
   await app.listen(3000);
 }
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-12T17:47:47.306Z",
+  "builtAt": "2026-09-14T15:52:25.879Z",
   "services": [
     {
       "name": "api",
@@ -378,23 +378,24 @@
       }
     },
     {
-      "id": "ui_api_call:web#src/app/live-events.service.ts:48:20",
+      "id": "ui_api_call:web#src/app/live-events.service.ts:46:20",
       "type": "ui_api_call",
-      "label": "GET /depots/:param/events${…}",
+      "label": "GET /depots/:param/events",
       "repo": "web",
       "file": "src/app/live-events.service.ts",
-      "line": 48,
+      "line": 46,
       "kind": "sse",
       "meta": {
         "method": "GET",
-        "url": "${apiUrl}/depots/:param/events${…}",
-        "path": "/depots/:param/events${…}",
+        "url": "${apiUrl}/depots/:param/events",
+        "path": "/depots/:param/events",
         "baseUrlEnv": "apiUrl",
         "responseType": null,
         "bodyType": null,
         "package": null,
         "client": "EventSource",
-        "via": "template-env"
+        "via": "template-env",
+        "targetService": "api"
       }
     },
     {
@@ -475,7 +476,10 @@
       "label": "LiveEventsService.openWithToken",
       "repo": "web",
       "file": "src/app/live-events.service.ts",
-      "line": 44
+      "line": 42,
+      "meta": {
+        "unreferenced": true
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService",
@@ -556,7 +560,10 @@
       "label": "StreamWrapperService.open",
       "repo": "web",
       "file": "src/app/stream-wrapper.service.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "unreferenced": true
+      }
     }
   ],
   "edges": [
@@ -808,6 +815,18 @@
       }
     },
     {
+      "from": "ui_api_call:web#src/app/live-events.service.ts:46:20",
+      "to": "entry:api:http:GET:/depots/:param/events",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 46,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
       "from": "ui_api_call:web#src/app/orders-api.service.ts:12:12",
       "to": "entry:api:http:POST:/depots/:param/orders/:param/cancel",
       "type": "hits",
@@ -833,11 +852,11 @@
     },
     {
       "from": "web#src/app/live-events.service.ts:LiveEventsService.openWithToken",
-      "to": "ui_api_call:web#src/app/live-events.service.ts:48:20",
+      "to": "ui_api_call:web#src/app/live-events.service.ts:46:20",
       "type": "calls",
       "confidence": "static",
       "file": "src/app/live-events.service.ts",
-      "line": 48
+      "line": 46
     },
     {
       "from": "web#src/app/orders-api.service.ts:OrdersApiService",

@@ -107,6 +107,35 @@ describe('streams the browser subscribes to', () => {
     expect(graph.edges.find((edge) => edge.to === stream.id)?.confidence).toBe('heuristic');
   });
 
+  it('reads a stream a wrapper opens at each caller that hands it the address', () => {
+    const graph = extract(
+      `  open(url: string): void { new EventSource(url); }
+  private url(orderId: string): string { return \`\${environment.apiUrl}/orders/\${orderId}/stream\`; }
+  track(orderId: string, token: string): void {
+    this.open(\`\${this.url(orderId)}?token=\${token}\`);
+  }`,
+      {},
+      `
+@Injectable({ providedIn: 'root' })
+export class WarehouseScreen {
+  constructor(private readonly live: LiveService) {}
+  watch(): void { this.live.open(\`\${environment.apiUrl}/warehouse/events\`); }
+}
+`,
+    );
+    const streams = streamsOf(graph);
+    expect(streams.map((stream) => stream.meta?.['path']).sort()).toEqual([
+      '/warehouse/events',
+      '/orders/:param/stream',
+    ]);
+    expect(streams.every((stream) => stream.meta?.['through'] === 'LiveService.open')).toBe(true);
+    const warehouse = streams.find((stream) => stream.meta?.['path'] === '/warehouse/events');
+    expect(graph.edges.find((edge) => edge.to === warehouse?.id)?.from).toBe(
+      'web#live.service.ts:WarehouseScreen.watch',
+    );
+    expect(graph.unresolved).toEqual([]);
+  });
+
   it('leaves a class of the repository’s own alone, whatever it is called', () => {
     const graph = extract(
       `  open(): LocalSource { return new LocalSource('/events'); }`,

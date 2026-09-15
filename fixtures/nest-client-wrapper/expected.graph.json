@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-client-wrapper",
-  "generatedAt": "2026-09-10T15:40:39.671Z",
+  "generatedAt": "2026-09-14T12:32:07.289Z",
   "nodes": [
     {
       "id": "config_key:nest-client-wrapper#BILLING_URL",
@@ -13,6 +13,24 @@
       "meta": {
         "key": "BILLING_URL",
         "source": "process.env"
+      }
+    },
+    {
+      "id": "external_api:chat.example.test",
+      "type": "external_api",
+      "label": "chat.example.test",
+      "repo": "nest-client-wrapper",
+      "meta": {
+        "host": "chat.example.test"
+      }
+    },
+    {
+      "id": "external_api:status.example.test",
+      "type": "external_api",
+      "label": "status.example.test",
+      "repo": "nest-client-wrapper",
+      "meta": {
+        "host": "status.example.test"
       }
     },
     {
@@ -45,6 +63,57 @@
         "baseUrlEnv": "BILLING_URL",
         "responseType": "type:nest-client-wrapper#Invoice",
         "bodyType": "string"
+      }
+    },
+    {
+      "id": "http_out:nest-client-wrapper#src/orders/notifier.service.ts:19:23",
+      "type": "http_out",
+      "label": "POST /bot${…}/sendMessage",
+      "repo": "nest-client-wrapper",
+      "file": "src/orders/notifier.service.ts",
+      "line": 19,
+      "meta": {
+        "method": "POST",
+        "url": "https://chat.example.test/bot${…}/sendMessage",
+        "path": "/bot${…}/sendMessage",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "RequestInit",
+        "host": "chat.example.test"
+      }
+    },
+    {
+      "id": "http_out:nest-client-wrapper#src/orders/notifier.service.ts:27:23",
+      "type": "http_out",
+      "label": "HEAD /health",
+      "repo": "nest-client-wrapper",
+      "file": "src/orders/notifier.service.ts",
+      "line": 27,
+      "meta": {
+        "method": "HEAD",
+        "url": "https://chat.example.test/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "chat.example.test"
+      }
+    },
+    {
+      "id": "http_out:nest-client-wrapper#src/orders/notifier.service.ts:37:23",
+      "type": "http_out",
+      "label": "GET /v1/summary",
+      "repo": "nest-client-wrapper",
+      "file": "src/orders/notifier.service.ts",
+      "line": 37,
+      "meta": {
+        "method": "GET",
+        "url": "https://status.example.test/v1/summary",
+        "path": "/v1/summary",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "status.example.test"
       }
     },
     {
@@ -92,7 +161,7 @@
         "path": "/orders/:param/cancel",
         "baseUrlEnv": "ORDERS_URL",
         "responseType": "type:nest-client-wrapper#Order",
-        "bodyType": "object"
+        "bodyType": "{reason:string}"
       }
     },
     {
@@ -178,13 +247,14 @@
       "label": "AppModule",
       "repo": "nest-client-wrapper",
       "file": "src/app.module.ts",
-      "line": 5,
+      "line": 6,
       "kind": "static",
       "meta": {
         "controllers": [],
         "providers": [
           "OrdersService",
-          "BillingService"
+          "BillingService",
+          "NotifierService"
         ],
         "exports": []
       }
@@ -232,6 +302,42 @@
       "repo": "nest-client-wrapper",
       "file": "src/orders/billing.service.ts",
       "line": 18
+    },
+    {
+      "id": "nest-client-wrapper#src/orders/notifier.service.ts:NotifierService",
+      "type": "provider",
+      "label": "NotifierService",
+      "repo": "nest-client-wrapper",
+      "file": "src/orders/notifier.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-client-wrapper#src/orders/notifier.service.ts:NotifierService.ping",
+      "type": "method",
+      "label": "NotifierService.ping",
+      "repo": "nest-client-wrapper",
+      "file": "src/orders/notifier.service.ts",
+      "line": 26
+    },
+    {
+      "id": "nest-client-wrapper#src/orders/notifier.service.ts:NotifierService.send",
+      "type": "method",
+      "label": "NotifierService.send",
+      "repo": "nest-client-wrapper",
+      "file": "src/orders/notifier.service.ts",
+      "line": 17
+    },
+    {
+      "id": "nest-client-wrapper#src/orders/notifier.service.ts:NotifierService.status",
+      "type": "method",
+      "label": "NotifierService.status",
+      "repo": "nest-client-wrapper",
+      "file": "src/orders/notifier.service.ts",
+      "line": 36
     },
     {
       "id": "nest-client-wrapper#src/orders/orders.service.ts:OrdersService",
@@ -284,8 +390,8 @@
       "repo": "nest-client-wrapper",
       "meta": {
         "stats": {
-          "files": 5,
-          "classes": 4,
+          "files": 6,
+          "classes": 5,
           "skippedExternalCalls": {}
         },
         "bootstrap": "src/main.ts",
@@ -298,6 +404,30 @@
     }
   ],
   "edges": [
+    {
+      "from": "http_out:nest-client-wrapper#src/orders/notifier.service.ts:19:23",
+      "to": "external_api:chat.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/notifier.service.ts",
+      "line": 19
+    },
+    {
+      "from": "http_out:nest-client-wrapper#src/orders/notifier.service.ts:27:23",
+      "to": "external_api:chat.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/notifier.service.ts",
+      "line": 27
+    },
+    {
+      "from": "http_out:nest-client-wrapper#src/orders/notifier.service.ts:37:23",
+      "to": "external_api:status.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/notifier.service.ts",
+      "line": 37
+    },
     {
       "from": "nest-client-wrapper#src/api/api-client.ts:ApiClient.get",
       "to": "nest-client-wrapper#src/api/api-client.ts:ApiClient.request",
@@ -411,6 +541,30 @@
       "line": 21,
       "params": [],
       "returns": "string"
+    },
+    {
+      "from": "nest-client-wrapper#src/orders/notifier.service.ts:NotifierService.ping",
+      "to": "http_out:nest-client-wrapper#src/orders/notifier.service.ts:27:23",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/notifier.service.ts",
+      "line": 27
+    },
+    {
+      "from": "nest-client-wrapper#src/orders/notifier.service.ts:NotifierService.send",
+      "to": "http_out:nest-client-wrapper#src/orders/notifier.service.ts:19:23",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/notifier.service.ts",
+      "line": 19
+    },
+    {
+      "from": "nest-client-wrapper#src/orders/notifier.service.ts:NotifierService.status",
+      "to": "http_out:nest-client-wrapper#src/orders/notifier.service.ts:37:23",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/notifier.service.ts",
+      "line": 37
     },
     {
       "from": "nest-client-wrapper#src/orders/orders.service.ts:OrdersService",

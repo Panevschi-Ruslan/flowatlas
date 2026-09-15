@@ -28,7 +28,7 @@ flowatlas doctor
 The last line says it in one sentence:
 
 ```
-unresolved: total=40 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=107 ignored=0 · exit=0
+unresolved: total=40 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=1 ignored=0 · exit=0
 ```
 
 Read it as three separate decisions.

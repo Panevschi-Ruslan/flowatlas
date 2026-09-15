@@ -452,3 +452,82 @@ describe('a graph from an older version of the tool', () => {
     );
   });
 });
+
+describe('a request only a catch-all answers', () => {
+  it('is joined, and reported, when the service spells its other routes out', () => {
+    const { project } = link([
+      callerGraph({ meta: { method: 'POST', path: '/api/orders/:param/delete' } }),
+      graph('orders', {
+        nodes: [route('orders', 'GET', '/api/orders/:param'), route('orders', 'ALL', '/api/*')],
+      }),
+    ]);
+    expect(project.edges.some((item) => item.to === 'entry:orders:http:ALL:/api/*')).toBe(true);
+    const row = project.unresolved.find((item) => item.reason === 'route-wildcard-only');
+    expect(row?.message).toBe('only the catch-all ALL /api/* in orders answers POST /api/orders/:param/delete');
+  });
+
+  it('says nothing when the route is spelled out, or the catch-all is all there is', () => {
+    const spelled = link([
+      callerGraph({ meta: { path: '/api/orders/:param' } }),
+      graph('orders', {
+        nodes: [route('orders', 'GET', '/api/orders/:param'), route('orders', 'ALL', '/api/*')],
+      }),
+    ]);
+    const alone = link([
+      callerGraph({ meta: { path: '/api/orders/:param' } }),
+      graph('orders', { nodes: [route('orders', 'ALL', '/api/*')] }),
+    ]);
+    for (const { project } of [spelled, alone]) {
+      expect(project.unresolved.some((item) => item.reason === 'route-wildcard-only')).toBe(false);
+    }
+  });
+});
+
+describe('annotations that name where a call goes', () => {
+  const marked = (markers: unknown[]) =>
+    callerGraph({ meta: { baseUrlEnv: undefined, path: undefined }, markers });
+
+  it('draws one edge per @CallsService on a method that fans out', () => {
+    const { project } = link(
+      [
+        marked([
+          { name: 'CallsService', args: ['orders', 'GET /orders/:id'] },
+          { name: 'CallsService', args: ['billing', 'POST /events/orders'] },
+        ]),
+        ordersGraph(),
+        graph('billing', { nodes: [route('billing', 'POST', '/events/orders')] }),
+      ],
+      config({
+        services: [
+          { name: 'gateway', repo: './gateway', type: 'nestjs' },
+          { name: 'orders', repo: './orders', type: 'nestjs', baseUrlEnv: ['ORDERS_URL'] },
+          { name: 'billing', repo: './billing', type: 'nestjs' },
+        ],
+      }),
+    );
+    const reached = project.edges
+      .filter((item) => item.type === 'http_calls')
+      .map((item) => `${item.to} ${item.confidence}`)
+      .sort();
+    expect(reached).toEqual([
+      'entry:billing:http:POST:/events/orders marker',
+      'entry:orders:http:GET:/orders/:param marker',
+    ]);
+  });
+
+  it('finds a marked route under the prefix its service adds to every route', () => {
+    const prefixed = graph('orders', {
+      nodes: [
+        node('entry:orders:http:GET:/api/orders/:param', 'orders', {
+          type: 'entry',
+          kind: 'http',
+          label: 'GET /api/orders/:param',
+          meta: { method: 'GET', path: '/api/orders/:param', globalPrefix: 'api' },
+        }),
+      ],
+    });
+    const { project } = link([marked([{ name: 'CallsService', args: ['orders', 'GET /orders/:id'] }]), prefixed]);
+    expect(project.edges.some((item) => item.to === 'entry:orders:http:GET:/api/orders/:param')).toBe(true);
+    expect(project.unresolved.some((item) => item.reason === 'marker-route-not-found')).toBe(false);
+  });
+});

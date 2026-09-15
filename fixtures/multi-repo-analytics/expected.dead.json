@@ -54,10 +54,27 @@
       "service": "orders",
       "file": "src/orders/unused.service.ts",
       "line": 9,
-      "reason": "nothing injects it and nothing reaches its methods; orders has 2 unresolved injects \u2014 verify"
+      "reason": "nothing injects it and nothing reaches its methods; orders has 2 unresolved injects — verify"
     }
   ],
-  "fields": [],
+  "fields": [
+    {
+      "typeId": "{customerId:string}",
+      "field": "draft",
+      "sentOn": [
+        "http_out:gateway#src/clients/orders.client.ts:20:12|http_calls|entry:orders:http:POST:/orders/create"
+      ],
+      "reason": "sent but not declared by any receiver"
+    },
+    {
+      "typeId": "{customerId:string}",
+      "field": "orderId",
+      "sentOn": [
+        "http_out:billing#src/clients/orders.client.ts:14:12|http_calls|entry:orders:http:POST:/orders/create"
+      ],
+      "reason": "sent but not declared by any receiver"
+    }
+  ],
   "excludedEntryKinds": [
     "cron",
     "bot_command",

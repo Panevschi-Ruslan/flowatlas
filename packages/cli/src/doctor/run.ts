@@ -78,6 +78,7 @@ const DESYNC_REASONS: ReadonlySet<string> = new Set([
   'target-route-not-found',
   'ambiguous-route',
   'ambiguous-route-target',
+  'route-wildcard-only',
 ]);
 
 const text = (value: unknown): string | null =>

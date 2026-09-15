@@ -8,6 +8,7 @@ import {
   enclosingHandler,
   fileOfNode,
   handlerInside,
+  inlineHandlerOf,
   repoSources,
 } from './shared.js';
 
@@ -68,6 +69,8 @@ interface Site {
   handler: EntryHandler | undefined;
   /** True when the handler is whatever the registration is written inside. */
   viaRegistration: boolean;
+  /** True when the handler is the function written in the registration. */
+  inline?: boolean;
   line: number;
   text: string;
   /** Class the registration is written in, when it is written in one. */
@@ -96,12 +99,18 @@ const siteOf = (call: TsNode, ctx: ExtractContext): Site | null => {
   const handlerArg = implied === undefined ? args[1] : args[0];
   const owner = enclosingClass(call);
   const behind = handlerInside(handlerArg, owner, ctx);
+  // A function written in the registration that hands over to no one thing is
+  // still the code the update runs, and is nearer the truth than whatever the
+  // registration happens to be written inside.
+  const inline =
+    behind === undefined ? inlineHandlerOf(handlerArg, `${name} ${keys[0] ?? ''}`.trim(), ctx) : undefined;
   return {
     method: name,
     kind,
     keys,
-    handler: behind ?? enclosingHandler(call, ctx),
-    viaRegistration: behind === undefined,
+    handler: behind ?? inline ?? enclosingHandler(call, ctx),
+    viaRegistration: behind === undefined && inline === undefined,
+    ...(inline === undefined ? {} : { inline: true }),
     line: call.getStartLineNumber(),
     text: (implied === undefined ? (args[0]?.getText() ?? '') : name).slice(0, 80),
     ...(owner === undefined ? {} : { updateClass: owner.getName() ?? '<anonymous>' }),
@@ -122,6 +131,8 @@ const siteOf = (call: TsNode, ctx: ExtractContext): Site | null => {
  */
 export const telegrafCallsAdapter: EntryAdapter = {
   name: ADAPTER,
+  // The bot library dispatches updates itself; no request pipeline wraps them.
+  outsideApplication: true,
   detect: (pkg) => hasAnyDependency(pkg, [TELEGRAF]),
   extractEntries: (ctx: ExtractContext) => {
     const entries: EntryNode[] = [];
@@ -159,7 +170,7 @@ export const telegrafCallsAdapter: EntryAdapter = {
               ...(site.updateClass === undefined ? {} : { updateClass: site.updateClass }),
               // Said plainly, because a walk from this entry is only as narrow
               // as the answer to "which code does the handler run".
-              handlerVia: site.viaRegistration ? 'registration' : 'call',
+              handlerVia: site.viaRegistration ? 'registration' : site.inline === true ? 'inline' : 'call',
             },
           });
         }

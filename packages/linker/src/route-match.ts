@@ -149,4 +149,24 @@ export const matchRoute = (
   };
 };
 
+/**
+ * Whether a route answered only because it is a catch-all in front of a service
+ * that also spells its routes out.
+ *
+ * A worker that hands everything under `/api/*` to the application behind it
+ * answers every request, including one the application has no route for. The
+ * edge to the catch-all is real, but it says nothing about whether the request
+ * will be served, and a renamed route hides behind it indefinitely.
+ */
+export const answeredOnlyByWildcard = (entry: GraphNode, routes: readonly GraphNode[]): boolean => {
+  const path = String(entry.meta?.['path'] ?? '');
+  if (!segmentsOf(path).includes('*')) return false;
+  return routes.some(
+    (route) =>
+      route.type === 'entry' &&
+      route.kind === 'http' &&
+      !segmentsOf(String(route.meta?.['path'] ?? '')).includes('*'),
+  );
+};
+
 export { pathAnswers };

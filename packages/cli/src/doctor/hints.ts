@@ -234,6 +234,12 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     "The target service serves no such route. Check its controllers for a rename, or annotate the call with @CallsService.",
   'ambiguous-route': () =>
     'More than one route in the target service answers this. Make the path more specific, or annotate the call with @CallsService.',
+  'route-unguarded': () =>
+    'Nothing in front of this route can refuse a request, and it reaches stored data. Add a guard, or mark it public with a decorator under doctor.publicDecorators or a pattern under doctor.publicRoutes.',
+  'route-shadowed': () =>
+    'A worker answers this route before the application does, so the application handler and its guards never run. Remove one, or give the worker route the same checks.',
+  'route-wildcard-only': () =>
+    'Only a catch-all route answers this request, so nothing behind it is known to serve it. Check the target service for a renamed or missing route.',
   'ambiguous-route-target': () =>
     'Set services[].apiTarget on the frontend to say which service its settings key names.',
   'marker-service-unknown': () =>

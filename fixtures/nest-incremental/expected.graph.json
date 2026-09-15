@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-incremental",
-  "generatedAt": "2026-09-10T15:42:45.968Z",
+  "generatedAt": "2026-09-14T12:13:37.205Z",
   "nodes": [
     {
       "id": "config_key:nest-incremental#BILLING_URL",
@@ -60,7 +60,7 @@
         "path": "/invoices",
         "baseUrlEnv": "BILLING_URL",
         "responseType": null,
-        "bodyType": "object"
+        "bodyType": "{orderId:string}"
       }
     },
     {
@@ -76,7 +76,7 @@
         "path": "/refunds",
         "baseUrlEnv": "BILLING_URL",
         "responseType": null,
-        "bodyType": "object"
+        "bodyType": "{orderId:string}"
       }
     },
     {

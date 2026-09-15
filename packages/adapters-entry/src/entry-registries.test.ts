@@ -79,14 +79,15 @@ describe('handlers kept in a table the project wrote itself', () => {
     expect(entries[0]?.meta?.['registry']).toBe('callbacks');
   });
 
-  it('keeps the way in when the handler is written in place, and says why it stops', () => {
+  it('points at the function written in place, found again by where it starts', () => {
     const { entries, unresolved } = extract(`
       import { callbackRegistry } from './registry.js';
       callbackRegistry.register('keep_order', (data, { orders }) => { orders.cancel(data); });
     `);
     expect(entries.map((entry) => entry.id)).toEqual(['entry:bot:bot_callback:keep_order']);
-    expect(entries[0]?.handler).toBeUndefined();
-    expect(unresolved.map((row) => row.reason)).toEqual(['registry-handler-anonymous']);
+    expect(entries[0]?.handler).toMatchObject({ inline: true, label: 'callbacks:keep_order', line: 3 });
+    expect(entries[0]?.meta?.['handlerVia']).toBe('inline');
+    expect(unresolved).toEqual([]);
   });
 
   it('reports a key built at run time instead of inventing one', () => {

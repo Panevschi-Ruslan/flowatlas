@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-types",
-  "generatedAt": "2026-09-10T15:40:37.196Z",
+  "generatedAt": "2026-09-14T12:13:07.790Z",
   "nodes": [
     {
       "id": "entry:nest-types:http:GET:/catalog/categories",
@@ -652,12 +652,12 @@
       "line": 39,
       "params": [
         "string",
-        "{customerId:string;status:type:nest-types#Status;kind:type:nest-types#Kind;lines:type:nest-types#OrderLine[];note?:string;id:string;createdAt:Date}"
+        "{customerId?:string;status?:type:nest-types#Status;kind?:type:nest-types#Kind;lines?:type:nest-types#OrderLine[];note?:string;id?:string;createdAt?:Date}"
       ],
       "returns": "type:nest-types#Order",
       "meta": {
         "params": "{id:string}",
-        "body": "{customerId:string;status:type:nest-types#Status;kind:type:nest-types#Kind;lines:type:nest-types#OrderLine[];note?:string;id:string;createdAt:Date}"
+        "body": "{customerId?:string;status?:type:nest-types#Status;kind?:type:nest-types#Kind;lines?:type:nest-types#OrderLine[];note?:string;id?:string;createdAt?:Date}"
       }
     },
     {
@@ -814,7 +814,7 @@
       "line": 41,
       "params": [
         "string",
-        "{customerId:string;status:type:nest-types#Status;kind:type:nest-types#Kind;lines:type:nest-types#OrderLine[];note?:string;id:string;createdAt:Date}"
+        "{customerId?:string;status?:type:nest-types#Status;kind?:type:nest-types#Kind;lines?:type:nest-types#OrderLine[];note?:string;id?:string;createdAt?:Date}"
       ],
       "returns": "type:nest-types#Order"
     },

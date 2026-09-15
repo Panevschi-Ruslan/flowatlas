@@ -1,11 +1,12 @@
 import {
   decoratorArgs,
+  decoratorName,
   evaluateExpression,
   findDecorators,
   lineOf,
   normalizePath,
 } from '@flowatlas/core';
-import type { CallExpression, ClassDeclaration, MethodDeclaration, Node as TsNode } from 'ts-morph';
+import type { CallExpression, ClassDeclaration, Decorator, MethodDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { WrappingLayer } from '../bootstrap.js';
 import type { NestExtractContext } from '../context.js';
@@ -134,22 +135,79 @@ const readConsumerChain = (
   return applied === undefined ? undefined : { applied, routes };
 };
 
+/** The arguments a wrapper is built with, when every one of them can be read. */
+const factoryArgsOf = (args: readonly TsNode[]): { factoryArgs?: unknown[] } => {
+  const values = args.map((item) => evaluateExpression(item));
+  if (values.length === 0 || !values.every((value) => value.resolved)) return {};
+  return { factoryArgs: values.map((value) => (value.resolved ? value.value : undefined)) };
+};
+
 const wrapperFrom = (expr: TsNode): { ref: ClassRef; factoryArgs?: unknown[] } | undefined => {
   if (Node.isCallExpression(expr)) {
     const ref = resolveCallableRef(expr.getExpression());
     if (ref.kind === 'unknown') return undefined;
-    const values = expr.getArguments().map((item) => evaluateExpression(item));
-    const factoryArgs = values.every((value) => value.resolved)
-      ? values.map((value) => (value.resolved ? value.value : undefined))
-      : undefined;
-    return { ref, ...(factoryArgs !== undefined && factoryArgs.length > 0 ? { factoryArgs } : {}) };
+    return { ref, ...factoryArgsOf(expr.getArguments()) };
   }
+  // `new ValidationPipe({ whitelist: true })` configures the instance exactly as
+  // a factory call does, and the bootstrap reader already keeps its arguments;
+  // dropping them here left a decorator-attached pipe unreadable to the checks
+  // that depend on how it is configured.
   if (Node.isNewExpression(expr)) {
     const ref = resolveClassExpression(expr.getExpression());
-    return ref.kind === 'unknown' ? undefined : { ref };
+    return ref.kind === 'unknown' ? undefined : { ref, ...factoryArgsOf(expr.getArguments() ?? []) };
   }
   const ref = resolveClassExpression(expr);
   return ref.kind === 'unknown' ? undefined : { ref };
+};
+
+/**
+ * The wrapper decorators a decorator of the project's own stands for.
+ *
+ * `export const ServiceAuth = (name) => applyDecorators(SetMetadata(KEY, name),
+ * UseGuards(ServiceAuthGuard))` puts a guard on every route that carries it, and
+ * reading only `@UseGuards` written out reported those routes as unguarded. Only
+ * a function of this repository whose single answer is an `applyDecorators(...)`
+ * call is followed, and only one level deep; anything else stands for nothing.
+ */
+const composedWrappers = (decorator: Decorator): Array<{ name: string; args: TsNode[] }> => {
+  const expression = decorator.getExpression();
+  const applied = Node.isCallExpression(expression) ? expression.getExpression() : expression;
+  if (!Node.isIdentifier(applied)) return [];
+  const symbol = applied.getSymbol();
+  const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
+  if (declaration === undefined) return [];
+  const sourceFile = declaration.getSourceFile();
+  if (sourceFile.isInNodeModules() || sourceFile.isDeclarationFile()) return [];
+
+  let fn: TsNode | undefined;
+  if (Node.isFunctionDeclaration(declaration)) fn = declaration;
+  else if (Node.isVariableDeclaration(declaration)) fn = declaration.getInitializer();
+  if (fn === undefined || !(Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn))) {
+    return [];
+  }
+  const body = fn.getBody();
+  let answer: TsNode | undefined;
+  if (body !== undefined && Node.isBlock(body)) {
+    const returns = body.getStatements().filter((statement) => Node.isReturnStatement(statement));
+    answer = returns.length === 1 && Node.isReturnStatement(returns[0]) ? returns[0].getExpression() : undefined;
+  } else {
+    answer = body;
+  }
+  while (answer !== undefined && (Node.isParenthesizedExpression(answer) || Node.isAsExpression(answer))) {
+    answer = answer.getExpression();
+  }
+  if (answer === undefined || !Node.isCallExpression(answer)) return [];
+  const callee = answer.getExpression();
+  if (!Node.isIdentifier(callee) || callee.getText() !== 'applyDecorators') return [];
+
+  const out: Array<{ name: string; args: TsNode[] }> = [];
+  for (const argument of answer.getArguments()) {
+    if (!Node.isCallExpression(argument)) continue;
+    const inner = argument.getExpression();
+    if (!Node.isIdentifier(inner) || !Object.hasOwn(DECORATOR_LAYERS, inner.getText())) continue;
+    out.push({ name: inner.getText(), args: argument.getArguments() });
+  }
+  return out;
 };
 
 const noteRole = (ctx: NestExtractContext, ref: ClassRef, layer: WrappingLayer): void => {
@@ -229,35 +287,49 @@ export const collectWrapping = (ctx: NestExtractContext): WrappingCollection => 
     scope: 'class' | 'method',
   ): WrapperApplication[] => {
     const found: WrapperApplication[] = [];
+    const apply = (name: string, layer: WrappingLayer, argument: TsNode, at: TsNode, source: string): void => {
+      const wrapper = wrapperFrom(argument);
+      if (wrapper === undefined) {
+        ctx.report({
+          file: ctx.fileOf(holder),
+          line: lineOf(at),
+          reason: 'global-wrapper-dynamic',
+          hint: `${name} was given something that does not name a class.`,
+          symbol: argument.getText(),
+        });
+        return;
+      }
+      noteRole(ctx, wrapper.ref, layer);
+      found.push({
+        layer,
+        scope,
+        wrapper: {
+          ref: wrapper.ref,
+          ...(wrapper.factoryArgs === undefined ? {} : { factoryArgs: wrapper.factoryArgs }),
+          line: lineOf(at),
+          text: argument.getText(),
+        },
+        source,
+        file: ctx.fileOf(holder),
+        ...(scope === 'class' ? { owner: holder as ClassDeclaration } : {}),
+        ...(scope === 'method' ? { method: holder as MethodDeclaration } : {}),
+      });
+    };
     for (const [name, layer] of Object.entries(DECORATOR_LAYERS)) {
       for (const decorator of findDecorators(holder, { names: [name], fromModules: NEST_COMMON })) {
-        for (const argument of decorator.getArguments()) {
-          const wrapper = wrapperFrom(argument);
-          if (wrapper === undefined) {
-            ctx.report({
-              file: ctx.fileOf(holder),
-              line: lineOf(argument),
-              reason: 'global-wrapper-dynamic',
-              hint: `${name} was given something that does not name a class.`,
-              symbol: argument.getText(),
-            });
-            continue;
-          }
-          noteRole(ctx, wrapper.ref, layer);
-          found.push({
-            layer,
-            scope,
-            wrapper: {
-              ref: wrapper.ref,
-              ...(wrapper.factoryArgs === undefined ? {} : { factoryArgs: wrapper.factoryArgs }),
-              line: lineOf(argument),
-              text: argument.getText(),
-            },
-            source: name,
-            file: ctx.fileOf(holder),
-            ...(scope === 'class' ? { owner: holder as ClassDeclaration } : {}),
-            ...(scope === 'method' ? { method: holder as MethodDeclaration } : {}),
-          });
+        for (const argument of decorator.getArguments()) apply(name, layer, argument, argument, name);
+      }
+    }
+    // A decorator of the project's own that bundles `UseGuards(...)` with
+    // metadata through `applyDecorators` attaches the same guard as writing it
+    // out. Followed one level, and the line is the one the decorator is written
+    // on, since that is where the route takes it on.
+    for (const decorator of holder.getDecorators()) {
+      for (const inner of composedWrappers(decorator)) {
+        const layer = DECORATOR_LAYERS[inner.name];
+        if (layer === undefined) continue;
+        for (const argument of inner.args) {
+          apply(inner.name, layer, argument, decorator, `${decoratorName(decorator)}:${inner.name}`);
         }
       }
     }

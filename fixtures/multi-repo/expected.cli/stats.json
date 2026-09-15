@@ -3,7 +3,7 @@
     "nodes": 107,
     "edges": 88,
     "types": 10,
-    "unresolved": 6
+    "unresolved": 10
   },
   "nodesByType": {
     "repo": 4,
@@ -50,6 +50,7 @@
     "ambiguous-route-target": 1,
     "di-token-unknown": 1,
     "dynamic-http-url": 1,
+    "route-unguarded": 4,
     "target-route-not-found": 2,
     "unknown-base-url-env": 1
   },
@@ -57,6 +58,7 @@
     "ambiguous-route-target": 1,
     "di-token-unknown": 1,
     "dynamic-http-url": 1,
+    "route-unguarded": 4,
     "target-route-not-found": 2,
     "unknown-base-url-env": 1
   },

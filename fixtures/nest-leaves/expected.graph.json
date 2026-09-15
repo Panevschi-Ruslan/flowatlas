@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-leaves",
-  "generatedAt": "2026-09-09T22:29:14.529Z",
+  "generatedAt": "2026-09-14T12:13:38.120Z",
   "nodes": [
     {
       "id": "cache_op:nest-leaves#src/orders/orders.service.ts:19:12",
@@ -217,7 +217,7 @@
         "path": "/v1/charges",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": "object",
+        "bodyType": "{amount:number}",
         "host": "api.stripe.com"
       }
     },

@@ -8,7 +8,7 @@
   "status": "hash_differs",
   "request": {
     "status": "unchecked",
-    "left": "object",
+    "left": "{orderId:string;amount:number}",
     "right": "type:billing#CreateInvoiceDto",
     "note": "the sending side declares no named type"
   },

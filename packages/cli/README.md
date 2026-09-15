@@ -59,10 +59,10 @@ a five-repository project, with no configuration beyond what `init` writes:
 
 | | first build | after two settings |
 |---|---|---|
-| HTTP routes found | 615 | 615 |
-| Browser requests matched to a route | 333 of 356 | 333 of 356 |
-| Calls between services matched | 0 of 55 | 43 of 55 |
-| Routes something reaches | 322 | 353 |
+| HTTP routes found | 564 | 564 |
+| Browser requests matched to a route | 489 of 495 | 489 of 495 |
+| Calls between services matched | 1 of 61 | 41 of 61 |
+| Routes something reaches | 477 | 502 |
 
 The two settings are `baseUrlEnv`, which tells the tool which settings key
 addresses a service, and `apiTarget`, which says where a frontend's key points.

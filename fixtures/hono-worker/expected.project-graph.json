@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-12T17:47:29.514Z",
+  "builtAt": "2026-09-14T12:37:29.190Z",
   "services": [
     {
       "name": "api",
@@ -16,6 +16,14 @@
     }
   ],
   "nodes": [
+    {
+      "id": "api#src/admin/admin.routes.ts:GET /orders/:orderId@15",
+      "type": "function",
+      "label": "GET /orders/:orderId@15",
+      "repo": "api",
+      "file": "src/admin/admin.routes.ts",
+      "line": 15
+    },
     {
       "id": "api#src/app.module.ts:AppModule",
       "type": "module",
@@ -33,6 +41,14 @@
         ],
         "exports": []
       }
+    },
+    {
+      "id": "api#src/auth/api-key.guard.ts:ApiKeyGuard",
+      "type": "guard",
+      "label": "ApiKeyGuard",
+      "repo": "api",
+      "file": "src/auth/api-key.guard.ts",
+      "line": 9
     },
     {
       "id": "api#src/orders/orders.controller.ts:OrdersController",
@@ -123,12 +139,44 @@
       "line": 11
     },
     {
+      "id": "api#src/worker.ts:DELETE /api/depots/:depotId/cache@42",
+      "type": "function",
+      "label": "DELETE /api/depots/:depotId/cache@42",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 42
+    },
+    {
+      "id": "api#src/worker.ts:GET /health@23",
+      "type": "function",
+      "label": "GET /health@23",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 23
+    },
+    {
+      "id": "api#src/worker.ts:POST /api/messenger/webhook@34",
+      "type": "function",
+      "label": "POST /api/messenger/webhook@34",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 34
+    },
+    {
       "id": "api#src/worker.ts:acceptUpdate",
       "type": "function",
       "label": "acceptUpdate",
       "repo": "api",
       "file": "src/worker.ts",
       "line": 67
+    },
+    {
+      "id": "api#src/worker.ts:boot",
+      "type": "function",
+      "label": "boot",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 78
     },
     {
       "id": "api#src/worker.ts:forwardToNest",
@@ -335,10 +383,11 @@
       "repo": "api",
       "meta": {
         "stats": {
-          "files": 9,
-          "classes": 3,
+          "files": 10,
+          "classes": 4,
           "skippedExternalCalls": {
-            "hono": 13
+            "@nestjs/common": 1,
+            "hono": 15
           }
         },
         "bootstrap": "src/main.ts",
@@ -597,6 +646,27 @@
       "line": 13
     },
     {
+      "from": "api#src/worker.ts:POST /api/messenger/webhook@34",
+      "to": "api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/worker.ts",
+      "line": 37
+    },
+    {
+      "from": "api#src/worker.ts:POST /api/messenger/webhook@34",
+      "to": "api#src/worker.ts:boot",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 35
+    },
+    {
       "from": "api#src/worker.ts:acceptUpdate",
       "to": "api#src/orders/orders.service.ts:OrdersService.cancel",
       "type": "calls",
@@ -618,6 +688,14 @@
       "line": 73
     },
     {
+      "from": "entry:api:http:DELETE:/api/depots/:param/cache",
+      "to": "api#src/worker.ts:DELETE /api/depots/:depotId/cache@42",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 42
+    },
+    {
       "from": "entry:api:http:GET:/api/admin/events",
       "to": "api#src/stream/sse.ts:adminEvents",
       "type": "handles",
@@ -626,12 +704,34 @@
       "line": 24
     },
     {
+      "from": "entry:api:http:GET:/api/admin/orders/:param",
+      "to": "api#src/admin/admin.routes.ts:GET /orders/:orderId@15",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/admin/admin.routes.ts",
+      "line": 15
+    },
+    {
       "from": "entry:api:http:GET:/api/depots/:param/menu-stream",
       "to": "api#src/stream/sse.ts:menuStream",
       "type": "handles",
       "confidence": "static",
       "file": "src/stream/sse.ts",
       "line": 18
+    },
+    {
+      "from": "entry:api:http:GET:/api/depots/:param/orders",
+      "to": "api#src/auth/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 16,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "bootstrap"
+      }
     },
     {
       "from": "entry:api:http:GET:/api/depots/:param/orders",
@@ -657,6 +757,28 @@
       "line": 11
     },
     {
+      "from": "entry:api:http:GET:/health",
+      "to": "api#src/worker.ts:GET /health@23",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 23
+    },
+    {
+      "from": "entry:api:http:POST:/api/depots/:param/orders/:param/cancel",
+      "to": "api#src/auth/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 16,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "bootstrap"
+      }
+    },
+    {
       "from": "entry:api:http:POST:/api/depots/:param/orders/:param/cancel",
       "to": "api#src/orders/orders.controller.ts:OrdersController.cancel",
       "type": "handles",
@@ -671,6 +793,14 @@
       "meta": {
         "params": "{depotId:string;orderId:string}"
       }
+    },
+    {
+      "from": "entry:api:http:POST:/api/messenger/webhook",
+      "to": "api#src/worker.ts:POST /api/messenger/webhook@34",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 34
     },
     {
       "from": "entry:api:http:POST:/internal/reload",
@@ -808,18 +938,6 @@
   },
   "unresolved": [
     {
-      "file": "src/admin/admin.routes.ts",
-      "line": 15,
-      "reason": "route-handler-anonymous",
-      "level": "info",
-      "sites": 4,
-      "message": "4 routes answer with a function written in the declaration, so nothing can be pointed at as the code behind them.",
-      "hint": "Give the handler a name and register that, or have the one written in place return what a single named function answers with.",
-      "symbol": "hono",
-      "adapter": "hono-routes",
-      "service": "api"
-    },
-    {
       "file": "src/admin/reports.routes.ts",
       "line": 12,
       "reason": "route-path-dynamic",
@@ -827,6 +945,15 @@
       "hint": "Mount the application at a literal path, or declare its routes on the application that is served.",
       "symbol": "GET /daily",
       "adapter": "hono-routes",
+      "service": "api"
+    },
+    {
+      "file": "src/worker.ts",
+      "line": 36,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "POST /api/messenger/webhook@34 -> container.get",
       "service": "api"
     },
     {

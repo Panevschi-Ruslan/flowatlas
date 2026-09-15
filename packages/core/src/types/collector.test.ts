@@ -207,3 +207,50 @@ describe('two declarations of one name', () => {
     expect(second).toContain('@');
   });
 });
+
+describe('what a handler actually writes into its answer', () => {
+  const collect = (source: string, strictNullChecks: boolean) => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strictNullChecks } });
+    const file = project.createSourceFile('api.ts', source);
+    const builder = new GraphBuilder({ repo: 'api', generatedAt: '2026-01-01T00:00:00.000Z' });
+    const collector = new TypeCollector({ builder, repo: 'api', report: () => undefined });
+    return (name: string): string =>
+      collector.collectSignature(file.getClassOrThrow('Api').getMethodOrThrow(name)).returns;
+  };
+
+  const SOURCE = `
+export interface Stats { earned: number; redeemed: number }
+export interface Order { id: string; userId: string; note: string | null }
+declare const stats: Stats;
+export class Api {
+  spread() { return { active: true as boolean, ...stats, rate: 0.5 }; }
+  flag() { return { ok: true }; }
+  maybe(on: boolean) { return { id: 'x', ...(on ? { extra: 1 } : {}) }; }
+  partial(body: Partial<Order>): Partial<Order> { return body; }
+  order(): Order { return null as never; }
+}
+`;
+
+  it('keeps the properties written beside a spread, not only what the spread brings', () => {
+    const read = collect(SOURCE, true);
+    expect(read('spread')).toBe('{rate:0.5;earned:number;redeemed:number;active:boolean}');
+  });
+
+  it('keeps the literal a returned object is written with', () => {
+    expect(collect(SOURCE, true)('flag')).toBe('{ok:true}');
+  });
+
+  it('reads a property only one branch of a spread brings in as optional', () => {
+    expect(collect(SOURCE, true)('maybe')).toBe("{extra?:number;id:'x'}");
+  });
+
+  it('reads a mapped optional as optional without strict null checks', () => {
+    expect(collect(SOURCE, false)('partial')).toBe('{id?:string;userId?:string;note?:string|null}');
+  });
+
+  it('keeps a null the declaration writes when the checker folded it away', () => {
+    // Without strict null checks the checker reads `string | null` as `string`.
+    expect(collect(SOURCE, false)('partial')).toContain('note?:string|null');
+    expect(collect(SOURCE, true)('partial')).toContain('note?:null|string');
+  });
+});

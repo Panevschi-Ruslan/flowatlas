@@ -43,9 +43,9 @@ export class OrdersApiService {
   }
 
   /**
-   * The address is put together at run time, so there is nothing to read.
-   * `@flowatlas-calls` on whoever calls it is the fix, which is what `updateStatus`
-   * below does.
+   * The only caller joins the path at run time, so even read from there there is
+   * nothing to read. `@flowatlas-calls` on that caller is the fix, which is what
+   * `updateStatus` below does (a caller writing a template would be followed).
    */
   private send(path: string): Observable<unknown> {
     return this.http.get<unknown>(this.base + path);
@@ -53,7 +53,7 @@ export class OrdersApiService {
 
   /** @flowatlas-calls PATCH /orders/:id/status */
   updateStatus(id: string, status: string): Observable<unknown> {
-    return this.send(`/orders/${id}/status?status=${status}`);
+    return this.send(['', 'orders', id, 'status'].join('/') + `?status=${status}`);
   }
 
   /** @flowatlas-consumes order.updated */

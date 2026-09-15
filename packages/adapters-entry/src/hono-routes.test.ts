@@ -138,7 +138,7 @@ describe('routes declared by calling the application', () => {
     expect(read.entries[0]?.meta?.['middleware']).toEqual(['withNest']);
   });
 
-  it('keeps a route whose handler is written in place, and says so once', () => {
+  it('keeps a route whose handler is written in place, and points at that function', () => {
     const read = extract(`
       import { Hono } from 'hono';
       const app = new Hono();
@@ -146,11 +146,11 @@ describe('routes declared by calling the application', () => {
       app.get('/ready', (c) => c.json({ ok: true }));
     `);
     expect(ids(read)).toEqual(['entry:api:http:GET:/health', 'entry:api:http:GET:/ready']);
-    expect(read.entries[0]?.handler).toBeUndefined();
-    expect(read.unresolved).toHaveLength(1);
-    expect(read.unresolved[0]?.reason).toBe('route-handler-anonymous');
-    expect(read.unresolved[0]?.level).toBe('info');
-    expect(read.unresolved[0]?.sites).toBe(2);
+    // The function written in place is the handler: found again by where it
+    // starts, so a walk from the route goes on into it, and nothing is reported.
+    expect(read.entries[0]?.handler).toMatchObject({ inline: true, label: 'GET /health', line: 4 });
+    expect(read.entries[0]?.meta?.['handlerVia']).toBe('inline');
+    expect(read.unresolved).toEqual([]);
   });
 
   it('follows a handler written in place to the single thing it delegates to', () => {
@@ -189,7 +189,8 @@ describe('routes declared by calling the application', () => {
     `,
       { '/src/boot.ts': 'export async function boot() { return {}; }' },
     );
-    expect(read.entries[0]?.handler).toBeUndefined();
+    // Not the helper: the function written in place, which is what answers.
+    expect(read.entries[0]?.handler).toMatchObject({ inline: true, label: 'POST /webhook' });
     expect(read.entries[0]?.meta?.['handlerVia']).toBe('inline');
   });
 

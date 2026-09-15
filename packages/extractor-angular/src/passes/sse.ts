@@ -1,8 +1,9 @@
-import { makeExternalApiId, makeLeafId, originOfValue, siteOf } from '@flowatlas/core';
-import type { NewExpression, Node as TsNode } from 'ts-morph';
+import { makeExternalApiId, makeLeafId, originOfValue, siteOf, type CallFrame } from '@flowatlas/core';
+import type { MethodDeclaration, NewExpression, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { AngularExtractContext } from '../context.js';
-import { analyzeApiUrl } from '../util/url.js';
+import { noteIfUnreferenced, requestIdOf, requestsOf, wrapperOf, type RequestSite } from '../util/forward.js';
+import type { ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
 
 /** The browser's own client for a stream of server-sent events. */
@@ -37,16 +38,19 @@ const isBrowserClient = (expression: TsNode): boolean => {
  * The verb is never in doubt: the protocol has only one.
  */
 export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
-  const sharedPackages = ctx.config.sharedPackages;
   const apiBaseEnv = ctx.service.apiBaseEnv ?? [];
 
-  const record = (site: NewExpression, methodId: string, file: string): void => {
-    const [urlArg] = site.getArguments();
-    if (urlArg === undefined) return;
-
-    const address = analyzeApiUrl(urlArg, sharedPackages);
+  const record = (
+    network: NewExpression,
+    request: RequestSite,
+    address: ApiUrl,
+    frames: readonly CallFrame[],
+    choice?: string,
+  ): void => {
+    const { call: site, methodId, file } = request;
     const at = siteOf(site);
-    const id = makeLeafId('ui_api_call', ctx.repo, file, at.line, at.column);
+    const leaf = makeLeafId('ui_api_call', ctx.repo, file, at.line, at.column);
+    const id = requestIdOf(leaf, network, { frames, ...(choice === undefined ? {} : { choice }) });
 
     ctx.builder.addNode({
       id,
@@ -70,6 +74,8 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
         via: address.via,
         ...(address.host === null ? {} : { host: address.host }),
         ...(address.guessed ? { guessed: true } : {}),
+        ...(frames.length > 0 ? { through: wrapperOf(network) } : {}),
+        ...(choice === undefined ? {} : { choice }),
       },
     });
     ctx.builder.addEdge({
@@ -124,6 +130,16 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
     }
   };
 
+  /** A stream opened in a wrapper belongs to whoever handed it the address. */
+  const emit = (site: NewExpression, method: MethodDeclaration, at: RequestSite): void => {
+    const [urlArg] = site.getArguments();
+    if (urlArg === undefined) return;
+    for (const request of requestsOf(ctx, urlArg, method, at)) {
+      noteIfUnreferenced(ctx, request.site);
+      record(site, request.site, request.address, request.frames, request.choice);
+    }
+  };
+
   for (const indexed of ctx.classes.all()) {
     if (indexed.role === 'module') continue;
     for (const method of indexed.declaration.getMethods()) {
@@ -140,7 +156,7 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
         if (!Node.isNewExpression(site)) return;
         if (!isBrowserClient(site.getExpression())) return;
         ctx.ensureMethodNode(method);
-        record(site, methodId, indexed.file);
+        emit(site, method as MethodDeclaration, { call: site, methodId, file: indexed.file });
       });
     }
   }

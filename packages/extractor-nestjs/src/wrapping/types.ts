@@ -39,6 +39,8 @@ export interface MiddlewareRoute {
 export interface EntryRecord {
   node: GraphNode;
   kind: EntryKind;
+  /** Answered outside the application, so none of its wrapping applies. */
+  outsideApplication?: boolean;
   /** Full path including any global prefix, for HTTP entries. */
   path?: string;
   /** Path as written on the controller, without the global prefix. */

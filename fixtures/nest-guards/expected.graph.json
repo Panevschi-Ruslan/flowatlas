@@ -1,15 +1,39 @@
 {
   "schemaVersion": 3,
   "repo": "nest-guards",
-  "generatedAt": "2026-09-09T22:29:13.430Z",
+  "generatedAt": "2026-09-14T17:22:55.488Z",
   "nodes": [
+    {
+      "id": "entry:nest-guards:http:GET:/admin/audit",
+      "type": "entry",
+      "label": "GET /admin/audit",
+      "repo": "nest-guards",
+      "file": "src/admin/admin.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/admin/audit",
+        "rawPath": "/admin/audit",
+        "controller": "AdminController",
+        "decorators": [
+          {
+            "name": "StaffOnly",
+            "args": [
+              "manager"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http"
+      }
+    },
     {
       "id": "entry:nest-guards:http:GET:/admin/stats",
       "type": "entry",
       "label": "GET /admin/stats",
       "repo": "nest-guards",
       "file": "src/admin/admin.controller.ts",
-      "line": 6,
+      "line": 8,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -65,7 +89,7 @@
       "label": "POST /orders",
       "repo": "nest-guards",
       "file": "src/orders/orders.controller.ts",
-      "line": 38,
+      "line": 39,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -84,7 +108,29 @@
       "kind": "external",
       "meta": {
         "package": "@nestjs/common",
-        "external": true
+        "external": true,
+        "factoryArgs": [
+          {
+            "whitelist": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-guards#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "pipe",
+      "label": "ValidationPipe({\"whitelist\":true})",
+      "repo": "nest-guards",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true,
+        "factoryArgs": [
+          {
+            "whitelist": true
+          }
+        ]
       }
     },
     {
@@ -135,11 +181,19 @@
       "label": "AdminController",
       "repo": "nest-guards",
       "file": "src/admin/admin.controller.ts",
-      "line": 4,
+      "line": 6,
       "kind": "controller",
       "meta": {
         "module": "AppModule"
       }
+    },
+    {
+      "id": "nest-guards#src/admin/admin.controller.ts:AdminController.audit",
+      "type": "method",
+      "label": "AdminController.audit",
+      "repo": "nest-guards",
+      "file": "src/admin/admin.controller.ts",
+      "line": 14
     },
     {
       "id": "nest-guards#src/admin/admin.controller.ts:AdminController.stats",
@@ -147,7 +201,7 @@
       "label": "AdminController.stats",
       "repo": "nest-guards",
       "file": "src/admin/admin.controller.ts",
-      "line": 6
+      "line": 8
     },
     {
       "id": "nest-guards#src/app.module.ts:AppModule",
@@ -256,7 +310,7 @@
       "label": "OrdersController.create",
       "repo": "nest-guards",
       "file": "src/orders/orders.controller.ts",
-      "line": 38
+      "line": 39
     },
     {
       "id": "nest-guards#src/orders/orders.controller.ts:OrdersController.findAll",
@@ -309,7 +363,7 @@
       "repo": "nest-guards",
       "meta": {
         "stats": {
-          "files": 13,
+          "files": 14,
           "classes": 10,
           "skippedExternalCalls": {
             "@nestjs/common": 8,
@@ -326,6 +380,86 @@
     }
   ],
   "edges": [
+    {
+      "from": "entry:nest-guards:http:GET:/admin/audit",
+      "to": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 10,
+      "meta": {
+        "order": 4,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/admin/audit",
+      "to": "nest-guards#src/admin/admin.controller.ts:AdminController.audit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/admin/admin.controller.ts",
+      "line": 14,
+      "params": [],
+      "returns": "number"
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/admin/audit",
+      "to": "nest-guards#src/app.module.ts:requestIdMiddleware",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 27,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "configure"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/admin/audit",
+      "to": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "guard",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/admin/audit",
+      "to": "nest-guards#src/guards/roles.guard.ts:RolesGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/admin/admin.controller.ts",
+      "line": 15,
+      "meta": {
+        "order": 2,
+        "scope": "method",
+        "layer": "guard",
+        "source": "StaffOnly:UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/admin/audit",
+      "to": "nest-guards#src/interceptors/metrics.interceptor.ts:MetricsInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 20,
+      "meta": {
+        "order": 3,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "APP_INTERCEPTOR"
+      }
+    },
     {
       "from": "entry:nest-guards:http:GET:/admin/stats",
       "to": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
@@ -346,7 +480,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/admin/admin.controller.ts",
-      "line": 6,
+      "line": 8,
       "params": [],
       "returns": "number"
     },
@@ -650,6 +784,20 @@
     },
     {
       "from": "entry:nest-guards:http:POST:/orders",
+      "to": "nest-guards#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 40,
+      "meta": {
+        "order": 7,
+        "scope": "method",
+        "layer": "pipe",
+        "source": "UsePipes"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:POST:/orders",
       "to": "nest-guards#node_modules/@nestjs/passport:AuthGuard(\"jwt\")",
       "type": "guarded_by",
       "confidence": "static",
@@ -738,7 +886,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 38,
+      "line": 39,
       "params": [],
       "returns": "string"
     },
@@ -764,7 +912,7 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 40,
+      "line": 42,
       "params": [],
       "returns": "string"
     },

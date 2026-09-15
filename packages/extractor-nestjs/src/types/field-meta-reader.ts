@@ -25,7 +25,7 @@ const TRANSFORMER_PACKAGE = 'class-transformer';
  */
 const VALIDATOR_NAMES = new Set([
   'Allow', 'Equals', 'IsDefined', 'IsEmpty', 'IsIn', 'IsNotEmpty', 'IsNotIn', 'IsOptional',
-  'NotEquals', 'ValidateBy', 'ValidateIf', 'ValidateNested', 'ValidatePromise',
+  'NotEquals', 'Validate', 'ValidateBy', 'ValidateIf', 'ValidateNested', 'ValidatePromise',
   'IsArray', 'IsBoolean', 'IsDate', 'IsEnum', 'IsInt', 'IsNumber', 'IsObject', 'IsString',
   'IsDivisibleBy', 'IsNegative', 'IsPositive', 'Max', 'Min', 'MaxDate', 'MinDate',
   'IsBooleanString', 'IsDateString', 'IsNumberString',
@@ -120,8 +120,14 @@ export const createNestFieldMetaReader = (
       }
 
       // From the library itself, every decorator counts. From a source that
-      // cannot be read, only the ones the list knows.
-      if (source !== 'validator' && !VALIDATOR_NAMES.has(name)) continue;
+      // cannot be read, only the ones the list knows — but one it does not know
+      // may be a validator of the project's own, built with `registerDecorator`,
+      // and saying so keeps a check about validation from assuming there is none.
+      if (source !== 'validator' && !VALIDATOR_NAMES.has(name)) {
+        const seen = Array.isArray(meta['unclassified']) ? (meta['unclassified'] as string[]) : [];
+        meta['unclassified'] = [...seen, name];
+        continue;
+      }
       validators.push(name);
       if (name === 'IsOptional') optional = true;
       if (name === 'ValidateNested') meta['validateNested'] = true;
