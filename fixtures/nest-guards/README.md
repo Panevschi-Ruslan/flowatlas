@@ -44,11 +44,18 @@ factory guard (§D9) and gets its own node keyed by `(class, args)`.
   `ValidationPipe`; `LoggerMiddleware` still applies (`forRoutes('orders')`
   matches `/orders` and `/orders/*`), `requestIdMiddleware` does not
   (`.exclude('orders/health')`).
-- `POST /orders` — same as `/orders/health`.
+- `POST /orders` — same as `/orders/health`, plus a method-level pipe built in
+  place, `@UsePipes(new ValidationPipe({ whitelist: true }))`: its own node
+  `…ValidationPipe({"whitelist":true})` with `meta.factoryArgs`, the same way
+  `new` is read in `main.ts`.
 - `GET /admin/stats` — `requestIdMiddleware` (layer `middleware`, scope `route`,
   `order: 0`, from `{ path: 'admin/*', method: RequestMethod.ALL }`), then
   `ApiKeyGuard`, `MetricsInterceptor`, `ValidationPipe` (global). No
   `LoggerMiddleware`: `forRoutes('orders')` does not match `/admin/*`.
+- `GET /admin/audit` — as `/admin/stats`, plus `RolesGuard` (layer `guard`, scope
+  `method`, `meta.source: 'StaffOnly:UseGuards'`). `@StaffOnly('manager')` is a
+  decorator of the project's own returning
+  `applyDecorators(SetMetadata(...), UseGuards(RolesGuard))`, followed one level.
 
 ## Notes
 

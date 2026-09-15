@@ -1,8 +1,16 @@
 {
   "schemaVersion": 3,
   "repo": "bot-registry",
-  "generatedAt": "2026-09-10T16:11:34.504Z",
+  "generatedAt": "2026-09-14T12:37:27.266Z",
   "nodes": [
+    {
+      "id": "bot-registry#src/actions/cancel-order.action.ts:callbacks:keep_order@19",
+      "type": "function",
+      "label": "callbacks:keep_order@19",
+      "repo": "bot-registry",
+      "file": "src/actions/cancel-order.action.ts",
+      "line": 19
+    },
     {
       "id": "bot-registry#src/actions/cancel-order.action.ts:confirmCancelHandler",
       "type": "function",
@@ -73,12 +81,20 @@
       "line": 21
     },
     {
-      "id": "bot-registry#src/commands/menu.command.ts:registerMenuHandlers",
+      "id": "bot-registry#src/bot.ts:on callback_query@25",
       "type": "function",
-      "label": "registerMenuHandlers",
+      "label": "on callback_query@25",
+      "repo": "bot-registry",
+      "file": "src/bot.ts",
+      "line": 25
+    },
+    {
+      "id": "bot-registry#src/commands/menu.command.ts:action back_to_main@14",
+      "type": "function",
+      "label": "action back_to_main@14",
       "repo": "bot-registry",
       "file": "src/commands/menu.command.ts",
-      "line": 11
+      "line": 14
     },
     {
       "id": "bot-registry#src/commands/menu.command.ts:showMenu",
@@ -129,7 +145,7 @@
         "adapter": "telegraf-calls",
         "registration": "action",
         "trigger": "'back_to_main'",
-        "handlerVia": "registration"
+        "handlerVia": "inline"
       }
     },
     {
@@ -161,7 +177,7 @@
         "adapter": "entry-registries",
         "registry": "callbacks",
         "registration": "callbackRegistry.register",
-        "handlerVia": "anonymous"
+        "handlerVia": "inline"
       }
     },
     {
@@ -227,7 +243,7 @@
         "registration": "on",
         "trigger": "'callback_query'",
         "updateClass": "Bot",
-        "handlerVia": "registration"
+        "handlerVia": "inline"
       }
     },
     {
@@ -240,7 +256,7 @@
           "files": 9,
           "classes": 3,
           "skippedExternalCalls": {
-            "telegraf": 4
+            "telegraf": 2
           }
         },
         "bootstrap": "src/main.ts",
@@ -255,6 +271,18 @@
     }
   ],
   "edges": [
+    {
+      "from": "bot-registry#src/actions/cancel-order.action.ts:callbacks:keep_order@19",
+      "to": "bot-registry#src/orders.service.ts:OrdersService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/actions/cancel-order.action.ts",
+      "line": 20,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
     {
       "from": "bot-registry#src/actions/cancel-order.action.ts:confirmCancelHandler",
       "to": "bot-registry#src/orders.service.ts:OrdersService.cancel",
@@ -318,15 +346,7 @@
       "returns": "string"
     },
     {
-      "from": "bot-registry#src/commands/menu.command.ts:registerMenuHandlers",
-      "to": "bot-registry#src/commands/menu.command.ts:showMenu",
-      "type": "calls",
-      "confidence": "static",
-      "file": "src/commands/menu.command.ts",
-      "line": 12
-    },
-    {
-      "from": "bot-registry#src/commands/menu.command.ts:registerMenuHandlers",
+      "from": "bot-registry#src/commands/menu.command.ts:action back_to_main@14",
       "to": "bot-registry#src/orders.service.ts:OrdersService.find",
       "type": "calls",
       "confidence": "static",
@@ -351,11 +371,11 @@
     },
     {
       "from": "entry:bot-registry:bot_callback:back_to_main",
-      "to": "bot-registry#src/commands/menu.command.ts:registerMenuHandlers",
+      "to": "bot-registry#src/commands/menu.command.ts:action back_to_main@14",
       "type": "handles",
       "confidence": "static",
       "file": "src/commands/menu.command.ts",
-      "line": 11
+      "line": 14
     },
     {
       "from": "entry:bot-registry:bot_callback:confirm_cancel",
@@ -364,6 +384,14 @@
       "confidence": "static",
       "file": "src/actions/cancel-order.action.ts",
       "line": 5
+    },
+    {
+      "from": "entry:bot-registry:bot_callback:keep_order",
+      "to": "bot-registry#src/actions/cancel-order.action.ts:callbacks:keep_order@19",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/actions/cancel-order.action.ts",
+      "line": 19
     },
     {
       "from": "entry:bot-registry:bot_callback:view_order",
@@ -393,25 +421,15 @@
     },
     {
       "from": "entry:bot-registry:bot_event:callback_query",
-      "to": "bot-registry#src/bot.ts:Bot.setup",
+      "to": "bot-registry#src/bot.ts:on callback_query@25",
       "type": "handles",
       "confidence": "static",
       "file": "src/bot.ts",
-      "line": 21,
-      "params": [],
-      "returns": "void"
+      "line": 25
     }
   ],
   "types": {},
   "unresolved": [
-    {
-      "file": "src/actions/cancel-order.action.ts",
-      "line": 19,
-      "reason": "registry-handler-anonymous",
-      "hint": "Give the handler a name and register that, so the code behind this can be pointed at.",
-      "symbol": "callbacks:keep_order",
-      "adapter": "entry-registries"
-    },
     {
       "file": "src/actions/cancel-order.action.ts",
       "line": 24,
@@ -426,7 +444,8 @@
       "reason": "call-dynamic-receiver",
       "level": "info",
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
-      "symbol": "Bot.setup -> callbackRegistry.dispatch"
+      "symbol": "Bot.setup -> callbackRegistry.dispatch",
+      "sites": 2
     },
     {
       "file": "src/handlers/text-registry.ts",

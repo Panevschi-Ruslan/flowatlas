@@ -136,6 +136,10 @@ export const wrappingEdgesPass = definePass('wrapping-edges', (ctx: NestExtractC
   const { globals, byClass, byMethod, middleware } = ctx.wrapping;
 
   for (const entry of ctx.entries) {
+    // A route a worker answers before the application, or an update a bot
+    // library dispatches itself, never passes through the application's guards.
+    // Drawing them would say a route is protected by a check that never runs.
+    if (entry.outsideApplication === true) continue;
     const applications: WrapperApplication[] = [];
 
     for (const application of middleware) {

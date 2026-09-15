@@ -54,6 +54,10 @@ describe('parseConfig', () => {
       },
       doctor: {
         ignoreReasons: [],
+        publicDecorators: ['Public', 'IsPublic', 'AllowAnonymous', 'SkipAuth'],
+        publicRoutes: [],
+        nonGateWrappers: ['ThrottlerGuard'],
+        skipGuardDecorators: {},
         markers: { warnAsError: false },
       },
     });

@@ -106,6 +106,22 @@ interface Verdict {
 }
 
 /**
+ * Whether a route runs a validation pipe that strips undecorated properties.
+ *
+ * Read from what the build recorded about the route's wrapping: a pipe named
+ * `ValidationPipe` configured with `whitelist: true`, wherever it was attached.
+ * A pipe whose options could not be read says nothing, and nothing is assumed.
+ */
+const stripsUndecorated = (lookup: GraphLookup, entryId: string): boolean =>
+  lookup.edgesFrom(entryId, ['guarded_by']).some((edge) => {
+    if (edge.meta?.['layer'] !== 'pipe') return false;
+    const pipe = lookup.node(edge.to);
+    if (pipe === undefined || !pipe.label.startsWith('ValidationPipe')) return false;
+    const [options] = Array.isArray(pipe.meta?.['factoryArgs']) ? (pipe.meta['factoryArgs'] as unknown[]) : [];
+    return typeof options === 'object' && options !== null && (options as { whitelist?: unknown }).whitelist === true;
+  });
+
+/**
  * How well the two ends of one exchange agree.
  *
  * The order is the plan's: whether the two are the same declaration at all,
@@ -169,11 +185,13 @@ const judge = (lookup: GraphLookup, exchange: Exchange, options: CheckOptions): 
     }
   }
 
+  const whitelist = exchange.direction === 'request' && stripsUndecorated(lookup, exchange.edge.to);
   const compare = (status: ContractStatus): Verdict => ({
     status,
     ...diffRefs(parse(sentRef), parse(wantRef), (id) => lookup.type(id), {
       depth: options.depth ?? DEFAULT_DEPTH,
       ...(options.disableRules === undefined ? {} : { disableRules: options.disableRules }),
+      ...(whitelist ? { whitelist } : {}),
     }),
   });
 
@@ -253,12 +271,36 @@ const excusedBy = (
   return null;
 };
 
+/**
+ * The method in a browser application that makes a request nothing reaches.
+ *
+ * A method nothing in its repository names — not a method, a constructor, an
+ * initializer, a template or a function — is not code that runs, and a
+ * disagreement found on it is one nobody meets. It is still worth a line, but
+ * not a failed build. The graph's own call edges cannot answer this, since they
+ * are only drawn from methods, so the extractor asks the compiler and marks the
+ * method `unreferenced`; nothing unmarked is ever softened.
+ */
+const unreachedCaller = (lookup: GraphLookup, exchange: Exchange): string | null => {
+  if (exchange.edge.type !== 'hits') return null;
+  const [caller] = exchange.symbols;
+  if (caller === undefined) return null;
+  if (lookup.node(caller)?.meta?.['unreferenced'] !== true) return null;
+  // A template names a method without the compiler seeing it; the graph does,
+  // so anything reaching the method in the graph keeps the finding an error.
+  return lookup.edgesTo(caller).length === 0 ? caller : null;
+};
+
 const findingOf = (
   exchange: Exchange,
   diff: FieldDiff,
   ignoredBy: string | null,
+  unreached: string | null = null,
 ): ContractFinding => ({
-  severity: severityOf(diff.kind, diff.rule),
+  severity:
+    unreached !== null && severityOf(diff.kind, diff.rule) === 'error'
+      ? 'warning'
+      : severityOf(diff.kind, diff.rule),
   kind: diff.kind,
   edge: exchange.edge,
   edgeKey: exchange.edgeKey,
@@ -270,10 +312,11 @@ const findingOf = (
   expected: diff.expected,
   actual: diff.actual,
   rule: diff.rule,
-  message: describeDiff(diff, {
-    sender: exchange.sender.service,
-    receiver: exchange.receiver.service,
-  }),
+  message:
+    describeDiff(diff, {
+      sender: exchange.sender.service,
+      receiver: exchange.receiver.service,
+    }) + (unreached === null ? '' : `; nothing in the project calls ${unreached}`),
   ignored: ignoredBy !== null,
   ignoredBy,
 });
@@ -314,7 +357,8 @@ export const checkContracts = (
     }
 
     const ignoredBy = excusedBy(lookup, exchange, options);
-    const found = verdict.diffs.map((diff) => findingOf(exchange, diff, ignoredBy));
+    const unreached = unreachedCaller(lookup, exchange);
+    const found = verdict.diffs.map((diff) => findingOf(exchange, diff, ignoredBy, unreached));
     edges.push({
       edge: exchange.edge,
       edgeKey: exchange.edgeKey,

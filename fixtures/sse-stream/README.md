@@ -48,7 +48,7 @@ edge across it would be a guess.
 | Site | Line | `path` | Joined | `ui.byReason` |
 |---|---|---|---|---|
 | `new EventSource(url)`, address in one template | `live-events.service.ts:29` | `/depots/:param/events` | route on `api`, static | — |
-| the same with `+ ?token=${…}` | `live-events.service.ts:48` | ends in a hole | no | `api-path-partly-read` |
+| the same with `+ ?token=${…}` | `live-events.service.ts:48` | `/depots/:param/events` | route on `api`, static | — |
 | `new EventSource(url)`, `url` a parameter | `stream-wrapper.service.ts:17` | `null` | no | `api-path-dynamic` |
 | `new EventSource(frames)`, class declared here | `replay.service.ts:23` | — | — | nothing at all |
 
@@ -57,10 +57,9 @@ Every one is `kind: "sse"` with `meta.method: "GET"` — the protocol has one ve
 browser's own rather than a package's.
 
 Line 48 is the shape every one of these is written in, because the client cannot
-set headers and the credentials have to ride in the query string. The query is
-not part of the route, but a `+` whose right-hand side cannot be read collapses
-whole and takes the `?` with it, so there is nothing left to cut the path at. The
-address reader owns that, not this pass; the R08 log names the line.
+set headers and the credentials have to ride in the query string. The right-hand
+side of the `+` cannot be read, but it opens with `?`, so whatever it holds is a
+query string and no part of the route: the path ends where the query begins.
 
 Line 23 is the precision case. The name alone proves nothing: `EventSource`
 declared in the repository is something else, and must produce no request and no

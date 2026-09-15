@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-10T21:22:24.560Z",
+  "builtAt": "2026-09-14T12:22:45.781Z",
   "configHash": "9376cf8f01b0",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 753
+      "durationMs": 0
     },
     {
       "name": "gateway",
@@ -23,7 +23,7 @@
       "edges": 15,
       "types": 2,
       "unresolved": 5,
-      "durationMs": 811
+      "durationMs": 0
     },
     {
       "name": "orders",
@@ -34,7 +34,7 @@
       "edges": 29,
       "types": 3,
       "unresolved": 9,
-      "durationMs": 785
+      "durationMs": 0
     }
   ],
   "httpOut": {
@@ -109,12 +109,39 @@
       "message": "no service declares LEGACY_URL",
       "hint": "Add LEGACY_URL to services[].baseUrlEnv of whichever service answers it.",
       "symbol": "http_out:gateway#src/clients/orders.client.ts:66:12"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11,
+      "reason": "route-unguarded",
+      "message": "POST /orders has no guard in front of it and reaches Order.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "POST /orders"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 16,
+      "reason": "route-unguarded",
+      "message": "POST /orders/legacy has no guard in front of it and reaches Order.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "POST /orders/legacy"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 21,
+      "reason": "route-unguarded",
+      "message": "GET /orders/:param has no guard in front of it and reaches Order.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "GET /orders/:param"
     }
   ],
   "totals": {
     "nodes": 65,
     "edges": 53,
     "types": 6,
-    "unresolved": 18
+    "unresolved": 21
   }
 }

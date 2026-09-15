@@ -1,4 +1,4 @@
-import { choosesASegment, holeIn, normalizePath, UNREAD_SPAN } from '@flowatlas/core';
+import { choosesASegment, constantPropertyValue, holeIn, normalizePath, UNREAD_SPAN } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { evaluateExpression } from '@flowatlas/extractor-nestjs';
@@ -94,7 +94,10 @@ export const analyzeUrl = (node: TsNode): UrlInfo => {
     if (span === undefined) continue;
     const value = evaluateExpression(span.getExpression());
     const text = span.getLiteral().getLiteralText();
-    const read = value.resolved && typeof value.value === 'string' ? value.value : null;
+    const read =
+      value.resolved && typeof value.value === 'string'
+        ? value.value
+        : constantPropertyValue(span.getExpression(), { allowHost: index === 0 && rest === '' });
     // A hole that fills a segment is a route parameter; one that could run over
     // a separator is a hole in what was read, and the address it sits in matches
     // no route at all. Both used to become `:param`, which is how an address

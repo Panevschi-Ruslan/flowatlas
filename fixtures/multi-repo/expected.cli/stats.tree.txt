@@ -1,4 +1,4 @@
-107 nodes, 88 edges, 10 types, 6 unresolved
+107 nodes, 88 edges, 10 types, 10 unresolved
 
 nodes by type
   repo          4
@@ -45,6 +45,7 @@ unresolved by reason, counted by site
   ambiguous-route-target  1
   di-token-unknown        1
   dynamic-http-url        1
+  route-unguarded         4
   target-route-not-found  2
   unknown-base-url-env    1
 

@@ -1,0 +1,11 @@
+{
+  "services": [
+    {
+      "name": "angular-client-wrapper",
+      "repo": ".",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"]
+    }
+  ],
+  "output": ".flowatlas"
+}

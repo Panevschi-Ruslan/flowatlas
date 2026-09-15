@@ -396,12 +396,60 @@ export class OpenApi extends BaseApi {
 
   it('will not call a lookup a route parameter either', () => {
     const graph = extract(`
-  private readonly paths = { item: 'menu-items', group: 'groups' } as const;
-  a(kind: 'item' | 'group', id: string): Observable<OrderDto> {
-    return this.http.get<OrderDto>(\`\${environment.apiUrl}/admin/\${this.paths[kind]}/\${id}\`);
+  a(paths: Record<string, string>, kind: string, id: string): Observable<OrderDto> {
+    return this.http.get<OrderDto>(\`\${environment.apiUrl}/admin/\${paths[kind]}/\${id}\`);
   }
 `);
     expect(only(graph).meta?.['path']).toBe('/admin/${…}/:param');
+  });
+
+  it('reads a lookup into a table written down as one request per entry it can name', () => {
+    const graph = extract(`
+  private readonly paths = { item: 'parcels', group: 'groups', zone: 'zones' } as const;
+  a(kind: 'item' | 'group', id: string): Observable<OrderDto> {
+    const path = this.paths[kind];
+    return this.http.get<OrderDto>(\`\${environment.apiUrl}/admin/\${path}/\${id}\`);
+  }
+`);
+    const calls = callsOf(graph);
+    expect(calls.map((call) => call.meta?.['path']).sort()).toEqual([
+      '/admin/groups/:param',
+      '/admin/parcels/:param',
+    ]);
+    // One of them per run, and nothing says which: each is a guess.
+    expect(calls.every((call) => call.meta?.['guessed'] === true)).toBe(true);
+    expect(new Set(calls.map((call) => call.id)).size).toBe(2);
+  });
+
+  it('reads a table kept in a module constant through a wrapper', () => {
+    const graph = extract(
+      '',
+      {},
+      `
+const ENTITY_PATH: Record<'item' | 'category', string> = { item: 'parcels', category: 'categories' };
+@Injectable({ providedIn: 'root' })
+export class Crate {
+  private readonly api = environment.apiUrl;
+  constructor(private readonly http: HttpClient) {}
+  set(rid: string, type: 'item' | 'category', id: string): Observable<unknown> {
+    const path = ENTITY_PATH[type];
+    return this.http.put(\`\${this.api}/admin/\${rid}/\${path}/\${id}/crates\`, {});
+  }
+}
+@Injectable({ providedIn: 'root' })
+export class Tab {
+  constructor(private readonly l10n: Crate, private type: 'item' | 'category') {}
+  save(): void { this.l10n.set('r', this.type, 'x'); }
+}
+`,
+    );
+    const calls = callsOf(graph);
+    expect(calls.map((call) => call.meta?.['path']).sort()).toEqual([
+      '/admin/:param/categories/:param/crates',
+      '/admin/:param/parcels/:param/crates',
+    ]);
+    // The lookup settles it where the request is written, so it stays there.
+    expect(graph.edges.filter((edge) => calls.some((call) => call.id === edge.to)).every((edge) => edge.from.includes('Crate.set'))).toBe(true);
   });
 
   it('keeps calling a value a route parameter, whatever wraps it', () => {
@@ -414,3 +462,285 @@ export class OpenApi extends BaseApi {
   });
 });
 
+
+const PASS_THROUGH = `
+export interface RequestOpts { params?: Record<string, string | undefined> }
+
+@Injectable({ providedIn: 'root' })
+export class ApiClient {
+  readonly base = environment.apiUrl;
+  constructor(private readonly http: HttpClient) {}
+  get<T>(path: string, opts?: RequestOpts): Observable<T> {
+    return this.http.get<T>(this.url(path, opts));
+  }
+  post<T>(path: string, body?: unknown, opts?: RequestOpts): Observable<T> {
+    return this.http.post<T>(this.url(path, opts), body ?? {});
+  }
+  private url(path: string, opts?: RequestOpts): string {
+    return \`\${this.base}\${path}\${opts?.params ? this.query(opts.params) : ''}\`;
+  }
+  private query(params: Record<string, string | undefined>): string {
+    const s = new URLSearchParams(params as Record<string, string>).toString();
+    return s ? \`?\${s}\` : '';
+  }
+}
+`;
+
+const TEMPLATE_METHOD = `
+export abstract class AdminBase {
+  protected baseUrl = environment.apiUrl || 'http://localhost:3000';
+  constructor(protected readonly http: HttpClient) {}
+  protected abstract getResourcePath(): string;
+  protected requestWithTenant<T>(fn: (tenantId: string) => Observable<T>): Observable<T> {
+    return fn('t1');
+  }
+  protected buildUrl(tenantId: string, path: string = ''): string {
+    const resourcePath = this.getResourcePath();
+    const basePath = \`\${this.baseUrl}/admin/\${tenantId}/\${resourcePath}\`;
+    return path ? \`\${basePath}/\${path}\` : basePath;
+  }
+  protected get<T>(path: string = ''): Observable<T> {
+    return this.requestWithTenant((tenantId) => this.http.get<T>(this.buildUrl(tenantId, path)));
+  }
+  protected post<T>(path: string, body: unknown): Observable<T> {
+    return this.requestWithTenant((tenantId) => this.http.post<T>(this.buildUrl(tenantId, path), body));
+  }
+  /** Deleting is a post to the item's own delete action. */
+  protected delete(path: string): Observable<void> {
+    return this.requestWithTenant((tenantId) =>
+      this.http.post<void>(this.buildUrl(tenantId, \`\${path}/delete\`), {}),
+    );
+  }
+  protected postAction<T>(path: string, body: unknown): Observable<T> {
+    return this.post<T>(path, body);
+  }
+  protected getWithParams<T>(path: string, params: Record<string, string>): Observable<T> {
+    return this.requestWithTenant((tenantId) => {
+      let url = this.buildUrl(tenantId, path);
+      const query = new URLSearchParams(params).toString();
+      if (query) {
+        url += \`?\${query}\`;
+      }
+      return this.http.get<T>(url);
+    });
+  }
+}
+`;
+
+describe('a request made through a wrapper', () => {
+  it('reads the request at every call site of a client that takes the path', () => {
+    const graph = extract(
+      '',
+      {},
+      `${PASS_THROUGH}
+@Injectable({ providedIn: 'root' })
+export class DealsClient {
+  constructor(private readonly api: ApiClient) {}
+  deals(): Observable<OrderDto[]> { return this.api.get<OrderDto[]>('/telegram/me/deals'); }
+  one(id: string): Observable<OrderDto> {
+    return this.api.get<OrderDto>(\`/telegram/deals/\${id}\`, { params: { lang: 'en' } });
+  }
+  claim(id: string, body: CreateOrderDto): Observable<OrderDto> {
+    return this.api.post<OrderDto>(\`/telegram/deals/\${id}/claim\`, body);
+  }
+}
+`,
+    );
+    const calls = callsOf(graph);
+    expect(calls.map((call) => `${String(call.meta?.['method'])} ${String(call.meta?.['path'])}`).sort()).toEqual([
+      'GET /telegram/deals/:param',
+      'GET /telegram/me/deals',
+      'POST /telegram/deals/:param/claim',
+    ]);
+    expect(calls.every((call) => call.meta?.['baseUrlEnv'] === 'apiUrl')).toBe(true);
+    expect(calls.every((call) => call.file === 'orders-api.service.ts')).toBe(true);
+    // Attributed to the method that decided the address, not to the wrapper.
+    const claim = calls.find((call) => call.meta?.['method'] === 'POST');
+    expect(graph.edges.find((edge) => edge.to === claim?.id)?.from).toContain('DealsClient.claim');
+    expect(claim?.meta).toMatchObject({
+      bodyType: 'type:web#CreateOrderDto',
+      responseType: 'type:web#OrderDto',
+      through: 'ApiClient.post',
+    });
+    expect(reasons(graph)).toEqual([]);
+  });
+
+  it('answers an abstract resource with the subclass that calls the base helper', () => {
+    const graph = extract(
+      '',
+      {},
+      `${TEMPLATE_METHOD}
+@Injectable({ providedIn: 'root' })
+export class ItemsApi extends AdminBase {
+  protected getResourcePath(): string { return 'parcels'; }
+  list(): Observable<OrderDto[]> { return this.get<OrderDto[]>(); }
+  one(id: string): Observable<OrderDto> { return this.get<OrderDto>(id); }
+  remove(id: string): Observable<void> { return this.delete(id); }
+  pause(id: string): Observable<OrderDto> { return this.postAction<OrderDto>(\`\${id}/pause\`, {}); }
+  log(page: number): Observable<OrderDto[]> { return this.getWithParams<OrderDto[]>('chat-log', { page: String(page) }); }
+}
+@Injectable({ providedIn: 'root' })
+export class TablesApi extends AdminBase {
+  protected getResourcePath(): string { return 'tables'; }
+  remove(id: string): Observable<void> { return this.delete(id); }
+}
+`,
+    );
+    expect(callsOf(graph).map((call) => `${String(call.meta?.['method'])} ${String(call.meta?.['path'])}`).sort()).toEqual([
+      'GET /admin/:param/parcels',
+      'GET /admin/:param/parcels/:param',
+      'GET /admin/:param/parcels/chat-log',
+      // The base's delete is a post to `<path>/delete`, whatever its name says.
+      'POST /admin/:param/parcels/:param/delete',
+      'POST /admin/:param/parcels/:param/pause',
+      'POST /admin/:param/tables/:param/delete',
+    ]);
+    const pause = callsOf(graph).find((call) => String(call.meta?.['path']).endsWith('/pause'));
+    expect(graph.edges.find((edge) => edge.to === pause?.id)?.from).toContain('ItemsApi.pause');
+  });
+
+  it('leaves a request whose path is a value where it is written', () => {
+    const graph = extract(
+      `  a(id: string): Observable<OrderDto> { return this.http.get<OrderDto>(\`\${environment.apiUrl}/orders/\${id}\`); }`,
+      {},
+      `
+@Injectable({ providedIn: 'root' })
+export class Screen {
+  constructor(private readonly orders: OrdersApiService) {}
+  open(): void { this.orders.a('o1'); }
+}
+`,
+    );
+    expect(graph.edges.find((edge) => edge.to === only(graph).id)?.from).toContain('OrdersApiService.a');
+  });
+
+  it('keeps both requests of a wrapper that writes two, each a guess', () => {
+    const graph = extract(
+      '',
+      {},
+      `
+@Injectable({ providedIn: 'root' })
+export class SaveClient {
+  private readonly base = environment.apiUrl;
+  constructor(private readonly http: HttpClient) {}
+  save(path: string, body: CreateOrderDto, id?: string): Observable<OrderDto> {
+    return id
+      ? this.http.put<OrderDto>(\`\${this.base}\${path}/\${id}\`, body)
+      : this.http.post<OrderDto>(\`\${this.base}\${path}\`, body);
+  }
+}
+@Injectable({ providedIn: 'root' })
+export class Items {
+  constructor(private readonly client: SaveClient) {}
+  create(body: CreateOrderDto): Observable<OrderDto> { return this.client.save('/items', body); }
+}
+`,
+    );
+    const calls = callsOf(graph);
+    expect(calls.map((call) => `${String(call.meta?.['method'])} ${String(call.meta?.['path'])}`).sort()).toEqual([
+      'POST /items',
+      'PUT /items/:param',
+    ]);
+    expect(new Set(calls.map((call) => call.id)).size).toBe(2);
+    expect(calls.every((call) => call.meta?.['guessed'] === true)).toBe(true);
+  });
+
+  it('keeps the wrapper row when a caller sits outside any method', () => {
+    const graph = extract(
+      '',
+      {},
+      `${PASS_THROUGH}
+@Injectable({ providedIn: 'root' })
+export class EarlyClient {
+  readonly early: Observable<OrderDto[]>;
+  constructor(private readonly api: ApiClient) {
+    this.early = this.api.get<OrderDto[]>('/ctor/call');
+  }
+}
+`,
+    );
+    expect(callsOf(graph).map((call) => call.meta?.['path'])).toEqual([null, null]);
+    expect(reasons(graph).filter((reason) => reason === 'api-path-dynamic')).toHaveLength(2);
+  });
+
+  it('keeps the wrapper request when nothing calls the wrapper', () => {
+    const graph = extract('', {}, PASS_THROUGH);
+    expect(callsOf(graph)).toHaveLength(2);
+    expect(callsOf(graph).map((call) => call.meta?.['path'])).toEqual([null, null]);
+    expect(reasons(graph).filter((reason) => reason.startsWith('api-'))).toEqual(['api-path-dynamic', 'api-path-dynamic']);
+  });
+});
+
+describe('an address another service assembles', () => {
+  it('is read through the helper on the injected service, in that service', () => {
+    const graph = extract(
+      '',
+      {},
+      `
+@Injectable({ providedIn: 'root' })
+export class ExportUrls {
+  private readonly api = environment.apiUrl;
+  csvUrl(rid: string, locales: string[] = []): string {
+    const qs = new URLSearchParams({ locales: locales.join(',') }).toString();
+    return \`\${this.api}/admin/\${rid}/translations/export.csv\${qs ? \`?\${qs}\` : ''}\`;
+  }
+}
+@Injectable({ providedIn: 'root' })
+export class TranslationsPage {
+  constructor(private readonly http: HttpClient, private readonly urls: ExportUrls) {}
+  download(rid: string): Observable<string> { return this.http.get<string>(this.urls.csvUrl(rid)); }
+}
+`,
+    );
+    expect(only(graph).meta).toMatchObject({
+      path: '/admin/:param/translations/export.csv',
+      baseUrlEnv: 'apiUrl',
+    });
+  });
+});
+
+describe('a query string at the end of an address', () => {
+  it('is no part of the route when it is only ever empty or opens with ?', () => {
+    const graph = extract(`
+  private qs(filters?: Record<string, string>): string {
+    if (!filters) return '';
+    const s = new URLSearchParams(filters).toString();
+    return s ? \`?\${s}\` : '';
+  }
+  a(filters?: Record<string, string>): Observable<OrderDto[]> {
+    const query = this.qs(filters);
+    return this.http.get<OrderDto[]>(\`\${environment.apiUrl}/reviews\${query}\`);
+  }
+`);
+    expect(only(graph).meta?.['path']).toBe('/reviews');
+  });
+
+  it('stays a hole when it could be anything', () => {
+    const graph = extract(`
+  a(tail: string): Observable<OrderDto[]> { return this.http.get<OrderDto[]>(\`\${environment.apiUrl}/reviews\${tail}\`); }
+`);
+    expect(only(graph).meta?.['path']).toBe('/reviews${…}');
+  });
+});
+
+describe('a method nothing names', () => {
+  it('is marked unreferenced, and one a constructor calls is not', () => {
+    const graph = extract(
+      `
+  a(): Observable<OrderDto> { return this.http.get<OrderDto>(\`\${environment.apiUrl}/a\`); }
+  b(): Observable<OrderDto> { return this.http.get<OrderDto>(\`\${environment.apiUrl}/b\`); }
+`,
+      {},
+      `
+@Injectable({ providedIn: 'root' })
+export class Early {
+  readonly first: Observable<OrderDto>;
+  constructor(orders: OrdersApiService) { this.first = orders.b(); }
+}
+`,
+    );
+    const method = (name: string) => graph.nodes.find((node) => node.id.endsWith(`OrdersApiService.${name}`));
+    expect(method('a')?.meta?.['unreferenced']).toBe(true);
+    expect(method('b')?.meta?.['unreferenced']).toBeUndefined();
+  });
+});

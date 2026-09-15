@@ -16,6 +16,7 @@ import {
   fileOfNode,
   handlerOfFunction,
   handlerReturned,
+  inlineHandlerOf,
   joinPath,
   repoFunctionOf,
   repoSources,
@@ -265,13 +266,18 @@ const routeOf = (site: AppCall, ctx: ExtractContext): Route | undefined => {
   if (path === undefined) return undefined;
 
   const handlerArg = site.args[site.args.length - 1];
+  const answer = answerOf(site, handlerArg, ctx);
+  // A function written in place is still the code that runs, and a node of its
+  // own is what lets a walk from the route go on into it.
+  const inline =
+    answer.via === 'inline' ? inlineHandlerOf(handlerArg, `${verbs.join('|')} ${path}`, ctx) : undefined;
   return {
     verbs,
     path,
     middleware: site.args
       .slice(byArgument ? 2 : 1, site.args.length - 1)
       .map((argument) => argument.getText().split('\n')[0]?.slice(0, 40) ?? ''),
-    answer: answerOf(site, handlerArg, ctx),
+    answer: inline === undefined ? answer : { ...answer, handler: inline },
   };
 };
 
@@ -289,6 +295,8 @@ const routeOf = (site: AppCall, ctx: ExtractContext): Route | undefined => {
  */
 export const honoRoutesAdapter: EntryAdapter = {
   name: ADAPTER,
+  // The worker answers before the application behind it is asked anything.
+  outsideApplication: true,
   detect: (pkg) => hasAnyDependency(pkg, [HONO]),
   extractEntries: (ctx: ExtractContext) => {
     const sources = [...repoSources(ctx)];
@@ -328,7 +336,7 @@ export const honoRoutesAdapter: EntryAdapter = {
           continue;
         }
 
-        if (route.answer.via === 'inline') anonymous.push({ file, line });
+        if (route.answer.via === 'inline' && route.answer.handler === undefined) anonymous.push({ file, line });
 
         for (const prefix of prefixes) {
           const rawPath = joinPath(prefix, route.path);

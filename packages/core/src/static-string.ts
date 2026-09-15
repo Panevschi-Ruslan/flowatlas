@@ -3,7 +3,7 @@ import { Node } from 'ts-morph';
 import { holeIn, UNREAD_SPAN } from './ids.js';
 import { packageNameOf } from './origin.js';
 import { declarationOf, evaluateExpression } from './static-value.js';
-import { choosesASegment } from './trace.js';
+import { choosesASegment, isQueryTail } from './trace.js';
 
 /** How a string was arrived at, which is what tells a reader how far to trust it. */
 export type StaticStringVia = 'literal' | 'template' | 'const' | 'enum' | 'shared-package';
@@ -110,7 +110,18 @@ const fromTemplate = (
   const envRefs: string[] = [];
   let guessed = false;
 
-  const spans = template.getTemplateSpans();
+  const all = template.getTemplateSpans();
+  let end = all.length;
+  // Trailing holes that are only ever a query string or nothing add nothing to
+  // the route, and a hole before them still ends the address.
+  while (end > 0) {
+    const span = all[end - 1];
+    if (span === undefined || span.getLiteral().getLiteralText() !== '') break;
+    if (evaluateExpression(span.getExpression()).resolved) break;
+    if (!isQueryTail(span.getExpression())) break;
+    end -= 1;
+  }
+  const spans = all.slice(0, end);
   for (const [index, span] of spans.entries()) {
     const tail = span.getLiteral().getLiteralText();
     // Only a hole the string starts with can be its root. Dropping one from the

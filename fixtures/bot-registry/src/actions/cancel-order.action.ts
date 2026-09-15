@@ -15,7 +15,7 @@ function viewOrderHandler(data: string, deps: BotDeps): void {
 callbackRegistry.register('confirm_cancel', confirmCancelHandler);
 callbackRegistry.register('view_order', viewOrderHandler);
 
-// Written in place, so there is no name to point at and the flow stops here.
+// Written in place: no name, so it is found again by where it starts.
 callbackRegistry.register('keep_order', (data, { orders }) => {
   orders.find(data);
 });

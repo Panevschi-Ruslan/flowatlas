@@ -99,6 +99,16 @@ describe('a repository that serves routes from two frameworks', () => {
     ]);
   });
 
+  it('draws the application guard on its own routes and on none of the worker routes', () => {
+    const guarded = (id: string): string[] => goesTo(id, 'guarded_by');
+    expect(guarded('entry:api:http:GET:/api/depots/:param/orders')).toEqual([
+      'api#src/auth/api-key.guard.ts:ApiKeyGuard',
+    ]);
+    for (const id of ['entry:api:http:GET:/health', 'entry:api:http:GET:/api/depots/:param/stream']) {
+      expect(guarded(id)).toEqual([]);
+    }
+  });
+
   it('carries a route declared in the worker through to the service it reaches', () => {
     const stream = 'entry:api:http:GET:/api/depots/:param/stream';
     const handler = 'api#src/stream/sse.ts:orderStream';
@@ -144,13 +154,13 @@ describe('a repository that serves routes from two frameworks', () => {
     ]);
   });
 
-  it('counts the routes answered by a function written in place once, not once each', () => {
-    const rows = project.unresolved.filter(
-      (row: Unresolved) => row.reason === 'route-handler-anonymous',
+  it('points each route answered by a function written in place at that function', () => {
+    expect(project.unresolved.filter((row: Unresolved) => row.reason === 'route-handler-anonymous')).toEqual([]);
+    const inline = project.nodes.filter(
+      (node) => node.type === 'entry' && node.repo === 'api' && node.meta?.['handlerVia'] === 'inline',
     );
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.level).toBe('info');
-    expect(rows[0]?.sites).toBe(4);
+    expect(inline.length).toBe(4);
+    for (const entry of inline) expect(goesTo(entry.id, 'handles')).toHaveLength(1);
   });
 });
 

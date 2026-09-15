@@ -32,6 +32,12 @@ describe('writing the graph as a page', () => {
     expect(page).not.toMatch(/<script[^>]+src=/);
   });
 
+  it('declares its encoding, so labels survive a server that sends no charset', () => {
+    const head = page.slice(0, 200).toLowerCase();
+    expect(head.startsWith('<!doctype html>')).toBe(true);
+    expect(head).toContain('<meta charset="utf-8">');
+  });
+
   it('carries the whole graph, not a sample of it', () => {
     const data = dataOf(page);
     expect(data.nodes.length).toBeGreaterThan(50);

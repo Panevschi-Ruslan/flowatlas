@@ -15,4 +15,8 @@ interface RequestInit {
   body?: string;
 }
 
-declare function fetch(input: string, init?: RequestInit): Promise<Response>;
+declare class Request {
+  constructor(input: string, init?: RequestInit);
+}
+
+declare function fetch(input: string | Request, init?: RequestInit): Promise<Response>;

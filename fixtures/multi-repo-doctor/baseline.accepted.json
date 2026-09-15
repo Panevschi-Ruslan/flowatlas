@@ -19,7 +19,7 @@
     }
   },
   "unresolved": {
-    "total": 18,
+    "total": 21,
     "byReason": {
       "channel-from-config": 1,
       "di-token-unknown": 1,
@@ -27,13 +27,14 @@
       "marker-route-not-found": 1,
       "marker-service-unknown": 1,
       "module-import-dynamic": 3,
+      "route-unguarded": 3,
       "target-route-not-found": 1,
       "unknown-base-url-env": 1,
       "unknown-db-package": 6
     },
     "byService": {
       "gateway": 9,
-      "orders": 9
+      "orders": 12
     },
     "keys": [
       {
@@ -74,6 +75,18 @@
       },
       {
         "key": "orders|src/app.module.ts|AppModule imports ConfigModule|module-import-dynamic",
+        "count": 1
+      },
+      {
+        "key": "orders|src/orders/orders.controller.ts|GET /orders/:param|route-unguarded",
+        "count": 1
+      },
+      {
+        "key": "orders|src/orders/orders.controller.ts|POST /orders/legacy|route-unguarded",
+        "count": 1
+      },
+      {
+        "key": "orders|src/orders/orders.controller.ts|POST /orders|route-unguarded",
         "count": 1
       },
       {

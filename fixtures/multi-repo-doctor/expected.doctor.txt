@@ -1,6 +1,6 @@
-unresolved: total=18 (baseline 18, +0) · markers: errors=5 warnings=4 · desync=2 · contracts: errors=1 ignored=1 · exit=0
+unresolved: total=21 (baseline 21, +0) · markers: errors=5 warnings=4 · desync=2 · contracts: errors=1 ignored=1 · exit=0
 
-unresolved: 18 to act on over 18 rows
+unresolved: 21 to act on over 21 rows
   unknown-db-package: 6 rows
     Add a descriptor for fake-orm to record which of its methods read and which write.
       orders/src/orders/orders.service.ts:35  this.rows.persist
@@ -20,6 +20,11 @@ unresolved: 18 to act on over 18 rows
       gateway/src/app.module.ts:8  AppModule imports HttpModule
       gateway/src/app.module.ts:8  AppModule imports ConfigModule
       orders/src/app.module.ts:10  AppModule imports ConfigModule
+  route-unguarded: 3 rows
+    Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.
+      orders/src/orders/orders.controller.ts:11  POST /orders
+      orders/src/orders/orders.controller.ts:16  POST /orders/legacy
+      orders/src/orders/orders.controller.ts:21  GET /orders/:param
   channel-from-config: 1 row
     The channel name cannot be read here. Annotate OrdersService.refund with the channel it uses.
       orders/src/orders/orders.service.ts:65  OrdersService.refund -> this.config.get('REFUND_CHANNEL')
@@ -56,11 +61,11 @@ desync: 2:
   target-route-not-found  gateway src/clients/orders.client.ts:58  DELETE /orders/:param/void  orders      Route renamed? Check orders's controllers, or annotate the call with @CallsService.
   unknown-base-url-env    gateway src/clients/orders.client.ts:66  GET /orders/:param/history  LEGACY_URL  Add LEGACY_URL to services[].baseUrlEnv of whichever service answers it.
 
-contracts: 1 error, 1 excused, 3 boundary directions nothing could be compared on:
+contracts: 1 error, 1 excused, 2 boundary directions nothing could be compared on:
   kind              between           direction  field    what
   missing_required  gateway → orders  request    channel  receiver orders requires `channel: string`; sender gateway does not send it
 
-baseline: ok (18 accepted, 18 now, +0)
+baseline: ok (21 accepted, 21 now, +0)
 
 verdict:
   5 annotations the graph contradicts

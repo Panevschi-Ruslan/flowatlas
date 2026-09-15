@@ -13,6 +13,13 @@ export enum Channel { Created = 'order.created' }
 
 const id = String(Math.random());
 const build = () => '/x';
+function query(filters?: Record<string, string>): string {
+  if (!filters) return '';
+  const text = new URLSearchParams(filters).toString();
+  return text ? \`?\${text}\` : '';
+}
+const qs = query();
+const anything = String(Math.random());
 
 export const values = {
   literal: '/orders',
@@ -30,6 +37,9 @@ export const values = {
   twoHoles: \`\${environment.apiUrl}/orders/\${id}\${id}\`,
   holeThenQuery: \`\${environment.apiUrl}/orders/\${id}?full=1\`,
   dynamic: build(),
+  queryTail: \`\${environment.apiUrl}/reviews\${qs}\`,
+  queryTailAfterHole: \`\${environment.apiUrl}/orders/\${id}\${query({ a: 'b' })}\`,
+  unknownTail: \`\${environment.apiUrl}/reviews\${anything}\`,
 };
 `;
 
@@ -141,5 +151,19 @@ describe('reading a string out of the source', () => {
 
   it('refuses to guess a string that is not constant', () => {
     expect(of('dynamic')).toBeNull();
+  });
+});
+
+describe('a query string at the end of a string', () => {
+  it('is dropped when every value it can take is empty or opens with ?', () => {
+    expect(of('queryTail')).toMatchObject({ value: '/reviews', envRefs: ['apiUrl'] });
+  });
+
+  it('leaves the hole before it filling a segment of its own', () => {
+    expect(of('queryTailAfterHole')?.value).toBe('/orders/:param');
+  });
+
+  it('stays a hole when it could be anything', () => {
+    expect(of('unknownTail')?.value).toBe('/reviews${…}');
   });
 });
