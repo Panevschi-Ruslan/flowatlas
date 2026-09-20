@@ -4,13 +4,16 @@ import {
   forEachCall,
   makeExternalApiId,
   makeLeafId,
+  methodBodies,
   narrowUnionByLiteral,
+  parametersOf,
   resolveTypeOrigin,
   siteOf,
   type CallFrame,
+  type ClassMethod,
   type TypeOrigin,
 } from '@flowatlas/core';
-import type { CallExpression, MethodDeclaration, Node as TsNode } from 'ts-morph';
+import type { CallExpression, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { AngularExtractContext } from '../context.js';
 import { ANGULAR_HTTP } from '../index-classes.js';
@@ -111,9 +114,9 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
       }
       if (!Node.isIdentifier(value)) break;
       const declaration = value.getSymbol()?.getDeclarations()[0];
-      const parameterIndex = frame.method
-        .getParameters()
-        .findIndex((parameter) => parameter === declaration);
+      const parameterIndex = parametersOf(frame.method).findIndex(
+        (parameter) => parameter === declaration,
+      );
       if (parameterIndex < 0) break;
       node = frame.call.getArguments()[parameterIndex];
       at = frame.call;
@@ -244,7 +247,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
   const emit = (
     network: CallExpression,
     name: string,
-    method: MethodDeclaration,
+    method: ClassMethod,
     site: RequestSite,
     siblings: number,
   ): void => {
@@ -259,9 +262,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
 
   for (const indexed of ctx.classes.all()) {
     if (indexed.role === 'module') continue;
-    for (const method of indexed.declaration.getMethods()) {
-      const body = method.getBody();
-      if (body === undefined) continue;
+    for (const { declaration: method, body } of methodBodies(indexed.declaration)) {
       const methodId = ctx.methodIdOf(method);
       if (methodId === undefined) continue;
 

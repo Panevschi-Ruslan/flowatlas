@@ -34,6 +34,12 @@ export const renderTable = <T>(rows: readonly T[], columns: readonly Column<T>[]
 /** The last line of a cut table, so nothing is ever quietly left out (I9). */
 export const moreRows = (count: number): string => `… ${count} more rows`;
 
-/** A heading over one section of a table-formatted answer. */
-export const section = (title: string, lines: readonly string[]): string[] =>
-  lines.length === 0 ? [`${title}: none`] : [`${title}:`, ...lines.map((line) => `  ${line}`)];
+/**
+ * A heading over one section of a table-formatted answer.
+ *
+ * `empty` is what the section says when it has no rows. A section that counts
+ * something it deliberately does not list has more to say there than "none",
+ * and this is the one place that decides how an empty section reads.
+ */
+export const section = (title: string, lines: readonly string[], empty = 'none'): string[] =>
+  lines.length === 0 ? [`${title}: ${empty}`] : [`${title}:`, ...lines.map((line) => `  ${line}`)];

@@ -22,6 +22,7 @@ export { resolveUiCall, uiFindingFor, uiReasonOf } from './ui-link.js';
 export type { UiIndex, UiOutcome, UiOutcomeKind, UiVia } from './ui-link.js';
 export { surveyChannels, surveyRoutes } from './survey.js';
 export type { ChannelSurvey, RouteSurvey } from './survey.js';
+export { matchesRoutePattern } from './route-audit.js';
 export { isMatch, matchRoute, pathAnswers } from './route-match.js';
 export type { RouteMatch, RouteMiss, RouteResult } from './route-match.js';
 export type { LinkReport, ServiceReport } from './report.js';

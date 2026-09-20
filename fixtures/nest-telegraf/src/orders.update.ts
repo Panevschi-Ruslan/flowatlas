@@ -20,9 +20,9 @@ export class OrdersUpdate {
     return 'help';
   }
 
-  @Command('menu')
-  menu(): string {
-    return 'menu';
+  @Command('depots')
+  depots(): string {
+    return 'depots';
   }
 
   /** An array fans out: one entry per spelling, both handled here. */
@@ -32,9 +32,9 @@ export class OrdersUpdate {
   }
 
   /** A reply-keyboard button sends plain text, which reads as a command. */
-  @Hears('Меню')
-  keyboardMenu(): string {
-    return 'menu';
+  @Hears('Depots')
+  keyboardDepots(): string {
+    return 'depots';
   }
 
   @Hears(/^hi/i)

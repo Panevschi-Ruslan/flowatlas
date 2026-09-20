@@ -1,5 +1,5 @@
 {
-  "analyticsFormatVersion": 1,
+  "analyticsFormatVersion": 2,
   "cycles": [
     {
       "id": "billing#src/invoices/invoices.service.ts:InvoicesService.sync",

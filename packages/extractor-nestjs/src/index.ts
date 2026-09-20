@@ -57,7 +57,14 @@ export type {
 } from '@flowatlas/core';
 export { nestDiOptions, resolveInjectToken } from './di/resolver.js';
 
-export { findMethod, forEachCall, resolveMemberCall, resolveReceiver } from '@flowatlas/core';
+export {
+  enclosingMethod,
+  findMethod,
+  forEachCall,
+  methodBodies,
+  parametersOf,
+  resolveReceiver,
+} from '@flowatlas/core';
 export type { ReceiverInfo } from '@flowatlas/core';
 
 export {

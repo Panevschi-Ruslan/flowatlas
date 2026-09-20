@@ -5,13 +5,15 @@
  * across revisions (plan §5), which is the whole basis of this — without that
  * every rebuild would look like a rewrite.
  */
-import type {
-  GraphEdge,
-  GraphNode,
-  ProjectGraph,
-  TypeEntry,
-  TypeRegistry,
-  Unresolved,
+import {
+  tally,
+  wasMissed,
+  type GraphEdge,
+  type GraphNode,
+  type ProjectGraph,
+  type TypeEntry,
+  type TypeRegistry,
+  type Unresolved,
 } from '@flowatlas/core';
 import { compareDeclarations } from './compare-declarations.js';
 import {
@@ -55,10 +57,15 @@ const indexEdges = (edges: readonly GraphEdge[]): Map<string, GraphEdge> => {
   return found;
 };
 
-const sites = (unresolved: readonly Unresolved[]): UnresolvedCount => ({
-  rows: unresolved.length,
-  sites: unresolved.reduce((sum, row) => sum + (row.sites ?? 1), 0),
-});
+/**
+ * Rows and the places they stand for, counting what was not read.
+ *
+ * A place where nothing joins is left out here for the same reason it is left
+ * out of the build summary: a revision that added a button to a template would
+ * otherwise report unresolved growth for a template that is perfectly readable.
+ */
+const sites = (unresolved: readonly Unresolved[]): UnresolvedCount =>
+  tally(unresolved.filter(wasMissed));
 
 const countsOf = (graph: ProjectGraph): GraphCounts => ({
   nodes: graph.nodes.length,

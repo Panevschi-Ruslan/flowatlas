@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import {
   SCHEMA_VERSION,
+  wasMissed,
   type FlowatlasConfig,
   type GraphEdge,
   type GraphNode,
@@ -392,7 +393,7 @@ export const linkGraphs = (
       nodes: project.nodes.length,
       edges: project.edges.length,
       types: Object.keys(types).length,
-      unresolved: project.unresolved.length,
+      unresolved: project.unresolved.filter(wasMissed).length,
     },
   };
 

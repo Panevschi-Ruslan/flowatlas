@@ -1,12 +1,22 @@
+import { methodsOfClass, type ClassMethod } from '@flowatlas/core';
 import type { ClassDeclaration } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
 import type { IndexedClass } from '../index-classes.js';
 import { readMarkers } from '../util/markers.js';
 import { definePass } from './types.js';
 
-/** Methods worth a node: the ones another method could call or a route could handle. */
-const methodsOf = (declaration: ClassDeclaration) =>
-  declaration.getMethods().filter((method) => method.getName() !== 'constructor');
+/**
+ * Methods worth a node: the ones another method could call or a route could
+ * handle, however they were written.
+ *
+ * A method written as a field is one of them. Leaving it out here while the
+ * calls pass makes a node for it anyway would mean two passes disagreeing
+ * about what a method is, and the one that lost would be the one that reads
+ * the annotations. A method with no body is one too: an abstract method is
+ * named by its callers and can carry an annotation.
+ */
+const methodsOf = (declaration: ClassDeclaration): ClassMethod[] =>
+  methodsOfClass(declaration).filter((method) => method.getName() !== 'constructor');
 
 /**
  * Classes the container manages, and their methods.

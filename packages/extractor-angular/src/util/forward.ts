@@ -1,11 +1,15 @@
 import {
   callSitesOf,
+  enclosingMethod,
   finiteLookups,
+  parametersOf,
   readsParameterOf,
+  remembersParametersOf,
   wasRead,
   type CallFrame,
+  type ClassMethod,
 } from '@flowatlas/core';
-import type { MethodDeclaration, Node as TsNode } from 'ts-morph';
+import type { Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { AngularExtractContext } from '../context.js';
 import { analyzeApiUrl, analyzeForwardedApiUrl, type ApiUrl } from './url.js';
@@ -47,7 +51,7 @@ export const requestIdOf = (
 
 /** `Class.method` of the wrapper a request is written in. */
 export const wrapperOf = (network: TsNode): string | null => {
-  const method = network.getFirstAncestorByKind(SyntaxKind.MethodDeclaration);
+  const method = enclosingMethod(network);
   const owner = method?.getParent();
   if (method === undefined || owner === undefined || !Node.isClassDeclaration(owner)) return null;
   return `${owner.getName() ?? '?'}.${method.getName()}`;
@@ -91,14 +95,18 @@ const enumerated = (
 };
 
 /**
- * Whether an argument is one of the enclosing method's own parameters, handed on
- * whole.
+ * Whether an argument leaves the address where its caller put it.
  *
  * `this.post(path, body)` passes its caller's path along untouched, so the
  * address is still undecided. `this.open(`${base}?token=${token}`)` writes text
- * around what it was given, and that is deciding it.
+ * around what it was given, and that is deciding it. An object a method
+ * remembered its own parameters in is the first case wearing a field: nothing
+ * about the address was decided by putting it there.
  */
-const passesOn = (argument: TsNode, outer: MethodDeclaration): boolean => {
+const passesOn = (argument: TsNode, outer: ClassMethod): boolean => {
+  // `this.open(this.params)`, where `this.params` is where `connect` put what it
+  // was given. The object is the parameters, so passing it is passing them on.
+  if (remembersParametersOf(argument, outer)) return true;
   let value = argument;
   for (;;) {
     if (Node.isParenthesizedExpression(value) || Node.isAsExpression(value) || Node.isNonNullExpression(value)) {
@@ -112,7 +120,7 @@ const passesOn = (argument: TsNode, outer: MethodDeclaration): boolean => {
   }
   if (!Node.isIdentifier(value)) return false;
   const declaration = value.getSymbol()?.getDeclarations()[0];
-  return outer.getParameters().some((parameter) => parameter === declaration);
+  return parametersOf(outer).some((parameter) => parameter === declaration);
 };
 
 /**
@@ -127,15 +135,15 @@ const passesOn = (argument: TsNode, outer: MethodDeclaration): boolean => {
  * dropped.
  */
 const forwardChains = (
-  method: MethodDeclaration,
+  method: ClassMethod,
   depth: number,
-  seen: ReadonlySet<MethodDeclaration>,
+  seen: ReadonlySet<ClassMethod>,
 ): CallFrame[][] => {
   const declaring = method.getParent();
   const chains: CallFrame[][] = [];
   for (const call of callSitesOf(method)) {
     const frame: CallFrame = { call, method };
-    const outer = call.getFirstAncestorByKind(SyntaxKind.MethodDeclaration);
+    const outer = enclosingMethod(call);
     const layered =
       outer !== undefined &&
       outer.getParent() === declaring &&
@@ -167,7 +175,7 @@ const forwardChains = (
 export const requestsOf = (
   ctx: AngularExtractContext,
   urlArg: TsNode,
-  method: MethodDeclaration,
+  method: ClassMethod,
   site: RequestSite,
   /** How many requests the wrapper method writes in all. */
   siblings = 1,
@@ -183,7 +191,7 @@ export const requestsOf = (
   if (!readsParameterOf(urlArg, method)) return [inPlace];
 
   const siteAt = (call: TsNode): RequestSite | undefined => {
-    const outer = call.getFirstAncestorByKind(SyntaxKind.MethodDeclaration);
+    const outer = enclosingMethod(call);
     const owner = outer?.getParent();
     if (outer === undefined || owner === undefined || !Node.isClassDeclaration(owner)) return undefined;
     const indexed = ctx.classes.get(owner);
@@ -234,7 +242,7 @@ export const requestsOf = (
  * runs, and that is what a contract check may soften a finding for.
  */
 export const noteIfUnreferenced = (ctx: AngularExtractContext, site: RequestSite): void => {
-  const method = site.call.getFirstAncestorByKind(SyntaxKind.MethodDeclaration);
+  const method = enclosingMethod(site.call);
   if (method === undefined) return;
   const name = method.getNameNode();
   const referenced = method.findReferencesAsNodes().some((reference) => reference !== name);

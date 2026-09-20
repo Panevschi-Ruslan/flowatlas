@@ -65,6 +65,30 @@ configuration will go and asks which belong to the project.
 | `--force` | off | overwrite an existing configuration |
 | `--no-mcp` | off | skip registering the graph server |
 
+The type of a repository is read from its manifest: `@nestjs/core` makes it
+`nestjs`, `@angular/core` makes it `angular`, and anything else is written as
+`unknown`. Where the manifest names a framework there is no reader for — Express,
+Fastify, Koa, Next.js, Nuxt, Remix, React, Vue or Svelte — `init` says so by
+name, and `build` repeats it on that repository's line:
+
+```
+api            skipped (no-extractor: Express, no reader yet)
+```
+
+Where the manifest declares a framework it *can* read, the line says which type
+to set instead, because a `type` the tool does not know — a typo, or a value
+from before a reader existed — reads exactly like a repository with no reader:
+
+```
+api            skipped (no-extractor: looks like nestjs; set its type to "nestjs")
+```
+
+The repository stays in the configuration and contributes nothing to the graph.
+Everything else in the project is still read and still joined; what is missing
+is that repository's routes, calls and types. NestJS wins over Express in a
+repository that declares both, since `@nestjs/platform-express` brings Express
+with it.
+
 ### `flowatlas mcp`
 
 With no flags, serves the graph over stdin and stdout. That is what an editor
@@ -294,6 +318,36 @@ reading cannot see.
 | `--kind <kind>` | `all` | one of `entries`, `channels`, `providers`, `fields`, `all` |
 | `--service <name>` | every service | narrow to one |
 
+A route nothing calls gets the reason it ended up in the list, which is not the
+same question as whether it is dead:
+
+| Reason | What it means |
+|---|---|
+| declared public in the configuration | a pattern under `doctor.publicRoutes` covers it, so its callers are outside the project by decision |
+| looks like a health or status probe | the last segment is `health`, `healthz`, `ping`, `readyz`, `metrics`, `status` and the like; whatever runs it is outside the graph |
+| looks like an event stream | the last segment is `stream` or `sse`, or ends in `-stream`; a browser subscribing to one is not read yet |
+| no `http_calls`/`hits` from any repo | nothing above applies, which is what this command is for |
+
+Only the last segment of a path is read, so `/api/health` is a probe and
+`/api/health/reports/:param` is a route like any other. `status` and `metrics`
+are words a business API uses too, so they count only within two segments of the
+root: `/api/status` is a probe and `/api/orders/:param/status` is a route. A
+segment starting with `_` or ending in `-status` counts at any depth.
+
+Rows are ordered by what they mean rather than by name — the ones nothing
+explains first — so `--max` cuts the rows that say why they are here before it
+cuts the rows that do not.
+
+`--kind fields` reports a field one side sends and the other does not declare.
+The rows are the ones something happens to: a field the receiver's whitelisting
+`ValidationPipe` removes on arrival, so the sender believes it sent something
+that never landed. That is read from the receiver's own validation, not guessed
+from the direction. Everything else — a response nothing declares, a request
+into a receiver that whitelists nothing — is carried, ignored and removed by no
+one, so it is counted on one line instead. `--format json` carries every row,
+each with its `direction` (`request`, `response` or `payload`) and whether it is
+`dropped`.
+
 ### `flowatlas config [selector]`
 
 The settings one flow depends on, across every service it reaches, including the
@@ -357,6 +411,18 @@ graph; it reads no repository, so two runs over one graph say the same thing.
 `--strict` on a project with no baseline yet exits 2, not 1: there is nothing to
 compare against, which is a different answer from "something got worse". Write
 one with `--accept`, or ask without it using `--no-baseline`.
+
+Every unresolved row is read at one of three levels, and only the first two say
+the graph is missing something:
+
+| Level | What it means | Counted in the total |
+|---|---|---|
+| `action` | a setting, an annotation or a registration would close it | yes, and `--strict` compares it |
+| `info` | an edge is there and static reading cannot see it | no; reported beside the total |
+| `nothing` | no edge exists to draw — a template binding that assigns to a field has no method behind it | no; reported on its own line |
+
+`build` says the same thing in its last line: the rows it could not read, then
+the places where nothing joins, never added together.
 
 ### `flowatlas diff <base-ref> [head-ref]`
 

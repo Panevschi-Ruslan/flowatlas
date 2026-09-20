@@ -79,6 +79,27 @@ describe('handlers that are functions rather than methods', () => {
     expect(graph.unresolved.map((row) => row.reason)).not.toContain('registry-handler-anonymous');
   });
 
+  it('follows a module of functions called from a method body', () => {
+    // The walk that reads a method deliberately follows no plain function; it
+    // would make a node of every helper in the repository. A module of
+    // functions is where a class keeps behaviour with no class of its own, and
+    // the call names which one, so it is followed and its body read (R24).
+    const command = id('commands/order-commands.ts', 'orderCommands.myOrders');
+    expect(edge(id('bot.ts', 'Bot.setup'), 'calls', command)).toBe(true);
+    expect(edge(command, 'calls', id('orders.service.ts', 'OrdersService.find'))).toBe(true);
+  });
+
+  it('reads a method written as a field, and reports one assigned from outside', () => {
+    // `announce = (id) => …` is a method in every sense but the one
+    // `getMethod` answers: a name on the class, a body, calls inside it. A
+    // field with no function in it stays what it is (R25).
+    expect(edge(id('bot.ts', 'Bot.ready'), 'calls', id('bot.ts', 'Bot.announce'))).toBe(true);
+    expect(edge(id('bot.ts', 'Bot.announce'), 'calls', id('orders.service.ts', 'OrdersService.find'))).toBe(
+      true,
+    );
+    expect(graph.nodes.some((node) => node.id === id('bot.ts', 'Bot.onReady'))).toBe(false);
+  });
+
   it('makes a node of no function an entry point does not reach', () => {
     const functions = graph.nodes.filter((node) => node.type === 'function').map((node) => node.id);
     expect(functions).toContain(id('actions/summary.ts', 'summarise'));

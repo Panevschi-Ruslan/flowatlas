@@ -2,11 +2,12 @@ import {
   makeChannelId,
   makeLeafId,
   makeSymbolId,
+  methodsOfClass,
   normalizePath,
   siteOf,
+  type ClassMethod,
   type GraphNode,
 } from '@flowatlas/core';
-import type { MethodDeclaration } from 'ts-morph';
 import { ANGULAR_HTTP } from '../index-classes.js';
 import { definePass } from './types.js';
 
@@ -17,7 +18,7 @@ const CALLS = /@flowatlas-calls\s+([A-Za-z]+)\s+(\S+)/g;
 const CONSUMES = /@flowatlas-consumes\s+(\S+)/g;
 
 /** Everything written in the documentation comments of a method. */
-const docsOf = (method: MethodDeclaration): string =>
+const docsOf = (method: ClassMethod): string =>
   method
     .getJsDocs()
     .map((doc) => doc.getInnerText())
@@ -46,7 +47,7 @@ export const markersPass = definePass('markers', (ctx) => {
     });
 
   const apiCall = (
-    method: MethodDeclaration,
+    method: ClassMethod,
     verb: string,
     path: string,
     file: string,
@@ -92,7 +93,7 @@ export const markersPass = definePass('markers', (ctx) => {
   };
 
   const consumer = (
-    method: MethodDeclaration,
+    method: ClassMethod,
     channelName: string,
     file: string,
     methodId: string,
@@ -141,7 +142,10 @@ export const markersPass = definePass('markers', (ctx) => {
 
   for (const indexed of ctx.classes.all()) {
     if (indexed.role === 'module') continue;
-    for (const method of indexed.declaration.getMethods()) {
+    // Every method, including the ones written as fields: the annotation is
+    // what the hints tell somebody to write when an address cannot be read, and
+    // a wrapper written as a field is exactly the case that needs it.
+    for (const method of methodsOfClass(indexed.declaration)) {
       const docs = docsOf(method);
       if (docs === '') continue;
       const methodId = ctx.methodIdOf(method);

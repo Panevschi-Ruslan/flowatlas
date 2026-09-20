@@ -1,4 +1,12 @@
-import type { ClassDeclaration, MethodDeclaration, Node as TsNode } from 'ts-morph';
+import type {
+  ArrowFunction,
+  ClassDeclaration,
+  FunctionExpression,
+  MethodDeclaration,
+  ParameterDeclaration,
+  PropertyDeclaration,
+  Node as TsNode,
+} from 'ts-morph';
 import { Node } from 'ts-morph';
 import { packageOfFile } from '../nodes.js';
 import { originOfType } from '../origin.js';
@@ -105,6 +113,112 @@ export const resolveReceiver = (
 };
 
 /**
+ * A method of a class, however it was written.
+ *
+ * `handle() {}` and `handle = () => {}` are the same thing to everything that
+ * matters here: a name on a class, a body, and calls inside it. The second is
+ * how a method that will be handed to a callback keeps its `this`, which is why
+ * bots and components are full of them. Reading only the first reports a call
+ * on the second as a receiver nobody can pin down, which is true of no part of
+ * it (R25).
+ */
+export type ClassMethod = MethodDeclaration | PropertyDeclaration;
+
+/** The function a property holds, when it holds one written in place. */
+const fieldFunction = (
+  property: PropertyDeclaration,
+): ArrowFunction | FunctionExpression | undefined => {
+  const initializer = property.getInitializer();
+  if (initializer === undefined) return undefined;
+  return Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)
+    ? initializer
+    : undefined;
+};
+
+/**
+ * The function a method is, whichever way it was written.
+ *
+ * Everything else here is a question about that function — its parameters, its
+ * body, whether there is one at all — so the branch is written once.
+ */
+export const functionOf = (
+  declaration: ClassMethod,
+): MethodDeclaration | ArrowFunction | FunctionExpression | undefined =>
+  Node.isMethodDeclaration(declaration) ? declaration : fieldFunction(declaration);
+
+/**
+ * The parameters of a method, wherever they were written.
+ *
+ * A method written as a field keeps them on the arrow it holds, which is one
+ * node further in than every caller expects to look.
+ */
+export const parametersOf = (declaration: ClassMethod): ParameterDeclaration[] =>
+  functionOf(declaration)?.getParameters() ?? [];
+
+/** The body of a method, wherever it was written. */
+export const bodyOf = (declaration: ClassMethod): TsNode | undefined =>
+  functionOf(declaration)?.getBody();
+
+/**
+ * The method a node is written in, however that method was written.
+ *
+ * The nearest of the two, not the first of one kind: a class expression inside
+ * a method would otherwise answer for a field-method written in it.
+ */
+export const enclosingMethod = (node: TsNode): ClassMethod | undefined => {
+  for (let at: TsNode | undefined = node.getParent(); at !== undefined; at = at.getParent()) {
+    if (Node.isMethodDeclaration(at)) return at;
+    if (Node.isPropertyDeclaration(at)) return fieldFunction(at) === undefined ? undefined : at;
+    if (Node.isClassDeclaration(at)) return undefined;
+  }
+  return undefined;
+};
+
+/**
+ * Every method a class declares, including the ones written as fields.
+ *
+ * Declarations, not bodies: an abstract method and an overload signature are
+ * methods a caller can name and an annotation can sit on, so whatever answers
+ * "what are this class's methods" has to include them. A walk that reads
+ * bodies asks {@link methodBodies} instead.
+ */
+export const methodsOfClass = (declaration: ClassDeclaration): ClassMethod[] => [
+  ...declaration.getMethods(),
+  ...declaration.getProperties().filter((property) => fieldFunction(property) !== undefined),
+];
+
+/**
+ * The method of that name on one class, written either way.
+ *
+ * One step, not a search: the caller decides whether to walk what the class
+ * extends. {@link findMethod} does; a trace standing in a known class does not.
+ */
+export const methodNamedOn = (
+  owner: ClassDeclaration,
+  name: string,
+): ClassMethod | undefined => {
+  const method = owner.getMethod(name);
+  if (method !== undefined) return method;
+  const property = owner.getProperty(name);
+  return property !== undefined && fieldFunction(property) !== undefined ? property : undefined;
+};
+
+/**
+ * Every method a class declares that has a body, including the ones written as
+ * fields, each with the body to read.
+ *
+ * One accessor rather than a list and a lookup: a field holding a value is not
+ * a method, an abstract method and an overload signature have no body, and
+ * every caller wants the same two things about the ones that are left.
+ */
+export const methodBodies = (
+  declaration: ClassDeclaration,
+): Array<{ declaration: ClassMethod; body: TsNode }> =>
+  methodsOfClass(declaration)
+    .map((method) => ({ declaration: method, body: bodyOf(method) }))
+    .filter((found): found is { declaration: ClassMethod; body: TsNode } => found.body !== undefined);
+
+/**
  * Finds a method on a class or anything it inherits from.
  *
  * Returns the base class's package when the method comes from one instead, so
@@ -113,10 +227,10 @@ export const resolveReceiver = (
 export const findMethod = (
   declaration: ClassDeclaration,
   name: string,
-): { method?: MethodDeclaration; externalPackage?: string } => {
+): { method?: ClassMethod; externalPackage?: string } => {
   let current: ClassDeclaration | undefined = declaration;
   for (let depth = 0; current !== undefined && depth < 8; depth += 1) {
-    const method = current.getMethod(name);
+    const method = methodNamedOn(current, name);
     if (method !== undefined) {
       const pkg = packageOfFile(method.getSourceFile().getFilePath());
       return pkg === undefined ? { method } : { externalPackage: pkg };
@@ -124,37 +238,6 @@ export const findMethod = (
     current = current.getBaseClass();
   }
   return {};
-};
-
-/** A call this repository declares both ends of. */
-export interface MemberCall {
-  readonly classDecl: ClassDeclaration;
-  readonly methodName: string;
-  readonly methodDecl: MethodDeclaration;
-}
-
-/**
- * Resolves `this.<prop>.<m>()` and `this.<m>()` to the method they reach.
- *
- * Null covers everything that is not one class of this repository calling
- * another: a receiver nothing pins down, a method that does not exist, a method
- * inherited from a package. Callers that need to tell those apart use
- * {@link resolveReceiver} and {@link findMethod} directly.
- */
-export const resolveMemberCall = (
-  call: TsNode,
-  owner: ClassDeclaration,
-  di: DiMap,
-): MemberCall | null => {
-  if (!Node.isCallExpression(call)) return null;
-  const callee = call.getExpression();
-  if (!Node.isPropertyAccessExpression(callee)) return null;
-  const receiver = resolveReceiver(callee.getExpression(), owner, di);
-  if (receiver.classDecl === undefined) return null;
-  const methodName = callee.getName();
-  const found = findMethod(receiver.classDecl, methodName);
-  if (found.method === undefined) return null;
-  return { classDecl: receiver.classDecl, methodName, methodDecl: found.method };
 };
 
 /**
@@ -167,6 +250,10 @@ export const forEachCall = (
   body: TsNode,
   visit: (call: TsNode & { getExpression(): TsNode }) => void,
 ): void => {
+  // An arrow with no braces — `(deps) => deps.orders.find(id)` — is a body that
+  // *is* the call, and a walk of its descendants alone would miss the only call
+  // in it. Every other body is a block, where this is never true.
+  if (Node.isCallExpression(body)) visit(body);
   body.forEachDescendant((node, traversal) => {
     if (Node.isClassDeclaration(node) || Node.isClassExpression(node)) {
       traversal.skip();

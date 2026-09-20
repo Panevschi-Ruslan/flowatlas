@@ -1,4 +1,4 @@
-import { makeChannelId, makeLeafId, makeSymbolId } from '@flowatlas/core';
+import { makeChannelId, makeLeafId, makeSymbolId, methodsOfClass } from '@flowatlas/core';
 import type { NestExtractContext } from '@flowatlas/extractor-nestjs';
 import type { BrokerSpec } from './adapters/index.js';
 
@@ -36,7 +36,7 @@ export const readBrokerMarkers = (
   for (const indexed of ctx.classes.all()) {
     if (!WALKED.has(indexed.role)) continue;
 
-    for (const method of indexed.declaration.getMethods()) {
+    for (const method of methodsOfClass(indexed.declaration)) {
       const methodId = ctx.methodIdOf(method);
       if (methodId === undefined) continue;
       const node = ctx.builder.getNode(methodId);

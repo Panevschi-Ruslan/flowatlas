@@ -11,8 +11,13 @@ import type { ContractFinding } from '@flowatlas/contracts';
 import { z } from 'zod';
 import { MARKER_CODES, type MarkerIssue } from './markers.js';
 
-/** Version of `.flowatlas/doctor.json`. */
-export const DOCTOR_FORMAT_VERSION = 1;
+/**
+ * Version of `.flowatlas/doctor.json`.
+ *
+ * 2: `level` gained `nothing`, and `unresolved` a count of the places that
+ * carry it. `rows` and `sites` stopped including them.
+ */
+export const DOCTOR_FORMAT_VERSION = 2;
 
 /** Version of `.flowatlas/baseline.json`, which moves independently. */
 export const BASELINE_FORMAT_VERSION = 1;
@@ -33,9 +38,12 @@ export interface DoctorRow {
   file: string;
   line: number;
   symbol: string | null;
-  /** `action` for something to fix, `info` for a limit of static reading. */
-  level: 'action' | 'info';
-  /** How many places this row stands for; more than one only when informational. */
+  /**
+   * `action` for something to fix, `info` for a limit of static reading,
+   * `nothing` for a place where no edge exists to be drawn.
+   */
+  level: 'action' | 'info' | 'nothing';
+  /** How many places this row stands for; more than one only below `action`. */
   sites: number;
   message: string;
   hint: string;
@@ -44,10 +52,16 @@ export interface DoctorRow {
 /** Every row of one reason, with the advice they share. */
 export interface ReasonGroup {
   reason: string;
-  level: 'action' | 'info';
+  level: 'action' | 'info' | 'nothing';
   /** Rows in the list. */
   count: number;
-  /** Places those rows stand for. Equal to `count` for anything actionable. */
+  /**
+   * Places those rows stand for. Equal to `count` for anything actionable.
+   *
+   * Summing this over every group does not give `unresolved.sites`: a group at
+   * level `nothing` is counted in `unresolved.nothing` instead, and the two are
+   * deliberately never added together.
+   */
   sites: number;
   /** False when the catalogue has no advice for this reason. */
   known: boolean;
@@ -119,11 +133,16 @@ export interface DoctorReport {
      * that failed on them would be asking for the impossible.
      */
     total: number;
-    /** Rows in the whole list, actionable and informational alike. */
+    /**
+     * Rows that say something was not read: actionable and informational
+     * alike, and never the ones where there was nothing to read.
+     */
     rows: number;
-    /** Places all of those rows stand for. */
+    /** Places those rows stand for. */
     sites: number;
     info: { rows: number; sites: number };
+    /** Places where nothing joins. Reported, never added to anything. */
+    nothing: { rows: number; sites: number };
     excluded: { reasons: string[]; sites: number };
     byReason: ReasonGroup[];
     /** Reasons the catalogue has never heard of, each named once. */
@@ -155,7 +174,7 @@ export interface DoctorReport {
   verdict: DoctorVerdict;
 }
 
-const level = z.enum(['action', 'info']);
+const level = z.enum(['action', 'info', 'nothing']);
 const status = z.enum(SECTION_STATUSES);
 const truncated = z.number().int().positive().optional();
 
@@ -212,6 +231,10 @@ export const doctorReportSchema = z.object({
     rows: z.number().int().nonnegative(),
     sites: z.number().int().nonnegative(),
     info: z.object({
+      rows: z.number().int().nonnegative(),
+      sites: z.number().int().nonnegative(),
+    }),
+    nothing: z.object({
       rows: z.number().int().nonnegative(),
       sites: z.number().int().nonnegative(),
     }),

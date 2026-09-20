@@ -94,6 +94,13 @@ export const placeOf = (symbol: string): { file: string; line: number } | undefi
   return { file, line: line === null ? 0 : Number(line[1]) };
 };
 
+/** What a group of one level is marked with, where it is not the ordinary case. */
+const LEVEL_TAG = {
+  action: '',
+  info: ' (info)',
+  nothing: ' (nothing to join)',
+} as const;
+
 const unresolvedSection = (
   report: DoctorReport,
   repoDirs: ReadonlyMap<string, string>,
@@ -109,8 +116,15 @@ const unresolvedSection = (
         ? ''
         : `, and ${unresolved.info.sites} place${unresolved.info.sites === 1 ? '' : 's'} static reading cannot see, folded into ${unresolved.info.rows}`),
   ];
+  // Said on a line of its own, in the words the build summary uses: these are
+  // sites where nothing joins, not sites where something was missed.
+  if (unresolved.nothing.rows > 0) {
+    lines.push(
+      `  ${unresolved.nothing.sites} site${unresolved.nothing.sites === 1 ? '' : 's'} with nothing to join, folded into ${unresolved.nothing.rows} row${unresolved.nothing.rows === 1 ? '' : 's'}, counted in none of the above`,
+    );
+  }
   for (const group of unresolved.byReason) {
-    const tag = group.level === 'info' ? ' (info)' : group.excluded ? ' (not counted)' : '';
+    const tag = LEVEL_TAG[group.level] || (group.excluded ? ' (not counted)' : '');
     const folded = group.sites === group.count ? '' : ` over ${group.sites} places`;
     lines.push(
       `  ${group.reason}${tag}: ${group.count} row${group.count === 1 ? '' : 's'}${folded}`,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-14T15:52:25.879Z",
+  "builtAt": "2026-09-20T11:25:36.242Z",
   "services": [
     {
       "name": "api",
@@ -311,11 +311,11 @@
       "repo": "web",
       "meta": {
         "stats": {
-          "files": 6,
-          "classes": 6,
+          "files": 7,
+          "classes": 9,
           "templates": 1,
           "skippedExternalCalls": {
-            "rxjs": 3,
+            "rxjs": 4,
             "@angular/common": 1
           }
         },
@@ -419,12 +419,34 @@
       }
     },
     {
-      "id": "ui_api_call:web#src/app/stream-wrapper.service.ts:17:19",
+      "id": "ui_api_call:web#src/app/remembered-stream.service.ts:63:5@36:20",
+      "type": "ui_api_call",
+      "label": "GET /depots/:param/events",
+      "repo": "web",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 63,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/depots/:param/events",
+        "path": "/depots/:param/events",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "through": "RememberedStreamService.open",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/stream-wrapper.service.ts:18:19",
       "type": "ui_api_call",
       "label": "GET ?",
       "repo": "web",
       "file": "src/app/stream-wrapper.service.ts",
-      "line": 17,
+      "line": 18,
       "kind": "sse",
       "meta": {
         "method": "GET",
@@ -436,6 +458,28 @@
         "package": null,
         "client": "EventSource",
         "via": null
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/stream-wrapper.service.ts:45:5@30:19",
+      "type": "ui_api_call",
+      "label": "GET /depots/:param/events",
+      "repo": "web",
+      "file": "src/app/stream-wrapper.service.ts",
+      "line": 45,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/depots/:param/events",
+        "path": "/depots/:param/events",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "through": "StreamWrapperService.openLater",
+        "targetService": "api"
       }
     },
     {
@@ -531,6 +575,57 @@
       "line": 23
     },
     {
+      "id": "web#src/app/remembered-stream.service.ts:OrderTrackStreamService",
+      "type": "provider",
+      "label": "OrderTrackStreamService",
+      "repo": "web",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 54,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/remembered-stream.service.ts:OrderTrackStreamService.track",
+      "type": "method",
+      "label": "OrderTrackStreamService.track",
+      "repo": "web",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 62,
+      "meta": {
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "web#src/app/remembered-stream.service.ts:RememberedStreamService",
+      "type": "provider",
+      "label": "RememberedStreamService",
+      "repo": "web",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 22,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/remembered-stream.service.ts:RememberedStreamService.connect",
+      "type": "method",
+      "label": "RememberedStreamService.connect",
+      "repo": "web",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 30
+    },
+    {
+      "id": "web#src/app/remembered-stream.service.ts:RememberedStreamService.open",
+      "type": "method",
+      "label": "RememberedStreamService.open",
+      "repo": "web",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 35
+    },
+    {
       "id": "web#src/app/replay.service.ts:ReplayService",
       "type": "provider",
       "label": "ReplayService",
@@ -548,7 +643,7 @@
       "label": "StreamWrapperService",
       "repo": "web",
       "file": "src/app/stream-wrapper.service.ts",
-      "line": 10,
+      "line": 11,
       "kind": "injectable",
       "meta": {
         "providedIn": "root"
@@ -560,7 +655,38 @@
       "label": "StreamWrapperService.open",
       "repo": "web",
       "file": "src/app/stream-wrapper.service.ts",
-      "line": 16,
+      "line": 17,
+      "meta": {
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "web#src/app/stream-wrapper.service.ts:StreamWrapperService.openLater",
+      "type": "method",
+      "label": "StreamWrapperService.openLater",
+      "repo": "web",
+      "file": "src/app/stream-wrapper.service.ts",
+      "line": 29
+    },
+    {
+      "id": "web#src/app/stream-wrapper.service.ts:WatchService",
+      "type": "provider",
+      "label": "WatchService",
+      "repo": "web",
+      "file": "src/app/stream-wrapper.service.ts",
+      "line": 40,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/stream-wrapper.service.ts:WatchService.watch",
+      "type": "method",
+      "label": "WatchService.watch",
+      "repo": "web",
+      "file": "src/app/stream-wrapper.service.ts",
+      "line": 44,
       "meta": {
         "unreferenced": true
       }
@@ -843,6 +969,30 @@
       }
     },
     {
+      "from": "ui_api_call:web#src/app/remembered-stream.service.ts:63:5@36:20",
+      "to": "entry:api:http:GET:/depots/:param/events",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 63,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/stream-wrapper.service.ts:45:5@30:19",
+      "to": "entry:api:http:GET:/depots/:param/events",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/stream-wrapper.service.ts",
+      "line": 45,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
       "from": "web#src/app/live-events.service.ts:LiveEventsService.open",
       "to": "ui_api_call:web#src/app/live-events.service.ts:29:20",
       "type": "calls",
@@ -907,12 +1057,68 @@
       "line": 24
     },
     {
+      "from": "web#src/app/remembered-stream.service.ts:OrderTrackStreamService",
+      "to": "web#src/app/remembered-stream.service.ts:RememberedStreamService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 58
+    },
+    {
+      "from": "web#src/app/remembered-stream.service.ts:OrderTrackStreamService.track",
+      "to": "ui_api_call:web#src/app/remembered-stream.service.ts:63:5@36:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 63
+    },
+    {
+      "from": "web#src/app/remembered-stream.service.ts:OrderTrackStreamService.track",
+      "to": "web#src/app/remembered-stream.service.ts:RememberedStreamService.connect",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 63
+    },
+    {
+      "from": "web#src/app/remembered-stream.service.ts:RememberedStreamService.connect",
+      "to": "web#src/app/remembered-stream.service.ts:RememberedStreamService.open",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 32
+    },
+    {
       "from": "web#src/app/stream-wrapper.service.ts:StreamWrapperService.open",
-      "to": "ui_api_call:web#src/app/stream-wrapper.service.ts:17:19",
+      "to": "ui_api_call:web#src/app/stream-wrapper.service.ts:18:19",
       "type": "calls",
       "confidence": "heuristic",
       "file": "src/app/stream-wrapper.service.ts",
-      "line": 17
+      "line": 18
+    },
+    {
+      "from": "web#src/app/stream-wrapper.service.ts:WatchService",
+      "to": "web#src/app/stream-wrapper.service.ts:StreamWrapperService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/stream-wrapper.service.ts",
+      "line": 42
+    },
+    {
+      "from": "web#src/app/stream-wrapper.service.ts:WatchService.watch",
+      "to": "ui_api_call:web#src/app/stream-wrapper.service.ts:45:5@30:19",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/stream-wrapper.service.ts",
+      "line": 45
+    },
+    {
+      "from": "web#src/app/stream-wrapper.service.ts:WatchService.watch",
+      "to": "web#src/app/stream-wrapper.service.ts:StreamWrapperService.openLater",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/stream-wrapper.service.ts",
+      "line": 45
     }
   ],
   "types": {
@@ -958,7 +1164,7 @@
     },
     {
       "file": "src/app/stream-wrapper.service.ts",
-      "line": 17,
+      "line": 18,
       "reason": "api-path-dynamic",
       "hint": "The address is built at run time. Annotate the method with /** @flowatlas-calls GET /path */.",
       "symbol": "new EventSource(url)",

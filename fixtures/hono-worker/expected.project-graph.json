@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-14T12:37:29.190Z",
+  "builtAt": "2026-09-20T15:39:41.037Z",
   "services": [
     {
       "name": "api",
@@ -123,20 +123,20 @@
       "line": 24
     },
     {
-      "id": "api#src/stream/sse.ts:menuStream",
-      "type": "function",
-      "label": "menuStream",
-      "repo": "api",
-      "file": "src/stream/sse.ts",
-      "line": 18
-    },
-    {
       "id": "api#src/stream/sse.ts:orderStream",
       "type": "function",
       "label": "orderStream",
       "repo": "api",
       "file": "src/stream/sse.ts",
       "line": 11
+    },
+    {
+      "id": "api#src/stream/sse.ts:stockStream",
+      "type": "function",
+      "label": "stockStream",
+      "repo": "api",
+      "file": "src/stream/sse.ts",
+      "line": 18
     },
     {
       "id": "api#src/worker.ts:DELETE /api/depots/:depotId/cache@42",
@@ -255,23 +255,6 @@
       }
     },
     {
-      "id": "entry:api:http:GET:/api/depots/:param/menu-stream",
-      "type": "entry",
-      "label": "GET /api/depots/:param/menu-stream",
-      "repo": "api",
-      "file": "src/worker.ts",
-      "line": 28,
-      "kind": "http",
-      "meta": {
-        "method": "GET",
-        "path": "/api/depots/:param/menu-stream",
-        "rawPath": "/api/depots/:depotId/menu-stream",
-        "adapter": "hono-routes",
-        "registration": "app.get",
-        "handlerVia": "function"
-      }
-    },
-    {
       "id": "entry:api:http:GET:/api/depots/:param/orders",
       "type": "entry",
       "label": "GET /api/depots/:param/orders",
@@ -286,6 +269,23 @@
         "globalPrefix": "api",
         "controller": "OrdersController",
         "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/depots/:param/stock-stream",
+      "type": "entry",
+      "label": "GET /api/depots/:param/stock-stream",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/depots/:param/stock-stream",
+        "rawPath": "/api/depots/:depotId/stock-stream",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "handlerVia": "function"
       }
     },
     {
@@ -387,7 +387,7 @@
           "classes": 4,
           "skippedExternalCalls": {
             "@nestjs/common": 1,
-            "hono": 15
+            "hono": 18
           }
         },
         "bootstrap": "src/main.ts",
@@ -622,18 +622,6 @@
       "line": 26
     },
     {
-      "from": "api#src/stream/sse.ts:menuStream",
-      "to": "api#src/orders/orders.service.ts:OrdersService.changesFor",
-      "type": "calls",
-      "confidence": "static",
-      "params": [
-        "string"
-      ],
-      "returns": "string",
-      "file": "src/stream/sse.ts",
-      "line": 20
-    },
-    {
       "from": "api#src/stream/sse.ts:orderStream",
       "to": "api#src/orders/orders.service.ts:OrdersService.changesFor",
       "type": "calls",
@@ -644,6 +632,18 @@
       "returns": "string",
       "file": "src/stream/sse.ts",
       "line": 13
+    },
+    {
+      "from": "api#src/stream/sse.ts:stockStream",
+      "to": "api#src/orders/orders.service.ts:OrdersService.changesFor",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/stream/sse.ts",
+      "line": 20
     },
     {
       "from": "api#src/worker.ts:POST /api/messenger/webhook@34",
@@ -712,14 +712,6 @@
       "line": 15
     },
     {
-      "from": "entry:api:http:GET:/api/depots/:param/menu-stream",
-      "to": "api#src/stream/sse.ts:menuStream",
-      "type": "handles",
-      "confidence": "static",
-      "file": "src/stream/sse.ts",
-      "line": 18
-    },
-    {
       "from": "entry:api:http:GET:/api/depots/:param/orders",
       "to": "api#src/auth/api-key.guard.ts:ApiKeyGuard",
       "type": "guarded_by",
@@ -747,6 +739,14 @@
       "meta": {
         "params": "{depotId:string}"
       }
+    },
+    {
+      "from": "entry:api:http:GET:/api/depots/:param/stock-stream",
+      "to": "api#src/stream/sse.ts:stockStream",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stream/sse.ts",
+      "line": 18
     },
     {
       "from": "entry:api:http:GET:/api/depots/:param/stream",

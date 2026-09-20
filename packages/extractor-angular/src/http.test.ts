@@ -206,6 +206,28 @@ describe('annotations', () => {
     expect(graph.edges.find((edge) => edge.to === marked?.id)?.confidence).toBe('marker');
   });
 
+  it('reads a helper written as a brace-less arrow field, the common spelling', () => {
+    // `url = (id) => `${base}/orders/${id}`` has no `return` anywhere. Asking
+    // for return statements finds nothing and reads as a helper that answers
+    // with nothing rather than one written differently.
+    const graph = extract(`
+  private url = (id: string): string => \`\${environment.apiUrl}/orders/\${id}\`;
+  a(id: string): Observable<unknown> { return this.http.get<unknown>(this.url(id)); }
+`);
+    expect(callsOf(graph)[0]?.meta).toMatchObject({ path: '/orders/:param' });
+  });
+
+  it('reads one on a method written as a field, which is the case that needs it', () => {
+    // The hint on an unreadable address says to write this annotation, and a
+    // wrapper written as a field is exactly where that happens.
+    const graph = extract(`
+  /** @flowatlas-calls PATCH /orders/:id/status */
+  a = (path: string): Observable<unknown> => this.http.get<unknown>(path);
+`);
+    const marked = callsOf(graph).find((call) => call.meta?.['via'] === 'marker');
+    expect(marked?.meta).toMatchObject({ method: 'PATCH', path: '/orders/:param/status' });
+  });
+
   it('keeps the request it read over the one an annotation asserts', () => {
     const graph = extract(`
   /** @flowatlas-calls GET /orders */

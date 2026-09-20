@@ -11,7 +11,8 @@ import {
   type ServiceConfig,
 } from '@flowatlas/core';
 import type { Command } from 'commander';
-import { guessType, suggestName, toPosixRelative, UNKNOWN_TYPE } from './init.js';
+import { guessType, UNKNOWN_TYPE } from '../stacks.js';
+import { suggestName, toPosixRelative } from './init.js';
 import { installMcp, MCP_FILE, SERVER_KEY } from './mcp.js';
 
 export interface LinkOptions {
