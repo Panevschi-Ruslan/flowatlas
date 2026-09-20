@@ -11,7 +11,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { CONFIG_FILENAME, FlowatlasError, loadConfig } from '@flowatlas/core';
 import { afterEach, describe, expect, it } from 'vitest';
-import { guessType, runInit, scanCandidates, suggestName, UNKNOWN_TYPE } from './init.js';
+import { UNKNOWN_TYPE } from '../stacks.js';
+import { runInit, scanCandidates, suggestName } from './init.js';
 
 const temporary: string[] = [];
 
@@ -44,26 +45,6 @@ afterEach(() => {
     const dir = temporary.pop();
     if (dir !== undefined) rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
-});
-
-describe('guessType', () => {
-  it('recognises a backend by its framework dependency', () => {
-    expect(guessType({ dependencies: { '@nestjs/core': '10.0.0' } })).toBe('nestjs');
-  });
-
-  it('recognises a frontend by its framework dependency', () => {
-    expect(guessType({ dependencies: { '@angular/core': '17.0.0' } })).toBe('angular');
-  });
-
-  it('looks in every dependency section', () => {
-    expect(guessType({ devDependencies: { '@nestjs/core': '10.0.0' } })).toBe('nestjs');
-    expect(guessType({ peerDependencies: { '@angular/core': '17.0.0' } })).toBe('angular');
-  });
-
-  it('says so when nothing gives the type away', () => {
-    expect(guessType({ dependencies: { lodash: '4.0.0' } })).toBe(UNKNOWN_TYPE);
-    expect(guessType({})).toBe(UNKNOWN_TYPE);
-  });
 });
 
 describe('suggestName', () => {
@@ -183,6 +164,30 @@ describe('runInit', () => {
       repo: '../tooling',
       type: UNKNOWN_TYPE,
     });
+  });
+
+  it('names a framework it has no reader for, and says the repository is left out', async () => {
+    const { root, out } = makeWorkspace();
+    makeRepo(root, 'api', { name: 'api', dependencies: { express: '4.19.0' } });
+    const messages: string[] = [];
+    const result = await runInit({ dir: root, out, yes: true, print: (m) => messages.push(m) });
+    // The configuration still holds it: a repository nobody can read is still a
+    // repository of this project, and `type` is an open string.
+    expect(result.config.services[0]).toEqual({ name: 'api', repo: '../api', type: UNKNOWN_TYPE });
+    const said = messages.join('\n');
+    expect(said).toContain('No reader yet for: api (Express)');
+    expect(said).toContain('contribute nothing to the graph');
+    expect(said).not.toContain('Could not tell the type of');
+  });
+
+  it('still says it could not tell, when the manifest gave nothing away', async () => {
+    const { root, out } = makeWorkspace();
+    makeRepo(root, 'tooling', { name: 'tooling', dependencies: { lodash: '4.0.0' } });
+    const messages: string[] = [];
+    await runInit({ dir: root, out, yes: true, print: (m) => messages.push(m) });
+    const said = messages.join('\n');
+    expect(said).toContain('Could not tell the type of: tooling');
+    expect(said).not.toContain('No reader yet');
   });
 
   it('says so and writes an empty configuration when there is nothing to find', async () => {

@@ -7,8 +7,12 @@ import { z } from 'zod';
  * Not the graph schema: the graph can be rebuilt at will, while a script that
  * reads `flowatlas dead --format=json` in CI breaks silently when a field moves.
  * Bump it when a field is removed or changes meaning.
+ *
+ * 2: a `fields` row says which way the field was travelling and whether the
+ * receiver removes it. Shared by `dead`, `cycles`, `hotspots` and `config`, so
+ * all four move together whichever of them changed.
  */
-export const ANALYTICS_FORMAT_VERSION = 1;
+export const ANALYTICS_FORMAT_VERSION = 2;
 
 const version = z.literal(ANALYTICS_FORMAT_VERSION);
 const confidence = z.enum(CONFIDENCE_LEVELS);
@@ -90,6 +94,9 @@ export const deadResultSchema = z.object({
         typeId: z.string(),
         field: z.string(),
         sentOn: z.array(z.string()),
+        direction: z.enum(['request', 'response', 'payload']),
+        /** True when the receiver's whitelisting pipe removes it on arrival. */
+        dropped: z.boolean(),
         reason: z.string(),
       }),
     )

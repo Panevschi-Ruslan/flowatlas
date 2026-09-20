@@ -55,7 +55,15 @@ export type { Confidence, EdgeType, GraphEdge } from './model/edges.js';
 export { TYPE_KINDS } from './model/types.js';
 export type { TypeEntry, TypeField, TypeKind, TypeRegistry } from './model/types.js';
 
-export { DEFAULT_DETAIL, DEFAULT_MAX_NODES, DETAIL_LEVELS } from './model/graph.js';
+export {
+  DEFAULT_DETAIL,
+  DEFAULT_MAX_NODES,
+  DETAIL_LEVELS,
+  sitesIn,
+  tally,
+  wasMissed,
+  type PlaceCount,
+} from './model/graph.js';
 export type {
   DetailLevel,
   ProjectGraph,
@@ -205,8 +213,18 @@ export type { DecoratorMatch } from './decorators.js';
 export { resolveConstructorInjection, resolveFieldInjection } from './di/constructor.js';
 export { resolveClassOfExpression, resolveClassOfType } from './di/class-ref.js';
 export type { ClassRef } from './di/class-ref.js';
-export { findMethod, forEachCall, resolveMemberCall, resolveReceiver } from './di/member-call.js';
-export type { MemberCall, ReceiverInfo } from './di/member-call.js';
+export {
+  bodyOf,
+  enclosingMethod,
+  findMethod,
+  forEachCall,
+  methodBodies,
+  methodNamedOn,
+  methodsOfClass,
+  parametersOf,
+  resolveReceiver,
+} from './di/member-call.js';
+export type { ClassMethod, ReceiverInfo } from './di/member-call.js';
 export { DiMap } from './di/types.js';
 export type {
   DiEntry,
@@ -247,6 +265,7 @@ export {
   isReadable,
   parameterBehind,
   readsParameterOf,
+  remembersParametersOf,
   returnedExpression,
   rootSettingAddress,
   rootSettingKey,

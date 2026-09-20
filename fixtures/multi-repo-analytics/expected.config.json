@@ -1,5 +1,5 @@
 {
-  "analyticsFormatVersion": 1,
+  "analyticsFormatVersion": 2,
   "flow": {
     "selector": "POST /orders",
     "entry": "entry:gateway:http:POST:/orders"

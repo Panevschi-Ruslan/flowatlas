@@ -1,4 +1,10 @@
-import { findMethod, forEachCall, lineOf, resolveReceiver } from '@flowatlas/core';
+import {
+  findMethod,
+  forEachCall,
+  lineOf,
+  methodBodies,
+  resolveReceiver,
+} from '@flowatlas/core';
 import type { ClassDeclaration } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { definePass } from './types.js';
@@ -18,9 +24,7 @@ export const callsPass = definePass('calls', (ctx) => {
     if (indexed.role === 'module') continue;
     const owner: ClassDeclaration = indexed.declaration;
 
-    for (const method of owner.getMethods()) {
-      const body = method.getBody();
-      if (body === undefined) continue;
+    for (const { declaration: method, body } of methodBodies(owner)) {
       const fromId = ctx.methodIdOf(method);
       if (fromId === undefined) continue;
       let fromCreated = false;

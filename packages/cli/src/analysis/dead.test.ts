@@ -24,6 +24,92 @@ describe('entries nothing reaches', () => {
     expect(rows[0]!.reason).toContain('may be a public API');
   });
 
+  it('says which kind of row it is, rather than one sentence for four', () => {
+    const uncalled = [
+      'entry:orders:http:GET:/health',
+      'entry:orders:http:GET:/api/_db-status',
+      'entry:orders:http:GET:/api/orders/:param/stream',
+      'entry:orders:http:GET:/api/tos',
+      'entry:orders:http:GET:/api/orders/:param',
+    ];
+    const db = buildTestDb({
+      nodes: uncalled.map((id) => route(id)),
+      edges: [],
+      report: { routes: { total: 5, called: 0, uncalled, duplicated: [] } },
+    });
+
+    const rows = deadEntries(db, db.report(), { publicRoutes: ['GET /api/tos'] });
+    db.close();
+    const reasonFor = (key: string) => rows.find((row) => row.key === key)?.reason ?? '';
+    // The rows the command is for come first, so reading the top of the list
+    // and stopping there is reading the findings and stopping there.
+    expect(rows.map((row) => row.key)).toEqual([
+      'GET:/api/orders/:param',
+      'GET:/api/orders/:param/stream',
+      'GET:/api/_db-status',
+      'GET:/health',
+      'GET:/api/tos',
+    ]);
+    expect(reasonFor('GET:/health')).toContain('probe');
+    expect(reasonFor('GET:/api/_db-status')).toContain('probe');
+    expect(reasonFor('GET:/api/orders/:param/stream')).toContain('event stream');
+    expect(reasonFor('GET:/api/tos')).toContain('declared public');
+    // Everything the four do not explain keeps the sentence it always had.
+    expect(reasonFor('GET:/api/orders/:param')).toContain('may be a public API');
+  });
+
+  it('keeps an ordinary noun from reading as a probe deep in a path', () => {
+    // `status` and `metrics` are words a business API uses. Near the root they
+    // are a probe; three segments in they are a route somebody wrote.
+    const uncalled = [
+      'entry:orders:http:GET:/api/orders/:param/status',
+      'entry:orders:http:GET:/api/restaurants/:param/metrics',
+      'entry:orders:http:GET:/api/events',
+    ];
+    const db = buildTestDb({
+      nodes: uncalled.map((id) => route(id)),
+      edges: [],
+      report: { routes: { total: 3, called: 0, uncalled, duplicated: [] } },
+    });
+
+    const rows = deadEntries(db, db.report());
+    db.close();
+    for (const row of rows) expect(row.reason).toContain('may be a public API');
+  });
+
+  it('reads a `-status` ending the way it reads a bare `status`', () => {
+    // `payment-status` is a noun a real route uses; `_db-status` is not a name
+    // anything but a probe wears, so it answers at any depth.
+    const uncalled = [
+      'entry:orders:http:GET:/api/orders/:param/payment-status',
+      'entry:orders:http:GET:/api/_db-status',
+    ];
+    const db = buildTestDb({
+      nodes: uncalled.map((id) => route(id)),
+      edges: [],
+      report: { routes: { total: 2, called: 0, uncalled, duplicated: [] } },
+    });
+
+    const rows = deadEntries(db, db.report());
+    db.close();
+    const reasonFor = (key: string) => rows.find((row) => row.key === key)?.reason ?? '';
+    expect(reasonFor('GET:/api/orders/:param/payment-status')).toContain('may be a public API');
+    expect(reasonFor('GET:/api/_db-status')).toContain('probe');
+  });
+
+  it('reads only the last segment, so a route below a probe is a route', () => {
+    const uncalled = ['entry:orders:http:GET:/api/health/reports/:param'];
+    const db = buildTestDb({
+      nodes: uncalled.map((id) => route(id)),
+      edges: [],
+      report: { routes: { total: 1, called: 0, uncalled, duplicated: [] } },
+    });
+
+    const rows = deadEntries(db, db.report());
+    db.close();
+    expect(rows[0]!.reason).toContain('may be a public API');
+  });
+
   it('never reports an entry something outside the graph triggers', () => {
     const db = buildTestDb({
       nodes: [
@@ -143,6 +229,75 @@ describe('channels missing an end', () => {
     const rows = deadChannels(db, db.report());
     db.close();
     expect(rows[0]!.reason).toBe('no consumer in any repo; no producer in any repo');
+  });
+
+  it('says when the consumer it could not read is a browser holding a stream', () => {
+    // The service publishes and also answers a subscription. "No consumer in
+    // any repo" there reads as "delete the publisher", and the screens that
+    // consume it go dark (R22).
+    const db = buildTestDb({
+      nodes: [
+        node('channel:order:*:created', { type: 'channel', label: 'order:*:created' }),
+        node('producer:orders#a:1:1', { type: 'producer', repo: 'orders' }),
+        node('entry:orders:http:GET:/orders/:param/stream', {
+          type: 'entry',
+          kind: 'http',
+          repo: 'orders',
+        }),
+        node('ui_api_call:web#s.ts:1:1', { type: 'ui_api_call', kind: 'sse', repo: 'web' }),
+      ],
+      edges: [
+        edge('producer:orders#a:1:1', 'channel:order:*:created', { type: 'emits' }),
+        edge('ui_api_call:web#s.ts:1:1', 'entry:orders:http:GET:/orders/:param/stream', {
+          type: 'hits',
+        }),
+      ],
+      report: {
+        channels: { total: 1, linked: 0, noConsumers: ['channel:order:*:created'], noProducers: [] },
+      },
+    });
+
+    const rows = deadChannels(db, db.report());
+    db.close();
+    expect(rows[0]?.reason).toBe(
+      'no consumer in any repo; orders serves 1 event stream, whose consumers are not read yet',
+    );
+  });
+
+  it('counts the routes held open, not the screens holding them', () => {
+    // Two screens subscribing to one stream are one route. Counting the
+    // subscriptions would say a service serves more streams than it declares.
+    const db = buildTestDb({
+      nodes: [
+        node('channel:order:*:created', { type: 'channel', label: 'order:*:created' }),
+        node('producer:orders#a:1:1', { type: 'producer', repo: 'orders' }),
+        node('entry:orders:http:GET:/orders/:param/stream', {
+          type: 'entry',
+          kind: 'http',
+          repo: 'orders',
+        }),
+        node('ui_api_call:web#a.ts:1:1', { type: 'ui_api_call', kind: 'sse', repo: 'web' }),
+        node('ui_api_call:web#b.ts:1:1', { type: 'ui_api_call', kind: 'sse', repo: 'web' }),
+      ],
+      edges: [
+        edge('producer:orders#a:1:1', 'channel:order:*:created', { type: 'emits' }),
+        edge('ui_api_call:web#a.ts:1:1', 'entry:orders:http:GET:/orders/:param/stream', {
+          type: 'hits',
+        }),
+        edge('ui_api_call:web#b.ts:1:1', 'entry:orders:http:GET:/orders/:param/stream', {
+          type: 'hits',
+        }),
+      ],
+      report: {
+        channels: { total: 1, linked: 0, noConsumers: ['channel:order:*:created'], noProducers: [] },
+      },
+    });
+
+    const rows = deadChannels(db, db.report());
+    db.close();
+    expect(rows[0]?.reason).toBe(
+      'no consumer in any repo; orders serves 1 event stream, whose consumers are not read yet',
+    );
   });
 });
 
@@ -313,5 +468,11 @@ describe('fields the receiver does not declare', () => {
     expect(result.fields.map((row) => `${row.typeId} ${row.field}`)).toEqual([
       'type:api#Body debugId',
     ]);
+    // Travelling into the receiver, and nothing there removes it: this graph
+    // has no whitelisting pipe, so the row must not claim one. What the
+    // checker read, not what the direction suggests.
+    expect(result.fields[0]?.direction).toBe('request');
+    expect(result.fields[0]?.dropped).toBe(false);
+    expect(result.fields[0]?.reason).toContain('nothing there removes it');
   });
 });

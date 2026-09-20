@@ -62,6 +62,10 @@
     "target-route-not-found": 2,
     "unknown-base-url-env": 1
   },
+  "nothing": {
+    "rows": 0,
+    "sites": 0
+  },
   "link": {
     "httpOut": {
       "total": 6,

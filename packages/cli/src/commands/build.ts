@@ -11,10 +11,13 @@ import {
   loadConfig,
   parseRepoGraph,
   readPackageJson,
+  sitesIn,
+  wasMissed,
   SCHEMA_VERSION,
   type FlowatlasConfig,
   type RepoGraph,
   type ServiceConfig,
+  type Unresolved,
 } from '@flowatlas/core';
 import { findTsconfig, listRepoSources } from '@flowatlas/extractor-nestjs';
 import { linkGraphs, writeGraphDb, type LinkResult, type ServiceReport } from '@flowatlas/linker';
@@ -36,6 +39,7 @@ import {
   type RepoCache,
 } from '../build/cache.js';
 import { adapterNames, createRegistry, EXTRACTORS, isFrontend } from '../build/extractor.js';
+import { noReaderNote } from '../stacks.js';
 import {
   planRebuild,
   type RebuildPlan,
@@ -219,11 +223,19 @@ const emptyReport = (service: ServiceConfig, extractor: string | null): ServiceR
   durationMs: 0,
 });
 
+/**
+ * What one repository came to, as the summary and the cache both count it.
+ *
+ * `unresolved` counts the rows that say something was not read. Rows at level
+ * `nothing` are left out: they stand for places where no edge exists to draw,
+ * so a repository full of them is not a repository read badly, and a number
+ * that mixed the two would say it was.
+ */
 const countsOf = (graph: RepoGraph): RepoCache['counts'] => ({
   nodes: graph.nodes.length,
   edges: graph.edges.length,
   types: Object.keys(graph.types).length,
-  unresolved: graph.unresolved.length,
+  unresolved: graph.unresolved.filter(wasMissed).length,
 });
 
 const reportOf = (
@@ -323,8 +335,15 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
     };
   }
 
+  // A repository with no reader contributes nothing, and the graph is smaller
+  // than the project by exactly that much. Naming the framework turns a line
+  // nobody can act on into one that says what would have to exist.
   if (extractor === null) {
-    return { service, report: { ...base, skipped: 'no-extractor' } };
+    const note = noReaderNote(readPackageJson(repoDir));
+    return {
+      service,
+      report: { ...base, skipped: 'no-extractor', ...(note === undefined ? {} : { error: note }) },
+    };
   }
 
   if (plan.mode === 'skip') {
@@ -622,6 +641,29 @@ const nextCache = (
   return cache;
 };
 
+/**
+ * What the unresolved rows came to, in one line.
+ *
+ * Three numbers, and two of them are never added together. Rows and places
+ * differ wherever a reason was folded, and both are worth saying: one is how
+ * long the list is, the other is what it covers. A place where nothing joins is
+ * neither — a template binding that assigns to a field has no other end, in
+ * this project or any other — so it is said last, in its own clause, and only
+ * when there is one.
+ */
+export const unresolvedLine = (rows: readonly Unresolved[], missed: number): string => {
+  const sites = sitesIn(rows.filter(wasMissed));
+  const nothing = rows.filter((row) => !wasMissed(row));
+  const nothingSites = sitesIn(nothing);
+  return (
+    `unresolved: ${missed}` +
+    (sites === missed ? '' : ` rows over ${sites} sites`) +
+    (nothing.length === 0
+      ? ''
+      : `, and ${nothingSites} site${nothingSites === 1 ? '' : 's'} with nothing to join`)
+  );
+};
+
 /** What the build found, in the order someone reading it would want. */
 export const summariseBuild = (result: BuildResult): string[] => {
   const { report } = result;
@@ -687,11 +729,7 @@ export const summariseBuild = (result: BuildResult): string[] => {
   lines.push(`types: ${report.types.total} (${report.types.sharedPackage} from shared packages)`);
   // Rows and places differ wherever a reason was folded, and both are worth
   // saying: one is how long the list is, the other is what it covers.
-  const sites = result.project.unresolved.reduce((sum, row) => sum + (row.sites ?? 1), 0);
-  lines.push(
-    `unresolved: ${report.totals.unresolved}` +
-      (sites === report.totals.unresolved ? '' : ` rows over ${sites} sites`),
-  );
+  lines.push(unresolvedLine(result.project.unresolved, report.totals.unresolved));
   return lines;
 };
 

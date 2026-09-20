@@ -3,7 +3,7 @@ import { adminRoutes } from './admin/admin.routes';
 import { registerReports } from './admin/reports.routes';
 import { requestLogger, withNest } from './middleware/with-nest';
 import { OrdersService } from './orders/orders.service';
-import { menuStream, orderStream } from './stream/sse';
+import { orderStream, stockStream } from './stream/sse';
 
 /**
  * The second framework of this repository.
@@ -25,7 +25,7 @@ app.get('/health', (c) => c.json({ status: 'ok' }));
 // The two the admin panel opens. Named functions, and the `/api` the Nest side
 // gets from `setGlobalPrefix` is written out here because nothing adds it.
 app.get('/api/depots/:depotId/stream', orderStream);
-app.get('/api/depots/:depotId/menu-stream', menuStream);
+app.get('/api/depots/:depotId/stock-stream', stockStream);
 
 // Middleware between the path and the handler, which is where a route's guards
 // go when there are no decorators to hang them on. The handler calls a function

@@ -107,6 +107,105 @@ describe('streams the browser subscribes to', () => {
     expect(graph.edges.find((edge) => edge.to === stream.id)?.confidence).toBe('heuristic');
   });
 
+  it('reads a stream through a wrapper that remembered what it was given', () => {
+    // A stream that has to survive being backgrounded cannot be opened where
+    // the address arrives, so the wrapper keeps its arguments and opens later.
+    // The address is still the caller's (R21).
+    const graph = extract(
+      `
+  private params: { url: string } | null = null;
+
+  connect(url: string): void {
+    this.params = { url };
+    this.open(this.params);
+  }
+
+  private open(p: { url: string }): void {
+    new EventSource(p.url);
+  }
+`,
+      {},
+      `
+@Injectable({ providedIn: 'root' })
+export class TrackService {
+  constructor(private readonly live: LiveService) {}
+
+  track(depotId: string): void {
+    this.live.connect(\`\${environment.apiUrl}/depots/\${depotId}/events\`);
+  }
+}
+`,
+    );
+    const stream = only(graph);
+    expect(stream.meta?.['path']).toBe('/depots/:param/events');
+    expect(stream.meta?.['baseUrlEnv']).toBe('apiUrl');
+    expect(stream.meta?.['through']).toBe('LiveService.open');
+    expect(graph.edges.find((edge) => edge.to === stream.id)?.from).toBe(
+      'web#live.service.ts:TrackService.track',
+    );
+  });
+
+  it('follows a wrapper written as a field to the caller that wrote the address', () => {
+    // Its parameters sit on the arrow and its callers name a property, so both
+    // questions forwarding asks are one node deeper than for a method (R26).
+    const graph = extract(
+      `  open = (url: string): void => { new EventSource(url); };`,
+      {},
+      `
+@Injectable({ providedIn: 'root' })
+export class WatchService {
+  constructor(private readonly live: LiveService) {}
+
+  watch(depotId: string): void {
+    this.live.open(\`\${environment.apiUrl}/depots/\${depotId}/events\`);
+  }
+}
+`,
+    );
+    const stream = only(graph);
+    expect(stream.meta?.['path']).toBe('/depots/:param/events');
+    expect(stream.meta?.['through']).toBe('LiveService.open');
+    expect(graph.edges.find((edge) => edge.to === stream.id)?.from).toBe(
+      'web#live.service.ts:WatchService.watch',
+    );
+  });
+
+  it('refuses a remembered object two places write, rather than picking one', () => {
+    // Two writers mean two possible addresses and nothing says which one a
+    // later read sees. Reported, as an address built at run time is.
+    const graph = extract(
+      `
+  private params: { url: string } | null = null;
+
+  connect(url: string): void {
+    this.params = { url };
+    this.open(this.params);
+  }
+
+  reset(): void {
+    this.params = { url: 'https://other.test/events' };
+  }
+
+  private open(p: { url: string }): void {
+    new EventSource(p.url);
+  }
+`,
+      {},
+      `
+@Injectable({ providedIn: 'root' })
+export class TrackService {
+  constructor(private readonly live: LiveService) {}
+
+  track(depotId: string): void {
+    this.live.connect(\`\${environment.apiUrl}/depots/\${depotId}/events\`);
+  }
+}
+`,
+    );
+    expect(only(graph).meta?.['path']).toBeNull();
+    expect(graph.unresolved.map((row) => row.reason)).toContain('api-path-dynamic');
+  });
+
   it('reads a stream a wrapper opens at each caller that hands it the address', () => {
     const graph = extract(
       `  open(url: string): void { new EventSource(url); }

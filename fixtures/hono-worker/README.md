@@ -47,7 +47,7 @@ application that declare no route at all.
 | `app.use('*', requestLogger)` | 20 | — | middleware, not a way in |
 | `app.get('/health', (c) => …)` | 23 | `GET /health` | `inline` |
 | `app.get('/api/depots/:depotId/stream', orderStream)` | 27 | `GET /api/depots/:param/stream` | `function` |
-| `app.get('/api/depots/:depotId/menu-stream', menuStream)` | 28 | `GET /api/depots/:param/menu-stream` | `function` |
+| `app.get('/api/depots/:depotId/stock-stream', stockStream)` | 28 | `GET /api/depots/:param/stock-stream` | `function` |
 | `app.post('/api/messenger/webhook', withNest, …)` | 34 | `POST /api/messenger/webhook` | `inline`, `meta.middleware: ["withNest"]` |
 | `app.on('DELETE', '…/cache', …)` | 42 | `DELETE /api/depots/:param/cache` | `inline` |
 | `app.get(pathFor('stats'), …)` | 45 | none | `route-path-dynamic` |

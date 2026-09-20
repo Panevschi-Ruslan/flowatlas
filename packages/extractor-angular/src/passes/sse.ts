@@ -1,5 +1,13 @@
-import { makeExternalApiId, makeLeafId, originOfValue, siteOf, type CallFrame } from '@flowatlas/core';
-import type { MethodDeclaration, NewExpression, Node as TsNode } from 'ts-morph';
+import {
+  makeExternalApiId,
+  makeLeafId,
+  methodBodies,
+  originOfValue,
+  siteOf,
+  type CallFrame,
+  type ClassMethod,
+} from '@flowatlas/core';
+import type { NewExpression, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { AngularExtractContext } from '../context.js';
 import { noteIfUnreferenced, requestIdOf, requestsOf, wrapperOf, type RequestSite } from '../util/forward.js';
@@ -131,7 +139,7 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
   };
 
   /** A stream opened in a wrapper belongs to whoever handed it the address. */
-  const emit = (site: NewExpression, method: MethodDeclaration, at: RequestSite): void => {
+  const emit = (site: NewExpression, method: ClassMethod, at: RequestSite): void => {
     const [urlArg] = site.getArguments();
     if (urlArg === undefined) return;
     for (const request of requestsOf(ctx, urlArg, method, at)) {
@@ -142,9 +150,7 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
 
   for (const indexed of ctx.classes.all()) {
     if (indexed.role === 'module') continue;
-    for (const method of indexed.declaration.getMethods()) {
-      const body = method.getBody();
-      if (body === undefined) continue;
+    for (const { declaration: method, body } of methodBodies(indexed.declaration)) {
       const methodId = ctx.methodIdOf(method);
       if (methodId === undefined) continue;
 
@@ -156,7 +162,7 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
         if (!Node.isNewExpression(site)) return;
         if (!isBrowserClient(site.getExpression())) return;
         ctx.ensureMethodNode(method);
-        emit(site, method as MethodDeclaration, { call: site, methodId, file: indexed.file });
+        emit(site, method, { call: site, methodId, file: indexed.file });
       });
     }
   }

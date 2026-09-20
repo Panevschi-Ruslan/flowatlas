@@ -3,6 +3,7 @@ import { Telegraf } from 'telegraf';
 
 import { callbackRegistry } from './handlers/callback-registry.js';
 import { registerMenuHandlers } from './commands/menu.command.js';
+import { orderCommands } from './commands/order-commands.js';
 import { OrdersService } from './orders.service.js';
 import './actions/cancel-order.action.js';
 
@@ -25,9 +26,28 @@ export class Bot {
     this.bot.on('callback_query', (data) => {
       callbackRegistry.dispatch(String(data), { orders: this.orders });
     });
+
+    // Called from a method body, which is the walk that follows no plain
+    // function. A module of functions is followed even there (R24).
+    orderCommands.myOrders(this.orders);
   }
 
   greet(): string {
     return this.orders.find('welcome');
+  }
+
+  /**
+   * A method written as a field, which is how one that will be handed to a
+   * callback keeps its `this`. Reading only `getMethod` reports the call below
+   * as a receiver nobody can pin down (R25).
+   */
+  announce = (orderId: string): string => this.orders.find(orderId);
+
+  /** Assigned from outside, so there is no one body to point at. */
+  onReady: (() => void) | undefined;
+
+  ready(): void {
+    this.announce('latest');
+    this.onReady?.();
   }
 }

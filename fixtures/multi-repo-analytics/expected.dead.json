@@ -1,5 +1,5 @@
 {
-  "analyticsFormatVersion": 1,
+  "analyticsFormatVersion": 2,
   "confidence": "heuristic",
   "entries": [
     {
@@ -64,7 +64,9 @@
       "sentOn": [
         "http_out:gateway#src/clients/orders.client.ts:20:12|http_calls|entry:orders:http:POST:/orders/create"
       ],
-      "reason": "sent but not declared by any receiver"
+      "direction": "request",
+      "dropped": false,
+      "reason": "sent in a request the receiver does not declare; nothing there removes it"
     },
     {
       "typeId": "{customerId:string}",
@@ -72,7 +74,9 @@
       "sentOn": [
         "http_out:billing#src/clients/orders.client.ts:14:12|http_calls|entry:orders:http:POST:/orders/create"
       ],
-      "reason": "sent but not declared by any receiver"
+      "direction": "request",
+      "dropped": false,
+      "reason": "sent in a request the receiver does not declare; nothing there removes it"
     }
   ],
   "excludedEntryKinds": [

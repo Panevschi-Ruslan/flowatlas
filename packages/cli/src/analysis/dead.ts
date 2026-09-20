@@ -1,5 +1,5 @@
 import type { GraphNode } from '@flowatlas/core';
-import type { GraphDb, LinkReport } from '@flowatlas/linker';
+import { matchesRoutePattern, type GraphDb, type LinkReport } from '@flowatlas/linker';
 import { byId, methodsByOwner } from './graph.js';
 
 /**
@@ -46,18 +46,147 @@ export interface DeadProvider {
   reason: string;
 }
 
+/** Which way a field was travelling when it crossed the boundary. */
+export type FieldDirection = 'request' | 'response' | 'payload';
+
 export interface DeadField {
   typeId: string;
   field: string;
   /** Edges the field was seen going over, as `from -> to`. */
   sentOn: string[];
+  direction: FieldDirection;
+  /**
+   * Whether anything at the far end removes it.
+   *
+   * Not a guess from the direction: the contract checker reads the receiver's
+   * `ValidationPipe` and says so, and this is that finding. A field the pipe
+   * strips never lands, so the sender believes it sent something that arrived
+   * and it did not. Everything else — a response nobody declares, a request
+   * into a receiver that whitelists nothing — is carried, ignored, and removed
+   * by no one. Counting the two together is what made this list 1,445 rows.
+   */
+  dropped: boolean;
   reason: string;
 }
+
+/** What each kind of row says about itself. Fully decided by the two fields above. */
+const FIELD_TRAVEL: Record<FieldDirection, string> = {
+  request: 'sent in a request the receiver does not declare; nothing there removes it',
+  response: 'sent in a response nothing on the far side declares; read by nobody',
+  payload: 'published in a payload nothing that handles the channel declares',
+};
+
+const STRIPPED = 'sent in a request the receiver whitelists; the pipe removes it on arrival';
 
 export interface DeadOptions {
   /** Only this service. */
   service?: string;
+  /**
+   * Routes the configuration has already called public, as `doctor.publicRoutes`
+   * spells them. A route named there has its callers outside the project by
+   * decision, and saying nobody calls it would be repeating the configuration
+   * back as a finding.
+   */
+  publicRoutes?: readonly string[];
 }
+
+/**
+ * Paths that answer something other than the project.
+ *
+ * Only the last segment is looked at, so `/api/health` is a probe and
+ * `/api/health/reports/:param` is a route like any other. Both lists are
+ * heuristics, which is what `dead` deals in; what they buy is that the four
+ * kinds of row in this list stop sharing one sentence.
+ *
+ * Two of the probe words — `status` and `metrics` — are ordinary nouns in a
+ * business API, where `GET /api/orders/:param/status` is a route somebody
+ * wrote on purpose. They count only near the root, where nothing is being
+ * addressed: a probe answers about the service itself, so it has nothing to
+ * put in front of its own name. `events` is left out of the stream words
+ * altogether, since a collection of events is as likely as a stream of them.
+ */
+const PROBE_SEGMENTS = new Set([
+  'health',
+  'healthz',
+  'healthcheck',
+  'livez',
+  'liveness',
+  'metrics',
+  'ping',
+  'readyz',
+  'readiness',
+  'status',
+]);
+
+/** How deep a path may be and still be read as a probe. `/api/health` is two. */
+const PROBE_DEPTH = 2;
+
+const STREAM_SEGMENTS = new Set(['stream', 'sse']);
+
+/** `GET:/api/orders/:param/stream` → `{ method: 'GET', path: '/api/orders/:param/stream' }`. */
+const splitKey = (key: string): { method: string; path: string } => {
+  const [method = '', ...rest] = key.split(':');
+  return { method, path: rest.join(':') };
+};
+
+const segmentsOf = (path: string): string[] => path.split('/').filter((part) => part !== '');
+
+const lastSegment = (path: string): string =>
+  (segmentsOf(path).pop() ?? '').toLowerCase();
+
+const isProbe = (path: string): boolean => {
+  const last = lastSegment(path);
+  // A name nobody else uses says probe wherever it sits: nothing in a business
+  // API is called `_db-status`. `payment-status` is a different matter — it is
+  // a noun a real route uses — so a `-status` ending answers near the root and
+  // nowhere else, exactly as a bare `status` does.
+  if (/^_.*(status|health)$/.test(last)) return true;
+  const named = PROBE_SEGMENTS.has(last) || last.endsWith('-status');
+  return named && segmentsOf(path).length <= PROBE_DEPTH;
+};
+
+const isStream = (path: string): boolean => {
+  const last = lastSegment(path);
+  return STREAM_SEGMENTS.has(last) || last.endsWith('-stream');
+};
+
+/**
+ * Why one route ended up in this list, which is not the same question as
+ * whether it is dead.
+ *
+ * Four answers, and only the first of them is the one the command is for. A
+ * reader who opens the list and finds `/health` at the top of it closes the
+ * list, so each kind says what it is, and `rank` puts the rows that mean
+ * something above the rows that never could — which is also the order `--max`
+ * cuts from the bottom of.
+ */
+const ENTRY_CLASSES = {
+  unexplained: { rank: 0, reason: 'no http_calls/hits from any repo (may be a public API)' },
+  stream: {
+    rank: 1,
+    reason: 'looks like an event stream; a browser subscribing to one is not read yet',
+  },
+  probe: {
+    rank: 2,
+    reason: 'looks like a health or status probe; whatever runs it is outside the graph',
+  },
+  declared: {
+    rank: 3,
+    reason: 'declared public in the configuration; its callers are outside the project',
+  },
+} as const;
+
+type EntryClass = (typeof ENTRY_CLASSES)[keyof typeof ENTRY_CLASSES];
+
+const classOf = (key: string, publicRoutes: readonly string[]): EntryClass => {
+  const { method, path } = splitKey(key);
+  if (publicRoutes.some((pattern) => matchesRoutePattern(pattern, method, path))) {
+    return ENTRY_CLASSES.declared;
+  }
+  if (isProbe(path)) return ENTRY_CLASSES.probe;
+  if (isStream(path)) return ENTRY_CLASSES.stream;
+  return ENTRY_CLASSES.unexplained;
+};
 
 const located = (node: GraphNode): { file?: string; line?: number } => ({
   ...(node.file === undefined ? {} : { file: node.file }),
@@ -89,7 +218,6 @@ export const deadEntries = (
   options: DeadOptions = {},
 ): DeadEntry[] => {
   const excluded = new Set<string>(EXTERNALLY_TRIGGERED);
-  const rows: DeadEntry[] = [];
 
   // The build already worked out which routes nothing reaches; recomputing it
   // here would be a second answer to the same question, free to disagree.
@@ -101,22 +229,26 @@ export const deadEntries = (
           .map((entry) => entry.id)
       : report.routes.uncalled;
 
+  const ranked: Array<{ rank: number; row: DeadEntry }> = [];
   for (const id of uncalled) {
     const node = db.node(id);
     if (node === undefined || !inService(node, options.service)) continue;
     // The build lists http routes only. The guard is here so that widening it
     // later cannot quietly start reporting a cron job as unreachable.
     if (excluded.has(node.kind ?? '')) continue;
-    rows.push({
-      id,
-      service: node.repo,
-      kind: node.kind ?? 'http',
-      key: keyOf(id),
-      ...located(node),
-      reason: 'no http_calls/hits from any repo (may be a public API)',
+    const found = classOf(keyOf(id), options.publicRoutes ?? []);
+    ranked.push({
+      rank: found.rank,
+      row: {
+        id,
+        service: node.repo,
+        kind: node.kind ?? 'http',
+        key: keyOf(id),
+        ...located(node),
+        reason: found.reason,
+      },
     });
   }
-
   for (const channel of report?.channels.noProducers ?? []) {
     for (const edge of db.edgesFrom(channel, ['consumes'])) {
       const consumer = db.node(edge.to);
@@ -125,18 +257,58 @@ export const deadEntries = (
       const node = db.node(entryId);
       if (node === undefined || excluded.has(node.kind ?? '')) continue;
       if (!inService(node, options.service)) continue;
-      rows.push({
-        id: entryId,
-        service: node.repo,
-        kind: node.kind ?? 'event',
-        key: keyOf(entryId),
-        ...located(node),
-        reason: `${channel} has no publisher in any repo`,
+      // A handler whose channel nobody publishes to is the finding this
+      // command is for, so it ranks with the routes nothing explains.
+      ranked.push({
+        rank: 0,
+        row: {
+          id: entryId,
+          service: node.repo,
+          kind: node.kind ?? 'event',
+          key: keyOf(entryId),
+          ...located(node),
+          reason: `${channel} has no publisher in any repo`,
+        },
       });
     }
   }
 
-  return rows.sort((a, b) => byId(a.id, b.id));
+  // Rank first, then id. `--max` cuts from the bottom, so what it cuts is the
+  // rows that say why they are here rather than the rows that do not.
+  ranked.sort((a, b) => a.rank - b.rank || byId(a.row.id, b.row.id));
+  return ranked.map((entry) => entry.row);
+};
+
+/** The services that publish to one channel. */
+const producersOf = (db: GraphDb, channel: string): string[] =>
+  servicesOf(
+    db,
+    db.edgesTo(channel, ['emits']).map((edge) => edge.from),
+  );
+
+/**
+ * How many routes of each service a browser holds open as a stream.
+ *
+ * Read off the graph rather than guessed from a path: a route is a stream here
+ * only because a subscription in a browser was joined to it, which is a fact
+ * the linker established.
+ */
+const streamsByService = (db: GraphDb): Map<string, number> => {
+  // Routes, not subscriptions: two screens holding the same stream open are one
+  // route, and saying two would be counting the browsers rather than the ends
+  // they reach.
+  const routes = new Map<string, Set<string>>();
+  for (const call of db.nodesByType('ui_api_call')) {
+    if (call.kind !== 'sse') continue;
+    for (const edge of db.edgesFrom(call.id, ['hits'])) {
+      const route = db.node(edge.to);
+      if (route === undefined) continue;
+      const served = routes.get(route.repo) ?? new Set<string>();
+      served.add(route.id);
+      routes.set(route.repo, served);
+    }
+  }
+  return new Map([...routes].map(([repo, served]) => [repo, served.size]));
 };
 
 /**
@@ -155,27 +327,45 @@ export const deadChannels = (
   if (report === undefined) return [];
   const rows = new Map<string, DeadChannel>();
 
-  const record = (id: string, reason: string): void => {
-    const producers = servicesOf(
-      db,
-      db.edgesTo(id, ['emits']).map((edge) => edge.from),
-    );
+  const record = (id: string, reason: (producers: readonly string[]) => string): void => {
+    const producers = producersOf(db, id);
     const consumers = servicesOf(
       db,
       db.edgesFrom(id, ['consumes']).map((edge) => edge.to),
     );
     if (options.service !== undefined && ![...producers, ...consumers].includes(options.service)) return;
     const existing = rows.get(id);
+    const said = reason(producers);
     rows.set(id, {
       id,
       producers,
       consumers,
-      reason: existing === undefined ? reason : `${existing.reason}; ${reason}`,
+      reason: existing === undefined ? said : `${existing.reason}; ${said}`,
     });
   };
 
-  for (const id of report.channels.noConsumers) record(id, 'no consumer in any repo');
-  for (const id of report.channels.noProducers) record(id, 'no producer in any repo');
+  // A channel whose service also serves streams has a consumer the graph cannot
+  // reach: the browser holding one open. Saying "no consumer in any repo" there
+  // reads as "delete the publisher", and deleting it takes a live screen down.
+  // Read once, and only when there is a channel to say it about.
+  let streamed: ReadonlyMap<string, number> | undefined;
+  for (const id of report.channels.noConsumers) {
+    record(id, (producers) => {
+      streamed ??= streamsByService(db);
+      const serving = producers
+        .map((service) => ({ service, streams: streamed?.get(service) ?? 0 }))
+        .filter((found) => found.streams > 0);
+      const [most] = serving.sort((a, b) => b.streams - a.streams || byId(a.service, b.service));
+      // The finding is kept and the caveat added to it. The streams counted are
+      // the service's, not this channel's — nothing links a channel to the
+      // route that forwards it — so this says what else is true of the
+      // publisher rather than claiming to have found the consumer.
+      return most === undefined
+        ? 'no consumer in any repo'
+        : `no consumer in any repo; ${most.service} serves ${most.streams} event stream${most.streams === 1 ? '' : 's'}, whose consumers are not read yet`;
+    });
+  }
+  for (const id of report.channels.noProducers) record(id, () => 'no producer in any repo');
 
   return [...rows.values()].sort((a, b) => byId(a.id, b.id));
 };
@@ -250,13 +440,36 @@ export interface FieldsResult {
  * Deliberately loose: the package that produces these is not a dependency, so
  * what arrives is whatever version happens to be installed.
  */
+/**
+ * The rules the contract checker fires when the receiving side removes a field.
+ *
+ * `whitelist-strip` is a validation pipe that does not declare it;
+ * `class-transformer` is a receiver that excludes it. The mechanism differs and
+ * the outcome does not: what the sender sent is thrown away before anything
+ * reads it.
+ */
+const REMOVED_BY_RECEIVER = new Set(['whitelist-strip', 'class-transformer']);
+
+/**
+ * As much of a contract finding as this file reads.
+ *
+ * Loose on purpose: the checker is imported at run time, so its types are not
+ * available here. `direction` has three values — a channel payload is neither a
+ * request nor a response — and `rule` is how the checker says it read the
+ * receiver's validation rather than guessed at it.
+ */
 interface ContractFinding {
   kind: string;
   field?: string;
+  direction?: string;
+  rule?: string;
   edge?: { from: string; to: string };
   edgeKey?: string;
   typeId?: string;
 }
+
+const directionOf = (said: string | undefined): FieldDirection =>
+  said === 'request' || said === 'payload' ? said : 'response';
 
 interface ContractsModule {
   checkContracts?: (db: GraphDb) => { findings: ContractFinding[] };
@@ -298,26 +511,46 @@ export const deadFields = async (db: GraphDb, options: DeadOptions = {}): Promis
     if (options.service !== undefined && sender?.repo !== options.service) continue;
 
     const typeId = finding.typeId ?? '';
-    const key = `${typeId}#${finding.field}`;
+    const direction = directionOf(finding.direction);
+    // Keyed by direction as well: one field can be a request on one edge and a
+    // channel payload on another, and those are two rows about two boundaries.
+    const key = `${typeId}#${finding.field}#${direction}`;
     const on =
       finding.edgeKey ??
       (finding.edge === undefined ? '' : `${finding.edge.from} -> ${finding.edge.to}`);
+    const dropped = finding.rule !== undefined && REMOVED_BY_RECEIVER.has(finding.rule);
     const existing = rows.get(key);
     if (existing === undefined) {
       rows.set(key, {
         typeId,
         field: finding.field,
         sentOn: on === '' ? [] : [on],
-        reason: 'sent but not declared by any receiver',
+        direction,
+        dropped,
+        reason: dropped ? STRIPPED : FIELD_TRAVEL[direction],
       });
-    } else if (on !== '' && !existing.sentOn.includes(on)) {
-      existing.sentOn.push(on);
+      continue;
+    }
+    if (on !== '' && !existing.sentOn.includes(on)) existing.sentOn.push(on);
+    // One receiver removing it is enough to make it the finding the list is
+    // for, whichever edge the checker happened to report first.
+    if (dropped && !existing.dropped) {
+      existing.dropped = true;
+      existing.reason = STRIPPED;
     }
   }
 
   for (const row of rows.values()) row.sentOn.sort(byId);
+  // What is removed first, as everywhere else in this command: the rows
+  // something happens to above the rows nothing happens to, so a reader who
+  // stops at the top has read the findings.
   return {
-    fields: [...rows.values()].sort((a, b) => byId(a.typeId, b.typeId) || byId(a.field, b.field)),
+    fields: [...rows.values()].sort(
+      (a, b) =>
+        Number(b.dropped) - Number(a.dropped) ||
+        byId(a.typeId, b.typeId) ||
+        byId(a.field, b.field),
+    ),
   };
 };
 
