@@ -7,7 +7,7 @@
  * runs over one graph say the same thing, so a difference in CI is a difference
  * in the project.
  */
-import type { GraphNode, Unresolved } from '@flowatlas/core';
+import { tally, wasMissed, type GraphNode, type Unresolved } from '@flowatlas/core';
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
 import { summarizeForDoctor } from '@flowatlas/contracts';
 import type { GraphDb } from '@flowatlas/linker';
@@ -132,13 +132,19 @@ const groupByReason = (
   for (const [reason, list] of byReason) {
     const known = isKnownReason(reason);
     if (!known) unknown.push(reason);
-    const level = list.some((row) => (row.level ?? 'action') === 'action') ? 'action' : 'info';
+    // A group is read at its loudest row: one thing to fix among four hundred
+    // places nothing joins is still one thing to fix.
+    const level = list.some((row) => (row.level ?? 'action') === 'action')
+      ? 'action'
+      : list.some((row) => row.level === 'info')
+        ? 'info'
+        : 'nothing';
     const drawn: DoctorRow[] = list.map((row) => ({
       service: row.service ?? '',
       file: row.file,
       line: row.line,
       symbol: row.symbol ?? null,
-      level: (row.level ?? 'action') as 'action' | 'info',
+      level: (row.level ?? 'action') as 'action' | 'info' | 'nothing',
       sites: row.sites ?? 1,
       message: row.message ?? reason,
       hint: hintFor(row, contextOf(row)),
@@ -161,11 +167,9 @@ const groupByReason = (
     });
   }
 
+  const loudness = { action: 0, info: 1, nothing: 2 } as const;
   groups.sort(
-    (a, b) =>
-      (a.level === b.level ? 0 : a.level === 'action' ? -1 : 1) ||
-      b.sites - a.sites ||
-      cmp(a.reason, b.reason),
+    (a, b) => loudness[a.level] - loudness[b.level] || b.sites - a.sites || cmp(a.reason, b.reason),
   );
   return { groups, unknown: unknown.sort(cmp) };
 };
@@ -272,12 +276,15 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
     .filter((row) => (row.level ?? 'action') === 'action' && ignore.has(row.reason))
     .reduce((sum, row) => sum + (row.sites ?? 1), 0);
 
+  // Places where nothing joins are their own line and nobody else's total.
+  const missed = tally(rows.filter(wasMissed));
   const unresolved: DoctorReport['unresolved'] = {
     status: wanted.has('unresolved') ? 'ok' : 'skipped',
     total: snapshot.total,
-    rows: rows.length,
-    sites: rows.reduce((sum, row) => sum + (row.sites ?? 1), 0),
+    rows: missed.rows,
+    sites: missed.sites,
     info: snapshot.info,
+    nothing: snapshot.nothing,
     excluded: { reasons: [...ignore].sort(cmp), sites: excludedSites },
     byReason: grouped.groups,
     unknownReasons: grouped.unknown,

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "bot-registry",
-  "generatedAt": "2026-09-14T12:37:27.266Z",
+  "generatedAt": "2026-09-20T10:29:12.036Z",
   "nodes": [
     {
       "id": "bot-registry#src/actions/cancel-order.action.ts:callbacks:keep_order@19",
@@ -58,11 +58,19 @@
       "label": "Bot",
       "repo": "bot-registry",
       "file": "src/bot.ts",
-      "line": 15,
+      "line": 16,
       "kind": "injectable",
       "meta": {
         "module": "AppModule"
       }
+    },
+    {
+      "id": "bot-registry#src/bot.ts:Bot.announce",
+      "type": "method",
+      "label": "Bot.announce",
+      "repo": "bot-registry",
+      "file": "src/bot.ts",
+      "line": 44
     },
     {
       "id": "bot-registry#src/bot.ts:Bot.greet",
@@ -70,7 +78,15 @@
       "label": "Bot.greet",
       "repo": "bot-registry",
       "file": "src/bot.ts",
-      "line": 30
+      "line": 35
+    },
+    {
+      "id": "bot-registry#src/bot.ts:Bot.ready",
+      "type": "method",
+      "label": "Bot.ready",
+      "repo": "bot-registry",
+      "file": "src/bot.ts",
+      "line": 49
     },
     {
       "id": "bot-registry#src/bot.ts:Bot.setup",
@@ -78,15 +94,15 @@
       "label": "Bot.setup",
       "repo": "bot-registry",
       "file": "src/bot.ts",
-      "line": 21
+      "line": 22
     },
     {
-      "id": "bot-registry#src/bot.ts:on callback_query@25",
+      "id": "bot-registry#src/bot.ts:on callback_query@26",
       "type": "function",
-      "label": "on callback_query@25",
+      "label": "on callback_query@26",
       "repo": "bot-registry",
       "file": "src/bot.ts",
-      "line": 25
+      "line": 26
     },
     {
       "id": "bot-registry#src/commands/menu.command.ts:action back_to_main@14",
@@ -103,6 +119,14 @@
       "repo": "bot-registry",
       "file": "src/commands/menu.command.ts",
       "line": 20
+    },
+    {
+      "id": "bot-registry#src/commands/order-commands.ts:orderCommands.myOrders",
+      "type": "function",
+      "label": "orderCommands.myOrders",
+      "repo": "bot-registry",
+      "file": "src/commands/order-commands.ts",
+      "line": 12
     },
     {
       "id": "bot-registry#src/orders.service.ts:OrdersService",
@@ -218,7 +242,7 @@
       "label": "bot_command start",
       "repo": "bot-registry",
       "file": "src/bot.ts",
-      "line": 22,
+      "line": 23,
       "kind": "bot_command",
       "meta": {
         "key": "start",
@@ -235,7 +259,7 @@
       "label": "bot_event callback_query",
       "repo": "bot-registry",
       "file": "src/bot.ts",
-      "line": 25,
+      "line": 26,
       "kind": "bot_event",
       "meta": {
         "key": "callback_query",
@@ -253,7 +277,7 @@
       "repo": "bot-registry",
       "meta": {
         "stats": {
-          "files": 9,
+          "files": 10,
           "classes": 3,
           "skippedExternalCalls": {
             "telegraf": 2
@@ -321,7 +345,19 @@
       "type": "injects",
       "confidence": "static",
       "file": "src/bot.ts",
-      "line": 19
+      "line": 20
+    },
+    {
+      "from": "bot-registry#src/bot.ts:Bot.announce",
+      "to": "bot-registry#src/orders.service.ts:OrdersService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/bot.ts",
+      "line": 44,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
     },
     {
       "from": "bot-registry#src/bot.ts:Bot.greet",
@@ -329,11 +365,19 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/bot.ts",
-      "line": 31,
+      "line": 36,
       "params": [
         "string"
       ],
       "returns": "string"
+    },
+    {
+      "from": "bot-registry#src/bot.ts:Bot.ready",
+      "to": "bot-registry#src/bot.ts:Bot.announce",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/bot.ts",
+      "line": 50
     },
     {
       "from": "bot-registry#src/bot.ts:Bot.setup",
@@ -341,9 +385,17 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/bot.ts",
-      "line": 22,
+      "line": 23,
       "params": [],
       "returns": "string"
+    },
+    {
+      "from": "bot-registry#src/bot.ts:Bot.setup",
+      "to": "bot-registry#src/commands/order-commands.ts:orderCommands.myOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/bot.ts",
+      "line": 32
     },
     {
       "from": "bot-registry#src/commands/menu.command.ts:action back_to_main@14",
@@ -364,6 +416,18 @@
       "confidence": "static",
       "file": "src/commands/menu.command.ts",
       "line": 21,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "bot-registry#src/commands/order-commands.ts:orderCommands.myOrders",
+      "to": "bot-registry#src/orders.service.ts:OrdersService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/commands/order-commands.ts",
+      "line": 12,
       "params": [
         "string"
       ],
@@ -415,17 +479,17 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/bot.ts",
-      "line": 30,
+      "line": 35,
       "params": [],
       "returns": "string"
     },
     {
       "from": "entry:bot-registry:bot_event:callback_query",
-      "to": "bot-registry#src/bot.ts:on callback_query@25",
+      "to": "bot-registry#src/bot.ts:on callback_query@26",
       "type": "handles",
       "confidence": "static",
       "file": "src/bot.ts",
-      "line": 25
+      "line": 26
     }
   ],
   "types": {},
@@ -440,12 +504,12 @@
     },
     {
       "file": "src/bot.ts",
-      "line": 26,
+      "line": 27,
       "reason": "call-dynamic-receiver",
       "level": "info",
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "Bot.setup -> callbackRegistry.dispatch",
-      "sites": 2
+      "sites": 3
     },
     {
       "file": "src/handlers/text-registry.ts",

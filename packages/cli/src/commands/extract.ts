@@ -10,6 +10,7 @@ import {
   parseConfig,
   readPackageJson,
   SCHEMA_VERSION,
+  wasMissed,
   type FlowatlasConfig,
   type RepoGraph,
   type ServiceConfig,
@@ -53,6 +54,9 @@ export interface ExtractOptions {
 }
 
 /** Name a repository is known by: the configured service if there is one. */
+/** Rows of a repository's graph that say something was not read. */
+const missed = (graph: RepoGraph): number => graph.unresolved.filter(wasMissed).length;
+
 const resolveService = (
   rootDir: string,
   configPath: string | undefined,
@@ -116,7 +120,9 @@ export const summarise = (graph: RepoGraph, outPath: string): string[] => {
   `leaves: db=${count('db_query')} cache=${count('cache_op')} http=${count('http_out')} config=${count('config_key')} tables=${count('table')}`,
   `brokers: channels=${count('channel')} producers=${count('producer')} consumers=${count('consumer')} markers=${graph.edges.filter((edge) => edge.confidence === 'marker').length}`,
   `types: ${Object.keys(graph.types).length} (external ${Object.values(graph.types).filter((entry) => entry.kind === 'external').length})`,
-  `unresolved: ${graph.unresolved.length}${graph.unresolved.length > 0 ? ` (see ${outPath}#unresolved)` : ''}`,
+  // The rows that say something was not read, which is what `build` counts and
+  // what the cache compares against. A place where nothing joins is neither.
+  `unresolved: ${missed(graph)}${missed(graph) > 0 ? ` (see ${outPath}#unresolved)` : ''}`,
   ];
 };
 
@@ -237,7 +243,7 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
       nodes: graph.nodes.length,
       edges: graph.edges.length,
       types: Object.keys(graph.types).length,
-      unresolved: graph.unresolved.length,
+      unresolved: missed(graph),
     },
   };
   return cache;
@@ -272,5 +278,5 @@ const counts = (graph: RepoGraph) => ({
   nodes: graph.nodes.length,
   edges: graph.edges.length,
   types: Object.keys(graph.types).length,
-  unresolved: graph.unresolved.length,
+  unresolved: missed(graph),
 });

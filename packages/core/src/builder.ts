@@ -33,27 +33,32 @@ const unresolvedKey = (row: Unresolved): string =>
   `${row.file}${SEP}${row.line}${SEP}${row.reason}${SEP}${row.symbol ?? ''}`;
 
 /**
- * Folds the informational rows to one per reason, counting the rest.
+ * Folds every row below `action` to one per reason, counting the rest.
  *
- * An actionable row is a place, and a reader needs every one of them. An
- * informational row is a statement about the repository — templates bind
- * expressions that are not calls, receivers are typed as unions — and repeating
- * it once per site buries everything worth acting on. The row kept is the first
- * by file and line, so it still points at somewhere real, and `sites` says how
- * many there were.
+ * An actionable row is a place, and a reader needs every one of them. A row
+ * below it is a statement about the repository — receivers are typed as unions,
+ * templates bind expressions that are not calls — and repeating it once per
+ * site buries everything worth acting on. The row kept is the first by file and
+ * line, so it still points at somewhere real, and `sites` says how many there
+ * were.
  */
-const foldInformational = (rows: readonly Unresolved[]): Unresolved[] => {
+const foldBelowAction = (rows: readonly Unresolved[]): Unresolved[] => {
   const out: Unresolved[] = [];
   const folded = new Map<string, Unresolved>();
   for (const row of rows) {
-    if (row.level !== 'info') {
+    if (row.level === undefined || row.level === 'action') {
       out.push(row);
       continue;
     }
-    const first = folded.get(row.reason);
+    // Keyed by level as well as reason. Two levels mean two different things —
+    // an edge that could not be read, and no edge at all — so a reason that
+    // ever raised both would otherwise fold them into one row carrying one
+    // level and both counts, and every figure downstream would believe it.
+    const key = `${row.reason}\u0000${row.level}`;
+    const first = folded.get(key);
     if (first === undefined) {
       const stored: Unresolved = { ...row };
-      folded.set(row.reason, stored);
+      folded.set(key, stored);
       out.push(stored);
       continue;
     }
@@ -185,7 +190,7 @@ export class GraphBuilder {
    * count and a list can never disagree about what is in the graph.
    */
   #rows(): Unresolved[] {
-    return foldInformational(
+    return foldBelowAction(
       [...this.#unresolved.values()].sort(
         (a, b) => cmp(a.file, b.file) || a.line - b.line || cmp(a.reason, b.reason),
       ),

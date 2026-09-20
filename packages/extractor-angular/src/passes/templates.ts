@@ -7,8 +7,9 @@ import {
   normalizeFilePath,
   normalizePath,
   siteOf,
+  type ClassMethod,
 } from '@flowatlas/core';
-import type { ClassDeclaration, MethodDeclaration } from 'ts-morph';
+import type { ClassDeclaration } from 'ts-morph';
 import type { AngularExtractContext, RouteEntry } from '../context.js';
 import { componentDecorator, type IndexedClass } from '../index-classes.js';
 import { parseAngularTemplate, type TemplateEvent, type TemplateHandler } from '../template.js';
@@ -80,7 +81,8 @@ const routesFor = (routes: readonly RouteEntry[], link: string): RouteEntry[] =>
 };
 
 export const templatesPass = definePass('templates', (ctx) => {
-  const methodOn = (owner: ClassDeclaration, name: string): MethodDeclaration | undefined =>
+  /** The method a name reaches on a class or anything it extends. */
+  const inheritedMethod = (owner: ClassDeclaration, name: string): ClassMethod | undefined =>
     findMethod(owner, name).method;
 
   /**
@@ -105,10 +107,10 @@ export const templatesPass = definePass('templates', (ctx) => {
   const handlerMethod = (
     owner: ClassDeclaration,
     handler: TemplateHandler,
-  ): MethodDeclaration | undefined => {
+  ): ClassMethod | undefined => {
     if (handler.kind === 'other') return undefined;
     const target = handlerOwner(owner, handler);
-    return target === undefined ? undefined : methodOn(target, handler.method);
+    return target === undefined ? undefined : inheritedMethod(target, handler.method);
   };
 
   const action = (
@@ -242,7 +244,10 @@ export const templatesPass = definePass('templates', (ctx) => {
       file: template.file,
       line: event.line,
       reason: 'handler-not-a-method',
-      level: 'info',
+      // Not a limit of static reading: there is no method, in any repository,
+      // that this binding could be joined to. The place is recorded and counted
+      // apart from what was missed.
+      level: 'nothing',
       hint: 'The binding is an assignment, or a call on something that is not an injected class, so no method node answers it.',
       symbol,
     });

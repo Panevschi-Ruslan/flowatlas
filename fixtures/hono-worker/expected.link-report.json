@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-14T12:37:29.190Z",
+  "builtAt": "2026-09-20T15:39:41.037Z",
   "configHash": "37634076a802",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 22,
       "types": 1,
       "unresolved": 3,
-      "durationMs": 641
+      "durationMs": 573
     },
     {
       "name": "web",
@@ -23,7 +23,7 @@
       "edges": 9,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 506
+      "durationMs": 0
     }
   ],
   "httpOut": {
@@ -56,7 +56,7 @@
       "entry:api:http:DELETE:/api/depots/:param/cache",
       "entry:api:http:GET:/api/admin/events",
       "entry:api:http:GET:/api/admin/orders/:param",
-      "entry:api:http:GET:/api/depots/:param/menu-stream",
+      "entry:api:http:GET:/api/depots/:param/stock-stream",
       "entry:api:http:GET:/health",
       "entry:api:http:POST:/api/depots/:param/orders/:param/cancel",
       "entry:api:http:POST:/api/messenger/webhook",

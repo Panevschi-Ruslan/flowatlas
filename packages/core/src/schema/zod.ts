@@ -66,7 +66,7 @@ export const unresolvedSchema = z.object({
   file: z.string(),
   line: z.number().int().nonnegative(),
   reason: z.string().min(1),
-  level: z.enum(['action', 'info']).optional(),
+  level: z.enum(['action', 'info', 'nothing']).optional(),
   sites: z.number().int().positive().optional(),
   message: z.string().optional(),
   hint: z.string().optional(),

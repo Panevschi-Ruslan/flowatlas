@@ -15,7 +15,7 @@ export async function orderStream(c: Context): Promise<unknown> {
 }
 
 /** The same shape a second time, since both real streams share one function. */
-export async function menuStream(c: Context): Promise<unknown> {
+export async function stockStream(c: Context): Promise<unknown> {
   const orders: OrdersService = c.get('orders');
   return c.text(await orders.changesFor(c.req.param('depotId')));
 }

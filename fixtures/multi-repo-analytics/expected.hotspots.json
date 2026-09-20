@@ -1,5 +1,5 @@
 {
-  "analyticsFormatVersion": 1,
+  "analyticsFormatVersion": 2,
   "rows": [
     {
       "id": "entry:orders:http:POST:/orders/create",

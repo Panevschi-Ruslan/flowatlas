@@ -3,6 +3,7 @@ import {
   forEachCall,
   lineOf,
   memberFunction,
+  methodBodies,
   namedFunction,
   originOfValue,
   resolveReceiver,
@@ -40,33 +41,44 @@ interface Caller {
 }
 
 /**
+ * Which calls on a function a walk follows, and what to do with each.
+ *
+ * `byName` is a bare `send()`, followed only when walking a function: following
+ * every helper a method calls would make a node of every function in the
+ * repository. `byMember` is `commands.myOrders()` — a module of functions is
+ * not a helper but where a class keeps behaviour that has no class of its own,
+ * and the call names which one, so a method's walk follows it too. A walk that
+ * gives only `byName` follows both through it.
+ */
+interface Follow {
+  byName?: (fn: NamedFunction, call: TsNode) => void;
+  byMember?: (fn: NamedFunction, call: TsNode) => void;
+}
+
+/**
  * Draws the edges one body's calls stand for.
  *
  * Only a receiver the checker resolves to a class of this repository produces an
  * edge. A receiver from an installed package is a leaf that a later phase turns
  * into data or network access, so it is counted rather than reported; a receiver
- * nothing can pin down is reported rather than guessed.
- *
- * `onFunctionCall` is how the walk of a function follows a plain `send()` to the
- * function it names. A method's walk passes nothing, because following every
- * helper a method calls would make a node of every function in the repository,
- * which is a much larger change than the one this is part of.
+ * nothing can pin down is reported rather than guessed. What it does with a call
+ * on a function rather than on a class is `follow`'s to say.
  */
 const walkCalls = (
   ctx: NestExtractContext,
   caller: Caller,
   body: TsNode,
-  onFunctionCall?: (fn: NamedFunction, call: TsNode) => void,
+  follow: Follow = {},
 ): void => {
   forEachCall(body, (call) => {
     const callee = call.getExpression();
 
     if (!Node.isPropertyAccessExpression(callee)) {
-      if (Node.isIdentifier(callee) && onFunctionCall !== undefined) {
+      if (Node.isIdentifier(callee) && follow.byName !== undefined) {
         const origin = originOfValue(callee);
         if (origin.kind !== 'local') return;
         const fn = namedFunction(origin.declaration);
-        if (fn !== undefined) onFunctionCall(fn, call);
+        if (fn !== undefined) follow.byName(fn, call);
         return;
       }
       if (Node.isElementAccessExpression(callee)) {
@@ -88,14 +100,15 @@ const walkCalls = (
     // `commands.myOrders(ctx)` on `export const commands = { myOrders: … }` —
     // a module of functions spelled as an object, followed like a function
     // called by name.
-    if (onFunctionCall !== undefined && Node.isIdentifier(receiverExpr)) {
+    const onMember = follow.byMember ?? follow.byName;
+    if (onMember !== undefined && Node.isIdentifier(receiverExpr)) {
       const origin = originOfValue(receiverExpr);
       const member =
         origin.kind === 'local' && Node.isVariableDeclaration(origin.declaration)
           ? memberFunction(origin.declaration.getNameNode(), calledName)
           : undefined;
       if (member !== undefined) {
-        onFunctionCall(member, call);
+        onMember(member, call);
         return;
       }
     }
@@ -154,11 +167,11 @@ const walkCalls = (
         file: caller.file,
         line: lineOf(call),
         reason: 'call-dynamic-receiver',
-        // The compiler agreed the member exists, so it is a property holding a
-        // function rather than a method: assigned from outside, with no one
-        // declaration to point at.
+        // The compiler agreed the member exists, and a field holding a function
+        // written in place is read as the method it is, so what is left is a
+        // field given its function from somewhere else: no one body to follow.
         level: 'info',
-        hint: `No method named ${calledName} is declared on ${receiver.classDecl.getName() ?? receiver.text} or its bases.`,
+        hint: `${calledName} on ${receiver.classDecl.getName() ?? receiver.text} is a field assigned a function from elsewhere, so there is no one body to follow. Declare it as a method to make the edge visible.`,
         symbol: `${caller.label} -> ${receiver.text}.${calledName}`,
       });
       return;
@@ -180,15 +193,43 @@ const walkCalls = (
   });
 };
 
-/** Every method of every class whose role means its body is worth reading. */
-const walkClasses = (ctx: NestExtractContext): void => {
+/**
+ * Writes the edge one caller makes to one function, whatever the caller is.
+ *
+ * A method and a function reach a function the same way and record it the same
+ * way; what differs is the bookkeeping each walk does afterwards, which stays
+ * with the walk.
+ */
+const callsFunction =
+  (ctx: NestExtractContext, from: { id: string; file: string }, ensure: () => void) =>
+  (called: NamedFunction, call: TsNode): void => {
+    ensure();
+    ctx.ensureFunctionNode(called);
+    ctx.builder.addEdge({
+      from: from.id,
+      to: ctx.functionIdOf(called),
+      type: 'calls',
+      confidence: 'static',
+      file: from.file,
+      line: lineOf(call),
+    });
+  };
+
+/**
+ * Every method of every class whose role means its body is worth reading.
+ *
+ * Returns the functions those methods called by name through a module of
+ * functions, so the walk that follows functions starts from them too: an edge
+ * to a handler nobody reads the body of stops exactly where the flow was about
+ * to become interesting.
+ */
+const walkClasses = (ctx: NestExtractContext): NamedFunction[] => {
+  const reached: NamedFunction[] = [];
   for (const indexed of ctx.classes.all()) {
     if (!WALKED.has(indexed.role)) continue;
     const owner: ClassDeclaration = indexed.declaration;
 
-    for (const method of owner.getMethods()) {
-      const body = method.getBody();
-      if (body === undefined) continue;
+    for (const { declaration: method, body } of methodBodies(owner)) {
       const id = ctx.methodIdOf(method);
       if (id === undefined) continue;
       let created = false;
@@ -207,9 +248,19 @@ const walkClasses = (ctx: NestExtractContext): void => {
           },
         },
         body,
+        {
+          byMember: (called, call) => {
+            callsFunction(ctx, { id, file: indexed.file }, () => ctx.ensureMethodNode(method))(
+              called,
+              call,
+            );
+            reached.push(called);
+          },
+        },
       );
     }
   }
+  return reached;
 };
 
 /**
@@ -242,11 +293,11 @@ const lexicalClassOf = (declaration: NamedFunction['declaration']): ClassDeclara
  * and spreads through the functions those call, which keeps the graph to what is
  * reachable from an entry point rather than to every function in the repository.
  */
-const walkHandlerFunctions = (ctx: NestExtractContext): void => {
+const walkHandlerFunctions = (ctx: NestExtractContext, alsoReached: readonly NamedFunction[]): void => {
   const queue: NamedFunction[] = [];
   const visited = new Set<NamedFunction['declaration']>();
   // Two ways in may name the same handler, and it is still one body to read.
-  for (const fn of ctx.handlerFunctions) {
+  for (const fn of [...ctx.handlerFunctions, ...alsoReached]) {
     if (visited.has(fn.declaration)) continue;
     visited.add(fn.declaration);
     queue.push(fn);
@@ -271,20 +322,13 @@ const walkHandlerFunctions = (ctx: NestExtractContext): void => {
         ensure: () => ctx.ensureFunctionNode(fn),
       },
       fn.body,
-      (called, call) => {
-        ctx.ensureFunctionNode(fn);
-        ctx.ensureFunctionNode(called);
-        ctx.builder.addEdge({
-          from: id,
-          to: ctx.functionIdOf(called),
-          type: 'calls',
-          confidence: 'static',
-          file,
-          line: lineOf(call),
-        });
-        if (visited.has(called.declaration)) return;
-        visited.add(called.declaration);
-        queue.push(called);
+      {
+        byName: (called, call) => {
+          callsFunction(ctx, { id, file }, () => ctx.ensureFunctionNode(fn))(called, call);
+          if (visited.has(called.declaration)) return;
+          visited.add(called.declaration);
+          queue.push(called);
+        },
       },
     );
   }
@@ -292,6 +336,6 @@ const walkHandlerFunctions = (ctx: NestExtractContext): void => {
 
 /** Turns call sites into edges between the things that hold them. */
 export const callsPass = definePass('calls', (ctx: NestExtractContext) => {
-  walkClasses(ctx);
-  walkHandlerFunctions(ctx);
+  const reached = walkClasses(ctx);
+  walkHandlerFunctions(ctx, reached);
 });

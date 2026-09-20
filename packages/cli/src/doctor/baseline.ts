@@ -17,7 +17,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { userInfo } from 'node:os';
-import type { Unresolved } from '@flowatlas/core';
+import { tally, wasMissed, type Unresolved } from '@flowatlas/core';
 import { z } from 'zod';
 import { BASELINE_FORMAT_VERSION, type BaselineDelta } from './schema.js';
 
@@ -45,6 +45,16 @@ export interface UnresolvedSnapshot {
    * number worth watching — without a build ever failing on it.
    */
   info: { rows: number; sites: number };
+  /**
+   * Places where nothing joins, which is not the same as places it could not
+   * read.
+   *
+   * Recorded and never compared, like `info`, and kept out of every total: a
+   * template binding that assigns to a field has no other end in any project,
+   * so counting it as something the tool missed would make every figure beside
+   * it worth less.
+   */
+  nothing: { rows: number; sites: number };
 }
 
 export interface Baseline {
@@ -87,6 +97,14 @@ export const baselineSchema = z.object({
       rows: z.number().int().nonnegative(),
       sites: z.number().int().nonnegative(),
     }),
+    // Written since the third level existed; a baseline accepted before it is
+    // still a baseline, and reads as having none.
+    nothing: z
+      .object({
+        rows: z.number().int().nonnegative(),
+        sites: z.number().int().nonnegative(),
+      })
+      .default({ rows: 0, sites: 0 }),
   }),
   markers: z.object({ warnings: z.number().int().nonnegative() }),
   contracts: z.object({
@@ -144,16 +162,12 @@ export const snapshotOf = (
   const byService = new Map<string, number>();
   const keys = new Map<string, number>();
   let total = 0;
-  let infoRows = 0;
-  let infoSites = 0;
+  const info = tally(rows.filter((row) => wasMissed(row) && !isActionable(row)));
+  const nothing = tally(rows.filter((row) => !wasMissed(row)));
 
   for (const row of rows) {
     const sites = sitesOf(row);
-    if (!isActionable(row)) {
-      infoRows += 1;
-      infoSites += sites;
-      continue;
-    }
+    if (!isActionable(row)) continue;
     if (ignored.has(row.reason)) continue;
     const service = row.service ?? '';
     total += sites;
@@ -170,7 +184,8 @@ export const snapshotOf = (
     keys: [...keys.entries()]
       .sort((a, b) => (a[0] < b[0] ? -1 : 1))
       .map(([key, count]) => ({ key, count })),
-    info: { rows: infoRows, sites: infoSites },
+    info,
+    nothing,
   };
 };
 
