@@ -15,7 +15,7 @@ describe('deriving the key half of a bot entry id', () => {
 
   it('keeps text a phrase handler matches exactly as written', () => {
     expect(deriveKey('Hears', { kind: 'text', value: '/menu' })).toBe('/menu');
-    expect(deriveKey('Hears', { kind: 'text', value: 'Меню' })).toBe('Меню');
+    expect(deriveKey('Hears', { kind: 'text', value: 'Depots' })).toBe('Depots');
   });
 
   it('writes a pattern back as the literal it was written as', () => {

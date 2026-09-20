@@ -12,8 +12,11 @@ import {
 } from '@flowatlas/core';
 import {
   definePass,
+  enclosingMethod,
   evaluateExpression,
   forEachCall,
+  methodBodies,
+  parametersOf,
   type NestExtractContext,
   type NestExtractorPass,
 } from '@flowatlas/extractor-nestjs';
@@ -457,16 +460,16 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
 
     // `{ method }` names a binding in scope rather than pointing at one, so the
     // parameter is found by name on the method the shorthand sits in.
-    const owningMethod = call.getFirstAncestorByKind(SyntaxKind.MethodDeclaration);
+    const owningMethod = enclosingMethod(call);
     const parameter = Node.isPropertyAssignment(property)
       ? parameterBehind(property.getInitializer() ?? property)
-      : Node.isShorthandPropertyAssignment(property)
-        ? owningMethod?.getParameter(property.getName())
+      : Node.isShorthandPropertyAssignment(property) && owningMethod !== undefined
+        ? parametersOf(owningMethod).find((item) => item.getName() === property.getName())
         : undefined;
 
-    const owner = parameter?.getParent()?.asKind(SyntaxKind.MethodDeclaration);
+    const owner = parameter === undefined ? undefined : enclosingMethod(parameter);
     if (parameter === undefined || owner === undefined) return undefined;
-    const index = owner.getParameters().findIndex((item) => item === parameter);
+    const index = parametersOf(owner).findIndex((item) => item === parameter);
     return index < 0 ? undefined : { parameter, owner: owner.getName(), index };
   };
 
@@ -522,7 +525,9 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
 
   /** The method node a call sits inside, when it sits inside one this repo owns. */
   const ownerOf = (site: TsNode): { methodId: string; file: string } | undefined => {
-    const declaration = site.getFirstAncestorByKind(SyntaxKind.MethodDeclaration);
+    // However that method was written: the loop below reads a field-method's
+    // body, so asking only for a declared one here would drop what it found.
+    const declaration = enclosingMethod(site);
     if (declaration === undefined) return undefined;
     const methodId = ctx.methodIdOf(declaration);
     if (methodId === undefined || !ctx.builder.has(methodId)) return undefined;
@@ -672,9 +677,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
 
   for (const indexed of ctx.classes.all()) {
     if (!WALKED.has(indexed.role)) continue;
-    for (const method of indexed.declaration.getMethods() as MethodDeclaration[]) {
-      const body = method.getBody();
-      if (body === undefined) continue;
+    for (const { declaration: method, body } of methodBodies(indexed.declaration)) {
       const methodId = ctx.methodIdOf(method);
       if (methodId === undefined || !ctx.builder.has(methodId)) continue;
       const file = indexed.file;

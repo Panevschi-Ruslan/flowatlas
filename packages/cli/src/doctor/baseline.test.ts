@@ -43,6 +43,20 @@ describe('what a baseline counts', () => {
     expect(snapshot.info).toEqual({ rows: 1, sites: 333 });
   });
 
+  it('counts a place where nothing joins apart from the places it could not read', () => {
+    // A template binding that assigns to a field has no other end in any
+    // project. Counting it beside a receiver whose class could not be resolved
+    // would make both numbers mean less than either does alone.
+    const snapshot = snapshotOf([
+      row(),
+      row({ level: 'info', sites: 192, file: 'x.ts' }),
+      row({ level: 'nothing', sites: 397, file: 'y.ts', reason: 'handler-not-a-method' }),
+    ]);
+    expect(snapshot.total).toBe(1);
+    expect(snapshot.info).toEqual({ rows: 1, sites: 192 });
+    expect(snapshot.nothing).toEqual({ rows: 1, sites: 397 });
+  });
+
   it('takes an ignored reason out of the total and out of the keys', () => {
     const rows = [row(), row({ reason: 'known-noise', file: 'b.ts' })];
     const snapshot = snapshotOf(rows, { ignoreReasons: ['known-noise'] });

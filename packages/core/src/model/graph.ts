@@ -3,20 +3,62 @@ import type { GraphNode } from './nodes.js';
 import type { TypeRegistry } from './types.js';
 
 /**
- * How a row is meant to be read.
+ * How a row is meant to be read, and what it says about the graph.
  *
  * `action` names something a person can change: a setting to add, an annotation
- * to write, a registration that is missing, a route that is not there. `info` is
- * the tool describing its own limits — an assignment in a template has no method
- * behind it, a receiver typed as a union has no single class — and no edit to the
- * repository will remove it.
+ * to write, a registration that is missing, a route that is not there. An edge
+ * is missing and closing the row would draw it.
+ *
+ * `info` is the tool describing its own limits — a receiver typed as a union has
+ * no single class, a generic is never instantiated where it is read. An edge is
+ * there and was not drawn, and no edit anyone would want to make to the
+ * repository will change that.
+ *
+ * `nothing` is neither. An assignment in a template has no method behind it and
+ * never did; there is no edge, the code is right, and the graph is complete
+ * over that place. These rows exist so that a reader who goes looking finds the
+ * place and the sentence, and they are counted apart from the two levels above,
+ * because adding them to a total makes the total say something untrue.
  *
  * The distinction exists because a list is only read while most of it is worth
- * reading. Informational rows are folded to one per reason carrying how many
+ * reading. Rows below `action` are folded to one per reason carrying how many
  * places they stand for: the four hundredth of them tells a reader nothing the
  * first did not.
  */
-export type UnresolvedLevel = 'action' | 'info';
+export type UnresolvedLevel = 'action' | 'info' | 'nothing';
+
+/**
+ * Whether a row says something was not read.
+ *
+ * Every figure the tool prints about its own reading asks this one question, so
+ * it is asked in one place: a row at `nothing` stands for a place where no edge
+ * exists to draw, and counting it beside a receiver whose class could not be
+ * resolved would make both numbers say less than either does alone. A fourth
+ * level, if there is ever one, changes this file and nothing else.
+ */
+export const wasMissed = (row: { level?: UnresolvedLevel }): boolean => row.level !== 'nothing';
+
+/** A list of rows, and the places those rows stand for. */
+export interface PlaceCount {
+  rows: number;
+  sites: number;
+}
+
+/** How many places a list of rows stands for, folding included. */
+export const sitesIn = (rows: readonly { sites?: number }[]): number =>
+  rows.reduce((sum, row) => sum + (row.sites ?? 1), 0);
+
+/**
+ * Rows and places in one shape, because every figure about reading needs both.
+ *
+ * Rows are how long the list is; places are what it covers. They differ
+ * wherever a reason was folded, and a report that gave only one of them would
+ * be answering a question nobody asked.
+ */
+export const tally = (rows: readonly { sites?: number }[]): PlaceCount => ({
+  rows: rows.length,
+  sites: sitesIn(rows),
+});
 
 /**
  * Something the extractor saw but could not resolve.

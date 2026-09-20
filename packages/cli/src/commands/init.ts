@@ -11,22 +11,8 @@ import {
   type PackageJson,
 } from '@flowatlas/core';
 import type { Command } from 'commander';
+import { guessType, guessUnread, TYPE_SIGNATURES, UNKNOWN_TYPE } from '../stacks.js';
 import { installMcp } from './mcp.js';
-
-/**
- * Service types this command can suggest, and the dependency that gives each
- * one away.
- *
- * The list lives here rather than in the core on purpose: the core must not
- * know the name of any framework, and `type` stays an open string so that a
- * value it has never heard of is still a valid configuration.
- */
-export const TYPE_SIGNATURES: ReadonlyArray<readonly [type: string, dependency: string]> = [
-  ['nestjs', '@nestjs/core'],
-  ['angular', '@angular/core'],
-];
-
-export const UNKNOWN_TYPE = 'unknown';
 
 /** Directories that are never a service of their own. */
 const SKIPPED = new Set(['node_modules', 'dist', 'build', 'coverage', 'tmp']);
@@ -40,20 +26,9 @@ export interface Candidate {
   name: string;
   /** Suggested type, or `unknown` when nothing gave it away. */
   type: string;
+  /** The framework found when there is no reader for it. Absent otherwise. */
+  unread?: string;
 }
-
-export const guessType = (pkg: PackageJson): string => {
-  const declared = {
-    ...pkg.dependencies,
-    ...pkg.devDependencies,
-    ...pkg.peerDependencies,
-    ...pkg.optionalDependencies,
-  };
-  for (const [type, dependency] of TYPE_SIGNATURES) {
-    if (Object.hasOwn(declared, dependency)) return type;
-  }
-  return UNKNOWN_TYPE;
-};
 
 /** `@scope/name` becomes `name`; anything unusable falls back to the directory. */
 export const suggestName = (pkg: PackageJson, dir: string): string => {
@@ -121,11 +96,14 @@ export const scanCandidates = (scanDir: string, configDir: string): Candidate[] 
     if (absPath === self) continue;
     const pkg = readPackageJson(absPath);
     if (pkg === undefined) continue;
+    const type = guessType(pkg);
+    const unread = type === UNKNOWN_TYPE ? guessUnread(pkg) : undefined;
     found.push({
       absPath,
       repo: toPosixRelative(self, absPath),
       name: suggestName(pkg, absPath),
-      type: guessType(pkg),
+      type,
+      ...(unread === undefined ? {} : { unread }),
     });
   }
   return found.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
@@ -168,7 +146,7 @@ const refine = async (candidates: readonly Candidate[]): Promise<Candidate[]> =>
   const chosen = await checkbox({
     message: 'Which repositories belong to this project?',
     choices: candidates.map((candidate) => ({
-      name: `${candidate.name}  (${candidate.repo}, ${candidate.type})`,
+      name: `${candidate.name}  (${candidate.repo}, ${candidate.unread === undefined ? candidate.type : `${candidate.unread}, no reader yet`})`,
       value: candidate,
       checked: candidate.type !== UNKNOWN_TYPE,
     })),
@@ -183,7 +161,18 @@ const refine = async (candidates: readonly Candidate[]): Promise<Candidate[]> =>
       choices: [...known, UNKNOWN_TYPE].map((type) => ({ name: type, value: type })),
       default: candidate.type,
     });
-    refined.push({ ...candidate, name, type: picked });
+    // Picking a type by hand answers the question `unread` was asking. Keeping
+    // it would print "no reader yet" beside a repository that is about to be
+    // read in full.
+    const { unread: _guessed, ...rest } = candidate;
+    refined.push({
+      ...rest,
+      name,
+      type: picked,
+      ...(picked === UNKNOWN_TYPE && candidate.unread !== undefined
+        ? { unread: candidate.unread }
+        : {}),
+    });
   }
   return refined;
 };
@@ -221,9 +210,28 @@ export const runInit = async (options: InitOptions = {}): Promise<InitResult> =>
     print('Wrote an empty configuration. Add services by hand, or re-run with --dir <parent>.');
   } else {
     print(`Wrote ${configPath} with ${selected.length} service(s):`);
-    for (const service of selected) print(`  ${service.name}  ${service.repo}  ${service.type}`);
+    for (const service of selected) {
+      const found = service.unread === undefined ? '' : `  (looks like ${service.unread})`;
+      print(`  ${service.name}  ${service.repo}  ${service.type}${found}`);
+    }
   }
-  const unknown = selected.filter((service) => service.type === UNKNOWN_TYPE);
+
+  // Being told which stack it found and that there is no reader for it is the
+  // difference between a graph somebody can judge and one that quietly leaves a
+  // repository out. It is said here, where the configuration is written, and
+  // again on every build, where the counts are.
+  const unread = selected.filter((service) => service.unread !== undefined);
+  if (unread.length > 0) {
+    const named = unread.map((service) => `${service.name} (${service.unread ?? ''})`).join(', ');
+    print(`No reader yet for: ${named}.`);
+    print(
+      `flowatlas reads repositories of type ${TYPE_SIGNATURES.map(([type]) => type).join(' and ')} today.`,
+    );
+    print('Those repositories stay in the configuration and contribute nothing to the graph.');
+  }
+  const unknown = selected.filter(
+    (service) => service.type === UNKNOWN_TYPE && service.unread === undefined,
+  );
   if (unknown.length > 0) {
     print(`Could not tell the type of: ${unknown.map((s) => s.name).join(', ')}.`);
     print('Detection is only a suggestion. Set the type by hand if you know it.');

@@ -1,6 +1,6 @@
 import type { GraphEdge, GraphNode } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
-import { auditRoutes, matchesRoute } from './route-audit.js';
+import { auditRoutes, matchesRoutePattern } from './route-audit.js';
 
 const node = (id: string, type: GraphNode['type'], extra: Partial<GraphNode> = {}): GraphNode => ({
   id,
@@ -99,9 +99,9 @@ describe('a route nothing guards', () => {
   });
 
   it('matches a configured route by verb and pattern', () => {
-    expect(matchesRoute('* /api/health', 'GET', '/api/health')).toBe(true);
-    expect(matchesRoute('POST /api/*', 'GET', '/api/x')).toBe(false);
-    expect(matchesRoute('GET /api/:param/menu', 'GET', '/api/:param/menu')).toBe(true);
+    expect(matchesRoutePattern('* /api/health', 'GET', '/api/health')).toBe(true);
+    expect(matchesRoutePattern('POST /api/*', 'GET', '/api/x')).toBe(false);
+    expect(matchesRoutePattern('GET /api/:param/menu', 'GET', '/api/:param/menu')).toBe(true);
   });
 });
 

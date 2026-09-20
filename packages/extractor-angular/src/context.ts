@@ -5,12 +5,13 @@ import {
   lineOf,
   makeSymbolId,
   TypeCollector,
+  type ClassMethod,
   type ExtractContext,
   type GraphNode,
   type NodeType,
   type Unresolved,
 } from '@flowatlas/core';
-import type { ClassDeclaration, MethodDeclaration } from 'ts-morph';
+import type { ClassDeclaration } from 'ts-morph';
 import type { AngularClassIndex, AngularRole, IndexedClass } from './index-classes.js';
 
 export interface AngularStats {
@@ -70,11 +71,11 @@ export interface AngularExtractContext extends ExtractContext {
   fileOf(node: { getSourceFile(): { getFilePath(): string } }): string;
 
   classIdOf(declaration: ClassDeclaration): string | undefined;
-  methodIdOf(declaration: MethodDeclaration): string | undefined;
+  methodIdOf(declaration: ClassMethod): string | undefined;
 
   /** Creates the node for a class of this repository, with the type its role implies. */
   ensureClassNode(declaration: ClassDeclaration, meta?: Record<string, unknown>): GraphNode | undefined;
-  ensureMethodNode(declaration: MethodDeclaration): GraphNode | undefined;
+  ensureMethodNode(declaration: ClassMethod): GraphNode | undefined;
   /** Creates the node for a class from an installed package. */
   ensureExternalClassNode(options: {
     typeName: string;

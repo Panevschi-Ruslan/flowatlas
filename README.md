@@ -64,28 +64,28 @@ Five repositories that ship as one product: three NestJS services and two Angula
 frontends, with a shared package of types between them. It is the project this
 was built against, which is worth knowing when you read the numbers: they are
 reproducible, and they are from one codebase whose author also wrote the tool.
-Measured with 0.2.0.
+Measured with 0.3.0.
 
 | | |
 |---|---|
 | Source read | 1,523 files, 259,337 lines of TypeScript and templates |
 | Cold build | 5.5 s |
 | Rebuild with nothing changed | 0.7 s |
-| Graph | 11,307 nodes, 19,758 edges |
-| **Edges that cross a repository boundary** | **537** |
+| Graph | 11,346 nodes, 19,817 edges |
+| **Edges that cross a repository boundary** | **541** |
 
-That last row is the point. Five hundred and thirty seven connections that no
+That last row is the point. Five hundred and forty one connections that no
 compiler in any of those five checkouts can see, because each one only ever
 reads its own.
 
-**Where the edges come from.** 19,344 were read from the code, 397 were
+**Where the edges come from.** 19,403 were read from the code, 397 were
 inferred and marked `heuristic`, and 17 were declared by an annotation. Every
 edge says which of the three it is.
 
 **Ways in.** 564 HTTP routes, and 64 more through a bot: 13 commands, 45 button
-callbacks, 6 events. Something in the project reaches 502 of the routes. Nothing
-it can see calls the other 62, which for a public API is expected and for the
-rest is worth a look.
+callbacks, 6 events. Something in the project reaches 506 of the routes. Nothing
+it can see calls the other 58 — and of those, 14 are declared public in the
+configuration and 7 look like health probes, which leaves 37 worth a look.
 
 **What joined across the boundaries.** Two columns, because the first build of
 any project is not the one to judge it by and quoting only the second would be
@@ -93,9 +93,9 @@ selling you something:
 
 | | first build | configured |
 |---|---|---|
-| Browser requests matched to the route that answers them | 489 of 495 | 489 of 495 |
+| Browser requests matched to the route that answers them | 493 of 499 | 493 of 499 |
 | Calls between services matched to a route | **1 of 61** | 41 of 61 |
-| Routes something in the project reaches | 477 | 502 |
+| Routes something in the project reaches | 481 | 506 |
 | Message channels with a handler | 0 | 7 of 12 |
 
 The configuration behind the second column names the settings key that
@@ -106,26 +106,31 @@ repository and a route in another are joined by a fact only the person who
 deployed them knows. `flowatlas doctor` names what is missing, with the file and
 the line that wants it.
 
-**What 0.2.0 changed, on the same repositories.** The same configuration and the
-same commit of every repository, read by both versions:
+**What each version changed, on the same repositories.** The same configuration
+and the same commit of every repository, read by each:
 
-| | 0.1.1 | 0.2.0 |
-|---|---|---|
-| Browser requests found | 343 | 495 |
-| …matched to the route that answers them | 318 | 489 |
-| Routes nothing appears to call | 220 | 62 |
-| Edges that cross a repository boundary | 366 | 537 |
-| Boundaries a contract could be compared on | 337 | 636 |
-| Contract errors | 37 | 1 |
-| Contract warnings | 398 | 1,069 |
+| | 0.1.1 | 0.2.0 | 0.3.0 |
+|---|---|---|---|
+| Browser requests found | 343 | 495 | 499 |
+| …matched to the route that answers them | 318 | 489 | 493 |
+| Routes nothing appears to call | 220 | 62 | 58 |
+| Edges that cross a repository boundary | 366 | 537 | 541 |
+| Boundaries a contract could be compared on | 337 | 636 | 636 |
+| Contract errors | 37 | 1 | 1 |
+| Contract warnings | 398 | 1,069 | 1,069 |
 
-Most of it is requests made through a wrapper — a pass-through client, a base
-service whose resource a subclass decides — that 0.1.1 followed as far as the
-wrapper and no further. The routes it reported as never called were being called
-all along. The contract rows move in opposite directions on purpose: nearly
-twice as many boundaries can be compared, several kinds of false error were
-removed, and a request from a method nothing references is now a warning rather
-than an error, because nothing proves it runs.
+Most of the first step is requests made through a wrapper — a pass-through
+client, a base service whose resource a subclass decides — that 0.1.1 followed
+as far as the wrapper and no further. The routes 0.1.1 reported as never called
+were being called all along. The contract rows move in opposite directions on
+purpose: nearly twice as many boundaries can be compared, several kinds of false
+error were removed, and a request from a method nothing references is now a
+warning rather than an error, because nothing proves it runs.
+
+The second step is smaller and the same shape: the four streams the application
+holds open, opened through a wrapper that remembers what it was given rather
+than using it there and then, which is how a subscription survives being
+backgrounded.
 
 **What it found once they were joined.**
 
@@ -135,9 +140,14 @@ than an error, because nothing proves it runs.
 | Channels published to and handled nowhere | 5 |
 | Contract errors, over 636 compared boundaries | 1 |
 
-**What it says it cannot see.** 30 findings to act on, and 691 places static
-reading cannot reach at all, folded into 14 rows so the list stays readable.
+**What it says it cannot see.** 30 findings to act on, and 291 places static
+reading cannot reach at all, folded into 12 rows so the list stays readable.
 None of it is guessed at; each row carries a file, a line and a reason.
+
+A further 397 places are listed apart from both, because nothing joins them to
+anything: a template binding that assigns to a field has no method behind it, in
+this project or any other. They are places, not gaps, and adding them to the
+figure above would make it say something untrue.
 
 ```sh
 flowatlas stats     # the tables above, for your own project
@@ -490,7 +500,7 @@ recorded with a reason and a location rather than guessed at or dropped:
 `flowatlas stats` counts them and `flowatlas dead` explains them.
 
 An edge is never drawn on a guess *silently*. Some are drawn on a guess and say
-so: on the project measured above, 19,344 edges were read from the code and 397
+so: on the project measured above, 19,403 edges were read from the code and 397
 were inferred and carry `confidence: "heuristic"`. An inference is a guess with
 its reasoning attached, and the field is there so you can filter on it, not so
 the word can be avoided. What cannot be inferred either is recorded as
@@ -542,14 +552,23 @@ Working and verified against a real five-repository project:
   repositories would notice it.
 - **Wrappers**: a request made through a pass-through client, a base service
   whose resource a subclass decides, a finite table of paths or a `fetch`
-  variant is followed to where its address was decided. An inline handler —
+  variant is followed to where its address was decided — including a wrapper
+  that remembers what it was given in a field and opens the request later,
+  which is how a stream that has to survive being backgrounded is written. An inline handler —
   Hono, Telegraf, a callback registry — is a function the flow continues into.
 - **Guards**: composite decorators built from `applyDecorators(UseGuards(...))`
   are read, and four checks report a route whose gate is missing, bypassed,
   a catch-all, or silently stripping a field.
+- **Counting**: a place where nothing joins is listed apart from a place it
+  could not read, so no figure claims the second while counting the first, and a
+  route nothing calls says which kind of route it is.
 
 Known gaps in what it can read:
 
+- A repository built on anything but NestJS or Angular. Express, Fastify, Koa,
+  Next.js, Nuxt, Remix, React, Vue and Svelte are recognised by name and read by
+  nothing: `init` and `build` both say which repository and which framework, and
+  the graph is smaller than the project by exactly that much.
 - An address built entirely at run time, where no part of it is written down.
   Each one is reported rather than guessed at.
 - A helper whose tail depends on whether an argument is empty, where the caller
@@ -558,8 +577,6 @@ Known gaps in what it can read:
 - A path accumulated into a reassignable variable across `if` statements is
   deliberately not followed, because reading the wrong branch would invent an
   edge.
-- A route that names its screen with `loadComponent` rather than `component`.
-  The link that opens it reads as pointing nowhere.
 - A channel whose name only exists as run-time data on both sides: a browser
   holding a stream open is subscribed to a URL, not to a name.
 

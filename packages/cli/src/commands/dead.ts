@@ -50,10 +50,14 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
     throw new FlowatlasError('bad-argument', `--kind must be one of ${KINDS.join(', ')}, not ${kind}`);
   }
 
-  const { db, close } = openProjectDb(options);
+  const { db, close, config } = openProjectDb(options);
   try {
     const max = maxRows(options);
-    const scope: DeadOptions = options.service === undefined ? {} : { service: options.service };
+    const publicRoutes = config?.doctor?.publicRoutes ?? [];
+    const scope: DeadOptions = {
+      ...(options.service === undefined ? {} : { service: options.service }),
+      ...(publicRoutes.length === 0 ? {} : { publicRoutes }),
+    };
     const report = db.report();
     const wanted = (name: Kind): boolean => kind === 'all' || kind === name;
 
@@ -61,7 +65,10 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
     const channels = wanted('channels') ? cut(deadChannels(db, report, scope), max) : undefined;
     const providers = wanted('providers') ? cut(deadProviders(db, scope), max) : undefined;
     const fields = wanted('fields') ? await deadFields(db, scope) : undefined;
-    const fieldRows = fields === undefined ? undefined : cut(fields.fields, max);
+    // Every row of this section is kept in the answer: the whole point of it is
+    // that a reader is spared the carried ones, not that they are thrown away.
+    // The other sections cut at `--max`, where the rows are all of one kind.
+    const fieldRows = fields === undefined ? undefined : { rows: fields.fields, dropped: 0 };
 
     const truncated: Record<string, number> = {};
     if (entries !== undefined && entries.dropped > 0) truncated['entries'] = entries.dropped;
@@ -139,16 +146,35 @@ export const runDead = async (options: DeadCommandOptions): Promise<DeadRun> => 
       );
     }
     if (fieldRows !== undefined) {
+      // A field nothing removes is carried, ignored, and depended on by no
+      // one: worth a number, not worth a thousand rows. The list holds what the
+      // receiving side really throws away and the count says the rest — even
+      // where there is no list, which is why the section is told what "none"
+      // should say here. Both counts come from the whole answer rather than
+      // from what `--max` left, so a truncated list says it was truncated
+      // instead of calling its own findings something else.
+      const kept = fields?.fields ?? [];
+      const stripped = kept.filter((row) => row.dropped);
+      const carried = kept.length - stripped.length;
+      const shown = stripped.slice(0, max);
       lines.push(
         ...section(
           'fields',
-          renderTable(fieldRows.rows, [
+          renderTable(shown, [
             { header: 'type', value: (row) => row.typeId },
             { header: 'field', value: (row) => row.field },
             { header: 'sent on', value: (row) => row.sentOn.join(', ') },
           ]),
+          carried === 0
+            ? 'none'
+            : `none the receiving side removes; ${carried} cross a boundary nothing on the far side declares, and nothing there removes them`,
         ),
-        ...(fieldRows.dropped > 0 ? [`  ${moreRows(fieldRows.dropped)}`] : []),
+        ...(stripped.length > shown.length ? [`  ${moreRows(stripped.length - shown.length)}`] : []),
+        ...(carried === 0 || shown.length === 0
+          ? []
+          : [
+              `  ${carried} more field${carried === 1 ? '' : 's'} cross a boundary nothing on the far side declares, and nothing there removes them`,
+            ]),
       );
     }
     for (const warning of warnings) lines.push(`warning: ${warning.reason} — ${warning.hint ?? ''}`);

@@ -5,7 +5,7 @@ import { cmp } from './order.js';
 export interface RouteAuditOptions {
   /** Decorators on a handler that say it is deliberately public. */
   publicDecorators: readonly string[];
-  /** Routes that are public by decision, as `METHOD /path`; `*` matches the rest of a segment run. */
+  /** Routes that are public by decision, as `METHOD /path`; `*` matches any run of characters. */
   publicRoutes: readonly string[];
   /** Guards that refuse nobody for who they are, by class name; not counted as gates. */
   nonGateWrappers?: readonly string[];
@@ -37,8 +37,14 @@ const decoratorNames = (entry: GraphNode): string[] => {
     : [];
 };
 
-/** `GET /api/*` against `GET /api/health`; `*` stands for any number of segments. */
-const matchesRoute = (pattern: string, method: string, path: string): boolean => {
+/**
+ * Whether `METHOD /path` with `*` for any run of characters covers this route.
+ *
+ * Exported because two commands ask the same question of the same configured
+ * patterns: the guard checks here, and `dead`, which must not report a route
+ * the configuration has already called public.
+ */
+export const matchesRoutePattern = (pattern: string, method: string, path: string): boolean => {
   const [wantedMethod, ...rest] = pattern.trim().split(/\s+/);
   const wantedPath = rest.join(' ');
   if (wantedMethod === undefined || wantedPath === '') return false;
@@ -158,7 +164,7 @@ export const auditRoutes = (
     // ---- a route nothing guards that reaches stored data --------------------
     if (gates.length > 0 || middleware.length > 0) continue;
     if (decorators.some((name) => options.publicDecorators.includes(name))) continue;
-    if (options.publicRoutes.some((pattern) => matchesRoute(pattern, method, path))) continue;
+    if (options.publicRoutes.some((pattern) => matchesRoutePattern(pattern, method, path))) continue;
     const data = dataReached(entry.id);
     if (data === undefined) continue;
     // A route a worker declares may be covered by middleware the worker installs
@@ -182,5 +188,3 @@ export const auditRoutes = (
   }
   return rows;
 };
-
-export { matchesRoute };

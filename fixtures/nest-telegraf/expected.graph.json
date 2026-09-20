@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-telegraf",
-  "generatedAt": "2026-09-10T16:11:59.929Z",
+  "generatedAt": "2026-09-20T15:39:52.264Z",
   "nodes": [
     {
       "id": "entry:nest-telegraf:bot_callback:/^order_(\\d+)$/",
@@ -125,6 +125,38 @@
       }
     },
     {
+      "id": "entry:nest-telegraf:bot_command:Depots",
+      "type": "entry",
+      "label": "bot_command Depots",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 35,
+      "kind": "bot_command",
+      "meta": {
+        "key": "Depots",
+        "decorator": "Hears",
+        "trigger": "'Depots'",
+        "updateClass": "OrdersUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
+      "id": "entry:nest-telegraf:bot_command:depots",
+      "type": "entry",
+      "label": "bot_command depots",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 23,
+      "kind": "bot_command",
+      "meta": {
+        "key": "depots",
+        "decorator": "Command",
+        "trigger": "'depots'",
+        "updateClass": "OrdersUpdate",
+        "adapter": "nestjs-telegraf"
+      }
+    },
+    {
       "id": "entry:nest-telegraf:bot_command:help",
       "type": "entry",
       "label": "bot_command help",
@@ -171,22 +203,6 @@
         "trigger": "['inbox', 'i']",
         "updateClass": "DirectBot",
         "handlerVia": "call"
-      }
-    },
-    {
-      "id": "entry:nest-telegraf:bot_command:menu",
-      "type": "entry",
-      "label": "bot_command menu",
-      "repo": "nest-telegraf",
-      "file": "src/orders.update.ts",
-      "line": 23,
-      "kind": "bot_command",
-      "meta": {
-        "key": "menu",
-        "decorator": "Command",
-        "trigger": "'menu'",
-        "updateClass": "OrdersUpdate",
-        "adapter": "nestjs-telegraf"
       }
     },
     {
@@ -249,22 +265,6 @@
       "meta": {
         "key": "start",
         "decorator": "Start",
-        "updateClass": "OrdersUpdate",
-        "adapter": "nestjs-telegraf"
-      }
-    },
-    {
-      "id": "entry:nest-telegraf:bot_command:Меню",
-      "type": "entry",
-      "label": "bot_command Меню",
-      "repo": "nest-telegraf",
-      "file": "src/orders.update.ts",
-      "line": 35,
-      "kind": "bot_command",
-      "meta": {
-        "key": "Меню",
-        "decorator": "Hears",
-        "trigger": "'Меню'",
         "updateClass": "OrdersUpdate",
         "adapter": "nestjs-telegraf"
       }
@@ -638,6 +638,14 @@
       "line": 46
     },
     {
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.depots",
+      "type": "method",
+      "label": "OrdersUpdate.depots",
+      "repo": "nest-telegraf",
+      "file": "src/orders.update.ts",
+      "line": 23
+    },
+    {
       "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.greet",
       "type": "method",
       "label": "OrdersUpdate.greet",
@@ -654,9 +662,9 @@
       "line": 18
     },
     {
-      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.keyboardMenu",
+      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.keyboardDepots",
       "type": "method",
-      "label": "OrdersUpdate.keyboardMenu",
+      "label": "OrdersUpdate.keyboardDepots",
       "repo": "nest-telegraf",
       "file": "src/orders.update.ts",
       "line": 35
@@ -668,14 +676,6 @@
       "repo": "nest-telegraf",
       "file": "src/orders.update.ts",
       "line": 29
-    },
-    {
-      "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.menu",
-      "type": "method",
-      "label": "OrdersUpdate.menu",
-      "repo": "nest-telegraf",
-      "file": "src/orders.update.ts",
-      "line": 23
     },
     {
       "id": "nest-telegraf#src/orders.update.ts:OrdersUpdate.projectOrderCreated",
@@ -872,6 +872,26 @@
       "returns": "string"
     },
     {
+      "from": "entry:nest-telegraf:bot_command:Depots",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.keyboardDepots",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 35,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-telegraf:bot_command:depots",
+      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.depots",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.update.ts",
+      "line": 23,
+      "params": [],
+      "returns": "string"
+    },
+    {
       "from": "entry:nest-telegraf:bot_command:help",
       "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.help",
       "type": "handles",
@@ -904,16 +924,6 @@
         "unknown"
       ],
       "returns": "void"
-    },
-    {
-      "from": "entry:nest-telegraf:bot_command:menu",
-      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.menu",
-      "type": "handles",
-      "confidence": "static",
-      "file": "src/orders.update.ts",
-      "line": 23,
-      "params": [],
-      "returns": "string"
     },
     {
       "from": "entry:nest-telegraf:bot_command:o",
@@ -954,16 +964,6 @@
       "confidence": "static",
       "file": "src/orders.update.ts",
       "line": 13,
-      "params": [],
-      "returns": "string"
-    },
-    {
-      "from": "entry:nest-telegraf:bot_command:Меню",
-      "to": "nest-telegraf#src/orders.update.ts:OrdersUpdate.keyboardMenu",
-      "type": "handles",
-      "confidence": "static",
-      "file": "src/orders.update.ts",
-      "line": 35,
       "params": [],
       "returns": "string"
     },

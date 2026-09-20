@@ -163,6 +163,24 @@ describe('GraphBuilder', () => {
     expect(b.build().unresolved).toHaveLength(2);
   });
 
+  it('folds rows below action by reason and by level, never across the two', () => {
+    // One reason raising both levels is not a case any pass makes today, and a
+    // fold keyed on the reason alone would answer it by inventing a number:
+    // one row, one level, and the count of both.
+    const b = builder();
+    b.addUnresolved({ file: 'src/a.ts', line: 1, reason: 'mixed', level: 'info' });
+    b.addUnresolved({ file: 'src/b.ts', line: 2, reason: 'mixed', level: 'info' });
+    b.addUnresolved({ file: 'src/c.ts', line: 3, reason: 'mixed', level: 'nothing' });
+    const rows = b.build().unresolved;
+    expect(rows).toHaveLength(2);
+    expect(rows.map((row) => [row.level, row.sites ?? 1])).toEqual(
+      expect.arrayContaining([
+        ['info', 2],
+        ['nothing', 1],
+      ]),
+    );
+  });
+
   it('throws when an edge points at a node that was never added', () => {
     const b = builder();
     b.addNode(node('a'));

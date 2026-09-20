@@ -1,6 +1,6 @@
-import { Project, type ClassDeclaration, type SourceFile } from 'ts-morph';
+import { Node, Project, type ClassDeclaration, type Node as TsNode, type SourceFile } from 'ts-morph';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { findMethod, forEachCall, resolveMemberCall, resolveReceiver } from './member-call.js';
+import { findMethod, forEachCall, resolveReceiver } from './member-call.js';
 import { DiMap } from './types.js';
 
 const LIB = `export declare class Client { send(): void }`;
@@ -56,11 +56,28 @@ beforeAll(() => {
 /** Every call written in `Handler.run`, in the order it appears. */
 const calls = (): ReturnType<typeof collect> => collect();
 
+/**
+ * The two questions every caller of this module asks together: what the
+ * receiver is, and which method of it a name reaches. Composed here as the
+ * passes compose them, rather than behind a third function nothing calls.
+ */
+const reaches = (call: TsNode): { classDecl: ClassDeclaration; methodName: string } | null => {
+  if (!Node.isCallExpression(call)) return null;
+  const callee = call.getExpression();
+  if (!Node.isPropertyAccessExpression(callee)) return null;
+  const receiver = resolveReceiver(callee.getExpression(), handler, di);
+  if (receiver.classDecl === undefined) return null;
+  const found = findMethod(receiver.classDecl, callee.getName());
+  return found.method === undefined
+    ? null
+    : { classDecl: receiver.classDecl, methodName: callee.getName() };
+};
+
 const collect = () => {
-  const out: Array<{ text: string; resolved: ReturnType<typeof resolveMemberCall> }> = [];
+  const out: Array<{ text: string; resolved: ReturnType<typeof reaches> }> = [];
   const body = handler.getMethodOrThrow('run').getBodyOrThrow();
   forEachCall(body, (call) => {
-    out.push({ text: call.getText(), resolved: resolveMemberCall(call, handler, di) });
+    out.push({ text: call.getText(), resolved: reaches(call) });
   });
   return out;
 };

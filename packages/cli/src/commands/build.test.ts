@@ -1,10 +1,11 @@
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import type { Unresolved } from '@flowatlas/core';
 import { openGraphDb } from '@flowatlas/linker';
 import { afterAll, describe, expect, it } from 'vitest';
 import { loadBuildCache } from '../build/cache.js';
-import { buildProject, summariseBuild, summariseRebuild } from './build.js';
+import { buildProject, summariseBuild, summariseRebuild, unresolvedLine } from './build.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
 const FIXTURES = join(ROOT, 'fixtures');
@@ -85,6 +86,33 @@ const brokenRepo = (): string => {
   writeFileSync(join(dir, 'src', 'main.ts'), 'export const nothing = 1;\n');
   return dir;
 };
+
+describe('the line the summary ends on', () => {
+  const row = (over: Partial<Unresolved> = {}): Unresolved => ({
+    service: 'api',
+    file: 'src/a.ts',
+    line: 1,
+    reason: 'dynamic-http-url',
+    ...over,
+  });
+
+  it('says rows and places apart when a reason was folded', () => {
+    expect(unresolvedLine([row(), row({ sites: 192, level: 'info' })], 2)).toBe(
+      'unresolved: 2 rows over 193 sites',
+    );
+  });
+
+  it('says nothing about places where nothing joins, when there are none', () => {
+    expect(unresolvedLine([row()], 1)).toBe('unresolved: 1');
+  });
+
+  // The number that matters is what was missed. Adding four hundred template
+  // bindings to it would make a well-read project look like a badly read one.
+  it('keeps places where nothing joins out of the count, and says them after it', () => {
+    const rows = [row(), row({ level: 'nothing', sites: 397, reason: 'handler-not-a-method' })];
+    expect(unresolvedLine(rows, 1)).toBe('unresolved: 1, and 397 sites with nothing to join');
+  });
+});
 
 describe('building a project', () => {
   it('reads every repository and joins them', async () => {

@@ -4,6 +4,7 @@ import {
   narrowUnionByLiteral,
   makeLeafId,
   makeSymbolId,
+  methodBodies,
   resolveTypeOrigin,
   type CallPattern,
   type GraphNode,
@@ -511,12 +512,11 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
     const owner = indexed.declaration;
     const file = indexed.file;
 
-    for (const method of owner.getMethods()) {
+    for (const { declaration: method, body } of methodBodies(owner)) {
       const methodId = ctx.methodIdOf(method);
       if (methodId === undefined || !ctx.builder.has(methodId)) continue;
 
-      const body = method.getBody();
-      if (body !== undefined) {
+      {
         forEachCall(body, (call) => {
           const expression = call as unknown as CallExpression;
           const callee = expression.getExpression();
@@ -532,6 +532,11 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
           }
         });
       }
+
+      // A handler is registered by a decorator, and a decorator on a property
+      // registers nothing in any of these frameworks: what it publishes is read
+      // above, and there is no subscription here to find.
+      if (!Node.isMethodDeclaration(method)) continue;
 
       emitSubscribers(method, owner, file, indexed.name);
 

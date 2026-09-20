@@ -165,6 +165,18 @@ a method and it tells you which of them are in other people's services.
 a message channel — here, one with a handler and no publisher anywhere in the
 project.
 
+## 6b. Follow a stream back to the screen that opened it
+
+A browser holding a stream open is a request like any other: one `GET`, held.
+What makes it hard to read is where the address was written — a wrapper that
+remembers its arguments and opens them later, which is how a subscription
+survives the phone being backgrounded.
+
+![flowatlas impact on a stream route](media/11-streams.gif)
+
+Four subscriptions reach one route here, and each row names the screen that
+decided the address rather than the wrapper they all pass through.
+
 ## 7. Compare what crosses a boundary
 
 Two services agree about a shape until one of them changes. `contracts` compares
@@ -258,6 +270,9 @@ After that, `claude mcp list` shows `flowatlas`.
 scripts/demo/record.sh          # all of them, into docs/media
 scripts/demo/record.sh 04 09    # just those two
 ```
+
+Most scenes run against `fixtures/multi-repo`; the stream one runs against
+`fixtures/sse-stream`, which is the fixture that has a stream in it.
 
 Each scene is a shell script under `scripts/demo/scenes`. The commands you see
 typed are the commands that ran; the driver sizes the terminal to the scene and

@@ -2,9 +2,12 @@ import {
   CONFIDENCE_LEVELS,
   EDGE_TYPES,
   NODE_TYPES,
+  tally,
+  wasMissed,
   type Confidence,
   type EdgeType,
   type NodeType,
+  type PlaceCount,
 } from '@flowatlas/core';
 import type { GraphDb, LinkReport } from '@flowatlas/linker';
 import type { Command } from 'commander';
@@ -37,6 +40,13 @@ export interface Stats {
    * reader can see rather than a number that quietly went away.
    */
   unresolvedSites: Record<string, number>;
+  /**
+   * Places where nothing joins, counted apart from every figure above.
+   *
+   * A template binding that assigns to a field has no other end, so it is not a
+   * reason with no answer; it is a place with no question.
+   */
+  nothing: PlaceCount;
   link: LinkSummary;
 }
 
@@ -102,12 +112,24 @@ export const collectStats = (db: GraphDb): Stats => {
     }
   }
 
+  // Counted the way the build summary counts: by reason, over the rows that say
+  // something was not read. Places where nothing joins are their own figure, so
+  // that the line at the top adds up to the list under it.
   const unresolvedByReason = new Map<string, number>();
   const unresolvedSites = new Map<string, number>();
+  const nothingRows: Array<{ sites?: number }> = [];
+  const missedRows: Array<{ sites?: number }> = [];
   for (const row of db.unresolved({ limit: 1_000_000 })) {
+    if (!wasMissed(row)) {
+      nothingRows.push(row);
+      continue;
+    }
+    missedRows.push(row);
     unresolvedByReason.set(row.reason, (unresolvedByReason.get(row.reason) ?? 0) + 1);
     unresolvedSites.set(row.reason, (unresolvedSites.get(row.reason) ?? 0) + (row.sites ?? 1));
   }
+  const nothing = tally(nothingRows);
+  const missed = tally(missedRows);
 
   const report = db.report();
   const link: LinkSummary =
@@ -121,13 +143,17 @@ export const collectStats = (db: GraphDb): Stats => {
         };
 
   return {
-    totals: db.counts(),
+    // The database counts every row it holds; `unresolved` here means what it
+    // means everywhere else — the rows that say something was not read — so a
+    // dashboard reading this figure and the build summary sees one number.
+    totals: { ...db.counts(), unresolved: missed.rows },
     nodesByType: sortedRecord(nodesByType, NODE_TYPES as readonly NodeType[]),
     nodesByService: sortedRecord(nodesByService),
     edgesByType: sortedRecord(edgesByType, EDGE_TYPES as readonly EdgeType[]),
     edgesByConfidence: sortedRecord(edgesByConfidence, CONFIDENCE_LEVELS as readonly Confidence[]),
     unresolvedByReason: sortedRecord(unresolvedByReason),
     unresolvedSites: sortedRecord(unresolvedSites),
+    nothing,
     link,
   };
 };
@@ -169,10 +195,12 @@ const unresolvedSection = (stats: Stats): string[] => {
 export const summariseStats = (stats: Stats): string[] => {
   const { totals, link } = stats;
   const sites = Object.values(stats.unresolvedSites).reduce((sum, count) => sum + count, 0);
+  const rows = totals.unresolved;
   const unresolved =
-    sites === totals.unresolved
-      ? `${totals.unresolved} unresolved`
-      : `${totals.unresolved} unresolved rows over ${sites} sites`;
+    (sites === rows ? `${rows} unresolved` : `${rows} unresolved rows over ${sites} sites`) +
+    (stats.nothing.rows === 0
+      ? ''
+      : `, and ${stats.nothing.sites} site${stats.nothing.sites === 1 ? '' : 's'} with nothing to join`);
   const lines = [
     `${totals.nodes} nodes, ${totals.edges} edges, ${totals.types} types, ${unresolved}`,
     '',

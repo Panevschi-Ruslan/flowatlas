@@ -22,6 +22,7 @@ state_of() {
     01-*) echo raw ;;
     02-* | 03-*) echo built ;;
     08-* | 91-*) echo renamed ;;
+    11-*) echo streams ;;
     *) echo tuned ;;
   esac
 }
@@ -36,6 +37,14 @@ tune() {
 }
 
 prepare() {
+  # A scene about streams needs a project that has one, which the four-service
+  # demo does not: it is the other fixture, configured, since what that scene
+  # shows is not the writing of a configuration.
+  if [ "$1" = streams ]; then
+    FIXTURE=sse-stream WITH_CONFIG=1 "$ROOT/scripts/demo/reset.sh" > /dev/null
+    (cd "$DEMO" && PATH="$DEMO/.bin:$PATH" flowatlas build) > /dev/null 2>&1
+    return 0
+  fi
   "$ROOT/scripts/demo/reset.sh" > /dev/null
   [ "$1" = raw ] && return 0
   (cd "$DEMO" && PATH="$DEMO/.bin:$PATH" flowatlas init --dir . --yes) > /dev/null 2>&1

@@ -8,13 +8,14 @@ import {
   makeSymbolId,
   moduleFunctions,
   TypeCollector,
+  type ClassMethod,
   type ExtractContext,
   type GraphNode,
   type NamedFunction,
   type NodeType,
   type Unresolved,
 } from '@flowatlas/core';
-import type { ClassDeclaration, MethodDeclaration } from 'ts-morph';
+import type { ClassDeclaration } from 'ts-morph';
 import { ClassIndex, type ClassRole, type IndexedClass, type NestClassIndex } from './index-classes.js';
 import { ModuleIndex } from './modules-index.js';
 import type { BootstrapInfo } from './bootstrap.js';
@@ -78,7 +79,7 @@ export interface NestExtractContext extends ExtractContext {
   fileOf(node: { getSourceFile(): { getFilePath(): string } }): string;
 
   classIdOf(declaration: ClassDeclaration): string | undefined;
-  methodIdOf(declaration: MethodDeclaration): string | undefined;
+  methodIdOf(declaration: ClassMethod): string | undefined;
   functionIdOf(fn: NamedFunction): string;
 
   /**
@@ -90,7 +91,7 @@ export interface NestExtractContext extends ExtractContext {
 
   /** Creates the node for a class of this repository, with the type its role implies. */
   ensureClassNode(declaration: ClassDeclaration): GraphNode | undefined;
-  ensureMethodNode(declaration: MethodDeclaration): GraphNode | undefined;
+  ensureMethodNode(declaration: ClassMethod): GraphNode | undefined;
   ensureFunctionNode(fn: NamedFunction): GraphNode;
   /** Creates the node for a class from an installed package. */
   ensureExternalClassNode(options: {

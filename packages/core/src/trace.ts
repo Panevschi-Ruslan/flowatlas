@@ -1,11 +1,21 @@
 import type {
   CallExpression,
-  MethodDeclaration,
+  Identifier,
+  ObjectLiteralExpression,
   ParameterDeclaration,
+  Symbol as TsSymbol,
   TemplateExpression,
   Node as TsNode,
 } from 'ts-morph';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
+import {
+  bodyOf,
+  enclosingMethod,
+  functionOf,
+  methodNamedOn,
+  parametersOf,
+  type ClassMethod,
+} from './di/member-call.js';
 import { holeIn, UNREAD_SPAN } from './ids.js';
 import { evaluateExpression } from './static-value.js';
 
@@ -113,15 +123,21 @@ const assignmentsIn = (name: string, declaration: ClassNode): TsNode[] => {
 
   for (const constructor of declaration.getConstructors()) {
     const body = constructor.getBody();
-    if (body === undefined) continue;
-    for (const assignment of body.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
-      if (assignment.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) continue;
-      const left = assignment.getLeft();
-      if (!Node.isPropertyAccessExpression(left)) continue;
-      if (left.getName() !== name) continue;
-      if (left.getExpression().getKind() !== SyntaxKind.ThisKeyword) continue;
-      found.push(assignment.getRight());
-    }
+    if (body !== undefined) found.push(...writesTo(name, body));
+  }
+  return found;
+};
+
+/** Every `this.<name> = value` written anywhere inside one node. */
+const writesTo = (name: string, container: TsNode): TsNode[] => {
+  const found: TsNode[] = [];
+  for (const assignment of container.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
+    if (assignment.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) continue;
+    const left = assignment.getLeft();
+    if (!Node.isPropertyAccessExpression(left)) continue;
+    if (left.getName() !== name) continue;
+    if (left.getExpression().getKind() !== SyntaxKind.ThisKeyword) continue;
+    found.push(assignment.getRight());
   }
   return found;
 };
@@ -221,13 +237,13 @@ const chainFrom = (scope: Scope, node: TsNode): ClassNode[] => {
 
 /** What a helper's parameters were given, so its body can be read with them. */
 const bindings = (
-  method: MethodDeclaration,
+  method: ClassMethod,
   call: CallExpression,
   scope: Scope,
 ): ReadonlyMap<ParameterDeclaration, Bound> => {
   const bound = new Map<ParameterDeclaration, Bound>();
   const args = call.getArguments();
-  method.getParameters().forEach((parameter, index) => {
+  parametersOf(method).forEach((parameter, index) => {
     const argument = args[index];
     if (argument !== undefined) bound.set(parameter, { node: argument, scope });
     else {
@@ -240,6 +256,126 @@ const bindings = (
     }
   });
   return bound;
+};
+
+/**
+ * The object literal a value stands for, and the scope that literal was written
+ * in.
+ *
+ * A wrapper that cannot act on what it was given keeps it: `this.params = {
+ * url, key }`, and later `this.open(this.params)`. Following the address
+ * through that means following the object, which is one parameter, one field
+ * and one literal away.
+ *
+ * A field written in more than one place is refused. Two writers mean two
+ * possible objects and nothing here says which one a call reads, and a reader
+ * that picked the first would be inventing an address rather than reading one.
+ */
+/**
+ * One hop towards where a name's value was written, with the scope to read it in.
+ *
+ * A parameter is answered by whoever called the method that declared it, and a
+ * `const` by its initializer. Both are a step of the same kind — a different
+ * node, read in a possibly different scope — which is what `Bound` is.
+ */
+const substituted = (name: Identifier, scope: Scope): Bound | null => {
+  const declaration = symbolBehind(name)?.getDeclarations()[0];
+  if (declaration === undefined) return null;
+  if (Node.isParameterDeclaration(declaration)) return scope.bound.get(declaration) ?? null;
+  if (Node.isVariableDeclaration(declaration)) {
+    const initializer = declaration.getInitializer();
+    return initializer === undefined ? null : { node: initializer, scope };
+  }
+  return null;
+};
+
+const objectHolding = (
+  value: TsNode,
+  scope: Scope,
+  budget: number,
+): { node: ObjectLiteralExpression; scope: Scope } | null => {
+  if (budget <= 0) return null;
+  const node = unwrap(value);
+  if (Node.isObjectLiteralExpression(node)) return { node, scope };
+
+  if (Node.isIdentifier(node)) {
+    const next = substituted(node, scope);
+    return next === null ? null : objectHolding(next.node, next.scope, budget - 1);
+  }
+
+  if (
+    Node.isPropertyAccessExpression(node) &&
+    node.getExpression().getKind() === SyntaxKind.ThisKeyword
+  ) {
+    const only = objectWrittenTo(node.getName(), scope.self ?? enclosingClass(node));
+    return only === undefined ? null : objectHolding(only, scope, budget - 1);
+  }
+  return null;
+};
+
+/**
+ * The one object a field is ever given, or nothing when that is not one object.
+ *
+ * Unlike the constant trace, this looks inside every method: a field a wrapper
+ * remembers something in is assigned where the wrapper was called, not where it
+ * was declared. `= null` is not a competing answer — it is the field saying it
+ * holds nothing yet — so it is passed over; anything else that is not the one
+ * literal makes this refuse, because two writers mean the reader cannot say
+ * which object a later read sees.
+ */
+const objectWrittenTo = (
+  name: string,
+  declaration: ClassNode | undefined,
+): ObjectLiteralExpression | undefined => {
+  const written: TsNode[] = [];
+  for (const owner of classChain(declaration)) {
+    const initializer = owner.getProperty(name)?.getInitializer();
+    if (initializer !== undefined) written.push(initializer);
+    // The whole class, not only its constructors: a field a wrapper remembers
+    // something in is written where the wrapper was called, which is a method.
+    written.push(...writesTo(name, owner));
+  }
+  const values = written.map(unwrap).filter((value) => !isEmptyValue(value));
+  const only = values.length === 1 ? values[0] : undefined;
+  return only !== undefined && Node.isObjectLiteralExpression(only) ? only : undefined;
+};
+
+/** `null` and `undefined`: a field saying it holds nothing, rather than what it holds. */
+const isEmptyValue = (node: TsNode): boolean => {
+  const value = unwrap(node);
+  return (
+    value.getKind() === SyntaxKind.NullKeyword ||
+    (Node.isIdentifier(value) && value.getText() === 'undefined')
+  );
+};
+
+/**
+ * What one property of a remembered object holds, with the scope to read it in.
+ *
+ * The scope is the one the literal was written in, not the one it is read in:
+ * `{ url, key }` written inside `connect` names `connect`'s parameters, and
+ * those are answered by whoever called `connect`.
+ */
+const rememberedProperty = (value: TsNode, scope: Scope, budget: number): Bound | null => {
+  if (budget <= 0) return null;
+  const access = unwrap(value);
+  if (!Node.isPropertyAccessExpression(access)) return null;
+  if (access.getExpression().getKind() === SyntaxKind.ThisKeyword) return null;
+
+  const holder = objectHolding(access.getExpression(), scope, budget - 1);
+  if (holder === null) return null;
+  const property = holder.node.getProperty(access.getName());
+  if (property === undefined) return null;
+  if (Node.isPropertyAssignment(property)) {
+    const initializer = property.getInitializer();
+    return initializer === undefined ? null : { node: initializer, scope: holder.scope };
+  }
+  // `{ url }` names a value rather than writing one, so the step from it is the
+  // same step any other name takes.
+  if (Node.isShorthandPropertyAssignment(property)) {
+    return substituted(property.getNameNode(), holder.scope);
+  }
+  return null;
 };
 
 /**
@@ -258,21 +394,19 @@ const constantIn = (node: TsNode, scope: Scope): string | null => {
   if (callee.getExpression().getKind() !== SyntaxKind.ThisKeyword) return null;
 
   for (const owner of chainFrom(scope, call)) {
-    const answer = constantReturnOf(owner.getMethod(callee.getName()));
+    const answer = constantReturnOf(methodNamedOn(owner, callee.getName()));
     if (answer !== null) return answer;
   }
   return null;
 };
 
 /** The one string every return of a method gives, when they all give the same. */
-const constantReturnOf = (method: MethodDeclaration | undefined): string | null => {
+const constantReturnOf = (method: ClassMethod | undefined): string | null => {
   if (method === undefined) return null;
-  const returns = method.getDescendantsOfKind(SyntaxKind.ReturnStatement);
-  if (returns.length === 0) return null;
+  const answers = answersOf(method, true);
+  if (answers.length === 0) return null;
   const values = new Set<string>();
-  for (const statement of returns) {
-    const expression = statement.getExpression();
-    if (expression === undefined) return null;
+  for (const expression of answers) {
     const value = evaluateExpression(expression);
     if (!value.resolved || typeof value.value !== 'string') return null;
     values.add(value.value);
@@ -337,6 +471,9 @@ const readString = (value: TsNode, scope: Scope, budget: number): string | null 
     return values.size === 1 ? (([...values][0] as string) ?? null) : null;
   }
 
+  const remembered = rememberedProperty(node, scope, budget);
+  if (remembered !== null) return readString(remembered.node, remembered.scope, budget - 1);
+
   return constantIn(node, scope);
 };
 
@@ -397,9 +534,11 @@ export const choosesASegment = (node: TsNode): boolean => {
   // A method the class declares but does not answer. Every subclass answers it
   // with its own name, and which subclass this is cannot be told from here.
   for (const owner of classChain(enclosingClass(value))) {
-    const method = owner.getMethod(callee.getName());
+    const method = methodNamedOn(owner, callee.getName());
     if (method === undefined) continue;
-    return method.isAbstract() || method.getBody() === undefined;
+    // A method written as a field always has its body with it; only a declared
+    // one can be abstract or left to a subclass.
+    return Node.isMethodDeclaration(method) && (method.isAbstract() || method.getBody() === undefined);
   }
   return false;
 };
@@ -515,6 +654,10 @@ const pathOf = (
       }
     }
   }
+  const remembered = rememberedProperty(node, scope, budget);
+  if (remembered !== null) {
+    return pathOf(remembered.node, remembered.scope, budget - 1, before, after, last);
+  }
   return hole(node);
 };
 
@@ -604,18 +747,18 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
         return null;
       }
       for (const owner of classChain(declared)) {
-        const method = owner.getMethod(callee.getName());
+        const method = methodNamedOn(owner, callee.getName());
         if (method === undefined) continue;
         // Every return of the method's own, and they have to agree: a helper
         // on another object that answers differently per branch is a hole,
         // not whichever branch happens to read first.
         const inside: Scope = { ...scope, self: declared, bound: bindings(method, node, scope) };
-        const answers = ownReturns(method).map((statement) => {
-          const returned = statement.asKind(SyntaxKind.ReturnStatement)?.getExpression();
-          return returned === undefined ? null : addressOf(returned, inside, budget - 1);
-        });
+        const answers = answersOf(method).map((returned) => addressOf(returned, inside, budget - 1));
         const [first] = answers;
-        if (first === null || first === undefined) return null;
+        // Nothing to read here is not an answer: a base class further along the
+        // chain may declare the method this one only names.
+        if (first === undefined) continue;
+        if (first === null) return null;
         const same = answers.every(
           (answer) => answer !== null && answer.key === first.key && answer.prefix === first.prefix,
         );
@@ -624,12 +767,10 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
       return null;
     }
     for (const owner of chainFrom(scope, node)) {
-      const method = owner.getMethod(callee.getName());
+      const method = methodNamedOn(owner, callee.getName());
       if (method === undefined) continue;
       const inside: Scope = { ...scope, bound: bindings(method, node, scope) };
-      for (const statement of method.getDescendantsOfKind(SyntaxKind.ReturnStatement)) {
-        const returned = statement.getExpression();
-        if (returned === undefined) continue;
+      for (const returned of answersOf(method, true)) {
         const found = addressOf(returned, inside, budget - 1);
         if (found !== null) return found;
       }
@@ -715,6 +856,10 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
     return initializer === undefined ? null : addressOf(initializer, scope, budget - 1);
   }
 
+  // `p.url`, where `p` is the object a wrapper remembered what it was given in.
+  const remembered = rememberedProperty(node, scope, budget);
+  if (remembered !== null) return addressOf(remembered.node, remembered.scope, budget - 1);
+
   return null;
 };
 
@@ -754,13 +899,13 @@ export const rootSettingAddress = (
  */
 export interface CallFrame {
   call: CallExpression;
-  method: MethodDeclaration;
+  method: ClassMethod;
 }
 
 /** The class a call reaches, which is the class that answers `this` inside it. */
 const selfAcross = (
   call: CallExpression,
-  method: MethodDeclaration,
+  method: ClassMethod,
   caller: Scope,
 ): ClassNode | undefined => {
   const callee = unwrap(call.getExpression());
@@ -847,7 +992,7 @@ export const addressAt = (
  * A reference that is not the callee — the method passed as a value, or named
  * in a type — is not a call and is left out.
  */
-export const callSitesOf = (method: MethodDeclaration): CallExpression[] => {
+export const callSitesOf = (method: ClassMethod): CallExpression[] => {
   const sites: CallExpression[] = [];
   const seen = new Set<string>();
   for (const reference of method.findReferencesAsNodes()) {
@@ -867,26 +1012,54 @@ export const callSitesOf = (method: MethodDeclaration): CallExpression[] => {
 };
 
 /**
+ * The symbol an identifier stands for, which is not always the one it declares.
+ *
+ * `{ url }` both declares a property and names a value, and only the second is
+ * the parameter an address came in on. Everywhere else the two are the same.
+ */
+const symbolBehind = (identifier: Identifier): TsSymbol | undefined => {
+  const parent = identifier.getParent();
+  if (Node.isShorthandPropertyAssignment(parent)) return parent.getValueSymbol();
+  return identifier.getSymbol();
+};
+
+/**
+ * Whether an argument is the object a method remembered its own parameters in.
+ *
+ * `connect(url, key) { this.params = { url, key }; this.open(this.params); }`
+ * hands its caller's address on as surely as `this.open(url)` would, one field
+ * and one literal further round. A wrapper doing that is still a wrapper, and
+ * the address is still decided by whoever called it, so the trace has to keep
+ * going out rather than stop at the object.
+ */
+export const remembersParametersOf = (argument: TsNode, method: ClassMethod): boolean => {
+  const access = unwrap(argument);
+  if (!Node.isPropertyAccessExpression(access)) return false;
+  if (access.getExpression().getKind() !== SyntaxKind.ThisKeyword) return false;
+  const object = objectWrittenTo(access.getName(), enclosingClass(access));
+  return object !== undefined && readsParameterOf(object, method);
+};
+
+/**
  * Whether a value depends on what a method was called with.
  *
  * Looked for in the value and in the local bindings it names, since
  * `const url = this.url(path)` and then `http.get(url)` depends on `path` just as
- * much as writing it in place does.
+ * much as writing it in place does. A shorthand property names a value rather
+ * than declaring one, so it is asked for the value's symbol: `{ url }` depends
+ * on `url` exactly as `{ url: url }` does.
  */
-export const readsParameterOf = (value: TsNode, method: MethodDeclaration, budget = 4): boolean => {
+export const readsParameterOf = (value: TsNode, method: ClassMethod, budget = 4): boolean => {
   if (budget <= 0) return false;
-  const parameters = new Set<TsNode>(method.getParameters());
+  const parameters = new Set<TsNode>(parametersOf(method));
   const identifiers = Node.isIdentifier(value)
     ? [value]
     : value.getDescendantsOfKind(SyntaxKind.Identifier);
   for (const identifier of identifiers) {
-    const declaration = identifier.getSymbol()?.getDeclarations()[0];
+    const declaration = symbolBehind(identifier)?.getDeclarations()[0];
     if (declaration === undefined) continue;
     if (parameters.has(declaration)) return true;
-    if (
-      Node.isVariableDeclaration(declaration) &&
-      declaration.getFirstAncestorByKind(SyntaxKind.MethodDeclaration) === method
-    ) {
+    if (Node.isVariableDeclaration(declaration) && enclosingMethod(declaration) === method) {
       const initializer = declaration.getInitializer();
       if (initializer !== undefined && readsParameterOf(initializer, method, budget - 1)) {
         return true;
@@ -894,6 +1067,35 @@ export const readsParameterOf = (value: TsNode, method: MethodDeclaration, budge
     }
   }
   return false;
+};
+
+/**
+ * The expressions a method answers with, however it was written.
+ *
+ * Three shapes, one question. A method and a block-bodied arrow answer with
+ * their `return` statements; an arrow with no braces —
+ * `url = (id) => `${base}/orders/${id}`` — answers with the expression it is,
+ * and has no `return` anywhere to find. Asking for `ReturnStatement`
+ * descendants of a field would find the ones inside the arrow when the filter
+ * allows it and nothing at all when it does not, which reads as a method that
+ * answers with nothing rather than one written differently.
+ *
+ * `nested` says whether returns written inside a function *inside* this one
+ * count, which is the difference between "what does this answer with" and
+ * "what values appear in it".
+ */
+const answersOf = (method: ClassMethod, nested = false): TsNode[] => {
+  const fn = functionOf(method);
+  if (fn === undefined) return [];
+  const body = fn.getBody();
+  if (body !== undefined && !Node.isBlock(body)) return [body];
+  const statements = nested ? fn.getDescendantsOfKind(SyntaxKind.ReturnStatement) : ownReturns(fn);
+  const answers: TsNode[] = [];
+  for (const statement of statements) {
+    const returned = statement.asKind(SyntaxKind.ReturnStatement)?.getExpression();
+    if (returned !== undefined) answers.push(returned);
+  }
+  return answers;
 };
 
 /** The returns that belong to a function itself, not to one nested inside it. */
@@ -953,35 +1155,32 @@ const queryOnly = (value: TsNode, scope: Scope, budget: number): boolean => {
   }
   if (Node.isCallExpression(node)) {
     const callee = unwrap(node.getExpression());
-    let body: TsNode | undefined;
+    let answers: TsNode[] | undefined;
     let inside = scope;
     if (
       Node.isPropertyAccessExpression(callee) &&
       callee.getExpression().getKind() === SyntaxKind.ThisKeyword
     ) {
       for (const owner of chainFrom(scope, node)) {
-        const method = owner.getMethod(callee.getName());
-        if (method?.getBody() === undefined) continue;
-        body = method;
+        const method = methodNamedOn(owner, callee.getName());
+        if (method === undefined || bodyOf(method) === undefined) continue;
+        answers = answersOf(method);
         inside = { ...scope, bound: bindings(method, node, scope) };
         break;
       }
     } else if (Node.isIdentifier(callee)) {
       const declaration = callee.getSymbol()?.getDeclarations()[0];
       if (declaration !== undefined && Node.isFunctionDeclaration(declaration)) {
-        body = declaration;
+        answers = [];
+        for (const statement of ownReturns(declaration)) {
+          const returned = statement.asKind(SyntaxKind.ReturnStatement)?.getExpression();
+          if (returned !== undefined) answers.push(returned);
+        }
         inside = { ...scope, bound: NOTHING };
       }
     }
-    if (body === undefined) return false;
-    const returns = ownReturns(body);
-    return (
-      returns.length > 0 &&
-      returns.every((statement) => {
-        const returned = statement.asKind(SyntaxKind.ReturnStatement)?.getExpression();
-        return returned !== undefined && queryOnly(returned, inside, budget - 1);
-      })
-    );
+    if (answers === undefined) return false;
+    return answers.length > 0 && answers.every((returned) => queryOnly(returned, inside, budget - 1));
   }
   return false;
 };
@@ -1204,15 +1403,13 @@ export const constantMethodResult = (node: TsNode): string | null => {
   if (callee.getExpression().getKind() !== SyntaxKind.ThisKeyword) return null;
 
   for (const owner of classChain(enclosingClass(call))) {
-    const method = owner.getMethod(callee.getName());
+    const method = methodNamedOn(owner, callee.getName());
     if (method === undefined) continue;
-    const returns = method.getDescendantsOfKind(SyntaxKind.ReturnStatement);
-    if (returns.length === 0) continue;
+    const answers = answersOf(method, true);
+    if (answers.length === 0) continue;
 
     const values = new Set<string>();
-    for (const statement of returns) {
-      const expression = statement.getExpression();
-      if (expression === undefined) return null;
+    for (const expression of answers) {
       const value = evaluateExpression(expression);
       if (!value.resolved || typeof value.value !== 'string') return null;
       values.add(value.value);
@@ -1238,11 +1435,13 @@ export const returnedExpression = (node: TsNode): TsNode | null => {
   if (callee.getExpression().getKind() !== SyntaxKind.ThisKeyword) return null;
 
   for (const owner of classChain(enclosingClass(call))) {
-    const method = owner.getMethod(callee.getName());
+    const method = methodNamedOn(owner, callee.getName());
     if (method === undefined) continue;
-    const returns = method.getDescendantsOfKind(SyntaxKind.ReturnStatement);
-    if (returns.length !== 1) return null;
-    return returns[0]?.getExpression() ?? null;
+    const answers = answersOf(method, true);
+    // Nothing to read is not an answer of its own: a base class along the chain
+    // may declare the method this one only names.
+    if (answers.length === 0) continue;
+    return answers.length === 1 ? (answers[0] ?? null) : null;
   }
   return null;
 };
