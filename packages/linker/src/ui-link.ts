@@ -98,6 +98,41 @@ const verbsAnswering = (path: string, routes: readonly GraphNode[]): string[] =>
   ].sort(cmp);
 
 /**
+ * The same call, once per value a closed segment of its address can take.
+ *
+ * `POST /orders/${id}/${action}` with `action: 'ship' | 'refund'` is two
+ * addresses, and both of them are routes the target service serves. Read as one
+ * `:param` it matched neither, fell through to the worker's catch-all, and was
+ * reported as a front end asking for something the back end does not serve —
+ * the most confident thing this tool says, said wrongly (R31).
+ *
+ * Each copy keeps the original's id, so an edge drawn from any of them is drawn
+ * from the call that was written. A call with no such segment answers with
+ * nothing, which is nearly every call.
+ */
+export const callPerChoice = (call: GraphNode): GraphNode[] | undefined => {
+  const choices = call.meta?.['pathChoices'];
+  if (!Array.isArray(choices) || choices.length < 2) return undefined;
+  if (!choices.every((choice): choice is string => typeof choice === 'string')) return undefined;
+  return choices.map((path) => ({ ...call, meta: { ...call.meta, path } }));
+};
+
+/** What is said when some of the addresses a call stands for reach no route. */
+export const missingChoiceFinding = (
+  method: string,
+  missing: readonly string[],
+  found: readonly string[],
+): Finding => ({
+  reason: 'target-route-not-found',
+  message:
+    `${method} ${missing.join(', ')} reaches no route, though ` +
+    `${found.join(', ')} ${found.length === 1 ? 'does' : 'do'}`,
+  hint:
+    'The segment is written as a closed set of values and one of them has no route. ' +
+    'A renamed or missing handler looks exactly like this; check the ones named.',
+});
+
+/**
  * Decides which route a request made in the browser reaches.
  *
  * Answers a question and changes nothing, so the decision can be read, tested

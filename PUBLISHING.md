@@ -36,8 +36,10 @@ been a breaking change for a package nobody was meant to import.
 
 **Everything it needs is a plain dependency, and that is deliberate.**
 
-About 15 MB of the install is the graph server's transport library and the
-Angular template parser. Both could be optional, and the saving is real. They are
+About 16 MB of a 73 MB install is the graph server's transport library and the
+Angular template parser — 11.6 MB and 4.2 MB, re-measured on 2026-09-21, and
+unmoved since it was first measured. Both could be optional, and the saving is
+real. They are
 not, because the person installing this cannot be expected to know which parts of
 their own stack the tool needs before it has read their stack. A tool that
 answers `flowatlas mcp` with "install something else first" is a worse tool than

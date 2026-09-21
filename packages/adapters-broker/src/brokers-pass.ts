@@ -5,8 +5,10 @@ import {
   makeLeafId,
   makeSymbolId,
   methodBodies,
+  methodNamedOn,
   resolveTypeOrigin,
   type CallPattern,
+  type ClassMethod,
   type GraphNode,
   type TypeOrigin,
 } from '@flowatlas/core';
@@ -151,7 +153,7 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
       resolution =
         name === undefined
           ? { unresolved: 'channel-dynamic', text: receiver.getText() }
-          : { name, via: 'const' };
+          : { name, names: [name], via: 'const' };
     } else {
       const argument = args[pattern.channelArg];
       resolution =
@@ -232,17 +234,22 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
       return true;
     }
 
-    const channel = channelNodeOf(channelName, spec, file, line);
-    alreadyStatic.add(pairKey(methodId, channelName));
-    ctx.builder.addEdge({
-      from: producerId,
-      to: channel.id,
-      type: 'emits',
-      confidence: 'static',
-      file,
-      line,
-      ...(payloadType === undefined ? {} : { params: [payloadType] }),
-    });
+    // One edge per channel the address reaches. `alreadyStatic` records each of
+    // them, so an `@Emits` naming any is recognised as saying what the code
+    // already said rather than adding a second edge (R42).
+    for (const name of isResolved(resolution) ? resolution.names : [channelName]) {
+      const channel = channelNodeOf(name, spec, file, line);
+      alreadyStatic.add(pairKey(methodId, name));
+      ctx.builder.addEdge({
+        from: producerId,
+        to: channel.id,
+        type: 'emits',
+        confidence: 'static',
+        file,
+        line,
+        ...(payloadType === undefined ? {} : { params: [payloadType] }),
+      });
+    }
     if (payloadType === undefined) {
       ctx.report({
         file,
@@ -279,7 +286,7 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
       return {
         resolution:
           typeof queue === 'string'
-            ? { name: queue, via: 'const' }
+            ? { name: queue, names: [queue], via: 'const' }
             : { unresolved: 'channel-dynamic', text: owner.getName() ?? '?' },
         ...(nameArg?.resolved === true && typeof nameArg.value === 'string'
           ? { jobName: nameArg.value }
@@ -361,15 +368,19 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
       reportChannel(resolution, file, line, `${className}.${method.getName()}`);
       return;
     }
-    const channel = channelNodeOf(resolution.name, spec, file, line);
-    ctx.builder.addEdge({
-      from: channel.id,
-      to: consumerId,
-      type: 'consumes',
-      confidence: 'static',
-      file,
-      line,
-    });
+    // One edge per channel the address reaches: a hole holding a closed set of
+    // values is several channels, not one wildcard (R42).
+    for (const name of resolution.names) {
+      const channel = channelNodeOf(name, spec, file, line);
+      ctx.builder.addEdge({
+        from: channel.id,
+        to: consumerId,
+        type: 'consumes',
+        confidence: 'static',
+        file,
+        line,
+      });
+    }
   };
 
   /**
@@ -382,19 +393,21 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
   const targetOfHandler = (
     handler: TsNode,
     owner: ClassDeclaration,
-  ): MethodDeclaration | undefined => {
+  ): ClassMethod | undefined => {
     const body = Node.isArrowFunction(handler) || Node.isFunctionExpression(handler)
       ? handler.getBody()
       : undefined;
     if (body === undefined) return undefined;
-    const called: MethodDeclaration[] = [];
+    const called: ClassMethod[] = [];
     // A concise arrow body is the call itself, not a descendant of one.
     const visit = (node: TsNode): void => {
       if (!Node.isCallExpression(node)) return;
       const callee = node.getExpression();
       if (!Node.isPropertyAccessExpression(callee)) return;
       if (!Node.isThisExpression(callee.getExpression())) return;
-      const found = owner.getMethod(callee.getName());
+      // A consumer that delegates to `this.handle()`, where `handle` may be a
+      // field holding an arrow — which is how a handler keeps its `this` (R29).
+      const found = methodNamedOn(owner, callee.getName());
       if (found !== undefined) called.push(found);
     };
     visit(body);
@@ -490,15 +503,17 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
             reportChannel(resolution, file, line, `${className}.${method.getName()}`);
             continue;
           }
-          const channel = channelNodeOf(resolution.name, spec, file, line);
-          ctx.builder.addEdge({
-            from: channel.id,
-            to: consumerId,
-            type: 'consumes',
-            confidence: 'static',
-            file,
-            line,
-          });
+          for (const name of resolution.names) {
+            const channel = channelNodeOf(name, spec, file, line);
+            ctx.builder.addEdge({
+              from: channel.id,
+              to: consumerId,
+              type: 'consumes',
+              confidence: 'static',
+              file,
+              line,
+            });
+          }
         }
       }
     }

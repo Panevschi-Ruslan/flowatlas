@@ -51,4 +51,25 @@ export class OrdersController {
   charge(@Body() order: OrderDto): Promise<unknown> {
     return this.payments.charge(order);
   }
+
+  /**
+   * Two routes one browser call reaches, one per value of a closed segment
+   * (R31). `ship` and `refund` are spelled out; `/orders/:param/:param`
+   * matches neither, which is the reading that has to be improved on.
+   */
+  @Post(':id/ship')
+  ship(@Param('id') id: string): { data: unknown } {
+    return this.orders.cancel(id);
+  }
+
+  @Post(':id/refund')
+  refund(@Param('id') id: string): { data: unknown } {
+    return this.orders.cancel(id);
+  }
+
+  /** The half of the same pair that exists: `hold` has no route, on purpose. */
+  @Post(':id/resume')
+  resume(@Param('id') id: string): { data: unknown } {
+    return this.orders.cancel(id);
+  }
 }

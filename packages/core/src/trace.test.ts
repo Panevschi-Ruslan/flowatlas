@@ -1,7 +1,12 @@
 import { Project, SyntaxKind, type CallExpression, type SourceFile } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 import { resolveStaticString, settingKeyIn } from './static-string.js';
-import { constantMethodResult, returnedExpression, rootSettingKey } from './trace.js';
+import {
+  constantMethodResult,
+  literalChoices,
+  returnedExpression,
+  rootSettingKey,
+} from './trace.js';
 
 const HEADER = `
 declare const environment: { apiUrl: string; api: { baseUrl: string } };
@@ -184,5 +189,52 @@ describe('a value a getter answers with', () => {
       }
     `);
     expect(read(file)?.envRefs).toEqual([]);
+  });
+});
+
+/**
+ * A segment written as a closed set of strings, which is a segment that was
+ * written down — in the type system rather than in the expression (R31).
+ */
+describe('a segment whose type is a handful of strings', () => {
+  const choicesIn = (source: string) => literalChoices(address(parse(source)));
+
+  it('reads the values a union of string literals allows', () => {
+    const [found] = choicesIn(
+      "function f(id: string, action: 'ship' | 'refund') { http.get(`/x/${id}/${action}`); }",
+    );
+    expect(found?.values).toEqual(['refund', 'ship']);
+  });
+
+  it('says nothing about a segment typed as plain text', () => {
+    // Which is nearly every segment, and the reason this costs nothing.
+    expect(choicesIn('function f(id: string) { http.get(`/x/${id}`); }')).toEqual([]);
+  });
+
+  it('says nothing about a union with an arm that is not a literal', () => {
+    expect(
+      choicesIn("function f(a: 'one' | string) { http.get(`/x/${a}`); }"),
+    ).toEqual([]);
+  });
+
+  it('says nothing about a union of one, which is not a choice', () => {
+    expect(choicesIn("function f(a: 'only') { http.get(`/x/${a}`); }")).toEqual([]);
+  });
+
+  it('stops at the cap rather than standing for a domain', () => {
+    // Past a dozen the union is a currency or a locale, not a choice, and the
+    // segment is better read as the hole it is.
+    const many = Array.from({ length: 13 }, (_, index) => `'v${index}'`).join(' | ');
+    expect(choicesIn(`function f(a: ${many}) { http.get(\`/x/\${a}\`); }`)).toEqual([]);
+    const few = Array.from({ length: 12 }, (_, index) => `'v${index}'`).join(' | ');
+    expect(choicesIn(`function f(a: ${few}) { http.get(\`/x/\${a}\`); }`)[0]?.values).toHaveLength(12);
+  });
+
+  it('says nothing about a value that is not a parameter', () => {
+    // A local holding one of two strings is settled where it is written, and
+    // the reader that follows values is the one that should answer for it.
+    expect(
+      choicesIn("function f() { const a: 'one' | 'two' = 'one'; http.get(`/x/${a}`); }"),
+    ).toEqual([]);
   });
 });

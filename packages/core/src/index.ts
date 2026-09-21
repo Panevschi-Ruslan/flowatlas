@@ -22,6 +22,7 @@ export {
 } from './errors.js';
 
 export {
+  DATA_REACH,
   HTTP_METHODS,
   holeIn,
   PARAM_PLACEHOLDER,
@@ -157,8 +158,10 @@ export {
   resolveTypeOrigin,
   stripWrapperSuffix,
   unwrapDelivery,
+  writtenKeysOf,
+  writtenObjectLiteral,
 } from './origin.js';
-export type { Origin, ResolveOriginOptions, TypeOrigin } from './origin.js';
+export type { BodyRead, Origin, ResolveOriginOptions, TypeOrigin } from './origin.js';
 export type { BrokerAdapter, CallPattern, ChannelKind } from './adapters/broker.js';
 export type { FrontendAdapter, FrontendExtractOptions } from './adapters/frontend.js';
 
@@ -178,6 +181,9 @@ export {
 export { createProject, findTsconfig, listRepoSources, TSCONFIG_CANDIDATES } from './project.js';
 export type { CreateProjectOptions } from './project.js';
 
+export { namesGivenTo, takesNames } from './markers.js';
+export type { MarkerNames, RecordedMarker, RefusedArg } from './markers.js';
+
 export { definePass } from './passes.js';
 export type { ExtractorPass } from './passes.js';
 
@@ -186,7 +192,14 @@ export { functionAt, inlineFunction, memberFunction, moduleFunctions, namedFunct
 export type { NamedFunction } from './functions.js';
 export type { BuildClassIndexOptions, IndexedClass } from './class-index.js';
 
-export { evaluateExpression, declarationOf, resolvedValue, stableKey, unresolvedValue } from './static-value.js';
+export {
+  declarationOf,
+  evaluateExpression,
+  literalUnionOf,
+  resolvedValue,
+  stableKey,
+  unresolvedValue,
+} from './static-value.js';
 export type { StaticValue } from './static-value.js';
 
 export { resolveStaticString, settingKeyIn } from './static-string.js';
@@ -260,6 +273,9 @@ export {
   constantPropertyValue,
   deref,
   finiteLookups,
+  MOST_CHOICES,
+  foldedChoices,
+  literalChoices,
   forwardedFrom,
   isQueryTail,
   isReadable,
@@ -270,6 +286,7 @@ export {
   rootSettingAddress,
   rootSettingKey,
   splitAtParameter,
+  writtenBodyOutward,
 } from './trace.js';
 export type {
   CallFrame,

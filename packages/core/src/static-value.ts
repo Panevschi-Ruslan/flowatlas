@@ -106,6 +106,21 @@ export const evaluateExpression = (expr: TsNode, depth = 0): StaticValue => {
       return resolvedValue(type.getLiteralValue());
     }
     if (type.isBooleanLiteral()) return resolvedValue(type.getText() === 'true');
+    // An `as const` array is a tuple of literal types, and the type is the only
+    // place the values are when the declaration came from a package's `.d.ts`:
+    // there is no initializer to walk, just `readonly ["a", "b"]` (R40).
+    if (type.isTuple()) {
+      const members = type.getTupleElements();
+      const values: unknown[] = [];
+      for (const member of members) {
+        if (!member.isStringLiteral() && !member.isNumberLiteral()) {
+          values.length = 0;
+          break;
+        }
+        values.push(member.getLiteralValue());
+      }
+      if (values.length === members.length && members.length > 0) return resolvedValue(values);
+    }
   }
 
   const declaration = declarationOf(node);
@@ -131,4 +146,37 @@ export const stableKey = (value: unknown): string => {
     a < b ? -1 : a > b ? 1 : 0,
   );
   return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${stableKey(item)}`).join(',')}}`;
+};
+
+/**
+ * The closed set of strings an expression's type allows, when it is one.
+ *
+ * `action: 'ship' | 'refund'` is a segment that was written down, in the
+ * type system instead of in the expression. Nothing downstream ever asked the
+ * type for it, so an address ending in one was read as though the segment were
+ * unreadable, and fell through to whatever catch-all the target service serves
+ * (R31).
+ *
+ * Only a union every arm of which is a string literal, and only up to `max` of
+ * them. A single literal type answers with itself. Anything else — `string`, a
+ * union with a `string` arm, an enum of numbers — answers with nothing, and the
+ * hole stays a hole.
+ */
+export const literalUnionOf = (node: TsNode, max: number): string[] | null => {
+  let type;
+  try {
+    type = node.getType();
+  } catch {
+    return null;
+  }
+  const arms = type.isUnion() ? type.getUnionTypes() : [type];
+  if (arms.length === 0 || arms.length > max) return null;
+  const members: string[] = [];
+  for (const arm of arms) {
+    if (!arm.isStringLiteral()) return null;
+    const value = arm.getLiteralValue();
+    if (typeof value !== 'string' || value === '') return null;
+    if (!members.includes(value)) members.push(value);
+  }
+  return members.length === 0 ? null : members;
 };

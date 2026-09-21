@@ -20,6 +20,18 @@ export class OrdersComponent {
     private readonly api: OrdersApiService,
   ) {}
 
+  /**
+   * A lifecycle hook written as a field (R29).
+   *
+   * Angular calls whatever the property holds, so this runs exactly as a
+   * declared `ngOnInit` would. Asking only for a `MethodDeclaration` answered
+   * nothing for it, and the screen lost its way in. Expected: a `ui_action`
+   * node labelled `ngOnInit`, reaching the request below it.
+   */
+  ngOnInit = (): void => {
+    this.api.cancel('r1', 'o1').subscribe();
+  };
+
   watch(): void {
     this.live.open('r1');
   }

@@ -1,11 +1,11 @@
-107 nodes, 88 edges, 10 types, 10 unresolved
+125 nodes, 108 edges, 11 types, 14 unresolved
 
 nodes by type
   repo          4
   module        4
-  entry         14
+  entry         17
   provider      17
-  method        39
+  method        47
   db_query      4
   table         1
   channel       3
@@ -15,38 +15,39 @@ nodes by type
   external_api  1
   ui_component  1
   ui_action     1
-  ui_api_call   6
+  ui_api_call   13
   config_key    2
 
 nodes by service
   billing  18
-  gateway  37
+  gateway  43
   orders   32
-  web      20
+  web      32
 
 edges by type
   imports       1
   injects       15
-  calls         37
-  handles       18
+  calls         49
+  handles       21
   queries       4
   emits         2
   consumes      2
   http_calls    2
-  hits          3
+  hits          8
   reads_config  4
 
 edges by confidence
-  static     85
-  marker     1
-  heuristic  2
+  static     98
+  marker     5
+  heuristic  5
 
 unresolved by reason, counted by site
   ambiguous-route-target  1
+  api-path-dynamic        3
   di-token-unknown        1
   dynamic-http-url        1
   route-unguarded         4
-  target-route-not-found  2
+  target-route-not-found  3
   unknown-base-url-env    1
 
 link report
@@ -55,4 +56,4 @@ link report
     channel:order.archived
   channels with no publisher: 1
     channel:invoice.requested
-  routes never called: 8 of 12
+  routes never called: 8 of 15

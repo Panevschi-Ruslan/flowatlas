@@ -290,3 +290,18 @@ pnpm flowatlas build --config fixtures/multi-repo/flowatlas.config.json
 node scripts/fixtures-check.mjs --update
 node scripts/mcp-snapshots.mjs --update
 ```
+
+## An annotated browser request (R39)
+
+`OrdersApiService.probe` and `.twoBlind` are the two halves of one rule.
+`@flowatlas-calls` does not repair the request it sits above — it adds a second
+request that joins — so the unreadable one keeps its row, and the question is
+whether the annotation can be about anything else.
+
+| method | requests | annotations | expected |
+|---|---|---|---|
+| `probe` | one unreadable | one, reaching a route | the row at `info`: nothing to do |
+| `twoBlind` | two unreadable | one, reaching a route | both rows kept, and the hint says why |
+
+An annotation that reached no route counts for nothing here: the reader still
+has something to fix, and the marker checks say what.

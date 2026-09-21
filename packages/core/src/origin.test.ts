@@ -1,6 +1,13 @@
-import { Project, type SourceFile } from 'ts-morph';
+import { Project, SyntaxKind, type SourceFile } from 'ts-morph';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { entityNameOf, packageOfPath, resolveTypeOrigin, stripWrapperSuffix, unwrapDelivery } from './origin.js';
+import {
+  entityNameOf,
+  packageOfPath,
+  resolveTypeOrigin,
+  stripWrapperSuffix,
+  unwrapDelivery,
+  writtenKeysOf,
+} from './origin.js';
 
 const SOURCE = `
 import { Repository } from 'some-orm';
@@ -121,5 +128,60 @@ describe('unwrapDelivery', () => {
   it('leaves a type that is not wrapped alone', () => {
     const property = file.getClassOrThrow('Api').getPropertyOrThrow('plain');
     expect(unwrapDelivery(property.getType()).getText()).toBe('string');
+  });
+});
+
+/**
+ * Which keys a call puts on the wire, as against which it is allowed to.
+ *
+ * Reading the keys off the literal's *type* is the whole of R34 wearing a
+ * disguise: the type of `{ ...patch }` where `patch` is a `Partial<T>` names
+ * every key of `T`, and the call may write none of them. A spread that cannot
+ * be pinned down has to refuse the literal rather than contribute a guess.
+ */
+describe('the keys an object written at a call site puts on the wire', () => {
+  const written = (body: string): string[] | undefined => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: true } });
+    const file = project.createSourceFile(
+      'w.ts',
+      [
+        'interface Item { a: string; b: number; c: boolean }',
+        'interface Full { x: string; y: number }',
+        'declare function send(body: unknown): void;',
+        'declare const patch: Partial<Item>;',
+        'declare const full: Full;',
+        'declare const cond: boolean;',
+        `send(${body});`,
+      ].join('\n'),
+    );
+    const call = file.getDescendantsOfKind(SyntaxKind.CallExpression).at(-1);
+    return writtenKeysOf([call!.getArguments()[0]!]);
+  };
+
+  it('answers with what the literal writes', () => {
+    expect(written("{ a: 'one', b: 2 }")).toEqual(['a', 'b']);
+  });
+
+  it('counts the keys a spread certainly carries', () => {
+    // Every field of `Full` is required, so spreading it really does put them
+    // all there. This is the case the contract fixture rests on.
+    expect(written('{ ...full, extra: 1 }')).toEqual(['extra', 'x', 'y']);
+  });
+
+  it('refuses a spread of a shape that may be missing its keys', () => {
+    // `Partial<Item>` permits a, b and c and guarantees none of them. Reading
+    // the literal's type said all three were written, and the message built on
+    // it said the call "always sent" them (R34).
+    expect(written('{ ...patch }')).toBeUndefined();
+    expect(written("{ a: 'one', ...patch }")).toBeUndefined();
+  });
+
+  it('refuses a spread that depends on a condition', () => {
+    expect(written("{ a: 'one', ...(cond ? { b: 1 } : {}) }")).toBeUndefined();
+  });
+
+  it('answers with nothing when there is no object to read', () => {
+    expect(written('patch')).toBeUndefined();
+    expect(writtenKeysOf([])).toBeUndefined();
   });
 });

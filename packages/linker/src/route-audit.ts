@@ -1,4 +1,4 @@
-import type { GraphEdge, GraphNode, Unresolved } from '@flowatlas/core';
+import { DATA_REACH, type GraphEdge, type GraphNode, type Unresolved } from '@flowatlas/core';
 import { cmp } from './order.js';
 
 /** What decides that a route is meant to be open. */
@@ -17,8 +17,7 @@ export interface RouteAuditOptions {
   skipGuardDecorators?: Readonly<Record<string, readonly string[]>>;
 }
 
-/** How far from a route its data access is looked for. */
-const REACH = 8;
+
 
 /** Wrapping that can refuse a request: a guard, or middleware that may be one. */
 const GATES = new Set(['guard', 'middleware']);
@@ -83,7 +82,7 @@ export const auditRoutes = (
   const dataReached = (entryId: string): GraphNode | undefined => {
     const seen = new Set<string>([entryId]);
     let frontier = [entryId];
-    for (let depth = 0; depth < REACH && frontier.length > 0; depth += 1) {
+    for (let depth = 0; depth < DATA_REACH && frontier.length > 0; depth += 1) {
       const next: string[] = [];
       for (const id of frontier) {
         const query = from(id, 'queries')[0];
@@ -167,22 +166,53 @@ export const auditRoutes = (
     if (options.publicRoutes.some((pattern) => matchesRoutePattern(pattern, method, path))) continue;
     const data = dataReached(entry.id);
     if (data === undefined) continue;
+
+    // The handler says it refuses a request itself, which nothing here can see
+    // and nothing here can check. Taken at its word — but listed, because
+    // every other decision this audit takes on trust is listed, and a claim
+    // nobody can see is the last one that should be invisible.
+    const claimed = text(entry.meta?.['authNote']);
+    if (claimed !== '') {
+      rows.push({
+        service: entry.repo,
+        file: entry.file ?? '',
+        line: entry.line ?? 0,
+        reason: 'route-guard-skipped',
+        level: 'info' as const,
+        message: `${method} ${path} reaches ${data.label} with no guard in front of it, and says it checks the request itself: ${claimed}.`,
+        hint: 'This cannot verify that. Check that the handler still does what its annotation says.',
+        symbol: `${method} ${path}`,
+      });
+      continue;
+    }
     // A route a worker declares may be covered by middleware the worker installs
     // for a whole prefix (`app.use('/api/*', auth)`), which is not read yet. It
     // is listed, but as something to look at rather than a finding.
     const byWorker = entry.meta?.['registration'] !== undefined && controller === '';
+    /**
+     * A route nobody guarded and a route somebody unguarded are not one finding.
+     *
+     * Nothing in front of a route is somebody forgetting. A decorator the
+     * project itself declared under `doctor.skipGuardDecorators`, written on
+     * the handler, is somebody deciding — worth an audit, not worth the same
+     * row, and above all not worth being told to write the same decision a
+     * second time into `doctor.publicRoutes` (R33).
+     */
+    const decided = !byWorker && skipped.length > 0;
     rows.push({
       service: entry.repo,
       file: entry.file ?? '',
       line: entry.line ?? 0,
-      reason: 'route-unguarded',
-      ...(byWorker ? { level: 'info' as const } : {}),
+      reason: decided ? 'route-guard-skipped' : 'route-unguarded',
+      ...(byWorker || decided ? { level: 'info' as const } : {}),
       message: byWorker
         ? `${method} ${path} has no route middleware and reaches ${data.label}; middleware installed for a whole prefix is not read, so check it by hand.`
-        : skipped.length > 0
-          ? `${method} ${path} has no guard in front of it once ${skipped.sort(cmp).join(', ')}, and reaches ${data.label}.`
+        : decided
+          ? `${method} ${path} reaches ${data.label} with no guard in front of it, because ${skipped.sort(cmp).join(', ')}.`
           : `${method} ${path} has no guard in front of it and reaches ${data.label}.`,
-      hint: 'Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.',
+      hint: decided
+        ? 'Decided on purpose, so nothing is missing. Check that the decision still holds; a handler that checks the request in its own body can say so with /** @flowatlas-auth <how> */.'
+        : 'Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.',
       symbol: `${method} ${path}`,
     });
   }

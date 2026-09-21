@@ -82,4 +82,23 @@ export class OrdersClient {
   private endpoint(path: string): string {
     return `${this.config.get('GATEWAY_BASE')}/${path}`;
   }
+
+  /**
+   * One annotation naming two routes of one service (R38).
+   *
+   * A method that fans out reaches several routes, and saying so once has to
+   * mean exactly what saying it twice means. Expected: two `http_calls` edges
+   * at `marker` confidence, to `POST /orders` and `GET /orders/:param`, and no
+   * marker issue.
+   */
+  @CallsService('orders', 'POST /orders', 'GET /orders/:id')
+  replay(body: CreateOrderDto): { data: unknown } {
+    return this.http.post<OrderDto>(this.endpoint('replay'), body);
+  }
+
+  /** The same, written as a list. It must not read differently. */
+  @CallsService('orders', ['POST /orders/legacy'])
+  replayLegacy(body: CreateOrderDto): { data: unknown } {
+    return this.http.post<OrderDto>(this.endpoint('replay-legacy'), body);
+  }
 }

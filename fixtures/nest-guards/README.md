@@ -64,3 +64,12 @@ factory guard (§D9) and gets its own node keyed by `(class, args)`.
   `APP_*` providers inside a single layer (P01 §D7 / §15 open question).
 - `@Roles('admin')` carries no wrapping of its own; it is expected in the
   entry's `meta.decorators[]`, not as a `guarded_by` edge.
+
+## `@flowatlas-auth`
+
+`GET /admin/handover` carries `/** @flowatlas-auth … */` and nothing else: no
+guard, no public decorator, no configured pattern. Expected: `authNote` on the
+entry's `meta`, holding the words after the annotation, and no row from the
+route audit for it. A handler that refuses a request in its own body has no
+other way to say so, and it is a `marker` claim — unverifiable, worth what
+whoever wrote it is worth (R33).

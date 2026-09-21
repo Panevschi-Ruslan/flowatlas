@@ -1,16 +1,16 @@
 {
   "totals": {
-    "nodes": 107,
-    "edges": 88,
-    "types": 10,
-    "unresolved": 10
+    "nodes": 125,
+    "edges": 108,
+    "types": 11,
+    "unresolved": 14
   },
   "nodesByType": {
     "repo": 4,
     "module": 4,
-    "entry": 14,
+    "entry": 17,
     "provider": 17,
-    "method": 39,
+    "method": 47,
     "db_query": 4,
     "table": 1,
     "channel": 3,
@@ -20,46 +20,48 @@
     "external_api": 1,
     "ui_component": 1,
     "ui_action": 1,
-    "ui_api_call": 6,
+    "ui_api_call": 13,
     "config_key": 2
   },
   "nodesByService": {
     "billing": 18,
-    "gateway": 37,
+    "gateway": 43,
     "orders": 32,
-    "web": 20
+    "web": 32
   },
   "edgesByType": {
     "imports": 1,
     "injects": 15,
-    "calls": 37,
-    "handles": 18,
+    "calls": 49,
+    "handles": 21,
     "queries": 4,
     "emits": 2,
     "consumes": 2,
     "http_calls": 2,
-    "hits": 3,
+    "hits": 8,
     "reads_config": 4
   },
   "edgesByConfidence": {
-    "static": 85,
-    "marker": 1,
-    "heuristic": 2
+    "static": 98,
+    "marker": 5,
+    "heuristic": 5
   },
   "unresolvedByReason": {
     "ambiguous-route-target": 1,
+    "api-path-dynamic": 3,
     "di-token-unknown": 1,
     "dynamic-http-url": 1,
     "route-unguarded": 4,
-    "target-route-not-found": 2,
+    "target-route-not-found": 3,
     "unknown-base-url-env": 1
   },
   "unresolvedSites": {
     "ambiguous-route-target": 1,
+    "api-path-dynamic": 3,
     "di-token-unknown": 1,
     "dynamic-http-url": 1,
     "route-unguarded": 4,
-    "target-route-not-found": 2,
+    "target-route-not-found": 3,
     "unknown-base-url-env": 1
   },
   "nothing": {
@@ -86,7 +88,7 @@
       ]
     },
     "routes": {
-      "total": 12,
+      "total": 15,
       "uncalled": [
         "entry:billing:http:GET:/invoices/:param",
         "entry:gateway:http:POST:/orders/:param/cancel",

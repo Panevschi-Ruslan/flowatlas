@@ -18,7 +18,16 @@ import {
   type BaselineRead,
   type UnresolvedSnapshot,
 } from './baseline.js';
-import { hintFor, isKnownReason, type HintContext } from './hints.js';
+import {
+  ANSWERED_HINT,
+  answeredByMarker,
+  requestsAround,
+  genericHint,
+  hintFor,
+  isKnownReason,
+  kindHint,
+  type HintContext,
+} from './hints.js';
 import { validateMarkers, type MarkerIssue } from './markers.js';
 import {
   DOCTOR_FORMAT_VERSION,
@@ -86,19 +95,11 @@ const text = (value: unknown): string | null =>
 
 const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
-/** The sentence most of them say, with ties broken by which reads first. */
-const commonest = (values: readonly string[]): string => {
-  const counted = new Map<string, number>();
-  for (const value of values) counted.set(value, (counted.get(value) ?? 0) + 1);
-  let best = '';
-  let most = 0;
-  for (const [value, count] of [...counted.entries()].sort((a, b) => cmp(a[0], b[0]))) {
-    if (count > most) {
-      best = value;
-      most = count;
-    }
-  }
-  return best;
+/** The one sentence they all say, or nothing when they do not all say one. */
+const unanimous = (values: readonly string[]): string | undefined => {
+  const first = values[0];
+  if (first === undefined) return undefined;
+  return values.every((value) => value === first) ? first : undefined;
 };
 
 /** Rows kept and rows cut, so a cut is always a number somebody can see. */
@@ -120,25 +121,31 @@ const groupByReason = (
   ignore: ReadonlySet<string>,
   maxNodes: number,
 ): { groups: ReasonGroup[]; unknown: string[] } => {
+  // Keyed by reason *and* level, so a group's level is every member's and not
+  // its loudest member's. One reason can hold both: a call whose address is
+  // built at run time is something to do, and the same reason on a call an
+  // annotation already answers is not (R36). Grouped together, the second
+  // would be listed under a heading asking for work that is already done.
+  const SPLIT = '\u0000';
+  const levelOf = (row: Unresolved): 'action' | 'info' | 'nothing' =>
+    (row.level ?? 'action') as 'action' | 'info' | 'nothing';
   const byReason = new Map<string, Unresolved[]>();
   for (const row of rows) {
-    const list = byReason.get(row.reason);
-    if (list === undefined) byReason.set(row.reason, [row]);
+    const key = `${row.reason}${SPLIT}${levelOf(row)}`;
+    const list = byReason.get(key);
+    if (list === undefined) byReason.set(key, [row]);
     else list.push(row);
   }
 
   const unknown: string[] = [];
   const groups: ReasonGroup[] = [];
-  for (const [reason, list] of byReason) {
+  const seen = new Set<string>();
+  for (const [key, list] of byReason) {
+    const reason = key.slice(0, key.indexOf(SPLIT));
+    const level = levelOf(list[0] as Unresolved);
     const known = isKnownReason(reason);
-    if (!known) unknown.push(reason);
-    // A group is read at its loudest row: one thing to fix among four hundred
-    // places nothing joins is still one thing to fix.
-    const level = list.some((row) => (row.level ?? 'action') === 'action')
-      ? 'action'
-      : list.some((row) => row.level === 'info')
-        ? 'info'
-        : 'nothing';
+    if (!known && !seen.has(reason)) unknown.push(reason);
+    seen.add(reason);
     const drawn: DoctorRow[] = list.map((row) => ({
       service: row.service ?? '',
       file: row.file,
@@ -157,11 +164,14 @@ const groupByReason = (
       sites: list.reduce((sum, row) => sum + (row.sites ?? 1), 0),
       known,
       excluded: ignore.has(reason),
-      // Rows of one reason nearly always share their advice, so the group says
-      // it once. Nearly: a row the joined graph knew something about has its
-      // own, and the group takes whichever sentence the most rows agree on so
-      // the exception is the line that stands out rather than the rule.
-      hint: commonest(drawn.map((row) => row.hint)),
+      // A sentence true of every member, which is the only kind a heading may
+      // carry. The members' own, when they all say one thing — unanimity is
+      // that guarantee — and otherwise the kind's, written once in the
+      // catalogue with nothing of any one member in it. What it may never be is
+      // whichever sentence the most members agreed on, which is what it was:
+      // that asserted one member's symbol over all of them, and left the
+      // sentence it belonged to floating below somebody else's site (R35).
+      hint: unanimous(drawn.map((row) => row.hint)) ?? kindHint(reason) ?? genericHint(reason),
       rows: bounded.rows,
       ...(bounded.truncated === undefined ? {} : { truncated: bounded.truncated }),
     });
@@ -208,6 +218,61 @@ const desyncOf = (
 const onService = (row: Unresolved, service: string): boolean => (row.service ?? '') === service;
 
 /**
+ * The rows again, with the ones an annotation has already answered demoted.
+ *
+ * A row saying "annotate this" that the joined graph can see is annotated is
+ * not something to act on: acting on it means writing an annotation that is
+ * already there. It was counted in the number at the top of the section, which
+ * is the whole argument for reading the section, and it was a row the baseline
+ * could never be cleared of, because nothing anybody writes can clear it (R36).
+ *
+ * Applied once, at the top, so the count, the grouping, the fold and the
+ * baseline are all looking at the same rows. Idempotent: a row already at
+ * `info` is left as it is.
+ */
+export const withAnsweredDemoted = (
+  rows: readonly Unresolved[],
+  db: Pick<GraphDb, 'node' | 'nodesByType' | 'allNodes' | 'edgesFrom' | 'edgesTo'>,
+): Unresolved[] => {
+  // Both kinds of outgoing request: one row's node is the call it names, and a
+  // browser request was never indexed here at all, so no `api-path-dynamic`
+  // row could find its node to be answered (R39).
+  const callsAt = new Map<string, GraphNode>();
+  for (const type of ['http_out', 'ui_api_call'] as const) {
+    for (const call of db.nodesByType(type)) {
+      callsAt.set(`${call.repo}|${call.file ?? ''}|${call.line ?? 0}`, call);
+    }
+  }
+  /**
+   * Methods by the name a row calls them, within the file they are declared in.
+   *
+   * A row names its symbol as it is written rather than by id, and for a
+   * channel that is `OrdersService.publish -> channel`: the method, then what
+   * about it could not be read. The line is the line of the *call*, not of the
+   * method, so the join is the name and the file — the same join `doctor`
+   * already makes to put a marker issue on a row.
+   */
+  const methodsAt = new Map<string, GraphNode>();
+  for (const node of db.allNodes()) {
+    if (node.type !== 'method') continue;
+    methodsAt.set(`${node.repo}|${node.file ?? ''}|${node.label}`, node);
+  }
+  const idFor = (row: Unresolved): string | undefined => {
+    if (row.symbol !== undefined && db.node(row.symbol) !== undefined) return row.symbol;
+    const here = callsAt.get(`${row.service ?? ''}|${row.file}|${row.line}`);
+    if (here !== undefined) return here.id;
+    if (row.symbol === undefined) return undefined;
+    const named = row.symbol.split(' -> ')[0] ?? row.symbol;
+    return methodsAt.get(`${row.service ?? ''}|${row.file}|${named}`)?.id;
+  };
+  return rows.map((row) =>
+    (row.level ?? 'action') === 'action' && answeredByMarker(row.reason, idFor(row), db)
+      ? { ...row, level: 'info' as const, hint: ANSWERED_HINT }
+      : row,
+  );
+};
+
+/**
  * Runs the check over an opened graph.
  *
  * Pure in the sense that matters: it opens nothing, writes nothing and spawns
@@ -250,8 +315,10 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
   // one repository was being read. The second kind still points at a place, so
   // the call at that place is what the hint is about.
   const callsAt = new Map<string, GraphNode>();
-  for (const call of db.nodesByType('http_out')) {
-    callsAt.set(`${call.repo}|${call.file ?? ''}|${call.line ?? 0}`, call);
+  for (const type of ['http_out', 'ui_api_call'] as const) {
+    for (const call of db.nodesByType(type)) {
+      callsAt.set(`${call.repo}|${call.file ?? ''}|${call.line ?? 0}`, call);
+    }
   }
   const nodeFor = (row: Unresolved): GraphNode | undefined => {
     if (row.symbol !== undefined) {
@@ -266,18 +333,26 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
     return {
       node,
       joined: node.type === 'http_out' && db.edgesFrom(node.id, ['http_calls']).length > 0,
+      // How the other requests in the same method stand, which is what decides
+      // whether an annotation on it can only be about this one (R39).
+      ...(node.type === 'ui_api_call'
+        ? { requests: requestsAround(node.id, db) ?? undefined }
+        : {}),
     };
   };
-  const snapshot: UnresolvedSnapshot = snapshotOf(rows, { ignoreReasons: [...ignore] });
+
+  const levelled = withAnsweredDemoted(rows, db);
+
+  const snapshot: UnresolvedSnapshot = snapshotOf(levelled, { ignoreReasons: [...ignore] });
   const grouped = wanted.has('unresolved')
-    ? groupByReason(rows, contextOf, ignore, perReason)
+    ? groupByReason(levelled, contextOf, ignore, perReason)
     : { groups: [], unknown: [] };
-  const excludedSites = rows
+  const excludedSites = levelled
     .filter((row) => (row.level ?? 'action') === 'action' && ignore.has(row.reason))
     .reduce((sum, row) => sum + (row.sites ?? 1), 0);
 
   // Places where nothing joins are their own line and nobody else's total.
-  const missed = tally(rows.filter(wasMissed));
+  const missed = tally(levelled.filter(wasMissed));
   const unresolved: DoctorReport['unresolved'] = {
     status: wanted.has('unresolved') ? 'ok' : 'skipped',
     total: snapshot.total,
