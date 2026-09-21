@@ -6,6 +6,132 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+## [0.4.0][] - 2026-09-21
+
+`@flowatlas/cli` only. `@flowatlas/markers` is unchanged at 0.1.1.
+
+0.3.0 stopped the tool claiming things it had not checked. This does the same
+one level down: the lists it produces are now short enough to read by hand, and
+reading them by hand showed that the last few rows were wrong. Measured on the
+five-repository project this is developed against, same configuration, same
+commits: the one row saying a front end asks for something the back end does not
+serve is gone, and it is gone because the two routes joined; the one contract
+error is gone; findings to act on went from 30 to 22; contract warnings from
+1,069 to 1,014; and four routes that read as having no guard now say that
+somebody took the guard off on purpose. A channel that never existed — a
+template wildcard standing for three real events — is gone too, which took the
+project from 18 channels to 17.
+
+### Added
+
+- A path segment written as a closed set of strings — a parameter typed
+  `'ship' | 'refund'` — is matched as each value as well as as a hole. Where
+  every value reaches a route, the call joins to each of them; where some do and
+  some do not, the finding names the value nothing serves, which is what a
+  renamed handler looks like from the other side. A union of more than twelve
+  values, and a segment typed `string`, are read as a hole exactly as before.
+- `/** @flowatlas-auth <how> */` on a NestJS handler says that the handler
+  checks the request in its own body — a signed header resolved inside the
+  method, a service token checked by hand — and the route audit then says
+  nothing about it. Unverifiable, like every marker, and documented beside
+  `@flowatlas-calls`.
+- `route-guard-skipped`, for a route whose guard a decorator named under
+  `doctor.skipGuardDecorators` switches off. Reported at `info`, and it does not
+  ask for the same decision to be written a second time under
+  `doctor.publicRoutes`.
+- A `whitelist-strip` finding carries an `impact`: `none` when the receiving
+  handler reaches no write and therefore cannot lose data, `stored` when it
+  writes a document that declares the field, `unknown` otherwise. The `none`
+  rows are counted on one line rather than listed — 25 of 56 on that project —
+  and every one is still in `--format json`.
+- `@Emits`, `@Consumes` and the routes of `@CallsService` take a name, several
+  names, or a list of them, and every form means what a stack of single
+  annotations means. A project that keeps its channel names in one catalogue can
+  reference it whole; the array has to be written down rather than assembled,
+  and one assembled at run time is reported rather than read as nothing.
+- `marker-arg-not-a-name`, for an annotation argument that resolved to
+  something that is not a name, and `marker-names-nothing`, for one given
+  arguments and left naming nothing. Both were silent: `@Emits('a', 'b')` kept
+  `a`, `@Emits(['a', 'b'])` kept neither, and on a method that really does
+  publish — the only place anyone writes the annotation — nothing was said at
+  all. An annotation that fails quietly is worse than no annotation, because
+  whoever wrote it believes the tool agreed with them.
+- A template hole whose values can be worked out is no longer a hole. A channel
+  addressed as `` `ticket:${id}:${verb}` `` where `verb` derives from a literal
+  union through plain string work — `slice`, `toLowerCase`, `replace` and the
+  rest of a closed set, plus `+` — is folded to one channel per value. The id
+  stays `*`, because it is genuinely unknowable. Nothing is folded half way: a
+  step that cannot be applied exactly makes the whole hole a hole again, since
+  inventing a channel nobody publishes to would be worse than saying `*`.
+- A hole whose value is typed as a union of string literals is read from that
+  type, wherever the value is written: a local, a function's return, or the call
+  written straight into the template. Typing the value is better than annotating
+  it — the compiler checks it, renaming a member updates it, and it cannot drift
+  from the code because it is the code.
+- An `as const` array declared in a shared package is read. A string const from
+  such a package already resolved — a declaration file carries the value in its
+  type — and an array is a tuple of literal types, which was one branch short.
+  A member that is not a string or a number makes the whole array unresolved
+  rather than partly read.
+- A method written as a field is followed in four more places, which 0.3.0
+  scoped itself out of: a lifecycle hook written as `ngOnInit = () => {}` is
+  read as the hook the framework will call, a request forwarded through a
+  wrapper written that way is followed to its callers, and a registration that
+  delegates to `this.handle()` finds a field holding an arrow — which is how a
+  handler keeps its `this` when a library holds it. The one place still asking
+  narrowly says why in its own source: a route, a message pattern and a cron are
+  registered by a decorator on a *method*, and a decorator on a property
+  registers nothing at all.
+- A contract party carries `writes`: the top-level keys an object written in the
+  source actually puts on the wire, where there is one to read, and
+  `writesEvery`, false when those keys are one object per caller rather than
+  one object. Three callers writing `{ role }`, `{ isActive }` and
+  `{ permissions }` put all three keys on the wire between them and none of
+  them on every request, so a message about those says "sent by some of the
+  calls" rather than "always sent".
+
+### Changed
+
+- A producer named by annotation carries every channel it publishes in its
+  label, rather than whichever channel was read first. A stack of annotations
+  always shared one producer node; now the node says so.
+- A request-direction finding about a key a call's declared type permits but
+  nothing writes is no longer reported. A declared parameter type says what a
+  call may send; an object written at the call site, in a `const` a line above
+  it, or by the one caller of the method that makes the request says what it
+  does send — and where several callers each write one, their keys together. A
+  spread of a wider object into a literal still puts its keys on the wire and
+  is still reported. 28 rows on that project, all of them a client echoing back
+  a key the server owns.
+- A message about a shape read from a declared type says "permits" rather than
+  "sends", and never "always sent". Response and payload wording is unchanged.
+- A finding on one arm of a handler that answers with a choice of shapes names
+  that arm, and a missing field counts the arms that carry it: "it is on 1 of
+  the 2 shapes this may answer with, and not on `{order,payment}`".
+- A row an annotation has already answered is `info` rather than something to
+  act on, in the count, the grouping, the fold and the baseline alike. Acting on
+  every row a run reports now takes the number to zero. What counts as answered
+  is the shape the graph takes once the annotation worked, and the shapes
+  differ: `@CallsService` draws one edge out of the method it is written on, and
+  `@Emits` draws two — the method reaches a producer, and the producer reaches
+  the channel — so a channel row an annotation had plainly answered used to keep
+  asking for the annotation. An annotation that names nothing answers nothing,
+  which is this and the marker reading agreeing. A browser request is the third
+  shape: `@flowatlas-calls` does not repair the request it sits above, it adds
+  one that joins, so the row is answered only where the annotations on that
+  method are at least as many as its unreadable requests — two unreadable
+  requests and one annotation keep both rows, and the hint says why rather than
+  asking again for an annotation that is already there.
+- A group of unresolved rows is headed by a sentence true of every member — the
+  members' own where they agree, and otherwise the kind's — instead of whichever
+  member's sentence the most rows happened to share. A member's own sentence is
+  marked so it belongs to the place above it, and a group is keyed by reason and
+  level, so a group's level is every member's.
+- `contracts` output is ordered worst first, as its own documentation has always
+  said it was, with the strips that can lose data above those that cannot.
+- `contracts --format json` is at format version 2: a party may carry `writes`,
+  a finding may carry `impact`.
+
 ## [0.3.0][] - 2026-09-20
 
 `@flowatlas/cli` only. `@flowatlas/markers` is unchanged at 0.1.1.
@@ -130,7 +256,8 @@ could not read.
 
 The first published version of both `@flowatlas/cli` and `@flowatlas/markers`.
 
-[unreleased]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Panevschi-Ruslan/flowatlas/tree/v0.2.0
 [0.1.1]: https://www.npmjs.com/package/@flowatlas/cli/v/0.1.1

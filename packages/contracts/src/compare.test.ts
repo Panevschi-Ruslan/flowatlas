@@ -282,6 +282,32 @@ describe('a choice on either side of the wire', () => {
     expect(kinds(compareTypes(sender, receiver, registry))).toEqual(['missing_required sizes[].extra']);
   });
 
+  it('names the shape a required field is missing from, and counts the ones it is on', () => {
+    // The whole of R32: the verdict was right and the sentence was not. "does
+    // not send it" read as "never sends it", and which of the two shapes it
+    // was had been sitting in the type all along.
+    const sender = object('Out', [field('body', 'type:api#Doc|{pending:boolean}')], registry);
+    const receiver = object('In', [field('body', '{extra:string}')], registry);
+    const [found] = compareTypes(sender, receiver, registry).filter(
+      (diff) => diff.kind === 'missing_required' && diff.path === 'body.extra',
+    );
+    expect(found?.note).toContain('1 of the 2 shapes');
+    expect(found?.note).toContain('{pending}');
+  });
+
+  it('says only which shape it is when the field is on none of them', () => {
+    const sender = object('Out', [field('body', '{a:string}|{pending:boolean}')], registry);
+    const receiver = object('In', [field('body', '{extra:string}')], registry);
+    const notes = compareTypes(sender, receiver, registry)
+      .filter((diff) => diff.kind === 'missing_required' && diff.path === 'body.extra')
+      .map((diff) => diff.note ?? '');
+    expect(notes.length).toBeGreaterThan(0);
+    for (const note of notes) {
+      expect(note).not.toContain('of the 2 shapes this may answer with, and not on');
+      expect(note).toContain('one of the 2 shapes');
+    }
+  });
+
   it('accepts a bare null sent to a receiver that declares null', () => {
     const sender = object('Out', [field('stoppedAt', 'null')], registry);
     const receiver = object('In', [field('stoppedAt', 'null|string')], registry);

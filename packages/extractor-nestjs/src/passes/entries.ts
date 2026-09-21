@@ -62,6 +62,11 @@ const resolveHandler = (
   const indexed = ctx.classes.byId(makeSymbolId(ctx.repo, handler.file, handler.className));
   if (indexed === undefined) return {};
   const owner = indexed.declaration as ClassDeclaration;
+  // Narrow on purpose (R29). A route, a message pattern and a cron in NestJS
+  // are all registered by a decorator on a *method*: the framework reads the
+  // metadata off the prototype, and a decorator on a property registers
+  // nothing at all. An adapter that hands over the name of a field has
+  // recorded something the framework will not call.
   const method = owner.getMethod(handler.methodName);
   if (method === undefined) return { owner };
   ctx.ensureMethodNode(method);

@@ -138,23 +138,30 @@ describe('building a project', () => {
       dynamic: 1,
     });
     expect(result.report.ui).toEqual({
-      total: 6,
+      total: 13,
       // `OrdersApiService.invoice` builds its address in a helper, and both what
       // the helper wrote and what the call passed it are kept (R05).
       // `OrdersApiService.one` goes through a helper whose optional tail nobody
       // settled, so the branch its argument takes is the answer and the edge
       // says `heuristic` (R11).
-      resolved: 3,
-      unresolved: 3,
+      // `OrdersApiService.decide` writes its last segment as one of two values
+      // and both are routes, so it joins to each; `advance` writes one of two
+      // and only one is a route, which is the finding worth having (R31).
+      // `probe` and `twoBlind` each add an annotated request that joins and the
+      // unreadable ones it sits beside: three addresses built at run time, two
+      // annotations that reach a route (R39).
+      resolved: 6,
+      unresolved: 7,
       byReason: {
         'ambiguous-route-target': 1,
+        'api-path-dynamic': 3,
         'api-path-partly-read': 1,
-        'target-route-not-found': 1,
+        'target-route-not-found': 2,
       },
     });
     expect(result.project.builtAt).toBe(FIXED);
     expect(summariseBuild(result).join('\n')).toContain('calls out: 6 total, 2 linked');
-    expect(summariseBuild(result).join('\n')).toContain('ui calls: 6 total, 3 joined to a route');
+    expect(summariseBuild(result).join('\n')).toContain('ui calls: 13 total, 6 joined to a route');
   }, 120_000);
 
   it('joins a button in the browser to the table at the far end of the project', async () => {

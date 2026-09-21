@@ -91,3 +91,18 @@ library involved.
 
 `expected.graph.json` is deliberately absent: it is generated once the P04 passes
 exist and reviewed as a diff.
+
+## Naming more than one channel (R38)
+
+Four methods say the same thing four ways — `@Emits('a', 'b')`, `@Emits(['a',
+'b'])`, `@Emits(CATALOGUE)` through an `as const` array, and a stack of two
+single annotations. Each must produce one producer, whose label names every
+channel it publishes, and one `emits` edge per channel at `marker` confidence.
+A list that reads differently from the stack it shortens is the fault the
+ticket was raised about.
+
+Two more are there because they must not be silent: `@Emits([])` names nothing
+and `@Emits(7 as unknown as string)` names something that is not a name.
+Neither draws an edge, and `doctor` reports each — `marker-names-nothing` and
+`marker-arg-not-a-name`. Before R38 both were read as "no annotation here", on
+a method that publishes, which is the one place an annotation is ever written.

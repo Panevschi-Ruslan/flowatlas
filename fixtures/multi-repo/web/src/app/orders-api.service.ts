@@ -81,4 +81,67 @@ export class OrdersApiService {
     const base = `${environment.apiUrl}/orders`;
     return path ? `${base}/${path}` : base;
   }
+
+  /**
+   * A last segment written as a closed set of two, both of them routes (R31).
+   *
+   * Read as one `:param` the address is `/orders/:param/:param`, which the
+   * gateway serves no route for; read as the two addresses somebody wrote, both
+   * join. Expected: `pathChoices` on the node, an edge to each of
+   * `POST /orders/:param/ship` and `POST /orders/:param/refund`, and no
+   * finding.
+   */
+  decide(id: string, action: 'ship' | 'refund'): Observable<unknown> {
+    return this.http.post<unknown>(`${environment.apiUrl}/orders/${id}/${action}`, {});
+  }
+
+  /**
+   * The same shape where only one of the two values has a route.
+   *
+   * Expected: one finding, naming `/orders/:param/hold` as the address that
+   * reaches nothing while `/orders/:param/resume` does — which is what a
+   * renamed or deleted handler looks like from here.
+   */
+  advance(id: string, step: 'resume' | 'hold'): Observable<unknown> {
+    return this.http.post<unknown>(`${environment.apiUrl}/orders/${id}/${step}`, {});
+  }
+
+  /**
+   * One unreadable request, and an annotation that can be about nothing else.
+   *
+   * `@flowatlas-calls` does not repair the request below it — it adds a second
+   * one that joins — so the unreadable request keeps its row. With one of each
+   * on the method the annotation is unambiguous, and the row is a record of
+   * what could not be read rather than work left to do (R39).
+   *
+   * The annotation names a route only the gateway serves, because one that
+   * reached no route would not have answered anything either.
+   *
+   * Expected: `api-path-dynamic` at `info`, saying there is nothing to do.
+   */
+  /** @flowatlas-calls POST /orders/:id/invoice */
+  probe(): Observable<unknown> {
+    return this.http.get<unknown>(this.opaque());
+  }
+
+  /**
+   * Two unreadable requests, and one annotation.
+   *
+   * Nothing says which of the two the annotation describes, so both rows stay
+   * and say so. Silencing both would hide a real gap behind an annotation that
+   * was never about it.
+   *
+   * Expected: two `api-path-dynamic` rows, both counted, whose hint names the
+   * count rather than asking again for the annotation that is already there.
+   */
+  /** @flowatlas-calls POST /orders/:id/invoice */
+  twoBlind(): Observable<unknown> {
+    this.http.post<unknown>(this.opaque(), {}).subscribe();
+    return this.http.get<unknown>(this.opaque());
+  }
+
+  /** An address with nothing readable in it, for the two above. */
+  private opaque(): string {
+    return globalThis.String(globalThis.Date.now());
+  }
 }

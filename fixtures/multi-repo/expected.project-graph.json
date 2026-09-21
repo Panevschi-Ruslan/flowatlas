@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-14T15:52:08.168Z",
+  "builtAt": "2026-09-22T10:05:33.018Z",
   "services": [
     {
       "name": "gateway",
@@ -416,6 +416,54 @@
       }
     },
     {
+      "id": "entry:gateway:http:POST:/orders/:param/refund",
+      "type": "entry",
+      "label": "POST /orders/:param/refund",
+      "repo": "gateway",
+      "file": "src/orders/orders.controller.ts",
+      "line": 65,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/refund",
+        "rawPath": "/orders/:id/refund",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/resume",
+      "type": "entry",
+      "label": "POST /orders/:param/resume",
+      "repo": "gateway",
+      "file": "src/orders/orders.controller.ts",
+      "line": 71,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/resume",
+        "rawPath": "/orders/:id/resume",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/ship",
+      "type": "entry",
+      "label": "POST /orders/:param/ship",
+      "repo": "gateway",
+      "file": "src/orders/orders.controller.ts",
+      "line": 60,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/ship",
+        "rawPath": "/orders/:id/ship",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
       "id": "entry:gateway:http:POST:/orders/charge",
       "type": "entry",
       "label": "POST /orders/charge",
@@ -765,6 +813,30 @@
       "line": 45
     },
     {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.refund",
+      "type": "method",
+      "label": "OrdersController.refund",
+      "repo": "gateway",
+      "file": "src/orders/orders.controller.ts",
+      "line": 65
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.resume",
+      "type": "method",
+      "label": "OrdersController.resume",
+      "repo": "gateway",
+      "file": "src/orders/orders.controller.ts",
+      "line": 71
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.ship",
+      "type": "method",
+      "label": "OrdersController.ship",
+      "repo": "gateway",
+      "file": "src/orders/orders.controller.ts",
+      "line": 60
+    },
+    {
       "id": "http_out:gateway#src/clients/billing.client.ts:33:12",
       "type": "http_out",
       "label": "POST ?",
@@ -778,6 +850,11 @@
         "baseUrlEnv": null,
         "responseType": "type:gateway#InvoiceDto",
         "bodyType": "{orderId:string;amount:number}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "amount",
+          "orderId"
+        ],
         "targetService": "billing"
       }
     },
@@ -812,6 +889,10 @@
         "baseUrlEnv": "ORDERS_URL",
         "responseType": "type:@fx/contracts#OrderDto",
         "bodyType": "{reason:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "reason"
+        ],
         "targetService": "orders"
       }
     },
@@ -845,7 +926,11 @@
         "path": "/pay",
         "baseUrlEnv": "PAYMENTS_URL",
         "responseType": null,
-        "bodyType": "{id:string}"
+        "bodyType": "{id:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "id"
+        ]
       }
     },
     {
@@ -862,6 +947,11 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": "{amount:number;currency:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "amount",
+          "currency"
+        ],
         "host": "api.stripe.com"
       }
     },
@@ -1143,7 +1233,8 @@
           "classes": 2,
           "templates": 1,
           "skippedExternalCalls": {
-            "@angular/common": 6
+            "@angular/common": 11,
+            "rxjs": 1
           }
         },
         "adapters": {
@@ -1172,6 +1263,131 @@
         "handler": "checkout()",
         "component": "web#src/app/checkout.component.ts:CheckoutComponent",
         "template": "src/app/checkout.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:106:12",
+      "type": "ui_api_call",
+      "label": "POST /orders/:param/:param",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 106,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/orders/:param/:param",
+        "path": "/orders/:param/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "unknown",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "pathChoices": [
+          "/orders/:param/hold",
+          "/orders/:param/resume"
+        ],
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:123:3",
+      "type": "ui_api_call",
+      "label": "POST /orders/:param/invoice",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 123,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/orders/:param/invoice",
+        "path": "/orders/:param/invoice",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "marker",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:124:12",
+      "type": "ui_api_call",
+      "label": "GET ?",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 124,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": "unknown",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": null
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:138:3",
+      "type": "ui_api_call",
+      "label": "POST /orders/:param/invoice",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 138,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/orders/:param/invoice",
+        "path": "/orders/:param/invoice",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "marker",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:139:5",
+      "type": "ui_api_call",
+      "label": "POST ?",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 139,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": "unknown",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "package": "@angular/common/http",
+        "via": null
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:140:12",
+      "type": "ui_api_call",
+      "label": "GET ?",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 140,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": "unknown",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": null
       }
     },
     {
@@ -1266,6 +1482,8 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "unknown",
         "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "gateway"
@@ -1289,6 +1507,32 @@
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:95:12",
+      "type": "ui_api_call",
+      "label": "POST /orders/:param/:param",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 95,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/orders/:param/:param",
+        "path": "/orders/:param/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "unknown",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "pathChoices": [
+          "/orders/:param/refund",
+          "/orders/:param/ship"
+        ],
         "targetService": "gateway"
       }
     },
@@ -1338,6 +1582,28 @@
       }
     },
     {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.advance",
+      "type": "method",
+      "label": "OrdersApiService.advance",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 105,
+      "meta": {
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.decide",
+      "type": "method",
+      "label": "OrdersApiService.decide",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 94,
+      "meta": {
+        "unreferenced": true
+      }
+    },
+    {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService.invoice",
       "type": "method",
       "label": "OrdersApiService.invoice",
@@ -1379,12 +1645,31 @@
       }
     },
     {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.opaque",
+      "type": "method",
+      "label": "OrdersApiService.opaque",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 144
+    },
+    {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService.order",
       "type": "method",
       "label": "OrdersApiService.order",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
       "line": 20
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.probe",
+      "type": "method",
+      "label": "OrdersApiService.probe",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 123,
+      "meta": {
+        "unreferenced": true
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService.receipt",
@@ -1404,6 +1689,17 @@
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
       "line": 47,
+      "meta": {
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.twoBlind",
+      "type": "method",
+      "label": "OrdersApiService.twoBlind",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 138,
       "meta": {
         "unreferenced": true
       }
@@ -1645,6 +1941,51 @@
       "line": 40,
       "meta": {
         "body": "type:@fx/contracts#OrderDto"
+      }
+    },
+    {
+      "from": "entry:gateway:http:POST:/orders/:param/refund",
+      "to": "gateway#src/orders/orders.controller.ts:OrdersController.refund",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{data:unknown}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 65,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:gateway:http:POST:/orders/:param/resume",
+      "to": "gateway#src/orders/orders.controller.ts:OrdersController.resume",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{data:unknown}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 71,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:gateway:http:POST:/orders/:param/ship",
+      "to": "gateway#src/orders/orders.controller.ts:OrdersController.ship",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{data:unknown}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 60,
+      "meta": {
+        "params": "{id:string}"
       }
     },
     {
@@ -1997,6 +2338,42 @@
       "line": 47
     },
     {
+      "from": "gateway#src/orders/orders.controller.ts:OrdersController.refund",
+      "to": "gateway#src/clients/orders.client.ts:OrdersClient.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{data:unknown}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 67
+    },
+    {
+      "from": "gateway#src/orders/orders.controller.ts:OrdersController.resume",
+      "to": "gateway#src/clients/orders.client.ts:OrdersClient.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{data:unknown}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 73
+    },
+    {
+      "from": "gateway#src/orders/orders.controller.ts:OrdersController.ship",
+      "to": "gateway#src/clients/orders.client.ts:OrdersClient.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{data:unknown}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 62
+    },
+    {
       "from": "http_out:gateway#src/clients/billing.client.ts:33:12",
       "to": "entry:billing:http:POST:/invoices",
       "type": "http_calls",
@@ -2185,6 +2562,46 @@
       "line": 15
     },
     {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:106:12",
+      "to": "entry:gateway:http:POST:/orders/:param/resume",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 106,
+      "params": [
+        "object"
+      ],
+      "returns": "unknown",
+      "meta": {
+        "via": "api-target",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:123:3",
+      "to": "entry:gateway:http:POST:/orders/:param/invoice",
+      "type": "hits",
+      "confidence": "marker",
+      "file": "src/app/orders-api.service.ts",
+      "line": 123,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:138:3",
+      "to": "entry:gateway:http:POST:/orders/:param/invoice",
+      "type": "hits",
+      "confidence": "marker",
+      "file": "src/app/orders-api.service.ts",
+      "line": 138,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "gateway"
+      }
+    },
+    {
       "from": "ui_api_call:web#src/app/orders-api.service.ts:21:12",
       "to": "entry:gateway:http:GET:/orders/:param",
       "type": "hits",
@@ -2227,6 +2644,38 @@
       }
     },
     {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:95:12",
+      "to": "entry:gateway:http:POST:/orders/:param/refund",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 95,
+      "params": [
+        "object"
+      ],
+      "returns": "unknown",
+      "meta": {
+        "via": "api-target",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:95:12",
+      "to": "entry:gateway:http:POST:/orders/:param/ship",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 95,
+      "params": [
+        "object"
+      ],
+      "returns": "unknown",
+      "meta": {
+        "via": "api-target",
+        "targetService": "gateway"
+      }
+    },
+    {
       "from": "web#src/app/checkout.component.ts:CheckoutComponent",
       "to": "web#src/app/orders-api.service.ts:OrdersApiService",
       "type": "injects",
@@ -2249,6 +2698,22 @@
       "confidence": "static",
       "file": "src/app/orders-api.service.ts",
       "line": 17
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.advance",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:106:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 106
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.decide",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:95:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 95
     },
     {
       "from": "web#src/app/orders-api.service.ts:OrdersApiService.invoice",
@@ -2299,6 +2764,30 @@
       "line": 21
     },
     {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.probe",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:123:3",
+      "type": "calls",
+      "confidence": "marker",
+      "file": "src/app/orders-api.service.ts",
+      "line": 123
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.probe",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:124:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 124
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.probe",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService.opaque",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 124
+    },
+    {
       "from": "web#src/app/orders-api.service.ts:OrdersApiService.receipt",
       "to": "ui_api_call:web#src/app/orders-api.service.ts:26:12",
       "type": "calls",
@@ -2313,6 +2802,38 @@
       "confidence": "static",
       "file": "src/app/orders-api.service.ts",
       "line": 48
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.twoBlind",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:138:3",
+      "type": "calls",
+      "confidence": "marker",
+      "file": "src/app/orders-api.service.ts",
+      "line": 138
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.twoBlind",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:139:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 139
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.twoBlind",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:140:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 140
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.twoBlind",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService.opaque",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 139
     }
   ],
   "types": {
@@ -2546,6 +3067,43 @@
         "exported": true
       }
     },
+    "type:orders#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/order.entity.ts",
+      "structuralHash": "1d69afe4970c8187",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
     "type:web#OrderDto": {
       "name": "OrderDto",
       "kind": "object",
@@ -2667,6 +3225,39 @@
       "message": "gateway and orders both answer GET /orders/:param",
       "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
       "symbol": "ui_api_call:web#src/app/orders-api.service.ts:34:12"
+    },
+    {
+      "service": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 106,
+      "reason": "target-route-not-found",
+      "message": "POST /orders/:param/hold reaches no route, though /orders/:param/resume does",
+      "hint": "The segment is written as a closed set of values and one of them has no route. A renamed or missing handler looks exactly like this; check the ones named.",
+      "symbol": "ui_api_call:web#src/app/orders-api.service.ts:106:12"
+    },
+    {
+      "file": "src/app/orders-api.service.ts",
+      "line": 124,
+      "reason": "api-path-dynamic",
+      "hint": "The address is built at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.",
+      "symbol": "this.http.get<unknown>(this.opaque())",
+      "service": "web"
+    },
+    {
+      "file": "src/app/orders-api.service.ts",
+      "line": 139,
+      "reason": "api-path-dynamic",
+      "hint": "The address is built at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.",
+      "symbol": "this.http.post<unknown>(this.opaque(), {})",
+      "service": "web"
+    },
+    {
+      "file": "src/app/orders-api.service.ts",
+      "line": 140,
+      "reason": "api-path-dynamic",
+      "hint": "The address is built at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.",
+      "symbol": "this.http.get<unknown>(this.opaque())",
+      "service": "web"
     }
   ]
 }

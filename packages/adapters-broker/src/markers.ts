@@ -1,20 +1,39 @@
-import { makeChannelId, makeLeafId, makeSymbolId, methodsOfClass } from '@flowatlas/core';
+import {
+  makeChannelId,
+  makeLeafId,
+  makeSymbolId,
+  methodsOfClass,
+  namesGivenTo,
+  type RecordedMarker,
+} from '@flowatlas/core';
 import type { NestExtractContext } from '@flowatlas/extractor-nestjs';
 import type { BrokerSpec } from './adapters/index.js';
-
-interface RecordedMarker {
-  name: string;
-  args: unknown[];
-}
 
 const WALKED = new Set(['controller', 'injectable', 'guard', 'interceptor', 'pipe', 'middleware', 'plain']);
 
 /** Key for a method and channel pair, using a separator neither can contain. */
 export const pairKey = (methodId: string, channel: string): string => `${methodId} :: ${channel}`;
 
-const channelArgOf = (marker: RecordedMarker): string | undefined => {
-  const [first] = marker.args;
-  return typeof first === 'string' ? first : undefined;
+/**
+ * Every channel one method's annotations name, by whether it publishes or reads.
+ *
+ * Gathered for the method rather than for each annotation, because a stack of
+ * six `@Emits` and one `@Emits` of six are the same claim written two ways, and
+ * the graph should not be able to tell them apart. Arguments that name nothing
+ * are left here: `doctor` is where an annotation is held to account, and
+ * reporting them twice would put the same mistake in two sections.
+ */
+const channelsOn = (markers: readonly RecordedMarker[]): { emits: string[]; consumes: string[] } => {
+  const emits: string[] = [];
+  const consumes: string[] = [];
+  for (const marker of markers) {
+    if (marker.name !== 'Emits' && marker.name !== 'Consumes') continue;
+    const into = marker.name === 'Emits' ? emits : consumes;
+    for (const name of namesGivenTo(marker).names) {
+      if (!into.includes(name)) into.push(name);
+    }
+  }
+  return { emits, consumes };
 };
 
 /**
@@ -46,13 +65,10 @@ export const readBrokerMarkers = (
       const line = method.getStartLineNumber();
       const file = indexed.file;
 
-      for (const marker of markers) {
-        if (marker.name !== 'Emits' && marker.name !== 'Consumes') continue;
-        const channelName = channelArgOf(marker);
-        if (channelName === undefined) continue;
-        // The code already says this, so the annotation adds nothing here.
-        if (alreadyStatic.has(pairKey(methodId, channelName))) continue;
+      const { emits, consumes } = channelsOn(markers);
 
+      /** The channel node, shared by every annotation and every adapter that names it. */
+      const channelNodeFor = (channelName: string): string => {
         const channelId = makeChannelId(channelName);
         const existing = ctx.builder.getNode(channelId);
         const adapters = new Set([
@@ -69,38 +85,49 @@ export const readBrokerMarkers = (
           meta: { channelKind, adapters: [...adapters] },
         });
         channel.meta = { ...channel.meta, adapters: [...adapters] };
+        return channelId;
+      };
 
-        if (marker.name === 'Emits') {
-          const producerId = makeLeafId('producer', ctx.repo, file, line, 0);
-          ctx.builder.addNode({
-            id: producerId,
-            type: 'producer',
-            label: `event ${channelName}`,
-            repo: ctx.repo,
-            file,
-            line,
-            kind: 'event',
-            meta: { kind: 'event', adapter, channelVia: 'marker', method: 'Emits' },
-          });
-          ctx.builder.addEdge({
-            from: methodId,
-            to: producerId,
-            type: 'calls',
-            confidence: 'marker',
-            file,
-            line,
-          });
+      // The code already says this, so the annotation adds nothing for it.
+      const published = emits.filter((name) => !alreadyStatic.has(pairKey(methodId, name)));
+      const received = consumes.filter((name) => !alreadyStatic.has(pairKey(methodId, name)));
+
+      if (published.length > 0) {
+        // One publish site, however many channels it was annotated with: the
+        // id has always been the method's line, so a stack of annotations
+        // shared a producer already, and a list must not read differently.
+        const producerId = makeLeafId('producer', ctx.repo, file, line, 0);
+        ctx.builder.addNode({
+          id: producerId,
+          type: 'producer',
+          label: `event ${published.join(', ')}`,
+          repo: ctx.repo,
+          file,
+          line,
+          kind: 'event',
+          meta: { kind: 'event', adapter, channelVia: 'marker', method: 'Emits' },
+        });
+        ctx.builder.addEdge({
+          from: methodId,
+          to: producerId,
+          type: 'calls',
+          confidence: 'marker',
+          file,
+          line,
+        });
+        for (const name of published) {
           ctx.builder.addEdge({
             from: producerId,
-            to: channelId,
+            to: channelNodeFor(name),
             type: 'emits',
             confidence: 'marker',
             file,
             line,
           });
-          continue;
         }
+      }
 
+      if (received.length > 0) {
         const consumerId = `consumer:${makeSymbolId(ctx.repo, file, indexed.name, method.getName())}`;
         ctx.builder.addNode({
           id: consumerId,
@@ -113,14 +140,16 @@ export const readBrokerMarkers = (
           meta: { kind: 'event', adapter, decorator: 'Consumes', entryId: null },
         });
         ctx.ensureMethodNode(method);
-        ctx.builder.addEdge({
-          from: channelId,
-          to: consumerId,
-          type: 'consumes',
-          confidence: 'marker',
-          file,
-          line,
-        });
+        for (const name of received) {
+          ctx.builder.addEdge({
+            from: channelNodeFor(name),
+            to: consumerId,
+            type: 'consumes',
+            confidence: 'marker',
+            file,
+            line,
+          });
+        }
         ctx.builder.addEdge({
           from: consumerId,
           to: methodId,

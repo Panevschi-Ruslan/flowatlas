@@ -1,4 +1,5 @@
 import type { MoneyDto } from '@fx/wire';
+import { IsString } from '../validation';
 
 /**
  * Copied verbatim into `gateway`.
@@ -47,4 +48,24 @@ export interface OrderCreatedEvent {
 export interface GetOrderQuery {
   orderId: string;
   includeItems: boolean;
+}
+
+/**
+ * What the handler for `POST /orders/drafts` declares, and all it declares.
+ *
+ * The caller's own shape for a draft has three fields; this has one. What the
+ * caller *sends* decides which of the other two are findings, and that is the
+ * whole of R34 in one boundary.
+ */
+export class CreateDraftDto {
+  // Decorated, because a whitelisting pipe only strips from a class that has
+  // some validation on it — a class with none is not a class it validates.
+  @IsString()
+  title!: string;
+}
+
+/** The second shape `GET /orders/drafts/:id` may answer with, on the locked path. */
+export class LockedDraftDto {
+  draft!: CreateDraftDto;
+  lockedBy!: string;
 }

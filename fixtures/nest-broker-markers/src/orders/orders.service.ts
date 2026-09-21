@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { EventBusService } from '../bus/event-bus.service';
 import { Emits } from '@flowatlas/markers';
+import { SHIPPING_CHANNELS } from './channels';
 import type {
   OrderArchivedEvent,
   OrderCancelledEvent,
@@ -60,6 +61,49 @@ export class OrdersService {
   // Expected: `channel:order.cancelled`, static.
   cancel(event: OrderCancelledEvent): void {
     this.bus.publish('order.cancelled', event);
+  }
+
+  // The four ways to name more than one channel, which all mean the same thing
+  // (R38). Each publishes through a computed channel, so the annotation is
+  // earning its place rather than repeating what the code says.
+  //
+  // Expected, for each: one producer whose label names every channel it
+  // publishes, and one `emits` edge per channel, confidence `marker`.
+  @Emits('order.held', 'order.released')
+  severalArguments(event: OrderArchivedEvent): void {
+    this.bus.publish(this.channelFor('held-or-released'), event);
+  }
+
+  @Emits(['order.split', 'order.merged'])
+  aListInPlace(event: OrderArchivedEvent): void {
+    this.bus.publish(this.channelFor('split-or-merged'), event);
+  }
+
+  @Emits(SHIPPING_CHANNELS)
+  aCatalogue(event: OrderArchivedEvent): void {
+    this.bus.publish(this.channelFor('shipping'), event);
+  }
+
+  // The form the three above shorten. It has to mean exactly what they mean,
+  // which is why it is here rather than only in the older cases.
+  @Emits('order.refunded')
+  @Emits('order.reopened')
+  stacked(event: OrderArchivedEvent): void {
+    this.bus.publish(this.channelFor('refunded-or-reopened'), event);
+  }
+
+  // Given an argument and left naming nothing. Expected: no channel, and
+  // `marker-names-nothing` from `doctor` — never silence, which is the whole
+  // point of the ticket.
+  @Emits([])
+  namesNothing(event: OrderArchivedEvent): void {
+    this.bus.publish(this.channelFor('nothing'), event);
+  }
+
+  // Resolved, and not a name. Expected: `marker-arg-not-a-name`.
+  @Emits(7 as unknown as string)
+  notAName(event: OrderArchivedEvent): void {
+    this.bus.publish(this.channelFor('number'), event);
   }
 
   /** Builds a channel name at run time, which is what makes `archive` blind. */

@@ -1,11 +1,12 @@
 import type {
+  ClassMethod,
   EntryHandler,
   ExtractContext,
   FunctionHandler,
   InlineHandler,
   NamedFunction,
 } from '@flowatlas/core';
-import { namedFunction, normalizeFilePath, originOfValue } from '@flowatlas/core';
+import { methodNamedOn, namedFunction, normalizeFilePath, originOfValue } from '@flowatlas/core';
 import type { ClassDeclaration, MethodDeclaration, Node as TsNode, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 
@@ -25,7 +26,7 @@ export const repoClasses = function* (ctx: ExtractContext): Generator<ClassDecla
 export const fileOfNode = (node: { getSourceFile(): SourceFile }, ctx: ExtractContext): string =>
   normalizeFilePath(node.getSourceFile().getFilePath(), ctx.repoDir);
 
-export const handlerOf = (method: MethodDeclaration, ctx: ExtractContext) => {
+export const handlerOf = (method: ClassMethod, ctx: ExtractContext) => {
   const owner = method.getParent() as ClassDeclaration;
   return {
     file: fileOfNode(method, ctx),
@@ -88,7 +89,9 @@ const handlerAmong = (
 
     if (!Node.isPropertyAccessExpression(callee)) continue;
     if (callee.getExpression().getKind() !== SyntaxKind.ThisKeyword) continue;
-    const method = owner?.getMethod(callee.getName());
+    // `this.handle()` where `handle = () => {}` is a method like any other,
+    // and it is how a handler keeps its `this` when a library holds it (R29).
+    const method = owner === undefined ? undefined : methodNamedOn(owner, callee.getName());
     if (method !== undefined) found.set(callee.getName(), handlerOf(method, ctx));
   }
   return found.size === 1 ? [...found.values()][0] : undefined;

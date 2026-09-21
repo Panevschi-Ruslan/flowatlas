@@ -8,6 +8,7 @@
  */
 import {
   SEVERITY_RANK,
+  STRIP_IMPACTS,
   type ContractFinding,
   type ContractReport,
   type Severity,
@@ -36,12 +37,48 @@ export const summaryLine = (report: ContractReport): string => {
   );
 };
 
+/**
+ * How far up the list a strip belongs, among findings of one severity.
+ *
+ * A field the receiving handler writes a document for can lose data; a field
+ * nothing it writes declares cannot lose much; and an ordinary finding is
+ * neither. The first few lines of the command are what gets read, and this is
+ * what decides which they are (R30).
+ */
+const rankOf = (finding: ContractFinding): number => {
+  // `STRIP_IMPACTS` is declared worst first, so its own order is the ranking
+  // and there is no second copy of it to fall out of step. An ordinary
+  // finding, which has no impact, sorts where `unknown` does.
+  const found = finding.impact === undefined ? -1 : STRIP_IMPACTS.indexOf(finding.impact);
+  return found < 0 ? STRIP_IMPACTS.indexOf('unknown') : found;
+};
+
 /** Findings at or above the level asked for, worst first. */
 export const shown = (
   findings: readonly ContractFinding[],
   severity: Severity,
 ): ContractFinding[] =>
-  findings.filter((finding) => SEVERITY_RANK[finding.severity] <= SEVERITY_RANK[severity]);
+  findings
+    .filter((finding) => SEVERITY_RANK[finding.severity] <= SEVERITY_RANK[severity])
+    .map((finding, index) => ({ finding, index }))
+    .sort(
+      (a, b) =>
+        SEVERITY_RANK[a.finding.severity] - SEVERITY_RANK[b.finding.severity] ||
+        rankOf(a.finding) - rankOf(b.finding) ||
+        a.index - b.index,
+    )
+    .map((each) => each.finding);
+
+/**
+ * Findings a strip cannot lose anything by, counted rather than listed.
+ *
+ * A handler that reaches no write cannot lose data by dropping a field, and on
+ * one real project twenty-five of the fifty-six strips were on handlers like
+ * that — a pricing preview being sent the caller's whole working object on
+ * purpose. Every one of them is still in `--format json` (R30).
+ */
+export const harmless = (findings: readonly ContractFinding[]): ContractFinding[] =>
+  findings.filter((finding) => finding.impact === 'none');
 
 const where = (finding: ContractFinding): string =>
   `${finding.sender.service} → ${finding.receiver.service}`;
@@ -60,7 +97,12 @@ export const renderContractsText = (
   options: ContractRenderOptions & { file?: string } = {},
 ): string => {
   const settings = { ...DEFAULTS, ...options };
-  const found = rows(shown(report.findings, settings.severity), settings.maxNodes);
+  const everything = shown(report.findings, settings.severity);
+  const folded = harmless(everything);
+  const found = rows(
+    everything.filter((finding) => finding.impact !== 'none'),
+    settings.maxNodes,
+  );
   const lines: string[] = [summaryLine(report), ''];
 
   // A project where nothing reaches another service has no contract to check,
@@ -87,6 +129,12 @@ export const renderContractsText = (
       ]),
     ),
     ...(found.dropped > 0 ? [`  ${truncationNote(found.dropped, options.file)}`] : []),
+    ...(folded.length === 0
+      ? []
+      : [
+          `  and ${folded.length} field${folded.length === 1 ? '' : 's'} a receiver strips on a route no write was found under, which nothing here can lose` +
+            `${options.file === undefined ? '' : `; they are in ${options.file}`}`,
+        ]),
   );
 
   if (settings.showIgnored && report.ignored.length > 0) {

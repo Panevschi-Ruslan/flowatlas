@@ -133,10 +133,11 @@ const unresolvedSection = (
     for (const row of group.rows) {
       const place = where(row.service, row.file, row.line, repoDirs);
       lines.push(`      ${place}${row.symbol === null ? '' : `  ${oneLine(row.symbol)}`}`);
-      // Rows of one reason usually share their advice, and the group prints it
-      // once. Where the joined graph knew something about this row in
-      // particular, that sentence belongs beside the row it is about.
-      if (row.hint !== group.hint) lines.push(`        ${row.hint}`);
+      // The heading says what the kind means; this says what this place is.
+      // Marked, because an unmarked sentence between two sites is read as
+      // belonging to the one below it (R35), and indentation alone was not
+      // enough to stop that.
+      if (row.hint !== group.hint) lines.push(`        ↳ ${row.hint}`);
     }
     lines.push(...more(group.truncated, file));
   }

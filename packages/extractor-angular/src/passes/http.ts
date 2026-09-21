@@ -9,6 +9,9 @@ import {
   parametersOf,
   resolveTypeOrigin,
   siteOf,
+  writtenBodyOutward,
+  writtenKeysOf,
+  type BodyRead,
   type CallFrame,
   type ClassMethod,
   type TypeOrigin,
@@ -75,13 +78,50 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     return ctx.types.collectType(returned, call);
   };
 
-  const typeOfBody = (call: CallExpression, index: number | null): string | null => {
-    if (index === null) return null;
+  /**
+   * The shape a request puts on the wire, and where that was read from.
+   *
+   * An object written at the call site is the body. A name, or a value built
+   * elsewhere, has only its declared type to go on, and a declared type says
+   * what is permitted rather than what is sent — which is a weaker claim, and
+   * one the finding then has to phrase as the weaker claim it is (R34).
+   */
+  /** A body shape, where it was read from, and the keys it actually writes. */
+  interface BodyShape {
+    type: string | null;
+    from: BodyRead;
+    keys?: readonly string[];
+  }
+
+  const NO_BODY: BodyShape = { type: null, from: 'type' };
+
+  /**
+   * The keys a body writes, followed out to whoever wrote it.
+   *
+   * The address and the body are not decided in the same place: a service
+   * method writes `this.url(id, 'zones')` and takes the body as a parameter, so
+   * the address stops travelling there and the body does not (R34).
+   */
+  const bodyKeysOf = (argument: TsNode): { from: BodyRead; keys?: readonly string[] } => {
+    const written = writtenBodyOutward(argument);
+    const keys = writtenKeysOf(written);
+    if (keys === undefined) return { from: 'type' };
+    // One writer means the keys are what this call sends, every time. Several
+    // mean they are what any of its callers may send, which is a weaker claim
+    // and has to be worded as one (R34).
+    return { from: written.length === 1 ? 'literal' : 'literals', keys };
+  };
+
+  const typeOfBody = (call: CallExpression, index: number | null): BodyShape => {
+    if (index === null) return NO_BODY;
     const argument = call.getArguments()[index];
-    if (argument === undefined) return null;
+    if (argument === undefined) return NO_BODY;
     const declared = declaredParameterType(call, index, ctx.checker);
     const narrowed = declared === undefined ? undefined : narrowUnionByLiteral(declared, argument);
-    return ctx.types.collectType(narrowed ?? argument.getType(), argument);
+    return {
+      type: ctx.types.collectType(narrowed ?? argument.getType(), argument),
+      ...bodyKeysOf(argument),
+    };
   };
 
   /**
@@ -95,13 +135,13 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     call: CallExpression,
     index: number | null,
     frames: readonly CallFrame[],
-  ): string | null => {
-    if (index === null) return null;
+  ): BodyShape => {
+    if (index === null) return NO_BODY;
     let node: TsNode | undefined = call.getArguments()[index];
     let at: CallExpression = call;
     let position = index;
     for (const frame of frames) {
-      if (node === undefined) return null;
+      if (node === undefined) return NO_BODY;
       let value: TsNode = node;
       while (Node.isParenthesizedExpression(value) || Node.isAsExpression(value)) {
         value = value.getExpression();
@@ -122,7 +162,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
       at = frame.call;
       position = parameterIndex;
     }
-    return node === undefined ? null : typeOfBody(at, position);
+    return node === undefined ? NO_BODY : typeOfBody(at, position);
   };
 
   const record = (
@@ -132,6 +172,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     address: ApiUrl,
     frames: readonly CallFrame[],
     choice?: string,
+    pathChoices?: readonly string[],
   ): void => {
     const shape = VERBS[name];
     if (shape === undefined) return;
@@ -144,10 +185,11 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     // request per segment, and each needs a node of its own.
     const id = requestIdOf(leaf, network, { frames, ...(choice === undefined ? {} : { choice }) });
     const responseType = Node.isCallExpression(call) ? typeOfResponse(call) : null;
-    const bodyType =
+    const body =
       frames.length === 0
         ? typeOfBody(network, shape.bodyIndex)
         : bodyThrough(network, shape.bodyIndex, frames);
+    const bodyType = body.type;
 
     ctx.builder.addNode({
       id,
@@ -164,6 +206,13 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         baseUrlEnv: address.baseUrlEnv,
         responseType,
         bodyType,
+        // Whether the shape above is what the call writes or only what its
+        // declared type permits, so a finding can say which (R34).
+        ...(bodyType === null ? {} : { bodyFrom: body.from }),
+        // The keys the call actually writes, where an object written in the
+        // source says. A declared type says what is permitted; this says what
+        // is sent, and the checker compares only these (R34).
+        ...(body.keys === undefined ? {} : { bodyKeys: body.keys }),
         package: ANGULAR_HTTP,
         via: address.via,
         ...(address.host === null ? {} : { host: address.host }),
@@ -175,6 +224,10 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         // keeps the one line that reaches the network findable from every call.
         ...(frames.length === 0 ? {} : { through: wrapperOf(network) }),
         ...(choice === undefined ? {} : { choice }),
+        // The same address once per value a closed segment of it can take. The
+        // joiner tries these when matching the address as written lands on a
+        // catch-all or on nothing at all (R31).
+        ...(pathChoices === undefined ? {} : { pathChoices }),
       },
     });
     ctx.builder.addEdge({
@@ -256,7 +309,15 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     if (shape === undefined || urlArg === undefined) return;
     for (const request of requestsOf(ctx, urlArg, method, site, siblings)) {
       noteIfUnreferenced(ctx, request.site);
-      record(network, name, request.site, request.address, request.frames, request.choice);
+      record(
+        network,
+        name,
+        request.site,
+        request.address,
+        request.frames,
+        request.choice,
+        request.pathChoices,
+      );
     }
   };
 

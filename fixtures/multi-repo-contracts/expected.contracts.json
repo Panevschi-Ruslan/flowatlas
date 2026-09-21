@@ -1,8 +1,427 @@
 {
-  "contractsFormatVersion": 1,
+  "contractsFormatVersion": 2,
   "schemaVersion": 3,
   "generatedAt": "1970-01-01T00:00:00.000Z",
   "edges": [
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:100:12",
+        "to": "entry:orders:http:POST:/orders/legacy",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:100:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:100:12",
+            "to": "entry:orders:http:POST:/orders/legacy",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:100:12|http_calls|entry:orders:http:POST:/orders/legacy",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CreateOrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateOrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+          },
+          "typeId": "type:orders#CreateOrderDto",
+          "field": "channel",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+          "ignored": true,
+          "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:100:12",
+            "to": "entry:orders:http:POST:/orders/legacy",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:100:12|http_calls|entry:orders:http:POST:/orders/legacy",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CreateOrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateOrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+          },
+          "typeId": "type:orders#CreateOrderDto",
+          "field": "debugId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "the type sender gateway declares permits `debugId: string`; receiver orders declares no such field",
+          "ignored": true,
+          "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+        },
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:100:12",
+            "to": "entry:orders:http:POST:/orders/legacy",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:100:12|http_calls|entry:orders:http:POST:/orders/legacy",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CreateOrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateOrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+          },
+          "typeId": "type:orders#CreateOrderDto",
+          "field": "note",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`note` may be left out by sender gateway and is required by receiver orders; the sender marks it optional by question",
+          "ignored": true,
+          "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:100:12",
+        "to": "entry:orders:http:POST:/orders/legacy",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:100:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#OrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:100:12",
+            "to": "entry:orders:http:POST:/orders/legacy",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:100:12|http_calls|entry:orders:http:POST:/orders/legacy",
+          "direction": "response",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#OrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+          },
+          "receiver": {
+            "service": "gateway",
+            "typeId": "type:gateway#OrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+          },
+          "typeId": "type:gateway#OrderDto",
+          "field": "total",
+          "expected": "string",
+          "actual": "number",
+          "rule": null,
+          "message": "sender orders sends `total` as `number`; receiver gateway declares it `string`",
+          "ignored": true,
+          "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+        }
+      ],
+      "rulesApplied": [
+        "date-string:placedAt"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:110:12",
+        "to": "entry:orders:http:POST:/orders/drafts/store",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:110:12|http_calls|entry:orders:http:POST:/orders/drafts/store",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{title:string;note:string}",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.storeDraft",
+        "writes": [
+          "note",
+          "title"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.storeDraft"
+      },
+      "findings": [
+        {
+          "severity": "warning",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:110:12",
+            "to": "entry:orders:http:POST:/orders/drafts/store",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:110:12|http_calls|entry:orders:http:POST:/orders/drafts/store",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "{title:string;note:string}",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.storeDraft",
+            "writes": [
+              "note",
+              "title"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateDraftDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.storeDraft"
+          },
+          "typeId": "type:orders#CreateDraftDto",
+          "field": "note",
+          "expected": null,
+          "actual": "string",
+          "rule": "whitelist-strip",
+          "impact": "stored",
+          "message": "sender gateway sends `note: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:110:12",
+        "to": "entry:orders:http:POST:/orders/drafts/store",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:110:12|http_calls|entry:orders:http:POST:/orders/drafts/store",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.storeDraft"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#DraftResultDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.storeDraft"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:122:12",
+        "to": "entry:orders:http:POST:/orders/drafts/tag",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:122:12|http_calls|entry:orders:http:POST:/orders/drafts/tag",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{title:string;colour:string}",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.tagDraft",
+        "writes": [
+          "colour",
+          "title"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.tagDraft"
+      },
+      "findings": [
+        {
+          "severity": "warning",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:122:12",
+            "to": "entry:orders:http:POST:/orders/drafts/tag",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:122:12|http_calls|entry:orders:http:POST:/orders/drafts/tag",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "{title:string;colour:string}",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.tagDraft",
+            "writes": [
+              "colour",
+              "title"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateDraftDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.tagDraft"
+          },
+          "typeId": "type:orders#CreateDraftDto",
+          "field": "colour",
+          "expected": null,
+          "actual": "string",
+          "rule": "whitelist-strip",
+          "impact": "unknown",
+          "message": "sender gateway sends `colour: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:122:12",
+        "to": "entry:orders:http:POST:/orders/drafts/tag",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:122:12|http_calls|entry:orders:http:POST:/orders/drafts/tag",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.tagDraft"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#DraftResultDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.tagDraft"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:134:12",
+        "to": "entry:orders:http:POST:/orders/drafts/preview",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:134:12|http_calls|entry:orders:http:POST:/orders/drafts/preview",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{title:string;note:string}",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.previewDraft",
+        "writes": [
+          "note",
+          "title"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.previewDraft"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:134:12",
+            "to": "entry:orders:http:POST:/orders/drafts/preview",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:134:12|http_calls|entry:orders:http:POST:/orders/drafts/preview",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "{title:string;note:string}",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.previewDraft",
+            "writes": [
+              "note",
+              "title"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateDraftDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.previewDraft"
+          },
+          "typeId": "type:orders#CreateDraftDto",
+          "field": "note",
+          "expected": null,
+          "actual": "string",
+          "rule": "whitelist-strip",
+          "impact": "none",
+          "message": "sender gateway sends `note: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:134:12",
+        "to": "entry:orders:http:POST:/orders/drafts/preview",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:134:12|http_calls|entry:orders:http:POST:/orders/drafts/preview",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.previewDraft"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#DraftResultDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.previewDraft"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
     {
       "edge": {
         "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
@@ -77,7 +496,7 @@
           "expected": null,
           "actual": "string",
           "rule": null,
-          "message": "sender gateway sends `debugId: string`; receiver orders declares no such field",
+          "message": "the type sender gateway declares permits `debugId: string`; receiver orders declares no such field",
           "ignored": false,
           "ignoredBy": null
         },
@@ -311,167 +730,424 @@
     },
     {
       "edge": {
-        "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
-        "to": "entry:orders:http:POST:/orders/legacy",
+        "from": "http_out:gateway#src/clients/orders.client.ts:51:12",
+        "to": "entry:orders:http:POST:/orders/drafts",
         "type": "http_calls"
       },
-      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:51:12|http_calls|entry:orders:http:POST:/orders/drafts",
       "direction": "request",
       "status": "hash_differs",
       "sender": {
         "service": "gateway",
-        "typeId": "type:gateway#CreateOrderDto",
-        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+        "typeId": "{title:string}",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftWritten",
+        "writes": [
+          "title"
+        ],
+        "writesEvery": true
       },
       "receiver": {
         "service": "orders",
-        "typeId": "type:orders#CreateOrderDto",
-        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:51:12",
+        "to": "entry:orders:http:POST:/orders/drafts",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:51:12|http_calls|entry:orders:http:POST:/orders/drafts",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#DraftResultDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftWritten"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:64:12",
+        "to": "entry:orders:http:POST:/orders/drafts",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:64:12|http_calls|entry:orders:http:POST:/orders/drafts",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#DraftDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftDeclared"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
       },
       "findings": [
         {
-          "severity": "error",
-          "kind": "missing_required",
+          "severity": "info",
+          "kind": "extra_field",
           "edge": {
-            "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
-            "to": "entry:orders:http:POST:/orders/legacy",
+            "from": "http_out:gateway#src/clients/orders.client.ts:64:12",
+            "to": "entry:orders:http:POST:/orders/drafts",
             "type": "http_calls"
           },
-          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:64:12|http_calls|entry:orders:http:POST:/orders/drafts",
           "direction": "request",
           "sender": {
             "service": "gateway",
-            "typeId": "type:gateway#CreateOrderDto",
-            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+            "typeId": "type:gateway#DraftDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftDeclared"
           },
           "receiver": {
             "service": "orders",
-            "typeId": "type:orders#CreateOrderDto",
-            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+            "typeId": "type:orders#CreateDraftDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
           },
-          "typeId": "type:orders#CreateOrderDto",
-          "field": "channel",
-          "expected": "string",
-          "actual": null,
+          "typeId": "type:orders#CreateDraftDto",
+          "field": "archived",
+          "expected": null,
+          "actual": "boolean",
           "rule": null,
-          "message": "receiver orders requires `channel: string`; sender gateway does not send it",
-          "ignored": true,
-          "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+          "message": "the type sender gateway declares permits `archived: boolean`; receiver orders declares no such field",
+          "ignored": false,
+          "ignoredBy": null
         },
         {
           "severity": "info",
           "kind": "extra_field",
           "edge": {
-            "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
-            "to": "entry:orders:http:POST:/orders/legacy",
+            "from": "http_out:gateway#src/clients/orders.client.ts:64:12",
+            "to": "entry:orders:http:POST:/orders/drafts",
             "type": "http_calls"
           },
-          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:64:12|http_calls|entry:orders:http:POST:/orders/drafts",
           "direction": "request",
           "sender": {
             "service": "gateway",
-            "typeId": "type:gateway#CreateOrderDto",
-            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+            "typeId": "type:gateway#DraftDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftDeclared"
           },
           "receiver": {
             "service": "orders",
-            "typeId": "type:orders#CreateOrderDto",
-            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+            "typeId": "type:orders#CreateDraftDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
           },
-          "typeId": "type:orders#CreateOrderDto",
-          "field": "debugId",
+          "typeId": "type:orders#CreateDraftDto",
+          "field": "owner",
           "expected": null,
           "actual": "string",
           "rule": null,
-          "message": "sender gateway sends `debugId: string`; receiver orders declares no such field",
-          "ignored": true,
-          "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
-        },
-        {
-          "severity": "warning",
-          "kind": "optionality_mismatch",
-          "edge": {
-            "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
-            "to": "entry:orders:http:POST:/orders/legacy",
-            "type": "http_calls"
-          },
-          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
-          "direction": "request",
-          "sender": {
-            "service": "gateway",
-            "typeId": "type:gateway#CreateOrderDto",
-            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
-          },
-          "receiver": {
-            "service": "orders",
-            "typeId": "type:orders#CreateOrderDto",
-            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
-          },
-          "typeId": "type:orders#CreateOrderDto",
-          "field": "note",
-          "expected": "string",
-          "actual": "string",
-          "rule": null,
-          "message": "`note` may be left out by sender gateway and is required by receiver orders; the sender marks it optional by question",
-          "ignored": true,
-          "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+          "message": "the type sender gateway declares permits `owner: string`; receiver orders declares no such field",
+          "ignored": false,
+          "ignoredBy": null
         }
       ],
       "rulesApplied": []
     },
     {
       "edge": {
-        "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
-        "to": "entry:orders:http:POST:/orders/legacy",
+        "from": "http_out:gateway#src/clients/orders.client.ts:64:12",
+        "to": "entry:orders:http:POST:/orders/drafts",
         "type": "http_calls"
       },
-      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:64:12|http_calls|entry:orders:http:POST:/orders/drafts",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#DraftResultDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftDeclared"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:74:12",
+        "to": "entry:orders:http:POST:/orders/drafts",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:74:12|http_calls|entry:orders:http:POST:/orders/drafts",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{extra:number;title:string;owner:string;archived:boolean}",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftSpread",
+        "writes": [
+          "archived",
+          "extra",
+          "owner",
+          "title"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:74:12",
+            "to": "entry:orders:http:POST:/orders/drafts",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:74:12|http_calls|entry:orders:http:POST:/orders/drafts",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "{extra:number;title:string;owner:string;archived:boolean}",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftSpread",
+            "writes": [
+              "archived",
+              "extra",
+              "owner",
+              "title"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateDraftDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
+          },
+          "typeId": "type:orders#CreateDraftDto",
+          "field": "archived",
+          "expected": null,
+          "actual": "boolean",
+          "rule": null,
+          "message": "sender gateway sends `archived: boolean`; receiver orders declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:74:12",
+            "to": "entry:orders:http:POST:/orders/drafts",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:74:12|http_calls|entry:orders:http:POST:/orders/drafts",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "{extra:number;title:string;owner:string;archived:boolean}",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftSpread",
+            "writes": [
+              "archived",
+              "extra",
+              "owner",
+              "title"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateDraftDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
+          },
+          "typeId": "type:orders#CreateDraftDto",
+          "field": "extra",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender gateway sends `extra: number`; receiver orders declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:74:12",
+            "to": "entry:orders:http:POST:/orders/drafts",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:74:12|http_calls|entry:orders:http:POST:/orders/drafts",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "{extra:number;title:string;owner:string;archived:boolean}",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftSpread",
+            "writes": [
+              "archived",
+              "extra",
+              "owner",
+              "title"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateDraftDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
+          },
+          "typeId": "type:orders#CreateDraftDto",
+          "field": "owner",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender gateway sends `owner: string`; receiver orders declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:74:12",
+        "to": "entry:orders:http:POST:/orders/drafts",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:74:12|http_calls|entry:orders:http:POST:/orders/drafts",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#DraftResultDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftSpread"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:87:12",
+        "to": "entry:orders:http:GET:/orders/drafts/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:87:12|http_calls|entry:orders:http:GET:/orders/drafts/:param",
       "direction": "response",
       "status": "hash_differs",
       "sender": {
         "service": "orders",
-        "typeId": "type:orders#OrderDto",
-        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+        "typeId": "type:orders#CreateDraftDto|type:orders#LockedDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.readDraft"
       },
       "receiver": {
         "service": "gateway",
-        "typeId": "type:gateway#OrderDto",
-        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+        "typeId": "type:gateway#DraftResultDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.fetchDraft"
       },
       "findings": [
         {
-          "severity": "error",
-          "kind": "type_mismatch",
+          "severity": "info",
+          "kind": "extra_field",
           "edge": {
-            "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
-            "to": "entry:orders:http:POST:/orders/legacy",
+            "from": "http_out:gateway#src/clients/orders.client.ts:87:12",
+            "to": "entry:orders:http:GET:/orders/drafts/:param",
             "type": "http_calls"
           },
-          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:87:12|http_calls|entry:orders:http:GET:/orders/drafts/:param",
           "direction": "response",
           "sender": {
             "service": "orders",
-            "typeId": "type:orders#OrderDto",
-            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+            "typeId": "type:orders#CreateDraftDto|type:orders#LockedDraftDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.readDraft"
           },
           "receiver": {
             "service": "gateway",
-            "typeId": "type:gateway#OrderDto",
-            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+            "typeId": "type:gateway#DraftResultDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.fetchDraft"
           },
-          "typeId": "type:gateway#OrderDto",
-          "field": "total",
-          "expected": "string",
-          "actual": "number",
+          "typeId": "type:gateway#DraftResultDto",
+          "field": "draft",
+          "expected": null,
+          "actual": "type:orders#CreateDraftDto",
           "rule": null,
-          "message": "sender orders sends `total` as `number`; receiver gateway declares it `string`",
-          "ignored": true,
-          "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+          "message": "sender orders sends `draft: type:orders#CreateDraftDto`; receiver gateway declares no such field; on LockedDraftDto, one of the 2 shapes this may answer with",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:87:12",
+            "to": "entry:orders:http:GET:/orders/drafts/:param",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:87:12|http_calls|entry:orders:http:GET:/orders/drafts/:param",
+          "direction": "response",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#CreateDraftDto|type:orders#LockedDraftDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.readDraft"
+          },
+          "receiver": {
+            "service": "gateway",
+            "typeId": "type:gateway#DraftResultDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.fetchDraft"
+          },
+          "typeId": "type:gateway#DraftResultDto",
+          "field": "lockedBy",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender orders sends `lockedBy: string`; receiver gateway declares no such field; on LockedDraftDto, one of the 2 shapes this may answer with",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:87:12",
+            "to": "entry:orders:http:GET:/orders/drafts/:param",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:87:12|http_calls|entry:orders:http:GET:/orders/drafts/:param",
+          "direction": "response",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#CreateDraftDto|type:orders#LockedDraftDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.readDraft"
+          },
+          "receiver": {
+            "service": "gateway",
+            "typeId": "type:gateway#DraftResultDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.fetchDraft"
+          },
+          "typeId": "type:gateway#DraftResultDto",
+          "field": "title",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver gateway requires `title: string`; sender orders does not send it; it is on 1 of the 2 shapes this may answer with, and not on LockedDraftDto",
+          "ignored": false,
+          "ignoredBy": null
         }
       ],
-      "rulesApplied": [
-        "date-string:placedAt"
-      ]
+      "rulesApplied": []
     },
     {
       "edge": {
@@ -547,7 +1223,7 @@
           "expected": null,
           "actual": "string",
           "rule": "class-transformer",
-          "message": "sender gateway sends `internalNote: string`; receiver orders declares no such field; the receiver excludes it, so what arrives is thrown away",
+          "message": "the type sender gateway declares permits `internalNote: string`; receiver orders declares no such field; the receiver excludes it, so what arrives is thrown away",
           "ignored": false,
           "ignoredBy": null
         },
@@ -837,7 +1513,7 @@
           "expected": null,
           "actual": "string",
           "rule": null,
-          "message": "sender gateway sends `code: string`; receiver orders declares no such field",
+          "message": "the type sender gateway declares permits `code: string`; receiver orders declares no such field",
           "ignored": false,
           "ignoredBy": null
         },
@@ -958,11 +1634,11 @@
     },
     {
       "edge": {
-        "from": "producer:orders#src/orders/orders.service.ts:39:5",
+        "from": "producer:orders#src/orders/orders.service.ts:69:5",
         "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
         "type": "emits"
       },
-      "edgeKey": "producer:orders#src/orders/orders.service.ts:39:5|emits|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "edgeKey": "producer:orders#src/orders/orders.service.ts:69:5|emits|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
       "direction": "payload",
       "status": "hash_differs",
       "sender": {
@@ -980,11 +1656,11 @@
           "severity": "error",
           "kind": "missing_required",
           "edge": {
-            "from": "producer:orders#src/orders/orders.service.ts:39:5",
+            "from": "producer:orders#src/orders/orders.service.ts:69:5",
             "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
             "type": "emits"
           },
-          "edgeKey": "producer:orders#src/orders/orders.service.ts:39:5|emits|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+          "edgeKey": "producer:orders#src/orders/orders.service.ts:69:5|emits|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
           "direction": "payload",
           "sender": {
             "service": "orders",
@@ -1022,7 +1698,15 @@
       "sender": {
         "service": "web",
         "typeId": "type:web#CreateOrderDto",
-        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create"
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+        "writes": [
+          "channel",
+          "customerId",
+          "note",
+          "shipTo",
+          "total"
+        ],
+        "writesEvery": true
       },
       "receiver": {
         "service": "orders",
@@ -1043,7 +1727,15 @@
           "sender": {
             "service": "web",
             "typeId": "type:web#CreateOrderDto",
-            "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create"
+            "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+            "writes": [
+              "channel",
+              "customerId",
+              "note",
+              "shipTo",
+              "total"
+            ],
+            "writesEvery": true
           },
           "receiver": {
             "service": "orders",
@@ -1148,64 +1840,6 @@
       "ignoredBy": null
     },
     {
-      "severity": "info",
-      "kind": "extra_field",
-      "edge": {
-        "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
-        "to": "entry:orders:http:POST:/orders",
-        "type": "http_calls"
-      },
-      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
-      "direction": "request",
-      "sender": {
-        "service": "gateway",
-        "typeId": "type:gateway#CreateOrderDto",
-        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
-      },
-      "receiver": {
-        "service": "orders",
-        "typeId": "type:orders#CreateOrderDto",
-        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
-      },
-      "typeId": "type:orders#CreateOrderDto",
-      "field": "debugId",
-      "expected": null,
-      "actual": "string",
-      "rule": null,
-      "message": "sender gateway sends `debugId: string`; receiver orders declares no such field",
-      "ignored": false,
-      "ignoredBy": null
-    },
-    {
-      "severity": "warning",
-      "kind": "optionality_mismatch",
-      "edge": {
-        "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
-        "to": "entry:orders:http:POST:/orders",
-        "type": "http_calls"
-      },
-      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
-      "direction": "request",
-      "sender": {
-        "service": "gateway",
-        "typeId": "type:gateway#CreateOrderDto",
-        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
-      },
-      "receiver": {
-        "service": "orders",
-        "typeId": "type:orders#CreateOrderDto",
-        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
-      },
-      "typeId": "type:orders#CreateOrderDto",
-      "field": "note",
-      "expected": "string",
-      "actual": "string",
-      "rule": null,
-      "message": "`note` may be left out by sender gateway and is required by receiver orders; the sender marks it optional by question",
-      "ignored": false,
-      "ignoredBy": null
-    },
-    {
       "severity": "error",
       "kind": "type_mismatch",
       "edge": {
@@ -1264,89 +1898,31 @@
       "ignoredBy": null
     },
     {
-      "severity": "warning",
-      "kind": "type_mismatch",
+      "severity": "error",
+      "kind": "missing_required",
       "edge": {
-        "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
-        "to": "entry:orders:http:POST:/wire",
+        "from": "http_out:gateway#src/clients/orders.client.ts:87:12",
+        "to": "entry:orders:http:GET:/orders/drafts/:param",
         "type": "http_calls"
       },
-      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
-      "direction": "request",
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:87:12|http_calls|entry:orders:http:GET:/orders/drafts/:param",
+      "direction": "response",
       "sender": {
-        "service": "gateway",
-        "typeId": "type:gateway#WireDto",
-        "symbol": "gateway#src/clients/wire.client.ts:WireClient.send"
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto|type:orders#LockedDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.readDraft"
       },
       "receiver": {
-        "service": "orders",
-        "typeId": "type:orders#WireDto",
-        "symbol": "orders#src/wire/wire.controller.ts:WireController.accept"
-      },
-      "typeId": "type:orders#WireDto",
-      "field": "counts",
-      "expected": "object",
-      "actual": "Record<string,number>",
-      "rule": "set-map-json",
-      "message": "`counts` is a Set or a Map; JSON carries neither, so what receiver orders reads is whatever a replacer wrote by hand",
-      "ignored": false,
-      "ignoredBy": null
-    },
-    {
-      "severity": "info",
-      "kind": "extra_field",
-      "edge": {
-        "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
-        "to": "entry:orders:http:POST:/wire",
-        "type": "http_calls"
-      },
-      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
-      "direction": "request",
-      "sender": {
         "service": "gateway",
-        "typeId": "type:gateway#WireDto",
-        "symbol": "gateway#src/clients/wire.client.ts:WireClient.send"
+        "typeId": "type:gateway#DraftResultDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.fetchDraft"
       },
-      "receiver": {
-        "service": "orders",
-        "typeId": "type:orders#WireDto",
-        "symbol": "orders#src/wire/wire.controller.ts:WireController.accept"
-      },
-      "typeId": "type:orders#WireDto",
-      "field": "internalNote",
-      "expected": null,
-      "actual": "string",
-      "rule": "class-transformer",
-      "message": "sender gateway sends `internalNote: string`; receiver orders declares no such field; the receiver excludes it, so what arrives is thrown away",
-      "ignored": false,
-      "ignoredBy": null
-    },
-    {
-      "severity": "warning",
-      "kind": "type_mismatch",
-      "edge": {
-        "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
-        "to": "entry:orders:http:POST:/wire",
-        "type": "http_calls"
-      },
-      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
-      "direction": "request",
-      "sender": {
-        "service": "gateway",
-        "typeId": "type:gateway#WireDto",
-        "symbol": "gateway#src/clients/wire.client.ts:WireClient.send"
-      },
-      "receiver": {
-        "service": "orders",
-        "typeId": "type:orders#WireDto",
-        "symbol": "orders#src/wire/wire.controller.ts:WireController.accept"
-      },
-      "typeId": "type:orders#WireDto",
-      "field": "tags",
-      "expected": "string[]",
-      "actual": "string[]",
-      "rule": "set-map-json",
-      "message": "`tags` is a Set or a Map; JSON carries neither, so what receiver orders reads is whatever a replacer wrote by hand",
+      "typeId": "type:gateway#DraftResultDto",
+      "field": "title",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver gateway requires `title: string`; sender orders does not send it; it is on 1 of the 2 shapes this may answer with, and not on LockedDraftDto",
       "ignored": false,
       "ignoredBy": null
     },
@@ -1496,35 +2072,6 @@
       "ignoredBy": null
     },
     {
-      "severity": "info",
-      "kind": "extra_field",
-      "edge": {
-        "from": "http_out:gateway#src/clients/wire.client.ts:33:12",
-        "to": "entry:orders:http:POST:/deep/categories",
-        "type": "http_calls"
-      },
-      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:33:12|http_calls|entry:orders:http:POST:/deep/categories",
-      "direction": "request",
-      "sender": {
-        "service": "gateway",
-        "typeId": "type:gateway#CategoryDto",
-        "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendCategory"
-      },
-      "receiver": {
-        "service": "orders",
-        "typeId": "type:orders#CategoryDto",
-        "symbol": "orders#src/deep/deep.controller.ts:DeepController.categories"
-      },
-      "typeId": "type:orders#CategoryDto",
-      "field": "code",
-      "expected": null,
-      "actual": "string",
-      "rule": null,
-      "message": "sender gateway sends `code: string`; receiver orders declares no such field",
-      "ignored": false,
-      "ignoredBy": null
-    },
-    {
       "severity": "error",
       "kind": "missing_required",
       "edge": {
@@ -1583,43 +2130,14 @@
       "ignoredBy": null
     },
     {
-      "severity": "info",
-      "kind": "extra_field",
-      "edge": {
-        "from": "producer:billing#src/invoices/orders.rpc.client.ts:15:12",
-        "to": "consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
-        "type": "emits"
-      },
-      "edgeKey": "producer:billing#src/invoices/orders.rpc.client.ts:15:12|emits|consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
-      "direction": "payload",
-      "sender": {
-        "service": "billing",
-        "typeId": "type:billing#GetOrderQuery",
-        "symbol": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient.ask"
-      },
-      "receiver": {
-        "service": "orders",
-        "typeId": "type:orders#GetOrderQuery",
-        "symbol": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get"
-      },
-      "typeId": "type:orders#GetOrderQuery",
-      "field": "includeRefunds",
-      "expected": null,
-      "actual": "boolean",
-      "rule": null,
-      "message": "sender billing sends `includeRefunds: boolean`; receiver orders declares no such field",
-      "ignored": false,
-      "ignoredBy": null
-    },
-    {
       "severity": "error",
       "kind": "missing_required",
       "edge": {
-        "from": "producer:orders#src/orders/orders.service.ts:39:5",
+        "from": "producer:orders#src/orders/orders.service.ts:69:5",
         "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
         "type": "emits"
       },
-      "edgeKey": "producer:orders#src/orders/orders.service.ts:39:5|emits|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "edgeKey": "producer:orders#src/orders/orders.service.ts:69:5|emits|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
       "direction": "payload",
       "sender": {
         "service": "orders",
@@ -1653,7 +2171,15 @@
       "sender": {
         "service": "web",
         "typeId": "type:web#CreateOrderDto",
-        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create"
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+        "writes": [
+          "channel",
+          "customerId",
+          "note",
+          "shipTo",
+          "total"
+        ],
+        "writesEvery": true
       },
       "receiver": {
         "service": "orders",
@@ -1697,6 +2223,538 @@
       "message": "sender orders sends `total` as `number`; receiver web declares it `string`",
       "ignored": false,
       "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:110:12",
+        "to": "entry:orders:http:POST:/orders/drafts/store",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:110:12|http_calls|entry:orders:http:POST:/orders/drafts/store",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{title:string;note:string}",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.storeDraft",
+        "writes": [
+          "note",
+          "title"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.storeDraft"
+      },
+      "typeId": "type:orders#CreateDraftDto",
+      "field": "note",
+      "expected": null,
+      "actual": "string",
+      "rule": "whitelist-strip",
+      "impact": "stored",
+      "message": "sender gateway sends `note: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:122:12",
+        "to": "entry:orders:http:POST:/orders/drafts/tag",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:122:12|http_calls|entry:orders:http:POST:/orders/drafts/tag",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{title:string;colour:string}",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.tagDraft",
+        "writes": [
+          "colour",
+          "title"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.tagDraft"
+      },
+      "typeId": "type:orders#CreateDraftDto",
+      "field": "colour",
+      "expected": null,
+      "actual": "string",
+      "rule": "whitelist-strip",
+      "impact": "unknown",
+      "message": "sender gateway sends `colour: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "typeId": "type:orders#CreateOrderDto",
+      "field": "note",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`note` may be left out by sender gateway and is required by receiver orders; the sender marks it optional by question",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
+        "to": "entry:orders:http:POST:/wire",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#WireDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.send"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#WireDto",
+        "symbol": "orders#src/wire/wire.controller.ts:WireController.accept"
+      },
+      "typeId": "type:orders#WireDto",
+      "field": "counts",
+      "expected": "object",
+      "actual": "Record<string,number>",
+      "rule": "set-map-json",
+      "message": "`counts` is a Set or a Map; JSON carries neither, so what receiver orders reads is whatever a replacer wrote by hand",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
+        "to": "entry:orders:http:POST:/wire",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#WireDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.send"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#WireDto",
+        "symbol": "orders#src/wire/wire.controller.ts:WireController.accept"
+      },
+      "typeId": "type:orders#WireDto",
+      "field": "tags",
+      "expected": "string[]",
+      "actual": "string[]",
+      "rule": "set-map-json",
+      "message": "`tags` is a Set or a Map; JSON carries neither, so what receiver orders reads is whatever a replacer wrote by hand",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "typeId": "type:orders#CreateOrderDto",
+      "field": "debugId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "the type sender gateway declares permits `debugId: string`; receiver orders declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:64:12",
+        "to": "entry:orders:http:POST:/orders/drafts",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:64:12|http_calls|entry:orders:http:POST:/orders/drafts",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#DraftDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftDeclared"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
+      },
+      "typeId": "type:orders#CreateDraftDto",
+      "field": "archived",
+      "expected": null,
+      "actual": "boolean",
+      "rule": null,
+      "message": "the type sender gateway declares permits `archived: boolean`; receiver orders declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:64:12",
+        "to": "entry:orders:http:POST:/orders/drafts",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:64:12|http_calls|entry:orders:http:POST:/orders/drafts",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#DraftDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftDeclared"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
+      },
+      "typeId": "type:orders#CreateDraftDto",
+      "field": "owner",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "the type sender gateway declares permits `owner: string`; receiver orders declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:74:12",
+        "to": "entry:orders:http:POST:/orders/drafts",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:74:12|http_calls|entry:orders:http:POST:/orders/drafts",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{extra:number;title:string;owner:string;archived:boolean}",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftSpread",
+        "writes": [
+          "archived",
+          "extra",
+          "owner",
+          "title"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
+      },
+      "typeId": "type:orders#CreateDraftDto",
+      "field": "archived",
+      "expected": null,
+      "actual": "boolean",
+      "rule": null,
+      "message": "sender gateway sends `archived: boolean`; receiver orders declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:74:12",
+        "to": "entry:orders:http:POST:/orders/drafts",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:74:12|http_calls|entry:orders:http:POST:/orders/drafts",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{extra:number;title:string;owner:string;archived:boolean}",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftSpread",
+        "writes": [
+          "archived",
+          "extra",
+          "owner",
+          "title"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
+      },
+      "typeId": "type:orders#CreateDraftDto",
+      "field": "extra",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender gateway sends `extra: number`; receiver orders declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:74:12",
+        "to": "entry:orders:http:POST:/orders/drafts",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:74:12|http_calls|entry:orders:http:POST:/orders/drafts",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{extra:number;title:string;owner:string;archived:boolean}",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.draftSpread",
+        "writes": [
+          "archived",
+          "extra",
+          "owner",
+          "title"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.draft"
+      },
+      "typeId": "type:orders#CreateDraftDto",
+      "field": "owner",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender gateway sends `owner: string`; receiver orders declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:87:12",
+        "to": "entry:orders:http:GET:/orders/drafts/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:87:12|http_calls|entry:orders:http:GET:/orders/drafts/:param",
+      "direction": "response",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto|type:orders#LockedDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.readDraft"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#DraftResultDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.fetchDraft"
+      },
+      "typeId": "type:gateway#DraftResultDto",
+      "field": "draft",
+      "expected": null,
+      "actual": "type:orders#CreateDraftDto",
+      "rule": null,
+      "message": "sender orders sends `draft: type:orders#CreateDraftDto`; receiver gateway declares no such field; on LockedDraftDto, one of the 2 shapes this may answer with",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:87:12",
+        "to": "entry:orders:http:GET:/orders/drafts/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:87:12|http_calls|entry:orders:http:GET:/orders/drafts/:param",
+      "direction": "response",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto|type:orders#LockedDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.readDraft"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#DraftResultDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.fetchDraft"
+      },
+      "typeId": "type:gateway#DraftResultDto",
+      "field": "lockedBy",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender orders sends `lockedBy: string`; receiver gateway declares no such field; on LockedDraftDto, one of the 2 shapes this may answer with",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
+        "to": "entry:orders:http:POST:/wire",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#WireDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.send"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#WireDto",
+        "symbol": "orders#src/wire/wire.controller.ts:WireController.accept"
+      },
+      "typeId": "type:orders#WireDto",
+      "field": "internalNote",
+      "expected": null,
+      "actual": "string",
+      "rule": "class-transformer",
+      "message": "the type sender gateway declares permits `internalNote: string`; receiver orders declares no such field; the receiver excludes it, so what arrives is thrown away",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/wire.client.ts:33:12",
+        "to": "entry:orders:http:POST:/deep/categories",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/wire.client.ts:33:12|http_calls|entry:orders:http:POST:/deep/categories",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CategoryDto",
+        "symbol": "gateway#src/clients/wire.client.ts:WireClient.sendCategory"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CategoryDto",
+        "symbol": "orders#src/deep/deep.controller.ts:DeepController.categories"
+      },
+      "typeId": "type:orders#CategoryDto",
+      "field": "code",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "the type sender gateway declares permits `code: string`; receiver orders declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:billing#src/invoices/orders.rpc.client.ts:15:12",
+        "to": "consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+        "type": "emits"
+      },
+      "edgeKey": "producer:billing#src/invoices/orders.rpc.client.ts:15:12|emits|consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+      "direction": "payload",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#GetOrderQuery",
+        "symbol": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient.ask"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#GetOrderQuery",
+        "symbol": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get"
+      },
+      "typeId": "type:orders#GetOrderQuery",
+      "field": "includeRefunds",
+      "expected": null,
+      "actual": "boolean",
+      "rule": null,
+      "message": "sender billing sends `includeRefunds: boolean`; receiver orders declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:134:12",
+        "to": "entry:orders:http:POST:/orders/drafts/preview",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:134:12|http_calls|entry:orders:http:POST:/orders/drafts/preview",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{title:string;note:string}",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.previewDraft",
+        "writes": [
+          "note",
+          "title"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.previewDraft"
+      },
+      "typeId": "type:orders#CreateDraftDto",
+      "field": "note",
+      "expected": null,
+      "actual": "string",
+      "rule": "whitelist-strip",
+      "impact": "none",
+      "message": "sender gateway sends `note: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it",
+      "ignored": false,
+      "ignoredBy": null
     }
   ],
   "ignored": [
@@ -1704,11 +2762,11 @@
       "severity": "error",
       "kind": "missing_required",
       "edge": {
-        "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
+        "from": "http_out:gateway#src/clients/orders.client.ts:100:12",
         "to": "entry:orders:http:POST:/orders/legacy",
         "type": "http_calls"
       },
-      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:100:12|http_calls|entry:orders:http:POST:/orders/legacy",
       "direction": "request",
       "sender": {
         "service": "gateway",
@@ -1733,11 +2791,11 @@
       "severity": "info",
       "kind": "extra_field",
       "edge": {
-        "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
+        "from": "http_out:gateway#src/clients/orders.client.ts:100:12",
         "to": "entry:orders:http:POST:/orders/legacy",
         "type": "http_calls"
       },
-      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:100:12|http_calls|entry:orders:http:POST:/orders/legacy",
       "direction": "request",
       "sender": {
         "service": "gateway",
@@ -1754,7 +2812,7 @@
       "expected": null,
       "actual": "string",
       "rule": null,
-      "message": "sender gateway sends `debugId: string`; receiver orders declares no such field",
+      "message": "the type sender gateway declares permits `debugId: string`; receiver orders declares no such field",
       "ignored": true,
       "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
     },
@@ -1762,11 +2820,11 @@
       "severity": "warning",
       "kind": "optionality_mismatch",
       "edge": {
-        "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
+        "from": "http_out:gateway#src/clients/orders.client.ts:100:12",
         "to": "entry:orders:http:POST:/orders/legacy",
         "type": "http_calls"
       },
-      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:100:12|http_calls|entry:orders:http:POST:/orders/legacy",
       "direction": "request",
       "sender": {
         "service": "gateway",
@@ -1791,11 +2849,11 @@
       "severity": "error",
       "kind": "type_mismatch",
       "edge": {
-        "from": "http_out:gateway#src/clients/orders.client.ts:53:12",
+        "from": "http_out:gateway#src/clients/orders.client.ts:100:12",
         "to": "entry:orders:http:POST:/orders/legacy",
         "type": "http_calls"
       },
-      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:53:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:100:12|http_calls|entry:orders:http:POST:/orders/legacy",
       "direction": "response",
       "sender": {
         "service": "orders",
@@ -1828,6 +2886,18 @@
       "direction": "request",
       "reason": "no-type-on-sender",
       "message": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:87:12",
+        "to": "entry:orders:http:GET:/orders/drafts/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:87:12|http_calls|entry:orders:http:GET:/orders/drafts/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "gateway#src/clients/orders.client.ts:OrdersClient.fetchDraft declares no type for what it sends",
       "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
     },
     {
@@ -1880,14 +2950,14 @@
     }
   ],
   "summary": {
-    "edges": 17,
+    "edges": 30,
     "shared": 2,
-    "identical": 2,
-    "hash_differs": 13,
-    "unchecked": 5,
-    "errors": 13,
-    "warnings": 3,
-    "infos": 4,
+    "identical": 8,
+    "hash_differs": 20,
+    "unchecked": 6,
+    "errors": 14,
+    "warnings": 5,
+    "infos": 12,
     "ignored": 4
   }
 }

@@ -26,6 +26,7 @@ export {
   uncheckedEdgeSchema,
 } from './schema.js';
 export { atLeast, severityOf, SEVERITY_RANK } from './severity.js';
+export { STRIP_IMPACTS } from './types.js';
 export {
   CONTRACT_STATUSES,
   CONTRACTS_FORMAT_VERSION,
@@ -47,6 +48,7 @@ export type {
   FieldDiff,
   FindingKind,
   GraphLookup,
+  StripImpact,
   Severity,
   Side,
   UncheckedEdge,

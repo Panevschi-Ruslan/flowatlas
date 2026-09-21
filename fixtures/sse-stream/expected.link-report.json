@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-20T11:25:36.242Z",
+  "builtAt": "2026-09-21T14:45:43.587Z",
   "configHash": "37634076a802",
   "services": [
     {
@@ -12,18 +12,18 @@
       "edges": 20,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 606
+      "durationMs": 0
     },
     {
       "name": "web",
       "repo": "./web",
       "type": "angular",
       "extractor": "@flowatlas/extractor-angular",
-      "nodes": 29,
-      "edges": 18,
+      "nodes": 31,
+      "edges": 20,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 538
+      "durationMs": 0
     }
   ],
   "httpOut": {
@@ -62,8 +62,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 53,
-    "edges": 43,
+    "nodes": 55,
+    "edges": 45,
     "types": 1,
     "unresolved": 2
   }

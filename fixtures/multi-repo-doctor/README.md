@@ -71,3 +71,13 @@ recorded and grouped exactly like the nine reasons this fixture does hold, and
 `fixtures/nest-telegraf` and `fixtures/angular-basic` already read them; a
 fourth and fifth repository here would add a minute to every `pnpm check` to
 exercise the same grouping code with different strings in it.
+
+## Two tokens in one group (R35)
+
+`OrdersService`'s constructor asks for two tokens nothing provides,
+`EVENTS_CLIENT` and `AUDIT_CLIENT`. That makes one `di-token-unknown` group
+whose two rows say different things, which is the shape a heading can be wrong
+about: the heading has to say what the *kind* means and name neither token,
+and each row's own sentence has to read as belonging to the site it sits under.
+A group whose rows all say one thing cannot catch that, which is why there are
+two.

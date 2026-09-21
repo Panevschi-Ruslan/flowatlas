@@ -284,7 +284,15 @@ describe('what an agent is told', () => {
     const client = new Client({ name: 'test', version: '0' });
     await client.connect(clientSide);
 
-    const drift = report.findings.find((finding) => finding.direction === 'request');
+    // The finding this asserts on, named rather than taken as whichever came
+    // first: the order of the report is a presentation decision and this test
+    // is about what an agent is told, not about where a row sits in a list.
+    const drift = report.findings.find(
+      (finding) =>
+        finding.direction === 'request' &&
+        finding.kind === 'missing_required' &&
+        finding.field === 'channel',
+    );
     const answer = (await client.callTool({
       name: 'check_contract',
       arguments: { from: drift?.edge.from, to: drift?.edge.to },

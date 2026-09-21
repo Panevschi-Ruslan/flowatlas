@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-client-wrapper",
-  "generatedAt": "2026-09-14T12:32:07.289Z",
+  "generatedAt": "2026-09-20T21:55:22.393Z",
   "nodes": [
     {
       "id": "config_key:nest-client-wrapper#BILLING_URL",
@@ -62,7 +62,8 @@
         "path": "/invoices",
         "baseUrlEnv": "BILLING_URL",
         "responseType": "type:nest-client-wrapper#Invoice",
-        "bodyType": "string"
+        "bodyType": "string",
+        "bodyFrom": "type"
       }
     },
     {
@@ -79,6 +80,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": "RequestInit",
+        "bodyFrom": "type",
         "host": "chat.example.test"
       }
     },
@@ -145,7 +147,8 @@
         "path": "/orders",
         "baseUrlEnv": "ORDERS_URL",
         "responseType": "type:nest-client-wrapper#Order",
-        "bodyType": "type:nest-client-wrapper#Order"
+        "bodyType": "type:nest-client-wrapper#Order",
+        "bodyFrom": "value"
       }
     },
     {
@@ -161,7 +164,11 @@
         "path": "/orders/:param/cancel",
         "baseUrlEnv": "ORDERS_URL",
         "responseType": "type:nest-client-wrapper#Order",
-        "bodyType": "{reason:string}"
+        "bodyType": "{reason:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "reason"
+        ]
       }
     },
     {

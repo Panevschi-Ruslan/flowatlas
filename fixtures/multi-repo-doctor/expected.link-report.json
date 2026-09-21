@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-14T12:22:45.781Z",
+  "builtAt": "2026-09-21T15:52:23.253Z",
   "configHash": "9376cf8f01b0",
   "services": [
     {
@@ -19,10 +19,10 @@
       "repo": "./gateway",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 21,
-      "edges": 15,
+      "nodes": 25,
+      "edges": 19,
       "types": 2,
-      "unresolved": 5,
+      "unresolved": 7,
       "durationMs": 0
     },
     {
@@ -30,17 +30,17 @@
       "repo": "./orders",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 34,
-      "edges": 29,
+      "nodes": 50,
+      "edges": 46,
       "types": 3,
-      "unresolved": 9,
+      "unresolved": 17,
       "durationMs": 0
     }
   ],
   "httpOut": {
-    "total": 6,
-    "linked": 2,
-    "byMarker": 1,
+    "total": 8,
+    "linked": 4,
+    "byMarker": 3,
     "unknownEnv": 1,
     "noRoute": 1,
     "ambiguous": 0,
@@ -54,19 +54,19 @@
     "byReason": {}
   },
   "channels": {
-    "total": 3,
+    "total": 5,
     "linked": 2,
     "noConsumers": [
-      "channel:order.audited"
+      "channel:order.audited",
+      "channel:order.held",
+      "channel:order.released"
     ],
     "noProducers": []
   },
   "routes": {
     "total": 3,
-    "called": 2,
-    "uncalled": [
-      "entry:orders:http:GET:/orders/:param"
-    ],
+    "called": 3,
+    "uncalled": [],
     "duplicated": []
   },
   "types": {
@@ -139,9 +139,9 @@
     }
   ],
   "totals": {
-    "nodes": 65,
-    "edges": 53,
+    "nodes": 85,
+    "edges": 77,
     "types": 6,
-    "unresolved": 21
+    "unresolved": 31
   }
 }

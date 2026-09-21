@@ -64,28 +64,28 @@ Five repositories that ship as one product: three NestJS services and two Angula
 frontends, with a shared package of types between them. It is the project this
 was built against, which is worth knowing when you read the numbers: they are
 reproducible, and they are from one codebase whose author also wrote the tool.
-Measured with 0.3.0.
+Measured with 0.4.0.
 
 | | |
 |---|---|
 | Source read | 1,523 files, 259,337 lines of TypeScript and templates |
 | Cold build | 5.5 s |
-| Rebuild with nothing changed | 0.7 s |
-| Graph | 11,346 nodes, 19,817 edges |
-| **Edges that cross a repository boundary** | **541** |
+| Rebuild with nothing changed | 1.0 s |
+| Graph | 11,352 nodes, 19,825 edges |
+| **Edges that cross a repository boundary** | **542** |
 
-That last row is the point. Five hundred and forty one connections that no
+That last row is the point. Five hundred and forty two connections that no
 compiler in any of those five checkouts can see, because each one only ever
 reads its own.
 
-**Where the edges come from.** 19,403 were read from the code, 397 were
-inferred and marked `heuristic`, and 17 were declared by an annotation. Every
+**Where the edges come from.** 19,406 were read from the code, 397 were
+inferred and marked `heuristic`, and 22 were declared by an annotation. Every
 edge says which of the three it is.
 
 **Ways in.** 564 HTTP routes, and 64 more through a bot: 13 commands, 45 button
-callbacks, 6 events. Something in the project reaches 506 of the routes. Nothing
-it can see calls the other 58 — and of those, 14 are declared public in the
-configuration and 7 look like health probes, which leaves 37 worth a look.
+callbacks, 6 events. Something in the project reaches 507 of the routes. Nothing
+it can see calls the other 57 — and of those, 12 are declared public in the
+configuration and 7 look like health probes, which leaves 38 worth a look.
 
 **What joined across the boundaries.** Two columns, because the first build of
 any project is not the one to judge it by and quoting only the second would be
@@ -95,8 +95,8 @@ selling you something:
 |---|---|---|
 | Browser requests matched to the route that answers them | 493 of 499 | 493 of 499 |
 | Calls between services matched to a route | **1 of 61** | 41 of 61 |
-| Routes something in the project reaches | 481 | 506 |
-| Message channels with a handler | 0 | 7 of 12 |
+| Routes something in the project reaches | 481 | 507 |
+| Message channels with a handler | 0 | 7 of 17 |
 
 The configuration behind the second column names the settings key that
 addresses a service (`baseUrlEnv`), the key a frontend's requests are rooted at
@@ -109,15 +109,16 @@ the line that wants it.
 **What each version changed, on the same repositories.** The same configuration
 and the same commit of every repository, read by each:
 
-| | 0.1.1 | 0.2.0 | 0.3.0 |
-|---|---|---|---|
-| Browser requests found | 343 | 495 | 499 |
-| …matched to the route that answers them | 318 | 489 | 493 |
-| Routes nothing appears to call | 220 | 62 | 58 |
-| Edges that cross a repository boundary | 366 | 537 | 541 |
-| Boundaries a contract could be compared on | 337 | 636 | 636 |
-| Contract errors | 37 | 1 | 1 |
-| Contract warnings | 398 | 1,069 | 1,069 |
+| | 0.1.1 | 0.2.0 | 0.3.0 | 0.4.0 |
+|---|---|---|---|---|
+| Browser requests found | 343 | 495 | 499 | 499 |
+| …matched to the route that answers them | 318 | 489 | 493 | 493 |
+| Routes nothing appears to call | 220 | 62 | 58 | 57 |
+| Edges that cross a repository boundary | 366 | 537 | 541 | 542 |
+| Boundaries a contract could be compared on | 337 | 636 | 636 | 636 |
+| Contract errors | 37 | 1 | 1 | 0 |
+| Contract warnings | 398 | 1,069 | 1,069 | 1,014 |
+| Front ends asking for a route nothing serves | — | 2 | 1 | **0** |
 
 Most of the first step is requests made through a wrapper — a pass-through
 client, a base service whose resource a subclass decides — that 0.1.1 followed
@@ -130,18 +131,22 @@ warning rather than an error, because nothing proves it runs.
 The second step is smaller and the same shape: the four streams the application
 holds open, opened through a wrapper that remembers what it was given rather
 than using it there and then, which is how a subscription survives being
-backgrounded.
+backgrounded. The third is smaller again, and is mostly about saying true
+things rather than reading new ones: the one contract error and the one route
+the front end appeared to ask for and the back end appeared not to serve were
+both false, and both are gone.
 
 **What it found once they were joined.**
 
 | | |
 |---|---|
 | Names declared more than one way in two repositories | 64 |
-| Channels published to and handled nowhere | 5 |
-| Contract errors, over 636 compared boundaries | 1 |
+| Channels published to and handled nowhere | 10 |
+| Contract errors, over 636 compared boundaries | 0 |
+| Front ends asking for a route nothing serves | 0 |
 
-**What it says it cannot see.** 30 findings to act on, and 291 places static
-reading cannot reach at all, folded into 12 rows so the list stays readable.
+**What it says it cannot see.** 22 findings to act on, and 387 places static
+reading cannot reach at all, folded into 19 rows so the list stays readable.
 None of it is guessed at; each row carries a file, a line and a reason.
 
 A further 397 places are listed apart from both, because nothing joins them to
@@ -245,7 +250,7 @@ flowatlas build --no-cache         # read everything again
 flowatlas build --timing           # how long each phase took
 ```
 
-On the 259,000-line project measured above: 5.5 seconds cold, 0.7 seconds when
+On the 259,000-line project measured above: 5.5 seconds cold, one second when
 nothing changed, about two seconds for a one-file edit under `--watch`.
 
 ### Asking
@@ -500,7 +505,7 @@ recorded with a reason and a location rather than guessed at or dropped:
 `flowatlas stats` counts them and `flowatlas dead` explains them.
 
 An edge is never drawn on a guess *silently*. Some are drawn on a guess and say
-so: on the project measured above, 19,403 edges were read from the code and 397
+so: on the project measured above, 19,406 edges were read from the code and 397
 were inferred and carry `confidence: "heuristic"`. An inference is a guess with
 its reasoning attached, and the field is there so you can filter on it, not so
 the word can be avoided. What cannot be inferred either is recorded as

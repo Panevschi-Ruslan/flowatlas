@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { ClassDeclaration, Node as TsNode, Type } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { Node, SymbolFlags } from 'ts-morph';
 
 /**
  * Where the type of a value was declared.
@@ -350,6 +350,123 @@ export const originOfValue = (node: TsNode): Origin => {
   const declaration = (symbol.getAliasedSymbol() ?? symbol).getDeclarations()[0];
   if (declaration === undefined) return { kind: 'unknown' };
   return originOfDeclaration(declaration, node.getText());
+};
+
+/**
+ * The keys an object written at a call site puts on the wire, when one is.
+ *
+ * Deliberately the names and not the shape. The declared type of the parameter
+ * is the better source for what each field *is* — an empty array literal types
+ * as `never[]`, and taking the literal's own type whole turned four boundaries
+ * that agreed into four that disagreed. What the declared type cannot say is
+ * which keys are there at all, and that is the whole of R34: `Partial<T>`
+ * permits every key of `T` and a call that writes three of them writes three.
+ *
+ * Read off the literal's own properties, one at a time. A spread contributes
+ * the keys it certainly carries, and refuses the whole literal when it may
+ * carry fewer — `{ ...patch }` with `patch: Partial<T>` writes none of `T`
+ * necessarily, and its *type* claims all of them. Several objects, where
+ * several callers each write one, answer with their keys together: a key no
+ * caller writes is a key nothing sends.
+ */
+export const writtenKeysOf = (written: readonly TsNode[]): string[] | undefined => {
+  if (written.length === 0) return undefined;
+  const keys = new Set<string>();
+  for (const node of written) {
+    const literal = writtenObjectLiteral(node);
+    if (literal === undefined || !Node.isObjectLiteralExpression(literal)) return undefined;
+    try {
+      for (const property of literal.getProperties()) {
+        if (Node.isSpreadAssignment(property)) {
+          const spread = spreadKeysOf(property);
+          if (spread === undefined) return undefined;
+          for (const key of spread) keys.add(key);
+          continue;
+        }
+        const name = property.getSymbol()?.getName();
+        if (name === undefined || name === '') return undefined;
+        keys.add(name);
+      }
+    } catch {
+      return undefined;
+    }
+  }
+  return [...keys].sort();
+};
+
+/**
+ * The keys a spread certainly contributes, or nothing when it may contribute
+ * fewer than it could.
+ *
+ * `{ ...topping }` where every field of `topping` is required does put them all
+ * on the wire. `{ ...patch }` where `patch` is a `Partial<T>` puts none of them
+ * there necessarily, and reading the type's properties said it put all of them
+ * — permission reported as act, which is the whole of R34 reappearing inside
+ * the fix for it. A spread that cannot be pinned down refuses the entire
+ * literal rather than contributing a guess to it.
+ */
+const spreadKeysOf = (property: TsNode): string[] | undefined => {
+  if (!Node.isSpreadAssignment(property)) return undefined;
+  const type = property.getExpression().getType();
+  // A union spreads different keys depending on which arm it is, and nothing
+  // here says which. `a ? { b } : {}` is the ordinary way to write one.
+  if (type.isUnion()) return undefined;
+  const keys: string[] = [];
+  for (const each of type.getProperties()) {
+    if (each.hasFlags(SymbolFlags.Optional)) return undefined;
+    keys.push(each.getName());
+  }
+  return keys;
+};
+
+/**
+ * Where the shape a call sends was read from, which is how far it can be trusted.
+ *
+ * `literal`  — an object written at the call site. This is what is sent.
+ * `literals` — one object per caller of the method that makes the request.
+ *              These are what any of them may send: a key none of them writes
+ *              is not sent, and a key one of them writes is not always sent.
+ * `value`   — the type of a value built elsewhere and passed by name.
+ * `type`    — the declared type of the parameter. This is what is *permitted*,
+ *             which is a weaker claim, and a finding built on it may not be
+ *             phrased as though somebody had written the key down (R34).
+ */
+export type BodyRead = 'literal' | 'literals' | 'value' | 'type';
+
+/**
+ * The object written at a call site, when the argument is one.
+ *
+ * A parameter's declared type says what a call is *permitted* to send;
+ * an object literal written in place says what it *does* send. `Partial<T>`
+ * permits every key of `T` and puts none of them on the wire, and reading the
+ * permission as the act reported four boundaries as sending keys no call there
+ * ever writes (R34). Where both are in hand, the literal is the better
+ * evidence, and it is the evidence ts-morph already has at the node.
+ *
+ * Unwraps the things written around a literal that do not change what is sent:
+ * parentheses, `as T`, `satisfies T` and `!`. An assertion is the author saying
+ * what they believe the shape is; the literal is the shape.
+ *
+ * A spread — `{ ...topping, extra: 1 }` — is deliberately still a literal here.
+ * It genuinely does put the spread object's keys on the wire, and the type of
+ * the literal says so.
+ */
+export const writtenObjectLiteral = (node: TsNode | undefined): TsNode | undefined => {
+  let value = node;
+  for (;;) {
+    if (value === undefined) return undefined;
+    if (Node.isObjectLiteralExpression(value)) return value;
+    if (
+      Node.isParenthesizedExpression(value) ||
+      Node.isAsExpression(value) ||
+      Node.isSatisfiesExpression(value) ||
+      Node.isNonNullExpression(value)
+    ) {
+      value = value.getExpression();
+      continue;
+    }
+    return undefined;
+  }
 };
 
 /**
