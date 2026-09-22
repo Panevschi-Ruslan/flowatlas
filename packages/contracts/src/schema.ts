@@ -13,6 +13,7 @@ import {
   DIRECTIONS,
   FINDING_KINDS,
   SEVERITIES,
+  STRIP_IMPACTS,
   UNCHECKED_REASONS,
 } from './types.js';
 
@@ -26,6 +27,10 @@ const partySchema = z.strictObject({
   service: z.string(),
   typeId: z.string().nullable(),
   symbol: z.string(),
+  /** Top-level keys an object written at the call site puts on the wire (R34). */
+  writes: z.array(z.string()).optional(),
+  /** False when the keys are one object per caller rather than one object (R34). */
+  writesEvery: z.boolean().optional(),
 });
 
 export const contractFindingSchema = z.strictObject({
@@ -41,6 +46,7 @@ export const contractFindingSchema = z.strictObject({
   expected: z.string().nullable(),
   actual: z.string().nullable(),
   rule: z.string().nullable(),
+  impact: z.enum(STRIP_IMPACTS).optional(),
   message: z.string().min(1),
   ignored: z.boolean(),
   ignoredBy: z.string().nullable(),

@@ -12,7 +12,14 @@
  * reader of the source in this package would be a second opinion about what the
  * code says — which is exactly the disagreement this command exists to prevent.
  */
-import { wasRead, type GraphNode, type Unresolved } from '@flowatlas/core';
+import {
+  namesGivenTo,
+  takesNames,
+  wasRead,
+  type GraphNode,
+  type RecordedMarker,
+  type Unresolved,
+} from '@flowatlas/core';
 import { isMatch, matchRoute, type GraphDb } from '@flowatlas/linker';
 
 /**
@@ -34,6 +41,8 @@ export const MARKER_CODES = [
   'marker-flowentry-not-handler',
   'marker-contractignore-unused',
   'marker-unknown-arg',
+  'marker-arg-not-a-name',
+  'marker-names-nothing',
 ] as const;
 
 export type MarkerCode = (typeof MARKER_CODES)[number];
@@ -45,6 +54,8 @@ const ERRORS: ReadonlySet<string> = new Set<MarkerCode>([
   'marker-callsservice-unknown-service',
   'marker-callsservice-route-missing',
   'marker-unknown-arg',
+  'marker-arg-not-a-name',
+  'marker-names-nothing',
 ]);
 
 export interface MarkerIssue {
@@ -64,10 +75,6 @@ export interface MarkerIssue {
 }
 
 /** An annotation as the extractor recorded it. */
-interface RecordedMarker {
-  name: string;
-  args: unknown[];
-}
 
 export interface MarkerOptions {
   /**
@@ -105,16 +112,6 @@ const literal = (marker: RecordedMarker, index = 0): string | undefined => {
   return typeof value === 'string' ? value : undefined;
 };
 
-/** True when an argument was there and the extractor could not read it. */
-const unreadable = (marker: RecordedMarker): string | undefined => {
-  for (const argument of marker.args) {
-    if (typeof argument === 'object' && argument !== null && 'unresolved' in argument) {
-      return String((argument as { unresolved: unknown }).unresolved);
-    }
-  }
-  return undefined;
-};
-
 /**
  * Whether a recorded row sits at this method.
  *
@@ -130,6 +127,9 @@ const rowsAt = (rows: readonly Unresolved[], node: GraphNode): Unresolved[] =>
       row.symbol !== undefined &&
       (row.symbol === node.label || row.symbol.startsWith(`${node.label} `)),
   );
+
+/** What a route's first word has to be for the linker to use it. */
+const HTTP_VERB = /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS|ALL)$/i;
 
 /** Reasons that mean "a channel is named here and could not be read". */
 const BLIND_CHANNEL = /^channel-/;
@@ -182,29 +182,63 @@ export const validateMarkers = (db: GraphDb, options: MarkerOptions = {}): Marke
     const blind = at.some((row) => BLIND_CHANNEL.test(row.reason));
 
     for (const marker of markers) {
-      const bad = unreadable(marker);
-      if (bad !== undefined) {
+      // Which arguments are names, and whether this marker takes any, are both
+      // core's to say: asking here was a fourth copy of the same knowledge, and
+      // a new annotation missing from one copy does nothing and says nothing.
+      const given = namesGivenTo(marker);
+
+      for (const bad of given.refused) {
+        if (bad.why === 'unreadable') {
+          add(
+            node,
+            'marker-unknown-arg',
+            marker.name,
+            bad.text,
+            `@${marker.name} on ${node.label} was given ${bad.text}, which could not be read`,
+            'Marker arguments must be string literals, or consts from a package listed in sharedPackages.',
+          );
+          continue;
+        }
         add(
           node,
-          'marker-unknown-arg',
+          'marker-arg-not-a-name',
           marker.name,
-          bad,
-          `@${marker.name} on ${node.label} was given ${bad}, which could not be read`,
-          'Marker arguments must be string literals, or consts from a package listed in sharedPackages.',
+          bad.text,
+          `@${marker.name} on ${node.label} was given ${bad.text}, which is not a name`,
+          'Each argument must be a string or an array of strings. A value of another shape names nothing, and was not read as anything.',
+        );
+      }
+
+      // Given arguments and left naming nothing, with no refusal to explain it:
+      // `@Emits([])`, or an annotation with no argument at all. Silence here is
+      // what R38 was raised about — the method stays blind and the annotation
+      // reads as though it worked.
+      if (takesNames(marker.name) && given.names.length === 0 && given.refused.length === 0) {
+        add(
+          node,
+          'marker-names-nothing',
+          marker.name,
+          undefined,
+          `@${marker.name} on ${node.label} names nothing`,
+          'Give it a name, a list of names, or several arguments. As written it annotates nothing and the method stays unread.',
         );
         continue;
       }
 
       if (marker.name === 'Emits') {
-        checkEmits(db, node, marker, blind, add);
+        for (const channel of given.names) checkEmits(db, node, marker, channel, blind, add);
         continue;
       }
       if (marker.name === 'Consumes') {
-        checkConsumes(db, node, marker, blind || at.length > 0, add);
+        for (const channel of given.names) {
+          checkConsumes(db, node, marker, channel, blind || at.length > 0, add);
+        }
         continue;
       }
       if (marker.name === 'CallsService') {
-        checkCallsService(db, node, marker, rows, routesByService, options.envOwners, add);
+        for (const route of given.names) {
+          checkCallsService(db, node, marker, route, rows, routesByService, options.envOwners, add);
+        }
         continue;
       }
       if (marker.name === 'FlowEntry') {
@@ -284,10 +318,10 @@ const checkEmits = (
   db: GraphDb,
   node: GraphNode,
   marker: RecordedMarker,
+  channel: string,
   blind: boolean,
   add: Add,
 ): void => {
-  const channel = literal(marker);
   const producers = producersOf(db, node.id);
   const fromCode = producers.filter((producer) => !producer.viaMarker);
 
@@ -297,7 +331,7 @@ const checkEmits = (
       'marker-emits-without-emit',
       marker.name,
       channel,
-      `@Emits(${JSON.stringify(channel ?? '')}) on ${node.label}, which publishes nothing`,
+      `@Emits(${JSON.stringify(channel)}) on ${node.label}, which publishes nothing`,
       'Remove the annotation, or publish from this method. Nothing else in it puts a message on any channel.',
     );
     return;
@@ -310,7 +344,7 @@ const checkEmits = (
       'marker-emits-shadowed',
       marker.name,
       channel,
-      `@Emits(${JSON.stringify(channel ?? '')}) on ${node.label} says what the code already says`,
+      `@Emits(${JSON.stringify(channel)}) on ${node.label} says what the code already says`,
       'Static reading finds this publish on its own, so the annotation adds nothing and will not be corrected when the channel is renamed. Remove it.',
     );
   }
@@ -331,10 +365,10 @@ const checkConsumes = (
   db: GraphDb,
   node: GraphNode,
   marker: RecordedMarker,
+  channel: string,
   blind: boolean,
   add: Add,
 ): void => {
-  const channel = literal(marker);
   const consumers = db
     .edgesTo(node.id, ['handles'])
     .map((edge) => db.node(edge.from))
@@ -350,7 +384,7 @@ const checkConsumes = (
       'marker-consumes-without-consumer',
       marker.name,
       channel,
-      `@Consumes(${JSON.stringify(channel ?? '')}) on ${node.label}, which nothing subscribes and nothing calls`,
+      `@Consumes(${JSON.stringify(channel)}) on ${node.label}, which nothing subscribes and nothing calls`,
       'Remove the annotation, or register the method as a handler. Nothing in the repository connects it to a message.',
     );
     return;
@@ -367,7 +401,7 @@ const checkConsumes = (
       'marker-consumes-shadowed',
       marker.name,
       channel,
-      `@Consumes(${JSON.stringify(channel ?? '')}) on ${node.label} says what the code already says`,
+      `@Consumes(${JSON.stringify(channel)}) on ${node.label} says what the code already says`,
       'Static reading finds this subscription on its own, so the annotation adds nothing. Remove it.',
     );
   }
@@ -386,20 +420,36 @@ const checkCallsService = (
   db: GraphDb,
   node: GraphNode,
   marker: RecordedMarker,
+  route: string,
   rows: readonly Unresolved[],
   routesByService: ReadonlyMap<string, GraphNode[]>,
   envOwners: ReadonlyMap<string, readonly string[]> | undefined,
   add: Add,
 ): void => {
   const service = literal(marker, 0);
-  const route = literal(marker, 1);
+  // A route is a verb and a path. The linker drops one that is neither, and
+  // before this nothing said so: the annotation produced no edge, no issue,
+  // and left the row underneath still asking to be annotated (R38's shape, in
+  // the route's grammar rather than the argument's).
+  const [verb, path] = route.trim().split(/\s+/);
+  if (verb === undefined || path === undefined || !HTTP_VERB.test(verb)) {
+    add(
+      node,
+      'marker-arg-not-a-name',
+      marker.name,
+      route,
+      `@CallsService on ${node.label} names the route ${JSON.stringify(route)}, which is not a method and a path`,
+      'Write it as `METHOD /path`, e.g. `POST /orders`. As written it names no route and draws no edge.',
+    );
+    return;
+  }
   const calls = db
     .edgesFrom(node.id, ['calls'])
     .map((edge) => db.node(edge.to))
     .filter(isNode)
     .filter((target) => target.type === 'http_out');
   const ids = new Set(calls.map((call) => call.id));
-  const argument = service === undefined ? route : `${service}, ${route ?? ''}`.trim();
+  const argument = service === undefined ? route : `${service}, ${route}`.trim();
 
   for (const row of rows) {
     if (row.symbol === undefined || !ids.has(row.symbol)) continue;
@@ -422,7 +472,7 @@ const checkCallsService = (
         'marker-callsservice-route-missing',
         marker.name,
         argument,
-        row.message ?? `@CallsService points at ${route ?? '?'}, which ${service ?? '?'} does not serve`,
+        row.message ?? `@CallsService points at ${route}, which ${service ?? '?'} does not serve`,
         near.length === 0
           ? (row.hint ?? `Check ${service ?? 'the service'}'s controllers, or correct the annotation.`)
           : `Did you mean ${near.join(', ')}? Otherwise check ${service ?? 'the service'}'s controllers.`,

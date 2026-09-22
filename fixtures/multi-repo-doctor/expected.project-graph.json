@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-14T12:22:45.781Z",
+  "builtAt": "2026-09-21T15:52:23.253Z",
   "services": [
     {
       "name": "gateway",
@@ -114,7 +114,7 @@
       "label": "order.audited",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 44,
+      "line": 55,
       "meta": {
         "channelKind": "topic",
         "adapters": [
@@ -130,7 +130,7 @@
       "label": "order.created",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 36,
+      "line": 47,
       "meta": {
         "channelKind": "topic",
         "adapters": [
@@ -141,12 +141,28 @@
       }
     },
     {
+      "id": "channel:order.held",
+      "type": "channel",
+      "label": "order.held",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 89,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
       "id": "channel:order.refunded",
       "type": "channel",
       "label": "order.refunded",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 63,
+      "line": 111,
       "meta": {
         "channelKind": "topic",
         "adapters": [
@@ -154,6 +170,22 @@
         ],
         "producers": 1,
         "consumers": 1
+      }
+    },
+    {
+      "id": "channel:order.released",
+      "type": "channel",
+      "label": "order.released",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 89,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ],
+        "producers": 1,
+        "consumers": 0
       }
     },
     {
@@ -193,14 +225,38 @@
       }
     },
     {
+      "id": "config_key:orders#DRAIN_CHANNEL",
+      "type": "config_key",
+      "label": "DRAIN_CHANNEL",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 126,
+      "meta": {
+        "key": "DRAIN_CHANNEL",
+        "source": "config.get"
+      }
+    },
+    {
       "id": "config_key:orders#REFUND_CHANNEL",
       "type": "config_key",
       "label": "REFUND_CHANNEL",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 65,
+      "line": 113,
       "meta": {
         "key": "REFUND_CHANNEL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:orders#SWEEP_CHANNEL",
+      "type": "config_key",
+      "label": "SWEEP_CHANNEL",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 71,
+      "meta": {
+        "key": "SWEEP_CHANNEL",
         "source": "config.get"
       }
     },
@@ -235,50 +291,12 @@
       }
     },
     {
-      "id": "db_query:orders#src/orders/orders.service.ts:35:23",
+      "id": "db_query:orders#src/orders/orders.service.ts:101:11",
       "type": "db_query",
       "label": "access Order",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 35,
-      "meta": {
-        "op": null,
-        "table": "Order",
-        "tables": [
-          "Order"
-        ],
-        "package": "fake-orm",
-        "method": "persist",
-        "receiver": "this.rows",
-        "source": "type-arg"
-      }
-    },
-    {
-      "id": "db_query:orders#src/orders/orders.service.ts:46:11",
-      "type": "db_query",
-      "label": "access Order",
-      "repo": "orders",
-      "file": "src/orders/orders.service.ts",
-      "line": 46,
-      "meta": {
-        "op": null,
-        "table": "Order",
-        "tables": [
-          "Order"
-        ],
-        "package": "fake-orm",
-        "method": "find",
-        "receiver": "this.rows",
-        "source": "type-arg"
-      }
-    },
-    {
-      "id": "db_query:orders#src/orders/orders.service.ts:55:11",
-      "type": "db_query",
-      "label": "access Order",
-      "repo": "orders",
-      "file": "src/orders/orders.service.ts",
-      "line": 55,
+      "line": 101,
       "meta": {
         "op": null,
         "table": "Order",
@@ -292,12 +310,12 @@
       }
     },
     {
-      "id": "db_query:orders#src/orders/orders.service.ts:74:11",
+      "id": "db_query:orders#src/orders/orders.service.ts:135:11",
       "type": "db_query",
       "label": "access Order",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 74,
+      "line": 135,
       "meta": {
         "op": null,
         "table": "Order",
@@ -311,12 +329,12 @@
       }
     },
     {
-      "id": "db_query:orders#src/orders/orders.service.ts:83:12",
+      "id": "db_query:orders#src/orders/orders.service.ts:144:12",
       "type": "db_query",
       "label": "access Order",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 83,
+      "line": 144,
       "meta": {
         "op": null,
         "table": "Order",
@@ -330,12 +348,107 @@
       }
     },
     {
-      "id": "db_query:orders#src/orders/orders.service.ts:87:25",
+      "id": "db_query:orders#src/orders/orders.service.ts:148:25",
       "type": "db_query",
       "label": "access Order",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 87,
+      "line": 148,
+      "meta": {
+        "op": null,
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "fake-orm",
+        "method": "find",
+        "receiver": "this.rows",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:orders#src/orders/orders.service.ts:46:23",
+      "type": "db_query",
+      "label": "access Order",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 46,
+      "meta": {
+        "op": null,
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "fake-orm",
+        "method": "persist",
+        "receiver": "this.rows",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:orders#src/orders/orders.service.ts:57:11",
+      "type": "db_query",
+      "label": "access Order",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 57,
+      "meta": {
+        "op": null,
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "fake-orm",
+        "method": "find",
+        "receiver": "this.rows",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:orders#src/orders/orders.service.ts:70:11",
+      "type": "db_query",
+      "label": "access Order",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 70,
+      "meta": {
+        "op": null,
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "fake-orm",
+        "method": "find",
+        "receiver": "this.rows",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:orders#src/orders/orders.service.ts:80:11",
+      "type": "db_query",
+      "label": "access Order",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 80,
+      "meta": {
+        "op": null,
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "fake-orm",
+        "method": "find",
+        "receiver": "this.rows",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:orders#src/orders/orders.service.ts:91:11",
+      "type": "db_query",
+      "label": "access Order",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 91,
       "meta": {
         "op": null,
         "table": "Order",
@@ -532,6 +645,47 @@
       }
     },
     {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.replay",
+      "type": "method",
+      "label": "OrdersClient.replay",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 94,
+      "meta": {
+        "markers": [
+          {
+            "name": "CallsService",
+            "args": [
+              "orders",
+              "POST /orders",
+              "GET /orders/:id"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.replayLegacy",
+      "type": "method",
+      "label": "OrdersClient.replayLegacy",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 100,
+      "meta": {
+        "markers": [
+          {
+            "name": "CallsService",
+            "args": [
+              "orders",
+              [
+                "POST /orders/legacy"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.restock",
       "type": "method",
       "label": "OrdersClient.restock",
@@ -559,6 +713,24 @@
       "line": 57
     },
     {
+      "id": "http_out:gateway#src/clients/orders.client.ts:102:12",
+      "type": "http_out",
+      "label": "POST ?",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 102,
+      "meta": {
+        "method": "POST",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": "type:gateway#OrderDto",
+        "bodyType": "type:gateway#CreateOrderDto",
+        "bodyFrom": "value",
+        "targetService": "orders"
+      }
+    },
+    {
       "id": "http_out:gateway#src/clients/orders.client.ts:31:12",
       "type": "http_out",
       "label": "POST ?",
@@ -572,6 +744,7 @@
         "baseUrlEnv": null,
         "responseType": "type:gateway#OrderDto",
         "bodyType": "type:gateway#CreateOrderDto",
+        "bodyFrom": "value",
         "targetService": "orders"
       }
     },
@@ -604,7 +777,11 @@
         "path": null,
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": "{sku:string}"
+        "bodyType": "{sku:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "sku"
+        ]
       }
     },
     {
@@ -654,6 +831,25 @@
         "baseUrlEnv": "ORDERS_URL",
         "responseType": "type:gateway#OrderDto",
         "bodyType": "type:gateway#CreateOrderDto",
+        "bodyFrom": "value",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:96:12",
+      "type": "http_out",
+      "label": "POST ?",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 96,
+      "meta": {
+        "method": "POST",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": "type:gateway#OrderDto",
+        "bodyType": "type:gateway#CreateOrderDto",
+        "bodyFrom": "value",
         "targetService": "orders"
       }
     },
@@ -753,7 +949,7 @@
       "label": "OrdersService.archive",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 53,
+      "line": 99,
       "meta": {
         "markers": [
           {
@@ -773,7 +969,7 @@
       "label": "OrdersService.audit",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 44,
+      "line": 55,
       "meta": {
         "markers": [
           {
@@ -791,7 +987,7 @@
       "label": "OrdersService.create",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 33,
+      "line": 44,
       "meta": {
         "markers": [
           {
@@ -804,12 +1000,39 @@
       }
     },
     {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.drain",
+      "type": "method",
+      "label": "OrdersService.drain",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 125
+    },
+    {
       "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
       "type": "method",
       "label": "OrdersService.findOne",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 86
+      "line": 147
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.hold",
+      "type": "method",
+      "label": "OrdersService.hold",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 89,
+      "meta": {
+        "markers": [
+          {
+            "name": "Emits",
+            "args": [
+              "order.held",
+              "order.released"
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService.reconcile",
@@ -817,7 +1040,7 @@
       "label": "OrdersService.reconcile",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 81,
+      "line": 142,
       "meta": {
         "markers": [
           {
@@ -833,7 +1056,7 @@
       "label": "OrdersService.refund",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 63,
+      "line": 111,
       "meta": {
         "markers": [
           {
@@ -851,7 +1074,7 @@
       "label": "OrdersService.settle",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 72,
+      "line": 133,
       "meta": {
         "markers": [
           {
@@ -864,12 +1087,93 @@
       }
     },
     {
-      "id": "producer:orders#src/orders/orders.service.ts:36:5",
+      "id": "orders#src/orders/orders.service.ts:OrdersService.sweep",
+      "type": "method",
+      "label": "OrdersService.sweep",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 78,
+      "meta": {
+        "markers": [
+          {
+            "name": "Emits",
+            "args": [
+              []
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.tally",
+      "type": "method",
+      "label": "OrdersService.tally",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 68,
+      "meta": {
+        "markers": [
+          {
+            "name": "Emits",
+            "args": [
+              7
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "producer:orders#src/orders/orders.service.ts:111:0",
+      "type": "producer",
+      "label": "event order.refunded",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 111,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "marker",
+        "method": "Emits"
+      }
+    },
+    {
+      "id": "producer:orders#src/orders/orders.service.ts:113:5",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 113,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "unresolved",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:orders#src/orders/orders.service.ts:126:5",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 126,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "unresolved",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:orders#src/orders/orders.service.ts:47:5",
       "type": "producer",
       "label": "event order.created",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 36,
+      "line": 47,
       "kind": "event",
       "meta": {
         "kind": "event",
@@ -879,12 +1183,12 @@
       }
     },
     {
-      "id": "producer:orders#src/orders/orders.service.ts:44:0",
+      "id": "producer:orders#src/orders/orders.service.ts:55:0",
       "type": "producer",
       "label": "event order.audited",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 44,
+      "line": 55,
       "kind": "event",
       "meta": {
         "kind": "event",
@@ -894,27 +1198,57 @@
       }
     },
     {
-      "id": "producer:orders#src/orders/orders.service.ts:63:0",
-      "type": "producer",
-      "label": "event order.refunded",
-      "repo": "orders",
-      "file": "src/orders/orders.service.ts",
-      "line": 63,
-      "kind": "event",
-      "meta": {
-        "kind": "event",
-        "adapter": "nestjs-kafka",
-        "channelVia": "marker",
-        "method": "Emits"
-      }
-    },
-    {
-      "id": "producer:orders#src/orders/orders.service.ts:65:5",
+      "id": "producer:orders#src/orders/orders.service.ts:71:5",
       "type": "producer",
       "label": "event ?",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 65,
+      "line": 71,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "unresolved",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:orders#src/orders/orders.service.ts:81:5",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 81,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "unresolved",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:orders#src/orders/orders.service.ts:89:0",
+      "type": "producer",
+      "label": "event order.held, order.released",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 89,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "marker",
+        "method": "Emits"
+      }
+    },
+    {
+      "id": "producer:orders#src/orders/orders.service.ts:92:5",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 92,
       "kind": "event",
       "meta": {
         "kind": "event",
@@ -953,7 +1287,7 @@
           "files": 4,
           "classes": 2,
           "skippedExternalCalls": {
-            "@nestjs/axios": 6,
+            "@nestjs/axios": 8,
             "@nestjs/config": 4
           }
         },
@@ -975,8 +1309,8 @@
           "files": 6,
           "classes": 5,
           "skippedExternalCalls": {
-            "fake-orm": 6,
-            "@nestjs/config": 1
+            "fake-orm": 9,
+            "@nestjs/config": 5
           }
         },
         "bootstrap": "src/main.ts",
@@ -1051,15 +1385,39 @@
       "line": 18
     },
     {
-      "from": "db_query:orders#src/orders/orders.service.ts:35:23",
+      "from": "db_query:orders#src/orders/orders.service.ts:101:11",
       "to": "table:orders#Order",
       "type": "queries",
       "confidence": "heuristic",
       "file": "src/orders/orders.service.ts",
-      "line": 35
+      "line": 101
     },
     {
-      "from": "db_query:orders#src/orders/orders.service.ts:46:11",
+      "from": "db_query:orders#src/orders/orders.service.ts:135:11",
+      "to": "table:orders#Order",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 135
+    },
+    {
+      "from": "db_query:orders#src/orders/orders.service.ts:144:12",
+      "to": "table:orders#Order",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 144
+    },
+    {
+      "from": "db_query:orders#src/orders/orders.service.ts:148:25",
+      "to": "table:orders#Order",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 148
+    },
+    {
+      "from": "db_query:orders#src/orders/orders.service.ts:46:23",
       "to": "table:orders#Order",
       "type": "queries",
       "confidence": "heuristic",
@@ -1067,36 +1425,36 @@
       "line": 46
     },
     {
-      "from": "db_query:orders#src/orders/orders.service.ts:55:11",
+      "from": "db_query:orders#src/orders/orders.service.ts:57:11",
       "to": "table:orders#Order",
       "type": "queries",
       "confidence": "heuristic",
       "file": "src/orders/orders.service.ts",
-      "line": 55
+      "line": 57
     },
     {
-      "from": "db_query:orders#src/orders/orders.service.ts:74:11",
+      "from": "db_query:orders#src/orders/orders.service.ts:70:11",
       "to": "table:orders#Order",
       "type": "queries",
       "confidence": "heuristic",
       "file": "src/orders/orders.service.ts",
-      "line": 74
+      "line": 70
     },
     {
-      "from": "db_query:orders#src/orders/orders.service.ts:83:12",
+      "from": "db_query:orders#src/orders/orders.service.ts:80:11",
       "to": "table:orders#Order",
       "type": "queries",
       "confidence": "heuristic",
       "file": "src/orders/orders.service.ts",
-      "line": 83
+      "line": 80
     },
     {
-      "from": "db_query:orders#src/orders/orders.service.ts:87:25",
+      "from": "db_query:orders#src/orders/orders.service.ts:91:11",
       "to": "table:orders#Order",
       "type": "queries",
       "confidence": "heuristic",
       "file": "src/orders/orders.service.ts",
-      "line": 87
+      "line": 91
     },
     {
       "from": "entry:billing:event:order.created",
@@ -1252,6 +1610,46 @@
       "line": 78
     },
     {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.replay",
+      "to": "gateway#src/clients/orders.client.ts:OrdersClient.endpoint",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/clients/orders.client.ts",
+      "line": 96
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.replay",
+      "to": "http_out:gateway#src/clients/orders.client.ts:96:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/clients/orders.client.ts",
+      "line": 96
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.replayLegacy",
+      "to": "gateway#src/clients/orders.client.ts:OrdersClient.endpoint",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/clients/orders.client.ts",
+      "line": 102
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.replayLegacy",
+      "to": "http_out:gateway#src/clients/orders.client.ts:102:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/clients/orders.client.ts",
+      "line": 102
+    },
+    {
       "from": "gateway#src/clients/orders.client.ts:OrdersClient.restock",
       "to": "gateway#src/clients/orders.client.ts:OrdersClient.endpoint",
       "type": "calls",
@@ -1288,6 +1686,22 @@
       "line": 58
     },
     {
+      "from": "http_out:gateway#src/clients/orders.client.ts:102:12",
+      "to": "entry:orders:http:POST:/orders/legacy",
+      "type": "http_calls",
+      "confidence": "marker",
+      "file": "src/clients/orders.client.ts",
+      "line": 102,
+      "params": [
+        "type:gateway#CreateOrderDto"
+      ],
+      "returns": "type:gateway#OrderDto",
+      "meta": {
+        "via": "marker",
+        "targetService": "orders"
+      }
+    },
+    {
       "from": "http_out:gateway#src/clients/orders.client.ts:31:12",
       "to": "entry:orders:http:POST:/orders",
       "type": "http_calls",
@@ -1316,6 +1730,38 @@
       "returns": "type:gateway#OrderDto",
       "meta": {
         "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:96:12",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "type": "http_calls",
+      "confidence": "marker",
+      "file": "src/clients/orders.client.ts",
+      "line": 96,
+      "params": [
+        "type:gateway#CreateOrderDto"
+      ],
+      "returns": "type:gateway#OrderDto",
+      "meta": {
+        "via": "marker",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:96:12",
+      "to": "entry:orders:http:POST:/orders",
+      "type": "http_calls",
+      "confidence": "marker",
+      "file": "src/clients/orders.client.ts",
+      "line": 96,
+      "params": [
+        "type:gateway#CreateOrderDto"
+      ],
+      "returns": "type:gateway#OrderDto",
+      "meta": {
+        "via": "marker",
         "targetService": "orders"
       }
     },
@@ -1380,63 +1826,111 @@
       "type": "injects",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
-      "line": 26
+      "line": 37
     },
     {
       "from": "orders#src/orders/orders.service.ts:OrdersService.archive",
-      "to": "db_query:orders#src/orders/orders.service.ts:55:11",
+      "to": "db_query:orders#src/orders/orders.service.ts:101:11",
       "type": "calls",
       "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 101
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.audit",
+      "to": "db_query:orders#src/orders/orders.service.ts:57:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 57
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.audit",
+      "to": "producer:orders#src/orders/orders.service.ts:55:0",
+      "type": "calls",
+      "confidence": "marker",
       "file": "src/orders/orders.service.ts",
       "line": 55
     },
     {
-      "from": "orders#src/orders/orders.service.ts:OrdersService.audit",
-      "to": "db_query:orders#src/orders/orders.service.ts:46:11",
+      "from": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "to": "db_query:orders#src/orders/orders.service.ts:46:23",
       "type": "calls",
       "confidence": "heuristic",
       "file": "src/orders/orders.service.ts",
       "line": 46
     },
     {
-      "from": "orders#src/orders/orders.service.ts:OrdersService.audit",
-      "to": "producer:orders#src/orders/orders.service.ts:44:0",
-      "type": "calls",
-      "confidence": "marker",
-      "file": "src/orders/orders.service.ts",
-      "line": 44
-    },
-    {
       "from": "orders#src/orders/orders.service.ts:OrdersService.create",
-      "to": "db_query:orders#src/orders/orders.service.ts:35:23",
-      "type": "calls",
-      "confidence": "heuristic",
-      "file": "src/orders/orders.service.ts",
-      "line": 35
-    },
-    {
-      "from": "orders#src/orders/orders.service.ts:OrdersService.create",
-      "to": "producer:orders#src/orders/orders.service.ts:36:5",
+      "to": "producer:orders#src/orders/orders.service.ts:47:5",
       "type": "calls",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
-      "line": 36
+      "line": 47
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.drain",
+      "to": "config_key:orders#DRAIN_CHANNEL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 126
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.drain",
+      "to": "producer:orders#src/orders/orders.service.ts:126:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 126
     },
     {
       "from": "orders#src/orders/orders.service.ts:OrdersService.findOne",
-      "to": "db_query:orders#src/orders/orders.service.ts:87:25",
+      "to": "db_query:orders#src/orders/orders.service.ts:148:25",
       "type": "calls",
       "confidence": "heuristic",
       "file": "src/orders/orders.service.ts",
-      "line": 87
+      "line": 148
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.hold",
+      "to": "config_key:orders#SWEEP_CHANNEL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 92
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.hold",
+      "to": "db_query:orders#src/orders/orders.service.ts:91:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 91
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.hold",
+      "to": "producer:orders#src/orders/orders.service.ts:89:0",
+      "type": "calls",
+      "confidence": "marker",
+      "file": "src/orders/orders.service.ts",
+      "line": 89
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.hold",
+      "to": "producer:orders#src/orders/orders.service.ts:92:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 92
     },
     {
       "from": "orders#src/orders/orders.service.ts:OrdersService.reconcile",
-      "to": "db_query:orders#src/orders/orders.service.ts:83:12",
+      "to": "db_query:orders#src/orders/orders.service.ts:144:12",
       "type": "calls",
       "confidence": "heuristic",
       "file": "src/orders/orders.service.ts",
-      "line": 83
+      "line": 144
     },
     {
       "from": "orders#src/orders/orders.service.ts:OrdersService.refund",
@@ -1444,34 +1938,90 @@
       "type": "reads_config",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
-      "line": 65
+      "line": 113
     },
     {
       "from": "orders#src/orders/orders.service.ts:OrdersService.refund",
-      "to": "producer:orders#src/orders/orders.service.ts:63:0",
+      "to": "producer:orders#src/orders/orders.service.ts:111:0",
       "type": "calls",
       "confidence": "marker",
       "file": "src/orders/orders.service.ts",
-      "line": 63
+      "line": 111
     },
     {
       "from": "orders#src/orders/orders.service.ts:OrdersService.refund",
-      "to": "producer:orders#src/orders/orders.service.ts:65:5",
+      "to": "producer:orders#src/orders/orders.service.ts:113:5",
       "type": "calls",
       "confidence": "heuristic",
       "file": "src/orders/orders.service.ts",
-      "line": 65
+      "line": 113
     },
     {
       "from": "orders#src/orders/orders.service.ts:OrdersService.settle",
-      "to": "db_query:orders#src/orders/orders.service.ts:74:11",
+      "to": "db_query:orders#src/orders/orders.service.ts:135:11",
       "type": "calls",
       "confidence": "heuristic",
       "file": "src/orders/orders.service.ts",
-      "line": 74
+      "line": 135
     },
     {
-      "from": "producer:orders#src/orders/orders.service.ts:36:5",
+      "from": "orders#src/orders/orders.service.ts:OrdersService.sweep",
+      "to": "config_key:orders#SWEEP_CHANNEL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 81
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.sweep",
+      "to": "db_query:orders#src/orders/orders.service.ts:80:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 80
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.sweep",
+      "to": "producer:orders#src/orders/orders.service.ts:81:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 81
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.tally",
+      "to": "config_key:orders#SWEEP_CHANNEL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 71
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.tally",
+      "to": "db_query:orders#src/orders/orders.service.ts:70:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 70
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.tally",
+      "to": "producer:orders#src/orders/orders.service.ts:71:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 71
+    },
+    {
+      "from": "producer:orders#src/orders/orders.service.ts:111:0",
+      "to": "channel:order.refunded",
+      "type": "emits",
+      "confidence": "marker",
+      "file": "src/orders/orders.service.ts",
+      "line": 111
+    },
+    {
+      "from": "producer:orders#src/orders/orders.service.ts:47:5",
       "to": "channel:order.created",
       "type": "emits",
       "confidence": "static",
@@ -1479,23 +2029,31 @@
         "{id:string;total:number}"
       ],
       "file": "src/orders/orders.service.ts",
-      "line": 36
+      "line": 47
     },
     {
-      "from": "producer:orders#src/orders/orders.service.ts:44:0",
+      "from": "producer:orders#src/orders/orders.service.ts:55:0",
       "to": "channel:order.audited",
       "type": "emits",
       "confidence": "marker",
       "file": "src/orders/orders.service.ts",
-      "line": 44
+      "line": 55
     },
     {
-      "from": "producer:orders#src/orders/orders.service.ts:63:0",
-      "to": "channel:order.refunded",
+      "from": "producer:orders#src/orders/orders.service.ts:89:0",
+      "to": "channel:order.held",
       "type": "emits",
       "confidence": "marker",
       "file": "src/orders/orders.service.ts",
-      "line": 63
+      "line": 89
+    },
+    {
+      "from": "producer:orders#src/orders/orders.service.ts:89:0",
+      "to": "channel:order.released",
+      "type": "emits",
+      "confidence": "marker",
+      "file": "src/orders/orders.service.ts",
+      "line": 89
     }
   ],
   "types": {
@@ -1715,6 +2273,22 @@
       "symbol": "http_out:gateway#src/clients/orders.client.ts:66:12"
     },
     {
+      "file": "src/clients/orders.client.ts",
+      "line": 96,
+      "reason": "dynamic-http-url",
+      "hint": "The address is built at run time. Annotate the call with the service and route it reaches.",
+      "symbol": "this.http.post<OrderDto>(this.endpoint('replay'), body)",
+      "service": "gateway"
+    },
+    {
+      "file": "src/clients/orders.client.ts",
+      "line": 102,
+      "reason": "dynamic-http-url",
+      "hint": "The address is built at run time. Annotate the call with the service and route it reaches.",
+      "symbol": "this.http.post<OrderDto>(this.endpoint('replay-legacy'), body)",
+      "service": "gateway"
+    },
+    {
       "file": "src/app.module.ts",
       "line": 10,
       "reason": "module-import-dynamic",
@@ -1760,9 +2334,9 @@
     {
       "file": "src/orders/orders.service.ts",
       "line": 35,
-      "reason": "unknown-db-package",
-      "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
-      "symbol": "this.rows.persist",
+      "reason": "di-token-unknown",
+      "hint": "No module in this repository provides AUDIT_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
+      "symbol": "OrdersService.constructor[1]",
       "service": "orders"
     },
     {
@@ -1770,12 +2344,68 @@
       "line": 46,
       "reason": "unknown-db-package",
       "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
+      "symbol": "this.rows.persist",
+      "service": "orders"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 57,
+      "reason": "unknown-db-package",
+      "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
       "symbol": "this.rows.find",
       "service": "orders"
     },
     {
       "file": "src/orders/orders.service.ts",
-      "line": 55,
+      "line": 70,
+      "reason": "unknown-db-package",
+      "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
+      "symbol": "this.rows.find",
+      "service": "orders"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 71,
+      "reason": "channel-from-config",
+      "hint": "The channel name cannot be read here. Annotate OrdersService.tally with the channel it uses.",
+      "symbol": "OrdersService.tally -> this.config.get('SWEEP_CHANNEL')",
+      "service": "orders"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 80,
+      "reason": "unknown-db-package",
+      "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
+      "symbol": "this.rows.find",
+      "service": "orders"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 81,
+      "reason": "channel-from-config",
+      "hint": "The channel name cannot be read here. Annotate OrdersService.sweep with the channel it uses.",
+      "symbol": "OrdersService.sweep -> this.config.get('SWEEP_CHANNEL')",
+      "service": "orders"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 91,
+      "reason": "unknown-db-package",
+      "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
+      "symbol": "this.rows.find",
+      "service": "orders"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 92,
+      "reason": "channel-from-config",
+      "hint": "The channel name cannot be read here. Annotate OrdersService.hold with the channel it uses.",
+      "symbol": "OrdersService.hold -> this.config.get('SWEEP_CHANNEL')",
+      "service": "orders"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 101,
       "reason": "unknown-db-package",
       "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
       "symbol": "this.rows.drop",
@@ -1783,7 +2413,7 @@
     },
     {
       "file": "src/orders/orders.service.ts",
-      "line": 65,
+      "line": 113,
       "reason": "channel-from-config",
       "hint": "The channel name cannot be read here. Annotate OrdersService.refund with the channel it uses.",
       "symbol": "OrdersService.refund -> this.config.get('REFUND_CHANNEL')",
@@ -1791,7 +2421,15 @@
     },
     {
       "file": "src/orders/orders.service.ts",
-      "line": 74,
+      "line": 126,
+      "reason": "channel-from-config",
+      "hint": "The channel name cannot be read here. Annotate OrdersService.drain with the channel it uses.",
+      "symbol": "OrdersService.drain -> this.config.get('DRAIN_CHANNEL')",
+      "service": "orders"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 135,
       "reason": "unknown-db-package",
       "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
       "symbol": "this.rows.find",
@@ -1799,7 +2437,7 @@
     },
     {
       "file": "src/orders/orders.service.ts",
-      "line": 83,
+      "line": 144,
       "reason": "unknown-db-package",
       "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
       "symbol": "this.rows.find",
@@ -1807,7 +2445,7 @@
     },
     {
       "file": "src/orders/orders.service.ts",
-      "line": 87,
+      "line": 148,
       "reason": "unknown-db-package",
       "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
       "symbol": "this.rows.find",

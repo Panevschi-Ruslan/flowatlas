@@ -1,7 +1,7 @@
 {
   "doctorFormatVersion": 2,
   "schemaVersion": 3,
-  "flowatlasVersion": "0.3.0",
+  "flowatlasVersion": "0.4.0",
   "generatedAt": "1970-01-01T00:00:00.000Z",
   "strict": false,
   "baselinePath": "<root>/fixtures/multi-repo-doctor/baseline.accepted.json",
@@ -15,12 +15,12 @@
   "note": null,
   "unresolved": {
     "status": "ok",
-    "total": 21,
-    "rows": 21,
-    "sites": 21,
+    "total": 26,
+    "rows": 31,
+    "sites": 31,
     "info": {
-      "rows": 0,
-      "sites": 0
+      "rows": 5,
+      "sites": 5
     },
     "nothing": {
       "rows": 0,
@@ -34,8 +34,8 @@
       {
         "reason": "unknown-db-package",
         "level": "action",
-        "count": 6,
-        "sites": 6,
+        "count": 9,
+        "sites": 9,
         "known": true,
         "excluded": false,
         "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
@@ -43,7 +43,7 @@
           {
             "service": "orders",
             "file": "src/orders/orders.service.ts",
-            "line": 35,
+            "line": 46,
             "symbol": "this.rows.persist",
             "level": "action",
             "sites": 1,
@@ -53,7 +53,7 @@
           {
             "service": "orders",
             "file": "src/orders/orders.service.ts",
-            "line": 46,
+            "line": 57,
             "symbol": "this.rows.find",
             "level": "action",
             "sites": 1,
@@ -63,83 +63,84 @@
           {
             "service": "orders",
             "file": "src/orders/orders.service.ts",
-            "line": 55,
+            "line": 70,
+            "symbol": "this.rows.find",
+            "level": "action",
+            "sites": 1,
+            "message": "unknown-db-package",
+            "hint": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          {
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 80,
+            "symbol": "this.rows.find",
+            "level": "action",
+            "sites": 1,
+            "message": "unknown-db-package",
+            "hint": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          {
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 91,
+            "symbol": "this.rows.find",
+            "level": "action",
+            "sites": 1,
+            "message": "unknown-db-package",
+            "hint": "Add a descriptor for fake-orm to record which of its methods read and which write."
+          },
+          {
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 101,
             "symbol": "this.rows.drop",
             "level": "action",
             "sites": 1,
             "message": "unknown-db-package",
             "hint": "Add a descriptor for fake-orm to record which of its methods read and which write."
-          },
-          {
-            "service": "orders",
-            "file": "src/orders/orders.service.ts",
-            "line": 74,
-            "symbol": "this.rows.find",
-            "level": "action",
-            "sites": 1,
-            "message": "unknown-db-package",
-            "hint": "Add a descriptor for fake-orm to record which of its methods read and which write."
-          },
-          {
-            "service": "orders",
-            "file": "src/orders/orders.service.ts",
-            "line": 83,
-            "symbol": "this.rows.find",
-            "level": "action",
-            "sites": 1,
-            "message": "unknown-db-package",
-            "hint": "Add a descriptor for fake-orm to record which of its methods read and which write."
-          },
-          {
-            "service": "orders",
-            "file": "src/orders/orders.service.ts",
-            "line": 87,
-            "symbol": "this.rows.find",
-            "level": "action",
-            "sites": 1,
-            "message": "unknown-db-package",
-            "hint": "Add a descriptor for fake-orm to record which of its methods read and which write."
           }
-        ]
+        ],
+        "truncated": 3
       },
       {
-        "reason": "dynamic-http-url",
+        "reason": "channel-from-config",
         "level": "action",
         "count": 3,
         "sites": 3,
         "known": true,
         "excluded": false,
-        "hint": "The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes.",
+        "hint": "The channel name is read from settings, so it cannot be followed. Annotate the method with @Emits('<channel>') or @Consumes('<channel>').",
         "rows": [
           {
-            "service": "gateway",
-            "file": "src/clients/orders.client.ts",
-            "line": 31,
-            "symbol": "this.http.post<OrderDto>(this.endpoint('orders'), body)",
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 71,
+            "symbol": "OrdersService.tally -> this.config.get('SWEEP_CHANNEL')",
             "level": "action",
             "sites": 1,
-            "message": "dynamic-http-url",
-            "hint": "The address is built at run time, and an annotation on this method already says where it goes — orders. Nothing to do here."
+            "message": "channel-from-config",
+            "hint": "The channel name cannot be read here. Annotate OrdersService.tally with the channel it uses."
           },
           {
-            "service": "gateway",
-            "file": "src/clients/orders.client.ts",
-            "line": 40,
-            "symbol": "this.http.delete(this.endpoint(`orders/${id}/cancel`))",
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 81,
+            "symbol": "OrdersService.sweep -> this.config.get('SWEEP_CHANNEL')",
             "level": "action",
             "sites": 1,
-            "message": "dynamic-http-url",
-            "hint": "The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes."
+            "message": "channel-from-config",
+            "hint": "The channel name cannot be read here. Annotate OrdersService.sweep with the channel it uses."
           },
           {
-            "service": "gateway",
-            "file": "src/clients/orders.client.ts",
-            "line": 49,
-            "symbol": "this.http.post(this.endpoint('restock'), { sku })",
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 126,
+            "symbol": "OrdersService.drain -> this.config.get('DRAIN_CHANNEL')",
             "level": "action",
             "sites": 1,
-            "message": "dynamic-http-url",
-            "hint": "The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes."
+            "message": "channel-from-config",
+            "hint": "The channel name cannot be read here. Annotate OrdersService.drain with the channel it uses."
           }
         ]
       },
@@ -226,34 +227,13 @@
         ]
       },
       {
-        "reason": "channel-from-config",
-        "level": "action",
-        "count": 1,
-        "sites": 1,
-        "known": true,
-        "excluded": false,
-        "hint": "The channel name cannot be read here. Annotate OrdersService.refund with the channel it uses.",
-        "rows": [
-          {
-            "service": "orders",
-            "file": "src/orders/orders.service.ts",
-            "line": 65,
-            "symbol": "OrdersService.refund -> this.config.get('REFUND_CHANNEL')",
-            "level": "action",
-            "sites": 1,
-            "message": "channel-from-config",
-            "hint": "The channel name cannot be read here. Annotate OrdersService.refund with the channel it uses."
-          }
-        ]
-      },
-      {
         "reason": "di-token-unknown",
         "level": "action",
-        "count": 1,
-        "sites": 1,
+        "count": 2,
+        "sites": 2,
         "known": true,
         "excluded": false,
-        "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
+        "hint": "No module in this repository provides the token these constructors ask for. Register it with { provide, useClass }, or force the adapter that does.",
         "rows": [
           {
             "service": "orders",
@@ -264,6 +244,47 @@
             "sites": 1,
             "message": "di-token-unknown",
             "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does."
+          },
+          {
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 35,
+            "symbol": "OrdersService.constructor[1]",
+            "level": "action",
+            "sites": 1,
+            "message": "di-token-unknown",
+            "hint": "No module in this repository provides AUDIT_CLIENT. Register it with { provide, useClass } or force the adapter that does."
+          }
+        ]
+      },
+      {
+        "reason": "dynamic-http-url",
+        "level": "action",
+        "count": 2,
+        "sites": 2,
+        "known": true,
+        "excluded": false,
+        "hint": "The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes.",
+        "rows": [
+          {
+            "service": "gateway",
+            "file": "src/clients/orders.client.ts",
+            "line": 40,
+            "symbol": "this.http.delete(this.endpoint(`orders/${id}/cancel`))",
+            "level": "action",
+            "sites": 1,
+            "message": "dynamic-http-url",
+            "hint": "The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes."
+          },
+          {
+            "service": "gateway",
+            "file": "src/clients/orders.client.ts",
+            "line": 49,
+            "symbol": "this.http.post(this.endpoint('restock'), { sku })",
+            "level": "action",
+            "sites": 1,
+            "message": "dynamic-http-url",
+            "hint": "The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes."
           }
         ]
       },
@@ -350,6 +371,78 @@
             "hint": "Add LEGACY_URL to services[].baseUrlEnv of whichever service answers it."
           }
         ]
+      },
+      {
+        "reason": "dynamic-http-url",
+        "level": "info",
+        "count": 3,
+        "sites": 3,
+        "known": true,
+        "excluded": false,
+        "hint": "The address is built at run time, and an annotation on this method already says where it goes — orders. Nothing to do here.",
+        "rows": [
+          {
+            "service": "gateway",
+            "file": "src/clients/orders.client.ts",
+            "line": 31,
+            "symbol": "this.http.post<OrderDto>(this.endpoint('orders'), body)",
+            "level": "info",
+            "sites": 1,
+            "message": "dynamic-http-url",
+            "hint": "The address is built at run time, and an annotation on this method already says where it goes — orders. Nothing to do here."
+          },
+          {
+            "service": "gateway",
+            "file": "src/clients/orders.client.ts",
+            "line": 96,
+            "symbol": "this.http.post<OrderDto>(this.endpoint('replay'), body)",
+            "level": "info",
+            "sites": 1,
+            "message": "dynamic-http-url",
+            "hint": "The address is built at run time, and an annotation on this method already says where it goes — orders. Nothing to do here."
+          },
+          {
+            "service": "gateway",
+            "file": "src/clients/orders.client.ts",
+            "line": 102,
+            "symbol": "this.http.post<OrderDto>(this.endpoint('replay-legacy'), body)",
+            "level": "info",
+            "sites": 1,
+            "message": "dynamic-http-url",
+            "hint": "The address is built at run time, and an annotation on this method already says where it goes — orders. Nothing to do here."
+          }
+        ]
+      },
+      {
+        "reason": "channel-from-config",
+        "level": "info",
+        "count": 2,
+        "sites": 2,
+        "known": true,
+        "excluded": false,
+        "hint": "An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here.",
+        "rows": [
+          {
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 92,
+            "symbol": "OrdersService.hold -> this.config.get('SWEEP_CHANNEL')",
+            "level": "info",
+            "sites": 1,
+            "message": "channel-from-config",
+            "hint": "An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here."
+          },
+          {
+            "service": "orders",
+            "file": "src/orders/orders.service.ts",
+            "line": 113,
+            "symbol": "OrdersService.refund -> this.config.get('REFUND_CHANNEL')",
+            "level": "info",
+            "sites": 1,
+            "message": "channel-from-config",
+            "hint": "An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here."
+          }
+        ]
       }
     ],
     "unknownReasons": []
@@ -357,7 +450,7 @@
   "markers": {
     "status": "ok",
     "note": null,
-    "errors": 5,
+    "errors": 7,
     "warnings": 4,
     "issues": [
       {
@@ -416,7 +509,7 @@
         "symbol": "orders#src/orders/orders.service.ts:OrdersService.create",
         "service": "orders",
         "file": "src/orders/orders.service.ts",
-        "line": 33,
+        "line": 44,
         "message": "@Emits(\"order.created\") on OrdersService.create says what the code already says",
         "hint": "Static reading finds this publish on its own, so the annotation adds nothing and will not be corrected when the channel is renamed. Remove it."
       },
@@ -428,9 +521,33 @@
         "symbol": "orders#src/orders/orders.service.ts:OrdersService.audit",
         "service": "orders",
         "file": "src/orders/orders.service.ts",
-        "line": 44,
+        "line": 55,
         "message": "@Emits(\"order.audited\") on OrdersService.audit, which publishes nothing",
         "hint": "Remove the annotation, or publish from this method. Nothing else in it puts a message on any channel."
+      },
+      {
+        "code": "marker-arg-not-a-name",
+        "severity": "error",
+        "marker": "Emits",
+        "argument": "7",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.tally",
+        "service": "orders",
+        "file": "src/orders/orders.service.ts",
+        "line": 68,
+        "message": "@Emits on OrdersService.tally was given 7, which is not a name",
+        "hint": "Each argument must be a string or an array of strings. A value of another shape names nothing, and was not read as anything."
+      },
+      {
+        "code": "marker-names-nothing",
+        "severity": "error",
+        "marker": "Emits",
+        "argument": null,
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.sweep",
+        "service": "orders",
+        "file": "src/orders/orders.service.ts",
+        "line": 78,
+        "message": "@Emits on OrdersService.sweep names nothing",
+        "hint": "Give it a name, a list of names, or several arguments. As written it annotates nothing and the method stays unread."
       },
       {
         "code": "marker-unknown-arg",
@@ -440,7 +557,7 @@
         "symbol": "orders#src/orders/orders.service.ts:OrdersService.archive",
         "service": "orders",
         "file": "src/orders/orders.service.ts",
-        "line": 53,
+        "line": 99,
         "message": "@Emits on OrdersService.archive was given channelFor('archived'), which could not be read",
         "hint": "Marker arguments must be string literals, or consts from a package listed in sharedPackages."
       },
@@ -452,7 +569,7 @@
         "symbol": "orders#src/orders/orders.service.ts:OrdersService.settle",
         "service": "orders",
         "file": "src/orders/orders.service.ts",
-        "line": 72,
+        "line": 133,
         "message": "@FlowEntry names a flow on OrdersService.settle, which nothing enters the service through",
         "hint": "Move it to the handler that starts the flow — the controller method, the bot handler, the message handler."
       },
@@ -464,7 +581,7 @@
         "symbol": "orders#src/orders/orders.service.ts:OrdersService.reconcile",
         "service": "orders",
         "file": "src/orders/orders.service.ts",
-        "line": 81,
+        "line": 142,
         "message": "@ContractIgnore on OrdersService.reconcile, which is not on either end of any boundary",
         "hint": "Nothing here crosses a service boundary, so nothing is being excused. Remove it, or move it to the method that makes the call."
       }
@@ -509,6 +626,35 @@
         "severity": "error",
         "kind": "missing_required",
         "edge": {
+          "from": "http_out:gateway#src/clients/orders.client.ts:102:12",
+          "to": "entry:orders:http:POST:/orders/legacy",
+          "type": "http_calls"
+        },
+        "edgeKey": "http_out:gateway#src/clients/orders.client.ts:102:12|http_calls|entry:orders:http:POST:/orders/legacy",
+        "direction": "request",
+        "sender": {
+          "service": "gateway",
+          "typeId": "type:gateway#CreateOrderDto",
+          "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replayLegacy"
+        },
+        "receiver": {
+          "service": "orders",
+          "typeId": "type:orders#CreateOrderDto",
+          "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+        },
+        "typeId": "type:orders#CreateOrderDto",
+        "field": "channel",
+        "expected": "string",
+        "actual": null,
+        "rule": null,
+        "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+        "ignored": false,
+        "ignoredBy": null
+      },
+      {
+        "severity": "error",
+        "kind": "missing_required",
+        "edge": {
           "from": "http_out:gateway#src/clients/orders.client.ts:31:12",
           "to": "entry:orders:http:POST:/orders",
           "type": "http_calls"
@@ -533,37 +679,95 @@
         "message": "receiver orders requires `channel: string`; sender gateway does not send it",
         "ignored": false,
         "ignoredBy": null
+      },
+      {
+        "severity": "error",
+        "kind": "type_mismatch",
+        "edge": {
+          "from": "http_out:gateway#src/clients/orders.client.ts:96:12",
+          "to": "entry:orders:http:GET:/orders/:param",
+          "type": "http_calls"
+        },
+        "edgeKey": "http_out:gateway#src/clients/orders.client.ts:96:12|http_calls|entry:orders:http:GET:/orders/:param",
+        "direction": "request",
+        "sender": {
+          "service": "gateway",
+          "typeId": "type:gateway#CreateOrderDto",
+          "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replay"
+        },
+        "receiver": {
+          "service": "orders",
+          "typeId": "string",
+          "symbol": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+        },
+        "typeId": "string",
+        "field": "",
+        "expected": "string",
+        "actual": "type:gateway#CreateOrderDto",
+        "rule": null,
+        "message": "sender gateway sends `type:gateway#CreateOrderDto` where receiver orders expects `string`",
+        "ignored": false,
+        "ignoredBy": null
+      },
+      {
+        "severity": "error",
+        "kind": "missing_required",
+        "edge": {
+          "from": "http_out:gateway#src/clients/orders.client.ts:96:12",
+          "to": "entry:orders:http:POST:/orders",
+          "type": "http_calls"
+        },
+        "edgeKey": "http_out:gateway#src/clients/orders.client.ts:96:12|http_calls|entry:orders:http:POST:/orders",
+        "direction": "request",
+        "sender": {
+          "service": "gateway",
+          "typeId": "type:gateway#CreateOrderDto",
+          "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replay"
+        },
+        "receiver": {
+          "service": "orders",
+          "typeId": "type:orders#CreateOrderDto",
+          "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+        },
+        "typeId": "type:orders#CreateOrderDto",
+        "field": "channel",
+        "expected": "string",
+        "actual": null,
+        "rule": null,
+        "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+        "ignored": false,
+        "ignoredBy": null
       }
     ],
-    "errorCount": 1,
+    "errorCount": 4,
     "ignored": 1,
-    "unchecked": 2
+    "unchecked": 4
   },
   "baseline": {
     "status": "ok",
     "note": null,
     "total": {
-      "baseline": 21,
-      "current": 21,
+      "baseline": 26,
+      "current": 26,
       "delta": 0
     },
     "byReason": [
       {
         "reason": "channel-from-config",
-        "baseline": 1,
-        "current": 1,
+        "baseline": 3,
+        "current": 3,
         "delta": 0
       },
       {
         "reason": "di-token-unknown",
-        "baseline": 1,
-        "current": 1,
+        "baseline": 2,
+        "current": 2,
         "delta": 0
       },
       {
         "reason": "dynamic-http-url",
-        "baseline": 3,
-        "current": 3,
+        "baseline": 2,
+        "current": 2,
         "delta": 0
       },
       {
@@ -604,8 +808,8 @@
       },
       {
         "reason": "unknown-db-package",
-        "baseline": 6,
-        "current": 6,
+        "baseline": 9,
+        "current": 9,
         "delta": 0
       }
     ],
@@ -615,8 +819,8 @@
   "verdict": {
     "exitCode": 0,
     "reasons": [
-      "5 annotations the graph contradicts",
-      "1 contract error nothing excused"
+      "7 annotations the graph contradicts",
+      "4 contract errors nothing excused"
     ]
   }
 }

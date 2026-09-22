@@ -82,6 +82,10 @@
                     "baseUrlEnv": "ORDERS_URL",
                     "responseType": "type:@fx/contracts#OrderDto",
                     "bodyType": "{reason:string}",
+                    "bodyFrom": "literal",
+                    "bodyKeys": [
+                      "reason"
+                    ],
                     "targetService": "orders"
                   }
                 },

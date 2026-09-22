@@ -23,6 +23,17 @@ export class OrdersService {
   constructor(
     @Inject('EVENTS_CLIENT')
     private readonly events: ClientProxy,
+    /**
+     * A second token nothing provides, for the group that has to be read top
+     * down.
+     *
+     * Two rows of one reason, each naming a different token. The heading over
+     * them may say what `di-token-unknown` means and may not say either token,
+     * and each row's own sentence has to belong to the row it sits under
+     * (R35). One token in one group cannot catch that; two can.
+     */
+    @Inject('AUDIT_CLIENT')
+    private readonly audit: ClientProxy,
     private readonly config: ConfigService,
   ) {}
 
@@ -47,6 +58,41 @@ export class OrdersService {
   }
 
   /**
+   * The annotation given an argument that resolves, and names nothing (R38).
+   *
+   * It is not unreadable — the reader followed it and found a number — so the
+   * unreadable check never saw it, and before R38 it produced no channel and
+   * no complaint at all.
+   * Expected: `marker-arg-not-a-name`, an error.
+   */
+  @Emits(7 as unknown as string)
+  async tally(id: string): Promise<void> {
+    await this.rows.find({ id });
+    this.events.emit(this.config.get('SWEEP_CHANNEL'), { id });
+  }
+
+  /**
+   * The annotation given a list with nothing in it (R38).
+   * Expected: `marker-names-nothing`, an error.
+   */
+  @Emits([])
+  async sweep(id: string): Promise<void> {
+    await this.rows.find({ id });
+    this.events.emit(this.config.get('SWEEP_CHANNEL'), { id });
+  }
+
+  /**
+   * One annotation naming two channels, which has to mean what two annotations
+   * mean (R38).
+   * Expected: two `emits` edges at `marker` confidence, and no marker issue.
+   */
+  @Emits('order.held', 'order.released')
+  async hold(id: string): Promise<void> {
+    await this.rows.find({ id });
+    this.events.emit(this.config.get('SWEEP_CHANNEL'), { id });
+  }
+
+  /**
    * The annotation whose argument is not a literal.
    * Expected: `marker-unknown-arg`, an error.
    */
@@ -58,11 +104,26 @@ export class OrdersService {
   /**
    * The annotation earning its place: the channel is read from settings, so
    * nothing static can name it, and the annotation is the only thing that can.
-   * Expected: no marker issue, and a `channel-from-config` row at this method.
+   * Expected: no marker issue, and a `channel-from-config` row at this method —
+   * at `info`, because the annotation the row asks for is there and worked
+   * (R37). `drain` below is the same method without the annotation.
    */
   @Emits('order.refunded')
   async refund(id: string): Promise<void> {
     this.events.emit(this.config.get('REFUND_CHANNEL'), { id });
+  }
+
+  /**
+   * The same blindness with nothing said about it (R37).
+   *
+   * The pair `refund` makes: one channel read from settings and annotated, one
+   * read from settings and not. Annotating this one would move it to the
+   * informational fold; removing `refund`'s annotation would move that one
+   * back here. Expected: a `channel-from-config` row, counted among the things
+   * to act on.
+   */
+  async drain(id: string): Promise<void> {
+    this.events.emit(this.config.get('DRAIN_CHANNEL'), { id });
   }
 
   /**

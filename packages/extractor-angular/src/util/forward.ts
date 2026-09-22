@@ -2,12 +2,15 @@ import {
   callSitesOf,
   enclosingMethod,
   finiteLookups,
+  literalChoices,
+  PARAM_PLACEHOLDER,
   parametersOf,
   readsParameterOf,
   remembersParametersOf,
   wasRead,
   type CallFrame,
   type ClassMethod,
+  type FiniteLookup,
 } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
@@ -29,6 +32,15 @@ export interface ReadRequest {
   frames: readonly CallFrame[];
   /** The table entry it stands for, when a lookup was enumerated. */
   choice?: string;
+  /**
+   * The address once per value a finite segment of it can take.
+   *
+   * Recorded rather than enumerated into a node each: the address reads
+   * perfectly well as `:param`, and most of the time matching it that way is
+   * right. It is wrong exactly when a route spells the values out, and only
+   * the joiner knows that (R31).
+   */
+  pathChoices?: readonly string[];
 }
 
 /**
@@ -66,6 +78,65 @@ const FORWARD_DEPTH = 4;
 const isRead = (address: ApiUrl): boolean => address.path !== null && wasRead(address.path);
 
 /**
+ * Whether anything in the address was filled in rather than read.
+ *
+ * The one cheap question worth asking before the expensive one: an address with
+ * no hole in it has nothing to spread, and asking the type system about every
+ * segment of every request that already reads perfectly well is work for
+ * nothing.
+ */
+const hasHole = (address: ApiUrl): boolean => address.path?.includes(PARAM_PLACEHOLDER) === true;
+
+/**
+ * The paths a set of enumerated addresses comes to, or nothing when it is not a
+ * choice between paths.
+ *
+ * Every candidate has to be readable end to end and they have to differ from
+ * the plain reading; a set holding one address the reader gave up on is not a
+ * choice, it is a guess wearing a list.
+ */
+const pathsOf = (
+  choices: ReadonlyArray<{ address: ApiUrl }>,
+  plain: ApiUrl,
+): readonly string[] | undefined => {
+  if (choices.length < 2) return undefined;
+  const paths = [...new Set(choices.map((each) => each.address.path))];
+  if (paths.some((path) => path === null || !wasRead(path))) return undefined;
+  if (paths.length < 2) return undefined;
+  return (paths as string[]).every((path) => path === plain.path) ? undefined : (paths as string[]).sort();
+};
+
+/**
+ * Everything the address could have been written in, out to the last caller.
+ *
+ * A wrapper's own argument is rarely a name: `this.url(path, opts)` is a call,
+ * and the parameter that decides the address is one level inside it. Rather
+ * than walk the same road the address reader already walks, this asks the whole
+ * of every argument each caller passed. A choice found in an argument the
+ * address does not use costs nothing: every combination then reads to the same
+ * address, and a set of identical addresses is not a choice (R31).
+ */
+const writtenAcross = (urlArg: TsNode, frames: readonly CallFrame[]): TsNode[] => [
+  urlArg,
+  ...frames.flatMap((frame) => frame.call.getArguments()),
+];
+
+/**
+ * Every finite choice the address depends on, wherever on the way out it was
+ * written.
+ *
+ * A table written down first, because it is a fact about a value and the surer
+ * of the two. Only where there is none is the type asked, and then only of a
+ * parameter — a segment somebody declared as one of a handful of strings.
+ */
+const choicesAcross = (urlArg: TsNode, frames: readonly CallFrame[]): FiniteLookup[] => {
+  const written = writtenAcross(urlArg, frames);
+  const tables = written.flatMap((each) => finiteLookups(each));
+  if (tables.length > 0) return tables;
+  return written.flatMap((each) => literalChoices(each));
+};
+
+/**
  * The requests an address stands for once every table it looks up is
  * enumerated, or nothing when that does not settle it.
  *
@@ -76,7 +147,7 @@ const enumerated = (
   urlArg: TsNode,
   frames: readonly CallFrame[],
 ): Array<{ address: ApiUrl; choice: string }> => {
-  const lookups = finiteLookups(urlArg);
+  const lookups = choicesAcross(urlArg, frames);
   if (lookups.length === 0) return [];
   let combinations: Array<Map<TsNode, string>> = [new Map()];
   for (const lookup of lookups) {
@@ -182,7 +253,11 @@ export const requestsOf = (
 ): ReadRequest[] => {
   const here = analyzeApiUrl(urlArg, ctx.config.sharedPackages);
   const inPlace: ReadRequest = { site, address: here, frames: [] };
-  if (isRead(here)) return [inPlace];
+  if (isRead(here)) {
+    // Read, and possibly read as a hole where somebody wrote a closed set.
+    const spread = hasHole(here) ? pathsOf(enumerated(urlArg, []), here) : undefined;
+    return [spread === undefined ? inPlace : { ...inPlace, pathChoices: spread }];
+  }
 
   const tables = enumerated(urlArg, []);
   if (tables.length > 0) {
@@ -214,20 +289,32 @@ export const requestsOf = (
       continue;
     }
     const address = analyzeForwardedApiUrl(urlArg, frames);
-    const choices = isRead(address) ? [] : enumerated(urlArg, frames);
-    if (choices.length > 0) {
-      for (const { address: one, choice } of choices) {
-        out.push({ site: caller, address: one, frames, choice });
-      }
-      continue;
-    }
+    const choices = isRead(address) && !hasHole(address) ? [] : enumerated(urlArg, frames);
+    // The address could not be read at all, and the choices settle it: one
+    // request per value, each marked as the guess it is.
     if (!isRead(address)) {
+      if (choices.length > 0) {
+        for (const { address: one, choice } of choices) {
+          out.push({ site: caller, address: one, frames, choice });
+        }
+        continue;
+      }
       unread += 1;
       continue;
     }
+    // The address reads, and a segment of it is a closed set. Both are true at
+    // once: `/orders/:param` is a fair reading and `/fulfilment/ship` is
+    // a better one where a route spells it out. Both are carried out, and the
+    // joiner decides (R31).
+    const spread = hasHole(address) ? pathsOf(choices, address) : undefined;
     // A wrapper writing several requests picks one per run, and nothing at the
     // call site says which: each one read there is a guess.
-    out.push({ site: caller, address: siblings > 1 ? { ...address, guessed: true } : address, frames });
+    out.push({
+      site: caller,
+      address: siblings > 1 ? { ...address, guessed: true } : address,
+      frames,
+      ...(spread === undefined ? {} : { pathChoices: spread }),
+    });
   }
   if (out.length === 0 || unread > 0) out.push(inPlace);
   return out;

@@ -77,8 +77,11 @@ describe('a route nothing guards', () => {
     const skip = { skipGuardDecorators: { SkipAuth: ['JwtGuard'] } };
     const skipped = graph({ guard: true, meta: { decorators: [{ name: 'SkipAuth', args: [] }] } });
     const [row] = auditRoutes(skipped.nodes, skipped.edges, { ...OPTIONS, ...skip });
-    expect(row).toMatchObject({ reason: 'route-unguarded' });
-    expect(row?.message).toBe('GET /orders has no guard in front of it once JwtGuard (skipped by @SkipAuth), and reaches Order.');
+    // Somebody decided this, in writing, on the handler — a different finding
+    // from a route nobody put anything in front of, and not one to act on (R33).
+    expect(row).toMatchObject({ reason: 'route-guard-skipped', level: 'info' });
+    expect(row?.message).toBe('GET /orders reaches Order with no guard in front of it, because JwtGuard (skipped by @SkipAuth).');
+    expect(row?.hint).not.toContain('publicRoutes');
 
     // Another guard it does not name still stands, and so does the same guard
     // on a route without the decorator.
@@ -90,6 +93,47 @@ describe('a route nothing guards', () => {
     // An empty list switches off every guard.
     const every = graph({ guard: true, meta: { decorators: [{ name: 'SkipAuth', args: [] }] } });
     expect(auditRoutes(every.nodes, every.edges, { ...OPTIONS, skipGuardDecorators: { SkipAuth: [] } })).toHaveLength(1);
+  });
+
+  it('tells three kinds of route apart: guarded, unguarded, and unguarded on purpose', () => {
+    const skip = { ...OPTIONS, skipGuardDecorators: { SkipAuth: ['JwtGuard'] } };
+    const guarded = graph({ guard: true });
+    const bare = graph({});
+    const decided = graph({ guard: true, meta: { decorators: [{ name: 'SkipAuth', args: [] }] } });
+    expect(auditRoutes(guarded.nodes, guarded.edges, skip).map((row) => row.reason)).toEqual([]);
+    expect(auditRoutes(bare.nodes, bare.edges, skip).map((row) => row.reason)).toEqual(['route-unguarded']);
+    expect(auditRoutes(decided.nodes, decided.edges, skip).map((row) => row.reason)).toEqual([
+      'route-guard-skipped',
+    ]);
+  });
+
+  it('moves a route back to unguarded when its skip decorator is taken off', () => {
+    // The guard goes with the decorator in the real edit, so the route that is
+    // left is a bare one, and it is a finding again.
+    const skip = { ...OPTIONS, skipGuardDecorators: { SkipAuth: ['JwtGuard'] } };
+    const decided = graph({ guard: true, meta: { decorators: [{ name: 'SkipAuth', args: [] }] } });
+    expect(auditRoutes(decided.nodes, decided.edges, skip)[0]).toMatchObject({
+      reason: 'route-guard-skipped',
+    });
+    const bare = graph({ meta: { decorators: [] } });
+    const [back] = auditRoutes(bare.nodes, bare.edges, skip);
+    expect(back).toMatchObject({ reason: 'route-unguarded' });
+    expect(back).not.toHaveProperty('level');
+  });
+
+  it('lists a handler that says it checks the request itself, and asks nothing of it', () => {
+    // A marker claim: unverifiable, and worth exactly what whoever wrote it is.
+    // Listed all the same — every other decision this audit takes on trust is
+    // listed, and a claim nobody can check is the last one to hide.
+    const { nodes, edges } = graph({ meta: { authNote: 'a signed header overrides the client claim' } });
+    const [row] = auditRoutes(nodes, edges, OPTIONS);
+    expect(row).toMatchObject({ reason: 'route-guard-skipped', level: 'info' });
+    expect(row?.message).toContain('a signed header overrides the client claim');
+    expect(row?.hint).toContain('cannot verify');
+    const empty = graph({ meta: { authNote: '' } });
+    expect(auditRoutes(empty.nodes, empty.edges, OPTIONS).map((row) => row.reason)).toEqual([
+      'route-unguarded',
+    ]);
   });
 
   it('lists a worker route as something to look at, since prefix middleware is not read', () => {

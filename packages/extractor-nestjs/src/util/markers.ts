@@ -1,5 +1,10 @@
 import type { Decorator } from 'ts-morph';
-import { decoratorArgs, decoratorName, findDecorators } from '@flowatlas/core';
+import {
+  decoratorArgs,
+  decoratorName,
+  findDecorators,
+  type RecordedMarker,
+} from '@flowatlas/core';
 
 /** The annotations this project understands, and where they come from. */
 export const MARKER_NAMES = [
@@ -12,10 +17,7 @@ export const MARKER_NAMES = [
 
 export const MARKER_MODULES = ['@flowatlas/markers'] as const;
 
-export interface RecordedMarker {
-  name: string;
-  args: unknown[];
-}
+export type { RecordedMarker };
 
 /**
  * Records the annotations present on a symbol.

@@ -73,3 +73,47 @@ Each repository carries its own copy of `node_modules/@fx/wire`, byte for byte
 identical, so the fixture resolves with no install and `MoneyDto` merges into
 one registry entry. The workspace copy in `shared/wire/src` is the same text
 again. Change one and change all three.
+
+## `POST /orders/drafts` — permission against act (R34)
+
+One route, one receiver DTO declaring `title` and nothing else, and three
+callers in `OrdersClient` that differ only in how the body is written:
+
+| caller | how the body is written | expected |
+|---|---|---|
+| `draftWritten` | an object literal in place | nothing at all — `owner` and `archived` are permitted by the declared type and never written |
+| `draftDeclared` | a parameter of the wider type, passed by name | `owner` and `archived` as `extra_field`, worded as a permission |
+| `draftSpread` | a wider object spread into a literal | `owner`, `archived` and `extra` as `extra_field`, worded as an act |
+
+A declared parameter type says what a call is *permitted* to send. An object
+written in the source says what it does send, and a spread genuinely does copy
+the keys it spreads. The three rows are here so that reading one as another is
+a failing snapshot.
+
+## `GET /orders/drafts/:id` — which shape (R32)
+
+The handler answers with `CreateDraftDto | LockedDraftDto`: the draft on the
+ordinary path, a wrapper on the locked one. The caller requires `title`, which
+is on the first and not on the second, so the finding is real — and the
+sentence names the shape it is about and counts the ones it is not, because
+"sender orders does not send it" reads as "never sends it" and sends a person
+to check whether the caller is broken in production.
+
+The other half of the rule — a field on *none* of the arms keeps the plain
+wording — is covered in `compare.test.ts` rather than here; it needs a third
+route to say nothing new.
+
+## Three strips, three things they cost (R30)
+
+`POST /orders/drafts/{store,tag,preview}` all whitelist, all declare `title`
+and nothing else, and differ only in what the handler behind each one does:
+
+| route | the handler | expected |
+|---|---|---|
+| `store` | writes `DraftSchema`, which declares `note` | `note` stripped, `impact: stored` |
+| `tag` | writes the same document, which declares no `colour` | `colour` stripped, `impact: unknown` |
+| `preview` | reaches no write at all | `note` stripped, `impact: none`, counted rather than listed |
+
+The join is the entity the write names, recorded in the registry by the write
+itself — not the field's spelling, and not the schema happening to be on a
+boundary for some other reason.

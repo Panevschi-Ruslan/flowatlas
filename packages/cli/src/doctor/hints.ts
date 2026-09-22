@@ -22,6 +22,15 @@ export interface HintContext {
   node?: GraphNode;
   /** True when that call did reach a route in the end, annotation or not. */
   joined?: boolean;
+  /**
+   * The requests written in the same method: how many an annotation asserts,
+   * and how many were not read.
+   *
+   * An annotation does not repair the request it sits above; it adds one of its
+   * own. So what a row about an unread request should say depends on whether
+   * the annotations on that method can only be about it (R39).
+   */
+  requests?: { asserted: number; unread: number };
 }
 
 export type HintTemplate = (row: Unresolved, context: HintContext) => string;
@@ -32,6 +41,9 @@ const meta = (context: HintContext, key: string): string | undefined => {
 };
 
 const named = (row: Unresolved): string => row.symbol ?? 'the call';
+
+/** A row with nothing of any one place on it, for asking a template the general question. */
+const ANONYMOUS = { reason: '', file: '', line: 0 } as unknown as Unresolved;
 
 /**
  * The annotation that would answer this, spelled out as far as it can be.
@@ -81,13 +93,197 @@ const flowatlasCalls = (context: HintContext): string | undefined => {
   if (context.node === undefined) return undefined;
   const service = meta(context, 'targetService');
   const path = readablePath(context);
-  const method = path === undefined ? '<METHOD>' : (meta(context, 'method') ?? 'GET').toUpperCase();
+  // The verb is usually readable even when the path is not — the call is
+  // `http.get(...)` whatever it is given — and an annotation with the verb
+  // already in it is less to work out than one with a placeholder.
+  const verb = (meta(context, 'method') ?? '').toUpperCase();
+  const method = verb === '' ? '<METHOD>' : verb;
   const named = service === undefined ? '' : ` ${service} is what answers it.`;
+  const requests = context.requests;
+
+  // The annotation is there and can be about nothing else, so the row is a
+  // record of what could not be read rather than something left to do.
+  if (requests !== undefined && coversEveryUnread(requests)) {
+    return (
+      'The address is built at run time, and an annotation on this method already says where it ' +
+      'goes. Nothing to do here.'
+    );
+  }
+
+  // Annotated, and not enough to go round. Saying "annotate this" again would
+  // send somebody to a line that is annotated; saying nothing would be the
+  // silence this was raised about. The way out is one annotation per request.
+  if (requests !== undefined && requests.asserted > 0) {
+    return (
+      `This method carries ${requests.asserted} annotation${requests.asserted === 1 ? '' : 's'} ` +
+      `and ${requests.unread} requests whose address is built at run time, so nothing here says ` +
+      'which annotation describes which. Write one per request, or move each request into its ' +
+      'own method.'
+    );
+  }
+
   return (
     `The address is built at run time.${named} Annotate the method with ` +
     `/** @flowatlas-calls ${method} ${path ?? '/<path>'} */.`
   );
 };
+
+/** As much of the graph as deciding "was this annotated?" needs to ask. */
+export interface MarkerGraph {
+  edgesFrom(id: string, types?: readonly string[]): ReadonlyArray<{ to: string; confidence: string }>;
+  edgesTo(id: string, types?: readonly string[]): ReadonlyArray<{ from: string; confidence: string }>;
+  node?(id: string): GraphNode | undefined;
+}
+
+/** Every request written in one method, as the graph holds them. */
+const requestsIn = (
+  owner: string,
+  graph: MarkerGraph,
+): { asserted: number; unread: number } => {
+  let asserted = 0;
+  let unread = 0;
+  for (const edge of graph.edgesFrom(owner, ['calls'])) {
+    const call = graph.node?.(edge.to);
+    if (call === undefined || call.type !== 'ui_api_call') continue;
+    const joined = graph.edgesFrom(call.id, ['hits']).length > 0;
+    // An annotation that named a route nothing serves has not answered
+    // anything: the reader still has something to fix, and the marker checks
+    // say what. Only one that reached a route counts.
+    if (call.meta?.['via'] === 'marker') {
+      if (joined) asserted += 1;
+    } else if (!joined) unread += 1;
+  }
+  return { asserted, unread };
+};
+
+/**
+ * How a method's requests stand, for a row about one of them.
+ *
+ * Exported because the row's sentence needs the same two numbers the demotion
+ * does: a method with two unreadable requests and one annotation keeps both
+ * rows, and has to be told why (R39).
+ */
+/**
+ * Whether a method's annotations can account for every request it could not read.
+ *
+ * One predicate, because two things ask it: the sentence a row carries and
+ * whether the row counts as work. Written twice they drift, and the drift is a
+ * row saying "nothing to do here" while still being counted among the things
+ * to do — the exact fault R36 and R37 were raised about.
+ */
+export const coversEveryUnread = (found: { asserted: number; unread: number }): boolean =>
+  found.asserted > 0 && found.asserted >= found.unread;
+
+export const requestsAround = (
+  callId: string,
+  graph: MarkerGraph,
+): { asserted: number; unread: number } | undefined => {
+  const owner = graph.edgesTo(callId, ['calls'])[0]?.from;
+  return owner === undefined ? undefined : requestsIn(owner, graph);
+};
+
+/** What the graph looks like once the annotation a row asks for has worked. */
+type AnswerTest = (id: string, graph: MarkerGraph) => boolean;
+
+const asserted = (edge: { confidence: string }): boolean => edge.confidence === 'marker';
+
+/**
+ * The annotation draws its edge from the annotated symbol itself.
+ *
+ * `@CallsService` on a method that makes a request: the call it names becomes
+ * an `http_calls` edge out of that very node.
+ */
+const drawsFrom =
+  (...types: string[]): AnswerTest =>
+  (id, graph) =>
+    graph.edgesFrom(id, types).some(asserted);
+
+/**
+ * The annotation draws a publish or a subscribe, which is two edges rather than
+ * one.
+ *
+ * `@Emits` gives the method a producer to call and the producer a channel to
+ * emit on; `@Consumes` gives the channel a consumer and the consumer a method
+ * to hand to. Looking only for an `emits` edge out of the method finds nothing,
+ * which is why a row an annotation had plainly answered kept asking for the
+ * annotation (R37).
+ */
+/**
+ * The annotation draws a request of its own, beside the one that was not read.
+ *
+ * `@flowatlas-calls` does not repair the call it is written above: it adds a
+ * second `ui_api_call` that joins, and the unreadable one stays exactly as it
+ * was. So the row's own node can never carry the edge, and looking there left
+ * a reader who had done what the hint asked still being asked (R39).
+ *
+ * Answered only where the annotation can be about nothing else: a method whose
+ * annotations are at least as many as its unreadable requests. One of each is
+ * the ordinary shape and the only one the project this is developed against
+ * has. Two unreadable requests and one annotation is ambiguous, and silencing
+ * both rows would hide a real gap behind an annotation that was never about
+ * it — which is the fault this release exists to stop, not one to add.
+ */
+const annotatedBeside: AnswerTest = (id, graph) => {
+  const found = requestsAround(id, graph);
+  return found !== undefined && coversEveryUnread(found);
+};
+
+const publishesOrConsumes: AnswerTest = (id, graph) =>
+  graph
+    .edgesFrom(id, ['calls'])
+    .filter(asserted)
+    .some((edge) => graph.edgesFrom(edge.to, ['emits']).some(asserted)) ||
+  graph
+    .edgesTo(id, ['handles'])
+    .filter(asserted)
+    .some((edge) => graph.edgesTo(edge.from, ['consumes']).some(asserted));
+
+/**
+ * How to tell that the annotation a row asks for was written, and worked.
+ *
+ * A row is raised while one repository is being read, when nothing yet knows
+ * whether an annotation somewhere answers it. Where one does, the edge is in
+ * the joined graph with `confidence: marker` on it, and the row is a record of
+ * what could not be read rather than something left to do (R36).
+ *
+ * Keyed by reason and valued by the shape to look for, so adding an annotation
+ * means adding a line here rather than a branch anywhere. The shapes are named
+ * because they are not all the same: some annotations draw one edge and some
+ * draw a pair, and pretending otherwise is what R37 was raised about.
+ */
+export const MARKER_ANSWERS: Readonly<Record<string, AnswerTest>> = Object.freeze({
+  // @CallsService, and its JSDoc twin @flowatlas-calls
+  'dynamic-http-url': drawsFrom('http_calls'),
+  'api-path-dynamic': annotatedBeside,
+  'api-method-dynamic': annotatedBeside,
+  // @Emits / @Consumes
+  'channel-from-config': publishesOrConsumes,
+  'channel-dynamic': publishesOrConsumes,
+  'channel-const-unresolved': publishesOrConsumes,
+  // @FlowEntry
+  'dynamic-bot-trigger': drawsFrom('triggers', 'handles'),
+});
+
+/**
+ * Whether an annotation has already answered this row.
+ *
+ * Takes the graph reader rather than a database, so the question can be asked
+ * of anything that can list edges — and so nothing here has to know what a
+ * database is.
+ */
+export const answeredByMarker = (
+  reason: string,
+  nodeId: string | undefined,
+  graph: MarkerGraph,
+): boolean => {
+  const test = MARKER_ANSWERS[reason];
+  if (test === undefined || nodeId === undefined) return false;
+  return test(nodeId, graph);
+};
+
+/** What is said instead of "annotate this", once an annotation has been read. */
+export const ANSWERED_HINT =
+  'An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here.';
 
 /**
  * Hints that only the joined graph can write, which therefore beat the row's own.
@@ -236,6 +432,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'More than one route in the target service answers this. Make the path more specific, or annotate the call with @CallsService.',
   'route-unguarded': () =>
     'Nothing in front of this route can refuse a request, and it reaches stored data. Add a guard, or mark it public with a decorator under doctor.publicDecorators or a pattern under doctor.publicRoutes.',
+  'route-guard-skipped': () =>
+    'A decorator named under doctor.skipGuardDecorators switches the guard off for this route, so nothing is missing — the decision is written in the source. Check that it still holds. A handler that checks the request in its own body can say so with /** @flowatlas-auth <how> */.',
   'route-shadowed': () =>
     'A worker answers this route before the application does, so the application handler and its guards never run. Remove one, or give the worker route the same checks.',
   'route-wildcard-only': () =>
@@ -254,6 +452,49 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     Object.entries(UNCHECKED_HINTS).map(([reason, hint]) => [reason, () => hint]),
   ),
 });
+
+/**
+ * The sentence a group of rows is headed with, true of every member.
+ *
+ * A heading describes a kind, not a member. Most catalogue templates already
+ * ignore the row they are handed and are that sentence exactly; the ones below
+ * name the symbol they were written about, and a heading that names one
+ * member's symbol asserts it of all of them (R35). Each is written once here,
+ * in the general, with the specific left to the row it belongs to.
+ */
+export const KIND_HINTS: Readonly<Record<string, string>> = Object.freeze({
+  'di-token-unknown':
+    'No module in this repository provides the token these constructors ask for. Register it with { provide, useClass }, or force the adapter that does.',
+  'di-token-ambiguous':
+    'The token is registered with more than one class; which one is in effect depends on module order. Register it once.',
+  'global-wrapper-dynamic':
+    'The wrapper is not registered with a class from this repository, so what it wraps cannot be read.',
+  'channel-from-config':
+    "The channel name is read from settings, so it cannot be followed. Annotate the method with @Emits('<channel>') or @Consumes('<channel>').",
+  'channel-dynamic':
+    "The channel name is built at run time. Annotate the method with @Emits('<channel>') or @Consumes('<channel>').",
+  'channel-const-unresolved':
+    "The const naming the channel could not be read. Move it to a package listed in sharedPackages, or annotate the method with @Emits('<channel>').",
+  'handler-not-found':
+    'The binding names a method declared nowhere on the component. Rename the binding, or declare the method.',
+  'route-target-unresolved':
+    'No configured route answers the link. Check the route table, or the prefix the router mounts it under.',
+});
+
+/**
+ * What a whole group is headed with, given nothing but its reason.
+ *
+ * Deliberately takes no row: a heading that can see a row is a heading that
+ * will eventually quote one. Where the catalogue's template ignores the row it
+ * is handed, that template is the kind's sentence already and is used as it is.
+ */
+export const kindHint = (reason: string): string | undefined => {
+  const written = KIND_HINTS[reason];
+  if (written !== undefined) return written;
+  const template = HINTS[reason];
+  if (template === undefined) return undefined;
+  return template(ANONYMOUS, {});
+};
 
 /** Every reason this catalogue has advice for, in alphabetical order. */
 export const KNOWN_REASONS: readonly string[] = Object.freeze(Object.keys(HINTS).sort());

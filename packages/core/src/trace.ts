@@ -17,7 +17,8 @@ import {
   type ClassMethod,
 } from './di/member-call.js';
 import { holeIn, UNREAD_SPAN } from './ids.js';
-import { evaluateExpression } from './static-value.js';
+import { writtenObjectLiteral } from './origin.js';
+import { evaluateExpression, literalUnionOf } from './static-value.js';
 
 /** How far back a value is followed before the answer stops being trustworthy. */
 const BUDGET = 8;
@@ -987,6 +988,91 @@ export const addressAt = (
 };
 
 /**
+ * The object a body argument turns out to be, followed out to where it is written.
+ *
+ * A request's address and its body are not decided in the same place. A service
+ * method writes the address — `this.url(id, 'zones')` — and takes the body as a
+ * parameter, so the address stops travelling at that method and the body does
+ * not: the object is written by whoever called it. Reading the body where the
+ * request is made finds a parameter typed `Partial<Item>`, which says every
+ * key of `Item` is *permitted* and none is present, and reporting the
+ * permission as the act said the call sends fields no call there writes (R34).
+ *
+ * Followed through a `const` it was parked in, and out to the callers that
+ * write it. Several callers answer with several objects: what the boundary
+ * carries is what any of them may send, which is their keys together. Every
+ * one of them has to be written in place for that to mean anything. Two callers may write two
+ * different objects, and there is one shape per boundary to record; the declared
+ * type is then the honest answer, and the finding built on it says so.
+ *
+ * Four steps, because the ordinary shape costs three of them: a parameter of
+ * the service method, the caller's argument, the `const` it was parked in, and
+ * the literal itself.
+ */
+export const writtenBodyOutward = (argument: TsNode | undefined, depth = 4): TsNode[] => {
+  let value = argument;
+  for (let left = depth; left > 0; left -= 1) {
+    if (value === undefined) return [];
+    if (writtenObjectLiteral(value) !== undefined) return [value];
+    const node = unwrap(value);
+    if (!Node.isIdentifier(node)) return [];
+    const declaration = node.getSymbol()?.getDeclarations()[0];
+    if (declaration === undefined) return [];
+    // `const body = { … }` a line above the call, which is how a form's value
+    // is nearly always assembled before it is sent. `const` because a `let`
+    // the reader has not followed may hold something else by the time the call
+    // is made.
+    if (Node.isVariableDeclaration(declaration)) {
+      const statement = declaration.getVariableStatement();
+      if (statement?.getDeclarationKind() !== VariableDeclarationKind.Const) return [];
+      value = declaration.getInitializer();
+      continue;
+    }
+    const method = enclosingMethod(node);
+    if (method === undefined) return [];
+    const index = parametersOf(method).findIndex((parameter) => parameter === declaration);
+    if (index < 0) return [];
+    const sites = callSitesOf(method);
+    if (sites.length === 0) return [];
+    const written = sites.map((site) => site.getArguments()[index]);
+    // One caller is followed further out: it may itself have parked the object
+    // in a `const`, or be a wrapper of its own. Several are read where they
+    // are, because a chain that forks is a chain with nothing at the end of it.
+    if (sites.length === 1) {
+      value = written[0];
+      continue;
+    }
+    // `updateStaff(id, { role })`, `updateStaff(id, { isActive })`,
+    // `updateStaff(id, { permissions })` — three callers, three objects, and
+    // what the boundary carries is what any of them may send. Every one of
+    // them has to be an object written in place: one caller passing a name is
+    // a caller whose keys are unknown, and an unknown set is not a set (R34).
+    return written.every((each) => writtenObjectLiteral(each) !== undefined)
+      ? (written as TsNode[])
+      : [];
+  }
+  return [];
+};
+
+/**
+ * The method a parameter belongs to, however that method was written.
+ *
+ * `handle(url: string) {}` keeps its parameters on itself; `handle = (url) =>
+ * {}` keeps them on the arrow, and the thing callers name is the property the
+ * arrow was assigned to. Asking only for a `MethodDeclaration` answers nothing
+ * for the second, so a request forwarded through a wrapper written that way
+ * stopped at the wrapper (R29).
+ */
+const methodHolding = (parameter: ParameterDeclaration): ClassMethod | undefined => {
+  const owner = parameter.getParent();
+  if (owner === undefined) return undefined;
+  if (Node.isMethodDeclaration(owner)) return owner;
+  if (!Node.isArrowFunction(owner) && !Node.isFunctionExpression(owner)) return undefined;
+  const property = owner.getParent();
+  return property !== undefined && Node.isPropertyDeclaration(property) ? property : undefined;
+};
+
+/**
  * Everywhere a method is called, as a call expression.
  *
  * A reference that is not the callee — the method passed as a value, or named
@@ -1334,10 +1420,9 @@ export interface ForwardedCall {
  */
 export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): ForwardedCall[] => {
   if (budget <= 0) return [];
-  const owner = parameter.getParent();
-  const method = owner?.asKind(SyntaxKind.MethodDeclaration);
+  const method = methodHolding(parameter);
   if (method === undefined) return [];
-  const index = method.getParameters().findIndex((item) => item === parameter);
+  const index = parametersOf(method).findIndex((item) => item === parameter);
   if (index < 0) return [];
 
   const out: ForwardedCall[] = [];
@@ -1452,8 +1537,17 @@ export interface FiniteLookup {
   values: string[];
 }
 
-/** The most values one table may give before enumerating stops being useful. */
-const MOST_CHOICES = 12;
+/**
+ * The most values one hole may stand for before enumerating stops being useful.
+ *
+ * One number for every reader that turns a hole into a set: a table looked up,
+ * a parameter typed as a union, a value folded from one, and the channels an
+ * address then names. Past a dozen the set is a domain rather than a choice —
+ * a currency, a locale, a status — and the hole is better read as the hole it
+ * is. Exported so the broker does not keep a second copy of the same judgement
+ * (R42).
+ */
+export const MOST_CHOICES = 12;
 
 /** The object a table expression always holds, when it is written down whole. */
 const tableOf = (expression: TsNode): Record<string, unknown> | null => {
@@ -1532,4 +1626,211 @@ export const finiteLookups = (value: TsNode, budget = 4): FiniteLookup[] => {
   };
   visit(value, budget);
   return [...found].map(([node, values]) => ({ node, values }));
+};
+
+/**
+ * Every segment of an address whose type is a closed set of strings.
+ *
+ * The other half of `finiteLookups`, and deliberately a second function rather
+ * than another branch inside it. A table written down is a fact about a value;
+ * this is a fact about a type, it is read differently, and it is asked only
+ * where the table search found nothing — so a project with neither pays for
+ * neither (R31).
+ *
+ * `decide(id: string, action: 'ship' | 'refund')` writing
+ * `` `/orders/${id}/${action}` `` is two addresses, both of them real, each
+ * reaching a route that exists. Read as one `:param` it matched neither.
+ */
+export const literalChoices = (value: TsNode, max = MOST_CHOICES): FiniteLookup[] => {
+  const found = new Map<TsNode, string[]>();
+  const identifiers = Node.isIdentifier(value)
+    ? [value]
+    : value.getDescendantsOfKind(SyntaxKind.Identifier);
+  for (const identifier of identifiers) {
+    if (found.has(identifier)) continue;
+    // A name that stands for a value, not one that is part of an access or a
+    // call: `order.status` names a property and `f(x)` names a function, and
+    // neither is a segment this can enumerate.
+    const parent = identifier.getParent();
+    if (parent !== undefined && Node.isPropertyAccessExpression(parent) && parent.getNameNode() === identifier) {
+      continue;
+    }
+    const declaration = identifier.getSymbol()?.getDeclarations()[0];
+    if (declaration === undefined || !Node.isParameterDeclaration(declaration)) continue;
+    const members = literalUnionOf(identifier, max);
+    if (members !== null && members.length > 1) found.set(identifier, [...members].sort());
+  }
+  return [...found].map(([node, values]) => ({ node, values }));
+};
+
+/**
+ * String operations this folds. Deliberately a closed set of pure, total
+ * methods whose result depends only on the receiver and literal arguments —
+ * add to it only when a real project needs the addition (R42).
+ */
+const FOLDABLE = new Set([
+  'slice',
+  'substring',
+  'toLowerCase',
+  'toUpperCase',
+  'trim',
+  'trimStart',
+  'trimEnd',
+  'replace',
+  'replaceAll',
+]);
+
+/** Longest value folding will carry, so a pathological pattern cannot run long. */
+const LONGEST_FOLD = 200;
+
+/** A literal argument to a folded call: a string, a number, or a regex. */
+const literalArgOf = (node: TsNode): string | number | RegExp | null => {
+  const expr = unwrap(node);
+  const value = evaluateExpression(expr);
+  if (value.resolved && (typeof value.value === 'string' || typeof value.value === 'number')) {
+    return value.value;
+  }
+  // `'TICKET_'.length` is a literal length written readably; the evaluator
+  // does not fold it, and refusing it here would refuse the common spelling.
+  if (Node.isPropertyAccessExpression(expr) && expr.getName() === 'length') {
+    const receiver = evaluateExpression(expr.getExpression());
+    if (receiver.resolved && typeof receiver.value === 'string') return receiver.value.length;
+  }
+  if (Node.isRegularExpressionLiteral(expr)) {
+    const text = expr.getLiteralText();
+    const end = text.lastIndexOf('/');
+    if (end <= 0) return null;
+    try {
+      return new RegExp(text.slice(1, end), text.slice(end + 1));
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
+/** One folded step. Returns null when the operation cannot be applied exactly. */
+const applyFold = (input: string, name: string, args: (string | number | RegExp)[]): string | null => {
+  if (input.length > LONGEST_FOLD) return null;
+  const [first, second] = args;
+  switch (name) {
+    case 'toLowerCase':
+      return args.length === 0 ? input.toLowerCase() : null;
+    case 'toUpperCase':
+      return args.length === 0 ? input.toUpperCase() : null;
+    case 'trim':
+      return args.length === 0 ? input.trim() : null;
+    case 'trimStart':
+      return args.length === 0 ? input.trimStart() : null;
+    case 'trimEnd':
+      return args.length === 0 ? input.trimEnd() : null;
+    case 'slice':
+    case 'substring': {
+      if (typeof first !== 'number') return null;
+      if (second !== undefined && typeof second !== 'number') return null;
+      return name === 'slice'
+        ? input.slice(first, second as number | undefined)
+        : input.substring(first, second as number | undefined);
+    }
+    case 'replace':
+    case 'replaceAll': {
+      if (typeof second !== 'string') return null;
+      if (typeof first === 'string') {
+        return name === 'replace' ? input.replace(first, second) : input.replaceAll(first, second);
+      }
+      if (first instanceof RegExp) {
+        // `replaceAll` demands a global pattern; `replace` accepts either.
+        if (name === 'replaceAll' && !first.flags.includes('g')) return null;
+        return input.replace(first, second);
+      }
+      return null;
+    }
+    default:
+      return null;
+  }
+};
+
+/**
+ * Every value an expression can hold, when that set is finite and readable.
+ *
+ * A name computed from a closed set of strings still holds a closed set of
+ * strings. `type.slice('TICKET_'.length).toLowerCase().replace(/_/g, '-')`
+ * over `'TICKET_OPENED' | 'TICKET_ON_HOLD' | 'TICKET_CLOSED'` is three
+ * values, all of them knowable without running anything — so a template hole
+ * filled by it is not a hole (R42).
+ *
+ * Returns null the moment a step cannot be applied exactly. Folding a value
+ * half-way and guessing the rest would put a channel in the graph that no
+ * service publishes to, which is worse than the wildcard it replaces.
+ */
+const foldValues = (node: TsNode, max: number, budget: number): string[] | null => {
+  if (budget <= 0) return null;
+  const expr = unwrap(node);
+
+  const direct = evaluateExpression(expr);
+  if (direct.resolved && typeof direct.value === 'string') return [direct.value];
+
+  // The type is the best annotation there is: it is checked, it is renamed with
+  // its members, and it cannot drift from the code because it is the code.
+  // Asked of every expression rather than only of a name, so that typing the
+  // value works wherever the value is written — a local, a call's return, or
+  // the call written straight into the template. Asking only of identifiers
+  // made the advice "give it a union type" depend on whether you had also
+  // assigned it to a variable, which is not a difference anybody means.
+  const byType = literalUnionOf(expr, max);
+  if (byType !== null && byType.length > 0) return [...byType];
+
+  if (Node.isIdentifier(expr)) {
+    const declaration = expr.getSymbol()?.getDeclarations()[0];
+    if (declaration !== undefined && Node.isVariableDeclaration(declaration)) {
+      const initializer = declaration.getInitializer();
+      if (initializer !== undefined) return foldValues(initializer, max, budget - 1);
+    }
+    return null;
+  }
+
+  if (Node.isCallExpression(expr)) {
+    const callee = unwrap(expr.getExpression());
+    if (!Node.isPropertyAccessExpression(callee)) return null;
+    const name = callee.getName();
+    if (!FOLDABLE.has(name)) return null;
+    const base = foldValues(callee.getExpression(), max, budget - 1);
+    if (base === null || base.length > max) return null;
+    const args: (string | number | RegExp)[] = [];
+    for (const argument of expr.getArguments()) {
+      const literal = literalArgOf(argument);
+      if (literal === null) return null;
+      args.push(literal);
+    }
+    const folded: string[] = [];
+    for (const value of base) {
+      const next = applyFold(value, name, args);
+      if (next === null) return null;
+      folded.push(next);
+    }
+    return [...new Set(folded)];
+  }
+
+  if (Node.isBinaryExpression(expr) && expr.getOperatorToken().getText() === '+') {
+    const left = foldValues(expr.getLeft(), max, budget - 1);
+    const right = foldValues(expr.getRight(), max, budget - 1);
+    if (left === null || right === null) return null;
+    if (left.length * right.length > max) return null;
+    return [...new Set(left.flatMap((a) => right.map((b) => a + b)))];
+  }
+
+  return null;
+};
+
+/**
+ * The values a template hole can hold, or null when that is not a finite set.
+ *
+ * The third reader beside `finiteLookups` (a fact about a written-down table)
+ * and `literalChoices` (a fact about a parameter's type): this is a fact about
+ * a computation over one of those, and it is asked where both found nothing.
+ */
+export const foldedChoices = (value: TsNode, max = MOST_CHOICES): string[] | null => {
+  const folded = foldValues(value, max, BUDGET);
+  if (folded === null || folded.length === 0 || folded.length > max) return null;
+  return [...folded].sort();
 };
