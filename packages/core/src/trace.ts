@@ -1680,7 +1680,19 @@ const FOLDABLE = new Set([
   'replaceAll',
 ]);
 
-/** Longest value folding will carry, so a pathological pattern cannot run long. */
+/**
+ * Longest value folding will carry, checked on the way IN and on the way OUT.
+ *
+ * Bounding the input bounds the work a pathological source regex can do on it.
+ * Bounding the output is what stops a chain growing without limit — a `replace`
+ * that doubles its receiver is under the cap at every individual step and over
+ * it after a few, and the last step in a chain has nothing after it to notice.
+ *
+ * It is not a runtime bound. A catastrophically backtracking pattern from the
+ * source (`/(a+)+b/`) against a 200-character receiver is still slow; the cap
+ * makes it bounded-slow rather than unbounded. Acceptable for a tool run by
+ * hand over a repository you own; it would not be for untrusted input.
+ */
 const LONGEST_FOLD = 200;
 
 /** A literal argument to a folded call: a string, a number, or a regex. */
@@ -1712,36 +1724,40 @@ const literalArgOf = (node: TsNode): string | number | RegExp | null => {
 /** One folded step. Returns null when the operation cannot be applied exactly. */
 const applyFold = (input: string, name: string, args: (string | number | RegExp)[]): string | null => {
   if (input.length > LONGEST_FOLD) return null;
+  const bounded = (value: string | null): string | null =>
+    value !== null && value.length <= LONGEST_FOLD ? value : null;
   const [first, second] = args;
   switch (name) {
     case 'toLowerCase':
-      return args.length === 0 ? input.toLowerCase() : null;
+      return args.length === 0 ? bounded(input.toLowerCase()) : null;
     case 'toUpperCase':
-      return args.length === 0 ? input.toUpperCase() : null;
+      return args.length === 0 ? bounded(input.toUpperCase()) : null;
     case 'trim':
-      return args.length === 0 ? input.trim() : null;
+      return args.length === 0 ? bounded(input.trim()) : null;
     case 'trimStart':
-      return args.length === 0 ? input.trimStart() : null;
+      return args.length === 0 ? bounded(input.trimStart()) : null;
     case 'trimEnd':
-      return args.length === 0 ? input.trimEnd() : null;
+      return args.length === 0 ? bounded(input.trimEnd()) : null;
     case 'slice':
     case 'substring': {
       if (typeof first !== 'number') return null;
       if (second !== undefined && typeof second !== 'number') return null;
-      return name === 'slice'
-        ? input.slice(first, second as number | undefined)
-        : input.substring(first, second as number | undefined);
+      return bounded(
+        name === 'slice'
+          ? input.slice(first, second as number | undefined)
+          : input.substring(first, second as number | undefined),
+      );
     }
     case 'replace':
     case 'replaceAll': {
       if (typeof second !== 'string') return null;
       if (typeof first === 'string') {
-        return name === 'replace' ? input.replace(first, second) : input.replaceAll(first, second);
+        return bounded(name === 'replace' ? input.replace(first, second) : input.replaceAll(first, second));
       }
       if (first instanceof RegExp) {
         // `replaceAll` demands a global pattern; `replace` accepts either.
         if (name === 'replaceAll' && !first.flags.includes('g')) return null;
-        return input.replace(first, second);
+        return bounded(input.replace(first, second));
       }
       return null;
     }
@@ -1782,7 +1798,15 @@ const foldValues = (node: TsNode, max: number, budget: number): string[] | null 
 
   if (Node.isIdentifier(expr)) {
     const declaration = expr.getSymbol()?.getDeclarations()[0];
-    if (declaration !== undefined && Node.isVariableDeclaration(declaration)) {
+    // `const` only. A `let` the code reassigns holds its initializer at exactly
+    // one point in the program, and folding it would answer with the first
+    // value and silently drop the rest — a confident wrong channel, which this
+    // function's own contract says is worse than the hole it replaces.
+    if (
+      declaration !== undefined &&
+      Node.isVariableDeclaration(declaration) &&
+      declaration.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const
+    ) {
       const initializer = declaration.getInitializer();
       if (initializer !== undefined) return foldValues(initializer, max, budget - 1);
     }
@@ -1816,7 +1840,8 @@ const foldValues = (node: TsNode, max: number, budget: number): string[] | null 
     const right = foldValues(expr.getRight(), max, budget - 1);
     if (left === null || right === null) return null;
     if (left.length * right.length > max) return null;
-    return [...new Set(left.flatMap((a) => right.map((b) => a + b)))];
+    const joined = [...new Set(left.flatMap((a) => right.map((b) => a + b)))];
+    return joined.some((each) => each.length > LONGEST_FOLD) ? null : joined;
   }
 
   return null;

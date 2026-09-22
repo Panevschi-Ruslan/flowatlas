@@ -23,6 +23,7 @@ state_of() {
     02-* | 03-*) echo built ;;
     08-* | 91-*) echo renamed ;;
     11-*) echo streams ;;
+    12-*) echo folded ;;
     *) echo tuned ;;
   esac
 }
@@ -36,12 +37,23 @@ tune() {
   mv "$DEMO/c.tmp" "$DEMO/flowatlas.config.json"
 }
 
+# Which fixture a state is built from, when it is not the four-service one.
+fixture_of() {
+  case $1 in
+    streams) echo sse-stream ;;
+    folded) echo folded-channels ;;
+    *) echo '' ;;
+  esac
+}
+
 prepare() {
-  # A scene about streams needs a project that has one, which the four-service
-  # demo does not: it is the other fixture, configured, since what that scene
-  # shows is not the writing of a configuration.
-  if [ "$1" = streams ]; then
-    FIXTURE=sse-stream WITH_CONFIG=1 "$ROOT/scripts/demo/reset.sh" > /dev/null
+  # A scene whose subject the four-service demo does not contain is built from
+  # the fixture that does, configured — what those scenes show is not the
+  # writing of a configuration.
+  local other
+  other=$(fixture_of "$1")
+  if [ -n "$other" ]; then
+    FIXTURE=$other WITH_CONFIG=1 "$ROOT/scripts/demo/reset.sh" > /dev/null
     (cd "$DEMO" && PATH="$DEMO/.bin:$PATH" flowatlas build) > /dev/null 2>&1
     return 0
   fi

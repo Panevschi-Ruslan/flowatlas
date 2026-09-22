@@ -203,10 +203,16 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
     const producerId = makeLeafId('producer', ctx.repo, file, line, column);
     const channelName = isResolved(resolution) ? resolution.name : null;
     const channelVia = isResolved(resolution) ? resolution.via : 'unresolved';
+    // The label names every channel the address reaches, which is how the
+    // marker path already spells a producer of several (R38). `name` is the
+    // representative pattern and stays the dedupe key, but showing it alone
+    // printed `order:*:*` for a producer that knows the three names behind it —
+    // the wildcard the fold exists to remove, still on the screen (R44).
+    const reaches = isResolved(resolution) ? resolution.names.join(', ') : undefined;
     ctx.builder.addNode({
       id: producerId,
       type: 'producer',
-      label: `${pattern.kind ?? 'event'} ${channelName ?? '?'}`,
+      label: `${pattern.kind ?? 'event'} ${reaches ?? '?'}`,
       repo: ctx.repo,
       file,
       line,

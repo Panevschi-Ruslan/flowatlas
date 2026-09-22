@@ -1,0 +1,20 @@
+unresolved: total=0 (missing) · markers: errors=0 warnings=3 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+
+unresolved: 0 to act on over 2 rows, and 2 places static reading cannot see, folded into 2
+  type-generic-uninstantiated (info): 2 rows
+    The type argument is not known here, so the reference names the parameter.
+      api/src/bus/event-bus.service.ts:14  T
+      worker/src/bus/event-bus.service.ts:14  T
+
+markers: 0 errors, 3 warnings:
+  severity  code                   where                                what                                                                                         to do
+  warning   marker-emits-shadowed  api src/orders/orders.service.ts:21  @Emits("order:*:opened") on OrdersService.publishLifecycle says what the code already says   Static reading finds this publish on its own, so the annotation adds nothing and will not be corrected when the channel is renamed. Remove it.
+  warning   marker-emits-shadowed  api src/orders/orders.service.ts:21  @Emits("order:*:on-hold") on OrdersService.publishLifecycle says what the code already says  Static reading finds this publish on its own, so the annotation adds nothing and will not be corrected when the channel is renamed. Remove it.
+  warning   marker-emits-shadowed  api src/orders/orders.service.ts:21  @Emits("order:*:closed") on OrdersService.publishLifecycle says what the code already says   Static reading finds this publish on its own, so the annotation adds nothing and will not be corrected when the channel is renamed. Remove it.
+
+desync: none
+
+contracts: no errors, 0 excused, 4 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 0 now, +0)
+  no baseline at <root>/fixtures/folded-channels/flowatlas.baseline.json; run flowatlas doctor --accept to write one

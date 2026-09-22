@@ -1,0 +1,6 @@
+~  order:*:closed                                             src/orders/orders.service.ts:26
+  -  producers (1)
+    ~  event order:*:closed, order:*:on-hold, order:*:opened  api/src/orders/orders.service.ts:26
+  -  consumers (1)
+    ~  LifecycleProjections.onClosed                          worker/src/projections/lifecycle.service.ts:26
+      -> LifecycleProjections.onClosed                        worker/src/projections/lifecycle.service.ts:37

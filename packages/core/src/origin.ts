@@ -328,9 +328,35 @@ const originOfDeclaration = (declaration: TsNode, fallback: string): Origin => {
   return { kind: 'local', declaration };
 };
 
+/**
+ * A value of the language itself: a primitive, or a closed set of them.
+ *
+ * Asked before the declaration, because a name given to such a set is still
+ * such a set. `state: OrderState` where `OrderState` is `'a' | 'b'` has an alias
+ * symbol declared in the repository, so reading the declaration first called it
+ * a local type, found no class behind it, and reported every `state.slice(...)`
+ * as a receiver nothing could be followed through — with a hint to inject a
+ * class. Naming the set is the spelling this tool recommends (R42), so it must
+ * not be the spelling that produces the rows.
+ */
+const isLanguageValue = (type: Type): boolean => {
+  if (type.isUnion()) return type.getUnionTypes().every(isLanguageValue);
+  return (
+    type.isString() ||
+    type.isStringLiteral() ||
+    type.isNumber() ||
+    type.isNumberLiteral() ||
+    type.isBoolean() ||
+    type.isBooleanLiteral() ||
+    type.isUndefined() ||
+    type.isNull()
+  );
+};
+
 /** Where the type of an expression comes from. */
 export const originOfType = (node: TsNode): Origin => {
   const type = node.getType();
+  if (isLanguageValue(type)) return { kind: 'builtin', typeName: type.getText() };
   const symbol = type.getSymbol() ?? type.getAliasSymbol();
   const declaration = symbol?.getDeclarations()[0];
   if (declaration === undefined) {
