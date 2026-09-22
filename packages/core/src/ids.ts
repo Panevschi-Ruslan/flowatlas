@@ -33,6 +33,16 @@ export const isHttpMethod = (value: string): value is HttpMethod =>
 /** `:id`, `{id}` and `<id>` are all the same hole in a route. */
 const PARAM_SEGMENT = /^(?::[^/]+|\{[^/]*\}|<[^/]*>)$/;
 
+/**
+ * How far from a route its data access is looked for.
+ *
+ * One number, because two checks say "this route reaches stored data" and they
+ * have to mean the same distance: the guard audit, which asks whether an
+ * unguarded route can reach anything, and the contract check, which asks what a
+ * stripped field could have cost.
+ */
+export const DATA_REACH = 8;
+
 export const PARAM_PLACEHOLDER = ':param';
 
 /**

@@ -130,6 +130,40 @@
       ]
     },
     {
+      "id": "type:orders#Order",
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/order.entity.ts",
+      "structuralHash": "1d69afe4970c8187",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "optional": false
+        }
+      ]
+    },
+    {
       "id": "type:billing#OrderCreatedEvent",
       "name": "OrderCreatedEvent",
       "kind": "object",
@@ -225,5 +259,5 @@
       "fields": []
     }
   ],
-  "total": 10
+  "total": 11
 }

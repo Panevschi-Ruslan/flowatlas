@@ -2,31 +2,39 @@
 ::error file=src/invoices/invoices.service.ts,line=18,title=billing%3A marker-consumes-without-consumer::@Consumes("order.refunded") on InvoicesService.onOrderRefunded, which nothing subscribes and nothing calls. Remove the annotation, or register the method as a handler. Nothing in the repository connects it to a message.
 ::error file=src/clients/orders.client.ts,line=38,title=gateway%3A marker-callsservice-route-missing::@CallsService points at DELETE /orders/:id/void, which orders does not serve. Did you mean POST /orders? Otherwise check orders's controllers.
 ::error file=src/clients/orders.client.ts,line=47,title=gateway%3A marker-callsservice-unknown-service::@CallsService names warehouse, which is not a configured service. Add warehouse to services[] in flowatlas.config.json, or correct the annotation.
-::warning file=src/orders/orders.service.ts,line=33,title=orders%3A marker-emits-shadowed::@Emits("order.created") on OrdersService.create says what the code already says. Static reading finds this publish on its own, so the annotation adds nothing and will not be corrected when the channel is renamed. Remove it.
-::error file=src/orders/orders.service.ts,line=44,title=orders%3A marker-emits-without-emit::@Emits("order.audited") on OrdersService.audit, which publishes nothing. Remove the annotation, or publish from this method. Nothing else in it puts a message on any channel.
-::error file=src/orders/orders.service.ts,line=53,title=orders%3A marker-unknown-arg::@Emits on OrdersService.archive was given channelFor('archived'), which could not be read. Marker arguments must be string literals, or consts from a package listed in sharedPackages.
-::warning file=src/orders/orders.service.ts,line=72,title=orders%3A marker-flowentry-not-handler::@FlowEntry names a flow on OrdersService.settle, which nothing enters the service through. Move it to the handler that starts the flow — the controller method, the bot handler, the message handler.
-::warning file=src/orders/orders.service.ts,line=81,title=orders%3A marker-contractignore-unused::@ContractIgnore on OrdersService.reconcile, which is not on either end of any boundary. Nothing here crosses a service boundary, so nothing is being excused. Remove it, or move it to the method that makes the call.
+::warning file=src/orders/orders.service.ts,line=44,title=orders%3A marker-emits-shadowed::@Emits("order.created") on OrdersService.create says what the code already says. Static reading finds this publish on its own, so the annotation adds nothing and will not be corrected when the channel is renamed. Remove it.
+::error file=src/orders/orders.service.ts,line=55,title=orders%3A marker-emits-without-emit::@Emits("order.audited") on OrdersService.audit, which publishes nothing. Remove the annotation, or publish from this method. Nothing else in it puts a message on any channel.
+::error file=src/orders/orders.service.ts,line=68,title=orders%3A marker-arg-not-a-name::@Emits on OrdersService.tally was given 7, which is not a name. Each argument must be a string or an array of strings. A value of another shape names nothing, and was not read as anything.
+::error file=src/orders/orders.service.ts,line=78,title=orders%3A marker-names-nothing::@Emits on OrdersService.sweep names nothing. Give it a name, a list of names, or several arguments. As written it annotates nothing and the method stays unread.
+::error file=src/orders/orders.service.ts,line=99,title=orders%3A marker-unknown-arg::@Emits on OrdersService.archive was given channelFor('archived'), which could not be read. Marker arguments must be string literals, or consts from a package listed in sharedPackages.
+::warning file=src/orders/orders.service.ts,line=133,title=orders%3A marker-flowentry-not-handler::@FlowEntry names a flow on OrdersService.settle, which nothing enters the service through. Move it to the handler that starts the flow — the controller method, the bot handler, the message handler.
+::warning file=src/orders/orders.service.ts,line=142,title=orders%3A marker-contractignore-unused::@ContractIgnore on OrdersService.reconcile, which is not on either end of any boundary. Nothing here crosses a service boundary, so nothing is being excused. Remove it, or move it to the method that makes the call.
 ::error file=src/clients/orders.client.ts,line=58,title=gateway%3A target-route-not-found::target service orders has no route DELETE /orders/:param/void. Route renamed? Check orders's controllers, or annotate the call with @CallsService.
 ::error file=src/clients/orders.client.ts,line=66,title=gateway%3A unknown-base-url-env::no service declares LEGACY_URL. Add LEGACY_URL to services[].baseUrlEnv of whichever service answers it.
 ::error file=src/clients/orders.client.ts,title=gateway → orders%3A missing_required::receiver orders requires `channel: string`; sender gateway does not send it
-unresolved: total=21 (baseline 21, +0) · markers: errors=5 warnings=4 · desync=2 · contracts: errors=1 ignored=1 · exit=0
+::error file=src/clients/orders.client.ts,title=gateway → orders%3A missing_required::receiver orders requires `channel: string`; sender gateway does not send it
+::error file=src/clients/orders.client.ts,title=gateway → orders%3A type_mismatch::sender gateway sends `type:gateway#CreateOrderDto` where receiver orders expects `string`
+::error file=src/clients/orders.client.ts,title=gateway → orders%3A missing_required::receiver orders requires `channel: string`; sender gateway does not send it
+unresolved: total=26 (baseline 26, +0) · markers: errors=7 warnings=4 · desync=2 · contracts: errors=4 ignored=1 · exit=0
 
-unresolved: 21 to act on over 21 rows
-  unknown-db-package: 6 rows
+unresolved: 26 to act on over 31 rows, and 5 places static reading cannot see, folded into 5
+  unknown-db-package: 9 rows
     Add a descriptor for fake-orm to record which of its methods read and which write.
-      orders src/orders/orders.service.ts:35  this.rows.persist
-      orders src/orders/orders.service.ts:46  this.rows.find
-      orders src/orders/orders.service.ts:55  this.rows.drop
-      orders src/orders/orders.service.ts:74  this.rows.find
-      orders src/orders/orders.service.ts:83  this.rows.find
-      orders src/orders/orders.service.ts:87  this.rows.find
-  dynamic-http-url: 3 rows
-    The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes.
-      gateway src/clients/orders.client.ts:31  this.http.post<OrderDto>(this.endpoint('orders'), body)
-        The address is built at run time, and an annotation on this method already says where it goes — orders. Nothing to do here.
-      gateway src/clients/orders.client.ts:40  this.http.delete(this.endpoint(`orders/${id}/cancel`))
-      gateway src/clients/orders.client.ts:49  this.http.post(this.endpoint('restock'), { sku })
+      orders src/orders/orders.service.ts:46  this.rows.persist
+      orders src/orders/orders.service.ts:57  this.rows.find
+      orders src/orders/orders.service.ts:70  this.rows.find
+      orders src/orders/orders.service.ts:80  this.rows.find
+      orders src/orders/orders.service.ts:91  this.rows.find
+      orders src/orders/orders.service.ts:101  this.rows.drop
+  … 3 more rows; the whole list is in <root>/fixtures/multi-repo-doctor/.flowatlas/doctor.json
+  channel-from-config: 3 rows
+    The channel name is read from settings, so it cannot be followed. Annotate the method with @Emits('<channel>') or @Consumes('<channel>').
+      orders src/orders/orders.service.ts:71  OrdersService.tally -> this.config.get('SWEEP_CHANNEL')
+        ↳ The channel name cannot be read here. Annotate OrdersService.tally with the channel it uses.
+      orders src/orders/orders.service.ts:81  OrdersService.sweep -> this.config.get('SWEEP_CHANNEL')
+        ↳ The channel name cannot be read here. Annotate OrdersService.sweep with the channel it uses.
+      orders src/orders/orders.service.ts:126  OrdersService.drain -> this.config.get('DRAIN_CHANNEL')
+        ↳ The channel name cannot be read here. Annotate OrdersService.drain with the channel it uses.
   module-import-dynamic: 3 rows
     Import a module class, or X.forRoot(...); a computed import cannot be followed.
       gateway src/app.module.ts:8  AppModule imports HttpModule
@@ -37,12 +45,16 @@ unresolved: 21 to act on over 21 rows
       orders src/orders/orders.controller.ts:11  POST /orders
       orders src/orders/orders.controller.ts:16  POST /orders/legacy
       orders src/orders/orders.controller.ts:21  GET /orders/:param
-  channel-from-config: 1 row
-    The channel name cannot be read here. Annotate OrdersService.refund with the channel it uses.
-      orders src/orders/orders.service.ts:65  OrdersService.refund -> this.config.get('REFUND_CHANNEL')
-  di-token-unknown: 1 row
-    No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.
+  di-token-unknown: 2 rows
+    No module in this repository provides the token these constructors ask for. Register it with { provide, useClass }, or force the adapter that does.
       orders src/orders/orders.service.ts:24  OrdersService.constructor[0]
+        ↳ No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.
+      orders src/orders/orders.service.ts:35  OrdersService.constructor[1]
+        ↳ No module in this repository provides AUDIT_CLIENT. Register it with { provide, useClass } or force the adapter that does.
+  dynamic-http-url: 2 rows
+    The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes.
+      gateway src/clients/orders.client.ts:40  this.http.delete(this.endpoint(`orders/${id}/cancel`))
+      gateway src/clients/orders.client.ts:49  this.http.post(this.endpoint('restock'), { sku })
   marker-route-not-found: 1 row
     Check orders's controllers, or correct the annotation.
       gateway src/clients/orders.client.ts:40  http_out:gateway#src/clients/orders.client.ts:40:12
@@ -55,30 +67,44 @@ unresolved: 21 to act on over 21 rows
   unknown-base-url-env: 1 row
     Add LEGACY_URL to services[].baseUrlEnv of whichever service answers it.
       gateway src/clients/orders.client.ts:66  http_out:gateway#src/clients/orders.client.ts:66:12
+  dynamic-http-url (info): 3 rows
+    The address is built at run time, and an annotation on this method already says where it goes — orders. Nothing to do here.
+      gateway src/clients/orders.client.ts:31  this.http.post<OrderDto>(this.endpoint('orders'), body)
+      gateway src/clients/orders.client.ts:96  this.http.post<OrderDto>(this.endpoint('replay'), body)
+      gateway src/clients/orders.client.ts:102  this.http.post<OrderDto>(this.endpoint('replay-legacy'), body)
+  channel-from-config (info): 2 rows
+    An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here.
+      orders src/orders/orders.service.ts:92  OrdersService.hold -> this.config.get('SWEEP_CHANNEL')
+      orders src/orders/orders.service.ts:113  OrdersService.refund -> this.config.get('REFUND_CHANNEL')
 
-markers: 5 errors, 4 warnings:
+markers: 7 errors, 4 warnings:
   severity  code                                 where                                         what                                                                                                        to do
   warning   marker-consumes-shadowed             billing src/invoices/invoices.consumer.ts:18  @Consumes("order.created") on InvoicesConsumer.onOrderCreated says what the code already says               Static reading finds this subscription on its own, so the annotation adds nothing. Remove it.
   error     marker-consumes-without-consumer     billing src/invoices/invoices.service.ts:18   @Consumes("order.refunded") on InvoicesService.onOrderRefunded, which nothing subscribes and nothing calls  Remove the annotation, or register the method as a handler. Nothing in the repository connects it to a message.
   error     marker-callsservice-route-missing    gateway src/clients/orders.client.ts:38       @CallsService points at DELETE /orders/:id/void, which orders does not serve                                Did you mean POST /orders? Otherwise check orders's controllers.
   error     marker-callsservice-unknown-service  gateway src/clients/orders.client.ts:47       @CallsService names warehouse, which is not a configured service                                            Add warehouse to services[] in flowatlas.config.json, or correct the annotation.
-  warning   marker-emits-shadowed                orders src/orders/orders.service.ts:33        @Emits("order.created") on OrdersService.create says what the code already says                             Static reading finds this publish on its own, so the annotation adds nothing and will not be corrected when the channel is renamed. Remove it.
-  error     marker-emits-without-emit            orders src/orders/orders.service.ts:44        @Emits("order.audited") on OrdersService.audit, which publishes nothing                                     Remove the annotation, or publish from this method. Nothing else in it puts a message on any channel.
-  error     marker-unknown-arg                   orders src/orders/orders.service.ts:53        @Emits on OrdersService.archive was given channelFor('archived'), which could not be read                   Marker arguments must be string literals, or consts from a package listed in sharedPackages.
-  warning   marker-flowentry-not-handler         orders src/orders/orders.service.ts:72        @FlowEntry names a flow on OrdersService.settle, which nothing enters the service through                   Move it to the handler that starts the flow — the controller method, the bot handler, the message handler.
-  warning   marker-contractignore-unused         orders src/orders/orders.service.ts:81        @ContractIgnore on OrdersService.reconcile, which is not on either end of any boundary                      Nothing here crosses a service boundary, so nothing is being excused. Remove it, or move it to the method that makes the call.
+  warning   marker-emits-shadowed                orders src/orders/orders.service.ts:44        @Emits("order.created") on OrdersService.create says what the code already says                             Static reading finds this publish on its own, so the annotation adds nothing and will not be corrected when the channel is renamed. Remove it.
+  error     marker-emits-without-emit            orders src/orders/orders.service.ts:55        @Emits("order.audited") on OrdersService.audit, which publishes nothing                                     Remove the annotation, or publish from this method. Nothing else in it puts a message on any channel.
+  error     marker-arg-not-a-name                orders src/orders/orders.service.ts:68        @Emits on OrdersService.tally was given 7, which is not a name                                              Each argument must be a string or an array of strings. A value of another shape names nothing, and was not read as anything.
+  error     marker-names-nothing                 orders src/orders/orders.service.ts:78        @Emits on OrdersService.sweep names nothing                                                                 Give it a name, a list of names, or several arguments. As written it annotates nothing and the method stays unread.
+  error     marker-unknown-arg                   orders src/orders/orders.service.ts:99        @Emits on OrdersService.archive was given channelFor('archived'), which could not be read                   Marker arguments must be string literals, or consts from a package listed in sharedPackages.
+  warning   marker-flowentry-not-handler         orders src/orders/orders.service.ts:133       @FlowEntry names a flow on OrdersService.settle, which nothing enters the service through                   Move it to the handler that starts the flow — the controller method, the bot handler, the message handler.
+  warning   marker-contractignore-unused         orders src/orders/orders.service.ts:142       @ContractIgnore on OrdersService.reconcile, which is not on either end of any boundary                      Nothing here crosses a service boundary, so nothing is being excused. Remove it, or move it to the method that makes the call.
 
 desync: 2:
   reason                  where                                    call                        target      to do
   target-route-not-found  gateway src/clients/orders.client.ts:58  DELETE /orders/:param/void  orders      Route renamed? Check orders's controllers, or annotate the call with @CallsService.
   unknown-base-url-env    gateway src/clients/orders.client.ts:66  GET /orders/:param/history  LEGACY_URL  Add LEGACY_URL to services[].baseUrlEnv of whichever service answers it.
 
-contracts: 1 error, 1 excused, 2 boundary directions nothing could be compared on:
-  kind              between           direction  field    what
-  missing_required  gateway → orders  request    channel  receiver orders requires `channel: string`; sender gateway does not send it
+contracts: 4 errors, 1 excused, 4 boundary directions nothing could be compared on:
+  kind              between           direction  field         what
+  missing_required  gateway → orders  request    channel       receiver orders requires `channel: string`; sender gateway does not send it
+  missing_required  gateway → orders  request    channel       receiver orders requires `channel: string`; sender gateway does not send it
+  type_mismatch     gateway → orders  request    (whole type)  sender gateway sends `type:gateway#CreateOrderDto` where receiver orders expects `string`
+  missing_required  gateway → orders  request    channel       receiver orders requires `channel: string`; sender gateway does not send it
 
-baseline: ok (21 accepted, 21 now, +0)
+baseline: ok (26 accepted, 26 now, +0)
 
 verdict:
-  5 annotations the graph contradicts
-  1 contract error nothing excused
+  7 annotations the graph contradicts
+  4 contract errors nothing excused

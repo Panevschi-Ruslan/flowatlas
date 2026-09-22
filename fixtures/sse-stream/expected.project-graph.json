@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-20T11:25:36.242Z",
+  "builtAt": "2026-09-21T14:45:43.587Z",
   "services": [
     {
       "name": "api",
@@ -315,7 +315,7 @@
           "classes": 9,
           "templates": 1,
           "skippedExternalCalls": {
-            "rxjs": 4,
+            "rxjs": 5,
             "@angular/common": 1
           }
         },
@@ -352,6 +352,21 @@
       "meta": {
         "event": "click",
         "handler": "cancel()",
+        "component": "web#src/app/orders.component.ts:OrdersComponent",
+        "template": "src/app/orders.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/orders.component.ts:31:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 31,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
         "component": "web#src/app/orders.component.ts:OrdersComponent",
         "template": "src/app/orders.component.ts"
       }
@@ -413,6 +428,8 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "void",
         "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "api"
@@ -564,7 +581,15 @@
       "label": "OrdersComponent.cancel",
       "repo": "web",
       "file": "src/app/orders.component.ts",
-      "line": 27
+      "line": 39
+    },
+    {
+      "id": "web#src/app/orders.component.ts:OrdersComponent.ngOnInit",
+      "type": "method",
+      "label": "OrdersComponent.ngOnInit",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 31
     },
     {
       "id": "web#src/app/orders.component.ts:OrdersComponent.watch",
@@ -572,7 +597,7 @@
       "label": "OrdersComponent.watch",
       "repo": "web",
       "file": "src/app/orders.component.ts",
-      "line": 23
+      "line": 35
     },
     {
       "id": "web#src/app/remembered-stream.service.ts:OrderTrackStreamService",
@@ -929,6 +954,14 @@
       "line": 14
     },
     {
+      "from": "ui_action:web#src/app/orders.component.ts:31:3",
+      "to": "web#src/app/orders.component.ts:OrdersComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 31
+    },
+    {
       "from": "ui_api_call:web#src/app/live-events.service.ts:29:20",
       "to": "entry:api:http:GET:/depots/:param/events",
       "type": "hits",
@@ -1046,7 +1079,15 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/app/orders.component.ts",
-      "line": 28
+      "line": 40
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent.ngOnInit",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 32
     },
     {
       "from": "web#src/app/orders.component.ts:OrdersComponent.watch",
@@ -1054,7 +1095,7 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/app/orders.component.ts",
-      "line": 24
+      "line": 36
     },
     {
       "from": "web#src/app/remembered-stream.service.ts:OrderTrackStreamService",

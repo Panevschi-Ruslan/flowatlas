@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "angular-client-wrapper",
-  "generatedAt": "2026-09-14T15:52:03.997Z",
+  "generatedAt": "2026-09-20T21:55:13.159Z",
   "nodes": [
     {
       "id": "angular-client-wrapper#node_modules/@angular/common:HttpClient",
@@ -420,6 +420,11 @@
         "baseUrlEnv": "apiUrl",
         "responseType": null,
         "bodyType": "{locale:string;name?:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "locale",
+          "name"
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
@@ -441,6 +446,11 @@
         "baseUrlEnv": "apiUrl",
         "responseType": null,
         "bodyType": "{locale:string;name?:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "locale",
+          "name"
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
@@ -462,6 +472,11 @@
         "baseUrlEnv": "apiUrl",
         "responseType": null,
         "bodyType": "{locale:string;name?:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "locale",
+          "name"
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
@@ -524,6 +539,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Parcel",
         "bodyType": "type:angular-client-wrapper#UpdateParcelDto",
+        "bodyFrom": "type",
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "BaseService.post"
@@ -544,6 +560,8 @@
         "baseUrlEnv": "apiUrl",
         "responseType": null,
         "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "BaseService.delete"
@@ -564,6 +582,8 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Parcel",
         "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "BaseService.post"
@@ -623,6 +643,8 @@
         "baseUrlEnv": "apiUrl",
         "responseType": null,
         "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "BaseService.delete"
@@ -683,6 +705,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Deal",
         "bodyType": "type:angular-client-wrapper#ClaimDealDto",
+        "bodyFrom": "type",
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "ApiClient.post"

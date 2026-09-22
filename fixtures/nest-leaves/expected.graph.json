@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-leaves",
-  "generatedAt": "2026-09-14T12:13:38.120Z",
+  "generatedAt": "2026-09-20T21:55:26.184Z",
   "nodes": [
     {
       "id": "cache_op:nest-leaves#src/orders/orders.service.ts:19:12",
@@ -201,7 +201,8 @@
         "path": "/orders",
         "baseUrlEnv": "ORDERS_URL",
         "responseType": "type:nest-leaves#OrderDto",
-        "bodyType": "type:nest-leaves#OrderDto"
+        "bodyType": "type:nest-leaves#OrderDto",
+        "bodyFrom": "value"
       }
     },
     {
@@ -218,6 +219,10 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": "{amount:number}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "amount"
+        ],
         "host": "api.stripe.com"
       }
     },

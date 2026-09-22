@@ -341,6 +341,31 @@ const compareShapeChoices = (
   if (senders.length + receivers.length < 3) return false;
   const structural = (member: TypeRefAst): boolean => isStructural(walk, member);
   if (!senders.every(structural) || !receivers.every(structural)) return false;
+  // Every arm is compared against every arm, so a pathological choice is the
+  // one shape here that could take a noticeable amount of time. Past the cap
+  // the pair is reported as uncompared rather than compared in part: half a
+  // comparison of a choice is a verdict about shapes nobody looked at (R32).
+  if (senders.length > MOST_ARMS || receivers.length > MOST_ARMS) {
+    // Two names for one declaration, or two spellings of one shape, agree
+    // whatever their arity. Saying they differ because there are too many of
+    // them to walk would be asserting a disagreement nobody found.
+    if (formatTypeRef(senderAst) === formatTypeRef(receiverAst)) return true;
+    // Not compared, which is a fact about this run rather than about the two
+    // declarations — so it is softened to information by a named rule, the way
+    // every other "less certain than TypeScript" answer in this file is.
+    walk.rules.add(TOO_MANY_ARMS);
+    record(walk, {
+      kind: 'type_mismatch',
+      path,
+      expected: formatTypeRef(receiverAst),
+      actual: formatTypeRef(senderAst),
+      rule: TOO_MANY_ARMS,
+      note:
+        `a choice of ${Math.max(senders.length, receivers.length)} shapes is more than the ` +
+        `${MOST_ARMS} this compares, so none of them were`,
+    });
+    return true;
+  }
 
   // Only what breaks counts when choosing the member a shape agrees with; a
   // field sent that nobody reads, or one only one side may leave out, does not.
@@ -357,10 +382,77 @@ const compareShapeChoices = (
     }
     if (best === undefined) continue;
     for (const rule of best.rules) walk.rules.add(rule);
-    walk.diffs.push(...best.diffs);
+    walk.diffs.push(...best.diffs.map((diff) => onArm(walk, diff, path, sender, senders)));
   }
   return true;
 };
+
+/** The four keys of a shape, for naming one arm of a choice in a sentence. */
+const MOST_KEYS_NAMED = 4;
+
+/** A short name for one arm of a choice: what it is called, or what it holds. */
+const armName = (walk: Walk, ast: TypeRefAst): string => {
+  if (ast.kind === 'id') {
+    const entry = walk.resolve(ast.id);
+    if (entry?.name !== undefined) return entry.name;
+  }
+  const fields = fieldsOfRef(walk, ast);
+  if (fields === undefined) return formatTypeRef(ast);
+  const names = fields.slice(0, MOST_KEYS_NAMED).map((field) => field.name);
+  return `{${names.join(',')}${fields.length > MOST_KEYS_NAMED ? ',…' : ''}}`;
+};
+
+/**
+ * A disagreement found on one arm of a choice, said as being about that arm.
+ *
+ * A handler that answers with one shape on the ordinary path and another on
+ * the one that needs a card is compared arm by arm already — and then reported
+ * with a sentence that reads as though it were about the whole answer. "sender
+ * does not send it" was read as "never sends it", and establishing that it
+ * meant "not on the second of two shapes" took four passes through two
+ * repositories, with the answer sitting in the type id the whole time (R32).
+ *
+ * The verdict does not change. A caller that cannot tell which shape it got is
+ * a real problem whether or not the second shape is reachable today; which arm
+ * it is is what lets somebody decide that in a minute rather than an afternoon.
+ */
+const onArm = (
+  walk: Walk,
+  diff: FieldDiff,
+  path: string,
+  arm: TypeRefAst,
+  arms: readonly TypeRefAst[],
+): FieldDiff => {
+  if (arms.length < 2) return diff;
+  const named = armName(walk, arm);
+  // The field as the arm itself names it. A choice can sit anywhere in a
+  // shape, so the path a diff carries is from the top of the type and the
+  // arms' own fields start where the choice does.
+  const under = path === '' ? diff.path : diff.path.slice(path.length + 1);
+  const own = under !== '' && !under.includes('.') && !under.includes('[') ? under : undefined;
+  const carrying =
+    own === undefined
+      ? 0
+      : arms.filter((each) => (fieldsOfRef(walk, each) ?? []).some((field) => field.name === own))
+          .length;
+  const where =
+    diff.kind === 'missing_required' && carrying > 0
+      ? `it is on ${carrying} of the ${arms.length} shapes this may answer with, and not on ${named}`
+      : `on ${named}, one of the ${arms.length} shapes this may answer with`;
+  return { ...diff, note: diff.note === null || diff.note === undefined ? where : `${diff.note}; ${where}` };
+};
+
+/**
+ * How many shapes a choice may hold before it is reported rather than compared.
+ *
+ * Two is the ordinary case and a handful is a discriminated result; a dozen is
+ * a shape that should have been one type, and comparing it against another
+ * dozen is a hundred and forty-four walks nobody is waiting for.
+ */
+const MOST_ARMS = 12;
+
+/** The rule that says a choice was too wide to walk, rather than wrong. */
+const TOO_MANY_ARMS = 'choice-too-wide';
 
 /**
  * How many times a choice may be unwrapped before compatibility gives up.

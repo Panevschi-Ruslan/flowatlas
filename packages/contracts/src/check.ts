@@ -7,7 +7,14 @@
  * consumed by three later commands, so it is deterministic to the byte and
  * nothing it could not check is left out of it.
  */
-import { parseTypeRef, type ProjectGraph, type TypeEntry, type TypeRefAst } from '@flowatlas/core';
+import {
+  DATA_REACH,
+  makeTypeId,
+  parseTypeRef,
+  type ProjectGraph,
+  type TypeEntry,
+  type TypeRefAst,
+} from '@flowatlas/core';
 import { boundaries, namesAShape, type Exchange } from './boundary.js';
 import { diffRefs } from './compare.js';
 import { findingKey } from './key.js';
@@ -26,6 +33,7 @@ import {
   type ContractSummary,
   type FieldDiff,
   type GraphLookup,
+  type StripImpact,
   type UncheckedEdge,
   type UncheckedReason,
 } from './types.js';
@@ -296,11 +304,12 @@ const findingOf = (
   diff: FieldDiff,
   ignoredBy: string | null,
   unreached: string | null = null,
+  impact?: StripImpact,
 ): ContractFinding => ({
   severity:
-    unreached !== null && severityOf(diff.kind, diff.rule) === 'error'
+    unreached !== null && severityOf(diff.kind, diff.rule, impact) === 'error'
       ? 'warning'
-      : severityOf(diff.kind, diff.rule),
+      : severityOf(diff.kind, diff.rule, impact),
   kind: diff.kind,
   edge: exchange.edge,
   edgeKey: exchange.edgeKey,
@@ -312,14 +321,134 @@ const findingOf = (
   expected: diff.expected,
   actual: diff.actual,
   rule: diff.rule,
+  ...(impact === undefined ? {} : { impact }),
   message:
     describeDiff(diff, {
       sender: exchange.sender.service,
       receiver: exchange.receiver.service,
+      // A request is the one direction with an object written at a call site to
+      // read from, so it is the one direction where reading a declared type
+      // instead is a weaker claim and has to be said as one. A response and a
+      // payload have only ever had the declared type, and their wording is not
+      // what R34 is about.
+      observed: exchange.direction !== 'request' || exchange.sender.writes !== undefined,
+      everyCall: exchange.direction !== 'request' || exchange.sender.writesEvery !== false,
     }) + (unreached === null ? '' : `; nothing in the project calls ${unreached}`),
   ignored: ignoredBy !== null,
   ignoredBy,
 });
+
+
+
+/**
+ * Every write a route's handler reaches, and the document each one names.
+ *
+ * Walked from the entry the same way the guard audit walks it, and stopping at
+ * the same distance, so "reaches stored data" means one thing across the tool.
+ * The db adapter has already worked out which calls are writes and which
+ * entity each one is about; this only collects them.
+ *
+ * A write is recognised by the node being one, not by it having an edge to a
+ * table. A write whose table could not be read has no `queries` edge and was
+ * therefore invisible here — and a handler that writes would have been reported
+ * as one that cannot lose anything, which is the kind of quiet false comfort
+ * this check exists to remove.
+ *
+ * One walk, answering both questions the impact needs, because walking twice
+ * per stripped field is the same traversal repeated for every row on the route.
+ */
+const writesReachedBy = (
+  lookup: GraphLookup,
+  entryId: string,
+): { any: boolean; documents: TypeEntry[] } => {
+  const repo = lookup.node(entryId)?.repo ?? '';
+  const documents: TypeEntry[] = [];
+  let any = false;
+  const seen = new Set<string>([entryId]);
+  let frontier = [entryId];
+  for (let depth = 0; depth < DATA_REACH && frontier.length > 0; depth += 1) {
+    const next: string[] = [];
+    for (const id of frontier) {
+      for (const edge of lookup.edgesFrom(id, ['handles', 'calls'])) {
+        if (seen.has(edge.to)) continue;
+        seen.add(edge.to);
+        next.push(edge.to);
+        const node = lookup.node(edge.to);
+        if (node?.type !== 'db_query' || node.meta?.['op'] !== 'write') continue;
+        any = true;
+        // The id the write recorded, which is the reliable answer; the name is
+        // the fallback for a graph written before that was kept.
+        const byId = node.meta['entityTypeId'];
+        const named = node.meta['entityType'];
+        const entry =
+          typeof byId === 'string' && byId !== ''
+            ? lookup.type(byId)
+            : typeof named === 'string' && named !== ''
+              ? lookup.type(makeTypeId(repo, named))
+              : undefined;
+        if (entry !== undefined) documents.push(entry);
+      }
+    }
+    frontier = next;
+  }
+  return { any, documents };
+};
+
+/**
+ * What a field the receiver strips off the body actually costs.
+ *
+ * Seventy-nine rows on one project, every one of them true, one of them a bug
+ * that had been in production unnoticed: a field the admin screen sets, the
+ * kitchen display groups by, and the DTO does not declare. Finding it cost an
+ * afternoon of reading the other seventy-eight, which is the afternoon the tool
+ * exists to save (R30).
+ *
+ * Neither test is a name heuristic. `_id` and `createdAt` need no special case:
+ * they fail the second test on their own, because the handler does not read
+ * them off the body.
+ */
+const stripImpact = (
+  writes: { any: boolean; documents: TypeEntry[] },
+  field: string,
+): StripImpact => {
+  if (!writes.any) return 'none';
+  // Only a key of the body itself. A nested path's last segment is not a
+  // top-level field of the document: `options.name` matched against a document
+  // with a `name` said the sender believed it had saved something, about a
+  // different field entirely.
+  if (field.includes('.') || field.includes('[')) return 'unknown';
+  const stored = writes.documents.some((entry) =>
+    (entry.fields ?? []).some((each) => each.name === field),
+  );
+  return stored ? 'stored' : 'unknown';
+};
+
+/**
+ * Whether a disagreement is about something the call actually puts on the wire.
+ *
+ * A boundary is compared on two declared types, and a declared type on the
+ * sending side says what the call is *permitted* to send. Where an object
+ * written in the source says which keys it writes, a key it does not write is
+ * not sent, and a sentence about a key nothing sends is not a finding — it is
+ * the tool reading a permission as an act (R34).
+ *
+ * Only for what the sender is being accused of putting there: `extra_field`,
+ * and a field the receiver made optional that the sender is said to always
+ * send. A field the receiver *requires* is left alone, because a literal that
+ * does not write it is an argument for the finding rather than against it.
+ *
+ * Only at the top of the shape. Below that the keys are the declared type's,
+ * and the literal says nothing about them.
+ */
+const isSent = (exchange: Exchange, diff: FieldDiff): boolean => {
+  const writes = exchange.sender.writes;
+  if (writes === undefined || exchange.direction !== 'request') return true;
+  if (diff.path === '' || diff.path.includes('.') || diff.path.includes('[')) return true;
+  const accuses =
+    diff.kind === 'extra_field' ||
+    (diff.kind === 'optionality_mismatch' && diff.optionalOn === 'receiver');
+  return !accuses || writes.includes(diff.path);
+};
 
 /**
  * Every boundary in a project, checked.
@@ -338,6 +467,21 @@ export const checkContracts = (
   const ignored: ContractFinding[] = [];
   const unchecked: UncheckedEdge[] = [];
   const summary = emptySummary();
+
+  /**
+   * What each route writes, worked out once.
+   *
+   * Every stripped field on one route asks the same question of the same
+   * handler, and the answer cannot change between two fields of one body.
+   */
+  const writes = new Map<string, { any: boolean; documents: TypeEntry[] }>();
+  const writesOf = (entryId: string): { any: boolean; documents: TypeEntry[] } => {
+    const known = writes.get(entryId);
+    if (known !== undefined) return known;
+    const found = writesReachedBy(lookup, entryId);
+    writes.set(entryId, found);
+    return found;
+  };
 
   for (const exchange of boundaries(lookup)) {
     const verdict = judge(lookup, exchange, options);
@@ -358,7 +502,21 @@ export const checkContracts = (
 
     const ignoredBy = excusedBy(lookup, exchange, options);
     const unreached = unreachedCaller(lookup, exchange);
-    const found = verdict.diffs.map((diff) => findingOf(exchange, diff, ignoredBy, unreached));
+    const found = verdict.diffs
+      .filter((diff) => isSent(exchange, diff))
+      .map((diff) =>
+        findingOf(
+          exchange,
+          diff,
+          ignoredBy,
+          unreached,
+          // Only a strip has anything to lose, and only the receiving end of a
+          // request has a handler to ask about it.
+          diff.rule === 'whitelist-strip' && exchange.direction === 'request'
+            ? stripImpact(writesOf(exchange.edge.to), diff.path)
+            : undefined,
+        ),
+      );
     edges.push({
       edge: exchange.edge,
       edgeKey: exchange.edgeKey,

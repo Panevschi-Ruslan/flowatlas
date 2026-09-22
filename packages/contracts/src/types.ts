@@ -8,8 +8,14 @@
  */
 import type { GraphEdge, GraphNode, TypeEntry } from '@flowatlas/core';
 
-/** Version of `contracts.json`, independent of the graph schema. */
-export const CONTRACTS_FORMAT_VERSION = 1;
+/**
+ * Version of `contracts.json`, independent of the graph schema.
+ *
+ * 2 — a party carries `writes`, the keys an object written at the call site
+ * puts on the wire, and a request-direction message says whether it is
+ * describing what a call sends or what its declared type permits (R34).
+ */
+export const CONTRACTS_FORMAT_VERSION = 2;
 
 /** How bad a finding is. */
 export const SEVERITIES = ['error', 'warning', 'info'] as const;
@@ -60,6 +66,27 @@ export const CONTRACT_STATUSES = ['shared', 'identical', 'hash_differs', 'unchec
 
 export type ContractStatus = (typeof CONTRACT_STATUSES)[number];
 
+/**
+ * What a field the receiver throws away can cost.
+ *
+ * A whitelisting pipe removes an undeclared field before the handler runs, and
+ * seventy-nine of those on one project are not seventy-nine problems. Two
+ * things the graph already knows tell them apart, and neither is the spelling
+ * of the name (R30):
+ *
+ * `stored`  — the handler writes a document that declares this field, so the
+ *             sender believes it saved something that never arrived.
+ * `none`    — no write was found under the handler within the distance this
+ *             walks. A preview endpoint genuinely writes nothing; so does a
+ *             handler whose data layer the reader could not follow, and the
+ *             two are not told apart here, which is why the row says what was
+ *             looked for rather than what the route does.
+ * `unknown` — it writes something, and nothing it writes declares this field.
+ */
+export const STRIP_IMPACTS = ['stored', 'unknown', 'none'] as const;
+
+export type StripImpact = (typeof STRIP_IMPACTS)[number];
+
 /** One end of an exchange: who it is, and what shape it names. */
 export interface ContractParty {
   service: string;
@@ -67,6 +94,27 @@ export interface ContractParty {
   typeId: string | null;
   /** The node whose source a reader would open. */
   symbol: string;
+  /**
+   * The top-level keys this end actually writes, when an object in the source
+   * says so.
+   *
+   * The type above is what this end is *permitted* to send; this is what it
+   * does send. A `Partial<T>` parameter permits every key of `T` and a call
+   * that writes three of them writes three, and the difference is the
+   * difference between a finding and a sentence about nothing (R34). Absent
+   * wherever the body was passed by name, which is most of the time.
+   */
+  writes?: readonly string[];
+  /**
+   * True when one object is written for this boundary rather than one per
+   * caller.
+   *
+   * Three callers each writing `{ role }`, `{ isActive }` and `{ permissions }`
+   * put all three keys on the wire between them and none of them on every
+   * request, so "always sent" is as wrong about them as it was about a type
+   * (R34).
+   */
+  writesEvery?: boolean;
 }
 
 /** One disagreement between two shapes, as the comparator found it. */
@@ -104,6 +152,8 @@ export interface ContractFinding {
   expected: string | null;
   actual: string | null;
   rule: string | null;
+  /** What the receiver throwing this field away can cost. Only on a strip. */
+  impact?: StripImpact;
   message: string;
   /** True when an annotation or the configuration says this drift is deliberate. */
   ignored: boolean;

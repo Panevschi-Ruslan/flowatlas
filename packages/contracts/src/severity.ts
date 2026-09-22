@@ -6,7 +6,7 @@
  * TypeScript, and less certainty can never make a verdict harsher than the
  * plain reading of the two declarations.
  */
-import type { FindingKind, Severity } from './types.js';
+import type { FindingKind, Severity, StripImpact } from './types.js';
 
 const BY_KIND: Record<FindingKind, Severity> = {
   missing_required: 'error',
@@ -30,6 +30,10 @@ const SOFTENED_BY: Record<string, Severity> = {
   'set-map-json': 'warning',
   // A `null` arriving where an unvalidated receiver declares the field optional.
   'null-for-optional': 'warning',
+  // A choice of shapes too wide to walk. Nothing was compared, so nothing was
+  // found to disagree, and the row says what was not done rather than claiming
+  // a mismatch it never established.
+  'choice-too-wide': 'info',
 };
 
 /**
@@ -42,8 +46,45 @@ const SOFTENED_BY: Record<string, Severity> = {
  */
 const HARDENED_BY: Record<string, Severity> = { 'whitelist-strip': 'warning' };
 
-export const severityOf = (kind: FindingKind, rule: string | null): Severity => {
+/**
+ * A strip, by what it can cost.
+ *
+ * The rule says the field is removed; this says what that removal can lose. A
+ * handler that reaches no write at all cannot lose anything by dropping a
+ * field — a pricing preview reads, answers and persists nothing — so its rows
+ * are information and fold into a count.
+ *
+ * The other two are both warnings, deliberately. R30 expected a field of a
+ * document the handler writes to be an error, on the reasoning that `_id` and
+ * `createdAt` would fail that test on their own because a client is not the
+ * thing that sets them. Measured, they do not fail it: they are declared on
+ * the schema like every other field, and promoting `stored` to an error made
+ * twenty-five errors of which almost all were a client echoing back a key the
+ * server owns. The signal is good enough to sort by and not good enough to
+ * stop a build with, and saying otherwise would be the same mistake this
+ * ticket was raised about.
+ */
+const BY_IMPACT: Record<StripImpact, Severity> = {
+  stored: 'warning',
+  unknown: 'warning',
+  none: 'info',
+};
+
+export const severityOf = (
+  kind: FindingKind,
+  rule: string | null,
+  impact?: StripImpact,
+): Severity => {
   const base = BY_KIND[kind];
+  if (rule !== null && HARDENED_BY[rule] !== undefined && impact !== undefined) {
+    // The impact refines the hardening, and like the hardening it may only
+    // reach the level that rule is allowed to reach. Returning it outright
+    // would let a measurement quietly soften a verdict the kind had made
+    // harsher, which is the one direction this module does not travel.
+    const measured = BY_IMPACT[impact];
+    const hardest = HARDENED_BY[rule] as Severity;
+    return SEVERITY_RANK[measured] < SEVERITY_RANK[hardest] ? hardest : measured;
+  }
   const hardened = rule === null ? undefined : HARDENED_BY[rule];
   if (hardened !== undefined && SEVERITY_RANK[hardened] < SEVERITY_RANK[base]) return hardened;
   const softened = rule === null ? undefined : SOFTENED_BY[rule];

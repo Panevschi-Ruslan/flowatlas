@@ -2,6 +2,8 @@ import {
   classifyDbCall,
   declaredParameterType,
   narrowUnionByLiteral,
+  writtenBodyOutward,
+  writtenKeysOf,
   makeConfigKeyId,
   makeExternalApiId,
   makeLeafId,
@@ -9,6 +11,7 @@ import {
   resolveTypeOrigin,
   type DbDescriptor,
   type TypeOrigin,
+  type BodyRead,
 } from '@flowatlas/core';
 import {
   definePass,
@@ -314,6 +317,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
 
     const site = siteOf(ctx, call, file);
     const id = makeLeafId('db_query', ctx.repo, file, site.line, site.column);
+    // Only for a write: a read cannot lose what a sender believed it saved, and
+    // collecting a type nobody will ask about is a type in everybody's registry.
+    const entityArg = classification.op === 'write' ? origin?.typeArgs[0] : undefined;
+    const entityTypeId = entityArg === undefined ? undefined : ctx.types.collectType(entityArg, call);
     ctx.builder.addNode({
       id,
       type: 'db_query',
@@ -329,7 +336,17 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         method,
         receiver: receiver.getText().slice(0, 80),
         source: classification.source,
-        ...(classification.entityType === undefined ? {} : { entityType: classification.entityType }),
+        ...(classification.entityType === undefined
+          ? {}
+          : {
+              entityType: classification.entityType,
+              // The document this call writes, recorded in the registry so
+              // that whoever asks what a write stores can read its fields.
+              // Without it the answer depended on the schema happening to be
+              // on a boundary for some other reason, which is not a fact about
+              // the write at all (R30).
+              ...(entityTypeId === undefined ? {} : { entityTypeId }),
+            }),
       },
     });
     ctx.builder.addEdge({
@@ -554,6 +571,11 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
 
     // A second argument can carry the method for a generic request.
     let verb = method;
+    // True when the second argument turned out to be a request's settings
+    // rather than its body — `fetch(url, { method, headers, body })`. Its keys
+    // are not the keys of anything sent, and recording them as such would let
+    // `method` and `headers` stand for what a call puts on the wire.
+    let secondIsSettings = false;
     if (verb === 'GET') {
       const optionsArg = init === undefined ? site.getArguments()[1] : deref(init);
       if (optionsArg !== undefined && Node.isObjectLiteralExpression(optionsArg)) {
@@ -563,6 +585,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
           const value = initializer === undefined ? undefined : evaluateExpression(initializer);
           if (value?.resolved === true && typeof value.value === 'string') {
             verb = value.value.toUpperCase();
+            secondIsSettings = init === undefined;
           }
         }
       }
@@ -577,14 +600,29 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       declaredBodyWide !== undefined && bodyArgument !== undefined
         ? narrowUnionByLiteral(declaredBodyWide, bodyArgument)
         : declaredBodyWide;
-    const bodyType =
-      verb === 'POST' || verb === 'PUT' || verb === 'PATCH'
-        ? declaredBody !== undefined
-          ? ctx.types.collectType(declaredBody, site)
-          : bodyArgument === undefined
-            ? null
-            : ctx.types.collectType(bodyArgument.getType(), bodyArgument)
-        : null;
+    // A declared type says what a call is permitted to send; the keys of an
+    // object written in the source say what it does send, and reporting the
+    // permission as the act named keys no call there writes (R34). The type
+    // stays the declared one — it is the better answer for what each field is —
+    // and the keys are recorded beside it.
+    const carries = verb === 'POST' || verb === 'PUT' || verb === 'PATCH';
+    const writtenBody = carries && !secondIsSettings ? writtenBodyOutward(bodyArgument) : [];
+    const bodyKeys = writtenKeysOf(writtenBody);
+    const bodyFrom: BodyRead =
+      bodyKeys !== undefined
+        ? writtenBody.length === 1
+          ? 'literal'
+          : 'literals'
+        : declaredBody !== undefined
+          ? 'type'
+          : 'value';
+    const bodyType = !carries
+      ? null
+      : declaredBody !== undefined
+        ? ctx.types.collectType(declaredBody, site)
+        : bodyArgument === undefined
+          ? null
+          : ctx.types.collectType(bodyArgument.getType(), bodyArgument);
 
     const place = siteOf(ctx, site, owner.file);
     const id = makeLeafId('http_out', ctx.repo, owner.file, place.line, place.column);
@@ -602,6 +640,8 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         baseUrlEnv: info.baseUrlEnv,
         responseType,
         bodyType,
+        ...(bodyType === null ? {} : { bodyFrom }),
+        ...(bodyKeys === undefined ? {} : { bodyKeys }),
         ...(info.host === null ? {} : { host: info.host }),
       },
     });

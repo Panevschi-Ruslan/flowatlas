@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-14T12:22:43.124Z",
+  "builtAt": "2026-09-22T10:05:33.018Z",
   "configHash": "6bdd35fd6118",
   "services": [
     {
@@ -12,18 +12,18 @@
       "edges": 14,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 703
+      "durationMs": 0
     },
     {
       "name": "gateway",
       "repo": "./gateway",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 37,
-      "edges": 32,
+      "nodes": 43,
+      "edges": 38,
       "types": 4,
       "unresolved": 1,
-      "durationMs": 756
+      "durationMs": 0
     },
     {
       "name": "orders",
@@ -32,20 +32,20 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 32,
       "edges": 25,
-      "types": 4,
+      "types": 5,
       "unresolved": 1,
-      "durationMs": 723
+      "durationMs": 0
     },
     {
       "name": "web",
       "repo": "./web",
       "type": "angular",
       "extractor": "@flowatlas/extractor-angular",
-      "nodes": 20,
-      "edges": 12,
+      "nodes": 32,
+      "edges": 21,
       "types": 1,
-      "unresolved": 0,
-      "durationMs": 579
+      "unresolved": 3,
+      "durationMs": 0
     }
   ],
   "httpOut": {
@@ -59,13 +59,14 @@
     "dynamic": 1
   },
   "ui": {
-    "total": 6,
-    "resolved": 3,
-    "unresolved": 3,
+    "total": 13,
+    "resolved": 6,
+    "unresolved": 7,
     "byReason": {
       "ambiguous-route-target": 1,
+      "api-path-dynamic": 3,
       "api-path-partly-read": 1,
-      "target-route-not-found": 1
+      "target-route-not-found": 2
     }
   },
   "channels": {
@@ -79,8 +80,8 @@
     ]
   },
   "routes": {
-    "total": 12,
-    "called": 4,
+    "total": 15,
+    "called": 7,
     "uncalled": [
       "entry:billing:http:GET:/invoices/:param",
       "entry:gateway:http:POST:/orders/:param/cancel",
@@ -96,7 +97,7 @@
     ]
   },
   "types": {
-    "total": 10,
+    "total": 11,
     "sharedPackage": 4
   },
   "unresolved": [
@@ -171,12 +172,21 @@
       "message": "gateway and orders both answer GET /orders/:param",
       "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
       "symbol": "ui_api_call:web#src/app/orders-api.service.ts:34:12"
+    },
+    {
+      "service": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 106,
+      "reason": "target-route-not-found",
+      "message": "POST /orders/:param/hold reaches no route, though /orders/:param/resume does",
+      "hint": "The segment is written as a closed set of values and one of them has no route. A renamed or missing handler looks exactly like this; check the ones named.",
+      "symbol": "ui_api_call:web#src/app/orders-api.service.ts:106:12"
     }
   ],
   "totals": {
-    "nodes": 107,
-    "edges": 88,
-    "types": 10,
-    "unresolved": 10
+    "nodes": 125,
+    "edges": 108,
+    "types": 11,
+    "unresolved": 14
   }
 }

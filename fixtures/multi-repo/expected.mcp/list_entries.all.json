@@ -57,6 +57,30 @@
       "kind": "http"
     },
     {
+      "id": "entry:gateway:http:POST:/orders/:param/refund",
+      "type": "entry",
+      "label": "POST /orders/:param/refund",
+      "loc": "src/orders/orders.controller.ts:65",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/resume",
+      "type": "entry",
+      "label": "POST /orders/:param/resume",
+      "loc": "src/orders/orders.controller.ts:71",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/ship",
+      "type": "entry",
+      "label": "POST /orders/:param/ship",
+      "loc": "src/orders/orders.controller.ts:60",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
       "id": "entry:gateway:http:POST:/orders/charge",
       "type": "entry",
       "label": "POST /orders/charge",
@@ -113,5 +137,5 @@
       "kind": "http"
     }
   ],
-  "total": 14
+  "total": 17
 }

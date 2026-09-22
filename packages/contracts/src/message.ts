@@ -12,6 +12,23 @@ import type { FieldDiff, FindingKind } from './types.js';
 export interface Parties {
   sender?: string;
   receiver?: string;
+  /**
+   * True when the sender's shape was read from an object written in the source.
+   *
+   * What a sentence is allowed to claim. Read from a literal, the tool watched
+   * the key being written and may say the call sends it. Read from a declared
+   * type, all it knows is that the key is *permitted*, and "sends" and "always
+   * sent" are then assertions about something nobody observed (R34).
+   */
+  observed?: boolean;
+  /**
+   * True when the keys observed are written once rather than once per caller.
+   *
+   * What separates "sends" from "always sends". Three callers writing three
+   * different objects do send every key between them, and none of them on
+   * every request.
+   */
+  everyCall?: boolean;
 }
 
 const sender = (parties: Parties): string =>
@@ -43,10 +60,16 @@ const SENTENCE: Record<FindingKind, (diff: FieldDiff, parties: Parties) => strin
   },
   optionality_mismatch: (diff, parties) =>
     diff.optionalOn === 'receiver'
-      ? `${named(diff.path)} is optional for ${receiver(parties)} and always sent by ${sender(parties)}`
+      ? parties.observed === true && parties.everyCall === true
+        ? `${named(diff.path)} is optional for ${receiver(parties)} and always sent by ${sender(parties)}`
+        : parties.observed === true
+          ? `${named(diff.path)} is optional for ${receiver(parties)} and sent by some of the calls ${sender(parties)} makes`
+          : `${named(diff.path)} is optional for ${receiver(parties)} and not optional in the type ${sender(parties)} declares`
       : `${named(diff.path)} may be left out by ${sender(parties)} and is required by ${receiver(parties)}`,
   extra_field: (diff, parties) =>
-    `${sender(parties)} sends ${shown(diff.path, diff.actual)}; ${receiver(parties)} declares no such field`,
+    parties.observed === true
+      ? `${sender(parties)} sends ${shown(diff.path, diff.actual)}; ${receiver(parties)} declares no such field`
+      : `the type ${sender(parties)} declares permits ${shown(diff.path, diff.actual)}; ${receiver(parties)} declares no such field`,
 };
 
 /** The sentence for one disagreement, with the two services named when known. */

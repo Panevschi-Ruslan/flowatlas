@@ -31,7 +31,7 @@ import {
   type BaselineRead,
 } from '../doctor/baseline.js';
 import { renderDoctorGithub, renderDoctorJson, renderDoctorText, summaryLine } from '../doctor/render.js';
-import { runDoctor } from '../doctor/run.js';
+import { runDoctor, withAnsweredDemoted } from '../doctor/run.js';
 import {
   BASELINE_FORMAT_VERSION,
   SECTIONS,
@@ -300,7 +300,10 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
   const settings = fromConfig(options);
   const { db, close } = openProjectDb(options);
   try {
-    const { rows, note } = rowsFor(db, settings.outputDir);
+    const { rows: raw, note } = rowsFor(db, settings.outputDir);
+    // Demoted here rather than inside the report, so that the baseline the
+    // accept writes and the count the report prints are the same rows (R36).
+    const rows = withAnsweredDemoted(raw, db);
     const path = baselinePathFor(options, settings);
 
     // Reading the baseline is separate from comparing it, so that "there is no

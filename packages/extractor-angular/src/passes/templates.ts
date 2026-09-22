@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import {
   findMethod,
+  methodNamedOn,
   lineOf,
   makeLeafId,
   normalizeFilePath,
@@ -255,7 +256,10 @@ export const templatesPass = definePass('templates', (ctx) => {
 
   const lifecycle = (indexed: IndexedClass): void => {
     for (const name of LIFECYCLE) {
-      const method = indexed.declaration.getMethod(name);
+      // `ngOnInit = () => {}` is a lifecycle hook like any other: the framework
+      // calls whatever the property holds, and asking only for a declared
+      // method left the screen with no way in (R29).
+      const method = methodNamedOn(indexed.declaration, name);
       if (method === undefined) continue;
       const methodId = ctx.methodIdOf(method);
       if (methodId === undefined) continue;

@@ -432,11 +432,13 @@ describe('a field a whitelisting validation pipe removes', () => {
       { generatedAt: FIXED },
     );
 
-  it('warns about a field declared without a decorator and one not declared at all', () => {
+  it('reports a field declared without a decorator and one not declared at all', () => {
     const stripped = patch({ whitelist: true }).findings.filter((finding) => finding.rule === 'whitelist-strip');
-    expect(stripped.map((finding) => [finding.field, finding.severity])).toEqual([
-      ['note', 'warning'],
-      ['price', 'warning'],
+    // This handler reaches no write, so neither strip can lose anything and
+    // both are information rather than a warning (R30).
+    expect(stripped.map((finding) => [finding.field, finding.severity, finding.impact])).toEqual([
+      ['note', 'info', 'none'],
+      ['price', 'info', 'none'],
     ]);
   });
 
@@ -476,5 +478,203 @@ describe('a field a whitelisting validation pipe removes', () => {
     const report = patch({ transform: true });
     expect(report.findings.some((finding) => finding.rule === 'whitelist-strip')).toBe(false);
     expect(report.findings.map((finding) => [finding.field, finding.severity])).toEqual([['note', 'info']]);
+  });
+});
+
+/**
+ * What a call is permitted to send, against what it writes down (R34).
+ *
+ * The sender's declared type is the only evidence there is until an object
+ * written at the call site says which keys are actually there. Where it does,
+ * a key it leaves out is not sent, and a sentence about a key nothing sends is
+ * not a finding.
+ */
+describe('a declared type as permission, and a literal as act', () => {
+  const wide = {
+    'type:caller#Wide': object('Wide', [
+      field('id', 'string'),
+      field('owner', 'string'),
+      field('archived', 'boolean'),
+    ]),
+    'type:api#Narrow': object('Narrow', [field('id', 'string')]),
+  } as TypeRegistry;
+
+  const sending = (writes?: readonly string[], from: string = 'literal'): ContractReport =>
+    checkContracts(
+      graphOf({
+        nodes: [
+          node('caller#Client.create', 'method', 'caller'),
+          node('http_out:caller#1', 'http_out', 'caller', {
+            ...(writes === undefined ? {} : { meta: { bodyKeys: writes, bodyFrom: from } }),
+          }),
+          node('entry:api:http:POST:/orders', 'entry', 'api', { kind: 'http' }),
+          node('api#Controller.create', 'method', 'api'),
+        ],
+        edges: [
+          edge('caller#Client.create', 'calls', 'http_out:caller#1'),
+          edge('http_out:caller#1', 'http_calls', 'entry:api:http:POST:/orders', {
+            params: ['type:caller#Wide'],
+          }),
+          edge('entry:api:http:POST:/orders', 'handles', 'api#Controller.create', {
+            params: ['type:api#Narrow'],
+            meta: { body: 'type:api#Narrow' },
+          }),
+        ],
+        types: wide,
+      }),
+      { generatedAt: FIXED },
+    );
+
+  const extras = (report: ContractReport): string[] =>
+    report.findings
+      .filter((finding) => finding.kind === 'extra_field' && finding.direction === 'request')
+      .map((finding) => finding.field)
+      .sort();
+
+  it('reports every permitted key when nothing says which are written', () => {
+    expect(extras(sending())).toEqual(['archived', 'owner']);
+  });
+
+  it('reports only the keys the call writes when something does', () => {
+    // `Partial<T>` permits all three; this call writes one of the two extras.
+    expect(extras(sending(['id', 'owner']))).toEqual(['owner']);
+  });
+
+  it('says nothing at all when the call writes only what the receiver declares', () => {
+    expect(extras(sending(['id']))).toEqual([]);
+  });
+
+  it('claims the act only where it watched the act', () => {
+    const permitted = sending().findings.find((finding) => finding.kind === 'extra_field');
+    const written = sending(['id', 'owner']).findings.find(
+      (finding) => finding.kind === 'extra_field',
+    );
+    expect(permitted?.message).toContain('permits');
+    expect(permitted?.message).not.toContain('sends');
+    expect(written?.message).toContain('sends');
+  });
+
+  it('leaves a field the receiver requires alone, however the sender was read', () => {
+    // A literal that does not write a required field is an argument for the
+    // finding, not against it, so this filter never touches that kind.
+    const missing = sending(['id'])
+      .findings.filter((finding) => finding.kind === 'missing_required')
+      .map((finding) => finding.field);
+    expect(missing).toEqual([]);
+  });
+
+  it('carries the keys onto the party, so a reader of the JSON sees them too', () => {
+    const found = sending(['id', 'owner']).edges.find((row) => row.direction === 'request');
+    expect(found?.sender.writes).toEqual(['id', 'owner']);
+    expect(
+      sending().edges.find((row) => row.direction === 'request')?.sender.writes,
+    ).toBeUndefined();
+  });
+
+  it('says "always" only where one object is written, not one per caller', () => {
+    // Three callers writing `{ role }`, `{ isActive }` and `{ permissions }`
+    // put all three keys on the wire between them and none on every request.
+    const oneObject = sending(['id', 'owner'], 'literal');
+    const onePerCaller = sending(['id', 'owner'], 'literals');
+    const said = (report: ContractReport): string =>
+      report.findings.find((finding) => finding.kind === 'optionality_mismatch')?.message ?? '';
+    expect(said(oneObject) + said(onePerCaller)).not.toContain('always sent');
+    expect(oneObject.edges.find((row) => row.direction === 'request')?.sender.writesEvery).toBe(true);
+    expect(onePerCaller.edges.find((row) => row.direction === 'request')?.sender.writesEvery).toBe(
+      false,
+    );
+  });
+});
+
+/**
+ * What a stripped field costs, which is not the same for all of them (R30).
+ *
+ * Seventy-nine rows on one real project, every one of them true and one of
+ * them a bug that had been in production unnoticed. Two things the graph knows
+ * tell the kinds apart, and neither is the spelling of the name.
+ */
+describe('a stripped field, by what it can lose', () => {
+  const types = {
+    'type:caller#Body': object('Body', [field('name', 'string'), field('course', 'string')]),
+    'type:api#BodyDto': object('BodyDto', [
+      field('name', 'string', false, { validators: ['IsString'] }),
+    ]),
+    'type:api#ItemSchema': object('ItemSchema', [field('name', 'string'), field('course', 'string')]),
+    'type:api#OtherSchema': object('OtherSchema', [field('name', 'string')]),
+  };
+
+  const posting = (writes?: { entity: string }): ContractReport =>
+    checkContracts(
+      graphOf({
+        nodes: [
+          node('caller#Client.create', 'method', 'caller'),
+          node('http_out:caller#1', 'http_out', 'caller'),
+          node('entry:api:http:POST:/items', 'entry', 'api', { kind: 'http' }),
+          node('api#Controller.create', 'method', 'api'),
+          node('api#main.ts:ValidationPipe(x)', 'provider', 'api', {
+            label: 'ValidationPipe(x)',
+            meta: { factoryArgs: [{ whitelist: true }] },
+          }),
+          ...(writes === undefined
+            ? []
+            : [
+                node('db_query:api#1', 'db_query', 'api', {
+                  meta: { op: 'write', table: 'Item', entityType: writes.entity },
+                }),
+                node('table:api#Item', 'table', 'api'),
+              ]),
+        ],
+        edges: [
+          edge('caller#Client.create', 'calls', 'http_out:caller#1'),
+          edge('http_out:caller#1', 'http_calls', 'entry:api:http:POST:/items', {
+            params: ['type:caller#Body'],
+          }),
+          edge('entry:api:http:POST:/items', 'handles', 'api#Controller.create', {
+            params: ['type:api#BodyDto'],
+            meta: { body: 'type:api#BodyDto' },
+          }),
+          edge('entry:api:http:POST:/items', 'guarded_by', 'api#main.ts:ValidationPipe(x)', {
+            meta: { layer: 'pipe', scope: 'global' },
+          }),
+          ...(writes === undefined
+            ? []
+            : [
+                edge('api#Controller.create', 'calls', 'db_query:api#1'),
+                edge('db_query:api#1', 'queries', 'table:api#Item'),
+              ]),
+        ],
+        types,
+      }),
+      { generatedAt: FIXED },
+    );
+
+  const strip = (report: ContractReport) =>
+    report.findings.find((finding) => finding.rule === 'whitelist-strip' && finding.field === 'course');
+
+  it('says nothing can be lost when the handler reaches no write', () => {
+    // A pricing preview reads, answers and persists nothing. Sending it the
+    // caller's whole working object costs nothing at all.
+    const found = strip(posting());
+    expect(found?.impact).toBe('none');
+    expect(found?.severity).toBe('info');
+  });
+
+  it('says the document declares it when the handler writes that document', () => {
+    const found = strip(posting({ entity: 'ItemSchema' }));
+    expect(found?.impact).toBe('stored');
+    expect(found?.severity).toBe('warning');
+  });
+
+  it('says it is on nothing the handler writes when no written document declares it', () => {
+    const found = strip(posting({ entity: 'OtherSchema' }));
+    expect(found?.impact).toBe('unknown');
+    expect(found?.severity).toBe('warning');
+  });
+
+  it('leaves everything that is not a strip without an impact at all', () => {
+    const others = posting({ entity: 'ItemSchema' }).findings.filter(
+      (finding) => finding.rule !== 'whitelist-strip',
+    );
+    expect(others.every((finding) => finding.impact === undefined)).toBe(true);
   });
 });

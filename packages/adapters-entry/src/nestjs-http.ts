@@ -7,7 +7,7 @@ import {
   getDecorator,
   stringListArg,
 } from '@flowatlas/extractor-nestjs';
-import { Node } from 'ts-morph';
+import { Node, type MethodDeclaration } from 'ts-morph';
 import { fileOfNode, handlerOf, joinPath, repoClasses } from './shared.js';
 
 const NEST_COMMON = ['@nestjs/common'] as const;
@@ -158,6 +158,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
           }
 
           const version = versionOf(method) ?? prefix.version;
+          const authNote = authNoteOf(method);
           const handler = handlerOf(method, ctx);
           const otherDecorators = method
             .getDecorators()
@@ -189,6 +190,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
                   ...(version === undefined ? {} : { version }),
                   controller: controllerName,
                   ...(otherDecorators.length > 0 ? { decorators: otherDecorators } : {}),
+                  ...(authNote === undefined ? {} : { authNote }),
                 },
               });
             }
@@ -198,6 +200,28 @@ export const nestjsHttpAdapter: EntryAdapter = {
     }
     return entries;
   },
+};
+
+/**
+ * `@flowatlas-auth a signed header is checked in the body` — a handler saying
+ * it refuses a request itself.
+ *
+ * Some handlers authenticate in their own body: a signed header is resolved and
+ * overrides what the client claimed, and a request carrying neither that nor a
+ * service token is refused. No guard sits in front of such a route and none
+ * should, and static reading cannot see any of it. The annotation is the
+ * handler's own word for it, in the shape `@flowatlas-calls` already uses, and
+ * it is a `marker` claim like every other: unverifiable, and therefore worth
+ * exactly as much as whoever wrote it (R33).
+ */
+const AUTH = /@flowatlas-auth[ \t]*(.*)/;
+
+const authNoteOf = (method: MethodDeclaration): string | undefined => {
+  for (const doc of method.getJsDocs()) {
+    const found = AUTH.exec(doc.getInnerText());
+    if (found !== null) return found[1]?.trim() === '' ? 'the handler checks the request itself' : (found[1] as string).trim();
+  }
+  return undefined;
 };
 
 export { Node };

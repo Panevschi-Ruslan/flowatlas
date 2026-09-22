@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-guards",
-  "generatedAt": "2026-09-14T17:22:55.488Z",
+  "generatedAt": "2026-09-20T21:18:31.069Z",
   "nodes": [
     {
       "id": "entry:nest-guards:http:GET:/admin/audit",
@@ -9,7 +9,7 @@
       "label": "GET /admin/audit",
       "repo": "nest-guards",
       "file": "src/admin/admin.controller.ts",
-      "line": 14,
+      "line": 29,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -24,6 +24,23 @@
             ]
           }
         ],
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-guards:http:GET:/admin/handover",
+      "type": "entry",
+      "label": "GET /admin/handover",
+      "repo": "nest-guards",
+      "file": "src/admin/admin.controller.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/admin/handover",
+        "rawPath": "/admin/handover",
+        "controller": "AdminController",
+        "authNote": "a signed header is resolved in the body and overrides the caller's claim",
         "adapter": "nestjs-http"
       }
     },
@@ -193,7 +210,15 @@
       "label": "AdminController.audit",
       "repo": "nest-guards",
       "file": "src/admin/admin.controller.ts",
-      "line": 14
+      "line": 29
+    },
+    {
+      "id": "nest-guards#src/admin/admin.controller.ts:AdminController.handover",
+      "type": "method",
+      "label": "AdminController.handover",
+      "repo": "nest-guards",
+      "file": "src/admin/admin.controller.ts",
+      "line": 23
     },
     {
       "id": "nest-guards#src/admin/admin.controller.ts:AdminController.stats",
@@ -400,7 +425,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/admin/admin.controller.ts",
-      "line": 14,
+      "line": 29,
       "params": [],
       "returns": "number"
     },
@@ -438,7 +463,7 @@
       "type": "guarded_by",
       "confidence": "static",
       "file": "src/admin/admin.controller.ts",
-      "line": 15,
+      "line": 30,
       "meta": {
         "order": 2,
         "scope": "method",
@@ -455,6 +480,72 @@
       "line": 20,
       "meta": {
         "order": 3,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "APP_INTERCEPTOR"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/admin/handover",
+      "to": "nest-guards#node_modules/@nestjs/common:ValidationPipe",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 10,
+      "meta": {
+        "order": 3,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/admin/handover",
+      "to": "nest-guards#src/admin/admin.controller.ts:AdminController.handover",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/admin/admin.controller.ts",
+      "line": 23,
+      "params": [],
+      "returns": "number"
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/admin/handover",
+      "to": "nest-guards#src/app.module.ts:requestIdMiddleware",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 27,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "configure"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/admin/handover",
+      "to": "nest-guards#src/guards/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "guard",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-guards:http:GET:/admin/handover",
+      "to": "nest-guards#src/interceptors/metrics.interceptor.ts:MetricsInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 20,
+      "meta": {
+        "order": 2,
         "scope": "global",
         "layer": "interceptor",
         "source": "APP_INTERCEPTOR"

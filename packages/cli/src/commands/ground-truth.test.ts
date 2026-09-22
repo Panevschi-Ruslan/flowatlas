@@ -257,15 +257,20 @@ describe('what the three requests of fixtures/ground-truth add up to', () => {
 
 describe('the routes fixtures/multi-repo declares, read from its controllers', () => {
   it('holds one entry per method and path, the pair of aliases collapsed into one', () => {
-    // gateway/src/orders/orders.controller.ts declares five, orders declares
-    // five over three files — `GET /a/:param` twice, which is one id — and
-    // billing/src/invoices/invoices.controller.ts declares two.
+    // gateway/src/orders/orders.controller.ts declares eight — three of them
+    // the pair a closed segment reaches and the half of a second pair that
+    // exists (R31) — orders declares five over three files, `GET /a/:param`
+    // twice, which is one id, and billing/src/invoices/invoices.controller.ts
+    // declares two.
     expect(routesOf(multiRepo)).toEqual([
       'entry:billing:http:GET:/invoices/:param',
       'entry:billing:http:POST:/invoices',
       'entry:gateway:http:GET:/orders/:param',
       'entry:gateway:http:POST:/orders/:param/cancel',
       'entry:gateway:http:POST:/orders/:param/invoice',
+      'entry:gateway:http:POST:/orders/:param/refund',
+      'entry:gateway:http:POST:/orders/:param/resume',
+      'entry:gateway:http:POST:/orders/:param/ship',
       'entry:gateway:http:POST:/orders/charge',
       'entry:gateway:http:POST:/orders/pay',
       'entry:orders:http:GET:/a/:param',
@@ -287,6 +292,12 @@ describe('the routes fixtures/multi-repo declares, read from its controllers', (
         'billing#src/invoices/invoices.controller.ts:InvoicesController.create',
       'entry:gateway:http:GET:/orders/:param':
         'gateway#src/orders/orders.controller.ts:OrdersController.findOne',
+      'entry:gateway:http:POST:/orders/:param/ship':
+        'gateway#src/orders/orders.controller.ts:OrdersController.ship',
+      'entry:gateway:http:POST:/orders/:param/refund':
+        'gateway#src/orders/orders.controller.ts:OrdersController.refund',
+      'entry:gateway:http:POST:/orders/:param/resume':
+        'gateway#src/orders/orders.controller.ts:OrdersController.resume',
       'entry:gateway:http:POST:/orders/:param/cancel':
         'gateway#src/orders/orders.controller.ts:OrdersController.cancel',
       'entry:gateway:http:POST:/orders/:param/invoice':

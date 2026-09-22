@@ -30,25 +30,42 @@ export const isMarkerName = (value: string): value is MarkerName =>
   (MARKER_NAMES as readonly string[]).includes(value);
 
 /**
- * This method publishes to `channel`.
+ * One name, several names, or a list of them.
+ *
+ * A project that keeps its channel names in one catalogue wants to reference
+ * them by symbol and to name more than one at a time; both forms mean the same
+ * thing as a stack of single annotations, and a stack of six is six lines
+ * saying one thing.
+ */
+export type Names = ReadonlyArray<string | readonly string[]>;
+
+/**
+ * This method publishes to these channels.
  *
  * For a channel name the analyser cannot follow, typically one read from
- * configuration.
+ * configuration. `@Emits('a')`, `@Emits('a', 'b')`, `@Emits(['a', 'b'])` and a
+ * stack of single annotations all mean the same thing.
  */
-export const Emits = (channel: string): MarkerDecorator => noop;
+export const Emits = (...channels: Names): MarkerDecorator => noop;
 
-/** This method receives from `channel`. */
-export const Consumes = (channel: string): MarkerDecorator => noop;
+/** This method receives from these channels, written the same ways. */
+export const Consumes = (...channels: Names): MarkerDecorator => noop;
 
 /**
  * This method calls another service.
  *
- * `route` is the method and path of the target, e.g. `POST /invoices`. For URLs
- * assembled at run time.
+ * `routes` are the method and path of each target, e.g. `POST /invoices`, one
+ * argument each or as a list. For URLs assembled at run time.
  */
-export const CallsService = (service: string, route: string): MarkerDecorator => noop;
+export const CallsService = (service: string, ...routes: Names): MarkerDecorator => noop;
 
-/** Names the flow this entry point starts, for reporting. */
+/**
+ * Names the flow this entry point starts, for reporting.
+ *
+ * One name, deliberately: an entry point is where one flow begins, and a
+ * handler that began two flows would be two entry points. The list form the
+ * channel markers take would be saying something this marker does not mean.
+ */
 export const FlowEntry = (name: string): MarkerDecorator => noop;
 
 /** Contract drift here is intentional; report it, do not fail on it. */

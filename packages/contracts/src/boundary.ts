@@ -109,9 +109,17 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
     }));
   }
 
+  const sender = lookup.node(edge.from)?.meta;
+  const written = sender?.['bodyKeys'];
+  const readable = Array.isArray(written) && written.every((key) => typeof key === 'string');
   const request = both(
     'request',
-    party(callerService, edge.params?.[0], caller),
+    {
+      ...party(callerService, edge.params?.[0], caller),
+      ...(readable
+        ? { writes: written as string[], writesEvery: sender?.['bodyFrom'] === 'literal' }
+        : {}),
+    },
     party(handlerService, bodyTypeOf(handles[0]), handler),
   );
   const response = both(

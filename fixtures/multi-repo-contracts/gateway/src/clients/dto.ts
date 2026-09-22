@@ -33,3 +33,20 @@ export interface OrderDto {
   total: string;
   placedAt: string;
 }
+
+/**
+ * The caller's shape for a draft: three fields where the receiver declares one.
+ *
+ * Which of the other two turn up as findings depends on what each call writes,
+ * not on this declaration. That is the point of it (R34).
+ */
+export interface DraftDto {
+  title: string;
+  owner: string;
+  archived: boolean;
+}
+
+/** What the draft route answers with, matching the receiver so only the request half is measured. */
+export interface DraftResultDto {
+  title: string;
+}

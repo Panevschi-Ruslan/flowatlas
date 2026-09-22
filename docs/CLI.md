@@ -424,6 +424,30 @@ the graph is missing something:
 `build` says the same thing in its last line: the rows it could not read, then
 the places where nothing joins, never added together.
 
+A row an annotation has already answered is `info`, not `action`. An address
+built at run time that `@CallsService` or `@flowatlas-calls` already names is a
+record of what could not be read rather than work left to do, and counting it
+among the things to act on left a row in the baseline that nothing anybody
+writes could ever clear. Acting on every `action` row a run reports takes the
+number to zero.
+
+What counts as answered is the shape the graph takes once the annotation
+worked, and the shapes differ. `@CallsService` draws one edge out of the method
+it is written on. `@Emits` draws two — the method reaches a producer, and the
+producer reaches the channel. `@flowatlas-calls` repairs nothing: it adds a
+second request beside the one that could not be read, so a browser row is
+answered only where the annotations on that method are at least as many as its
+unreadable requests. Two unreadable requests and one annotation keep both rows
+and say why, because silencing both would hide a real gap behind an annotation
+that was never about it. An annotation that reached no route answers nothing at
+all.
+
+A group of rows is headed by a sentence true of every member of it: the
+members' own where they all say one thing, and otherwise the kind's, written
+once. A member's own sentence sits under that member, marked `↳`. Groups are
+keyed by reason *and* level, so a group's level is every member's rather than
+its loudest member's.
+
 ### `flowatlas diff <base-ref> [head-ref]`
 
 Builds the graph at two revisions and reports what moved: which nodes changed,
@@ -497,26 +521,104 @@ services both claim resolves to neither, and says so.
 | `doctor.publicDecorators` | string[] | `["Public", "IsPublic", "AllowAnonymous", "SkipAuth"]` | decorators that mark a handler public on purpose, so `route-unguarded` leaves it out |
 | `doctor.publicRoutes` | string[] | `[]` | routes public by decision, as `METHOD /path` with `*` for any run of characters (`* /api/health`, `GET /api/public/*`) |
 | `doctor.nonGateWrappers` | string[] | `["ThrottlerGuard"]` | guards that refuse nobody for who they are, so a route behind only these is still `route-unguarded` |
-| `doctor.skipGuardDecorators` | object | `{}` | decorators that switch a guard off for one handler through the reflector, each mapped to the guard classes it switches off (`{"SkipCustomerAuth": ["CustomerAuthGuard"]}`; `[]` = every guard); a route carrying one is audited as if those guards were absent |
+| `doctor.skipGuardDecorators` | object | `{}` | decorators that switch a guard off for one handler through the reflector, each mapped to the guard classes it switches off (`{"SkipTenantAuth": ["TenantAuthGuard"]}`; `[]` = every guard); a route carrying one is audited as if those guards were absent |
 
-**Checks over the joined routes.** A build also records three findings no single
+**A path segment written as a closed set.** A segment whose type is a union of
+string literals — `action: 'ship' | 'refund'` — is a segment that was
+written down, in the type system rather than in the expression. Matching it as
+a hole finds whatever route happens to have a parameter there, or a catch-all,
+or nothing. It is now matched as each value as well: where every value reaches a
+route the call joins to each of them, and where some do and some do not the
+finding names the value nothing serves. A union of more than twelve values is a
+domain rather than a choice — a currency, a locale, a status — and is read as a
+hole, as is a segment typed `string`.
+
+**Checks over the joined routes.** A build also records four findings no single
 repository can see, as ordinary rows under `doctor`'s unresolved section:
 `route-unguarded` (an HTTP route with no guard or middleware in front of it that
 reaches stored data; a guard is read through a decorator of the project's own
 that returns `applyDecorators(UseGuards(...), ...)`, one level deep; a route a worker declares is listed at `info`, because
-middleware a worker installs for a whole prefix is not read yet), `route-shadowed` (a route a worker answers before the
+middleware a worker installs for a whole prefix is not read yet),
+`route-guard-skipped` (the same route, except that a decorator named under
+`doctor.skipGuardDecorators` switches the guard off for it — somebody decided
+this in writing on the handler, so it is listed at `info` and does not ask to be
+written down a second time under `doctor.publicRoutes`), `route-shadowed` (a
+route a worker answers before the
 application, whose guards then never run) and `route-wildcard-only` (a request
 only a catch-all route answers). Accept them into the baseline once reviewed;
 `--strict` then fails only on new ones.
+
+**`/** @flowatlas-auth <how> */`.** Some handlers refuse a request in their own
+body — a signed header resolved inside the method, a service token checked by
+hand — and no guard sits in front of them because none should. Static reading
+cannot see any of that. The annotation on the handler says so in one line, and
+the route audit then says nothing about it. Like every marker it is
+unverifiable: it is worth what whoever wrote it is worth, and it is the same
+bargain `@flowatlas-calls` offers for an address built at run time.
+
+**A channel addressed as a template.** `` `ticket:${id}:${verb}` `` has two
+holes and they are not the same kind of thing. The id is genuinely unknowable
+and reads as `*`. The event usually is not, and is read two ways, neither of
+which needs anything written down:
+
+```ts
+type Verb = 'opened' | 'on-hold' | 'closed';
+
+// Read from the type, wherever the value is written — a local, a function's
+// return, or the call put straight into the template.
+const verb: Verb = this.registry.verbFor(type);
+
+// Or folded, when the value derives from a union by plain string work:
+// slice, substring, case changes, trim, replace, and `+`.
+const verb = type.slice('TICKET_'.length).toLowerCase().replace(/_/g, '-');
+```
+
+Either way the address becomes one channel per value. Nothing is folded half
+way: a step that cannot be applied exactly puts the hole back, because
+inventing a channel nobody publishes to is worse than admitting a wildcard.
+
+**There is no annotation for this, on purpose.** One was built and removed
+before it shipped. Every hole it could have named can be named in the type
+instead — including with a cast at the use site, for code you do not own — and
+the type is checked, renames with its members, narrows the value for the rest
+of the function, and cannot drift from the code because it *is* the code. A
+comment does none of that and can be silently wrong. Where neither the type nor
+folding can settle a hole, the channel reads `*` and says so.
 
 **Rules the contract check applies on top of the wire.** `optional-accepts-null`
 (a field a receiving validator marks `@IsOptional` reads `null` too),
 `null-for-optional` (a `null` sent where an unvalidated receiver declares the
 field optional is a warning, not an error) and `whitelist-strip` (a field sent to
 a route whose `ValidationPipe` whitelists, and which the receiving class does not
-declare or decorate, is a warning: it is removed before the handler runs). A
+declare or decorate: it is removed before the handler runs). A
 request made from a browser service method nothing calls is reported as a
 warning rather than an error, and says so.
+
+**What a strip can lose.** A `whitelist-strip` row carries an `impact`, worked
+out from the graph rather than from the field's name: `stored` when the
+receiving handler writes a document that declares the field, `unknown` when it
+writes something and nothing it writes declares it, and `none` when it reaches
+no write at all. A handler that persists nothing cannot lose data by dropping a
+field, so those rows are `info` and the command counts them on one line instead
+of listing them; the others are warnings, with `stored` first. Every row is in
+`--format json` whatever the command printed.
+
+**What a call sends against what its type permits.** A declared parameter type
+says what a call is *permitted* to send. Where an object written in the source
+says which keys it writes — at the call site, in a `const` a line above it, or
+handed in by the callers of the method that makes the request — those keys are
+what is compared, and a key the type permits but nothing writes is not a
+finding. Several callers each writing an object answer with their keys
+together, since a key none of them writes is a key nothing sends; a message
+about them says "sent by some of the calls" rather than "always sent", because
+none of those keys is on every request. A spread of a wider object into a literal really does put its keys on
+the wire and stays one. Where there is no such object, the declared type is all
+there is, and the sentence says "permits" rather than "sends". The party in
+`contracts.json` carries `writes` when the keys were read.
+
+`contracts.json` is at format version 2: a party may carry `writes`, a finding
+may carry `impact`, and a request-direction message distinguishes what a call
+sends from what its type permits.
 
 ### `adapters`
 
@@ -636,6 +738,34 @@ async submit(order: Order) {
 An annotation wins over what the settings key would have said, and adds no
 second edge. One naming a service or a route that does not exist is reported and
 the automatic answer is kept, so a stale annotation degrades rather than lies.
+
+**Naming more than one.** `@Emits`, `@Consumes` and the routes of
+`@CallsService` take a name, several names, or a list of them, and all of the
+forms mean what a stack of single annotations means:
+
+```ts
+import { CART_CHANNELS } from '@acme/events';   // ['cart:joined', 'cart:left'] as const
+
+@Emits('cart:joined', 'cart:left')              // several arguments
+@Emits(['cart:joined', 'cart:left'])            // a list written in place
+@Emits(CART_CHANNELS)                           // a catalogue, read through the const
+@CallsService('orders', 'POST /orders', 'GET /orders/:id')
+```
+
+A catalogue resolves whether or not it is `as const`, and whether or not it is
+readonly: what matters is that the array is *written down* where the reader can
+see it. One assembled — `[...BASE, 'cart:left']`, or `NAMES.map(...)` — is read
+at run time and cannot be followed, and says so rather than resolving to
+nothing. `@FlowEntry` takes exactly one name, deliberately: an entry point is
+where one flow begins.
+
+**An argument that names nothing is reported, never dropped.** `doctor` says
+which of the three it was: `marker-unknown-arg` for an argument the resolver
+could not follow, `marker-arg-not-a-name` for one that resolved to something
+that is not a string or a list of them, and `marker-names-nothing` for an
+annotation that was given arguments and named nothing by the end of them. An
+annotation that fails quietly is worse than no annotation, because the person
+who wrote it believes the tool agreed with them.
 
 ---
 
