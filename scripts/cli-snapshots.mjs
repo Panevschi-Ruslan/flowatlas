@@ -115,8 +115,24 @@ const DOCTOR_CASES = [
   ],
 ];
 
+const foldedFixture = join(root, 'fixtures', 'folded-channels');
+const foldedConfig = join(foldedFixture, 'flowatlas.config.json');
+
 /**
- * Two sets of recordings, in two places.
+ * A publish whose channel name the reader works out, and what is said about it.
+ *
+ * The channel query holds the join: one of three names folded out of a template
+ * in `api`, and the handler in `worker` that names it outright. The health check
+ * holds the three rows that say the annotations restate the code — all three,
+ * which is the part a producer reaching several channels used to get wrong.
+ */
+const FOLDED_CASES = [
+  ['expected.channel.closed.tree.txt', (io) => runChannel('order:*:closed', { config: foldedConfig, color: false, ascii: true, format: 'tree' }, io)],
+  ['expected.doctor.txt', (io) => runDoctorCommand({ config: foldedConfig }, io)],
+];
+
+/**
+ * Sets of recordings, in several places.
  *
  * The first owns its folder, so an answer nobody asks for any more is swept
  * away with it. The second sits in a fixture directory full of other files, so
@@ -126,6 +142,7 @@ const SUITES = [
   { dir: outDir, owned: true, cases: CASES },
   { dir: contractsFixture, owned: false, cases: CONTRACT_CASES },
   { dir: doctorFixture, owned: false, cases: DOCTOR_CASES },
+  { dir: foldedFixture, owned: false, cases: FOLDED_CASES },
 ];
 
 /**

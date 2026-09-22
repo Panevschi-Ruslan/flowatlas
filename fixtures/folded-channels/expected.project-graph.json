@@ -1,0 +1,730 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-22T12:52:45.423Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "worker",
+      "repo": "./worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "EventBus",
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/bus/event-bus.service.ts:EventBus",
+      "type": "provider",
+      "label": "EventBus",
+      "repo": "api",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/bus/event-bus.service.ts:EventBus.pSubscribe",
+      "type": "method",
+      "label": "EventBus.pSubscribe",
+      "repo": "api",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 19
+    },
+    {
+      "id": "api#src/bus/event-bus.service.ts:EventBus.publish",
+      "type": "method",
+      "label": "EventBus.publish",
+      "repo": "api",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 14
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.setState",
+      "type": "method",
+      "label": "OrdersController.setState",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.archiveInRegion",
+      "type": "method",
+      "label": "OrdersService.archiveInRegion",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 36
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.publishLifecycle",
+      "type": "method",
+      "label": "OrdersService.publishLifecycle",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 21,
+      "meta": {
+        "markers": [
+          {
+            "name": "Emits",
+            "args": [
+              "order:*:opened"
+            ]
+          },
+          {
+            "name": "Emits",
+            "args": [
+              "order:*:on-hold"
+            ]
+          },
+          {
+            "name": "Emits",
+            "args": [
+              "order:*:closed"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "channel:order:*:*:archived",
+      "type": "channel",
+      "label": "order:*:*:archived",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 37,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "house-bus"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:order:*:closed",
+      "type": "channel",
+      "label": "order:*:closed",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 26,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "house-bus"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:order:*:on-hold",
+      "type": "channel",
+      "label": "order:*:on-hold",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 26,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "house-bus"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:order:*:opened",
+      "type": "channel",
+      "label": "order:*:opened",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 26,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "house-bus"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed",
+      "type": "consumer",
+      "label": "LifecycleProjections.onClosed",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "house-bus",
+        "decorator": "pSubscribe",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onHeld",
+      "type": "consumer",
+      "label": "LifecycleProjections.onHeld",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 25,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "house-bus",
+        "decorator": "pSubscribe",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onOpened",
+      "type": "consumer",
+      "label": "LifecycleProjections.onOpened",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 24,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "house-bus",
+        "decorator": "pSubscribe",
+        "entryId": null
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/orders/:param/state",
+      "type": "entry",
+      "label": "POST /orders/:param/state",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/state",
+        "rawPath": "/orders/:id/state",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "producer:api#src/orders/orders.service.ts:26:5",
+      "type": "producer",
+      "label": "event order:*:closed, order:*:on-hold, order:*:opened",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "house-bus",
+        "channelVia": "template",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "producer:api#src/orders/orders.service.ts:37:5",
+      "type": "producer",
+      "label": "event order:*:*:archived",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 37,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "house-bus",
+        "channelVia": "template",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "classes": 4,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:worker",
+      "type": "repo",
+      "label": "worker",
+      "repo": "worker",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "worker#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "worker",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "EventBus",
+          "LifecycleProjections"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "worker#src/bus/event-bus.service.ts:EventBus",
+      "type": "provider",
+      "label": "EventBus",
+      "repo": "worker",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "worker#src/bus/event-bus.service.ts:EventBus.pSubscribe",
+      "type": "method",
+      "label": "EventBus.pSubscribe",
+      "repo": "worker",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 19
+    },
+    {
+      "id": "worker#src/bus/event-bus.service.ts:EventBus.publish",
+      "type": "method",
+      "label": "EventBus.publish",
+      "repo": "worker",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 14
+    },
+    {
+      "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections",
+      "type": "provider",
+      "label": "LifecycleProjections",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 19,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed",
+      "type": "method",
+      "label": "LifecycleProjections.onClosed",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 37
+    },
+    {
+      "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onHeld",
+      "type": "method",
+      "label": "LifecycleProjections.onHeld",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 33
+    },
+    {
+      "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onModuleInit",
+      "type": "method",
+      "label": "LifecycleProjections.onModuleInit",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 23
+    },
+    {
+      "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onOpened",
+      "type": "method",
+      "label": "LifecycleProjections.onOpened",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 29
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController",
+      "to": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController.setState",
+      "to": "api#src/orders/orders.service.ts:OrdersService.publishLifecycle",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "type:api#OrderState",
+        "type:api#LifecycleEvent"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService",
+      "to": "api#src/bus/event-bus.service.ts:EventBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 9
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.archiveInRegion",
+      "to": "api#src/bus/event-bus.service.ts:EventBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.archiveInRegion",
+      "to": "producer:api#src/orders/orders.service.ts:37:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.publishLifecycle",
+      "to": "api#src/bus/event-bus.service.ts:EventBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.publishLifecycle",
+      "to": "producer:api#src/orders/orders.service.ts:26:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "channel:order:*:closed",
+      "to": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 26
+    },
+    {
+      "from": "channel:order:*:on-hold",
+      "to": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onHeld",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 25
+    },
+    {
+      "from": "channel:order:*:opened",
+      "to": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onOpened",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 24
+    },
+    {
+      "from": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 26
+    },
+    {
+      "from": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onHeld",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onHeld",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 25
+    },
+    {
+      "from": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onOpened",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onOpened",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 24
+    },
+    {
+      "from": "entry:api:http:POST:/orders/:param/state",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.setState",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{state:type:api#OrderState}"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "meta": {
+        "params": "{id:string}",
+        "body": "{state:type:api#OrderState}"
+      }
+    },
+    {
+      "from": "producer:api#src/orders/orders.service.ts:26:5",
+      "to": "channel:order:*:closed",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:api#LifecycleEvent"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "producer:api#src/orders/orders.service.ts:26:5",
+      "to": "channel:order:*:on-hold",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:api#LifecycleEvent"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "producer:api#src/orders/orders.service.ts:26:5",
+      "to": "channel:order:*:opened",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:api#LifecycleEvent"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "producer:api#src/orders/orders.service.ts:37:5",
+      "to": "channel:order:*:*:archived",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:api#LifecycleEvent"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "from": "worker#src/projections/lifecycle.service.ts:LifecycleProjections",
+      "to": "worker#src/bus/event-bus.service.ts:EventBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 21
+    },
+    {
+      "from": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onModuleInit",
+      "to": "worker#src/bus/event-bus.service.ts:EventBus.pSubscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 24
+    },
+    {
+      "from": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onModuleInit",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 26
+    },
+    {
+      "from": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onModuleInit",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onHeld",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 25
+    },
+    {
+      "from": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onModuleInit",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onOpened",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 24
+    }
+  ],
+  "types": {
+    "type:api#LifecycleEvent": {
+      "name": "LifecycleEvent",
+      "kind": "object",
+      "declaredIn": "api#src/orders/order.dto.ts",
+      "structuralHash": "821f0bf2c4755576",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#OrderState": {
+      "name": "OrderState",
+      "kind": "union",
+      "declaredIn": "api#src/orders/order.dto.ts",
+      "structuralHash": "001695088a37e9ac",
+      "members": [
+        "'ORDER_OPENED'",
+        "'ORDER_ON_HOLD'",
+        "'ORDER_CLOSED'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
+    "type:worker#LifecycleEvent": {
+      "name": "LifecycleEvent",
+      "kind": "object",
+      "declaredIn": "worker#src/projections/lifecycle.service.ts",
+      "structuralHash": "821f0bf2c4755576",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/bus/event-bus.service.ts",
+      "line": 14,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "api"
+    },
+    {
+      "file": "src/bus/event-bus.service.ts",
+      "line": 14,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "worker"
+    }
+  ]
+}

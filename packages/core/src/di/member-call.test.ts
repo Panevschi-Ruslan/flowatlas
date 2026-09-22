@@ -15,10 +15,14 @@ export class Orders {
 
 export class Base { shared(): void {} }
 
+/** A name given to a closed set of strings, which is still a set of strings. */
+export type State = 'OPEN' | 'CLOSED';
+
 export class Handler extends Base {
   private readonly orders!: Orders;
   private readonly client!: Client;
   private readonly loose!: unknown;
+  private readonly state!: State;
 
   own(): void {}
 
@@ -29,6 +33,7 @@ export class Handler extends Base {
     this.orders?.create();
     this.client.send();
     this.loose.whatever();
+    this.state.toLowerCase();
     super.shared();
     [1].map((n) => n);
   }
@@ -108,6 +113,20 @@ describe('following a call to the method it reaches', () => {
   it('refuses a receiver the checker will not commit to', () => {
     const found = calls().find((call) => call.text === 'this.loose.whatever()');
     expect(found?.resolved).toBeNull();
+  });
+
+  it('calls a named union of strings what it is, which is the language itself', () => {
+    // The alias is declared in this repository, so reading the declaration
+    // first called it a local type, found no class behind it, and reported
+    // every `state.toLowerCase()` as a receiver nothing could be followed
+    // through. Naming the set is the spelling the tool recommends, so it must
+    // not be the spelling that produces the rows.
+    const receiver = resolveReceiver(
+      handler.getPropertyOrThrow('state').getNameNode(),
+      handler,
+      di,
+    );
+    expect(receiver.kind).toBe('builtin');
   });
 
   it('walks past a class the repository does not declare', () => {

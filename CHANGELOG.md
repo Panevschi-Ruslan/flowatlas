@@ -6,6 +6,37 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+## [0.4.1][] - 2026-09-22
+
+`@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0.
+
+Three readers that were written when a producer had one channel, found by
+exercising 0.4.0's folding as a project rather than as a unit test.
+
+### Fixed
+
+- A producer that reaches several channels is now read as such everywhere, not
+  only in the graph. `doctor` reports **every** annotation that restates a
+  channel the code already yields, where it used to report the first and leave
+  the rest of them unmentioned; and a producer is labelled with the channels it
+  reaches rather than with the wildcard pattern they share, which is how an
+  annotated producer has been labelled since 0.4.0.
+- A receiver whose type is a named union of string literals — `state: OrderState`
+  where `OrderState` is `'A' | 'B'` — no longer produces a row saying the
+  receiver could not be followed and suggesting a class be injected. It is the
+  language's own `string`, whether or not the set was given a name. Naming the
+  set in the type is what 0.4.0 recommends instead of an annotation, so it had
+  better not be the spelling that produces rows.
+
+### Added
+
+- `fixtures/folded-channels`, which exercises the folded template across two
+  repositories: one publishes `` `order:${id}:${verb}` `` with `verb` derived
+  from a union-typed parameter, the other handles the three names that reaches.
+  Deleting the three `@Emits` from it leaves the channels unchanged, which is
+  the claim 0.4.0 makes, now checked rather than asserted.
+- `docs/media/12-folded.gif`, the same story recorded.
+
 ## [0.4.0][] - 2026-09-21
 
 `@flowatlas/cli` 0.4.0 and `@flowatlas/markers` 0.2.0, which moves for the
@@ -261,7 +292,8 @@ could not read.
 
 The first published version of both `@flowatlas/cli` and `@flowatlas/markers`.
 
-[unreleased]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.4.0...HEAD
+[unreleased]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Panevschi-Ruslan/flowatlas/tree/v0.2.0
