@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-22T12:49:49.150Z",
+  "configHash": "a2182287a03c",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 17,
+      "edges": 12,
+      "types": 2,
+      "unresolved": 1,
+      "durationMs": 628
+    },
+    {
+      "name": "worker",
+      "repo": "./worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 16,
+      "edges": 11,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 614
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 4,
+    "linked": 3,
+    "noConsumers": [
+      "channel:order:*:*:archived"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 0,
+    "uncalled": [
+      "entry:api:http:POST:/orders/:param/state"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 3,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 30,
+    "edges": 23,
+    "types": 3,
+    "unresolved": 2
+  }
+}

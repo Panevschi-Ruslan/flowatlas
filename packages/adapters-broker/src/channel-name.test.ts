@@ -43,6 +43,11 @@ export class Publisher {
     return \`ticket:\${id}:\${verb}\`;
   }
   foldedDirect(id: string, kind: 'a' | 'b') { return \`x:\${id}:\${kind}\` }
+  reassigned(id: string) {
+    let verb = 'split';
+    if (lookup('x') === 'y') verb = 'closed';
+    return \`session:\${id}:\${verb}\`;
+  }
   unfoldable(id: string, type: 'TICKET_OPENED' | 'TICKET_CLOSED') {
     const verb = lookup(type);
     return \`ticket:\${id}:\${verb}\`;
@@ -146,6 +151,14 @@ describe('resolving which channel a call addresses', () => {
     it('expands a hole typed as a union directly, with no computation', () => {
       const resolved = of('foldedDirect');
       expect(isResolved(resolved) && resolved.names).toEqual(['x:*:a', 'x:*:b']);
+    });
+
+    it('a reassigned `let` is a hole, not its first value', () => {
+      // Following a `let`'s initializer would assert `session:*:split` and
+      // silently omit `session:*:closed` — a confident wrong answer, which is
+      // worse than the wildcard it replaces.
+      const resolved = ofReturn('reassigned');
+      expect(isResolved(resolved) && resolved.names).toEqual(['session:*:*']);
     });
 
     it('an unsupported operation still wildcards — the closed set stays closed', () => {

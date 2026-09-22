@@ -288,22 +288,33 @@ type Add = (
   hint: string,
 ) => void;
 
-/** The producers a method reaches directly, and the channel each publishes to. */
-const producersOf = (db: GraphDb, methodId: string): Array<{ node: GraphNode; channel: string | null; viaMarker: boolean }> =>
+/**
+ * The producers a method reaches directly, and every channel each publishes to.
+ *
+ * One producer, several channels: a template whose hole holds a closed set of
+ * values reaches one channel per member (R42). Reading only the first `emits`
+ * edge answered for one of them and left the rest looking unpublished, so an
+ * annotation restating a folded channel went unreported unless it happened to
+ * name the one edge that came back first.
+ */
+const producersOf = (
+  db: GraphDb,
+  methodId: string,
+): Array<{ node: GraphNode; channels: readonly string[]; viaMarker: boolean }> =>
   db
     .edgesFrom(methodId, ['calls'])
     .map((edge) => db.node(edge.to))
     .filter(isNode)
     .filter((target) => target.type === 'producer')
-    .map((producer) => {
-      const [emits] = db.edgesFrom(producer.id, ['emits']);
-      const channel = emits === undefined ? undefined : db.node(emits.to);
-      return {
-        node: producer,
-        channel: channel?.label ?? null,
-        viaMarker: producer.meta?.['channelVia'] === 'marker',
-      };
-    });
+    .map((producer) => ({
+      node: producer,
+      channels: db
+        .edgesFrom(producer.id, ['emits'])
+        .map((emits) => db.node(emits.to))
+        .filter(isNode)
+        .map((channel) => channel.label),
+      viaMarker: producer.meta?.['channelVia'] === 'marker',
+    }));
 
 /**
  * `@Emits('x')` against what the method actually publishes.
@@ -337,7 +348,7 @@ const checkEmits = (
     return;
   }
 
-  const shadowing = fromCode.find((producer) => producer.channel === channel);
+  const shadowing = fromCode.find((producer) => producer.channels.includes(channel));
   if (shadowing !== undefined) {
     add(
       node,

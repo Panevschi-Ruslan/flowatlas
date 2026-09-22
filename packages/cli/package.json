@@ -1,6 +1,6 @@
 {
   "name": "@flowatlas/cli",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "One map of a project that lives in several repositories: read them, join them, ask questions.",
   "license": "MIT",
   "author": {
