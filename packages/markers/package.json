@@ -1,6 +1,6 @@
 {
   "name": "@flowatlas/markers",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Annotations that tell flowatlas what static reading cannot work out.",
   "license": "MIT",
   "author": {

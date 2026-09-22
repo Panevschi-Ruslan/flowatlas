@@ -8,7 +8,9 @@ only one of them moved.
 
 ## [0.4.0][] - 2026-09-21
 
-`@flowatlas/cli` only. `@flowatlas/markers` is unchanged at 0.1.1.
+`@flowatlas/cli` 0.4.0 and `@flowatlas/markers` 0.2.0, which moves for the
+first time since it was published: the channel and call annotations take a list,
+and that is a change to their signatures.
 
 0.3.0 stopped the tool claiming things it had not checked. This does the same
 one level down: the lists it produces are now short enough to read by hand, and
@@ -46,7 +48,10 @@ project from 18 channels to 17.
   and every one is still in `--format json`.
 - `@Emits`, `@Consumes` and the routes of `@CallsService` take a name, several
   names, or a list of them, and every form means what a stack of single
-  annotations means. A project that keeps its channel names in one catalogue can
+  annotations means. **This is a signature change in `@flowatlas/markers`**, so
+  the list forms need 0.2.0 of that package to compile and 0.4.0 of the command
+  to be read; every existing annotation keeps compiling and keeps meaning what
+  it meant. A project that keeps its channel names in one catalogue can
   reference it whole; the array has to be written down rather than assembled,
   and one assembled at run time is reported rather than read as nothing.
 - `marker-arg-not-a-name`, for an annotation argument that resolved to

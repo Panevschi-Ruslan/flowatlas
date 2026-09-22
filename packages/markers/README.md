@@ -47,11 +47,25 @@ class Orders {
 
 | Marker | Says |
 |---|---|
-| `CallsService(service, route)` | this method calls that route in that service |
-| `Emits(channel)` | this method publishes on that channel |
-| `Consumes(channel)` | this method handles messages from it |
+| `CallsService(service, ...routes)` | this method calls those routes in that service |
+| `Emits(...channels)` | this method publishes on those channels |
+| `Consumes(...channels)` | this method handles messages from them |
 | `FlowEntry(name)` | names the flow this entry point starts, for reporting |
 | `ContractIgnore()` | drift across this boundary is intentional; report it, do not fail on it |
+
+Each name may be given as one argument, as several, or as a list, and all three
+mean what a stack of single annotations means — so a catalogue can be handed
+over whole:
+
+```ts
+@Emits('cart:joined', 'cart:left')
+@Emits(['cart:joined', 'cart:left'])
+@Emits(CART_CHANNELS)
+@CallsService('orders', 'POST /orders', 'GET /orders/:id')
+```
+
+`FlowEntry` takes exactly one name, deliberately: an entry point is where one
+flow begins. Reading the list forms needs `@flowatlas/cli` 0.4.0 or newer.
 
 `flowatlas doctor --section markers` reports any that point at something that is
 no longer there, which is the failure mode annotations have.
