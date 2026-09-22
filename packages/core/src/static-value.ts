@@ -1,5 +1,5 @@
 import type { Node as TsNode } from 'ts-morph';
-import { Node, SyntaxKind } from 'ts-morph';
+import { VariableDeclarationKind, Node, SyntaxKind } from 'ts-morph';
 
 /**
  * The result of trying to read a value out of the source without running it.
@@ -128,6 +128,16 @@ export const evaluateExpression = (expr: TsNode, depth = 0): StaticValue => {
     if (Node.isEnumMember(declaration)) {
       const value = declaration.getValue();
       if (value !== undefined) return resolvedValue(value);
+    }
+    // A `let` or `var` holds its initializer at exactly one point in the
+    // program; anywhere else it is whatever was last assigned. Reading the
+    // initializer as "the value" turns a reassigned name into a confident wrong
+    // answer, so only a `const` binding is followed.
+    if (Node.isVariableDeclaration(declaration)) {
+      const kind = declaration.getVariableStatement()?.getDeclarationKind();
+      if (kind !== undefined && kind !== VariableDeclarationKind.Const) {
+        return unresolvedValue(node.getText(), 'reassignable-binding');
+      }
     }
     if (Node.isVariableDeclaration(declaration) || Node.isPropertyAssignment(declaration)) {
       const initializer = declaration.getInitializer();

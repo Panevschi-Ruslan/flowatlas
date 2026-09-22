@@ -177,6 +177,21 @@ survives the phone being backgrounded.
 Four subscriptions reach one route here, and each row names the screen that
 decided the address rather than the wrapper they all pass through.
 
+## 6c. A channel whose name the code builds
+
+A service that publishes per entity writes the channel as a template, and the
+piece that varies is usually not a mystery: it comes from a parameter typed as a
+closed set of strings. The reader folds the template once per member, so an
+address written as one line becomes the channels it actually reaches, and a
+handler in another repository that names one of them outright joins it.
+
+![flowatlas channel on a folded template, and the annotations it makes redundant](media/12-folded.gif)
+
+The annotations in that recording are not doing any work: `doctor` says so, they
+are deleted on camera, and the channels are unchanged afterwards. Reach for
+`@Emits` when the name genuinely cannot be read — one that comes from settings,
+say. When the set is closed, name it in the type and the reader will find it.
+
 ## 7. Compare what crosses a boundary
 
 Two services agree about a shape until one of them changes. `contracts` compares
