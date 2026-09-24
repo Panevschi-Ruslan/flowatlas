@@ -10,7 +10,8 @@ One map of a project that lives in several repositories.
 **A command-line tool that reads several TypeScript repositories with the
 compiler's own checker, without running them, and joins them into one graph you
 can query — from a terminal or from a coding agent over the Model Context
-Protocol.** It knows NestJS and Angular, Telegraf and Hono, TypeORM, Prisma,
+Protocol.** It knows NestJS and Angular, Express, Fastify and Koa, Telegraf and
+Hono, TypeORM, Prisma,
 Mongo, node-postgres, Redis, Kafka, RabbitMQ and BullMQ.
 
 Each repository is read on its own, then the readings are joined: a request made
@@ -536,7 +537,9 @@ Every edge carries how much to trust it: `static` was read from the code,
 Working and verified against a real five-repository project:
 
 - **Reading** NestJS and Angular, with modules, injection, guards, routes,
-  components and templates.
+  components and templates; Express, Fastify, Koa and Hono, where a route is
+  registered by a call rather than declared by a decorator, with the routers it
+  is mounted through and the middleware in front of it.
 - **Leaves** for TypeORM, Prisma, node-postgres, MongoDB and a repository base
   named in the configuration; Redis and cache-manager; outgoing requests;
   settings keys.
@@ -570,10 +573,21 @@ Working and verified against a real five-repository project:
 
 Known gaps in what it can read:
 
-- A repository built on anything but NestJS or Angular. Express, Fastify, Koa,
+- A repository built on anything but NestJS, Angular, Express, Fastify or Koa.
   Next.js, Nuxt, Remix, React, Vue and Svelte are recognised by name and read by
   nothing: `init` and `build` both say which repository and which framework, and
   the graph is smaller than the project by exactly that much.
+- On Express, Fastify and Koa, what is read is the route — verb, path and
+  handler — the router it is declared on, the prefix it is mounted under, and
+  the middleware in front of it, including middleware installed on an
+  application above the mount and inherited through it. Two things are not: a
+  file-system router, which `@fastify/autoload` is as much as Next.js is, and
+  middleware installed in a different file from the routes it covers, because
+  the order it runs in is the order the modules are evaluated in and nothing
+  here reads that. Both are reported rather than guessed at. Most Express
+  handlers declare no shape for the request body; where a route declares one it
+  is in the graph as a type, and where it does not, the route has no declared
+  input, which is true.
 - An address built entirely at run time, where no part of it is written down.
   Each one is reported rather than guessed at.
 - A helper whose tail depends on whether an argument is empty, where the caller

@@ -10,7 +10,7 @@ import {
 } from '@flowatlas/core';
 import { Project } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
-import { honoRoutesAdapter } from './hono-routes.js';
+import { honoRoutesAdapter } from './call-routes.js';
 
 /**
  * Enough of the framework for the type of a receiver to mean something.

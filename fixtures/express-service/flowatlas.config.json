@@ -1,0 +1,17 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "api" }
+    }
+  ],
+  "output": ".flowatlas"
+}

@@ -9,8 +9,14 @@ import type { PackageJson } from '@flowatlas/core';
  * value it has never heard of is still a valid configuration.
  */
 export const TYPE_SIGNATURES: ReadonlyArray<readonly [type: string, dependency: string]> = [
+  // Order matters, and NestJS comes first for a reason: `@nestjs/platform-express`
+  // brings Express with it, and a Nest application that declares `express` is a
+  // Nest application. The first match wins, so the most specific goes first.
   ['nestjs', '@nestjs/core'],
   ['angular', '@angular/core'],
+  ['express', 'express'],
+  ['fastify', 'fastify'],
+  ['koa', 'koa'],
 ];
 
 export const UNKNOWN_TYPE = 'unknown';
@@ -22,16 +28,16 @@ export const UNKNOWN_TYPE = 'unknown';
  * can: a repository that contributes nothing to the graph should say which
  * repository and why, rather than leave somebody to work out that half their
  * routes are missing. These are consulted only once `TYPE_SIGNATURES` has found
- * nothing, so a NestJS application is never called Express on the strength of
- * `@nestjs/platform-express` bringing Express with it.
+ * nothing, so a repository whose framework is read is never named here on the
+ * strength of a second dependency it happens to declare.
  */
 export const UNREAD_SIGNATURES: ReadonlyArray<readonly [framework: string, dependency: string]> = [
+  // The three file-system routers. What they have in common is that the path a
+  // route is served at is the path of the file declaring it, which is a
+  // different fact from a call with a path in it and needs a different reader.
   ['Next.js', 'next'],
   ['Nuxt', 'nuxt'],
   ['Remix', '@remix-run/react'],
-  ['Express', 'express'],
-  ['Fastify', 'fastify'],
-  ['Koa', 'koa'],
   ['React', 'react'],
   ['Vue', 'vue'],
   ['Svelte', 'svelte'],
