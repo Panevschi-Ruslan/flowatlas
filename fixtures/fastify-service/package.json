@@ -1,0 +1,9 @@
+{
+  "name": "fastify-service",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "fastify": "^5.2.1",
+    "pg": "^8.13.1"
+  }
+}

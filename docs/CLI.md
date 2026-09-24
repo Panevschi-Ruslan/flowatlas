@@ -66,13 +66,14 @@ configuration will go and asks which belong to the project.
 | `--no-mcp` | off | skip registering the graph server |
 
 The type of a repository is read from its manifest: `@nestjs/core` makes it
-`nestjs`, `@angular/core` makes it `angular`, and anything else is written as
-`unknown`. Where the manifest names a framework there is no reader for — Express,
-Fastify, Koa, Next.js, Nuxt, Remix, React, Vue or Svelte — `init` says so by
-name, and `build` repeats it on that repository's line:
+`nestjs`, `@angular/core` makes it `angular`, `express`, `fastify` and `koa`
+make it each of those, and anything else is written as `unknown`. Where the
+manifest names a framework there is no reader for — Next.js, Nuxt, Remix, React,
+Vue or Svelte — `init` says so by name, and `build` repeats it on that
+repository's line:
 
 ```
-api            skipped (no-extractor: Express, no reader yet)
+web            skipped (no-extractor: Next.js, no reader yet)
 ```
 
 Where the manifest declares a framework it *can* read, the line says which type
@@ -87,7 +88,18 @@ The repository stays in the configuration and contributes nothing to the graph.
 Everything else in the project is still read and still joined; what is missing
 is that repository's routes, calls and types. NestJS wins over Express in a
 repository that declares both, since `@nestjs/platform-express` brings Express
-with it.
+with it and the Nest reader knows more about such a repository than the Express
+one would.
+
+For `express`, `fastify` and `koa` what is read is the route as the code
+registers it — the verb, the path, the handler, the router it is declared on and
+the prefix that router is mounted under, however many mounts deep — together
+with the middleware in front of it, including middleware installed on an
+application above the mount and inherited through it. That is what makes the
+route audit answer on these repositories rather than defer to a person. A path
+assembled at run time is reported rather than placed at a guessed address, and a
+file-system router — `@fastify/autoload` as much as Next.js — is refused, since
+the address lives in a directory name rather than in the call.
 
 ### `flowatlas mcp`
 
@@ -497,7 +509,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 |---|---|---|---|
 | `name` | string | required | what this service is called everywhere else |
 | `repo` | string | required | path to the repository, relative to this file or absolute |
-| `type` | string | required | which extractor reads it: `nestjs`, `angular`, or anything else to skip it |
+| `type` | string | required | which extractor reads it: `nestjs`, `angular`, `express`, `fastify`, `koa`, `hono`, or anything else to skip it |
 | `baseUrlEnv` | string[] | `[]` | settings keys other services use to address this one |
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |

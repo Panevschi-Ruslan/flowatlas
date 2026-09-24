@@ -1,6 +1,11 @@
 import type { AdapterRegistry, EntryAdapter } from '@flowatlas/core';
 import { entryRegistriesAdapter } from './entry-registries.js';
-import { honoRoutesAdapter } from './hono-routes.js';
+import {
+  expressRoutesAdapter,
+  fastifyRoutesAdapter,
+  honoRoutesAdapter,
+  koaRoutesAdapter,
+} from './call-routes.js';
 import { nestjsHttpAdapter } from './nestjs-http.js';
 import { nestjsMicroserviceAdapter } from './nestjs-microservice.js';
 import { nestjsScheduleAdapter } from './nestjs-schedule.js';
@@ -18,6 +23,9 @@ export const PACKAGE_NAME = '@flowatlas/adapters-entry';
 export const entryAdapters: readonly EntryAdapter[] = [
   nestjsHttpAdapter,
   honoRoutesAdapter,
+  expressRoutesAdapter,
+  fastifyRoutesAdapter,
+  koaRoutesAdapter,
   nestjsMicroserviceAdapter,
   nestjsScheduleAdapter,
   nestjsTelegrafAdapter,
@@ -28,6 +36,20 @@ export const entryAdapters: readonly EntryAdapter[] = [
 export const registerEntryAdapters = (registry: AdapterRegistry): AdapterRegistry =>
   registry.registerAll('entry', entryAdapters);
 
+export {
+  callRoutesAdapter,
+  expressRoutesAdapter,
+  fastifyRoutesAdapter,
+  koaRoutesAdapter,
+} from './call-routes.js';
+export type {
+  AppType,
+  MiddlewareShape,
+  MountShape,
+  RouteDialect,
+  RouteObjectShape,
+} from './route-dialects.js';
+export { EXPRESS, FASTIFY, HONO, KOA, ROUTE_DIALECTS } from './route-dialects.js';
 export {
   entryRegistriesAdapter,
   honoRoutesAdapter,
