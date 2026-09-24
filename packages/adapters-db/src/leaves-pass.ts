@@ -1,6 +1,8 @@
 import {
   classifyDbCall,
   declaredParameterType,
+  memberFunction,
+  moduleFunctions,
   narrowUnionByLiteral,
   writtenBodyOutward,
   writtenKeysOf,
@@ -11,6 +13,7 @@ import {
   operationOf,
   resolveTypeOrigin,
   type DbDescriptor,
+  type NamedFunction,
   type TypeOrigin,
   type BodyRead,
 } from '@flowatlas/core';
@@ -30,6 +33,7 @@ import type {
   MethodDeclaration,
   Node as TsNode,
   ParameterDeclaration,
+  SourceFile,
 } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { dataNameHints, tableLocators } from './descriptors/index.js';
@@ -146,6 +150,32 @@ const siteOf = (ctx: NestExtractContext, node: TsNode, file: string): Site => {
 };
 
 /**
+ * The thing a leaf hangs off, and how to put it in the graph.
+ *
+ * A method and a module-level function hold a query the same way; the only
+ * difference between them is which node has to exist before an edge can point
+ * at it. Keeping that difference behind `ensure` is what lets every emitter
+ * below be written once and read both.
+ *
+ * `ensure` runs when a leaf is actually recorded rather than when the body is
+ * opened, because a repository is mostly functions that touch nothing and a
+ * node for each of them is not what anybody asked the graph for.
+ */
+interface Holder {
+  id: string;
+  /** Repo-relative path the calls are written in. */
+  file: string;
+  ensure(): void;
+}
+
+/** A holder together with the body to read and the class it belongs to, if any. */
+interface Scope extends Holder {
+  body: TsNode;
+  /** The class the body belongs to, absent when it belongs to none. */
+  owner?: ClassDeclaration;
+}
+
+/**
  * The leaves a chain of calls ends at.
  *
  * Every one of them is found the same way: resolve the type of whatever the call
@@ -184,7 +214,6 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   }
 
   const seenConfig = new Set<string>();
-  const reportedTables = new Set<string>();
 
   /**
    * What reads as a data layer, and what was actually read through it.
@@ -195,7 +224,14 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    */
   const dataLayers = new Map<string, { file: string; line: number; chain: readonly string[] }>();
   const readAsData = new Set<string>();
-  let queries = 0;
+
+  /**
+   * The leaves already recorded, which is also how many queries were found.
+   *
+   * Counting emissions rather than nodes is what made a chain count twice, so
+   * the count is the set of nodes itself and cannot drift from it (R49).
+   */
+  const emitted = new Set<string>();
 
   // Answered once per class rather than once per call: a repository asks this
   // of the same few classes thousands of times, and every answer costs a walk
@@ -229,7 +265,8 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return name;
   };
 
-  const emitConfig = (node: TsNode, methodId: string, file: string): void => {
+  const emitConfig = (node: TsNode, holder: Holder): void => {
+    const { id: holderId, file } = holder;
     const read = readConfig(node);
     if (read === null) return;
     const site = siteOf(ctx, node, file);
@@ -244,7 +281,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       return;
     }
     const id = makeConfigKeyId(ctx.repo, read.key);
-    const marker = `${methodId} ${id}`;
+    const marker = `${holderId} ${id}`;
     ctx.builder.addNode({
       id,
       type: 'config_key',
@@ -260,8 +297,9 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     });
     if (seenConfig.has(marker)) return;
     seenConfig.add(marker);
+    holder.ensure();
     ctx.builder.addEdge({
-      from: methodId,
+      from: holderId,
       to: id,
       type: 'reads_config',
       // A platform binding is recognised by shape rather than by type, so it is
@@ -272,12 +310,8 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     });
   };
 
-  const emitDb = (
-    call: CallExpression,
-    methodId: string,
-    file: string,
-    owner: ClassDeclaration,
-  ): boolean => {
+  const emitDb = (call: CallExpression, scope: Scope): boolean => {
+    const { id: holderId, file, owner } = scope;
     const callee = call.getExpression();
     if (!Node.isPropertyAccessExpression(callee)) return false;
     const receiver = callee.getExpression();
@@ -343,16 +377,33 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       return true;
     }
 
-    queries += 1;
+    const site = siteOf(ctx, call, file);
+    const id = makeLeafId('db_query', ctx.repo, file, site.line, site.column);
+
+    // One node per visit to the database, and one count per node.
+    //
+    // A leaf is identified by where it is written, and every link of a chain is
+    // written at the same place: `knex.select('id').from('users').first()`
+    // holds two recognised operations that both land on this id. That the node
+    // is one is right — it is one visit to the database — but it used to be
+    // emitted twice, and the internal count of queries, which is what decides
+    // whether to report a data layer nobody could read, counted the chain twice
+    // (R49).
+    //
+    // What the node records is the outermost link, which is the one the walk
+    // reaches first: in every one of these builders the chain is lazy, so the
+    // call at the end of it is the one that goes to the database and the links
+    // before it only describe what it will ask for. `first` on a chain that
+    // began with `select` is the query; the `select` is how it was built.
+    if (emitted.has(id)) return true;
+    emitted.add(id);
+
     if (layer !== undefined) readAsData.add(layer);
     // A repository class that queries a driver itself is read, even though the
     // call that reaches it was not the query. What the graph loses in that case
     // is nothing: the operation hangs off the repository's own method.
-    const ownLayer = dataLayerNameOf(owner);
+    const ownLayer = owner === undefined ? undefined : dataLayerNameOf(owner);
     if (ownLayer !== undefined) readAsData.add(ownLayer);
-
-    const site = siteOf(ctx, call, file);
-    const id = makeLeafId('db_query', ctx.repo, file, site.line, site.column);
     // Only for a write: a read cannot lose what a sender believed it saved, and
     // collecting a type nobody will ask about is a type in everybody's registry.
     const entityArg = classification.op === 'write' ? origin?.typeArgs[0] : undefined;
@@ -374,19 +425,24 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         source: classification.source,
         ...(classification.entityType === undefined
           ? {}
-          : {
-              entityType: classification.entityType,
-              // The document this call writes, recorded in the registry so
-              // that whoever asks what a write stores can read its fields.
-              // Without it the answer depended on the schema happening to be
-              // on a boundary for some other reason, which is not a fact about
-              // the write at all (R30).
-              ...(entityTypeId === undefined ? {} : { entityTypeId }),
-            }),
+          : { entityType: classification.entityType }),
+        // The document this call writes, recorded in the registry so that
+        // whoever asks what a write stores can read its fields. Without it the
+        // answer depended on the schema happening to be on a boundary for some
+        // other reason, which is not a fact about the write at all (R30).
+        //
+        // Beside `entityType` rather than inside it, because `entityType` is
+        // the declared name only when a wrapper suffix was stripped off it.
+        // `Repository<OrderEntity>` and `Repository<Order>` are the same fact
+        // about the same write, and recording the document for the first and
+        // not the second is why a project that does not suffix its entities
+        // was told `unknown` for every field a validation pipe strips (R48).
+        ...(entityTypeId === undefined ? {} : { entityTypeId }),
       },
     });
+    scope.ensure();
     ctx.builder.addEdge({
-      from: methodId,
+      from: holderId,
       to: id,
       type: 'calls',
       confidence: classification.confidence,
@@ -423,12 +479,9 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // understand does — and the row says which fact is missing, so a reader can
     // see the difference between a table nothing touches and a table nothing
     // could name.
-    // Once per query, not once per link. A chain can carry two operations —
-    // `knex.count('*').first()` is one visit to the database written as two
-    // calls that start in the same place — and they land on one node, so a row
-    // per call would say the same thing twice about it.
-    if (locators !== undefined && classification.table === null && !reportedTables.has(id)) {
-      reportedTables.add(id);
+    // Once per query, not once per link: the chain was settled above, so this
+    // is reached by the one call the node was recorded for.
+    if (locators !== undefined && classification.table === null) {
       ctx.report({
         file,
         line: site.line,
@@ -440,7 +493,8 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return true;
   };
 
-  const emitCache = (call: CallExpression, methodId: string, file: string): boolean => {
+  const emitCache = (call: CallExpression, holder: Holder): boolean => {
+    const { id: holderId, file } = holder;
     const callee = call.getExpression();
     if (!Node.isPropertyAccessExpression(callee)) return false;
     const origin = resolveTypeOrigin(callee.getExpression());
@@ -472,8 +526,9 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       line: site.line,
       meta: { op, keyPattern, package: origin.package, method },
     });
+    holder.ensure();
     ctx.builder.addEdge({
-      from: methodId,
+      from: holderId,
       to: id,
       type: 'caches',
       confidence: keyPattern === null ? 'heuristic' : 'static',
@@ -598,14 +653,20 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   };
 
   /** The method node a call sits inside, when it sits inside one this repo owns. */
-  const ownerOf = (site: TsNode): { methodId: string; file: string } | undefined => {
+  const ownerOf = (site: TsNode): Holder | undefined => {
     // However that method was written: the loop below reads a field-method's
     // body, so asking only for a declared one here would drop what it found.
     const declaration = enclosingMethod(site);
     if (declaration === undefined) return undefined;
     const methodId = ctx.methodIdOf(declaration);
     if (methodId === undefined || !ctx.builder.has(methodId)) return undefined;
-    return { methodId, file: ctx.fileOf(declaration) };
+    return {
+      id: methodId,
+      file: ctx.fileOf(declaration),
+      ensure: () => {
+        ctx.ensureMethodNode(declaration);
+      },
+    };
   };
 
   /**
@@ -620,7 +681,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     site: CallExpression,
     urlArg: TsNode,
     method: string,
-    owner: { methodId: string; file: string },
+    owner: Holder,
     split?: SplitAddress,
     init?: TsNode,
   ): void => {
@@ -702,8 +763,9 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         ...(info.host === null ? {} : { host: info.host }),
       },
     });
+    owner.ensure();
     ctx.builder.addEdge({
-      from: owner.methodId,
+      from: owner.id,
       to: id,
       type: 'calls',
       confidence: info.path === null ? 'heuristic' : 'static',
@@ -741,7 +803,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     }
   };
 
-  const emitHttp = (call: CallExpression, methodId: string, file: string): boolean => {
+  const emitHttp = (call: CallExpression, holder: Holder): boolean => {
     const recognised = recogniseHttp(call);
     if (recognised === null) return false;
     const written = call.getArguments()[recognised.urlIndex];
@@ -768,38 +830,186 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       if (recorded > 0) return true;
     }
 
-    recordHttp(call, urlArg, recognised.method, { methodId, file }, undefined, request?.init);
+    recordHttp(call, urlArg, recognised.method, holder, undefined, request?.init);
     return true;
   };
 
-  for (const indexed of ctx.classes.all()) {
-    if (!WALKED.has(indexed.role)) continue;
-    for (const { declaration: method, body } of methodBodies(indexed.declaration)) {
-      const methodId = ctx.methodIdOf(method);
-      if (methodId === undefined || !ctx.builder.has(methodId)) continue;
-      const file = indexed.file;
+  /**
+   * Every body whose calls are read, and the node each one's leaves hang off.
+   *
+   * Classes first, and then the functions, so that a graph reads in the order
+   * it always has.
+   *
+   * The functions are the point. This walk used to be the methods of the
+   * indexed classes and nothing else, so a query written in a module-level
+   * function — the shape most TypeScript that is not Nest is written in —
+   * produced no node at all: not an unresolved row, not a dynamic-table
+   * report, nothing (R52). Two fixtures were bent around that limit and a real
+   * drizzle repository read as a project with no data layer, because its data
+   * layer is a module of exported functions.
+   *
+   * Three sources, because there are three ways a body of this repository can
+   * be written: a method, a function declared at the top of a module (which
+   * covers `function list()` and `const list = () => …` alike), and a function
+   * written in place where an entry point was registered, which the entries
+   * pass has already named. A function declared inside one of those is not a
+   * fourth: the walk of a body reads what is nested in it.
+   *
+   * Unreached is not the same as unwritten, which is why a body is read whether
+   * or not anything calls it. A method holding a query is already read that
+   * way — the class index holds every class in the repository — and a function
+   * that no entry point reaches still says what it does to the database.
+   */
+  /** The files of this repository, which is what both walks below read. */
+  const repoFiles = function* (): Generator<SourceFile> {
+    for (const source of ctx.project.getSourceFiles()) {
+      const path = source.getFilePath();
+      // A file of an installed package, or of another repository read into the
+      // same project, is not this repository's to answer for.
+      if (path.includes('/node_modules/') || !path.startsWith(`${ctx.repoDir}/`)) continue;
+      yield source;
+    }
+  };
 
-      forEachCall(body, (call) => {
-        const expression = call as unknown as CallExpression;
-        if (emitDb(expression, methodId, file, indexed.declaration)) return;
-        if (emitCache(expression, methodId, file)) return;
-        emitHttp(expression, methodId, file);
-      });
+  const scopes = function* (): Generator<Scope> {
+    for (const indexed of ctx.classes.all()) {
+      if (!WALKED.has(indexed.role)) continue;
+      for (const { declaration: method, body } of methodBodies(indexed.declaration)) {
+        const id = ctx.methodIdOf(method);
+        if (id === undefined) continue;
+        yield {
+          id,
+          file: indexed.file,
+          body,
+          owner: indexed.declaration,
+          ensure: () => {
+            ctx.ensureMethodNode(method);
+          },
+        };
+      }
+    }
 
-      body.forEachDescendant((node, traversal) => {
-        if (Node.isClassDeclaration(node) || Node.isClassExpression(node)) {
+    // Two ways in may name the same function, and it is still one body to read.
+    const seen = new Set<NamedFunction['declaration']>();
+    const scopeOf = (fn: NamedFunction): Scope => ({
+      id: ctx.functionIdOf(fn),
+      file: ctx.fileOf(fn.declaration),
+      body: fn.body,
+      ensure: () => {
+        ctx.ensureFunctionNode(fn);
+      },
+    });
+
+    for (const source of repoFiles()) {
+      for (const fn of moduleFunctions(source)) {
+        if (seen.has(fn.declaration)) continue;
+        seen.add(fn.declaration);
+        yield scopeOf(fn);
+      }
+
+      // A module of functions spelled as an object: `export const orders = {
+      // list: async () => … }`. A call through one of those is already followed
+      // by name elsewhere, so the function it names is something the graph can
+      // point at and a query inside it belongs to that function.
+      for (const declaration of source.getVariableDeclarations()) {
+        const initializer = declaration.getInitializer();
+        if (initializer === undefined || !Node.isObjectLiteralExpression(initializer)) continue;
+        for (const property of initializer.getProperties()) {
+          if (!Node.isPropertyAssignment(property) && !Node.isMethodDeclaration(property)) continue;
+          const fn = memberFunction(declaration.getNameNode(), property.getName());
+          if (fn === undefined || seen.has(fn.declaration)) continue;
+          seen.add(fn.declaration);
+          yield scopeOf(fn);
+        }
+      }
+    }
+
+    // A handler written in the registration itself — `router.get('/x', async (req) => …)`
+    // — is nobody's module-level function and is where a great deal of Express
+    // and Hono code keeps its queries. The entries pass has already given it a
+    // name and a node.
+    for (const fn of ctx.handlerFunctions) {
+      if (seen.has(fn.declaration)) continue;
+      seen.add(fn.declaration);
+      yield scopeOf(fn);
+    }
+  };
+
+  /**
+   * A query written where there is no body to hang it off.
+   *
+   * Everything a body can be is walked above, which leaves the statements of a
+   * module itself: `const rows = await db.select().from(orders)` at the top
+   * level of a file runs once at import and belongs to no function anybody can
+   * name. There is nothing to attach a leaf to, so the answer is a row saying
+   * the query is there and why it is not in the graph — which is the whole
+   * difference between this and what the reader used to do with a function,
+   * which was to say nothing at all (R52).
+   *
+   * Recognised by the descriptor alone rather than by the full classification:
+   * what is being reported is that a call was skipped, and the package and the
+   * method name settle that much without reading the table out of it.
+   */
+  const reportModuleLevel = (source: SourceFile, file: string): void => {
+    // A body of its own, read as a scope above. `forEachDescendant` never
+    // visits the node it was called on, so a statement that is itself a
+    // function has to be turned away here rather than in the walk below.
+    const isBody = (node: TsNode): boolean =>
+      Node.isFunctionDeclaration(node) ||
+      Node.isFunctionExpression(node) ||
+      Node.isArrowFunction(node) ||
+      Node.isMethodDeclaration(node) ||
+      Node.isClassDeclaration(node) ||
+      Node.isClassExpression(node);
+
+    for (const statement of source.getStatements()) {
+      if (isBody(statement)) continue;
+      statement.forEachDescendant((node, traversal) => {
+        if (isBody(node)) {
           traversal.skip();
           return;
         }
-        if (
-          Node.isCallExpression(node) ||
-          Node.isPropertyAccessExpression(node) ||
-          Node.isElementAccessExpression(node)
-        ) {
-          emitConfig(node, methodId, file);
-        }
+        if (!Node.isCallExpression(node)) return;
+        const callee = node.getExpression();
+        if (!Node.isPropertyAccessExpression(callee)) return;
+        const origin = resolveTypeOrigin(callee.getExpression(), { localBaseClasses });
+        const descriptor = descriptorFor(origin);
+        if (descriptor === undefined || operationOf(descriptor, callee.getName()) === null) return;
+        const site = siteOf(ctx, node, file);
+        ctx.report({
+          file,
+          line: site.line,
+          reason: 'db-call-at-module-level',
+          hint: 'The query runs when the module is imported, so there is no function or method to record it under. Move it into one to make it visible.',
+          symbol: `${callee.getExpression().getText().slice(0, 60)}.${callee.getName()}`,
+        });
       });
     }
+  };
+
+  for (const source of repoFiles()) reportModuleLevel(source, ctx.fileOf(source));
+
+  for (const scope of scopes()) {
+    forEachCall(scope.body, (call) => {
+      const expression = call as unknown as CallExpression;
+      if (emitDb(expression, scope)) return;
+      if (emitCache(expression, scope)) return;
+      emitHttp(expression, scope);
+    });
+
+    scope.body.forEachDescendant((node, traversal) => {
+      if (Node.isClassDeclaration(node) || Node.isClassExpression(node)) {
+        traversal.skip();
+        return;
+      }
+      if (
+        Node.isCallExpression(node) ||
+        Node.isPropertyAccessExpression(node) ||
+        Node.isElementAccessExpression(node)
+      ) {
+        emitConfig(node, scope);
+      }
+    });
   }
 
   // Silence is an answer, and on a data layer it is usually the wrong one. A
@@ -826,7 +1036,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   // Nothing here is named like a data layer either, so this is the one case
   // that rests on the manifest rather than on what the code is called.
   const declaredDb = ctx.adapters.db.filter((adapter) => adapter.descriptor.package !== 'local');
-  if (queries === 0 && dataLayers.size === 0 && declaredDb.length > 0) {
+  if (emitted.size === 0 && dataLayers.size === 0 && declaredDb.length > 0) {
     const names = declaredDb.map((adapter) => adapter.name).join(', ');
     ctx.report({
       file: 'package.json',

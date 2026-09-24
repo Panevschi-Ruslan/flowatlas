@@ -1,0 +1,518 @@
+{
+  "schemaVersion": 3,
+  "repo": "fn-data-layer",
+  "generatedAt": "2026-09-24T21:36:09.624Z",
+  "nodes": [
+    {
+      "id": "db_query:fn-data-layer#src/orders/orders.class.ts:17:12",
+      "type": "db_query",
+      "label": "read Order",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.class.ts",
+      "line": 17,
+      "meta": {
+        "op": "read",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "this.orders",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:fn-data-layer#src/orders/orders.class.ts:21:12",
+      "type": "db_query",
+      "label": "write Order",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.class.ts",
+      "line": 21,
+      "meta": {
+        "op": "write",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "typeorm",
+        "method": "save",
+        "receiver": "this.orders",
+        "source": "type-arg",
+        "entityTypeId": "type:fn-data-layer#Order"
+      }
+    },
+    {
+      "id": "db_query:fn-data-layer#src/orders/orders.class.ts:26:13",
+      "type": "db_query",
+      "label": "delete Order",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.class.ts",
+      "line": 26,
+      "meta": {
+        "op": "delete",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "typeorm",
+        "method": "delete",
+        "receiver": "this.orders",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:fn-data-layer#src/orders/orders.class.ts:32:12",
+      "type": "db_query",
+      "label": "write Invoice",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.class.ts",
+      "line": 32,
+      "meta": {
+        "op": "write",
+        "table": "Invoice",
+        "tables": [
+          "Invoice"
+        ],
+        "package": "typeorm",
+        "method": "save",
+        "receiver": "this.invoices",
+        "source": "type-arg",
+        "entityType": "InvoiceEntity",
+        "entityTypeId": "type:fn-data-layer#InvoiceEntity"
+      }
+    },
+    {
+      "id": "db_query:fn-data-layer#src/orders/orders.object.ts:13:39",
+      "type": "db_query",
+      "label": "read Order",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.object.ts",
+      "line": 13,
+      "meta": {
+        "op": "read",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "orders",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:fn-data-layer#src/orders/orders.repository.ts:17:10",
+      "type": "db_query",
+      "label": "read Order",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.repository.ts",
+      "line": 17,
+      "meta": {
+        "op": "read",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "orders",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:fn-data-layer#src/orders/orders.repository.ts:21:66",
+      "type": "db_query",
+      "label": "write Order",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.repository.ts",
+      "line": 21,
+      "meta": {
+        "op": "write",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "typeorm",
+        "method": "save",
+        "receiver": "orders",
+        "source": "type-arg",
+        "entityTypeId": "type:fn-data-layer#Order"
+      }
+    },
+    {
+      "id": "db_query:fn-data-layer#src/orders/orders.repository.ts:31:11",
+      "type": "db_query",
+      "label": "delete Order",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.repository.ts",
+      "line": 31,
+      "meta": {
+        "op": "delete",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "typeorm",
+        "method": "delete",
+        "receiver": "orders",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "db_query:fn-data-layer#src/orders/orders.repository.ts:38:3",
+      "type": "db_query",
+      "label": "write Invoice",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.repository.ts",
+      "line": 38,
+      "meta": {
+        "op": "write",
+        "table": "Invoice",
+        "tables": [
+          "Invoice"
+        ],
+        "package": "typeorm",
+        "method": "save",
+        "receiver": "invoices",
+        "source": "type-arg",
+        "entityType": "InvoiceEntity",
+        "entityTypeId": "type:fn-data-layer#InvoiceEntity"
+      }
+    },
+    {
+      "id": "fn-data-layer#src/orders/orders.class.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.class.ts",
+      "line": 11,
+      "kind": "injectable"
+    },
+    {
+      "id": "fn-data-layer#src/orders/orders.class.ts:OrdersService.archiveOrder",
+      "type": "method",
+      "label": "OrdersService.archiveOrder",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.class.ts",
+      "line": 24
+    },
+    {
+      "id": "fn-data-layer#src/orders/orders.class.ts:OrdersService.listOrders",
+      "type": "method",
+      "label": "OrdersService.listOrders",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.class.ts",
+      "line": 16
+    },
+    {
+      "id": "fn-data-layer#src/orders/orders.class.ts:OrdersService.saveInvoice",
+      "type": "method",
+      "label": "OrdersService.saveInvoice",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.class.ts",
+      "line": 31
+    },
+    {
+      "id": "fn-data-layer#src/orders/orders.class.ts:OrdersService.saveOrder",
+      "type": "method",
+      "label": "OrdersService.saveOrder",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.class.ts",
+      "line": 20
+    },
+    {
+      "id": "fn-data-layer#src/orders/orders.object.ts:orderQueries.list",
+      "type": "function",
+      "label": "orderQueries.list",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.object.ts",
+      "line": 13
+    },
+    {
+      "id": "fn-data-layer#src/orders/orders.repository.ts:archiveOrder",
+      "type": "function",
+      "label": "archiveOrder",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.repository.ts",
+      "line": 29
+    },
+    {
+      "id": "fn-data-layer#src/orders/orders.repository.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.repository.ts",
+      "line": 16
+    },
+    {
+      "id": "fn-data-layer#src/orders/orders.repository.ts:saveInvoice",
+      "type": "function",
+      "label": "saveInvoice",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.repository.ts",
+      "line": 37
+    },
+    {
+      "id": "fn-data-layer#src/orders/orders.repository.ts:saveOrder",
+      "type": "function",
+      "label": "saveOrder",
+      "repo": "fn-data-layer",
+      "file": "src/orders/orders.repository.ts",
+      "line": 21
+    },
+    {
+      "id": "repo:fn-data-layer",
+      "type": "repo",
+      "label": "fn-data-layer",
+      "repo": "fn-data-layer",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "typeorm": 4
+          }
+        },
+        "adapters": {
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "table:fn-data-layer#Invoice",
+      "type": "table",
+      "label": "Invoice",
+      "repo": "fn-data-layer"
+    },
+    {
+      "id": "table:fn-data-layer#Order",
+      "type": "table",
+      "label": "Order",
+      "repo": "fn-data-layer"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:fn-data-layer#src/orders/orders.class.ts:17:12",
+      "to": "table:fn-data-layer#Order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.class.ts",
+      "line": 17
+    },
+    {
+      "from": "db_query:fn-data-layer#src/orders/orders.class.ts:21:12",
+      "to": "table:fn-data-layer#Order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.class.ts",
+      "line": 21
+    },
+    {
+      "from": "db_query:fn-data-layer#src/orders/orders.class.ts:26:13",
+      "to": "table:fn-data-layer#Order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.class.ts",
+      "line": 26
+    },
+    {
+      "from": "db_query:fn-data-layer#src/orders/orders.class.ts:32:12",
+      "to": "table:fn-data-layer#Invoice",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.class.ts",
+      "line": 32
+    },
+    {
+      "from": "db_query:fn-data-layer#src/orders/orders.object.ts:13:39",
+      "to": "table:fn-data-layer#Order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.object.ts",
+      "line": 13
+    },
+    {
+      "from": "db_query:fn-data-layer#src/orders/orders.repository.ts:17:10",
+      "to": "table:fn-data-layer#Order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 17
+    },
+    {
+      "from": "db_query:fn-data-layer#src/orders/orders.repository.ts:21:66",
+      "to": "table:fn-data-layer#Order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 21
+    },
+    {
+      "from": "db_query:fn-data-layer#src/orders/orders.repository.ts:31:11",
+      "to": "table:fn-data-layer#Order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 31
+    },
+    {
+      "from": "db_query:fn-data-layer#src/orders/orders.repository.ts:38:3",
+      "to": "table:fn-data-layer#Invoice",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 38
+    },
+    {
+      "from": "fn-data-layer#src/orders/orders.class.ts:OrdersService.archiveOrder",
+      "to": "db_query:fn-data-layer#src/orders/orders.class.ts:26:13",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.class.ts",
+      "line": 26
+    },
+    {
+      "from": "fn-data-layer#src/orders/orders.class.ts:OrdersService.listOrders",
+      "to": "db_query:fn-data-layer#src/orders/orders.class.ts:17:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.class.ts",
+      "line": 17
+    },
+    {
+      "from": "fn-data-layer#src/orders/orders.class.ts:OrdersService.saveInvoice",
+      "to": "db_query:fn-data-layer#src/orders/orders.class.ts:32:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.class.ts",
+      "line": 32
+    },
+    {
+      "from": "fn-data-layer#src/orders/orders.class.ts:OrdersService.saveOrder",
+      "to": "db_query:fn-data-layer#src/orders/orders.class.ts:21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.class.ts",
+      "line": 21
+    },
+    {
+      "from": "fn-data-layer#src/orders/orders.object.ts:orderQueries.list",
+      "to": "db_query:fn-data-layer#src/orders/orders.object.ts:13:39",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.object.ts",
+      "line": 13
+    },
+    {
+      "from": "fn-data-layer#src/orders/orders.repository.ts:archiveOrder",
+      "to": "db_query:fn-data-layer#src/orders/orders.repository.ts:31:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 31
+    },
+    {
+      "from": "fn-data-layer#src/orders/orders.repository.ts:listOrders",
+      "to": "db_query:fn-data-layer#src/orders/orders.repository.ts:17:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 17
+    },
+    {
+      "from": "fn-data-layer#src/orders/orders.repository.ts:saveInvoice",
+      "to": "db_query:fn-data-layer#src/orders/orders.repository.ts:38:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 38
+    },
+    {
+      "from": "fn-data-layer#src/orders/orders.repository.ts:saveOrder",
+      "to": "db_query:fn-data-layer#src/orders/orders.repository.ts:21:66",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 21
+    }
+  ],
+  "types": {
+    "type:fn-data-layer#InvoiceEntity": {
+      "name": "InvoiceEntity",
+      "kind": "object",
+      "declaredIn": "fn-data-layer#src/orders/entities.ts",
+      "structuralHash": "78dbe5b1e055a99c",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:fn-data-layer#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "fn-data-layer#src/orders/entities.ts",
+      "structuralHash": "7cc437b59eae3b81",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "userId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/main.ts",
+      "line": 1,
+      "reason": "bootstrap-not-found",
+      "hint": "Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.",
+      "symbol": "bootstrap"
+    },
+    {
+      "file": "src/orders/orders.object.ts",
+      "line": 22,
+      "reason": "db-call-at-module-level",
+      "hint": "The query runs when the module is imported, so there is no function or method to record it under. Move it into one to make it visible.",
+      "symbol": "orders.find"
+    }
+  ]
+}

@@ -3,11 +3,10 @@ import { Pool } from 'pg';
 /**
  * Stored data, so the route audit has something to say a route reaches.
  *
- * A class, and one instance of it exported, because that is the only shape the
- * data-layer reader walks: it works through the classes of a repository, and a
- * `pool.query(…)` written in a module-level function is not read at all. That
- * is a real limit for repositories that keep their data access in functions,
- * and it belongs to the data-layer reader rather than to this fixture.
+ * A class, and one instance of it exported, which is one of the two shapes an
+ * Express service keeps its data access in. The other — a module of exported
+ * functions around a `pool` — reads the same since R52; `fixtures/fn-data-layer`
+ * is where the two are compared.
  */
 export class OrdersRepository {
   private readonly pool = new Pool();

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-typeorm",
-  "generatedAt": "2026-09-09T22:29:17.190Z",
+  "generatedAt": "2026-09-24T21:19:02.815Z",
   "nodes": [
     {
       "id": "db_query:nest-typeorm#src/orders/orders.service.ts:22:12",
@@ -38,7 +38,8 @@
         "package": "typeorm",
         "method": "save",
         "receiver": "this.orders",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityTypeId": "type:nest-typeorm#Order"
       }
     },
     {
