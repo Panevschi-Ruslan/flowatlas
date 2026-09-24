@@ -10,9 +10,9 @@ One map of a project that lives in several repositories.
 **A command-line tool that reads several TypeScript repositories with the
 compiler's own checker, without running them, and joins them into one graph you
 can query — from a terminal or from a coding agent over the Model Context
-Protocol.** It knows NestJS and Angular, Express, Fastify and Koa, Telegraf and
-Hono, TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Knex, Mongo, node-postgres,
-Redis, Kafka, RabbitMQ, BullMQ and socket.io.
+Protocol.** It knows NestJS and Angular, React and Next.js, Express, Fastify and
+Koa, Telegraf and Hono, TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Knex,
+Mongo, node-postgres, Redis, Kafka, RabbitMQ, BullMQ and socket.io.
 
 Each repository is read on its own, then the readings are joined: a request made
 in one service is matched to the route that answers it in another, a message
@@ -578,10 +578,27 @@ Working and verified against a real five-repository project:
 
 Known gaps in what it can read:
 
-- A repository built on anything but NestJS, Angular, Express, Fastify or Koa.
-  Next.js, Nuxt, Remix, React, Vue and Svelte are recognised by name and read by
+- A repository built on anything but NestJS, Angular, React, Next.js, Express,
+  Fastify or Koa. Nuxt, Remix, Vue and Svelte are recognised by name and read by
   nothing: `init` and `build` both say which repository and which framework, and
   the graph is smaller than the project by exactly that much.
+- In a React repository, a request written any way other than the browser's own
+  client or the common client library. What decides that a function is a
+  component or a hook is its name and whether markup comes back, because that is
+  all the framework itself goes on; a component whose name is not capitalised is
+  not one here either, and neither is it at run time.
+- In a Next.js repository, a server action built by a call rather than declared
+  as a function — `export const save = client.schema(…).action(…)`, which is
+  what the validation helpers produce. The boundary is real and nothing here can
+  name the code behind it, so it is counted and reported: on the repository this
+  was measured against, 11 of 134 actions were read and one row named the other
+  123. Also unread there: a layout, which decides what surrounds a screen rather
+  than what crosses a boundary, and a `middleware.ts` whose matcher is a regular
+  expression, which is reported rather than treated as coverage nobody checked.
+- A Next.js repository's dependency injection, guards and data layer. It is read
+  by the browser reader, because the screens and half the route handlers are in
+  files the server reader does not open, and that reader's passes do not run —
+  so a query there produces no node even when it is written in a class.
 - On Express, Fastify and Koa, what is read is the route — verb, path and
   handler — the router it is declared on, the prefix it is mounted under, and
   the middleware in front of it, including middleware installed on an
@@ -596,8 +613,9 @@ Known gaps in what it can read:
 - A query written outside a class. The data layer is read from the methods of a
   repository's classes, so a query in a module of exported functions produces
   nothing at all — not a row, not a node. It is the shape a good deal of
-  non-NestJS code is written in, and it is the reason Drizzle is covered by a
-  fixture rather than by a repository somebody actually ships.
+  non-NestJS code is written in, it is the usual shape in a Next.js repository,
+  and it is the reason Drizzle is covered by a fixture rather than by a
+  repository somebody actually ships.
 - A model reached only through its type. `sequelize-typescript` injects a class
   and names the table with a decorator the library resolves at run time, so
   neither end of it is an expression anything here can walk.

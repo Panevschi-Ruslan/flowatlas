@@ -1,0 +1,17 @@
+{
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "apiBaseEnv": ["VITE_API_URL"],
+      "apiTarget": { "VITE_API_URL": "shop" }
+    }
+  ],
+  "output": ".flowatlas"
+}

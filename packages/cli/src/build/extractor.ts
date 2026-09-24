@@ -7,11 +7,13 @@ import {
 import { brokersPass, registerBrokerAdapters } from '@flowatlas/adapters-broker';
 import { leavesPass, registerDbAdapters } from '@flowatlas/adapters-db';
 import { registerEntryAdapters } from '@flowatlas/adapters-entry';
-import { registerFrontendAdapters } from '@flowatlas/extractor-angular';
+import { registerFrontendAdapters as registerAngularFrontend } from '@flowatlas/extractor-angular';
+import { registerFrontendAdapters as registerReactFrontend } from '@flowatlas/extractor-react';
 import type { NestExtractorPass } from '@flowatlas/extractor-nestjs';
 
 export const NESTJS_EXTRACTOR = '@flowatlas/extractor-nestjs';
 export const ANGULAR_EXTRACTOR = '@flowatlas/extractor-angular';
+export const REACT_EXTRACTOR = '@flowatlas/extractor-react';
 
 /**
  * Repository types the TypeScript server reader handles.
@@ -25,10 +27,27 @@ export const ANGULAR_EXTRACTOR = '@flowatlas/extractor-angular';
  */
 export const SERVER_TYPES: readonly string[] = ['nestjs', 'express', 'fastify', 'koa'];
 
+/**
+ * Repository types the React reader handles.
+ *
+ * The file-system router is here rather than beside the server types on
+ * purpose, and it is the one place in this tool where that decision is visible.
+ * A repository built on it is a browser and a server at once: the same
+ * directory holds the screens, the route handlers that answer them and the
+ * actions the screens call, and most of it is written in files the server
+ * reader does not open, because that reader globs `.ts` and a component lives
+ * in `.tsx`. Reading it with the reader that opens both, and letting the ways
+ * in come from an entry adapter through the registry, keeps one repository one
+ * reading. What it costs is named in the README: no dependency injection, no
+ * data-layer pass and no incremental session for those repositories yet.
+ */
+export const BROWSER_TYPES: readonly string[] = ['react', 'nextjs'];
+
 /** Package that reads each kind of repository. */
 export const EXTRACTORS: Record<string, string> = {
   ...Object.fromEntries(SERVER_TYPES.map((type) => [type, NESTJS_EXTRACTOR])),
   angular: ANGULAR_EXTRACTOR,
+  ...Object.fromEntries(BROWSER_TYPES.map((type) => [type, REACT_EXTRACTOR])),
 };
 
 /**
@@ -38,7 +57,7 @@ export const EXTRACTORS: Record<string, string> = {
  * someone works on a service, which is the whole reason for leaving them out of
  * a build on request.
  */
-const FRONTEND_TYPES = new Set(['angular']);
+const FRONTEND_TYPES = new Set(['angular', 'react']);
 
 export const isFrontend = (type: string): boolean => FRONTEND_TYPES.has(type);
 
@@ -51,7 +70,8 @@ export const createRegistry = (): AdapterRegistry => {
   registerEntryAdapters(registry);
   registerDbAdapters(registry);
   registerBrokerAdapters(registry);
-  registerFrontendAdapters(registry);
+  registerAngularFrontend(registry);
+  registerReactFrontend(registry);
   return registry;
 };
 

@@ -187,7 +187,7 @@ describe('building a project', () => {
   it('leaves a service no extractor can read out, without failing', async () => {
     const config = configFor('unknown-type', [
       service('orders', { baseUrlEnv: ['ORDERS_URL'] }),
-      { name: 'landing', repo: join(FIXTURE, 'web'), type: 'react' },
+      { name: 'landing', repo: join(FIXTURE, 'web'), type: 'svelte' },
     ]);
     const result = await buildProject({ config, builtAt: FIXED });
 

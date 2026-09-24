@@ -158,6 +158,9 @@ importers:
       '@flowatlas/extractor-nestjs':
         specifier: workspace:*
         version: link:../extractor-nestjs
+      '@flowatlas/extractor-react':
+        specifier: workspace:*
+        version: link:../extractor-react
       '@flowatlas/linker':
         specifier: workspace:*
         version: link:../linker
@@ -200,6 +203,18 @@ importers:
 
   packages/extractor-nestjs:
     dependencies:
+      '@flowatlas/core':
+        specifier: workspace:*
+        version: link:../core
+      ts-morph:
+        specifier: ^28.0.0
+        version: 28.0.0
+
+  packages/extractor-react:
+    dependencies:
+      '@flowatlas/adapters-entry':
+        specifier: workspace:*
+        version: link:../adapters-entry
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core
