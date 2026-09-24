@@ -11,7 +11,8 @@ One map of a project that lives in several repositories.
 compiler's own checker, without running them, and joins them into one graph you
 can query — from a terminal or from a coding agent over the Model Context
 Protocol.** It knows NestJS and Angular, Telegraf and Hono, TypeORM, Prisma,
-Mongo, node-postgres, Redis, Kafka, RabbitMQ and BullMQ.
+Drizzle, Mongoose, Sequelize, Knex, Mongo, node-postgres, Redis, Kafka, RabbitMQ
+and BullMQ.
 
 Each repository is read on its own, then the readings are joined: a request made
 in one service is matched to the route that answers it in another, a message
@@ -537,9 +538,12 @@ Working and verified against a real five-repository project:
 
 - **Reading** NestJS and Angular, with modules, injection, guards, routes,
   components and templates.
-- **Leaves** for TypeORM, Prisma, node-postgres, MongoDB and a repository base
-  named in the configuration; Redis and cache-manager; outgoing requests;
-  settings keys.
+- **Leaves** for TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Knex,
+  node-postgres, MongoDB and a repository base named in the configuration; Redis
+  and cache-manager; outgoing requests; settings keys. Where the table is named
+  in the call rather than in a type — `from(users)`, `knex('orders')`,
+  `Model.init(..., { tableName })` — it is read from the expression, and a table
+  assembled at run time is reported rather than guessed at.
 - **Channels** for Kafka, RabbitMQ, BullMQ, Redis pub/sub and an in-house bus
   described in the configuration.
 - **Bot entries** for Telegraf, both the decorator style and the imperative one,
@@ -574,6 +578,14 @@ Known gaps in what it can read:
   Next.js, Nuxt, Remix, React, Vue and Svelte are recognised by name and read by
   nothing: `init` and `build` both say which repository and which framework, and
   the graph is smaller than the project by exactly that much.
+- A query written outside a class. The data layer is read from the methods of a
+  repository's classes, so a query in a module of exported functions produces
+  nothing at all — not a row, not a node. It is the shape a good deal of
+  non-NestJS code is written in, and it is the reason Drizzle is covered by a
+  fixture rather than by a repository somebody actually ships.
+- A model reached only through its type. `sequelize-typescript` injects a class
+  and names the table with a decorator the library resolves at run time, so
+  neither end of it is an expression anything here can walk.
 - An address built entirely at run time, where no part of it is written down.
   Each one is reported rather than guessed at.
 - A helper whose tail depends on whether an argument is empty, where the caller

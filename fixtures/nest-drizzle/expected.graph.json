@@ -1,0 +1,545 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-drizzle",
+  "generatedAt": "2026-09-24T16:07:04.085Z",
+  "nodes": [
+    {
+      "id": "db_query:nest-drizzle#src/orders/orders.service.ts:14:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 14,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "drizzle-orm",
+        "method": "select",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-drizzle#src/orders/orders.service.ts:20:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 20,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "drizzle-orm",
+        "method": "select",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-drizzle#src/orders/orders.service.ts:25:12",
+      "type": "db_query",
+      "label": "write orders",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 25,
+      "meta": {
+        "op": "write",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "drizzle-orm",
+        "method": "insert",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-drizzle#src/orders/orders.service.ts:30:12",
+      "type": "db_query",
+      "label": "write invoices",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 30,
+      "meta": {
+        "op": "write",
+        "table": "invoices",
+        "tables": [
+          "invoices"
+        ],
+        "package": "drizzle-orm",
+        "method": "insert",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-drizzle#src/orders/orders.service.ts:34:12",
+      "type": "db_query",
+      "label": "write orders",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 34,
+      "meta": {
+        "op": "write",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "drizzle-orm",
+        "method": "update",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-drizzle#src/orders/orders.service.ts:38:12",
+      "type": "db_query",
+      "label": "delete orders",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 38,
+      "meta": {
+        "op": "delete",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "drizzle-orm",
+        "method": "delete",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-drizzle#src/orders/orders.service.ts:45:12",
+      "type": "db_query",
+      "label": "delete ?",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 45,
+      "meta": {
+        "op": "delete",
+        "table": null,
+        "tables": [],
+        "package": "drizzle-orm",
+        "method": "delete",
+        "receiver": "this.db",
+        "source": "none"
+      }
+    },
+    {
+      "id": "entry:nest-drizzle:http:DELETE:/orders",
+      "type": "entry",
+      "label": "DELETE /orders",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-drizzle:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-drizzle:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-drizzle#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-drizzle",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-drizzle#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-drizzle#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14
+    },
+    {
+      "id": "nest-drizzle#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "method",
+      "label": "OrdersController.findAll",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-drizzle#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "method",
+      "label": "OrdersController.remove",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19
+    },
+    {
+      "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 24
+    },
+    {
+      "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "method",
+      "label": "OrdersService.findAll",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "method",
+      "label": "OrdersService.findOne",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 19
+    },
+    {
+      "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService.invoice",
+      "type": "method",
+      "label": "OrdersService.invoice",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 29
+    },
+    {
+      "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService.markPaid",
+      "type": "method",
+      "label": "OrdersService.markPaid",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 33
+    },
+    {
+      "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService.purge",
+      "type": "method",
+      "label": "OrdersService.purge",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 44
+    },
+    {
+      "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "method",
+      "label": "OrdersService.remove",
+      "repo": "nest-drizzle",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "id": "repo:nest-drizzle",
+      "type": "repo",
+      "label": "nest-drizzle",
+      "repo": "nest-drizzle",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "drizzle-orm": 18,
+            "drizzle-orm.limit": 2,
+            "drizzle-orm.from": 2,
+            "drizzle-orm.where": 4,
+            "drizzle-orm.values": 2,
+            "drizzle-orm.set": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:nest-drizzle#invoices",
+      "type": "table",
+      "label": "invoices",
+      "repo": "nest-drizzle"
+    },
+    {
+      "id": "table:nest-drizzle#orders",
+      "type": "table",
+      "label": "orders",
+      "repo": "nest-drizzle"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:nest-drizzle#src/orders/orders.service.ts:14:12",
+      "to": "table:nest-drizzle#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 14
+    },
+    {
+      "from": "db_query:nest-drizzle#src/orders/orders.service.ts:20:12",
+      "to": "table:nest-drizzle#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 20
+    },
+    {
+      "from": "db_query:nest-drizzle#src/orders/orders.service.ts:25:12",
+      "to": "table:nest-drizzle#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 25
+    },
+    {
+      "from": "db_query:nest-drizzle#src/orders/orders.service.ts:30:12",
+      "to": "table:nest-drizzle#invoices",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 30
+    },
+    {
+      "from": "db_query:nest-drizzle#src/orders/orders.service.ts:34:12",
+      "to": "table:nest-drizzle#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 34
+    },
+    {
+      "from": "db_query:nest-drizzle#src/orders/orders.service.ts:38:12",
+      "to": "table:nest-drizzle#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 38
+    },
+    {
+      "from": "entry:nest-drizzle:http:DELETE:/orders",
+      "to": "nest-drizzle#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "entry:nest-drizzle:http:GET:/orders",
+      "to": "nest-drizzle#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "params": [],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "entry:nest-drizzle:http:POST:/orders",
+      "to": "nest-drizzle#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-drizzle#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-drizzle#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-drizzle#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "nest-drizzle#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 16,
+      "params": [
+        "number"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-drizzle#src/orders/orders.controller.ts:OrdersController.findAll",
+      "to": "nest-drizzle#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11,
+      "params": [],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "nest-drizzle#src/orders/orders.controller.ts:OrdersController.remove",
+      "to": "nest-drizzle#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 21,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-drizzle#src/orders/orders.service.ts:OrdersService.create",
+      "to": "db_query:nest-drizzle#src/orders/orders.service.ts:25:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 25
+    },
+    {
+      "from": "nest-drizzle#src/orders/orders.service.ts:OrdersService.findAll",
+      "to": "db_query:nest-drizzle#src/orders/orders.service.ts:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 14
+    },
+    {
+      "from": "nest-drizzle#src/orders/orders.service.ts:OrdersService.findOne",
+      "to": "db_query:nest-drizzle#src/orders/orders.service.ts:20:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 20
+    },
+    {
+      "from": "nest-drizzle#src/orders/orders.service.ts:OrdersService.invoice",
+      "to": "db_query:nest-drizzle#src/orders/orders.service.ts:30:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 30
+    },
+    {
+      "from": "nest-drizzle#src/orders/orders.service.ts:OrdersService.markPaid",
+      "to": "db_query:nest-drizzle#src/orders/orders.service.ts:34:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 34
+    },
+    {
+      "from": "nest-drizzle#src/orders/orders.service.ts:OrdersService.purge",
+      "to": "db_query:nest-drizzle#src/orders/orders.service.ts:45:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 45
+    },
+    {
+      "from": "nest-drizzle#src/orders/orders.service.ts:OrdersService.remove",
+      "to": "db_query:nest-drizzle#src/orders/orders.service.ts:38:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 38
+    }
+  ],
+  "types": {
+    "type:drizzle-orm#PgTable<string>": {
+      "name": "PgTable",
+      "kind": "external",
+      "declaredIn": "drizzle-orm",
+      "structuralHash": "51e2aaf2c9d09485",
+      "meta": {
+        "declKind": "external",
+        "package": "drizzle-orm"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 45,
+      "reason": "dynamic-table-name",
+      "hint": "The table this.db.delete touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.",
+      "symbol": "this.db.delete"
+    }
+  ]
+}
