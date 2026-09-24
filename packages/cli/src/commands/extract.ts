@@ -12,10 +12,12 @@ import {
   SCHEMA_VERSION,
   wasMissed,
   type FlowatlasConfig,
+  type PackageJson,
   type RepoGraph,
   type ServiceConfig,
 } from '@flowatlas/core';
 import { angularFrontendAdapter, extractRepo as extractAngularRepo } from '@flowatlas/extractor-angular';
+import { reactFrontendAdapter, extractRepo as extractReactRepo } from '@flowatlas/extractor-react';
 import {
   extractRepo,
   findTsconfig,
@@ -37,6 +39,34 @@ import {
   type BuildCache,
 } from '../build/cache.js';
 import { adapterNames, createRegistry, EXTRA_PASSES, NESTJS_EXTRACTOR } from '../build/extractor.js';
+
+/**
+ * The browser readers, by the repository type each one reads.
+ *
+ * A table rather than a pair of branches, because there are now three types
+ * and two readers and the next one is a row. Everything not named here is read
+ * by the server reader, which is the default for the same reason it always
+ * was: a repository nobody described is far likelier to be a service.
+ */
+const BROWSER_READERS: Record<string, (options: ExtractRepoOptions) => Promise<RepoGraph>> = {
+  angular: extractAngularRepo,
+  react: extractReactRepo,
+  nextjs: extractReactRepo,
+};
+
+/**
+ * The browser reader for a repository nothing in a configuration described.
+ *
+ * Asked of the adapters themselves, in the order they are listed, so the
+ * answer is the same one the registry would give. The order matters once:
+ * a repository built on the file-system router declares both packages, and
+ * the one that reads it has to be asked first.
+ */
+const detectBrowserReader = (pkg: PackageJson): ((options: ExtractRepoOptions) => Promise<RepoGraph>) | undefined => {
+  if (angularFrontendAdapter.detect(pkg)) return extractAngularRepo;
+  if (reactFrontendAdapter.detect(pkg)) return extractReactRepo;
+  return undefined;
+};
 import { BUILD_STAMP } from '../version.js';
 
 export interface ExtractOptions {
@@ -155,19 +185,19 @@ export const runExtract = async (
   // The configured type says which extractor reads a repository. Without a
   // configuration there is only the manifest, and a frontend adapter that
   // recognises it is as good an answer as the server-side default.
-  const frontend =
+  const readBrowser =
     service === undefined
-      ? angularFrontendAdapter.detect(readPackageJson(rootDir) ?? {})
-      : service.type === 'angular';
+      ? detectBrowserReader(readPackageJson(rootDir) ?? {})
+      : BROWSER_READERS[service.type];
 
   // A server repository is opened here rather than inside the extractor, so the
   // parsed project can also answer what the build cache needs to know: which
   // files there are, what each imports, and which of them are global. The
-  // frontend reader has no such session yet, so it caches nothing.
-  const warm = frontend ? undefined : openRepo(extractOptions);
+  // browser readers have no such session yet, so they cache nothing.
+  const warm = readBrowser === undefined ? openRepo(extractOptions) : undefined;
   const graph =
     warm === undefined
-      ? await extractAngularRepo(extractOptions)
+      ? await (readBrowser as (options: ExtractRepoOptions) => Promise<RepoGraph>)(extractOptions)
       : await extractRepo({ ...extractOptions, project: warm.project });
 
   const outDir = options.out ?? config?.output ?? DEFAULT_OUTPUT;

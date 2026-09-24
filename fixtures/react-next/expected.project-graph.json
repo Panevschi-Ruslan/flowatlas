@@ -1,0 +1,901 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-24T21:37:46.664Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:http:ALL:/api/legacy-orders",
+      "type": "entry",
+      "label": "ALL /api/legacy-orders",
+      "repo": "shop",
+      "file": "pages/api/legacy-orders.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/legacy-orders",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middleware": [
+          "middleware.ts"
+        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/invoices",
+      "type": "entry",
+      "label": "GET /api/invoices",
+      "repo": "shop",
+      "file": "app/api/(admin)/invoices/route.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/invoices",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middleware": [
+          "middleware.ts"
+        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "app/api/orders/route.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middleware": [
+          "middleware.ts"
+        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/orders/:param",
+      "type": "entry",
+      "label": "GET /api/orders/:param",
+      "repo": "shop",
+      "file": "app/api/orders/[id]/route.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders/:param",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middleware": [
+          "middleware.ts"
+        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:http:PATCH:/api/orders/:param",
+      "type": "entry",
+      "label": "PATCH /api/orders/:param",
+      "repo": "shop",
+      "file": "app/api/orders/[id]/route.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/api/orders/:param",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middleware": [
+          "middleware.ts"
+        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/orders",
+      "type": "entry",
+      "label": "POST /api/orders",
+      "repo": "shop",
+      "file": "app/api/orders/route.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/orders",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middleware": [
+          "middleware.ts"
+        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:rpc:action:app/actions/orders.ts#archiveOrder",
+      "type": "entry",
+      "label": "action archiveOrder",
+      "repo": "shop",
+      "file": "app/actions/orders.ts",
+      "line": 13,
+      "kind": "rpc",
+      "meta": {
+        "action": "archiveOrder",
+        "adapter": "nextjs-routes",
+        "registration": "module 'use server'",
+        "viaImport": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:rpc:action:app/actions/orders.ts#renameOrder",
+      "type": "entry",
+      "label": "action renameOrder",
+      "repo": "shop",
+      "file": "app/actions/orders.ts",
+      "line": 18,
+      "kind": "rpc",
+      "meta": {
+        "action": "renameOrder",
+        "adapter": "nextjs-routes",
+        "registration": "module 'use server'",
+        "viaImport": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "functions": 16,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "functions": 8,
+          "components": 2,
+          "hooks": 2,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "shop#app/actions/orders.ts:archiveOrder",
+      "type": "function",
+      "label": "archiveOrder",
+      "repo": "shop",
+      "file": "app/actions/orders.ts",
+      "line": 13
+    },
+    {
+      "id": "shop#app/actions/orders.ts:renameOrder",
+      "type": "function",
+      "label": "renameOrder",
+      "repo": "shop",
+      "file": "app/actions/orders.ts",
+      "line": 18
+    },
+    {
+      "id": "shop#app/api/(admin)/invoices/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "shop",
+      "file": "app/api/(admin)/invoices/route.ts",
+      "line": 10
+    },
+    {
+      "id": "shop#app/api/orders/[id]/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "shop",
+      "file": "app/api/orders/[id]/route.ts",
+      "line": 4
+    },
+    {
+      "id": "shop#app/api/orders/[id]/route.ts:PATCH",
+      "type": "function",
+      "label": "PATCH",
+      "repo": "shop",
+      "file": "app/api/orders/[id]/route.ts",
+      "line": 10
+    },
+    {
+      "id": "shop#app/api/orders/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "shop",
+      "file": "app/api/orders/route.ts",
+      "line": 4
+    },
+    {
+      "id": "shop#app/api/orders/route.ts:POST",
+      "type": "function",
+      "label": "POST",
+      "repo": "shop",
+      "file": "app/api/orders/route.ts",
+      "line": 9
+    },
+    {
+      "id": "shop#app/orders/page.tsx:OrdersPage",
+      "type": "ui_component",
+      "label": "OrdersPage",
+      "repo": "shop",
+      "file": "app/orders/page.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "id": "shop#lib/invoices-store.ts:listInvoices",
+      "type": "function",
+      "label": "listInvoices",
+      "repo": "shop",
+      "file": "lib/invoices-store.ts",
+      "line": 8
+    },
+    {
+      "id": "shop#lib/orders-store.ts:archive",
+      "type": "function",
+      "label": "archive",
+      "repo": "shop",
+      "file": "lib/orders-store.ts",
+      "line": 35
+    },
+    {
+      "id": "shop#lib/orders-store.ts:findOrder",
+      "type": "function",
+      "label": "findOrder",
+      "repo": "shop",
+      "file": "lib/orders-store.ts",
+      "line": 20
+    },
+    {
+      "id": "shop#lib/orders-store.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "shop",
+      "file": "lib/orders-store.ts",
+      "line": 18
+    },
+    {
+      "id": "shop#lib/orders-store.ts:patchOrder",
+      "type": "function",
+      "label": "patchOrder",
+      "repo": "shop",
+      "file": "lib/orders-store.ts",
+      "line": 27
+    },
+    {
+      "id": "shop#lib/orders-store.ts:saveOrder",
+      "type": "function",
+      "label": "saveOrder",
+      "repo": "shop",
+      "file": "lib/orders-store.ts",
+      "line": 22
+    },
+    {
+      "id": "shop#pages/api/legacy-orders.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "pages/api/legacy-orders.ts",
+      "line": 7
+    },
+    {
+      "id": "ui_action:shop#app/orders/page.tsx:12:29",
+      "type": "ui_action",
+      "label": "onClick={onArchive}",
+      "repo": "shop",
+      "file": "app/orders/page.tsx",
+      "line": 12,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "onArchive",
+        "component": "shop#app/orders/page.tsx:OrdersPage",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/components/InvoicesPanel.tsx:13:29",
+      "type": "ui_action",
+      "label": "onClick={() => listInvoices()}",
+      "repo": "web",
+      "file": "src/components/InvoicesPanel.tsx",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => listInvoices()",
+        "component": "web#src/components/InvoicesPanel.tsx:InvoicesPanel",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/components/OrdersPanel.tsx:17:29",
+      "type": "ui_action",
+      "label": "onClick={() => orders.refresh()}",
+      "repo": "web",
+      "file": "src/components/OrdersPanel.tsx",
+      "line": 17,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => orders.refresh()",
+        "component": "web#src/components/OrdersPanel.tsx:OrdersPanel",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/components/OrdersPanel.tsx:20:29",
+      "type": "ui_action",
+      "label": "onClick={() => orders.rename('1', { name: 'renamed' })}",
+      "repo": "web",
+      "file": "src/components/OrdersPanel.tsx",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => orders.rename('1', { name: 'renamed' })",
+        "component": "web#src/components/OrdersPanel.tsx:OrdersPanel",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/components/OrdersPanel.tsx:23:29",
+      "type": "ui_action",
+      "label": "onClick={() => resource.load()}",
+      "repo": "web",
+      "file": "src/components/OrdersPanel.tsx",
+      "line": 23,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => resource.load()",
+        "component": "web#src/components/OrdersPanel.tsx:OrdersPanel",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/api/orders.ts:21:24",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "web",
+      "file": "src/api/orders.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/api/orders.ts:26:24",
+      "type": "ui_api_call",
+      "label": "PATCH /api/orders/:param",
+      "repo": "web",
+      "file": "src/api/orders.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "url": "${VITE_API_URL}/api/orders/:param",
+        "path": "/api/orders/:param",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": "type:web#UpdateOrderDto",
+        "bodyFrom": "literal",
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/api/orders.ts:45:59@41:24",
+      "type": "ui_api_call",
+      "label": "GET /api/invoices",
+      "repo": "web",
+      "file": "src/api/orders.ts",
+      "line": 45,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/api/invoices",
+        "path": "/api/invoices",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "through": "send",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/hooks/use-resource.ts:14:26",
+      "type": "ui_api_call",
+      "label": "GET /${…}",
+      "repo": "web",
+      "file": "src/hooks/use-resource.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}${…}",
+        "path": "/${…}",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env"
+      }
+    },
+    {
+      "id": "web#src/api/orders.ts:listInvoices",
+      "type": "function",
+      "label": "listInvoices",
+      "repo": "web",
+      "file": "src/api/orders.ts",
+      "line": 45
+    },
+    {
+      "id": "web#src/api/orders.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "web",
+      "file": "src/api/orders.ts",
+      "line": 20
+    },
+    {
+      "id": "web#src/api/orders.ts:send",
+      "type": "function",
+      "label": "send",
+      "repo": "web",
+      "file": "src/api/orders.ts",
+      "line": 40
+    },
+    {
+      "id": "web#src/api/orders.ts:updateOrder",
+      "type": "function",
+      "label": "updateOrder",
+      "repo": "web",
+      "file": "src/api/orders.ts",
+      "line": 25
+    },
+    {
+      "id": "web#src/components/InvoicesPanel.tsx:InvoicesPanel",
+      "type": "ui_component",
+      "label": "InvoicesPanel",
+      "repo": "web",
+      "file": "src/components/InvoicesPanel.tsx",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "route": "/invoices"
+      }
+    },
+    {
+      "id": "web#src/components/OrdersPanel.tsx:OrdersPanel",
+      "type": "ui_component",
+      "label": "OrdersPanel",
+      "repo": "web",
+      "file": "src/components/OrdersPanel.tsx",
+      "line": 11,
+      "kind": "function",
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "id": "web#src/hooks/use-orders.ts:useOrders",
+      "type": "function",
+      "label": "useOrders",
+      "repo": "web",
+      "file": "src/hooks/use-orders.ts",
+      "line": 12,
+      "kind": "hook"
+    },
+    {
+      "id": "web#src/hooks/use-resource.ts:useResource",
+      "type": "function",
+      "label": "useResource",
+      "repo": "web",
+      "file": "src/hooks/use-resource.ts",
+      "line": 12,
+      "kind": "hook"
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:http:ALL:/api/legacy-orders",
+      "to": "shop#pages/api/legacy-orders.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "pages/api/legacy-orders.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:shop:http:GET:/api/invoices",
+      "to": "shop#app/api/(admin)/invoices/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/(admin)/invoices/route.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#app/api/orders/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders/:param",
+      "to": "shop#app/api/orders/[id]/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/orders/[id]/route.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:shop:http:PATCH:/api/orders/:param",
+      "to": "shop#app/api/orders/[id]/route.ts:PATCH",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/orders/[id]/route.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:shop:http:POST:/api/orders",
+      "to": "shop#app/api/orders/route.ts:POST",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:shop:rpc:action:app/actions/orders.ts#archiveOrder",
+      "to": "shop#app/actions/orders.ts:archiveOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:shop:rpc:action:app/actions/orders.ts#renameOrder",
+      "to": "shop#app/actions/orders.ts:renameOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 18
+    },
+    {
+      "from": "shop#app/actions/orders.ts:archiveOrder",
+      "to": "shop#lib/orders-store.ts:archive",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 14
+    },
+    {
+      "from": "shop#app/actions/orders.ts:renameOrder",
+      "to": "shop#lib/orders-store.ts:patchOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 19
+    },
+    {
+      "from": "shop#app/api/(admin)/invoices/route.ts:GET",
+      "to": "shop#lib/invoices-store.ts:listInvoices",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/(admin)/invoices/route.ts",
+      "line": 11
+    },
+    {
+      "from": "shop#app/api/orders/[id]/route.ts:GET",
+      "to": "shop#lib/orders-store.ts:findOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/orders/[id]/route.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#app/api/orders/[id]/route.ts:PATCH",
+      "to": "shop#lib/orders-store.ts:patchOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/orders/[id]/route.ts",
+      "line": 15
+    },
+    {
+      "from": "shop#app/api/orders/route.ts:GET",
+      "to": "shop#lib/orders-store.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#app/api/orders/route.ts:POST",
+      "to": "shop#lib/orders-store.ts:saveOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 11
+    },
+    {
+      "from": "shop#app/orders/page.tsx:OrdersPage",
+      "to": "entry:shop:rpc:action:app/actions/orders.ts#archiveOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 8
+    },
+    {
+      "from": "shop#app/orders/page.tsx:OrdersPage",
+      "to": "shop#app/actions/orders.ts:archiveOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 8
+    },
+    {
+      "from": "shop#lib/orders-store.ts:archive",
+      "to": "shop#lib/orders-store.ts:patchOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/orders-store.ts",
+      "line": 36
+    },
+    {
+      "from": "shop#pages/api/legacy-orders.ts:handler",
+      "to": "shop#lib/orders-store.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "pages/api/legacy-orders.ts",
+      "line": 11
+    },
+    {
+      "from": "ui_action:shop#app/orders/page.tsx:12:29",
+      "to": "shop#app/orders/page.tsx:OrdersPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 12
+    },
+    {
+      "from": "ui_action:web#src/components/InvoicesPanel.tsx:13:29",
+      "to": "web#src/components/InvoicesPanel.tsx:InvoicesPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/components/InvoicesPanel.tsx",
+      "line": 13
+    },
+    {
+      "from": "ui_action:web#src/components/OrdersPanel.tsx:17:29",
+      "to": "web#src/components/OrdersPanel.tsx:OrdersPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/components/OrdersPanel.tsx",
+      "line": 17
+    },
+    {
+      "from": "ui_action:web#src/components/OrdersPanel.tsx:20:29",
+      "to": "web#src/components/OrdersPanel.tsx:OrdersPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/components/OrdersPanel.tsx",
+      "line": 20
+    },
+    {
+      "from": "ui_action:web#src/components/OrdersPanel.tsx:23:29",
+      "to": "web#src/components/OrdersPanel.tsx:OrdersPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/components/OrdersPanel.tsx",
+      "line": 23
+    },
+    {
+      "from": "ui_api_call:web#src/api/orders.ts:21:24",
+      "to": "entry:shop:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api/orders.ts",
+      "line": 21,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/api/orders.ts:26:24",
+      "to": "entry:shop:http:PATCH:/api/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api/orders.ts",
+      "line": 26,
+      "params": [
+        "type:web#UpdateOrderDto"
+      ],
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/api/orders.ts:45:59@41:24",
+      "to": "entry:shop:http:GET:/api/invoices",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api/orders.ts",
+      "line": 45,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "web#src/api/orders.ts:listInvoices",
+      "to": "ui_api_call:web#src/api/orders.ts:45:59@41:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api/orders.ts",
+      "line": 45
+    },
+    {
+      "from": "web#src/api/orders.ts:listInvoices",
+      "to": "web#src/api/orders.ts:send",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api/orders.ts",
+      "line": 45
+    },
+    {
+      "from": "web#src/api/orders.ts:listOrders",
+      "to": "ui_api_call:web#src/api/orders.ts:21:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api/orders.ts",
+      "line": 21
+    },
+    {
+      "from": "web#src/api/orders.ts:updateOrder",
+      "to": "ui_api_call:web#src/api/orders.ts:26:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api/orders.ts",
+      "line": 26
+    },
+    {
+      "from": "web#src/components/InvoicesPanel.tsx:InvoicesPanel",
+      "to": "web#src/api/orders.ts:listInvoices",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/components/InvoicesPanel.tsx",
+      "line": 13
+    },
+    {
+      "from": "web#src/components/OrdersPanel.tsx:OrdersPanel",
+      "to": "web#src/hooks/use-orders.ts:useOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/components/OrdersPanel.tsx",
+      "line": 12
+    },
+    {
+      "from": "web#src/components/OrdersPanel.tsx:OrdersPanel",
+      "to": "web#src/hooks/use-resource.ts:useResource",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/components/OrdersPanel.tsx",
+      "line": 13
+    },
+    {
+      "from": "web#src/hooks/use-orders.ts:useOrders",
+      "to": "web#src/api/orders.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/hooks/use-orders.ts",
+      "line": 13
+    },
+    {
+      "from": "web#src/hooks/use-orders.ts:useOrders",
+      "to": "web#src/api/orders.ts:updateOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/hooks/use-orders.ts",
+      "line": 14
+    },
+    {
+      "from": "web#src/hooks/use-resource.ts:useResource",
+      "to": "ui_api_call:web#src/hooks/use-resource.ts:14:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/hooks/use-resource.ts",
+      "line": 14
+    }
+  ],
+  "types": {
+    "type:web#UpdateOrderDto": {
+      "name": "UpdateOrderDto",
+      "kind": "object",
+      "declaredIn": "web#src/api/orders.ts",
+      "structuralHash": "1204184ec4755515",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": []
+}

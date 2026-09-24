@@ -53,6 +53,7 @@ const buildStamp = (): string => {
     '@flowatlas/core',
     '@flowatlas/extractor-nestjs',
     '@flowatlas/extractor-angular',
+    '@flowatlas/extractor-react',
     '@flowatlas/adapters-db',
     '@flowatlas/adapters-entry',
     '@flowatlas/adapters-broker',
