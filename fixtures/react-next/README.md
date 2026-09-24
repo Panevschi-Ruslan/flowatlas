@@ -26,7 +26,11 @@ so rather than a silence:
 
 - `useResource(props.resourcePath)` builds its address from a property of the
   screen, so following it outward settles nothing;
-- `lib/orders-store.ts` is a data layer written as a module of functions, and
-  the data-layer reader walks class methods, so no query node comes of it;
+- `lib/orders-store.ts` is a data layer written as a module of functions. The
+  data-layer reader reads that shape, but it does not run here at all: a
+  Next.js repository is read by the browser reader, because the server reader
+  opens no `.tsx` file, and the data-layer pass belongs to the server reader.
+  So no query node comes of it, and the reason is which reader ran rather than
+  how the queries are written;
 - nothing here declares which component a Next.js `layout.tsx` wraps, so a
   screen's surroundings are not part of the graph.

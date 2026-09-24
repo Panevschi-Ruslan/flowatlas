@@ -610,12 +610,14 @@ Known gaps in what it can read:
   handlers declare no shape for the request body; where a route declares one it
   is in the graph as a type, and where it does not, the route has no declared
   input, which is true.
-- A query written outside a class. The data layer is read from the methods of a
-  repository's classes, so a query in a module of exported functions produces
-  nothing at all — not a row, not a node. It is the shape a good deal of
-  non-NestJS code is written in, it is the usual shape in a Next.js repository,
-  and it is the reason Drizzle is covered by a fixture rather than by a
-  repository somebody actually ships.
+- A query written at the top level of a module, which runs when the module is
+  imported and belongs to no function anybody can name. It is reported rather
+  than absent. A query in a module-level *function* is read, which is the usual
+  shape outside NestJS.
+- The table behind a Drizzle query, on a real repository. The queries are found;
+  the table is not, because a modern driver's handle is typed as an
+  intersection and a type's origin is not read through one. So those rows say
+  the receiver was recognised by name alone, which is what they mean.
 - A model reached only through its type. `sequelize-typescript` injects a class
   and names the table with a decorator the library resolves at run time, so
   neither end of it is an expression anything here can walk.
