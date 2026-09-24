@@ -1,0 +1,1151 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-24T16:11:51.856Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "OrdersGateway",
+          "AuditGateway",
+          "ReportsGateway",
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/orders/audit.gateway.ts:AuditGateway",
+      "type": "provider",
+      "label": "AuditGateway",
+      "repo": "api",
+      "file": "src/orders/audit.gateway.ts",
+      "line": 14,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/audit.gateway.ts:AuditGateway.audit",
+      "type": "method",
+      "label": "AuditGateway.audit",
+      "repo": "api",
+      "file": "src/orders/audit.gateway.ts",
+      "line": 29
+    },
+    {
+      "id": "api#src/orders/audit.gateway.ts:AuditGateway.record",
+      "type": "method",
+      "label": "AuditGateway.record",
+      "repo": "api",
+      "file": "src/orders/audit.gateway.ts",
+      "line": 16
+    },
+    {
+      "id": "api#src/orders/orders.gateway.ts:OrdersGateway",
+      "type": "provider",
+      "label": "OrdersGateway",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 20,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.gateway.ts:OrdersGateway.cancel",
+      "type": "method",
+      "label": "OrdersGateway.cancel",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 28
+    },
+    {
+      "id": "api#src/orders/orders.gateway.ts:OrdersGateway.notifyRegion",
+      "type": "method",
+      "label": "OrdersGateway.notifyRegion",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 65
+    },
+    {
+      "id": "api#src/orders/orders.gateway.ts:OrdersGateway.publishLifecycle",
+      "type": "method",
+      "label": "OrdersGateway.publishLifecycle",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 52
+    },
+    {
+      "id": "api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
+      "type": "method",
+      "label": "OrdersGateway.summarise",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 40
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 7
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.summarise",
+      "type": "method",
+      "label": "OrdersService.summarise",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 11
+    },
+    {
+      "id": "api#src/orders/reports.gateway.ts:ReportsGateway",
+      "type": "provider",
+      "label": "ReportsGateway",
+      "repo": "api",
+      "file": "src/orders/reports.gateway.ts",
+      "line": 14,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/reports.gateway.ts:ReportsGateway.request",
+      "type": "method",
+      "label": "ReportsGateway.request",
+      "repo": "api",
+      "file": "src/orders/reports.gateway.ts",
+      "line": 16
+    },
+    {
+      "id": "channel:order:updated",
+      "type": "channel",
+      "label": "order:updated",
+      "repo": "api",
+      "file": "src/orders/audit.gateway.ts",
+      "line": 16,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "socketio"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:orders/order:cancel",
+      "type": "channel",
+      "label": "orders/order:cancel",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 28,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "socketio"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:orders/order:closed",
+      "type": "channel",
+      "label": "orders/order:closed",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 54,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "socketio"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:orders/order:opened",
+      "type": "channel",
+      "label": "orders/order:opened",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 54,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "socketio"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:orders/order:summary",
+      "type": "channel",
+      "label": "orders/order:summary",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 40,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "socketio"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:orders/order:updated",
+      "type": "channel",
+      "label": "orders/order:updated",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 31,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "socketio"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:api#src/orders/audit.gateway.ts:AuditGateway.audit",
+      "type": "consumer",
+      "label": "AuditGateway.audit",
+      "repo": "api",
+      "file": "src/orders/audit.gateway.ts",
+      "line": 29,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "decorator": "SubscribeMessage",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:api#src/orders/audit.gateway.ts:AuditGateway.record",
+      "type": "consumer",
+      "label": "AuditGateway.record",
+      "repo": "api",
+      "file": "src/orders/audit.gateway.ts",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "decorator": "SubscribeMessage",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:api#src/orders/orders.gateway.ts:OrdersGateway.cancel",
+      "type": "consumer",
+      "label": "OrdersGateway.cancel",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "decorator": "SubscribeMessage",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
+      "type": "consumer",
+      "label": "OrdersGateway.summarise",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 40,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "decorator": "SubscribeMessage",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:api#src/orders/reports.gateway.ts:ReportsGateway.request",
+      "type": "consumer",
+      "label": "ReportsGateway.request",
+      "repo": "api",
+      "file": "src/orders/reports.gateway.ts",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "decorator": "SubscribeMessage",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:web#src/app/live-feed.service.ts:LiveFeedService.apply",
+      "type": "consumer",
+      "label": "LiveFeedService.apply",
+      "repo": "web",
+      "file": "src/app/live-feed.service.ts",
+      "line": 22,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "decorator": "on",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+      "type": "consumer",
+      "label": "OrdersSocketService.apply",
+      "repo": "web",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 31,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "decorator": "on",
+        "entryId": null
+      }
+    },
+    {
+      "id": "producer:api#src/orders/orders.gateway.ts:31:5",
+      "type": "producer",
+      "label": "event orders/order:updated",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 31,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:api#src/orders/orders.gateway.ts:54:5",
+      "type": "producer",
+      "label": "event orders/order:closed, orders/order:opened",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 54,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:api#src/orders/orders.gateway.ts:66:5",
+      "type": "producer",
+      "label": "event orders/order:updated",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 66,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:web#src/app/orders-socket.service.ts:26:5",
+      "type": "producer",
+      "label": "event orders/order:cancel",
+      "repo": "web",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:web#src/app/orders-socket.service.ts:46:5",
+      "type": "producer",
+      "label": "rpc orders/order:summary",
+      "repo": "web",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 46,
+      "kind": "rpc",
+      "meta": {
+        "kind": "rpc",
+        "adapter": "socketio",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:web#src/app/orders-socket.service.ts:51:5",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "web",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 51,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "channelVia": "unresolved",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 8,
+          "classes": 5,
+          "skippedExternalCalls": {
+            "socket.io": 4
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "classes": 3,
+          "templates": 1,
+          "skippedExternalCalls": {
+            "socket.io-client": 8
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/orders.component.ts:10:13",
+      "type": "ui_action",
+      "label": "click=\"cancel()\"",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 10,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "cancel()",
+        "component": "web#src/app/orders.component.ts:OrdersComponent",
+        "template": "src/app/orders.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/orders.component.ts:11:13",
+      "type": "ui_action",
+      "label": "click=\"summarise()\"",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 11,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "summarise()",
+        "component": "web#src/app/orders.component.ts:OrdersComponent",
+        "template": "src/app/orders.component.ts"
+      }
+    },
+    {
+      "id": "web#src/app/live-feed.service.ts:LiveFeedService",
+      "type": "provider",
+      "label": "LiveFeedService",
+      "repo": "web",
+      "file": "src/app/live-feed.service.ts",
+      "line": 15,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/live-feed.service.ts:LiveFeedService.apply",
+      "type": "method",
+      "label": "LiveFeedService.apply",
+      "repo": "web",
+      "file": "src/app/live-feed.service.ts",
+      "line": 25
+    },
+    {
+      "id": "web#src/app/live-feed.service.ts:LiveFeedService.watch",
+      "type": "method",
+      "label": "LiveFeedService.watch",
+      "repo": "web",
+      "file": "src/app/live-feed.service.ts",
+      "line": 21
+    },
+    {
+      "id": "web#src/app/orders-socket.service.ts:OrdersSocketService",
+      "type": "provider",
+      "label": "OrdersSocketService",
+      "repo": "web",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 14,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+      "type": "method",
+      "label": "OrdersSocketService.apply",
+      "repo": "web",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 54
+    },
+    {
+      "id": "web#src/app/orders-socket.service.ts:OrdersSocketService.audit",
+      "type": "method",
+      "label": "OrdersSocketService.audit",
+      "repo": "web",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 50
+    },
+    {
+      "id": "web#src/app/orders-socket.service.ts:OrdersSocketService.cancel",
+      "type": "method",
+      "label": "OrdersSocketService.cancel",
+      "repo": "web",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 25
+    },
+    {
+      "id": "web#src/app/orders-socket.service.ts:OrdersSocketService.markOnline",
+      "type": "method",
+      "label": "OrdersSocketService.markOnline",
+      "repo": "web",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 62
+    },
+    {
+      "id": "web#src/app/orders-socket.service.ts:OrdersSocketService.requestSummary",
+      "type": "method",
+      "label": "OrdersSocketService.requestSummary",
+      "repo": "web",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 45
+    },
+    {
+      "id": "web#src/app/orders-socket.service.ts:OrdersSocketService.show",
+      "type": "method",
+      "label": "OrdersSocketService.show",
+      "repo": "web",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 58
+    },
+    {
+      "id": "web#src/app/orders-socket.service.ts:OrdersSocketService.watch",
+      "type": "method",
+      "label": "OrdersSocketService.watch",
+      "repo": "web",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 30
+    },
+    {
+      "id": "web#src/app/orders.component.ts:OrdersComponent",
+      "type": "ui_component",
+      "label": "OrdersComponent",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-orders"
+      }
+    },
+    {
+      "id": "web#src/app/orders.component.ts:OrdersComponent.cancel",
+      "type": "method",
+      "label": "OrdersComponent.cancel",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 19
+    },
+    {
+      "id": "web#src/app/orders.component.ts:OrdersComponent.summarise",
+      "type": "method",
+      "label": "OrdersComponent.summarise",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 24
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/orders/orders.gateway.ts:OrdersGateway",
+      "to": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 25
+    },
+    {
+      "from": "api#src/orders/orders.gateway.ts:OrdersGateway.cancel",
+      "to": "api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:api#CancelOrder"
+      ],
+      "returns": "type:api#OrderUpdate",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 30
+    },
+    {
+      "from": "api#src/orders/orders.gateway.ts:OrdersGateway.cancel",
+      "to": "producer:api#src/orders/orders.gateway.ts:31:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 31
+    },
+    {
+      "from": "api#src/orders/orders.gateway.ts:OrdersGateway.notifyRegion",
+      "to": "producer:api#src/orders/orders.gateway.ts:66:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 66
+    },
+    {
+      "from": "api#src/orders/orders.gateway.ts:OrdersGateway.publishLifecycle",
+      "to": "producer:api#src/orders/orders.gateway.ts:54:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 54
+    },
+    {
+      "from": "api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
+      "to": "api#src/orders/orders.service.ts:OrdersService.summarise",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#OrderSummary",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 42
+    },
+    {
+      "from": "channel:order:updated",
+      "to": "consumer:api#src/orders/audit.gateway.ts:AuditGateway.record",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/audit.gateway.ts",
+      "line": 16
+    },
+    {
+      "from": "channel:orders/order:cancel",
+      "to": "consumer:api#src/orders/orders.gateway.ts:OrdersGateway.cancel",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 28
+    },
+    {
+      "from": "channel:orders/order:closed",
+      "to": "consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 33
+    },
+    {
+      "from": "channel:orders/order:opened",
+      "to": "consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 32
+    },
+    {
+      "from": "channel:orders/order:summary",
+      "to": "consumer:api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 40
+    },
+    {
+      "from": "channel:orders/order:updated",
+      "to": "consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 31
+    },
+    {
+      "from": "consumer:api#src/orders/audit.gateway.ts:AuditGateway.audit",
+      "to": "api#src/orders/audit.gateway.ts:AuditGateway.audit",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "void",
+      "file": "src/orders/audit.gateway.ts",
+      "line": 29
+    },
+    {
+      "from": "consumer:api#src/orders/audit.gateway.ts:AuditGateway.record",
+      "to": "api#src/orders/audit.gateway.ts:AuditGateway.record",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "void",
+      "file": "src/orders/audit.gateway.ts",
+      "line": 16
+    },
+    {
+      "from": "consumer:api#src/orders/orders.gateway.ts:OrdersGateway.cancel",
+      "to": "api#src/orders/orders.gateway.ts:OrdersGateway.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "void",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 28
+    },
+    {
+      "from": "consumer:api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
+      "to": "api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:api#OrderSummary",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 40
+    },
+    {
+      "from": "consumer:api#src/orders/reports.gateway.ts:ReportsGateway.request",
+      "to": "api#src/orders/reports.gateway.ts:ReportsGateway.request",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "void",
+      "file": "src/orders/reports.gateway.ts",
+      "line": 16
+    },
+    {
+      "from": "consumer:web#src/app/live-feed.service.ts:LiveFeedService.apply",
+      "to": "web#src/app/live-feed.service.ts:LiveFeedService.apply",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live-feed.service.ts",
+      "line": 22
+    },
+    {
+      "from": "consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+      "to": "web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 31
+    },
+    {
+      "from": "producer:api#src/orders/orders.gateway.ts:31:5",
+      "to": "channel:orders/order:updated",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:api#OrderUpdate"
+      ],
+      "file": "src/orders/orders.gateway.ts",
+      "line": 31
+    },
+    {
+      "from": "producer:api#src/orders/orders.gateway.ts:54:5",
+      "to": "channel:orders/order:closed",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:api#OrderUpdate"
+      ],
+      "file": "src/orders/orders.gateway.ts",
+      "line": 54
+    },
+    {
+      "from": "producer:api#src/orders/orders.gateway.ts:54:5",
+      "to": "channel:orders/order:opened",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:api#OrderUpdate"
+      ],
+      "file": "src/orders/orders.gateway.ts",
+      "line": 54
+    },
+    {
+      "from": "producer:api#src/orders/orders.gateway.ts:66:5",
+      "to": "channel:orders/order:updated",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:api#OrderUpdate"
+      ],
+      "file": "src/orders/orders.gateway.ts",
+      "line": 66
+    },
+    {
+      "from": "producer:web#src/app/orders-socket.service.ts:26:5",
+      "to": "channel:orders/order:cancel",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:web#CancelOrder"
+      ],
+      "file": "src/app/orders-socket.service.ts",
+      "line": 26
+    },
+    {
+      "from": "producer:web#src/app/orders-socket.service.ts:46:5",
+      "to": "channel:orders/order:summary",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/app/orders-socket.service.ts",
+      "line": 46
+    },
+    {
+      "from": "ui_action:web#src/app/orders.component.ts:10:13",
+      "to": "web#src/app/orders.component.ts:OrdersComponent.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 10
+    },
+    {
+      "from": "ui_action:web#src/app/orders.component.ts:11:13",
+      "to": "web#src/app/orders.component.ts:OrdersComponent.summarise",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 11
+    },
+    {
+      "from": "web#src/app/live-feed.service.ts:LiveFeedService.watch",
+      "to": "web#src/app/live-feed.service.ts:LiveFeedService.apply",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/live-feed.service.ts",
+      "line": 22
+    },
+    {
+      "from": "web#src/app/orders-socket.service.ts:OrdersSocketService.audit",
+      "to": "producer:web#src/app/orders-socket.service.ts:51:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 51
+    },
+    {
+      "from": "web#src/app/orders-socket.service.ts:OrdersSocketService.cancel",
+      "to": "producer:web#src/app/orders-socket.service.ts:26:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 26
+    },
+    {
+      "from": "web#src/app/orders-socket.service.ts:OrdersSocketService.requestSummary",
+      "to": "producer:web#src/app/orders-socket.service.ts:46:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 46
+    },
+    {
+      "from": "web#src/app/orders-socket.service.ts:OrdersSocketService.requestSummary",
+      "to": "web#src/app/orders-socket.service.ts:OrdersSocketService.show",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 46
+    },
+    {
+      "from": "web#src/app/orders-socket.service.ts:OrdersSocketService.watch",
+      "to": "web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 31
+    },
+    {
+      "from": "web#src/app/orders-socket.service.ts:OrdersSocketService.watch",
+      "to": "web#src/app/orders-socket.service.ts:OrdersSocketService.markOnline",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-socket.service.ts",
+      "line": 35
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent",
+      "to": "web#src/app/orders-socket.service.ts:OrdersSocketService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 17
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent.cancel",
+      "to": "web#src/app/orders-socket.service.ts:OrdersSocketService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 21
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent.summarise",
+      "to": "web#src/app/orders-socket.service.ts:OrdersSocketService.requestSummary",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 25
+    }
+  ],
+  "types": {
+    "type:api#CancelOrder": {
+      "name": "CancelOrder",
+      "kind": "object",
+      "declaredIn": "api#src/orders/order-events.ts",
+      "structuralHash": "fb48963ae9ad6b6c",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#OrderState": {
+      "name": "OrderState",
+      "kind": "union",
+      "declaredIn": "api#src/orders/order-events.ts",
+      "structuralHash": "2e1c7376005f31d6",
+      "members": [
+        "'ORDER_OPENED'",
+        "'ORDER_CLOSED'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
+    "type:api#OrderSummary": {
+      "name": "OrderSummary",
+      "kind": "object",
+      "declaredIn": "api#src/orders/order-events.ts",
+      "structuralHash": "bd346bcc437b8241",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "lines",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#OrderUpdate": {
+      "name": "OrderUpdate",
+      "kind": "object",
+      "declaredIn": "api#src/orders/order-events.ts",
+      "structuralHash": "621d447b96257d42",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "state",
+          "type": "type:api#OrderState",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:web#CancelOrder": {
+      "name": "CancelOrder",
+      "kind": "object",
+      "declaredIn": "web#src/app/order-events.ts",
+      "structuralHash": "fb48963ae9ad6b6c",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:web#OrderUpdate": {
+      "name": "OrderUpdate",
+      "kind": "object",
+      "declaredIn": "web#src/app/order-events.ts",
+      "structuralHash": "2bd878e719fea60a",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "state",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/orders/audit.gateway.ts",
+      "line": 29,
+      "reason": "channel-const-unresolved",
+      "hint": "The channel name cannot be read here. Annotate AuditGateway.audit with the channel it uses.",
+      "symbol": "AuditGateway.audit -> AUDIT_EVENT",
+      "service": "api"
+    },
+    {
+      "file": "src/orders/reports.gateway.ts",
+      "line": 16,
+      "reason": "channel-dynamic",
+      "hint": "The namespace this class declares cannot be read, so neither can any channel name under it. Write it as a literal or a constant.",
+      "symbol": "ReportsGateway.request -> REPORTS_NAMESPACE",
+      "service": "api"
+    },
+    {
+      "file": "src/app/live-feed.service.ts",
+      "line": 22,
+      "reason": "channel-dynamic",
+      "hint": "The address this socket was opened on cannot be read, so neither can the namespace its events belong to. Write the path beside the settings key rather than inside it.",
+      "symbol": "LiveFeedService.watch -> `${environment.apiUrl}/${feedNamespace}`",
+      "service": "web"
+    },
+    {
+      "file": "src/app/orders-socket.service.ts",
+      "line": 51,
+      "reason": "channel-const-unresolved",
+      "hint": "The event name cannot be read here, so this end of the channel cannot be joined to the service that writes the other end. Annotate OrdersSocketService.audit with the channel it uses.",
+      "symbol": "OrdersSocketService.audit -> event",
+      "service": "web"
+    }
+  ]
+}

@@ -11,8 +11,8 @@ One map of a project that lives in several repositories.
 compiler's own checker, without running them, and joins them into one graph you
 can query — from a terminal or from a coding agent over the Model Context
 Protocol.** It knows NestJS and Angular, Telegraf and Hono, TypeORM, Prisma,
-Drizzle, Mongoose, Sequelize, Knex, Mongo, node-postgres, Redis, Kafka, RabbitMQ
-and BullMQ.
+Drizzle, Mongoose, Sequelize, Knex, Mongo, node-postgres, Redis, Kafka, RabbitMQ,
+BullMQ and socket.io.
 
 Each repository is read on its own, then the readings are joined: a request made
 in one service is matched to the route that answers it in another, a message
@@ -544,8 +544,10 @@ Working and verified against a real five-repository project:
   in the call rather than in a type — `from(users)`, `knex('orders')`,
   `Model.init(..., { tableName })` — it is read from the expression, and a table
   assembled at run time is reported rather than guessed at.
-- **Channels** for Kafka, RabbitMQ, BullMQ, Redis pub/sub and an in-house bus
-  described in the configuration.
+- **Channels** for Kafka, RabbitMQ, BullMQ, Redis pub/sub, socket.io and an
+  in-house bus described in the configuration. A socket is read from both ends:
+  `@SubscribeMessage` in a gateway and `socket.emit` in a browser are two ends
+  of one channel, under the namespace the gateway declares.
 - **Bot entries** for Telegraf, both the decorator style and the imperative one,
   so a flow starts at the command someone typed.
 - **Joining** requests to routes, browsers to routes, publishers to handlers, and

@@ -188,6 +188,9 @@ importers:
       '@angular/compiler':
         specifier: ^19.2.0
         version: 19.2.25
+      '@flowatlas/adapters-broker':
+        specifier: workspace:*
+        version: link:../adapters-broker
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core

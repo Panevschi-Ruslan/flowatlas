@@ -1,12 +1,21 @@
 import {
+  evaluateExpression,
   foldedChoices,
   MOST_CHOICES,
   packageNameOf,
+  stableKey,
   type FlowatlasConfig,
 } from '@flowatlas/core';
-import { evaluateExpression, stableKey } from '@flowatlas/extractor-nestjs';
 import type { Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
+
+/**
+ * Reading the name a call is addressed to.
+ *
+ * Everything here comes from the core rather than from either extractor, which
+ * is what lets a browser and a service resolve the same name the same way and
+ * therefore meet on the same node.
+ */
 
 /** How a channel name was arrived at. */
 export type ChannelVia = 'literal' | 'const' | 'enum' | 'shared-package' | 'pattern' | 'template';
@@ -222,3 +231,44 @@ export const resolveChannelName = (
 
 export const isResolved = (resolution: ChannelResolution): resolution is ResolvedChannel =>
   'name' in resolution;
+
+/**
+ * An endpoint written with or without its slashes, read as one name.
+ *
+ * `'orders'`, `'/orders'` and `'/orders/'` are the same namespace, and a gateway
+ * and a browser are free to spell it differently. They have to meet on one node,
+ * so the spelling is settled here rather than at either end.
+ */
+export const trimEndpoint = (value: string): string => value.replace(/^\/+|\/+$/g, '');
+
+/** What the transport, rather than the call, has to say about a name. */
+export interface ChannelShaping {
+  /** Endpoint the class declared, prepended to every name the calls write. */
+  readonly prefix?: string | undefined;
+  readonly separator?: string;
+  /** Names the transport keeps for itself, which are never channels. */
+  readonly reserved?: readonly string[];
+}
+
+/**
+ * The channels an address really reaches, once the transport has its say.
+ *
+ * Two things stand between the name a call writes and the node it lands on. A
+ * class may declare an endpoint the name is relative to, in which case the same
+ * name under two endpoints is two channels. And the transport keeps some names
+ * for its own signalling, which are not channels at all and would otherwise
+ * appear as nodes nobody publishes to.
+ *
+ * Applied in one place because both ends of a socket ask it, and a browser and
+ * a gateway that disagreed about either rule would stop meeting on one node —
+ * which is the only thing the channel side of the graph is for.
+ */
+export const shapeChannelNames = (
+  names: readonly string[],
+  shaping: ChannelShaping = {},
+): string[] => {
+  const reserved = new Set(shaping.reserved ?? []);
+  const kept = names.filter((name) => !reserved.has(name));
+  if (shaping.prefix === undefined || shaping.prefix === '') return kept;
+  return kept.map((name) => `${shaping.prefix}${shaping.separator ?? '/'}${name}`);
+};
