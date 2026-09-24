@@ -1,4 +1,10 @@
-import { makeSymbolId, packageOfFile, stableKey, type GraphNode } from '@flowatlas/core';
+import {
+  hasAnyDependency,
+  makeSymbolId,
+  packageOfFile,
+  stableKey,
+  type GraphNode,
+} from '@flowatlas/core';
 import { Node } from 'ts-morph';
 import type { WrappingLayer } from '../bootstrap.js';
 import type { NestExtractContext } from '../context.js';
@@ -110,9 +116,26 @@ const wrapperNode = (
   });
 };
 
+/**
+ * Frameworks whose application has a bootstrap file in this sense at all.
+ *
+ * This reader opens an Express, a Fastify and a Koa repository as readily as a
+ * NestJS one — which of them it is, is decided by the entry adapters and not
+ * here. `bootstrap` is not a word any of the other three knows: there is no
+ * file where global guards, global pipes and a global prefix are installed on
+ * an application object, because those frameworks install such things wherever
+ * the application is, and the entry adapters read them there.
+ *
+ * So the missing-bootstrap row is raised only where the setting it names would
+ * do anything. Asked of the manifest rather than of `services[].type`, because
+ * `extract` on a bare directory has no configured type to ask, and those are
+ * exactly the repositories that were being told to set it.
+ */
+const BOOTSTRAP_FRAMEWORK = ['@nestjs/core', '@nestjs/common'];
+
 /** Reads what the entry file said and settles every class's role. */
 export const wrappingCollectPass = definePass('wrapping-collect', (ctx) => {
-  if (!ctx.bootstrap.found) {
+  if (!ctx.bootstrap.found && hasAnyDependency(ctx.pkg, BOOTSTRAP_FRAMEWORK)) {
     ctx.report({
       file: ctx.bootstrap.file ?? 'src/main.ts',
       line: 1,

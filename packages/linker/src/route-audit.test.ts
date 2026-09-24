@@ -136,10 +136,34 @@ describe('a route nothing guards', () => {
     ]);
   });
 
-  it('lists a worker route as something to look at, since prefix middleware is not read', () => {
+  it('lists a route as something to look at only where the reader says it read no installs', () => {
+    const unread = graph({ meta: { registration: 'app.get', middlewareRead: false } });
+    const [caution] = auditRoutes(unread.nodes, unread.edges, OPTIONS);
+    expect(caution).toMatchObject({ reason: 'route-unguarded', level: 'info' });
+    expect(caution?.message).toContain('not read');
+  });
+
+  it('reports a route whose reader did read the installs as the ordinary finding', () => {
+    // The sentence this replaces. It was asked of the shape of the route — a
+    // registration with no controller — and every route read by Express,
+    // Fastify or Koa has that shape, whether or not anything was read about the
+    // middleware in front of it. Three readers that do read it were told they
+    // had not, and a route with a real hole was reported as a caution.
+    const { nodes, edges } = graph({ meta: { registration: 'app.get', middlewareRead: true } });
+    const [row] = auditRoutes(nodes, edges, OPTIONS);
+    expect(row).toMatchObject({ reason: 'route-unguarded' });
+    expect(row).not.toHaveProperty('level');
+    expect(row?.message).toBe('GET /orders has no guard in front of it and reaches Order.');
+  });
+
+  it('says nothing new about a reader that makes no claim either way', () => {
+    // Silence is not doubt. The NestJS reader records what stands in front of a
+    // route as edges and never writes this flag, and reading its silence as
+    // "not read" would turn every finding this audit has into a caution.
     const { nodes, edges } = graph({ meta: { registration: 'app.get' } });
     const [row] = auditRoutes(nodes, edges, OPTIONS);
-    expect(row).toMatchObject({ reason: 'route-unguarded', level: 'info' });
+    expect(row).toMatchObject({ reason: 'route-unguarded' });
+    expect(row).not.toHaveProperty('level');
   });
 
   it('matches a configured route by verb and pattern', () => {
