@@ -51,7 +51,55 @@ export interface SubscriberPattern {
   kind: string;
 }
 
+/**
+ * A part of the channel name that the class states rather than the call.
+ *
+ * A socket gateway declares a namespace once and every event in it is addressed
+ * within that namespace, so `order:updated` on two namespaces is two channels
+ * and not one. Without this they would collapse onto one node and join two
+ * services that never speak — the failure the whole channel side is built to
+ * avoid. It is written here rather than on the call pattern because it belongs
+ * to the class: publishing and receiving in the same gateway share it.
+ */
+export interface ChannelPrefix {
+  /** Decorator on the class that declares the endpoint. */
+  classDecorator: string;
+  /** Property of that decorator's options object holding the name. */
+  optionKey: string;
+  /** What goes between the prefix and the name the call writes. */
+  separator: string;
+}
+
 export interface BrokerSpec extends BrokerAdapter {
   consumerPatterns: ConsumerPattern[];
   subscriberPatterns?: SubscriberPattern[];
+  channelPrefix?: ChannelPrefix;
+  /**
+   * The kind a publishing call takes when it hands over somewhere to reply.
+   *
+   * Absent for a transport where publishing is always one-way. Where it is set,
+   * the same method is a publish or a request depending on whether the call site
+   * passes a callback, and the two are not the same thing on a graph.
+   */
+  acknowledgedKind?: string;
+  /**
+   * Names the transport keeps for itself.
+   *
+   * A socket signals `connect` and `disconnect` on the same channel mechanism it
+   * carries application events on. Recording those as channels would fill the
+   * graph with one node per repository that nobody publishes to and nothing can
+   * be said about — the library talking to itself, drawn as architecture.
+   */
+  reservedChannels?: readonly string[];
+  /**
+   * Whether the publishing method's own declaration says nothing useful.
+   *
+   * A bus typed for its own catalogue declares what it carries, and that
+   * declaration beats any one call's argument. A socket does not: its `emit` is
+   * `(event: string, ...args: any[])`, so reading the declaration back gives the
+   * rest parameter's array and hides the only shape anybody wrote down. Where
+   * this is set the argument at the call site is the answer, because it is the
+   * only answer there is.
+   */
+  payloadFromCallSite?: boolean;
 }
