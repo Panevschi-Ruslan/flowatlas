@@ -1,0 +1,7 @@
+~  orders/order:updated             src/orders/orders.gateway.ts:31
+  -  producers (2)
+    ~  event orders/order:updated   api/src/orders/orders.gateway.ts:31
+    ~  event orders/order:updated   api/src/orders/orders.gateway.ts:66
+  -  consumers (1)
+    ~  OrdersSocketService.apply    web/src/app/orders-socket.service.ts:31
+      -> OrdersSocketService.apply  web/src/app/orders-socket.service.ts:54
