@@ -1,0 +1,10 @@
+{
+  "name": "next-actions-shop",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "next": "^15.0.0",
+    "next-safe-action": "^8.0.0",
+    "react": "^19.0.0"
+  }
+}

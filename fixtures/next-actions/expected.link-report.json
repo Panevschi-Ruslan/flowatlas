@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-25T10:28:15.972Z",
+  "configHash": "1f65cc337532",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 11,
+      "edges": 8,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1066
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 11,
+    "edges": 8,
+    "types": 0,
+    "unresolved": 1
+  }
+}

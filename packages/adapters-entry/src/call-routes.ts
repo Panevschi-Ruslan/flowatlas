@@ -852,6 +852,18 @@ const objectRouteOf = (site: AppCall, dialect: RouteDialect, ctx: ExtractContext
   };
 };
 
+/**
+ * Which argument of a verb call spells the path.
+ *
+ * The dialect says where the path sits among a route's own arguments; a method
+ * that takes the verb as an argument has one more in front of all of them, and
+ * that shift belongs to the reader rather than to a second field nobody could
+ * fill without knowing about the first.
+ */
+const pathIndex = (site: AppCall, dialect: RouteDialect): number =>
+  (dialect.verbArgument !== undefined && site.method === dialect.verbArgument ? 1 : 0) +
+  dialect.pathAt;
+
 const routeOf = (site: AppCall, dialect: RouteDialect, ctx: ExtractContext): Route | undefined => {
   const asObject = objectRouteOf(site, dialect, ctx);
   if (asObject !== undefined) return asObject;
@@ -859,7 +871,7 @@ const routeOf = (site: AppCall, dialect: RouteDialect, ctx: ExtractContext): Rou
   const byArgument = dialect.verbArgument !== undefined && site.method === dialect.verbArgument;
   const verb = dialect.verbs[site.method];
   if (verb === undefined && !byArgument) return undefined;
-  const pathAt = byArgument ? 1 : 0;
+  const pathAt = pathIndex(site, dialect);
   // One argument is a path with nothing to answer it, which the framework
   // accepts and which declares no way in. It is also how Express reads a
   // setting back: `app.get('trust proxy')`.
@@ -870,10 +882,14 @@ const routeOf = (site: AppCall, dialect: RouteDialect, ctx: ExtractContext): Rou
   const path = stringArg(site.args[pathAt]);
   if (path === undefined) return undefined;
 
-  const rest = site.args.slice(pathAt + 1);
-  const handlerArg = throughWrapper(rest[rest.length - 1]);
+  // Where the answer sits is the dialect's to say, and the arguments between it
+  // and the path are the middleware written for this one route.
+  const handlerAt =
+    dialect.handlerAt < 0 ? site.args.length + dialect.handlerAt : dialect.handlerAt;
+  if (handlerAt <= pathAt) return undefined;
+  const handlerArg = throughWrapper(site.args[handlerAt]);
   const middleware: string[] = [];
-  for (const argument of rest.slice(0, -1)) {
+  for (const argument of dialect.middlewareBetween ? site.args.slice(pathAt + 1, handlerAt) : []) {
     // An options object between the path and the handler is not middleware
     // itself; some of its keys hold middleware, and only a dialect that says
     // which ones is read for them.
@@ -956,7 +972,25 @@ const isConditional = (call: TsNode): boolean => {
  * of them; what the methods are called, and which argument is which, is read
  * off the row rather than written into the code.
  */
-export const callRoutesAdapter = (dialect: RouteDialect): EntryAdapter => ({
+export interface CallRoutesOptions {
+  /**
+   * Whether reading nothing is worth a row of its own.
+   *
+   * Off for the frameworks shipped with the tool: one of their adapters is
+   * turned on by a dependency, and a repository that depends on a framework and
+   * declares no route on it is an ordinary thing — a library, a worker, a
+   * service whose routes are all in another repository. On for a framework
+   * somebody described, because there the silence is the failure mode: a
+   * description with a type name spelled wrong reads exactly like a repository
+   * with no routes in it, and nothing else would ever say which it was.
+   */
+  readonly reportSilence?: boolean;
+}
+
+export const callRoutesAdapter = (
+  dialect: RouteDialect,
+  options: CallRoutesOptions = {},
+): EntryAdapter => ({
   name: dialect.name,
   // These frameworks answer before the application the extractor reads is asked
   // anything — a worker in front of it, or no such application at all — so its
@@ -973,9 +1007,15 @@ export const callRoutesAdapter = (dialect: RouteDialect): EntryAdapter => ({
     const entries: EntryNode[] = [];
     const seen = new Set<string>();
     const anonymous: Site[] = [];
+    // Calls written on a value of a type the dialect names, whether or not any
+    // of them turned out to be a route. It is the one fact that tells a
+    // description whose types match nothing from one whose types match and
+    // whose verbs do not, and only this walk has it.
+    let onDescribedType = 0;
 
     for (const sourceFile of sources) {
       for (const site of appCallsIn(sourceFile, dialect, ctx)) {
+        onDescribedType += 1;
         const route = routeOf(site, dialect, ctx);
         if (route === undefined) {
           reportUnreadable(ctx, site, dialect);
@@ -1062,9 +1102,47 @@ export const callRoutesAdapter = (dialect: RouteDialect): EntryAdapter => ({
     }
 
     if (anonymous.length > 0) reportAnonymous(ctx, anonymous, dialect);
+    if (options.reportSilence === true && entries.length === 0) {
+      reportSilence(ctx, dialect, onDescribedType);
+    }
     return entries;
   },
 });
+
+/**
+ * A description that read nothing, and which part of it read nothing.
+ *
+ * The failure mode of every configuration-driven reader is silence that looks
+ * like a clean repository, and the two silences want different answers. No call
+ * on any described type means the description is pointed at the wrong types —
+ * the commonest cause being a framework whose application type is re-exported
+ * from a package the repository does not import it from. Calls on the right
+ * types and no route out of them means the types are right and the methods or
+ * the argument positions are not.
+ *
+ * Written against the manifest, because that is the nearest real file: the
+ * description itself is in the project's configuration, which is not part of
+ * the repository the row belongs to.
+ */
+const reportSilence = (ctx: ExtractContext, dialect: RouteDialect, onTypes: number): void => {
+  const types = dialect.appTypes.map((app) => `${app.package}#${app.typeName}`).join(', ');
+  const verbs = Object.keys(dialect.verbs).join(', ');
+  ctx.builder.addUnresolved({
+    file: 'package.json',
+    line: 1,
+    reason: onTypes === 0 ? 'entry-http-types-unmatched' : 'entry-http-routes-unmatched',
+    message:
+      onTypes === 0
+        ? `Nothing here is a value of any type the ${dialect.name} description names, so none of its routes were read.`
+        : `${onTypes} call${onTypes === 1 ? ' is' : 's are'} written on a type the ${dialect.name} description names, and none of them spelled a verb and a path this could read.`,
+    hint:
+      onTypes === 0
+        ? `Check appTypes on that description; it looks for ${types}.`
+        : `Check verbs, verbArgument, pathArg and handlerArg on that description; it looks for ${verbs}.`,
+    symbol: dialect.name,
+    adapter: dialect.name,
+  });
+};
 
 /**
  * A route whose path or verb could not be read.
@@ -1081,7 +1159,7 @@ const reportUnreadable = (ctx: ExtractContext, site: AppCall, dialect: RouteDial
     site.args[0] !== undefined &&
     Node.isObjectLiteralExpression(unwrap(site.args[0] as TsNode));
   if (dialect.verbs[site.method] === undefined && !byArgument && !asObject) return;
-  const pathAt = byArgument ? 1 : 0;
+  const pathAt = pathIndex(site, dialect);
   if (!asObject && site.args.length < pathAt + 2) return;
   const written = asObject
     ? propertyOf(site.args[0], dialect.routeObject?.pathKey ?? '')

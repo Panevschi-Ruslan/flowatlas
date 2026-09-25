@@ -117,6 +117,130 @@ export const entryRegistrySchema = z.strictObject({
   kind: z.enum(ENTRY_KINDS).default('bot_callback'),
 });
 
+/**
+ * Types whose values declare routes, as a cross product.
+ *
+ * A framework usually declares one application type, and usually re-exports it
+ * from more than one package: the implementation, the types package beside it,
+ * and whatever the repository happens to import it from. Writing every pair by
+ * hand is the same list three times, so a group is a set of packages and a set
+ * of type names, and every combination of them counts.
+ */
+export const entryHttpAppTypesSchema = z.strictObject({
+  packages: z.array(z.string().min(1)).min(1),
+  typeNames: z.array(z.string().min(1)).min(1),
+});
+
+/**
+ * How one application is hung inside another.
+ *
+ * The path the mount adds is either an argument or a key of an options object,
+ * and the application being mounted is either the argument itself or the first
+ * parameter of a function the framework will call with an instance of its own.
+ */
+export const entryHttpMountSchema = z.strictObject({
+  method: z.string().min(1),
+  /** Which argument is the application; negative counts from the end. */
+  appArg: z.number().int().default(-1),
+  /** Which argument spells the path, when one does. */
+  pathArg: z.number().int().optional(),
+  /** The options argument and the key on it that spells the prefix. */
+  prefixKey: z
+    .strictObject({ arg: z.number().int().min(0), key: z.string().min(1) })
+    .optional(),
+  /** The application is the first parameter of the function handed over. */
+  asPlugin: z.boolean().default(false),
+  /** Methods that turn an application into the middleware it is mounted as. */
+  through: z.array(z.string().min(1)).default([]),
+});
+
+/**
+ * How middleware is installed on a whole application rather than on one route.
+ *
+ * This is the guard equivalent, and the reason it is worth describing: one such
+ * call written above thirty mounts is what stands between a request and every
+ * route under all of them.
+ */
+export const entryHttpMiddlewareSchema = z.strictObject({
+  method: z.string().min(1),
+  /** The first argument may be a path the middleware is scoped to. */
+  scoped: z.boolean().default(false),
+  /** The first argument names a lifecycle hook and is not middleware itself. */
+  named: z.boolean().default(false),
+  /** Keys of an options object that hold middleware for one route. */
+  optionKeys: z.array(z.string().min(1)).default([]),
+});
+
+/** A route declared by one object argument rather than by position. */
+export const entryHttpRouteObjectSchema = z.strictObject({
+  method: z.string().min(1),
+  verbKey: z.string().min(1),
+  pathKey: z.string().min(1),
+  handlerKey: z.string().min(1),
+});
+
+/**
+ * A framework that registers an HTTP route by calling an application.
+ *
+ * The third and last of the descriptions this tool accepts instead of code, and
+ * the one with the most variation behind it: every such framework wants the
+ * same three things from the source — a verb, a path and a handler — and
+ * differs only in what the methods are called and where the arguments sit. A
+ * service built on something nobody here has heard of is read from this alone.
+ *
+ * Every field says where something is. None of them says how to compute
+ * anything: the moment a description would need a condition it has stopped
+ * being a description, and what it wants is an adapter.
+ */
+export const entryHttpSchema = z.strictObject({
+  /** How this framework is named in reports and on the entries it produces. */
+  name: z.string().min(1),
+  /**
+   * Dependencies any one of which means this framework is in use.
+   *
+   * One configuration covers every repository of a project, and most of them
+   * are built on something else. An empty list means the description is tried
+   * everywhere.
+   */
+  packages: z.array(z.string().min(1)).default([]),
+  appTypes: z.array(entryHttpAppTypesSchema).min(1),
+  /**
+   * Method name to the verb it answers.
+   *
+   * Absent means the eight a method is usually named after, which is what every
+   * framework measured so far spells.
+   */
+  verbs: z.record(z.string().min(1), z.string().min(1)).optional(),
+  /** A method taking the verb as its first argument. */
+  verbArgument: z.string().min(1).optional(),
+  /** A method returning the same application with a prefix in front of it. */
+  prefixMethod: z.string().min(1).optional(),
+  /**
+   * The prefix method changes the application it is called on rather than
+   * returning a new one, so a bare statement of it moves every route on it.
+   */
+  prefixMutates: z.boolean().default(false),
+  /** A key of the constructor's options object that prefixes the whole router. */
+  prefixOption: z.string().min(1).optional(),
+  /** A method returning a route object already bound to a path. */
+  pathMethod: z.string().min(1).optional(),
+  /** Which argument of a verb call spells the path. */
+  pathArg: z.number().int().min(0).default(0),
+  /** Which argument answers the request; negative counts from the end. */
+  handlerArg: z.number().int().default(-1),
+  /**
+   * Arguments between the path and the handler are middleware for that route.
+   *
+   * True for every framework measured so far, and a field rather than a rule
+   * because a framework that spells its route middleware somewhere else would
+   * otherwise have every one of those arguments named as a guard it is not.
+   */
+  middlewareBetween: z.boolean().default(true),
+  mount: entryHttpMountSchema.optional(),
+  middleware: entryHttpMiddlewareSchema.optional(),
+  routeObject: entryHttpRouteObjectSchema.optional(),
+});
+
 export const adapterForceSchema = z.strictObject({
   entry: adapterNamesSchema.optional(),
   db: adapterNamesSchema.optional(),
@@ -136,8 +260,10 @@ export const flowatlasConfigSchema = z
         entry: z
           .strictObject({
             registries: z.array(entryRegistrySchema).default([]),
+            /** Frameworks that register an HTTP route by calling an application. */
+            http: z.array(entryHttpSchema).default([]),
           })
-          .default({ registries: [] }),
+          .default({ registries: [], http: [] }),
         broker: z
           .strictObject({
             custom: z.array(customBrokerSchema).default([]),
@@ -159,7 +285,7 @@ export const flowatlasConfigSchema = z
       .default({
         auto: true,
         force: {},
-        entry: { registries: [] },
+        entry: { registries: [], http: [] },
         broker: { custom: [] },
         db: { localBaseClasses: [] },
       }),
@@ -271,6 +397,16 @@ export const flowatlasConfigSchema = z
   });
 
 export type CustomBrokerConfig = z.infer<typeof customBrokerSchema>;
+export type EntryHttpConfig = z.infer<typeof entryHttpSchema>;
+/**
+ * A description as it is written, before the schema fills in what it leaves out.
+ *
+ * Exported so that the descriptions shipped with the tool can be written in the
+ * same shape a person writes in configuration, and go through the same schema
+ * on the way in. A shape nothing but configuration ever uses is a shape only
+ * configuration has ever tested.
+ */
+export type EntryHttpDescription = z.input<typeof entryHttpSchema>;
 export type EntryRegistryConfig = z.infer<typeof entryRegistrySchema>;
 export type CustomProducerConfig = z.infer<typeof customProducerSchema>;
 export type CustomSubscriberConfig = z.infer<typeof customSubscriberSchema>;

@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-25T10:26:47.282Z",
+  "configHash": "d95e219d6b04",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 515
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 0,
+    "uncalled": [
+      "entry:api:http:GET:/health",
+      "entry:api:http:GET:/orders",
+      "entry:api:http:POST:/orders",
+      "entry:api:http:POST:/orders/:param/cancel"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 9,
+    "edges": 4,
+    "types": 0,
+    "unresolved": 1
+  }
+}
