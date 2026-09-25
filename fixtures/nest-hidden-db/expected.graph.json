@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-hidden-db",
-  "generatedAt": "2026-09-10T16:11:46.005Z",
+  "generatedAt": "2026-09-25T13:31:20.033Z",
   "nodes": [
     {
       "id": "config_key:nest-hidden-db#MONGO_URL",
@@ -191,6 +191,8 @@
       "meta": {
         "stats": {
           "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
           "classes": 5,
           "skippedExternalCalls": {}
         },

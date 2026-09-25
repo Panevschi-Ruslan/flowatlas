@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-25T11:33:58.626Z",
+  "builtAt": "2026-09-25T13:31:34.622Z",
   "services": [
     {
       "name": "shop",
@@ -68,6 +68,8 @@
       "meta": {
         "stats": {
           "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
           "classes": 0,
           "skippedExternalCalls": {},
           "functions": 11,

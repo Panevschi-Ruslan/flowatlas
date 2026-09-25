@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import {
   AdapterRegistry,
+  countSources,
   createProject,
   GraphBuilder,
   normalizeFilePath,
@@ -169,11 +170,14 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
 
   // Before any pass runs, because a file the parser could not read is a hole in
   // everything that follows and the rest of this function has no way of
-  // noticing it: a source with a syntax error is still a source file, still
-  // counted among them, and simply holds nothing any walk can find. Written
-  // here rather than after the halves have run so that it is recorded even if a
-  // pass throws on the wreckage.
+  // noticing it: a source with a syntax error is still a source file the
+  // project opened, and simply holds nothing any walk can find. Written here
+  // rather than after the halves have run so that it is recorded even if a pass
+  // throws on the wreckage. The counts taken here answer the same question and
+  // go on the repository node, so the rows and the figure beside them cannot
+  // disagree about how many files were read.
   reportUnreadableSources(base);
+  const sources = countSources(project);
 
   // The other half of the same directory. A repository built on a file-system
   // router is a browser and a server at once: its route handlers sit beside the
@@ -208,9 +212,9 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     base,
     classes,
     bootstrap,
+    sources,
     ...(options.typesDepth === undefined ? {} : { maxDepth: options.typesDepth }),
   });
-  ctx.stats.files = project.getSourceFiles().length;
 
   const passes = [...BUILT_IN_PASSES, ...(options.extraPasses ?? [])].filter(
     (pass) => options.noTypes !== true || pass.name !== 'types',

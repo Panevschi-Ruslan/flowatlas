@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-telegraf",
-  "generatedAt": "2026-09-20T15:39:52.264Z",
+  "generatedAt": "2026-09-25T13:31:30.229Z",
   "nodes": [
     {
       "id": "entry:nest-telegraf:bot_callback:/^order_(\\d+)$/",
@@ -765,6 +765,8 @@
       "meta": {
         "stats": {
           "files": 12,
+          "filesRead": 12,
+          "filesUnreadable": 0,
           "classes": 9,
           "skippedExternalCalls": {
             "telegraf": 4

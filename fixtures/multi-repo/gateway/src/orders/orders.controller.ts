@@ -81,6 +81,6 @@ export class OrdersController {
 // real Nest handler can say and which hid the delivery wrapper the graph reads
 // through.
 //
-// Do not put an annotation back. It would need two imports, and every line
-// below them would move; node ids carry line numbers, and the fixture section
-// of the repository README lists what that breaks.
+// Do not put an annotation back. The stub's signature is what decides the type
+// here, so an annotation written out by hand would be asserting the copy rather
+// than the library, which is exactly how the wrong shape went unnoticed.

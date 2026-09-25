@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-unknown-orm",
-  "generatedAt": "2026-09-09T22:29:18.234Z",
+  "generatedAt": "2026-09-25T13:31:33.683Z",
   "nodes": [
     {
       "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:16:12",
@@ -139,6 +139,8 @@
       "meta": {
         "stats": {
           "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
           "classes": 3,
           "skippedExternalCalls": {
             "fake-orm": 2

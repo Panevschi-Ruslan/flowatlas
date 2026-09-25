@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-24T22:21:53.914Z",
+  "builtAt": "2026-09-25T13:31:07.258Z",
   "services": [
     {
       "name": "api",
@@ -418,6 +418,8 @@
       "meta": {
         "stats": {
           "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
           "classes": 4,
           "skippedExternalCalls": {
             "@nestjs/common": 1,
@@ -442,6 +444,8 @@
       "meta": {
         "stats": {
           "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
           "classes": 3,
           "templates": 1,
           "skippedExternalCalls": {

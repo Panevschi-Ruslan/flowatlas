@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-kafka",
-  "generatedAt": "2026-09-09T22:29:13.997Z",
+  "generatedAt": "2026-09-25T13:31:21.635Z",
   "nodes": [
     {
       "id": "channel:get.order",
@@ -821,6 +821,8 @@
       "meta": {
         "stats": {
           "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
           "classes": 4,
           "skippedExternalCalls": {
             "@nestjs/microservices": 1,

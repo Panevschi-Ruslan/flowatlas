@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-24T16:11:51.856Z",
+  "builtAt": "2026-09-25T13:31:37.953Z",
   "services": [
     {
       "name": "api",
@@ -454,6 +454,8 @@
       "meta": {
         "stats": {
           "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
           "classes": 5,
           "skippedExternalCalls": {
             "socket.io": 4
@@ -475,6 +477,8 @@
       "meta": {
         "stats": {
           "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
           "classes": 3,
           "templates": 1,
           "skippedExternalCalls": {

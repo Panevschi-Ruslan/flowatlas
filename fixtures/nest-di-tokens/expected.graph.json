@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-di-tokens",
-  "generatedAt": "2026-09-09T22:29:12.351Z",
+  "generatedAt": "2026-09-25T13:31:17.503Z",
   "nodes": [
     {
       "id": "db_query:nest-di-tokens#src/orders/orders.service.ts:37:10",
@@ -260,6 +260,8 @@
       "meta": {
         "stats": {
           "files": 12,
+          "filesRead": 12,
+          "filesUnreadable": 0,
           "classes": 10,
           "skippedExternalCalls": {}
         },

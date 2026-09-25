@@ -186,6 +186,7 @@ export {
 } from './nodes.js';
 
 export {
+  countSources,
   createProject,
   findTsconfig,
   listRepoSources,
@@ -193,7 +194,12 @@ export {
   TSCONFIG_CANDIDATES,
   UNREADABLE_FILE_REASON,
 } from './project.js';
-export type { CreateProjectOptions, UnreadableSourceContext } from './project.js';
+export type {
+  CreateProjectOptions,
+  RepoStats,
+  SourceCounts,
+  UnreadableSourceContext,
+} from './project.js';
 
 export { namesGivenTo, takesNames } from './markers.js';
 export type { MarkerNames, RecordedMarker, RefusedArg } from './markers.js';

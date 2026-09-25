@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-prisma",
-  "generatedAt": "2026-09-09T22:29:15.576Z",
+  "generatedAt": "2026-09-25T13:31:26.204Z",
   "nodes": [
     {
       "id": "db_query:nest-prisma#src/orders/orders.service.ts:12:12",
@@ -314,6 +314,8 @@
       "meta": {
         "stats": {
           "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
           "classes": 5,
           "skippedExternalCalls": {
             "@prisma/client": 7,

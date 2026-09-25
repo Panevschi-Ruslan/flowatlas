@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-21T14:45:43.587Z",
+  "builtAt": "2026-09-25T13:31:39.281Z",
   "services": [
     {
       "name": "api",
@@ -291,6 +291,8 @@
       "meta": {
         "stats": {
           "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
           "classes": 7,
           "skippedExternalCalls": {
             "rxjs": 3
@@ -312,6 +314,8 @@
       "meta": {
         "stats": {
           "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
           "classes": 9,
           "templates": 1,
           "skippedExternalCalls": {

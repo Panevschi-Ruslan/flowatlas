@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import {
   AdapterRegistry,
+  countSources,
   createProject,
   GraphBuilder,
   parseConfig,
@@ -89,9 +90,9 @@ export const extractAngular = (
   const ctx = createAngularContext({
     base,
     classes,
+    sources: countSources(base.project),
     ...(options.typesDepth === undefined ? {} : { maxDepth: options.typesDepth }),
   });
-  ctx.stats.files = base.project.getSourceFiles().length;
 
   for (const pass of BUILT_IN_PASSES) {
     base.logger.debug(`pass ${pass.name}`);
@@ -162,9 +163,10 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
 
   // Before any adapter runs, because a file the parser could not read is a hole
   // in everything that follows and nothing downstream can notice it: a source
-  // with a syntax error is still a source file, still counted among them, and
-  // simply holds nothing any pass can find. The wording lives in the core, so
-  // this reader and its siblings say the same thing about the same event.
+  // with a syntax error is still a source file the project opened, and simply
+  // holds nothing any pass can find. The wording lives in the core, so this
+  // reader and its siblings say the same thing about the same event, and so
+  // does the count of them the repository node carries.
   reportUnreadableSources(base);
 
   // Every adapter goes through the registry, this one included: a repository no

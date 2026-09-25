@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-24T22:20:58.856Z",
+  "builtAt": "2026-09-25T13:31:05.177Z",
   "services": [
     {
       "name": "worker",
@@ -81,6 +81,8 @@
       "meta": {
         "stats": {
           "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
           "classes": 3,
           "skippedExternalCalls": {}
         },

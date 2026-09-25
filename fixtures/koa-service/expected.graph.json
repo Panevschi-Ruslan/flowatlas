@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "koa-service",
-  "generatedAt": "2026-09-24T22:21:54.384Z",
+  "generatedAt": "2026-09-25T13:31:07.758Z",
   "nodes": [
     {
       "id": "db_query:koa-service#src/orders/orders.repository.ts:12:12",
@@ -244,6 +244,8 @@
       "meta": {
         "stats": {
           "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
           "classes": 1,
           "skippedExternalCalls": {
             "pg": 3

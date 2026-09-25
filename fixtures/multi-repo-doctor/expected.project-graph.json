@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-25T11:47:24.881Z",
+  "builtAt": "2026-09-25T13:31:13.922Z",
   "services": [
     {
       "name": "gateway",
@@ -1265,6 +1265,8 @@
       "meta": {
         "stats": {
           "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
           "classes": 3,
           "skippedExternalCalls": {}
         },
@@ -1285,6 +1287,8 @@
       "meta": {
         "stats": {
           "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
           "classes": 2,
           "skippedExternalCalls": {
             "@nestjs/axios": 8,
@@ -1307,6 +1311,8 @@
       "meta": {
         "stats": {
           "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
           "classes": 5,
           "skippedExternalCalls": {
             "fake-orm": 9,

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-bullmq",
-  "generatedAt": "2026-09-25T11:47:26.553Z",
+  "generatedAt": "2026-09-25T13:31:16.171Z",
   "nodes": [
     {
       "id": "channel:digest",
@@ -419,6 +419,8 @@
       "meta": {
         "stats": {
           "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
           "classes": 7,
           "skippedExternalCalls": {
             "bullmq": 4

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-mongoose",
-  "generatedAt": "2026-09-24T16:07:09.102Z",
+  "generatedAt": "2026-09-25T13:31:23.661Z",
   "nodes": [
     {
       "id": "db_query:nest-mongoose#src/orders/orders.service.ts:11:12",
@@ -321,6 +321,8 @@
       "meta": {
         "stats": {
           "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
           "classes": 3,
           "skippedExternalCalls": {
             "mongoose": 7
