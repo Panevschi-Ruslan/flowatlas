@@ -1,12 +1,12 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-24T22:22:15.143Z",
+  "builtAt": "2026-09-25T10:21:16.835Z",
   "services": [
     {
       "name": "shop",
       "repo": "./shop",
       "type": "nextjs",
-      "extractor": "@flowatlas/extractor-react"
+      "extractor": "@flowatlas/extractor-nestjs"
     },
     {
       "name": "web",
@@ -16,6 +16,82 @@
     }
   ],
   "nodes": [
+    {
+      "id": "db_query:shop#lib/orders-store.ts:19:57",
+      "type": "db_query",
+      "label": "read order",
+      "repo": "shop",
+      "file": "lib/orders-store.ts",
+      "line": 19,
+      "meta": {
+        "op": "read",
+        "table": "order",
+        "tables": [
+          "order"
+        ],
+        "package": "@prisma/client",
+        "method": "findMany",
+        "receiver": "prisma.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:shop#lib/orders-store.ts:22:3",
+      "type": "db_query",
+      "label": "read order",
+      "repo": "shop",
+      "file": "lib/orders-store.ts",
+      "line": 22,
+      "meta": {
+        "op": "read",
+        "table": "order",
+        "tables": [
+          "order"
+        ],
+        "package": "@prisma/client",
+        "method": "findUnique",
+        "receiver": "prisma.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:shop#lib/orders-store.ts:26:3",
+      "type": "db_query",
+      "label": "write order",
+      "repo": "shop",
+      "file": "lib/orders-store.ts",
+      "line": 26,
+      "meta": {
+        "op": "write",
+        "table": "order",
+        "tables": [
+          "order"
+        ],
+        "package": "@prisma/client",
+        "method": "create",
+        "receiver": "prisma.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:shop#lib/orders-store.ts:29:3",
+      "type": "db_query",
+      "label": "write order",
+      "repo": "shop",
+      "file": "lib/orders-store.ts",
+      "line": 29,
+      "meta": {
+        "op": "write",
+        "table": "order",
+        "tables": [
+          "order"
+        ],
+        "package": "@prisma/client",
+        "method": "update",
+        "receiver": "prisma.order",
+        "source": "receiver-prop"
+      }
+    },
     {
       "id": "entry:shop:http:ALL:/api/legacy-orders",
       "type": "entry",
@@ -176,10 +252,13 @@
       "meta": {
         "stats": {
           "files": 9,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@prisma/client": 8
+          },
           "functions": 16,
           "components": 1,
-          "hooks": 0,
-          "skippedExternalCalls": {}
+          "hooks": 0
         },
         "adapters": {
           "frontend": [
@@ -294,7 +373,7 @@
       "label": "archive",
       "repo": "shop",
       "file": "lib/orders-store.ts",
-      "line": 35
+      "line": 37
     },
     {
       "id": "shop#lib/orders-store.ts:findOrder",
@@ -302,7 +381,7 @@
       "label": "findOrder",
       "repo": "shop",
       "file": "lib/orders-store.ts",
-      "line": 20
+      "line": 21
     },
     {
       "id": "shop#lib/orders-store.ts:listOrders",
@@ -310,7 +389,7 @@
       "label": "listOrders",
       "repo": "shop",
       "file": "lib/orders-store.ts",
-      "line": 18
+      "line": 19
     },
     {
       "id": "shop#lib/orders-store.ts:patchOrder",
@@ -318,7 +397,7 @@
       "label": "patchOrder",
       "repo": "shop",
       "file": "lib/orders-store.ts",
-      "line": 27
+      "line": 28
     },
     {
       "id": "shop#lib/orders-store.ts:saveOrder",
@@ -326,7 +405,7 @@
       "label": "saveOrder",
       "repo": "shop",
       "file": "lib/orders-store.ts",
-      "line": 22
+      "line": 25
     },
     {
       "id": "shop#pages/api/legacy-orders.ts:handler",
@@ -335,6 +414,12 @@
       "repo": "shop",
       "file": "pages/api/legacy-orders.ts",
       "line": 7
+    },
+    {
+      "id": "table:shop#order",
+      "type": "table",
+      "label": "order",
+      "repo": "shop"
     },
     {
       "id": "ui_action:shop#app/orders/page.tsx:12:29",
@@ -573,6 +658,38 @@
   ],
   "edges": [
     {
+      "from": "db_query:shop#lib/orders-store.ts:19:57",
+      "to": "table:shop#order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "lib/orders-store.ts",
+      "line": 19
+    },
+    {
+      "from": "db_query:shop#lib/orders-store.ts:22:3",
+      "to": "table:shop#order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "lib/orders-store.ts",
+      "line": 22
+    },
+    {
+      "from": "db_query:shop#lib/orders-store.ts:26:3",
+      "to": "table:shop#order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "lib/orders-store.ts",
+      "line": 26
+    },
+    {
+      "from": "db_query:shop#lib/orders-store.ts:29:3",
+      "to": "table:shop#order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "lib/orders-store.ts",
+      "line": 29
+    },
+    {
       "from": "entry:shop:http:ALL:/api/legacy-orders",
       "to": "shop#pages/api/legacy-orders.ts:handler",
       "type": "handles",
@@ -714,7 +831,39 @@
       "type": "calls",
       "confidence": "static",
       "file": "lib/orders-store.ts",
-      "line": 36
+      "line": 38
+    },
+    {
+      "from": "shop#lib/orders-store.ts:findOrder",
+      "to": "db_query:shop#lib/orders-store.ts:22:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/orders-store.ts",
+      "line": 22
+    },
+    {
+      "from": "shop#lib/orders-store.ts:listOrders",
+      "to": "db_query:shop#lib/orders-store.ts:19:57",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/orders-store.ts",
+      "line": 19
+    },
+    {
+      "from": "shop#lib/orders-store.ts:patchOrder",
+      "to": "db_query:shop#lib/orders-store.ts:29:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/orders-store.ts",
+      "line": 29
+    },
+    {
+      "from": "shop#lib/orders-store.ts:saveOrder",
+      "to": "db_query:shop#lib/orders-store.ts:26:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/orders-store.ts",
+      "line": 26
     },
     {
       "from": "shop#pages/api/legacy-orders.ts:handler",
@@ -903,5 +1052,15 @@
       }
     }
   },
-  "unresolved": []
+  "unresolved": [
+    {
+      "file": "pages/api/legacy-orders.ts",
+      "line": 11,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "handler -> response.json",
+      "service": "shop"
+    }
+  ]
 }

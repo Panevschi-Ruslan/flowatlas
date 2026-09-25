@@ -91,6 +91,11 @@ export const extractReact = (base: ExtractContext, options: FrontendExtractOptio
   // that any pass collected is known.
   if (options.noTypes !== true) ctx.types.finalize();
 
+  // This half may be one of two readings of the same directory, and a
+  // repository is one node however many halves wrote it. Writing it first and
+  // letting the other half fold its counts in is what keeps it one node; see
+  // the server reader, which does the folding because it is the half that goes
+  // second.
   base.builder.addNode({
     id: `repo:${base.repo}`,
     type: 'repo',

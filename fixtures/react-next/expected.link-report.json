@@ -1,18 +1,18 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-24T21:37:46.664Z",
+  "builtAt": "2026-09-25T10:21:16.835Z",
   "configHash": "fe6ade849f35",
   "services": [
     {
       "name": "shop",
       "repo": "./shop",
       "type": "nextjs",
-      "extractor": "@flowatlas/extractor-react",
-      "nodes": 25,
-      "edges": 20,
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 30,
+      "edges": 28,
       "types": 0,
-      "unresolved": 0,
-      "durationMs": 599
+      "unresolved": 1,
+      "durationMs": 1524
     },
     {
       "name": "web",
@@ -23,7 +23,7 @@
       "edges": 14,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 597
+      "durationMs": 1632
     }
   ],
   "httpOut": {
@@ -66,9 +66,9 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 42,
-    "edges": 37,
+    "nodes": 47,
+    "edges": 45,
     "types": 1,
-    "unresolved": 0
+    "unresolved": 1
   }
 }
