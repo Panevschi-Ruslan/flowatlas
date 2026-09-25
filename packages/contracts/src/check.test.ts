@@ -403,7 +403,17 @@ describe('a field a whitelisting validation pipe removes', () => {
     'type:api#PatchDto': object('PatchDto', [validated('name', ['IsString']), validated('price')]),
   };
 
-  const patch = (pipe: Record<string, unknown> | null): ContractReport =>
+  /**
+   * The same route, with the body optionally wrapped in a list.
+   *
+   * `wrap` is how R71 is asked about: a whitelisting pipe handed an array
+   * validates each element against the same class, so wrapping both refs must
+   * change where the findings are and nothing else about them.
+   */
+  const patch = (
+    pipe: Record<string, unknown> | null,
+    wrap: (ref: string) => string = (ref) => ref,
+  ): ContractReport =>
     checkContracts(
       graphOf({
         nodes: [
@@ -418,10 +428,12 @@ describe('a field a whitelisting validation pipe removes', () => {
         ],
         edges: [
           edge('caller#Client.patch', 'calls', 'http_out:caller#1'),
-          edge('http_out:caller#1', 'http_calls', 'entry:api:http:PATCH:/items', { params: ['type:caller#Patch'] }),
+          edge('http_out:caller#1', 'http_calls', 'entry:api:http:PATCH:/items', {
+            params: [wrap('type:caller#Patch')],
+          }),
           edge('entry:api:http:PATCH:/items', 'handles', 'api#Controller.patch', {
-            params: ['type:api#PatchDto'],
-            meta: { body: 'type:api#PatchDto' },
+            params: [wrap('type:api#PatchDto')],
+            meta: { body: wrap('type:api#PatchDto') },
           }),
           edge('entry:api:http:PATCH:/items', 'guarded_by', 'api#main.ts:ValidationPipe(x)', {
             meta: { layer: 'pipe', scope: 'global' },
@@ -472,6 +484,20 @@ describe('a field a whitelisting validation pipe removes', () => {
       { generatedAt: FIXED },
     );
     expect(custom.findings.filter((finding) => finding.rule === 'whitelist-strip')).toEqual([]);
+  });
+
+  it('finds the same fields when the body is a list of that shape (R71)', () => {
+    // A `Dto[]` body is compared once as its element, at path `[]` rather than
+    // at the empty path, and stripping used to be read only at the empty one.
+    // Every field the pipe removes from an array body was therefore lost in
+    // silence by the check that exists to notice exactly that.
+    const stripped = patch({ whitelist: true }, (ref) => `${ref}[]`).findings.filter(
+      (finding) => finding.rule === 'whitelist-strip',
+    );
+    expect(stripped.map((finding) => [finding.field, finding.severity, finding.impact])).toEqual([
+      ['[].note', 'info', 'none'],
+      ['[].price', 'info', 'none'],
+    ]);
   });
 
   it('says nothing of the kind when the pipe does not whitelist', () => {
@@ -702,9 +728,11 @@ describe('a stripped field, by what it can lose', () => {
  * as stripping at the top of a body, so the case was made to stop existing
  * rather than given a word of its own and a format version with it (R67).
  *
- * `stripImpact` is exercised directly because the comparison cannot yet produce
- * a nested strip to drive it through `checkContracts`, and code nobody can
- * reach in a test is code nobody has checked.
+ * `stripImpact` is exercised directly because the comparison produces only one
+ * shape of nested strip on its own — an array body's `[].name`, which R71 made
+ * reachable and which is asserted above through `checkContracts`. The deeper
+ * paths below are still unreachable that way, and code nobody can reach in a
+ * test is code nobody has checked.
  */
 describe('what a nested path is compared against', () => {
   const registry: TypeRegistry = {

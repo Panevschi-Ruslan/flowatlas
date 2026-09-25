@@ -69,4 +69,16 @@ export class OrdersService {
     this.events.emit('order.created', event);
     return { id: body.customerId, total: body.total.amount, placedAt: event.placedAt };
   }
+
+  /**
+   * The same write, for a body that arrives as a list (R71).
+   *
+   * It has to reach a write of `DraftSchema` exactly as `storeDraft` does, or
+   * the strip found on the element would be `impact: none` for the boring
+   * reason rather than the interesting one.
+   */
+  async storeDrafts(body: CreateDraftDto[]): Promise<CreateDraftDto[]> {
+    await this.drafts.save(body as unknown as DraftSchema);
+    return body;
+  }
 }

@@ -58,6 +58,24 @@ const joinPath = (path: string, name: string): string => (path === '' ? name : `
 /** `depth-cap` at the top of a type has no path to name, so it names the root. */
 const at = (prefix: string, path: string): string => `${prefix}:${path === '' ? '.' : path}`;
 
+/**
+ * Whether a path still names the body itself, rather than something inside one
+ * of its fields.
+ *
+ * A whitelisting pipe judges the body it was handed. When that body is an
+ * array, the pipe validates each element against the same class, so an element
+ * is the body as far as stripping is concerned — and the path the walk carries
+ * there is `[]`, because an array is compared once as its element (R71). Asking
+ * for `''` alone meant a `Dto[]` request through a whitelisting pipe produced no
+ * strip findings whatsoever: every field the pipe removes was lost, silently, by
+ * the check whose whole purpose is to notice exactly that.
+ *
+ * Only the markers count. Under a named field, stripping would depend on nested
+ * validation this walk does not follow, which is the reason the test was written
+ * as "the top" in the first place; an array marker adds no such dependency.
+ */
+const atBodyTop = (path: string): boolean => /^(?:\[\])*$/.test(path);
+
 const record = (walk: Walk, diff: Omit<FieldDiff, 'message'>): void => {
   walk.diffs.push({ ...diff, message: describeDiff({ ...diff, message: '' }) });
 };
@@ -711,7 +729,9 @@ const compareFields = (
   // property its class does not decorate. Only the top of a body is judged:
   // below it, stripping depends on nested validation this does not follow.
   const stripping =
-    walk.whitelist && path === '' && receiverFields.some((field) => validatorsOf(field.meta).length > 0);
+    walk.whitelist &&
+    atBodyTop(path) &&
+    receiverFields.some((field) => validatorsOf(field.meta).length > 0);
 
   const declared = new Set<string>();
   const droppedByReceiver = new Set<string>();

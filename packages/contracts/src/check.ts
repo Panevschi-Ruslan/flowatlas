@@ -333,10 +333,33 @@ const findingOf = (
       // what R34 is about.
       observed: exchange.direction !== 'request' || exchange.sender.writes !== undefined,
       everyCall: exchange.direction !== 'request' || exchange.sender.writesEvery !== false,
-    }) + (unreached === null ? '' : `; nothing in the project calls ${unreached}`),
+    }) +
+    (unreached === null ? '' : `; nothing in the project calls ${unreached}`) +
+    declaredNote(exchange),
   ignored: ignoredBy !== null,
   ignoredBy,
 });
+
+/**
+ * The clause that says one end of this was believed rather than read.
+ *
+ * On the sentence rather than only in the JSON, because the sentence is what
+ * reaches a person: it is what the terminal prints, what the document holds and
+ * what an agent is handed, and a reader deciding whether to act on a finding
+ * needs to know that half of it is a third party's description of itself.
+ * Without it a declared end reads exactly like a read one, which is the one
+ * thing this must never do — the tool would be presenting an unverifiable claim
+ * in the voice it uses for what it has checked.
+ *
+ * Both ends, when both were declared, because two documents disagreeing with
+ * each other is a statement about two documents and about nothing else.
+ */
+const declaredNote = (exchange: Exchange): string => {
+  const ends = [exchange.sender, exchange.receiver]
+    .filter((end) => end.declaredBy !== undefined)
+    .map((end) => `${end.service} was declared by ${end.declaredBy as string}, not read`);
+  return ends.length === 0 ? '' : `; ${[...new Set(ends)].join('; ')}`;
+};
 
 
 
@@ -473,12 +496,11 @@ const declaresPath = (
  * a fourth thing wearing a third thing's word. The choice was between giving
  * that fourth thing a word of its own and making it stop existing, and it stops
  * existing here: the segments are the keys of one shape after another, and the
- * registry holds every shape a key names. Measured, no row in the fixture
- * corpus is in this case at all, because a whitelisting pipe is only read as
- * stripping at the top of a body, so a fourth word would have named nothing and
- * cost every reader of `contracts.json` a version. Walking costs nothing and is
- * already right for the day the comparison strips below the top — an array body
- * is one such day, and its paths read `[].name`.
+ * registry holds every shape a key names. When that was written no row in the
+ * corpus reached it, because a whitelisting pipe was only read as stripping at
+ * the empty path; the day it would be needed was named as an array body, whose
+ * paths read `[].name`. R71 was that day: an array body is compared at `[]`, the
+ * markers are dropped by `segmentsOf`, and the walk was waiting and correct.
  */
 export const stripImpact = (
   writes: { any: boolean; documents: TypeEntry[] },

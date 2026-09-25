@@ -134,6 +134,12 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
       for (const env of service.baseUrlEnv ?? []) {
         envOwners.set(env, [...(envOwners.get(env) ?? []), service.name]);
       }
+      // A declared service's rows already name the document relative to the
+      // configuration, because the document is where they came from and there
+      // is no repository under it. Putting its directory in front would spell
+      // `contracts/contracts/billing.json` and send a reader to a file that is
+      // not there.
+      if (service.openapi !== undefined) continue;
       const dir = service.repo.replace(/^\.\//, '').replace(/\/+$/, '');
       if (dir !== '' && dir !== '.') repoDirs.set(service.name, dir);
     }

@@ -1,8 +1,10 @@
 import { createHash } from 'node:crypto';
 import {
+  CONFIDENCE_RANK,
   namesGivenTo,
   SCHEMA_VERSION,
   wasMissed,
+  type Confidence,
   type FlowatlasConfig,
   type GraphEdge,
   type GraphNode,
@@ -169,6 +171,27 @@ const buildUiIndex = (
   };
 };
 
+/**
+ * A join edge may not claim more than the weakest of the two ends it rests on.
+ *
+ * The caller's half really was read, so on its own it is `static`. The route's
+ * half may be nobody's reading at all: a service configured as a document has
+ * routes that are that service's own description of itself, and there is no
+ * source anywhere here to check them against. An edge that stayed `static`
+ * across such a join would be saying the whole claim was proven, which is
+ * precisely the overstatement the way in for a document exists not to make —
+ * and it is the confidence a person actually meets, because `impact` and `flow`
+ * walk these edges and print what they carry.
+ *
+ * It only ever weakens. A request whose path the extractor had to guess is
+ * `heuristic` whoever answers it, and a route somebody declared does not make a
+ * guess any better than it was.
+ */
+const boundedByRoute = (confidence: Confidence, entry: GraphNode): Confidence =>
+  entry.meta?.['declaredBy'] === undefined || CONFIDENCE_RANK[confidence] <= CONFIDENCE_RANK.marker
+    ? confidence
+    : 'marker';
+
 /** The edge a resolved call becomes. */
 const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked' }>): GraphEdge => {
   const params = call.meta?.['bodyType'];
@@ -177,7 +200,7 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
     from: call.id,
     to: outcome.entry.id,
     type: 'http_calls',
-    confidence: outcome.via === 'marker' ? 'marker' : 'static',
+    confidence: boundedByRoute(outcome.via === 'marker' ? 'marker' : 'static', outcome.entry),
     ...(call.file === undefined ? {} : { file: call.file }),
     ...(call.line === undefined ? {} : { line: call.line }),
     ...(typeof params === 'string' ? { params: [params] } : {}),
@@ -213,7 +236,10 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
     from: call.id,
     to: outcome.entry.id,
     type: 'hits',
-    confidence: asserted ? 'marker' : guessed ? 'heuristic' : 'static',
+    confidence: boundedByRoute(
+      asserted ? 'marker' : guessed ? 'heuristic' : 'static',
+      outcome.entry,
+    ),
     ...(call.file === undefined ? {} : { file: call.file }),
     ...(call.line === undefined ? {} : { line: call.line }),
     ...(typeof params === 'string' ? { params: [params] } : {}),

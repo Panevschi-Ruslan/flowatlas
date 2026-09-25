@@ -1,6 +1,6 @@
 ## Contracts
 
-contracts: edges=30 shared=2 identical=8 drift=20 unchecked=6 errors=14 warnings=5 infos=12 ignored=4
+contracts: edges=32 shared=2 identical=8 drift=22 unchecked=6 errors=14 warnings=6 infos=12 ignored=4
 
 | severity | kind | between | direction | field | what |
 |---|---|---|---|---|---|
@@ -19,6 +19,7 @@ contracts: edges=30 shared=2 identical=8 drift=20 unchecked=6 errors=14 warnings
 | error | missing_required | web → orders | request | shipTo.postcode | receiver orders requires `shipTo.postcode: string`; sender web does not send it |
 | error | type_mismatch | orders → web | response | total | sender orders sends `total` as `number`; receiver web declares it `string` |
 | warning | extra_field | gateway → orders | request | note | sender gateway sends `note: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it |
+| warning | extra_field | gateway → orders | request | [].note | the type sender gateway declares permits `[].note: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it |
 | warning | extra_field | gateway → orders | request | colour | sender gateway sends `colour: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it |
 | warning | optionality_mismatch | gateway → orders | request | note | `note` may be left out by sender gateway and is required by receiver orders; the sender marks it optional by question |
 | warning | type_mismatch | gateway → orders | request | counts | `counts` is a Set or a Map; JSON carries neither, so what receiver orders reads is whatever a replacer wrote by hand |

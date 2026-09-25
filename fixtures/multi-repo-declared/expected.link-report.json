@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-25T12:35:03.893Z",
+  "configHash": "14afc89d6d8c",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 8,
+      "types": 5,
+      "unresolved": 2,
+      "durationMs": 721
+    },
+    {
+      "name": "billing",
+      "repo": "contracts/billing.json",
+      "type": "declared",
+      "extractor": "openapi-document",
+      "nodes": 8,
+      "edges": 4,
+      "types": 5,
+      "unresolved": 1,
+      "durationMs": 18
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 3,
+    "uncalled": [
+      "entry:billing:http:DELETE:/invoices/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 10,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 20,
+    "edges": 15,
+    "types": 10,
+    "unresolved": 3
+  }
+}

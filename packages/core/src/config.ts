@@ -9,17 +9,60 @@ export const DEFAULT_OUTPUT = '.flowatlas';
 export const DEFAULT_TYPE_MAX_DEPTH = 3;
 
 /**
- * One repository of the project.
+ * What a service whose source nobody here has is called.
+ *
+ * A word about where the facts came from rather than about what the service is
+ * built on, because that is all anybody here knows about it: nothing was read,
+ * so there is no framework to name. Module-local on purpose — it is a value
+ * this schema fills in and reports print, never something to branch on. What a
+ * reader downstream actually wants to know is whether `openapi` is set, which
+ * is the fact rather than a word chosen to stand for it.
+ */
+const DECLARED_SERVICE_TYPE = 'declared';
+
+/**
+ * One end of the project: a repository, or a document standing in for one.
  *
  * `type` is an open string on purpose: the core must not know the names of the
  * frameworks it can be pointed at. The command line and the extractors own the
  * list of values they understand.
+ *
+ * `openapi` is the one exception to that, and it is a document format rather
+ * than a framework. A service named this way has no source anybody here can
+ * read — a payment provider, another team's repository, something written in
+ * another language — and the document is the only statement of its routes and
+ * its shapes there is.
+ *
+ * This project deleted `@flowatlas-hole`, an annotation whose purpose was to
+ * accept a claim nothing could check, and the argument for deleting it was that
+ * a checked way of saying the same thing already existed: the code the
+ * annotation described sat in the same file, so the tool could go and read it
+ * instead of being told. A document is not that. There is no source to read and
+ * therefore no checked alternative, and the choice here is not between a claim
+ * and a reading — it is between a claim and silence. Silence is what the tool
+ * did before: the call was counted as third party and the question stopped
+ * there, which was honest and answered nothing.
+ *
+ * What keeps this from being the annotation again is that nothing produced from
+ * a document is ever presented as read. Every end of it is named as declared
+ * wherever it is reported, in prose and in `--format json` alike, and `doctor`
+ * says when the document last changed relative to the commits — because a stale
+ * document is a wrong answer wearing a confident face, and that is the one
+ * failure this way in can have.
  */
-export const serviceConfigSchema = z.strictObject({
+const serviceEntrySchema = z.strictObject({
   name: z.string().min(1),
-  /** Path to the repository, relative to the configuration file. */
-  repo: z.string().min(1),
-  type: z.string().min(1),
+  /**
+   * Path to the repository, relative to the configuration file.
+   *
+   * Absent for a declared service, where the directory holding the document
+   * stands in for it: everything downstream asks a service where it lives, and
+   * a document that lives somewhere is a truer answer than none.
+   */
+  repo: z.string().min(1).optional(),
+  /** Path to an OpenAPI document, relative to the configuration file. */
+  openapi: z.string().min(1).optional(),
+  type: z.string().min(1).optional(),
   /** Environment variables that hold this service's own base URL. */
   baseUrlEnv: z.array(z.string().min(1)).optional(),
   /** Settings keys a frontend reads its API base URL from. */
@@ -37,6 +80,40 @@ export const serviceConfigSchema = z.strictObject({
   /** Entry file where global wrapping is installed, when there is one. */
   bootstrap: z.string().min(1).optional(),
 });
+
+/** The directory part of a configured path, in the spelling it was written in. */
+const directoryOf = (path: string): string => {
+  const cut = path.replace(/\\/g, '/').lastIndexOf('/');
+  return cut <= 0 ? '.' : path.slice(0, cut);
+};
+
+/**
+ * A service entry, with what a declared one leaves out filled in.
+ *
+ * Filled in here rather than left optional because every reader downstream asks
+ * a service for its directory and its type, and making those two questions
+ * answerable only sometimes would push the same branch into every one of them
+ * for no gain. A declared service lives in the directory its document is in,
+ * and is of the type that says nothing was read.
+ */
+export const serviceConfigSchema = serviceEntrySchema
+  .superRefine((service, ctx) => {
+    const sources = [service.repo, service.openapi].filter((each) => each !== undefined);
+    if (sources.length === 1) return;
+    ctx.addIssue({
+      code: 'custom',
+      path: ['repo'],
+      message:
+        sources.length === 0
+          ? 'a service needs either a repo to read or an openapi document to take the word of.'
+          : 'a service has either a repo or an openapi document, not both: source that can be read is read.',
+    });
+  })
+  .transform((service) => ({
+    ...service,
+    repo: service.repo ?? directoryOf(service.openapi as string),
+    type: service.type ?? DECLARED_SERVICE_TYPE,
+  }));
 
 const adapterNamesSchema = z.array(z.string().min(1));
 
@@ -511,9 +588,21 @@ export const loadConfig = (
   };
 
   if (options.checkRepos !== false) {
-    const missing = config.services
-      .filter((service) => !isDirectory(repoDirOf(service)))
-      .map((service) => `services.${service.name}.repo: ${service.repo} is not a directory`);
+    // A declared service is checked on the one path it actually has. Its `repo`
+    // is the document's directory, filled in by the schema, so checking that
+    // instead would pass whenever the folder existed and the document did not —
+    // and the failure would arrive much later, as a service with no routes.
+    const missing = config.services.flatMap((service) => {
+      if (service.openapi !== undefined) {
+        const path = isAbsolute(service.openapi)
+          ? service.openapi
+          : resolve(rootDir, service.openapi);
+        return isFile(path) ? [] : [`services.${service.name}.openapi: ${service.openapi} is not a file`];
+      }
+      return isDirectory(repoDirOf(service))
+        ? []
+        : [`services.${service.name}.repo: ${service.repo} is not a directory`];
+    });
     if (missing.length > 0) {
       // Not "re-run init": when init was the thing that wrote them, running it
       // again writes the same paths and the reader is in a loop. Say what they

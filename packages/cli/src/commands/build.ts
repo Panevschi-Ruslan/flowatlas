@@ -38,6 +38,7 @@ import {
   type FileStamp,
   type RepoCache,
 } from '../build/cache.js';
+import { isDeclared, newestCommitAcross, readDeclaredService } from '../build/declared.js';
 import { adapterNames, createRegistry, EXTRACTORS, isFrontend } from '../build/extractor.js';
 import { noReaderNote } from '../stacks.js';
 import {
@@ -55,6 +56,16 @@ import { ownBin } from '../own-path.js';
 const run = promisify(execFile);
 
 const binPath = (): string => ownBin(import.meta.url);
+
+/**
+ * What is named as having read a declared service.
+ *
+ * Not `null`, which is this build's word for "no reader applies to this", and
+ * not the name of a framework, because none was involved. A document was read,
+ * completely, and saying so is what keeps a declared service out of the list of
+ * repositories the tool could not handle.
+ */
+const DECLARED_EXTRACTOR = 'openapi-document';
 
 /** Where a repository's own graph lives, whoever wrote it. */
 export const serviceGraphPath = (repoDir: string): string =>
@@ -317,11 +328,71 @@ interface ExtractOneOptions {
   stamps?: Record<string, FileStamp>;
   /** Leave the browsers out, when only the servers changed. */
   skipFrontend?: boolean;
+  /** Directory the configuration file is in, for a document's path. */
+  rootDir: string;
+  /** Fixed timestamp, for reproducible output. */
+  builtAt?: string;
+  /** When the newest commit of everything read landed, for a document's age. */
+  newestCommit?: Date;
 }
+
+/**
+ * A service read from its document rather than from its source.
+ *
+ * Reported as a service that was read, because it was — one file, completely,
+ * every time. What it is not is a service that was *checked*: the graph says so
+ * on every node and edge it contributes, and the age row the reader attaches
+ * says how much the document's word is currently worth.
+ *
+ * A failure here is a failure of the build rather than a repository that could
+ * not be opened. A repository that fails to parse leaves the rest of the
+ * project readable and is worth reporting as such; a document that cannot be
+ * read leaves a service with no routes at all, which is indistinguishable from
+ * a service that has none.
+ */
+const extractDeclared = async (options: ExtractOneOptions): Promise<Extracted> => {
+  const { service } = options;
+  const base = emptyReport(service, DECLARED_EXTRACTOR);
+  const started = Date.now();
+  try {
+    const { graph, documentPath } = await readDeclaredService({
+      service,
+      rootDir: options.rootDir,
+      ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
+      ...(options.newestCommit === undefined ? {} : { newestCommit: options.newestCommit }),
+    });
+    return {
+      service,
+      graph,
+      report: {
+        ...base,
+        ...countsOf(graph),
+        repo: documentPath,
+        durationMs: Date.now() - started,
+      },
+    };
+  } catch (error) {
+    return {
+      service,
+      report: {
+        ...base,
+        skipped: 'extract-failed',
+        error: error instanceof Error ? error.message : String(error),
+        durationMs: Date.now() - started,
+      },
+    };
+  }
+};
 
 /** Reads one repository, or reuses what the last build left of it. */
 const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
   const { service, repoDir, plan, session, previous } = options;
+
+  // A service the configuration described rather than pointed at. There is no
+  // repository to survey, nothing to cache against and no extractor to choose:
+  // one file is read and it produces the same graph a repository would have.
+  if (isDeclared(service)) return await extractDeclared(options);
+
   const extractor = EXTRACTORS[service.type] ?? null;
   const base = emptyReport(service, extractor);
 
@@ -524,7 +595,11 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   const cacheProblem = found !== null && 'problem' in found ? found.problem : undefined;
   const cache = found !== null && 'cache' in found ? found.cache : null;
 
-  const surveys = loaded.config.services.map((service) => {
+  // A declared service has no source to survey: there are no files to hash, no
+  // tsconfig to find and nothing for an incremental plan to decide. It is read
+  // in full on every build, which for one document costs nothing.
+  const readable = loaded.config.services.filter((service) => !isDeclared(service));
+  const surveys = readable.map((service) => {
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
     return surveyService({
@@ -550,6 +625,13 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
       ? Math.max(cpus().length - 1, 1)
       : Math.max(Number(options.concurrency), 1);
 
+  // Asked once, before anything is read, and only when somebody is going to
+  // ask how old a document is. It is what a declared service's age is measured
+  // against: whether the work has moved on since the document was last fetched.
+  const newestCommit = loaded.config.services.some(isDeclared)
+    ? await newestCommitAcross(readable.map((service) => loaded.repoDir(service)))
+    : undefined;
+
   const extracted = await inPools(loaded.config.services, limit, (service) => {
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
@@ -558,6 +640,9 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
       service,
       repoDir: loaded.repoDir(service),
       configPath: loaded.configPath,
+      rootDir: loaded.rootDir,
+      ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
+      ...(newestCommit === undefined ? {} : { newestCommit }),
       plan: plan[service.name] ?? { mode: 'full', reason: 'not planned' },
       ...(options.skipFrontend === undefined ? {} : { skipFrontend: options.skipFrontend }),
       ...(session === undefined ? {} : { session }),
@@ -727,6 +812,20 @@ export const summariseBuild = (result: BuildResult): string[] => {
       (routes.duplicated.length === 0 ? '' : `, ${routes.duplicated.length} claimed by two handlers`),
   );
   lines.push(`types: ${report.types.total} (${report.types.sharedPackage} from shared packages)`);
+  /**
+   * The ends of this project nobody here can read.
+   *
+   * Said out loud in the build's own summary, every time, because a declared
+   * service is the one part of the graph that was believed rather than checked
+   * and the number of them is the size of what a reader is taking on trust.
+   */
+  const declared = report.services.filter((service) => service.extractor === DECLARED_EXTRACTOR);
+  if (declared.length > 0) {
+    lines.push(
+      `declared from a document: ${declared.map((service) => `${service.name} (${service.repo})`).join(', ')}` +
+        ' — nothing here checked any of it against the service it describes',
+    );
+  }
   // Rows and places differ wherever a reason was folded, and both are worth
   // saying: one is how long the list is, the other is what it covers.
   lines.push(unresolvedLine(result.project.unresolved, report.totals.unresolved));

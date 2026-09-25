@@ -113,6 +113,13 @@ and nothing else, and differ only in what the handler behind each one does:
 | `store` | writes `DraftSchema`, which declares `note` | `note` stripped, `impact: stored` |
 | `tag` | writes the same document, which declares no `colour` | `colour` stripped, `impact: unknown` |
 | `preview` | reaches no write at all | `note` stripped, `impact: none`, counted rather than listed |
+| `batch` | takes `CreateDraftDto[]` and writes the same document | `[].note` stripped, `impact: stored` |
+
+`batch` is the fourth because a body that is an array is compared at path `[]`
+and never at `''`, and stripping used to be read only at `''` (R71). Every field
+a whitelisting pipe removed from a list body was therefore lost in silence. The
+row reads exactly like `store`'s one array deep, which is the claim: the element
+is the body as far as the pipe is concerned, and `stripImpact` walks the marker.
 
 The join is the entity the write names, recorded in the registry by the write
 itself — not the field's spelling, and not the schema happening to be on a

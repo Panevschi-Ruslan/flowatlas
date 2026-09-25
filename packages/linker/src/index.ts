@@ -20,6 +20,8 @@ export type {
 } from './http-link.js';
 export { resolveUiCall, uiFindingFor, uiReasonOf } from './ui-link.js';
 export type { UiIndex, UiOutcome, UiOutcomeKind, UiVia } from './ui-link.js';
+export { DECLARED_BY, OpenapiDocumentError, readOpenapiDocument } from './openapi/index.js';
+export type { ReadDocumentOptions, ReadDocumentResult } from './openapi/index.js';
 export { surveyChannels, surveyRoutes } from './survey.js';
 export type { ChannelSurvey, RouteSurvey } from './survey.js';
 export { matchesRoutePattern } from './route-audit.js';
