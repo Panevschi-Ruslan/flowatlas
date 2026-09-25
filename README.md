@@ -670,6 +670,55 @@ stubs where a package had to be stood in for; the rest resolve through the
 workspace, so a clone needs `pnpm install` and nothing more. Snapshots are produced by running the
 tool and never written by hand; review the diff before accepting one.
 
+**A stub may declare less than the library it stands for. It may never declare
+something of a different kind.** A stub exists so the checker resolves an import
+without an install, and every fact the tool reads off it — the package a type is
+declared in, whether a call answers with a wrapper or with a value, whether a
+name is exported at all — has to be the fact the real library would have given.
+Drop the methods nobody calls, drop the overloads, drop the fields; do not turn
+an intersection into a class, an `Observable` into a plain object, a `Query`
+into a `Promise`, or a name the library never exported into one it did. The rule
+is written in blood: a `drizzle` stub that returned a plain class where the
+library returns an intersection let a defect that zeroed a real repository's
+entire data layer leave every fixture green. Nor may a fixture source re-state
+what a stub already says — a client method that hand-copies its own return type
+is asserting the copy, not the library, which is how `{ data: unknown }` stood
+in for `Observable<AxiosResponse<T>>` across ten repositories without anyone
+noticing.
+
+Three stubs are knowingly the wrong shape and are left that way, so nobody
+audits them a second time from scratch: `axios`' default export is an object
+where the real one is callable, `@angular/router`'s `RouterModule` is a const
+object where the real one is a class with statics, and `pg`'s `PoolClient` is a
+class where the real one is an interface. All three resolve to the same origin
+either way, which is the only fact the tool reads off them.
+
+Adding or removing a line in a fixture source is not free. A node id carries the
+line the node was read at, and twenty-three assertions under `packages/`
+hard-code one: eighteen in `packages/cli/src/commands/ground-truth.test.ts`,
+four in `packages/mcp/src/tools/tools.test.ts` and one in
+`packages/cli/src/commands/build.test.ts`. Two more are pinned as scenario
+inputs in `scripts/mcp-snapshots.mjs`, and three in `scripts/demo/scenes/`.
+Seven fixture files are held in place by them:
+
+| File | Lines pinned |
+|---|---|
+| `fixtures/ground-truth/client/src/orders/orders.client.ts` | 21, 26, 35 |
+| `fixtures/multi-repo/gateway/src/clients/orders.client.ts` | 33, 44, 59 |
+| `fixtures/multi-repo/gateway/src/clients/billing.client.ts` | 33 |
+| `fixtures/multi-repo/orders/src/orders/orders.service.ts` | 26, 49 |
+| `fixtures/multi-repo/web/src/app/orders-api.service.ts` | 21, 34, 48, 61 |
+| `fixtures/multi-repo/web/src/app/checkout.component.ts` | 15 |
+| `fixtures/nest-leaves/src/orders/orders.service.ts` | 44, 54, 65 |
+
+A line added above any of those cannot be made without an edit under
+`packages/`, which puts a cost on exactly the operation that should be cheapest:
+adding a line to a fixture to reproduce a defect. Coordinates elsewhere in the
+tests — `packages/cli/src/{analysis/config-keys,doctor/hints,render/render}.test.ts`,
+`packages/cli/src/test-graph.ts` and the two `packages/linker` tests — belong to
+graphs built in the test itself and name no fixture, so they are not part of
+this.
+
 Two fixtures state in their own README what their source ought to produce, and
 are asserted fact by fact rather than compared against a recording:
 `fixtures/ground-truth` in `packages/cli/src/commands/ground-truth.test.ts`,

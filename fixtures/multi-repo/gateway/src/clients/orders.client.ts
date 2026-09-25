@@ -29,7 +29,7 @@ export class OrdersClient {
    * itself a parameter matches the `:param` route exactly and never the literal
    * one, so this is not ambiguous (§10, rows 6-8).
    */
-  fetchOne(id: string): { data: unknown } {
+  fetchOne(id: string) {
     return this.http.get<OrderDto>(`${this.config.get('ORDERS_URL')}/orders/${id}`);
   }
 
@@ -40,7 +40,7 @@ export class OrdersClient {
    * `target-route-not-found` whose message reads exactly
    * `target service orders has no route POST /orders/:param/cancel`.
    */
-  cancel(id: string): { data: unknown } {
+  cancel(id: string) {
     return this.http.post<OrderDto>(`${this.config.get('ORDERS_URL')}/orders/${id}/cancel`, {
       reason: 'customer',
     });
@@ -55,7 +55,18 @@ export class OrdersClient {
    * name. So it joined to `GET /orders/:param` in `orders` with the edge marked
    * `static`, and the evidence that anything had been guessed was gone (R01).
    */
-  variant(id: string, suffix: string): { data: unknown } {
+  variant(id: string, suffix: string) {
     return this.http.get<OrderDto>(`${this.config.get('ORDERS_URL')}/orders/${id}${suffix}`);
   }
 }
+
+// The request methods above declare no return type on purpose. What a request
+// answers with is the library's business — `HttpService.get<T>` gives back
+// `Observable<AxiosResponse<T>>` — and letting that signature decide is what
+// makes this fixture a test of the library's shape rather than of a shape
+// somebody retyped. They used to say `{ data: unknown }`, which no real Nest
+// client can say and which hid the delivery wrapper the graph reads through.
+//
+// Do not put an annotation back. It would need two imports, and every line
+// below them would move; node ids carry line numbers, and the fixture section
+// of the repository README lists what that breaks.

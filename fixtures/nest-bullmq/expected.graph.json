@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-bullmq",
-  "generatedAt": "2026-09-25T10:14:27.390Z",
+  "generatedAt": "2026-09-25T11:47:26.553Z",
   "nodes": [
     {
       "id": "channel:digest",
@@ -656,14 +656,14 @@
     }
   ],
   "types": {
-    "type:@nestjs/bull#Job<type:nest-bullmq#SendEmailJob>": {
+    "type:bull#Job<type:nest-bullmq#SendEmailJob>": {
       "name": "Job",
       "kind": "external",
-      "declaredIn": "@nestjs/bull",
-      "structuralHash": "63432207e3cb1e4f",
+      "declaredIn": "bull",
+      "structuralHash": "c5bf3fa294a7cec9",
       "meta": {
         "declKind": "external",
-        "package": "@nestjs/bull"
+        "package": "bull"
       }
     },
     "type:bullmq#Job<type:nest-bullmq#ReportJob,unknown,string>": {

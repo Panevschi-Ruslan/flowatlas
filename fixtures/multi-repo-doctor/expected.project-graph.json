@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-21T15:52:23.253Z",
+  "builtAt": "2026-09-25T11:47:24.881Z",
   "services": [
     {
       "name": "gateway",
@@ -2057,6 +2057,26 @@
     }
   ],
   "types": {
+    "type:axios#AxiosResponse<type:gateway#OrderDto>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:axios#AxiosResponse<unknown>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
     "type:billing#OrderCreatedEvent": {
       "name": "OrderCreatedEvent",
       "kind": "object",

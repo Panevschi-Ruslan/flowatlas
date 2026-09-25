@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-leaves",
-  "generatedAt": "2026-09-20T21:55:26.184Z",
+  "generatedAt": "2026-09-25T11:47:33.041Z",
   "nodes": [
     {
       "id": "cache_op:nest-leaves#src/orders/orders.service.ts:19:12",
@@ -483,7 +483,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:nest-leaves#OrderDto>",
       "meta": {
         "params": "{id:string}"
       }
@@ -522,7 +522,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}"
+      "returns": "type:axios#AxiosResponse<type:nest-leaves#OrderDto>"
     },
     {
       "from": "nest-leaves#src/orders/orders.controller.ts:OrdersController.settings",
@@ -672,6 +672,16 @@
     }
   ],
   "types": {
+    "type:axios#AxiosResponse<type:nest-leaves#OrderDto>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
     "type:nest-leaves#OrderDto": {
       "name": "OrderDto",
       "kind": "object",

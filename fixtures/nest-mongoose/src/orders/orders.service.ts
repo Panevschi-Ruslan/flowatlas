@@ -7,11 +7,11 @@ import { OrderModel, type OrderDocument } from './order.model.js';
 export class OrdersService {
   // A read through the model. The collection comes from the declaration the
   // receiver names; the document type comes from `Model<OrderDocument>`.
-  findAll(): Promise<OrderDocument[]> {
+  async findAll(): Promise<OrderDocument[]> {
     return OrderModel.find({});
   }
 
-  findOne(id: string): Promise<OrderDocument | null> {
+  async findOne(id: string): Promise<OrderDocument | null> {
     return OrderModel.findById(id);
   }
 
@@ -22,7 +22,7 @@ export class OrdersService {
     return OrderModel.create(order);
   }
 
-  markPaid(id: string): Promise<unknown> {
+  async markPaid(id: string): Promise<unknown> {
     return OrderModel.updateOne({ id }, { status: 'paid' });
   }
 
@@ -33,14 +33,25 @@ export class OrdersService {
     return document.save();
   }
 
-  remove(id: string): Promise<unknown> {
+  async remove(id: string): Promise<unknown> {
     return OrderModel.deleteOne({ id });
   }
 
   // The model is chosen by name at run time, so neither the collection nor the
   // document can be read. Expected: the query is still a node, with no table
   // and a `dynamic-table-name` row saying why.
-  countOf(collection: string): Promise<number> {
+  async countOf(collection: string): Promise<number> {
     return models[collection]!.countDocuments({});
   }
 }
+
+// Every query method above is `async` because a mongoose query is not a
+// promise. `find`, `findById`, `countDocuments`, `updateOne` and `deleteOne`
+// all answer with a `Query`: thenable, so it can be awaited or returned from an
+// `async` method, and not assignable to `Promise`, so it cannot be returned
+// from a plain one. The stub said `Promise` here for a long while, which let
+// these be written without the keyword — a smaller declaration is allowed, a
+// differently shaped one is not.
+//
+// The note sits at the foot of the file because node ids carry line numbers;
+// see the fixture section of the repository README.

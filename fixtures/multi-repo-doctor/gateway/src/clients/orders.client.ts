@@ -27,7 +27,7 @@ export class OrdersClient {
    * `POST /orders` at `marker` confidence.
    */
   @CallsService('orders', 'POST /orders')
-  create(body: CreateOrderDto): { data: unknown } {
+  create(body: CreateOrderDto) {
     return this.http.post<OrderDto>(this.endpoint('orders'), body);
   }
 
@@ -36,7 +36,7 @@ export class OrdersClient {
    * Expected: `marker-callsservice-route-missing`, an error.
    */
   @CallsService('orders', 'DELETE /orders/:id/void')
-  cancel(id: string): { data: unknown } {
+  cancel(id: string) {
     return this.http.delete(this.endpoint(`orders/${id}/cancel`));
   }
 
@@ -45,7 +45,7 @@ export class OrdersClient {
    * Expected: `marker-callsservice-unknown-service`, an error.
    */
   @CallsService('warehouse', 'POST /restock')
-  restock(sku: string): { data: unknown } {
+  restock(sku: string) {
     return this.http.post(this.endpoint('restock'), { sku });
   }
 
@@ -54,7 +54,7 @@ export class OrdersClient {
    * `orders`, so this is placed without help — at a path `orders` does not
    * serve. Expected: a `desync` row, `target-route-not-found`.
    */
-  void(id: string): { data: unknown } {
+  void(id: string) {
     return this.http.delete(`${this.config.get('ORDERS_URL')}/orders/${id}/void`);
   }
 
@@ -62,7 +62,7 @@ export class OrdersClient {
    * A settings key no service claims.
    * Expected: a `desync` row, `unknown-base-url-env`.
    */
-  history(id: string): { data: unknown } {
+  history(id: string) {
     return this.http.get(`${this.config.get('LEGACY_URL')}/orders/${id}/history`);
   }
 
@@ -74,7 +74,7 @@ export class OrdersClient {
    * removed. Expected: `contracts.ignored` counts them and no error is raised.
    */
   @ContractIgnore()
-  legacy(body: CreateOrderDto): { data: unknown } {
+  legacy(body: CreateOrderDto) {
     return this.http.post<OrderDto>(`${this.config.get('ORDERS_URL')}/orders/legacy`, body);
   }
 
@@ -92,13 +92,24 @@ export class OrdersClient {
    * marker issue.
    */
   @CallsService('orders', 'POST /orders', 'GET /orders/:id')
-  replay(body: CreateOrderDto): { data: unknown } {
+  replay(body: CreateOrderDto) {
     return this.http.post<OrderDto>(this.endpoint('replay'), body);
   }
 
   /** The same, written as a list. It must not read differently. */
   @CallsService('orders', ['POST /orders/legacy'])
-  replayLegacy(body: CreateOrderDto): { data: unknown } {
+  replayLegacy(body: CreateOrderDto) {
     return this.http.post<OrderDto>(this.endpoint('replay-legacy'), body);
   }
 }
+
+// The request methods above declare no return type on purpose. What a request
+// answers with is the library's business — `HttpService.get<T>` gives back
+// `Observable<AxiosResponse<T>>` — and letting that signature decide is what
+// makes this fixture a test of the library's shape rather than of a shape
+// somebody retyped. They used to say `{ data: unknown }`, which no real Nest
+// client can say and which hid the delivery wrapper the graph reads through.
+//
+// Do not put an annotation back. It would need two imports, and every line
+// below them would move; node ids carry line numbers, and the fixture section
+// of the repository README lists what that breaks.

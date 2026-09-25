@@ -1,4 +1,4 @@
-125 nodes, 108 edges, 11 types, 14 unresolved
+125 nodes, 108 edges, 14 types, 14 unresolved
 
 nodes by type
   repo          4
