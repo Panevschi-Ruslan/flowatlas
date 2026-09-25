@@ -96,6 +96,7 @@ export type {
 } from './nestjs-telegraf/index.js';
 export {
   builtExportFunction,
+  builtExportFunctions,
   enclosingClass,
   enclosingHandler,
   handlerInside,

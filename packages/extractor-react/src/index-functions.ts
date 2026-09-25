@@ -1,4 +1,4 @@
-import { builtExportFunction } from '@flowatlas/adapters-entry';
+import { builtExportFunctions } from '@flowatlas/adapters-entry';
 import { makeSymbolId, moduleFunctions, normalizeFilePath, type NamedFunction } from '@flowatlas/core';
 import type { Project, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
@@ -226,22 +226,20 @@ const defaultExportFunction = (sourceFile: SourceFile, file: string): NamedFunct
  * pays for it (R61).
  *
  * What counts as such an export, and what its declaration and its body are, is
- * `builtExportFunction`, which lives beside the adapters rather than here. The
+ * `builtExportFunctions`, which lives beside the adapters rather than here. The
  * reason is R72: the adapter that reads a route file has to name the code
  * behind a verb export, and the node it names is the one this index makes, so
  * a second rule written here would be a rule that could disagree with it. The
  * decision that the body is the whole initializer — which is why the export
  * reaches whatever the function written inside the call reaches — is recorded
- * there with the rest of the reading.
+ * there with the rest of the reading, as is the decision to ask the module's
+ * export table what it exports rather than to look for an `export` keyword on
+ * a declaration. That second decision is why a value bound to a local name and
+ * re-exported under another — `const handler = NextAuth(opts); export { handler
+ * as GET, handler as POST }` — now has a node here, and it is what lets the
+ * adapter reading that route point at one: both sides ask the same table, so
+ * neither can claim a function the other does not have (R74).
  */
-const builtExports = (sourceFile: SourceFile): NamedFunction[] => {
-  const found: NamedFunction[] = [];
-  for (const declaration of sourceFile.getVariableDeclarations()) {
-    const fn = builtExportFunction(declaration);
-    if (fn !== undefined) found.push(fn);
-  }
-  return found;
-};
 
 export const buildReactFunctionIndex = (
   options: BuildFunctionIndexOptions,
@@ -252,7 +250,7 @@ export const buildReactFunctionIndex = (
   for (const sourceFile of project.getSourceFiles()) {
     if (!isRepoFile(sourceFile)) continue;
     const file = normalizeFilePath(sourceFile.getFilePath(), repoDir);
-    const found = [...moduleFunctions(sourceFile), ...builtExports(sourceFile)];
+    const found = [...moduleFunctions(sourceFile), ...builtExportFunctions(sourceFile)];
     const anonymous = defaultExportFunction(sourceFile, file);
     if (anonymous !== undefined) found.push(anonymous);
 

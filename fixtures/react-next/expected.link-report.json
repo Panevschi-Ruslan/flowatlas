@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-25T12:10:20.962Z",
+  "builtAt": "2026-09-25T13:34:41.474Z",
   "configHash": "fe6ade849f35",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 31,
-      "edges": 29,
+      "nodes": 39,
+      "edges": 38,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 601
+      "durationMs": 0
     },
     {
       "name": "web",
@@ -23,7 +23,7 @@
       "edges": 14,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 591
+      "durationMs": 0
     }
   ],
   "httpOut": {
@@ -51,12 +51,17 @@
     "noProducers": []
   },
   "routes": {
-    "total": 6,
+    "total": 11,
     "called": 3,
     "uncalled": [
       "entry:shop:http:ALL:/api/legacy-orders",
       "entry:shop:http:GET:/api/orders/:param",
-      "entry:shop:http:POST:/api/orders"
+      "entry:shop:http:GET:/api/reports",
+      "entry:shop:http:POST:/api/invoices",
+      "entry:shop:http:POST:/api/jobs",
+      "entry:shop:http:POST:/api/orders",
+      "entry:shop:http:POST:/api/reports",
+      "entry:shop:http:PUT:/api/orders/:param"
     ],
     "duplicated": []
   },
@@ -66,8 +71,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 48,
-    "edges": 46,
+    "nodes": 56,
+    "edges": 55,
     "types": 1,
     "unresolved": 1
   }

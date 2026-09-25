@@ -6,6 +6,7 @@ import {
   makeHttpEntryKey,
   namedFunction,
   normalizeFilePath,
+  originOfValue,
   type EntryAdapter,
   type EntryHandler,
   type EntryNode,
@@ -67,7 +68,15 @@ const exportedFunction = (declaration: TsNode): NamedFunction | undefined =>
  * to the way in (R72). `builtExportFunction` is the reading the React function
  * index uses to give that export a node, shared rather than written again here,
  * because two rules for what the function behind an export is would name two
- * different things within a release.
+ * different things within a release. That shared reading now also covers the
+ * two other spellings a large repository uses — a value bound to a local name
+ * and re-exported under a verb's, and a verb taken out of an object a call
+ * handed back (`export const { POST } = serve(…)`) — and it covers them on both
+ * sides at once, which is the only way it is worth covering them: an adapter
+ * that named a function the index had no node for would draw an edge to
+ * nothing. The third spelling, a verb written as another verb's name, is read
+ * below and needs nothing of the index, because the verb it names already has
+ * the node.
  *
  * Deliberately not folded into `exportedFunction`, which the server actions
  * below also use: there, an export that is not a function written in place is
@@ -75,8 +84,44 @@ const exportedFunction = (declaration: TsNode): NamedFunction | undefined =>
  * and records which library built it. That is a finer answer than this one and
  * it would be lost if this rule answered first.
  */
-const verbFunction = (declaration: TsNode): NamedFunction | undefined =>
-  exportedFunction(declaration) ?? builtExportFunction(declaration);
+const verbFunction = (declaration: TsNode, depth = 0): NamedFunction | undefined =>
+  exportedFunction(declaration) ??
+  builtExportFunction(declaration) ??
+  aliasedFunction(declaration, depth);
+
+/** How far a verb written as another verb's name is followed. */
+const ALIAS_DEPTH = 4;
+
+/**
+ * The verb an aliased verb stands for.
+ *
+ * `export const PUT = PATCH;` is how a repository keeps an old spelling of a
+ * route working, and `export const POST = GET;` is how one answers a scheduled
+ * job whichever way the scheduler calls it. The initializer is a name rather
+ * than a call, so the two readings above both decline it and are right to: the
+ * module declares no function here and built nothing either. But the verb it
+ * names is in the graph already, with a node of its own, and pointing both ways
+ * in at that one node is the whole of what the code says.
+ *
+ * The name is resolved rather than looked up in this file, because an alias is
+ * free to name a verb another module exports, and the node the target has is
+ * the one in the file it was declared in. Whatever the name resolves to is then
+ * read as a verb in its own right, so an alias of a built export reaches the
+ * built export's function; a chain is followed a few links and then abandoned,
+ * which also settles the mutually aliased pair nobody writes on purpose.
+ */
+const aliasedFunction = (declaration: TsNode, depth: number): NamedFunction | undefined => {
+  if (depth >= ALIAS_DEPTH) return undefined;
+  if (!Node.isVariableDeclaration(declaration)) return undefined;
+  const initializer = declaration.getInitializer();
+  if (initializer === undefined) return undefined;
+  const value = unwrapValue(initializer);
+  if (!Node.isIdentifier(value)) return undefined;
+  const origin = originOfValue(value);
+  // A name that resolves into a package is that package's function, and this
+  // repository has no node for it to point at.
+  return origin.kind === 'local' ? verbFunction(origin.declaration, depth + 1) : undefined;
+};
 
 /**
  * How far a matcher pattern reaches, as a test on a path.
