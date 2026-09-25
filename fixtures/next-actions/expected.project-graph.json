@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-25T10:49:46.377Z",
+  "builtAt": "2026-09-25T11:33:58.626Z",
   "services": [
     {
       "name": "shop",
@@ -70,7 +70,7 @@
           "files": 4,
           "classes": 0,
           "skippedExternalCalls": {},
-          "functions": 7,
+          "functions": 11,
           "components": 1,
           "hooks": 0
         },
@@ -93,12 +93,28 @@
       "line": 22
     },
     {
+      "id": "shop#app/actions/orders.ts:archiveOrder",
+      "type": "function",
+      "label": "archiveOrder",
+      "repo": "shop",
+      "file": "app/actions/orders.ts",
+      "line": 20
+    },
+    {
       "id": "shop#app/actions/orders.ts:cancelOrder",
       "type": "function",
       "label": "cancelOrder",
       "repo": "shop",
       "file": "app/actions/orders.ts",
       "line": 14
+    },
+    {
+      "id": "shop#app/actions/orders.ts:exportOrders",
+      "type": "function",
+      "label": "exportOrders",
+      "repo": "shop",
+      "file": "app/actions/orders.ts",
+      "line": 44
     },
     {
       "id": "shop#app/actions/orders.ts:renameOrderAction",
@@ -129,12 +145,28 @@
       "line": 2
     },
     {
+      "id": "shop#lib/orders-store.ts:exportAll",
+      "type": "function",
+      "label": "exportAll",
+      "repo": "shop",
+      "file": "lib/orders-store.ts",
+      "line": 11
+    },
+    {
       "id": "shop#lib/orders-store.ts:rename",
       "type": "function",
       "label": "rename",
       "repo": "shop",
       "file": "lib/orders-store.ts",
       "line": 6
+    },
+    {
+      "id": "shop#lib/safe-action.ts:withAudit",
+      "type": "function",
+      "label": "withAudit",
+      "repo": "shop",
+      "file": "lib/safe-action.ts",
+      "line": 13
     },
     {
       "id": "ui_action:shop#app/orders/page.tsx:16:29",
@@ -201,12 +233,36 @@
       "line": 23
     },
     {
+      "from": "shop#app/actions/orders.ts:archiveOrder",
+      "to": "shop#lib/orders-store.ts:archive",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 23
+    },
+    {
       "from": "shop#app/actions/orders.ts:cancelOrder",
       "to": "shop#lib/orders-store.ts:archive",
       "type": "calls",
       "confidence": "static",
       "file": "app/actions/orders.ts",
       "line": 15
+    },
+    {
+      "from": "shop#app/actions/orders.ts:exportOrders",
+      "to": "shop#lib/orders-store.ts:exportAll",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 44
+    },
+    {
+      "from": "shop#app/actions/orders.ts:exportOrders",
+      "to": "shop#lib/safe-action.ts:withAudit",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 44
     },
     {
       "from": "shop#app/actions/orders.ts:renameOrderAction",
@@ -218,11 +274,27 @@
     },
     {
       "from": "shop#app/orders/page.tsx:OrdersPage",
+      "to": "entry:shop:rpc:action:app/actions/orders.ts#archiveOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 11
+    },
+    {
+      "from": "shop#app/orders/page.tsx:OrdersPage",
       "to": "entry:shop:rpc:action:app/actions/orders.ts#cancelOrder",
       "type": "calls",
       "confidence": "static",
       "file": "app/orders/page.tsx",
       "line": 12
+    },
+    {
+      "from": "shop#app/orders/page.tsx:OrdersPage",
+      "to": "shop#app/actions/orders.ts:archiveOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 11
     },
     {
       "from": "shop#app/orders/page.tsx:OrdersPage",

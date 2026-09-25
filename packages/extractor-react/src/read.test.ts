@@ -5,17 +5,23 @@ import {
   silentLogger,
   wasRead,
   type ExtractContext,
+  type EntryAdapter,
+  type EntryNode,
   type GraphEdge,
   type GraphNode,
   type RepoGraph,
   type ServiceConfig,
 } from '@flowatlas/core';
-import { Project } from 'ts-morph';
+import { Project, SyntaxKind } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 import { extractReact } from './extract-repo.js';
 
 /** Reads a repository written in memory, exactly as the adapter would. */
-const read = (files: Record<string, string>, service?: Partial<ServiceConfig>): RepoGraph => {
+const read = (
+  files: Record<string, string>,
+  service?: Partial<ServiceConfig>,
+  entry: EntryAdapter[] = [],
+): RepoGraph => {
   const project = new Project({
     useInMemoryFileSystem: true,
     // `4` is the setting that parses markup as markup; without it every
@@ -34,7 +40,7 @@ const read = (files: Record<string, string>, service?: Partial<ServiceConfig>): 
     project,
     checker: project.getTypeChecker(),
     builder,
-    adapters: noAdapters,
+    adapters: { ...noAdapters, entry },
     logger: silentLogger,
   };
   extractReact(ctx, { noTypes: true });
@@ -302,5 +308,113 @@ describe('what a screen is', () => {
     const row = graph.nodes.find((node) => node.id === 'web#app/orders/page.tsx:Row');
     expect(page?.meta?.['route']).toBe('/orders');
     expect(row?.meta?.['route']).toBeUndefined();
+  });
+});
+
+/**
+ * The source both tests below are read from: one boundary declared outright and
+ * one built by a library, with a screen that crosses each of them once.
+ */
+const ACTIONS = {
+  '/lib/orders-store.ts': `
+    export const archive = async (id: string): Promise<void> => { void id; };
+  `,
+  '/app/actions/orders.ts': `
+    import { archive } from '../../lib/orders-store';
+    export async function cancelOrder(id: string) {
+      await archive(id);
+      return { cancelled: true };
+    }
+    export const archiveOrder = actionClient
+      .schema({ id: 'string' })
+      .action(async (input: { id: string }) => {
+        await archive(input.id);
+        return { archived: true };
+      });
+  `,
+  '/app/orders/page.tsx': `
+    import { archiveOrder, cancelOrder } from '../actions/orders';
+    export default function OrdersPage(props: { id: string }) {
+      const onArchive = () => archiveOrder({ id: props.id });
+      const onCancel = () => cancelOrder(props.id);
+      return <main><button onClick={onArchive} /><button onClick={onCancel} /></main>;
+    }
+  `,
+};
+
+/**
+ * An entry adapter that reports what a server-action reader reports.
+ *
+ * Written here rather than imported, because what is under test is the half of
+ * the contract this extractor answers: an entry reached by import, whose code
+ * is named in one case and written in the registration in the other. The
+ * positions are asked of the source for the same reason the real adapter asks
+ * for them — the line a function starts on is the only name an inline one has.
+ */
+const actionBoundaries: EntryAdapter = {
+  name: 'actions',
+  detect: () => true,
+  extractEntries: (ctx) => {
+    const file = 'app/actions/orders.ts';
+    const sourceFile = ctx.project.getSourceFileOrThrow(`/${file}`);
+    const built = sourceFile.getVariableDeclarationOrThrow('archiveOrder');
+    const written = built.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+    const at = sourceFile.getLineAndColumnAtPos(written.getStart());
+    const declared = sourceFile.getFunctionOrThrow('cancelOrder');
+    const entries: EntryNode[] = [
+      {
+        id: 'entry:web:rpc:archiveOrder',
+        kind: 'rpc',
+        label: 'action archiveOrder',
+        key: 'action:archiveOrder',
+        handler: {
+          file,
+          line: at.line,
+          column: at.column,
+          label: 'action archiveOrder',
+          inline: true,
+        },
+        file,
+        line: built.getStartLineNumber(),
+        meta: { viaImport: true },
+      },
+      {
+        id: 'entry:web:rpc:cancelOrder',
+        kind: 'rpc',
+        label: 'action cancelOrder',
+        key: 'action:cancelOrder',
+        handler: { file, functionName: 'cancelOrder' },
+        file,
+        line: declared.getStartLineNumber(),
+        meta: { viaImport: true },
+      },
+    ];
+    return entries;
+  },
+};
+
+describe('a boundary that is reached by importing it', () => {
+  it('draws the caller of a built action, as it already did for a declared one', () => {
+    const graph = read(ACTIONS, undefined, [actionBoundaries]);
+    const page = 'web#app/orders/page.tsx:OrdersPage';
+    expect(edge(graph, page, 'entry:web:rpc:cancelOrder')).toBeDefined();
+    // The defect this covers: the caller writes `archiveOrder`, which is the
+    // export, and the code behind the boundary is an arrow with no name.
+    expect(edge(graph, page, 'entry:web:rpc:archiveOrder')).toBeDefined();
+    // The export is a function of this repository in its own right, so what it
+    // reaches is on the graph under the name every caller writes.
+    expect(
+      edge(graph, 'web#app/actions/orders.ts:archiveOrder', 'web#lib/orders-store.ts:archive'),
+    ).toBeDefined();
+  });
+
+  it('points a boundary at the function written in the registration itself', () => {
+    const graph = read(ACTIONS, undefined, [actionBoundaries]);
+    const handles = graph.edges.filter(
+      (each) => each.type === 'handles' && each.from === 'entry:web:rpc:archiveOrder',
+    );
+    expect(handles).toHaveLength(1);
+    const written = graph.nodes.find((node) => node.id === handles[0]?.to);
+    expect(written?.label).toMatch(/^action archiveOrder@\d+$/);
   });
 });
