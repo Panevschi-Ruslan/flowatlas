@@ -39,6 +39,7 @@ import {
   stampFiles,
   type BuildCache,
 } from '../build/cache.js';
+import { hashGraphFile } from '../build/incremental.js';
 import { adapterNames, createRegistry, EXTRA_PASSES, NESTJS_EXTRACTOR } from '../build/extractor.js';
 
 /**
@@ -281,7 +282,7 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
     globalFiles: globalFiles(warm),
     files,
     graphPath: outPath,
-    graphHash: hashFile(outPath),
+    graphHash: hashGraphFile(outPath),
     counts: {
       nodes: graph.nodes.length,
       edges: graph.edges.length,

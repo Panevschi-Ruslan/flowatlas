@@ -1,6 +1,45 @@
+import { readFileSync } from 'node:fs';
 import type { RepoGraph } from '@flowatlas/core';
 import type { BuildCache, FileStamp } from './cache.js';
-import { diffRepoFiles } from './cache.js';
+import { diffRepoFiles, hashText } from './cache.js';
+
+/**
+ * The hash of a graph file as the rebuild plan means it: its body, not its bytes.
+ *
+ * A graph carries `generatedAt`, which the builder stamps from the clock on
+ * every extraction. Hashing the file whole therefore made two readings of an
+ * unchanged tree differ, and the plan read its own timestamp as somebody
+ * having edited the graph behind the build's back. The project graph schema
+ * already treats this field as metadata rather than content, and this is the
+ * same judgement applied to the repository graph.
+ *
+ * Because the body is hashed after parsing, the hash no longer depends on how
+ * the file was printed: a graph rewritten with different indentation, or with
+ * the same content saved by another tool, now compares equal. That is a
+ * deliberate widening — the question the plan asks is whether the graph says
+ * something different, and whitespace does not. Key order within an object is
+ * still significant, since nothing here re-sorts the parsed value.
+ *
+ * A file that cannot be read or is not an object falls back to hashing its
+ * text, so a truncated or corrupt graph still differs from a sound one rather
+ * than collapsing onto a single value every broken file would share.
+ */
+export const hashGraphFile = (path: string): string => {
+  let text: string;
+  try {
+    text = readFileSync(path, 'utf8');
+  } catch {
+    return hashText('');
+  }
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return hashText(text);
+    const { generatedAt: _generatedAt, ...body } = parsed as Record<string, unknown>;
+    return hashText(JSON.stringify(body));
+  } catch {
+    return hashText(text);
+  }
+};
 
 /**
  * What an extractor has to offer for a repository to be rebuilt incrementally.
