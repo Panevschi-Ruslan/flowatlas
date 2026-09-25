@@ -7,7 +7,7 @@
  * the weakest hop on the way, and a bound that cuts the list without inventing
  * a count.
  */
-import { strongerConfidence, type Confidence } from '@flowatlas/core';
+import { CONFIDENCE_LEVELS, strongerConfidence, type Confidence } from '@flowatlas/core';
 import type { GraphDb, TraverseRow } from '../db/reader.js';
 import type { BlastEntry, BlastOptions, BlastRadius, BlastRow } from './types.js';
 
@@ -52,8 +52,18 @@ const byText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 const kindOf = (row: { type: string; kind: string | null }): string =>
   row.type === 'ui_action' ? 'ui_action' : (row.kind ?? 'http');
 
+/**
+ * The stored word, read back as a level.
+ *
+ * Membership is tested against the model's own list rather than a run of
+ * comparisons, so a level added to the model is understood here the day it is
+ * added instead of silently reading back as `static` — which is how a declared
+ * hop would have been reported as proven.
+ */
+const LEVELS: ReadonlySet<string> = new Set<string>(CONFIDENCE_LEVELS);
+
 const asConfidence = (value: string | null): Confidence =>
-  value === 'marker' || value === 'heuristic' || value === 'runtime' ? value : 'static';
+  value !== null && LEVELS.has(value) ? (value as Confidence) : 'static';
 
 /** The weakest of two, which is all a chain of them is worth. */
 const weaker = (a: Confidence, b: Confidence): Confidence =>

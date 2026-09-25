@@ -533,8 +533,10 @@ extractor runs.
 ```
 
 Every node, every edge and every join into a declared service carries
-`marker` confidence rather than `static`, because a declaration is somebody's
+`declared` confidence rather than `static`, because a declaration is somebody's
 word for itself and an edge may not claim more than the weakest of its two ends.
+`declared` is its own level, below `marker`: an annotation is written by
+somebody who can see the code, a document by somebody who cannot see yours.
 Nothing here can check a document against the running service, so `doctor`
 reports how recently the document changed — against the newest commit among the
 repositories that *were* read — under `openapi-document-age`. That age is

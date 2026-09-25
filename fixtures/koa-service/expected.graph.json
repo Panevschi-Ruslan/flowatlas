@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "repo": "koa-service",
-  "generatedAt": "2026-09-25T13:31:07.758Z",
+  "generatedAt": "2026-09-25T14:33:40.394Z",
   "nodes": [
     {
       "id": "db_query:koa-service#src/orders/orders.repository.ts:12:12",

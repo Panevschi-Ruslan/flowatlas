@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "repo": "nest-rabbitmq",
-  "generatedAt": "2026-09-25T13:31:26.926Z",
+  "generatedAt": "2026-09-25T14:34:01.513Z",
   "nodes": [
     {
       "id": "channel:order.cancelled",

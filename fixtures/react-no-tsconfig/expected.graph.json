@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "repo": "react-no-tsconfig",
-  "generatedAt": "2026-09-25T13:31:36.176Z",
+  "generatedAt": "2026-09-25T14:34:08.055Z",
   "nodes": [
     {
       "id": "react-no-tsconfig#src/OrdersPanel.tsx:OrdersPanel",

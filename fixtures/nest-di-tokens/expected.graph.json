@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "repo": "nest-di-tokens",
-  "generatedAt": "2026-09-25T13:31:17.503Z",
+  "generatedAt": "2026-09-25T14:33:51.597Z",
   "nodes": [
     {
       "id": "db_query:nest-di-tokens#src/orders/orders.service.ts:37:10",

@@ -96,11 +96,17 @@ export const ASCII_CROSSING = '=>';
  * How much an edge can be trusted, said only when it is less than proven.
  *
  * `static` prints nothing: an unmarked line is the common case, and marking it
- * would bury the three that deserve a second look.
+ * would bury the four that deserve a second look.
+ *
+ * `declared` takes a question mark because it has to read as weaker than a
+ * marker's hash at a glance, without a reader having to know the rank order.
+ * A hash is somebody in the code saying so; a question mark is a document
+ * saying so about code this tool has never opened.
  */
 export const CONFIDENCE_MARK: Record<Confidence, string> = {
   static: '',
   marker: '#marker',
+  declared: '?declared',
   heuristic: '~heuristic',
   runtime: '@runtime',
 };

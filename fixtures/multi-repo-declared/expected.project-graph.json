@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 3,
-  "builtAt": "2026-09-25T13:46:28.287Z",
+  "schemaVersion": 4,
+  "builtAt": "2026-09-25T14:33:46.175Z",
   "services": [
     {
       "name": "api",
@@ -360,7 +360,7 @@
       "from": "entry:billing:http:DELETE:/invoices/:param",
       "to": "billing#contracts/billing.json:voidInvoice",
       "type": "handles",
-      "confidence": "marker",
+      "confidence": "declared",
       "file": "contracts/billing.json",
       "meta": {
         "declaredBy": "contracts/billing.json"
@@ -370,7 +370,7 @@
       "from": "entry:billing:http:GET:/customers/:param",
       "to": "billing#contracts/billing.json:getCustomer",
       "type": "handles",
-      "confidence": "marker",
+      "confidence": "declared",
       "file": "contracts/billing.json",
       "returns": "type:billing#CustomerRef",
       "meta": {
@@ -381,7 +381,7 @@
       "from": "entry:billing:http:GET:/invoices/:param",
       "to": "billing#contracts/billing.json:getInvoice",
       "type": "handles",
-      "confidence": "marker",
+      "confidence": "declared",
       "file": "contracts/billing.json",
       "returns": "type:billing#Invoice",
       "meta": {
@@ -392,7 +392,7 @@
       "from": "entry:billing:http:POST:/invoices",
       "to": "billing#contracts/billing.json:createInvoice",
       "type": "handles",
-      "confidence": "marker",
+      "confidence": "declared",
       "file": "contracts/billing.json",
       "params": [
         "type:billing#CreateInvoice"
@@ -407,7 +407,7 @@
       "from": "http_out:api#src/billing/billing.client.ts:30:12",
       "to": "entry:billing:http:POST:/invoices",
       "type": "http_calls",
-      "confidence": "marker",
+      "confidence": "declared",
       "file": "src/billing/billing.client.ts",
       "line": 30,
       "params": [
@@ -423,7 +423,7 @@
       "from": "http_out:api#src/billing/billing.client.ts:35:12",
       "to": "entry:billing:http:GET:/invoices/:param",
       "type": "http_calls",
-      "confidence": "marker",
+      "confidence": "declared",
       "file": "src/billing/billing.client.ts",
       "line": 35,
       "returns": "type:api#InvoiceDto",
@@ -436,7 +436,7 @@
       "from": "http_out:api#src/billing/billing.client.ts:46:12",
       "to": "entry:billing:http:GET:/customers/:param",
       "type": "http_calls",
-      "confidence": "marker",
+      "confidence": "declared",
       "file": "src/billing/billing.client.ts",
       "line": 46,
       "returns": "type:api#CustomerRefDto",

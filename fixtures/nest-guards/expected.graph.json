@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "repo": "nest-guards",
-  "generatedAt": "2026-09-25T13:31:19.428Z",
+  "generatedAt": "2026-09-25T14:33:54.170Z",
   "nodes": [
     {
       "id": "entry:nest-guards:http:GET:/admin/audit",

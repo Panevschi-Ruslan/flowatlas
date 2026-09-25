@@ -72,13 +72,21 @@ describe('a route taken from a document', () => {
 });
 
 describe('what says the facts were declared rather than read', () => {
-  it('marks every edge as asserted rather than proven', () => {
+  it('marks every edge as declared rather than proven', () => {
     // `static` is this model's word for what the type system proved. Nothing
     // here proved anything, and an edge that claimed otherwise would put a
     // third party's description of itself in the voice the tool uses for what
     // it has checked.
     const { graph } = read(minimal);
-    expect(graph.edges.every((edge) => edge.confidence === 'marker')).toBe(true);
+    expect(graph.edges.every((edge) => edge.confidence === 'declared')).toBe(true);
+  });
+
+  it('does not borrow the word for an annotation', () => {
+    // R77. `marker` is what somebody wrote in source this tool can open, and a
+    // reader filtering on it to find annotations to delete must not be handed a
+    // service nobody here can edit.
+    const { graph } = read(minimal);
+    expect(graph.edges.some((edge) => edge.confidence === 'marker')).toBe(false);
   });
 
   it('names the document on every node and every edge', () => {
