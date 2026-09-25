@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-25T10:26:47.282Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.ts:GET /health@16",
+      "type": "function",
+      "label": "GET /health@16",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 16
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:cancelOrder",
+      "type": "function",
+      "label": "cancelOrder",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:createOrder",
+      "type": "function",
+      "label": "createOrder",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 4
+    },
+    {
+      "id": "entry:api:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "entry-http-custom",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "middleware": [
+          "authenticate"
+        ],
+        "handlerVia": "inline",
+        "description": "minihttp-routes"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "api",
+      "file": "src/orders/orders.routes.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "entry-http-custom",
+        "registration": "ordersRouter.get",
+        "middlewareRead": true,
+        "middleware": [
+          "authenticate"
+        ],
+        "handlerVia": "function",
+        "description": "minihttp-routes"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "api",
+      "file": "src/orders/orders.routes.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "entry-http-custom",
+        "registration": "ordersRouter.post",
+        "middlewareRead": true,
+        "middleware": [
+          "authenticate"
+        ],
+        "handlerVia": "function",
+        "description": "minihttp-routes"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "label": "POST /orders/:param/cancel",
+      "repo": "api",
+      "file": "src/orders/orders.routes.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/cancel",
+        "rawPath": "/orders/:id/cancel",
+        "adapter": "entry-http-custom",
+        "registration": "ordersRouter.post",
+        "middlewareRead": true,
+        "middleware": [
+          "authenticate"
+        ],
+        "handlerVia": "function",
+        "description": "minihttp-routes"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "minihttp": 5
+          }
+        },
+        "adapters": {
+          "entry": [
+            "entry-http-custom"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:api:http:GET:/health",
+      "to": "api#src/app.ts:GET /health@16",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:api:http:GET:/orders",
+      "to": "api#src/orders/orders.controller.ts:listOrders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:api:http:POST:/orders",
+      "to": "api#src/orders/orders.controller.ts:createOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:api:http:POST:/orders/:param/cancel",
+      "to": "api#src/orders/orders.controller.ts:cancelOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "message": "Nothing here is a value of any type the misspelt-routes description names, so none of its routes were read.",
+      "hint": "Check appTypes on that description; it looks for minihttp#Aplication.",
+      "symbol": "misspelt-routes",
+      "adapter": "misspelt-routes",
+      "service": "api"
+    }
+  ]
+}

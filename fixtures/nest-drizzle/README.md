@@ -24,6 +24,21 @@ descriptor. Each of them is one link of a builder being built, and listing them
 would emit a row per link for a single visit to the database; they are counted
 as external calls instead.
 
+The stub in `node_modules/drizzle-orm` returns an intersection, because the real
+library returns one: `PostgresJsDatabase<TSchema> & { $client: Sql }`. It used to
+return a plain class, and that single difference of shape is why the fixture stayed
+green through a defect that zeroed out a real repository's entire data layer: an
+intersection carries no symbol of its own, so the receiver had no origin, no package
+and no table, and every query fell back to recognising `db` by its name. A stub may
+declare less than the library it stands for; it may not be a different kind of type,
+because then the fixture measures the stub.
+
+Reverting the intersection handling in `packages/core/src/origin.ts` now turns every
+row of the table above into `access ?` with no operation, no table and no package,
+takes both table nodes and all six `queries` edges out of the graph, and replaces the
+one `dynamic-table-name` row with seven `db-receiver-name-only` ones. That is the
+failure the fixture could not see before, on seven calls instead of forty-three.
+
 The last row is the one to keep: a table decided at run time still produces a
 `db_query`, because losing the whole call over one unreadable fact is what a
 tool that stays quiet about what it did not understand does. The row says which

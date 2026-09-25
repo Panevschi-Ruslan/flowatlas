@@ -135,24 +135,48 @@ export interface MarkerGraph {
   node?(id: string): GraphNode | undefined;
 }
 
-/** Every request written in one method, as the graph holds them. */
+/** The routes one request reaches, which is empty exactly when it was not joined. */
+const routesOf = (id: string, graph: MarkerGraph): string[] =>
+  graph.edgesFrom(id, ['hits']).map((edge) => edge.to);
+
+/**
+ * Every request written in one method, as the graph holds them.
+ *
+ * An annotation counts only where it says something no request in the method
+ * already said. A method with one readable request, one `@flowatlas-calls`
+ * naming the route that request already reaches, and one request nobody could
+ * read used to come to `1 >= 1`, and the unreadable row was demoted on the
+ * strength of an annotation that was about the other call (R43). A redundant
+ * annotation is what `marker-callsservice-shadowed` exists to catch, and the
+ * demotion now asks the same question that check asks: are the routes this
+ * annotation names ones the source already reaches on its own?
+ */
 const requestsIn = (
   owner: string,
   graph: MarkerGraph,
 ): { asserted: number; unread: number } => {
-  let asserted = 0;
+  /** The routes each annotation's own request reaches. */
+  const annotations: string[][] = [];
+  /** Every route a request read from the source reaches, annotation or not. */
+  const read = new Set<string>();
   let unread = 0;
   for (const edge of graph.edgesFrom(owner, ['calls'])) {
     const call = graph.node?.(edge.to);
     if (call === undefined || call.type !== 'ui_api_call') continue;
-    const joined = graph.edgesFrom(call.id, ['hits']).length > 0;
+    const routes = routesOf(call.id, graph);
     // An annotation that named a route nothing serves has not answered
     // anything: the reader still has something to fix, and the marker checks
     // say what. Only one that reached a route counts.
     if (call.meta?.['via'] === 'marker') {
-      if (joined) asserted += 1;
-    } else if (!joined) unread += 1;
+      if (routes.length > 0) annotations.push(routes);
+      continue;
+    }
+    if (routes.length === 0) unread += 1;
+    else for (const route of routes) read.add(route);
   }
+  const asserted = annotations.filter(
+    (routes) => !routes.every((route) => read.has(route)),
+  ).length;
   return { asserted, unread };
 };
 
@@ -217,7 +241,8 @@ const drawsFrom =
  * a reader who had done what the hint asked still being asked (R39).
  *
  * Answered only where the annotation can be about nothing else: a method whose
- * annotations are at least as many as its unreadable requests. One of each is
+ * annotations — the ones that say something no readable request in the method
+ * already says — are at least as many as its unreadable requests. One of each is
  * the ordinary shape and the only one the project this is developed against
  * has. Two unreadable requests and one annotation is ambiguous, and silencing
  * both rows would hide a real gap behind an annotation that was never about
@@ -353,6 +378,14 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Give the handler a name and register that, so the code behind this can be pointed at.',
   'entry-registry-unconfigured': () =>
     'Name the table under adapters.entry.registries in flowatlas.config.json so each registration becomes an entry point.',
+  'server-action-unread': () =>
+    'Describe the builder that made it, or declare the action as an exported function, so the way in and its callers are visible.',
+  'entry-http-description-inactive': () =>
+    'Ordinary in a project of several repositories. If this is the one it was written for, check the spelling of its packages.',
+  'entry-http-types-unmatched': () =>
+    'Nothing here is a value of any type that description names. Check its appTypes against the package the framework is imported from.',
+  'entry-http-routes-unmatched': () =>
+    'Its types match and its routes do not. Check verbs, verbArgument, pathArg and handlerArg on that description.',
 
   // Bots (adapters-entry/nestjs-telegraf, telegraf-calls)
   'dynamic-bot-trigger': () =>

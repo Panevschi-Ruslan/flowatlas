@@ -6,7 +6,7 @@ import {
   namesGivenTo,
   type RecordedMarker,
 } from '@flowatlas/core';
-import type { NestExtractContext } from '@flowatlas/extractor-nestjs';
+import type { PassContext } from '@flowatlas/extract-scopes';
 import type { BrokerSpec } from './adapters/index.js';
 
 const WALKED = new Set(['controller', 'injectable', 'guard', 'interceptor', 'pipe', 'middleware', 'plain']);
@@ -45,7 +45,7 @@ const channelsOn = (markers: readonly RecordedMarker[]): { emits: string[]; cons
  * chain is never counted twice.
  */
 export const readBrokerMarkers = (
-  ctx: NestExtractContext,
+  ctx: PassContext,
   spec: BrokerSpec | undefined,
   alreadyStatic: ReadonlySet<string>,
 ): void => {

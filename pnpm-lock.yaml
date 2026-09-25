@@ -75,9 +75,9 @@ importers:
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core
-      '@flowatlas/extractor-nestjs':
+      '@flowatlas/extract-scopes':
         specifier: workspace:*
-        version: link:../extractor-nestjs
+        version: link:../extract-scopes
       ts-morph:
         specifier: ^28.0.0
         version: 28.0.0
@@ -186,6 +186,15 @@ importers:
         specifier: ^4.5.4
         version: 4.5.4
 
+  packages/extract-scopes:
+    dependencies:
+      '@flowatlas/core':
+        specifier: workspace:*
+        version: link:../core
+      ts-morph:
+        specifier: ^28.0.0
+        version: 28.0.0
+
   packages/extractor-angular:
     dependencies:
       '@angular/compiler':
@@ -206,6 +215,9 @@ importers:
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core
+      '@flowatlas/extract-scopes':
+        specifier: workspace:*
+        version: link:../extract-scopes
       ts-morph:
         specifier: ^28.0.0
         version: 28.0.0

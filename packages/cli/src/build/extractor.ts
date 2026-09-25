@@ -25,23 +25,27 @@ export const REACT_EXTRACTOR = '@flowatlas/extractor-react';
  * exactly the same passes as a NestJS one, so its type belongs here rather than
  * in a reader of its own.
  */
-export const SERVER_TYPES: readonly string[] = ['nestjs', 'express', 'fastify', 'koa'];
+export const SERVER_TYPES: readonly string[] = ['nestjs', 'express', 'fastify', 'koa', 'nextjs'];
 
 /**
- * Repository types the React reader handles.
+ * Repository types the React reader handles on its own.
  *
- * The file-system router is here rather than beside the server types on
- * purpose, and it is the one place in this tool where that decision is visible.
- * A repository built on it is a browser and a server at once: the same
- * directory holds the screens, the route handlers that answer them and the
- * actions the screens call, and most of it is written in files the server
- * reader does not open, because that reader globs `.ts` and a component lives
- * in `.tsx`. Reading it with the reader that opens both, and letting the ways
- * in come from an entry adapter through the registry, keeps one repository one
- * reading. What it costs is named in the README: no dependency injection, no
- * data-layer pass and no incremental session for those repositories yet.
+ * A repository built on the file-system router used to be here, because it is a
+ * browser and a server in one directory and the server reader opened no `.tsx`
+ * file, so reading it there would have lost every screen. That is no longer
+ * true: the project opens every kind of TypeScript source, and the server
+ * reader asks the frontend adapters to read the browser half through the same
+ * context. So such a repository is a server type now, and what it gained by
+ * moving is everything that lives on the server side — dependency injection,
+ * the wrapping chain, the data-layer and broker passes, the contract types and
+ * an incremental session — without losing a component, an action or the route
+ * handlers that are written in markup.
+ *
+ * What stays here is a repository that is only a browser. It has no ways in for
+ * the server reader to find, so running it there would add passes with nothing
+ * to read and a slower run to show for it.
  */
-export const BROWSER_TYPES: readonly string[] = ['react', 'nextjs'];
+export const BROWSER_TYPES: readonly string[] = ['react'];
 
 /** Package that reads each kind of repository. */
 export const EXTRACTORS: Record<string, string> = {

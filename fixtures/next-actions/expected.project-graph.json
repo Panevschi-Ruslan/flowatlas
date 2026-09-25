@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-25T10:49:46.377Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:rpc:action:app/actions/orders.ts#archiveOrder",
+      "type": "entry",
+      "label": "action archiveOrder",
+      "repo": "shop",
+      "file": "app/actions/orders.ts",
+      "line": 20,
+      "kind": "rpc",
+      "meta": {
+        "action": "archiveOrder",
+        "adapter": "nextjs-routes",
+        "registration": "module 'use server'",
+        "builder": "next-safe-action",
+        "viaImport": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:shop:rpc:action:app/actions/orders.ts#cancelOrder",
+      "type": "entry",
+      "label": "action cancelOrder",
+      "repo": "shop",
+      "file": "app/actions/orders.ts",
+      "line": 14,
+      "kind": "rpc",
+      "meta": {
+        "action": "cancelOrder",
+        "adapter": "nextjs-routes",
+        "registration": "module 'use server'",
+        "viaImport": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:rpc:action:app/actions/orders.ts#renameOrder",
+      "type": "entry",
+      "label": "action renameOrder",
+      "repo": "shop",
+      "file": "app/actions/orders.ts",
+      "line": 36,
+      "kind": "rpc",
+      "meta": {
+        "action": "renameOrder",
+        "adapter": "nextjs-routes",
+        "registration": "module 'use server'",
+        "builder": "next-safe-action",
+        "viaImport": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 7,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop#app/actions/orders.ts:action archiveOrder@22",
+      "type": "function",
+      "label": "action archiveOrder@22",
+      "repo": "shop",
+      "file": "app/actions/orders.ts",
+      "line": 22
+    },
+    {
+      "id": "shop#app/actions/orders.ts:cancelOrder",
+      "type": "function",
+      "label": "cancelOrder",
+      "repo": "shop",
+      "file": "app/actions/orders.ts",
+      "line": 14
+    },
+    {
+      "id": "shop#app/actions/orders.ts:renameOrderAction",
+      "type": "function",
+      "label": "renameOrderAction",
+      "repo": "shop",
+      "file": "app/actions/orders.ts",
+      "line": 28
+    },
+    {
+      "id": "shop#app/orders/page.tsx:OrdersPage",
+      "type": "ui_component",
+      "label": "OrdersPage",
+      "repo": "shop",
+      "file": "app/orders/page.tsx",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "id": "shop#lib/orders-store.ts:archive",
+      "type": "function",
+      "label": "archive",
+      "repo": "shop",
+      "file": "lib/orders-store.ts",
+      "line": 2
+    },
+    {
+      "id": "shop#lib/orders-store.ts:rename",
+      "type": "function",
+      "label": "rename",
+      "repo": "shop",
+      "file": "lib/orders-store.ts",
+      "line": 6
+    },
+    {
+      "id": "ui_action:shop#app/orders/page.tsx:16:29",
+      "type": "ui_action",
+      "label": "onClick={onArchive}",
+      "repo": "shop",
+      "file": "app/orders/page.tsx",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "onArchive",
+        "component": "shop#app/orders/page.tsx:OrdersPage",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:shop#app/orders/page.tsx:19:29",
+      "type": "ui_action",
+      "label": "onClick={onCancel}",
+      "repo": "shop",
+      "file": "app/orders/page.tsx",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "onCancel",
+        "component": "shop#app/orders/page.tsx:OrdersPage",
+        "handlerVia": "enclosing"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:rpc:action:app/actions/orders.ts#archiveOrder",
+      "to": "shop#app/actions/orders.ts:action archiveOrder@22",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 22
+    },
+    {
+      "from": "entry:shop:rpc:action:app/actions/orders.ts#cancelOrder",
+      "to": "shop#app/actions/orders.ts:cancelOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:shop:rpc:action:app/actions/orders.ts#renameOrder",
+      "to": "shop#app/actions/orders.ts:renameOrderAction",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 28
+    },
+    {
+      "from": "shop#app/actions/orders.ts:action archiveOrder@22",
+      "to": "shop#lib/orders-store.ts:archive",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 23
+    },
+    {
+      "from": "shop#app/actions/orders.ts:cancelOrder",
+      "to": "shop#lib/orders-store.ts:archive",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 15
+    },
+    {
+      "from": "shop#app/actions/orders.ts:renameOrderAction",
+      "to": "shop#lib/orders-store.ts:rename",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 33
+    },
+    {
+      "from": "shop#app/orders/page.tsx:OrdersPage",
+      "to": "entry:shop:rpc:action:app/actions/orders.ts#cancelOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 12
+    },
+    {
+      "from": "shop#app/orders/page.tsx:OrdersPage",
+      "to": "shop#app/actions/orders.ts:cancelOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 12
+    },
+    {
+      "from": "ui_action:shop#app/orders/page.tsx:16:29",
+      "to": "shop#app/orders/page.tsx:OrdersPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 16
+    },
+    {
+      "from": "ui_action:shop#app/orders/page.tsx:19:29",
+      "to": "shop#app/orders/page.tsx:OrdersPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 19
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "app/actions/orders.ts",
+      "line": 44,
+      "reason": "server-action-unread",
+      "sites": 1,
+      "message": "1 exported value of a module marked 'use server' is built by a call no description names, so the boundary was not recorded.",
+      "hint": "Describe the builder in action-builders.ts by naming its package, the method that receives the action and which argument it is; or declare the action as `export async function name(...)`.",
+      "symbol": "app/actions/orders.ts#exportOrders",
+      "adapter": "nextjs-routes",
+      "service": "shop"
+    }
+  ]
+}

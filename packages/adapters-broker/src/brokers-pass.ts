@@ -1,25 +1,24 @@
 import {
   declaredParameterType,
-  makeChannelId,
-  narrowUnionByLiteral,
-  makeLeafId,
-  makeSymbolId,
-  type CallPattern,
-  type GraphNode,
-} from '@flowatlas/core';
-import {
   decoratorArgs,
   definePass,
   evaluateExpression,
   findDecorators,
   forEachCall,
   getDecorator,
-  scopesOf,
-  type Holder,
-  type Scope,
-  type NestExtractContext,
-  type NestExtractorPass,
-} from '@flowatlas/extractor-nestjs';
+  makeChannelId,
+  narrowUnionByLiteral,
+  makeLeafId,
+  makeSymbolId,
+  type CallPattern,
+  type ExtractorPass,
+  type GraphNode,
+} from '@flowatlas/core';
+// The context and the body walk, from the package neither extractor owns. This
+// import is the whole of R46's answer at this end: a channel reader is not part
+// of any extractor, so it names none, and the Angular reader that borrows its
+// name resolution no longer inherits the Nest one through it.
+import { scopesOf, type Holder, type PassContext, type Scope } from '@flowatlas/extract-scopes';
 import type { CallExpression, ClassDeclaration, MethodDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { brokerAdapters, createCustomBrokerAdapter, type BrokerSpec, type ConsumerPattern } from './adapters/index.js';
@@ -80,7 +79,7 @@ const shapingOf = (owner: ClassDeclaration | undefined, spec: BrokerSpec): Class
 };
 
 /** Every adapter that applies: the detected ones plus any described in configuration. */
-export const brokerSpecsFor = (ctx: NestExtractContext): BrokerSpec[] => {
+export const brokerSpecsFor = (ctx: PassContext): BrokerSpec[] => {
   const detected = new Set(ctx.adapters.broker.map((adapter) => adapter.name));
   const specs = brokerAdapters.filter((spec) => detected.has(spec.name));
   return [...specs, ...ctx.config.adapters.broker.custom.map(createCustomBrokerAdapter)];
@@ -96,7 +95,7 @@ export const brokerSpecsFor = (ctx: NestExtractContext): BrokerSpec[] => {
  * annotation would fix it, because a guessed name would join two services that
  * never speak.
  */
-export const extractBrokers = (ctx: NestExtractContext): void => {
+export const extractBrokers = (ctx: PassContext): void => {
   const specs = brokerSpecsFor(ctx);
   if (specs.length === 0) return;
 
@@ -613,9 +612,6 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
   const matches = (pattern: CallPattern, receiver: TsNode, method: string): boolean =>
     pattern.method === method && receiverIsFrom(receiver, pattern);
 
-  // A publish is read wherever it is written. The scope walk is shared with the
-  // data-layer reader rather than copied here, because two copies of the
-  // judgement "what counts as a body" diverge the first time one is reconsidered.
   /**
    * Receiving, for a body that is a method of an indexed class.
    *
@@ -634,11 +630,17 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
     // registers nothing in any of these frameworks: what it publishes is read
     // above, and there is no subscription here to find.
     if (owner === undefined || method === undefined || !Node.isMethodDeclaration(method)) return;
-    // Unchanged from before the producer walk was widened: a handler is
-    // recognised on a method the graph already holds. Publishing dropped that
-    // gate because `ensure` now creates the node a producer hangs off; whether
-    // receiving should drop it too is a different question from this one.
-    if (!ctx.builder.has(scope.id)) return;
+    // There is deliberately no test here that the graph already holds this
+    // method. Receiving was the last reader that asked, and it asked for the
+    // same reason the other two did: before the emitters learned to create the
+    // node a leaf hangs off, an edge to a method nobody had added went nowhere,
+    // so the gate stood in for a node that did not exist yet. It no longer
+    // stands in for anything — `emitConsumer` and `emitSubscribers` both call
+    // `ensureMethodNode` before they draw — and what it did instead was hide a
+    // decorated handler on a class no route and no call reaches, which is the
+    // ordinary shape of a worker whose only way in is the channel itself.
+    // Unreached is not unwritten: a handler is a fact about the source, and the
+    // reader's job is to say what the source says (R60).
     const className = ctx.classes.get(owner)?.name ?? owner.getName() ?? '?';
     const file = scope.file;
 
@@ -660,9 +662,10 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
 
   // A publish is read wherever it is written: a method, a module-level
   // function, a member of an object of functions, a handler written in the
-  // registration. The scope walk is shared with the data-layer reader rather
-  // than copied here, because two copies of the judgement "what counts as a
-  // body" diverge the first time one of them is reconsidered (R54).
+  // registration. The walk is the data-layer reader's walk too, taken from
+  // `@flowatlas/extract-scopes` rather than copied here, because two copies of
+  // the judgement "what counts as a body" diverge the first time one of them is
+  // reconsidered (R54).
   for (const scope of scopesOf(ctx)) {
     forEachCall(scope.body, (call) => {
       const expression = call as unknown as CallExpression;
@@ -685,4 +688,4 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
   readBrokerMarkers(ctx, specs[0] ?? brokerAdapters[0], alreadyStatic);
 };
 
-export const brokersPass: NestExtractorPass = definePass('brokers', extractBrokers);
+export const brokersPass: ExtractorPass<PassContext> = definePass('brokers', extractBrokers);

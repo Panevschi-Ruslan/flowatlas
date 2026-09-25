@@ -988,6 +988,33 @@ export const addressAt = (
 };
 
 /**
+ * The most call sites a body is read across before it is read as declared.
+ *
+ * One number for every question this asks about a body, stated once here the
+ * way `MOST_CHOICES` is stated once for a hole. It is two things at once.
+ *
+ * It is a claim about meaning. The keys of several writers are unioned, and the
+ * finding built on the union says "what any of its callers may send". Past a
+ * handful of callers that sentence describes nothing a reader can act on: a
+ * helper every screen in a repository posts through carries the keys of the
+ * whole repository, and a union that wide decides which findings survive while
+ * standing for no call in particular. The declared type is then the honest
+ * answer, and the finding phrased from it already says it is the weaker claim.
+ *
+ * It is also a bound on work. `callSitesOf` is `findReferencesAsNodes`, asked
+ * up to four times per body argument of every POST, PUT and PATCH; a shared
+ * helper with two hundred callers then had two hundred literals' types read and
+ * unioned. The 0.4.0 review measured the cold build on the project this is
+ * developed against at 5.5s with and without the walk, so the cap is a guard
+ * against a repository shaped differently rather than a saving here (R43).
+ *
+ * Twelve, the same dozen `MOST_CHOICES` draws the line at, and for the same
+ * reason: a set that size is a domain rather than an enumeration of what some
+ * particular call does.
+ */
+const MOST_BODY_WRITERS = 12;
+
+/**
  * The object a body argument turns out to be, followed out to where it is written.
  *
  * A request's address and its body are not decided in the same place. A service
@@ -1034,6 +1061,9 @@ export const writtenBodyOutward = (argument: TsNode | undefined, depth = 4): TsN
     if (index < 0) return [];
     const sites = callSitesOf(method);
     if (sites.length === 0) return [];
+    // A crowd of callers is not a set of writers, so nothing is read across
+    // them and the body is left to its declared type.
+    if (sites.length > MOST_BODY_WRITERS) return [];
     const written = sites.map((site) => site.getArguments()[index]);
     // One caller is followed further out: it may itself have parked the object
     // in a `const`, or be a wrapper of its own. Several are read where they

@@ -16,7 +16,7 @@ import {
 } from '@flowatlas/core';
 import type { Project } from 'ts-morph';
 import { findBootstrapFile, readBootstrap } from './bootstrap.js';
-import { createNestContext } from './context.js';
+import { createNestContext, type NestStats } from './context.js';
 import { buildClassIndex } from './index-classes.js';
 import { callsPass } from './passes/calls.js';
 import { diPass } from './passes/di.js';
@@ -83,6 +83,25 @@ export const createRepoProject = (options: ExtractRepoOptions): Project => {
   });
 };
 
+/**
+ * The counts of two halves of one reading, as one record.
+ *
+ * Every key either half filled is kept; where both filled one it is either the
+ * same number by construction — both count the source files of the same
+ * project — or the tally of calls into installed packages, which is summed
+ * because each half skipped its own. Nothing is read out of the shape beyond
+ * that tally, so a half that grows a counter needs no change here.
+ */
+const foldStats = (existing: unknown, mine: NestStats): Record<string, unknown> => {
+  if (typeof existing !== 'object' || existing === null) return { ...mine };
+  const prior = existing as Record<string, unknown>;
+  const skippedExternalCalls = { ...((prior['skippedExternalCalls'] ?? {}) as Record<string, number>) };
+  for (const [pkg, count] of Object.entries(mine.skippedExternalCalls)) {
+    skippedExternalCalls[pkg] = (skippedExternalCalls[pkg] ?? 0) + count;
+  }
+  return { ...mine, ...prior, skippedExternalCalls };
+};
+
 const defaultService = (repo: string, rootDir: string): ServiceConfig => ({
   name: repo,
   repo: rootDir,
@@ -137,6 +156,35 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     },
   };
 
+  // The other half of the same directory. A repository built on a file-system
+  // router is a browser and a server at once: its route handlers sit beside the
+  // screens that call them, and both are in the project because the project
+  // opens every kind of TypeScript source. Every frontend adapter the registry
+  // detected is asked to read what it knows, through the same context and into
+  // the same builder, so the two halves are one reading of one repository
+  // rather than two graphs to reconcile afterwards.
+  //
+  // For a repository that is only a server the loop is empty, because no
+  // frontend adapter detects it. That is the whole of the condition, and it is
+  // why this reader still names no framework: which halves run is the
+  // registry's answer, not this file's.
+  //
+  // The browser half goes first because it is the half that can say what a
+  // function is *for*. A screen is a function like any other to the walk below,
+  // and the builder keeps what the first writer said a node was; read the other
+  // way round, every component would be recorded as a plain function and the
+  // screens — the thing a front-end reading exists to reach — would be gone
+  // while the node count stayed the same. Nothing is lost by this order: the
+  // server half's own counts are folded into the repository node that the
+  // browser half wrote, rather than replacing it.
+  for (const adapter of adapters.frontend) {
+    logger.debug(`frontend ${adapter.name}`);
+    adapter.extract(base, {
+      ...(options.noTypes === undefined ? {} : { noTypes: options.noTypes }),
+      ...(options.typesDepth === undefined ? {} : { typesDepth: options.typesDepth }),
+    });
+  }
+
   const ctx = createNestContext({
     base,
     classes,
@@ -157,8 +205,20 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // that any pass collected is known.
   if (options.noTypes !== true) ctx.types.finalize();
 
-  builder.addNode({
-    id: `repo:${repo}`,
+  // One repository is one repository node, whether this reading is the whole of
+  // it or the server half of a directory a frontend adapter has already read.
+  // `addNode` keeps what the first writer put there, so the counts and the
+  // adapter names are written back as the union of both halves: what either
+  // half filled is kept, and the two tallies of calls into installed packages
+  // are summed. Those tallies are the only place a half says what it chose not
+  // to follow, so dropping one would be dropping a reason.
+  const repoId = `repo:${repo}`;
+  // Read before writing: after the write the stored counts are this half's own
+  // when no other half ran, and folding those into themselves would count every
+  // skipped call twice.
+  const priorStats = builder.getNode(repoId)?.meta?.['stats'];
+  const node = builder.addNode({
+    id: repoId,
     type: 'repo',
     label: repo,
     repo,
@@ -171,6 +231,14 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
       },
     },
   });
+  node.meta = {
+    ...node.meta,
+    stats: foldStats(priorStats, ctx.stats),
+    adapters: {
+      ...(node.meta?.['adapters'] as Record<string, unknown> | undefined),
+      entry: adapters.entry.map((adapter) => adapter.name),
+    },
+  };
 
   return builder.build();
 };

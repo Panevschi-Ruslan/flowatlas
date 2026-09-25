@@ -136,7 +136,7 @@ describe('runInit', () => {
     expect(result.config.adapters).toEqual({
       auto: true,
       force: {},
-      entry: { registries: [] },
+      entry: { registries: [], http: [] },
       broker: { custom: [] },
       db: { localBaseClasses: [] },
     });

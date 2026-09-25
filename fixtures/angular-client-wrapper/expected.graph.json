@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "angular-client-wrapper",
-  "generatedAt": "2026-09-20T21:55:13.159Z",
+  "generatedAt": "2026-09-25T10:24:45.684Z",
   "nodes": [
     {
       "id": "angular-client-wrapper#node_modules/@angular/common:HttpClient",
@@ -125,10 +125,21 @@
       "label": "ParcelService",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 14,
+      "line": 35,
       "kind": "injectable",
       "meta": {
         "providedIn": "root"
+      }
+    },
+    {
+      "id": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.label",
+      "type": "method",
+      "label": "ParcelService.label",
+      "repo": "angular-client-wrapper",
+      "file": "src/app/admin/parcel.service.ts",
+      "line": 68,
+      "meta": {
+        "unreferenced": true
       }
     },
     {
@@ -137,7 +148,7 @@
       "label": "ParcelService.list",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 20,
+      "line": 41,
       "meta": {
         "unreferenced": true
       }
@@ -148,7 +159,7 @@
       "label": "ParcelService.one",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 24,
+      "line": 45,
       "meta": {
         "unreferenced": true
       }
@@ -159,7 +170,7 @@
       "label": "ParcelService.remove",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 33,
+      "line": 54,
       "meta": {
         "unreferenced": true
       }
@@ -170,7 +181,7 @@
       "label": "ParcelService.search",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 41,
+      "line": 72,
       "meta": {
         "unreferenced": true
       }
@@ -181,7 +192,7 @@
       "label": "ParcelService.stop",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 37,
+      "line": 58,
       "meta": {
         "unreferenced": true
       }
@@ -192,7 +203,7 @@
       "label": "ParcelService.update",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 28,
+      "line": 49,
       "meta": {
         "unreferenced": true
       }
@@ -484,12 +495,12 @@
       }
     },
     {
-      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:21:12@29:49",
+      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:42:12@29:49",
       "type": "ui_api_call",
       "label": "GET /admin/:param/parcels",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 21,
+      "line": 42,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -504,12 +515,12 @@
       }
     },
     {
-      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:25:12@29:49",
+      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:46:12@29:49",
       "type": "ui_api_call",
       "label": "GET /admin/:param/parcels/:param",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 25,
+      "line": 46,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -525,12 +536,12 @@
       }
     },
     {
-      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:29:12@45:7",
+      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:50:12@45:7",
       "type": "ui_api_call",
       "label": "POST /admin/:param/parcels/:param/update",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 29,
+      "line": 50,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -546,12 +557,12 @@
       }
     },
     {
-      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:34:12@52:7",
+      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:55:12@52:7",
       "type": "ui_api_call",
       "label": "POST /admin/:param/parcels/:param/delete",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 34,
+      "line": 55,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -568,12 +579,12 @@
       }
     },
     {
-      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:38:12@45:7",
+      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:59:12@45:7",
       "type": "ui_api_call",
       "label": "POST /admin/:param/parcels/:param/stop",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 38,
+      "line": 59,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -590,12 +601,90 @@
       }
     },
     {
-      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:42:12@39:14",
+      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:69:12@45:7#categories,asc",
+      "type": "ui_api_call",
+      "label": "POST /admin/:param/parcels/labels/categories",
+      "repo": "angular-client-wrapper",
+      "file": "src/app/admin/parcel.service.ts",
+      "line": 69,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/admin/:param/parcels/labels/categories",
+        "path": "/admin/:param/parcels/labels/categories",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": "{order:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "order"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "guessed": true,
+        "through": "BaseService.post",
+        "choice": "categories,asc"
+      }
+    },
+    {
+      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:69:12@45:7#parcels,asc",
+      "type": "ui_api_call",
+      "label": "POST /admin/:param/parcels/labels/parcels",
+      "repo": "angular-client-wrapper",
+      "file": "src/app/admin/parcel.service.ts",
+      "line": 69,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/admin/:param/parcels/labels/parcels",
+        "path": "/admin/:param/parcels/labels/parcels",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": "{order:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "order"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "guessed": true,
+        "through": "BaseService.post",
+        "choice": "parcels,asc"
+      }
+    },
+    {
+      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:69:12@45:7#stickers,asc",
+      "type": "ui_api_call",
+      "label": "POST /admin/:param/parcels/labels/stickers",
+      "repo": "angular-client-wrapper",
+      "file": "src/app/admin/parcel.service.ts",
+      "line": 69,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/admin/:param/parcels/labels/stickers",
+        "path": "/admin/:param/parcels/labels/stickers",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": "{order:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "order"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "guessed": true,
+        "through": "BaseService.post",
+        "choice": "stickers,asc"
+      }
+    },
+    {
+      "id": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:73:12@39:14",
       "type": "ui_api_call",
       "label": "GET /admin/:param/parcels/search",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 42,
+      "line": 73,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -854,20 +943,52 @@
       "line": 28
     },
     {
+      "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.label",
+      "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.post",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/admin/parcel.service.ts",
+      "line": 69
+    },
+    {
+      "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.label",
+      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:69:12@45:7#categories,asc",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/admin/parcel.service.ts",
+      "line": 69
+    },
+    {
+      "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.label",
+      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:69:12@45:7#parcels,asc",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/admin/parcel.service.ts",
+      "line": 69
+    },
+    {
+      "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.label",
+      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:69:12@45:7#stickers,asc",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/admin/parcel.service.ts",
+      "line": 69
+    },
+    {
       "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.list",
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.get",
       "type": "calls",
       "confidence": "static",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 21
+      "line": 42
     },
     {
       "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.list",
-      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:21:12@29:49",
+      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:42:12@29:49",
       "type": "calls",
       "confidence": "static",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 21
+      "line": 42
     },
     {
       "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.one",
@@ -875,15 +996,15 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 25
+      "line": 46
     },
     {
       "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.one",
-      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:25:12@29:49",
+      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:46:12@29:49",
       "type": "calls",
       "confidence": "static",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 25
+      "line": 46
     },
     {
       "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.remove",
@@ -891,15 +1012,15 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 34
+      "line": 55
     },
     {
       "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.remove",
-      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:34:12@52:7",
+      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:55:12@52:7",
       "type": "calls",
       "confidence": "static",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 34
+      "line": 55
     },
     {
       "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.search",
@@ -907,15 +1028,15 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 42
+      "line": 73
     },
     {
       "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.search",
-      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:42:12@39:14",
+      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:73:12@39:14",
       "type": "calls",
       "confidence": "static",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 42
+      "line": 73
     },
     {
       "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.stop",
@@ -923,15 +1044,15 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 38
+      "line": 59
     },
     {
       "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.stop",
-      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:38:12@45:7",
+      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:59:12@45:7",
       "type": "calls",
       "confidence": "static",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 38
+      "line": 59
     },
     {
       "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.update",
@@ -939,15 +1060,15 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 29
+      "line": 50
     },
     {
       "from": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService.update",
-      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:29:12@45:7",
+      "to": "ui_api_call:angular-client-wrapper#src/app/admin/parcel.service.ts:50:12@45:7",
       "type": "calls",
       "confidence": "static",
       "file": "src/app/admin/parcel.service.ts",
-      "line": 29
+      "line": 50
     },
     {
       "from": "angular-client-wrapper#src/app/admin/review.service.ts:ReviewService.list",

@@ -1,0 +1,31 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs"
+    }
+  ],
+  "adapters": {
+    "force": {
+      "entry": ["entry-http-custom"]
+    },
+    "entry": {
+      "http": [
+        {
+          "name": "minihttp-routes",
+          "packages": ["minihttp"],
+          "appTypes": [{ "packages": ["minihttp"], "typeNames": ["Server"] }],
+          "mount": { "method": "attach", "appArg": 1, "pathArg": 0 },
+          "middleware": { "method": "use", "scoped": true }
+        },
+        {
+          "name": "misspelt-routes",
+          "packages": ["minihttp"],
+          "appTypes": [{ "packages": ["minihttp"], "typeNames": ["Aplication"] }]
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

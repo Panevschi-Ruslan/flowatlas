@@ -417,6 +417,11 @@ const stripImpact = (
   // with a `name` said the sender believed it had saved something, about a
   // different field entirely.
   if (field.includes('.') || field.includes('[')) return 'unknown';
+  // Something is written and no shape of it was read, so there is nothing to
+  // look the field up in. Answering `unknown` here said "nothing it writes
+  // declares this field", which is a claim nobody was in a position to make
+  // (R43).
+  if (writes.documents.length === 0) return 'unread';
   const stored = writes.documents.some((entry) =>
     (entry.fields ?? []).some((each) => each.name === field),
   );

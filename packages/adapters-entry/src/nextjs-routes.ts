@@ -1,4 +1,5 @@
 import {
+  hasAnyDependency,
   hasDependency,
   HTTP_METHODS,
   makeEntryId,
@@ -6,14 +7,17 @@ import {
   namedFunction,
   normalizeFilePath,
   type EntryAdapter,
+  type EntryHandler,
   type EntryNode,
   type ExtractContext,
   type NamedFunction,
 } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
+import type { ActionBuilder } from './action-builders.js';
+import { ACTION_BUILDERS } from './action-builders.js';
 import { APP_ROUTER, PAGES_API, routePathOfFile } from './nextjs-paths.js';
-import { handlerOfFunction, repoSources } from './shared.js';
+import { handlerOfFunction, inlineHandlerOf, repoFunctionOf, repoSources } from './shared.js';
 
 /** The dependency that gives the framework away. */
 const PACKAGE = 'next';
@@ -141,6 +145,13 @@ export const nextjsRoutesAdapter: EntryAdapter = {
     const seen = new Set<string>();
     const unreadable: UnreadableAction[] = [];
     const middleware = readMiddleware(ctx);
+    // Only the libraries this repository actually depends on. Without that a
+    // method called `action` or `handler` on anything at all would be read as
+    // a boundary, and a description that matches by name alone would be a
+    // guess wearing a row's clothes.
+    const builders = ACTION_BUILDERS.filter((builder) =>
+      hasAnyDependency(ctx.pkg, builder.packages),
+    );
 
     /**
      * Whether what stands in front of a route was read, rather than guessed.
@@ -221,7 +232,7 @@ export const nextjsRoutesAdapter: EntryAdapter = {
         continue;
       }
 
-      unreadable.push(...readServerActions(ctx, sourceFile, file, entries, seen));
+      unreadable.push(...readServerActions(ctx, sourceFile, file, entries, seen, builders));
     }
 
     if (unreadable.length > 0) reportUnreadableActions(ctx, unreadable);
@@ -294,8 +305,11 @@ const readAppRoute = (
 /**
  * The functions a module hands to the client as a boundary.
  *
- * Two spellings and the same fact: the whole module is marked, or one function
- * in it is. What makes this worth a node of its own is that both ends are in
+ * Three spellings and the same fact. The whole module is marked, or one
+ * function in it is, or the module is marked and the export is what a builder
+ * handed back — which is the dominant spelling in this ecosystem and was the
+ * one that read as nothing at all until a row described where the action sits
+ * in the call. What makes this worth a node of its own is that both ends are in
  * this repository and the call between them crosses a process: the component
  * imports the function and calls it, and what happens at run time is a request
  * to the server with no address written anywhere. The import is the only
@@ -307,9 +321,52 @@ const readServerActions = (
   file: string,
   entries: EntryNode[],
   seen: Set<string>,
+  builders: readonly ActionBuilder[],
 ): UnreadableAction[] => {
   const wholeModule = opensWith(sourceFile.getStatements(), USE_SERVER);
   const unreadable: UnreadableAction[] = [];
+
+  /**
+   * One boundary, however it was written.
+   *
+   * Both spellings arrive here with the same four facts — the exported name,
+   * the line it is declared on, the code behind it and how confidently that
+   * could be named — so the node is built in one place and a reader comparing
+   * a built action with a declared one is comparing the same thing.
+   */
+  const record = (options: {
+    name: string;
+    line: number;
+    handler: EntryHandler | undefined;
+    via: 'function' | 'inline';
+    builder?: string;
+  }): void => {
+    const key = `action:${file}#${options.name}`;
+    const id = makeEntryId(ctx.repo, 'rpc', key);
+    if (seen.has(id)) return;
+    seen.add(id);
+    entries.push({
+      id,
+      kind: 'rpc',
+      label: `action ${options.name}`,
+      key,
+      ...(options.handler === undefined ? {} : { handler: options.handler }),
+      file,
+      line: options.line,
+      meta: {
+        action: options.name,
+        adapter: 'nextjs-routes',
+        registration: wholeModule ? "module 'use server'" : "function 'use server'",
+        ...(options.builder === undefined ? {} : { builder: options.builder }),
+        // There is no address, so nothing joins this to a caller by matching
+        // one. Whoever imports it is the caller, and saying so here is what
+        // lets a pass that has the import graph draw that edge without knowing
+        // anything about this framework.
+        viaImport: true,
+        handlerVia: options.via,
+      },
+    });
+  };
 
   for (const [name, declarations] of sourceFile.getExportedDeclarations()) {
     const [declaration] = declarations;
@@ -318,13 +375,27 @@ const readServerActions = (
     if (fn === undefined) {
       // A value the module exports that is not a function written in place.
       // In a module marked whole every one of these is a boundary the client
-      // may cross, and the commonest way to write one — a builder that wraps
-      // validation round the body — produces exactly this. It is a hole, and
-      // a hole nobody is told about reads as a repository with no actions in
-      // it (R07).
-      if (wholeModule && Node.isVariableDeclaration(declaration)) {
+      // may cross, and the commonest way to write one is a builder that wraps
+      // validation round the body. A builder some row describes is read as the
+      // action it is; one nobody describes is a hole, and a hole nobody is
+      // told about reads as a repository with no actions in it (R07).
+      if (!wholeModule || !Node.isVariableDeclaration(declaration)) continue;
+      const built = builtAction(declaration, builders);
+      if (built === undefined) {
         unreadable.push({ file, name, line: declaration.getStartLineNumber() });
+        continue;
       }
+      const named = repoFunctionOf(built.action);
+      record({
+        name,
+        line: declaration.getStartLineNumber(),
+        handler:
+          named === undefined
+            ? inlineHandlerOf(built.action, `action ${name}`, ctx)
+            : handlerOfFunction(named, ctx),
+        via: named === undefined ? 'inline' : 'function',
+        builder: built.builder.name,
+      });
       continue;
     }
     // A module marked whole makes every exported function a boundary. A module
@@ -332,32 +403,66 @@ const readServerActions = (
     const marked = wholeModule || (Node.isBlock(fn.body) && opensWith(fn.body.getStatements(), USE_SERVER));
     if (!marked) continue;
 
-    const key = `action:${file}#${name}`;
-    const id = makeEntryId(ctx.repo, 'rpc', key);
-    if (seen.has(id)) continue;
-    seen.add(id);
-    entries.push({
-      id,
-      kind: 'rpc',
-      label: `action ${name}`,
-      key,
-      handler: handlerOfFunction(fn, ctx),
-      file,
-      line: fn.line,
-      meta: {
-        action: name,
-        adapter: 'nextjs-routes',
-        registration: wholeModule ? "module 'use server'" : "function 'use server'",
-        // There is no address, so nothing joins this to a caller by matching
-        // one. Whoever imports it is the caller, and saying so here is what
-        // lets a pass that has the import graph draw that edge without knowing
-        // anything about this framework.
-        viaImport: true,
-        handlerVia: 'function',
-      },
-    });
+    record({ name, line: fn.line, handler: handlerOfFunction(fn, ctx), via: 'function' });
   }
   return unreadable;
+};
+
+/** `(x)`, `x as T` and `await x` all stand for whatever is inside them. */
+const unwrapValue = (expr: TsNode): TsNode => {
+  if (
+    Node.isParenthesizedExpression(expr) ||
+    Node.isAsExpression(expr) ||
+    Node.isAwaitExpression(expr)
+  ) {
+    return unwrapValue(expr.getExpression());
+  }
+  return expr;
+};
+
+/** Whether an expression is a function, written here or named elsewhere. */
+const isFunctionValue = (node: TsNode): boolean =>
+  Node.isArrowFunction(node) ||
+  Node.isFunctionExpression(node) ||
+  repoFunctionOf(node) !== undefined;
+
+/**
+ * The function a described builder was handed, when the value is built by one.
+ *
+ * The chain is walked from the outside in, because the call that receives the
+ * action is the last one written and so the first one met: `client.schema(…)
+ * .action(fn)` is an `action` call whose receiver is a `schema` call. A step
+ * the description says nothing about is walked through rather than refused,
+ * since a library is free to put `.metadata(…)` after the action — what
+ * decides is whether any step is one a row names.
+ *
+ * The argument has to be a function. A method sharing a described name that is
+ * handed a value rather than a function is not this library's action, and
+ * reading it as one would put a boundary in the graph that does not exist.
+ */
+const builtAction = (
+  declaration: TsNode,
+  builders: readonly ActionBuilder[],
+): { action: TsNode; builder: ActionBuilder } | undefined => {
+  if (!Node.isVariableDeclaration(declaration)) return undefined;
+  let at = declaration.getInitializer();
+  for (let depth = 0; at !== undefined && depth < 16; depth += 1) {
+    const node = unwrapValue(at);
+    if (!Node.isCallExpression(node)) return undefined;
+    const callee = node.getExpression();
+    if (!Node.isPropertyAccessExpression(callee)) return undefined;
+    const method = callee.getName();
+    for (const builder of builders) {
+      const position = builder.methods[method];
+      if (position === undefined) continue;
+      const argument = node.getArguments()[position];
+      if (argument === undefined) continue;
+      const action = unwrapValue(argument);
+      if (isFunctionValue(action)) return { action, builder };
+    }
+    at = callee.getExpression();
+  }
+  return undefined;
 };
 
 /** One exported value of a boundary module that is not a function to point at. */
@@ -382,8 +487,8 @@ const reportUnreadableActions = (ctx: ExtractContext, found: readonly Unreadable
     line: first.line,
     reason: 'server-action-unread',
     sites: found.length,
-    message: `${found.length} exported value${found.length === 1 ? '' : 's'} of a module marked 'use server' ${found.length === 1 ? 'is' : 'are'} built by a call rather than declared as a function, so the boundary was not recorded.`,
-    hint: "Declare the action as `export async function name(...)`, or export the built value from a function of that name, to make the way in and its callers visible.",
+    message: `${found.length} exported value${found.length === 1 ? '' : 's'} of a module marked 'use server' ${found.length === 1 ? 'is' : 'are'} built by a call no description names, so the boundary was not recorded.`,
+    hint: 'Describe the builder in action-builders.ts by naming its package, the method that receives the action and which argument it is; or declare the action as `export async function name(...)`.',
     symbol: `${first.file}#${first.name}`,
     adapter: 'nextjs-routes',
   });

@@ -159,14 +159,16 @@ describe('a row an annotation has already answered', () => {
    * A browser request, where the annotation adds a call rather than repairing
    * one — so the row's own node can never carry the edge (R39).
    */
-  const browser = (calls: Array<{ id: string; marker?: boolean; joined?: boolean }>): MarkerGraph => ({
+  const browser = (
+    calls: Array<{ id: string; marker?: boolean; joined?: boolean; route?: string }>,
+  ): MarkerGraph => ({
     edgesFrom: (id, types) => {
       if (id === 'method' && (types ?? []).includes('calls')) {
         return calls.map((call) => ({ to: call.id, confidence: call.marker === true ? 'marker' : 'static' }));
       }
       const found = calls.find((call) => call.id === id);
       if (found?.joined === true && (types ?? []).includes('hits')) {
-        return [{ to: 'entry:x', confidence: 'static' }];
+        return [{ to: found.route ?? 'entry:x', confidence: 'static' }];
       }
       return [];
     },
@@ -213,6 +215,28 @@ describe('a row an annotation has already answered', () => {
       { id: 'blind2' },
       { id: 'a1', marker: true, joined: true },
       { id: 'a2', marker: true, joined: true },
+    ]);
+    expect(answeredByMarker('api-path-dynamic', 'blind', graph)).toBe(true);
+  });
+
+  it('is not answered by an annotation that duplicates a readable request', () => {
+    // One readable request, one annotation naming the very route it already
+    // reaches, and one request nobody could read. The annotation was about the
+    // readable call — `marker-callsservice-shadowed` exists to say so — and it
+    // asserts nothing at all about the unreadable one (R43).
+    const graph = browser([
+      { id: 'blind' },
+      { id: 'readable', joined: true, route: 'entry:orders' },
+      { id: 'asserted', marker: true, joined: true, route: 'entry:orders' },
+    ]);
+    expect(answeredByMarker('api-path-dynamic', 'blind', graph)).toBe(false);
+  });
+
+  it('is answered by an annotation naming a route no readable request reaches', () => {
+    const graph = browser([
+      { id: 'blind' },
+      { id: 'readable', joined: true, route: 'entry:orders' },
+      { id: 'asserted', marker: true, joined: true, route: 'entry:invoices' },
     ]);
     expect(answeredByMarker('api-path-dynamic', 'blind', graph)).toBe(true);
   });

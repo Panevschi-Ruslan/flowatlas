@@ -41,7 +41,7 @@ describe('parseConfig', () => {
       adapters: {
         auto: true,
         force: {},
-        entry: { registries: [] },
+        entry: { registries: [], http: [] },
         broker: { custom: [] },
         db: { localBaseClasses: [] },
       },
@@ -67,7 +67,7 @@ describe('parseConfig', () => {
     expect(parseConfig({ adapters: { auto: false } }).adapters).toEqual({
       auto: false,
       force: {},
-      entry: { registries: [] },
+      entry: { registries: [], http: [] },
       broker: { custom: [] },
       db: { localBaseClasses: [] },
     });
