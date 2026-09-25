@@ -2,6 +2,7 @@ import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
 import {
+  AdapterRegistry,
   CONFIG_FILENAME,
   createLogger,
   DEFAULT_OUTPUT,
@@ -43,27 +44,39 @@ import { adapterNames, createRegistry, EXTRA_PASSES, NESTJS_EXTRACTOR } from '..
 /**
  * The browser readers, by the repository type each one reads.
  *
- * A table rather than a pair of branches, because there are now three types
- * and two readers and the next one is a row. Everything not named here is read
- * by the server reader, which is the default for the same reason it always
- * was: a repository nobody described is far likelier to be a service.
+ * A table rather than a pair of branches, so that the next browser reader is a
+ * row. Everything not named here is read by the server reader, which is the
+ * default for the same reason it always was: a repository nobody described is
+ * far likelier to be a service, and the server reader is now also the one that
+ * reads a repository which is both.
  */
 const BROWSER_READERS: Record<string, (options: ExtractRepoOptions) => Promise<RepoGraph>> = {
   angular: extractAngularRepo,
   react: extractReactRepo,
-  nextjs: extractReactRepo,
 };
 
 /**
  * The browser reader for a repository nothing in a configuration described.
  *
- * Asked of the adapters themselves, in the order they are listed, so the
- * answer is the same one the registry would give. The order matters once:
- * a repository built on the file-system router declares both packages, and
- * the one that reads it has to be asked first.
+ * Asked of the adapters themselves, so the answer is the one the registry would
+ * give and no framework is named twice in this file.
+ *
+ * A repository that declares a way in is read by the server reader even when a
+ * frontend adapter also recognises it, because that reader can answer for both
+ * halves — it opens every kind of TypeScript source and hands the browser half
+ * back to the frontend adapters — while a browser reader can answer only for
+ * one. That is the whole of the rule, and it is written in terms of what the
+ * adapters detect rather than in terms of any framework's name: a repository
+ * built on a file-system router lands on the server reader because its entry
+ * adapter recognised it, and a browser with no server in it lands here because
+ * nothing did.
  */
-const detectBrowserReader = (pkg: PackageJson): ((options: ExtractRepoOptions) => Promise<RepoGraph>) | undefined => {
+const detectBrowserReader = (
+  registry: AdapterRegistry,
+  pkg: PackageJson,
+): ((options: ExtractRepoOptions) => Promise<RepoGraph>) | undefined => {
   if (angularFrontendAdapter.detect(pkg)) return extractAngularRepo;
+  if (registry.detect(pkg, {}).entry.length > 0) return undefined;
   if (reactFrontendAdapter.detect(pkg)) return extractReactRepo;
   return undefined;
 };
@@ -187,7 +200,7 @@ export const runExtract = async (
   // recognises it is as good an answer as the server-side default.
   const readBrowser =
     service === undefined
-      ? detectBrowserReader(readPackageJson(rootDir) ?? {})
+      ? detectBrowserReader(registry, readPackageJson(rootDir) ?? {})
       : BROWSER_READERS[service.type];
 
   // A server repository is opened here rather than inside the extractor, so the

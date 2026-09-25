@@ -14,8 +14,37 @@ export interface CreateProjectOptions {
 /** Directories that never hold sources worth reading. */
 const SKIPPED_DIRECTORIES = new Set(['node_modules', 'dist', 'build']);
 
-/** Files that are compiled but say nothing about the shape of the system. */
-const SKIPPED_SUFFIXES = ['.spec.ts', '.test.ts', '.e2e-spec.ts', '.d.ts'];
+/**
+ * The extensions a TypeScript repository keeps its code in.
+ *
+ * Both of them, and not because every reader wants both. A reader that wants
+ * fewer says so through `include`, which is what makes the set of files a
+ * property of the reader rather than of this module. What this constant fixes
+ * is the default, and the default has to be every kind of source a repository
+ * has, because the alternative was read for a long time as a statement about
+ * the repository: globbing `.ts` alone meant a directory that is a browser and
+ * a server at once could only ever be half read, and the half that was missing
+ * was decided here rather than by anyone who could see the consequence.
+ *
+ * The suffix carries no meaning beyond "this file may hold markup". A route
+ * handler that answers with an image is written in `.tsx` for that reason
+ * alone, and it is a route handler.
+ */
+export const SOURCE_EXTENSIONS = ['.ts', '.tsx'] as const;
+
+/**
+ * Files that are compiled but say nothing about the shape of the system.
+ *
+ * Written as stems crossed with {@link SOURCE_EXTENSIONS} rather than as a
+ * literal list, so that adding an extension cannot silently start reading
+ * everyone's tests in it.
+ */
+const SKIPPED_STEMS = ['.spec', '.test', '.e2e-spec'] as const;
+
+const SKIPPED_SUFFIXES = [
+  ...SKIPPED_STEMS.flatMap((stem) => SOURCE_EXTENSIONS.map((ext) => `${stem}${ext}`)),
+  '.d.ts',
+];
 
 /** Tried in order when the caller does not name one. */
 export const TSCONFIG_CANDIDATES = [
@@ -57,16 +86,11 @@ export const createProject = (options: CreateProjectOptions): Project => {
   });
 
   const sourceRoot = existsSync(join(rootDir, 'src')) ? 'src' : '.';
-  const globs = include ?? [`${sourceRoot}/**/*.ts`];
+  const globs = include ?? SOURCE_EXTENSIONS.map((ext) => `${sourceRoot}/**/*${ext}`);
   project.addSourceFilesAtPaths([
     ...globs.map((glob) => join(rootDir, glob)),
-    `!${join(rootDir, '**/node_modules/**')}`,
-    `!${join(rootDir, '**/dist/**')}`,
-    `!${join(rootDir, '**/build/**')}`,
-    `!${join(rootDir, '**/*.spec.ts')}`,
-    `!${join(rootDir, '**/*.test.ts')}`,
-    `!${join(rootDir, '**/*.e2e-spec.ts')}`,
-    `!${join(rootDir, '**/*.d.ts')}`,
+    ...[...SKIPPED_DIRECTORIES].map((dir) => `!${join(rootDir, `**/${dir}/**`)}`),
+    ...SKIPPED_SUFFIXES.map((suffix) => `!${join(rootDir, `**/*${suffix}`)}`),
   ]);
   return project;
 };
@@ -96,7 +120,7 @@ export const listRepoSources = (rootDir: string): string[] => {
         walk(path);
         continue;
       }
-      if (!entry.name.endsWith('.ts')) continue;
+      if (!SOURCE_EXTENSIONS.some((ext) => entry.name.endsWith(ext))) continue;
       if (SKIPPED_SUFFIXES.some((suffix) => entry.name.endsWith(suffix))) continue;
       out.push(path);
     }
