@@ -14,8 +14,13 @@ import type { GraphEdge, GraphNode, TypeEntry } from '@flowatlas/core';
  * 2 — a party carries `writes`, the keys an object written at the call site
  * puts on the wire, and a request-direction message says whether it is
  * describing what a call sends or what its declared type permits (R34).
+ *
+ * 3 — a strip's `impact` may read `unread`, which `unknown` used to stand in
+ * for. A reader that branches on the three older words would take a field
+ * nobody could look for as a field nobody found, so the widening is a version
+ * of its own rather than a quiet addition (R43).
  */
-export const CONTRACTS_FORMAT_VERSION = 2;
+export const CONTRACTS_FORMAT_VERSION = 3;
 
 /** How bad a finding is. */
 export const SEVERITIES = ['error', 'warning', 'info'] as const;
@@ -76,14 +81,24 @@ export type ContractStatus = (typeof CONTRACT_STATUSES)[number];
  *
  * `stored`  — the handler writes a document that declares this field, so the
  *             sender believes it saved something that never arrived.
+ * `unread`  — it writes something, and no document of anything it writes could
+ *             be read. A knex or drizzle call names a table and no shape, and
+ *             fifteen of the twenty-three writes in this repository's own
+ *             fixtures are that shape. Nothing here rules the loss in or out,
+ *             which is a different sentence from the one below and used to be
+ *             told in the same words (R43).
+ * `unknown` — it writes something, documents of what it writes were read, and
+ *             none of them declares this field.
  * `none`    — no write was found under the handler within the distance this
  *             walks. A preview endpoint genuinely writes nothing; so does a
  *             handler whose data layer the reader could not follow, and the
  *             two are not told apart here, which is why the row says what was
  *             looked for rather than what the route does.
- * `unknown` — it writes something, and nothing it writes declares this field.
+ *
+ * Declared worst first, because that order is also the order the command lists
+ * them in and there is no second copy of the ranking.
  */
-export const STRIP_IMPACTS = ['stored', 'unknown', 'none'] as const;
+export const STRIP_IMPACTS = ['stored', 'unread', 'unknown', 'none'] as const;
 
 export type StripImpact = (typeof STRIP_IMPACTS)[number];
 

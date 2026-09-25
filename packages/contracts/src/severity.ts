@@ -66,6 +66,10 @@ const HARDENED_BY: Record<string, Severity> = { 'whitelist-strip': 'warning' };
  */
 const BY_IMPACT: Record<StripImpact, Severity> = {
   stored: 'warning',
+  // Nothing was read that could rule the loss in or out, so it stays where
+  // `unknown` stood before it was split off it. Demoting it to information
+  // would be reading "nobody looked" as "nothing was there" (R43).
+  unread: 'warning',
   unknown: 'warning',
   none: 'info',
 };

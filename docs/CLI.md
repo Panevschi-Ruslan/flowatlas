@@ -609,11 +609,12 @@ warning rather than an error, and says so.
 
 **What a strip can lose.** A `whitelist-strip` row carries an `impact`, worked
 out from the graph rather than from the field's name: `stored` when the
-receiving handler writes a document that declares the field, `unknown` when it
-writes something and nothing it writes declares it, and `none` when it reaches
-no write at all. A handler that persists nothing cannot lose data by dropping a
-field, so those rows are `info` and the command counts them on one line instead
-of listing them; the others are warnings, with `stored` first. Every row is in
+receiving handler writes a document that declares the field, `unread` when it
+writes something and no document of what it writes could be read, `unknown`
+when the documents were read and none of them declares it, and `none` when it
+reaches no write at all. A handler that persists nothing cannot lose data by
+dropping a field, so those rows are `info` and the command counts them on one
+line instead of listing them; the others are warnings, with `stored` first. Every row is in
 `--format json` whatever the command printed.
 
 **What a call sends against what its type permits.** A declared parameter type
@@ -629,9 +630,10 @@ the wire and stays one. Where there is no such object, the declared type is all
 there is, and the sentence says "permits" rather than "sends". The party in
 `contracts.json` carries `writes` when the keys were read.
 
-`contracts.json` is at format version 2: a party may carry `writes`, a finding
-may carry `impact`, and a request-direction message distinguishes what a call
-sends from what its type permits.
+`contracts.json` is at format version 3: a party may carry `writes`, a finding
+may carry `impact`, a request-direction message distinguishes what a call sends
+from what its type permits, and an `impact` may read `unread` as well as the
+three words version 2 knew.
 
 ### `adapters`
 
