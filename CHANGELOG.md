@@ -29,6 +29,30 @@ other things.
   position and so lands on one node, which is right, but the internal count of
   queries counted the emissions; that count is what decides whether to report a
   repository whose data layer nobody could read.
+- The route audit no longer tells a reader that middleware installed for a whole
+  prefix went unread when it was read. The caution was raised for any route
+  registered by calling an application, which was fair while the only such
+  reader was the one that does not read installs, and stopped being fair when
+  three that do arrived. A route now says whether its reader read them, and the
+  audit asks that: an Express, Fastify or Koa route with nothing in front of it
+  is an ordinary finding again, at the level it deserves.
+- Middleware a Hono worker installs for a whole prefix is read, as it already
+  was for the other three. `app.use('*', requestLogger)` reaches every route
+  below it, through a mount and through an application handed back by
+  `basePath`, which answers through the one it came from.
+- A route declared as `app.route('/books').get(handler)` is read. The path is
+  written on Express's `IRoute` rather than on the application, so those routes
+  produced no node and no row: they were simply absent, which is the worst way
+  for a reader to fail.
+- A repository that is not a NestJS one is no longer told to set
+  `services[].bootstrap`. The same reader opens Express, Fastify and Koa
+  repositories, and `bootstrap` names a NestJS file; the row was a finding
+  nobody could act on, in a list whose worth is that everything in it can be.
+- The build stamp the graph cache is keyed on covers every reader package,
+  derived from the dispatch table and this command's own dependencies rather
+  than written out by hand. The hand-written list had missed a reader, so a tool
+  rebuilt with it answered from the cache written before that reader existed —
+  a real change read as no change.
 
 ### Added
 
