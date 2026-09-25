@@ -73,6 +73,7 @@
     "@flowatlas/contracts": "workspace:*",
     "@flowatlas/core": "workspace:*",
     "@flowatlas/extractor-angular": "workspace:*",
+    "@flowatlas/extractor-react": "workspace:*",
     "@flowatlas/extractor-nestjs": "workspace:*",
     "@flowatlas/linker": "workspace:*",
     "@flowatlas/mcp": "workspace:*"

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-22T10:05:33.018Z",
+  "builtAt": "2026-09-24T21:18:46.052Z",
   "services": [
     {
       "name": "gateway",
@@ -287,7 +287,8 @@
         "package": "typeorm",
         "method": "save",
         "receiver": "this.orders",
-        "source": "type-arg"
+        "source": "type-arg",
+        "entityTypeId": "type:orders#Order"
       }
     },
     {

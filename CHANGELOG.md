@@ -6,6 +6,36 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+Three ways the data-layer reader was dishonest, two of them found by work on
+other things.
+
+### Fixed
+
+- A query written in a module-level function is read. The leaf walk read the
+  methods of the indexed classes and nothing else, so a `pool.query(…)` or a
+  `db.select(…)` in a module of exported functions — the shape most TypeScript
+  that is not Nest is written in — produced no node, no unresolved row and no
+  report: nothing at all. Functions declared at the top of a module, arrows
+  assigned to a const, functions nested in either, and handlers written in the
+  registration are now read exactly as methods are, and a body is read whether
+  or not anything calls it.
+- A write records the document it stores whether or not the entity's name had a
+  wrapper suffix to strip. `Repository<OrderEntity>` recorded it and
+  `Repository<Order>` did not, so `stripImpact` answered `unknown` — the answer
+  meaning "I could not tell" — for every field a validation pipe strips in a
+  project that does not suffix its entities.
+- A chain carrying two operations — `knex.select('id').from('users').first()` —
+  is one query and is counted once. Every link of a chain is written at the same
+  position and so lands on one node, which is right, but the internal count of
+  queries counted the emissions; that count is what decides whether to report a
+  repository whose data layer nobody could read.
+
+### Added
+
+- `fixtures/fn-data-layer`, the same four queries written twice — as a module of
+  exported functions and as a class — so that the two can be compared rather
+  than described, and both spellings of an entity name are covered.
+
 ## [0.4.1][] - 2026-09-22
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0.
