@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-24T16:27:51.380Z",
+  "builtAt": "2026-09-24T21:24:54.447Z",
   "services": [
     {
       "name": "api",
@@ -30,7 +30,7 @@
       "label": "OrdersRepository",
       "repo": "api",
       "file": "src/orders/orders.repository.ts",
-      "line": 12,
+      "line": 11,
       "kind": "injectable"
     },
     {
@@ -39,7 +39,7 @@
       "label": "OrdersRepository.byId",
       "repo": "api",
       "file": "src/orders/orders.repository.ts",
-      "line": 19
+      "line": 18
     },
     {
       "id": "api#src/orders/orders.repository.ts:OrdersRepository.insert",
@@ -47,7 +47,7 @@
       "label": "OrdersRepository.insert",
       "repo": "api",
       "file": "src/orders/orders.repository.ts",
-      "line": 23
+      "line": 22
     },
     {
       "id": "api#src/orders/orders.repository.ts:OrdersRepository.list",
@@ -55,7 +55,7 @@
       "label": "OrdersRepository.list",
       "repo": "api",
       "file": "src/orders/orders.repository.ts",
-      "line": 15
+      "line": 14
     },
     {
       "id": "api#src/orders/orders.routes.ts:GET /:orderId@25",
@@ -90,12 +90,12 @@
       "line": 18
     },
     {
-      "id": "db_query:api#src/orders/orders.repository.ts:16:12",
+      "id": "db_query:api#src/orders/orders.repository.ts:15:12",
       "type": "db_query",
       "label": "read orders",
       "repo": "api",
       "file": "src/orders/orders.repository.ts",
-      "line": 16,
+      "line": 15,
       "meta": {
         "op": "read",
         "table": "orders",
@@ -109,12 +109,12 @@
       }
     },
     {
-      "id": "db_query:api#src/orders/orders.repository.ts:20:12",
+      "id": "db_query:api#src/orders/orders.repository.ts:19:12",
       "type": "db_query",
       "label": "read orders",
       "repo": "api",
       "file": "src/orders/orders.repository.ts",
-      "line": 20,
+      "line": 19,
       "meta": {
         "op": "read",
         "table": "orders",
@@ -128,12 +128,12 @@
       }
     },
     {
-      "id": "db_query:api#src/orders/orders.repository.ts:24:12",
+      "id": "db_query:api#src/orders/orders.repository.ts:23:12",
       "type": "db_query",
       "label": "write orders",
       "repo": "api",
       "file": "src/orders/orders.repository.ts",
-      "line": 24,
+      "line": 23,
       "meta": {
         "op": "write",
         "table": "orders",
@@ -453,27 +453,27 @@
     },
     {
       "from": "api#src/orders/orders.repository.ts:OrdersRepository.byId",
-      "to": "db_query:api#src/orders/orders.repository.ts:20:12",
+      "to": "db_query:api#src/orders/orders.repository.ts:19:12",
       "type": "calls",
       "confidence": "static",
       "file": "src/orders/orders.repository.ts",
-      "line": 20
+      "line": 19
     },
     {
       "from": "api#src/orders/orders.repository.ts:OrdersRepository.insert",
-      "to": "db_query:api#src/orders/orders.repository.ts:24:12",
+      "to": "db_query:api#src/orders/orders.repository.ts:23:12",
       "type": "calls",
       "confidence": "static",
       "file": "src/orders/orders.repository.ts",
-      "line": 24
+      "line": 23
     },
     {
       "from": "api#src/orders/orders.repository.ts:OrdersRepository.list",
-      "to": "db_query:api#src/orders/orders.repository.ts:16:12",
+      "to": "db_query:api#src/orders/orders.repository.ts:15:12",
       "type": "calls",
       "confidence": "static",
       "file": "src/orders/orders.repository.ts",
-      "line": 16
+      "line": 15
     },
     {
       "from": "api#src/orders/orders.routes.ts:GET /:orderId@25",
@@ -510,28 +510,28 @@
       "line": 19
     },
     {
-      "from": "db_query:api#src/orders/orders.repository.ts:16:12",
+      "from": "db_query:api#src/orders/orders.repository.ts:15:12",
       "to": "table:api#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.repository.ts",
-      "line": 16
+      "line": 15
     },
     {
-      "from": "db_query:api#src/orders/orders.repository.ts:20:12",
+      "from": "db_query:api#src/orders/orders.repository.ts:19:12",
       "to": "table:api#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.repository.ts",
-      "line": 20
+      "line": 19
     },
     {
-      "from": "db_query:api#src/orders/orders.repository.ts:24:12",
+      "from": "db_query:api#src/orders/orders.repository.ts:23:12",
       "to": "table:api#orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.repository.ts",
-      "line": 24
+      "line": 23
     },
     {
       "from": "entry:api:http:GET:/orders",

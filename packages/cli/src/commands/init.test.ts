@@ -168,14 +168,14 @@ describe('runInit', () => {
 
   it('names a framework it has no reader for, and says the repository is left out', async () => {
     const { root, out } = makeWorkspace();
-    makeRepo(root, 'api', { name: 'api', dependencies: { next: '15.0.0' } });
+    makeRepo(root, 'api', { name: 'api', dependencies: { nuxt: '3.14.0' } });
     const messages: string[] = [];
     const result = await runInit({ dir: root, out, yes: true, print: (m) => messages.push(m) });
     // The configuration still holds it: a repository nobody can read is still a
     // repository of this project, and `type` is an open string.
     expect(result.config.services[0]).toEqual({ name: 'api', repo: '../api', type: UNKNOWN_TYPE });
     const said = messages.join('\n');
-    expect(said).toContain('No reader yet for: api (Next.js)');
+    expect(said).toContain('No reader yet for: api (Nuxt)');
     expect(said).toContain('contribute nothing to the graph');
     expect(said).not.toContain('Could not tell the type of');
   });

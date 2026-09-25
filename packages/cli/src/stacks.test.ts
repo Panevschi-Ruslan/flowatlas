@@ -8,6 +8,8 @@ describe('the stack a repository is built on', () => {
     expect(guessType({ dependencies: { express: '4.19.0' } })).toBe('express');
     expect(guessType({ dependencies: { fastify: '5.2.1' } })).toBe('fastify');
     expect(guessType({ dependencies: { koa: '2.15.0' } })).toBe('koa');
+    expect(guessType({ dependencies: { react: '19.0.0' } })).toBe('react');
+    expect(guessType({ dependencies: { next: '15.0.0' } })).toBe('nextjs');
   });
 
   it('looks in every dependency section', () => {
@@ -31,9 +33,18 @@ describe('the stack a repository is built on', () => {
   });
 
   it('names the framework when there is no reader for it', () => {
-    expect(guessUnread({ dependencies: { next: '15.0.0' } })).toBe('Next.js');
-    expect(guessUnread({ dependencies: { react: '18.2.0' } })).toBe('React');
+    expect(guessUnread({ dependencies: { nuxt: '3.14.0' } })).toBe('Nuxt');
+    expect(guessUnread({ dependencies: { '@remix-run/react': '2.0.0' } })).toBe('Remix');
     expect(guessUnread({ devDependencies: { svelte: '5.0.0' } })).toBe('Svelte');
+  });
+
+  // Every application built on the file-system router declares React too, and
+  // both are read, so the order decides which reader a repository gets. The
+  // one that also finds the routes it answers goes first.
+  it('prefers the file-system router over the framework it is built on', () => {
+    const pkg = { dependencies: { next: '15.0.0', react: '19.0.0' } };
+    expect(guessType(pkg)).toBe('nextjs');
+    expect(guessUnread(pkg)).toBeUndefined();
   });
 
   it('says nothing about a manifest that gave nothing away', () => {
@@ -44,7 +55,7 @@ describe('the stack a repository is built on', () => {
   });
 
   it('writes the note a build prints beside a repository it skipped', () => {
-    expect(noReaderNote({ dependencies: { next: '15.0.0' } })).toBe('Next.js, no reader yet');
+    expect(noReaderNote({ dependencies: { nuxt: '3.14.0' } })).toBe('Nuxt, no reader yet');
   });
 
   // A service configured as `nest` has no reader, and the repository it points
