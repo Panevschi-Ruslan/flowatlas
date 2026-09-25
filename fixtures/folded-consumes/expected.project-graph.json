@@ -1,0 +1,323 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-24T22:20:58.856Z",
+  "services": [
+    {
+      "name": "worker",
+      "repo": "./worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:order:closed",
+      "type": "channel",
+      "label": "order:closed",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "house-bus"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:order:on-hold",
+      "type": "channel",
+      "label": "order:on-hold",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "house-bus"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:order:opened",
+      "type": "channel",
+      "label": "order:opened",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "house-bus"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onLifecycle",
+      "type": "consumer",
+      "label": "LifecycleProjections.onLifecycle",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "house-bus",
+        "decorator": "pSubscribe",
+        "entryId": null
+      }
+    },
+    {
+      "id": "repo:worker",
+      "type": "repo",
+      "label": "worker",
+      "repo": "worker",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "worker#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "worker",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "EventBus",
+          "LifecycleProjections"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "worker#src/bus/event-bus.service.ts:EventBus",
+      "type": "provider",
+      "label": "EventBus",
+      "repo": "worker",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "worker#src/bus/event-bus.service.ts:EventBus.pSubscribe",
+      "type": "method",
+      "label": "EventBus.pSubscribe",
+      "repo": "worker",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 19
+    },
+    {
+      "id": "worker#src/bus/event-bus.service.ts:EventBus.publish",
+      "type": "method",
+      "label": "EventBus.publish",
+      "repo": "worker",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 14
+    },
+    {
+      "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections",
+      "type": "provider",
+      "label": "LifecycleProjections",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 20,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onLifecycle",
+      "type": "method",
+      "label": "LifecycleProjections.onLifecycle",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 49,
+      "meta": {
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "order:opened"
+            ]
+          },
+          {
+            "name": "Consumes",
+            "args": [
+              "order:on-hold"
+            ]
+          },
+          {
+            "name": "Consumes",
+            "args": [
+              "order:closed"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onModuleInit",
+      "type": "method",
+      "label": "LifecycleProjections.onModuleInit",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 24
+    },
+    {
+      "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.subscribeTo",
+      "type": "method",
+      "label": "LifecycleProjections.subscribeTo",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 36
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:order:closed",
+      "to": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onLifecycle",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38
+    },
+    {
+      "from": "channel:order:on-hold",
+      "to": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onLifecycle",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38
+    },
+    {
+      "from": "channel:order:opened",
+      "to": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onLifecycle",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38
+    },
+    {
+      "from": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onLifecycle",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onLifecycle",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38
+    },
+    {
+      "from": "worker#src/projections/lifecycle.service.ts:LifecycleProjections",
+      "to": "worker#src/bus/event-bus.service.ts:EventBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 22
+    },
+    {
+      "from": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onModuleInit",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.subscribeTo",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:worker#OrderState"
+      ],
+      "returns": "void",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 25
+    },
+    {
+      "from": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.subscribeTo",
+      "to": "worker#src/bus/event-bus.service.ts:EventBus.pSubscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38
+    },
+    {
+      "from": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.subscribeTo",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onLifecycle",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38
+    }
+  ],
+  "types": {
+    "type:worker#LifecycleEvent": {
+      "name": "LifecycleEvent",
+      "kind": "object",
+      "declaredIn": "worker#src/projections/lifecycle.service.ts",
+      "structuralHash": "821f0bf2c4755576",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:worker#OrderState": {
+      "name": "OrderState",
+      "kind": "union",
+      "declaredIn": "worker#src/projections/lifecycle.service.ts",
+      "structuralHash": "001695088a37e9ac",
+      "members": [
+        "'ORDER_OPENED'",
+        "'ORDER_ON_HOLD'",
+        "'ORDER_CLOSED'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/bus/event-bus.service.ts",
+      "line": 14,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "worker"
+    }
+  ]
+}
