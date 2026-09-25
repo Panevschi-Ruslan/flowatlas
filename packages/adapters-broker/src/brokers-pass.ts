@@ -247,7 +247,7 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
     // The shape of one argument is only an instance of that, and is used only
     // when the declaration promises nothing.
     const declaredWide =
-      pattern.payloadArg === undefined || spec.payloadFromCallSite === true
+      pattern.payloadArg === undefined
         ? undefined
         : declaredParameterType(call, pattern.payloadArg, ctx.checker);
     // A bus declares every event it can carry; this call sends one of them.

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-24T22:19:22.739Z",
+  "builtAt": "2026-09-25T09:35:16.390Z",
   "services": [
     {
       "name": "api",
@@ -189,6 +189,7 @@
         "rawPath": "/orders",
         "adapter": "express-routes",
         "registration": "ordersRouter.post",
+        "middlewareRead": true,
         "middleware": [
           "express.json()"
         ],
@@ -209,6 +210,7 @@
         "rawPath": "/orders/:orderId/cancel",
         "adapter": "express-routes",
         "registration": "ordersRouter.post",
+        "middlewareRead": true,
         "middleware": [
           "express.json()"
         ],
@@ -737,14 +739,6 @@
       "level": "info",
       "hint": "The type argument is not known here, so the reference names the parameter.",
       "symbol": "T",
-      "service": "api"
-    },
-    {
-      "file": "src/main.ts",
-      "line": 1,
-      "reason": "bootstrap-not-found",
-      "hint": "Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.",
-      "symbol": "bootstrap",
       "service": "api"
     },
     {
