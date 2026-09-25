@@ -1,12 +1,12 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-25T10:28:15.972Z",
+  "builtAt": "2026-09-25T10:49:46.377Z",
   "services": [
     {
       "name": "shop",
       "repo": "./shop",
       "type": "nextjs",
-      "extractor": "@flowatlas/extractor-react"
+      "extractor": "@flowatlas/extractor-nestjs"
     }
   ],
   "nodes": [
@@ -68,10 +68,11 @@
       "meta": {
         "stats": {
           "files": 4,
+          "classes": 0,
+          "skippedExternalCalls": {},
           "functions": 7,
           "components": 1,
-          "hooks": 0,
-          "skippedExternalCalls": {}
+          "hooks": 0
         },
         "adapters": {
           "frontend": [
@@ -82,6 +83,14 @@
           ]
         }
       }
+    },
+    {
+      "id": "shop#app/actions/orders.ts:action archiveOrder@22",
+      "type": "function",
+      "label": "action archiveOrder@22",
+      "repo": "shop",
+      "file": "app/actions/orders.ts",
+      "line": 22
     },
     {
       "id": "shop#app/actions/orders.ts:cancelOrder",
@@ -160,6 +169,14 @@
   ],
   "edges": [
     {
+      "from": "entry:shop:rpc:action:app/actions/orders.ts#archiveOrder",
+      "to": "shop#app/actions/orders.ts:action archiveOrder@22",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 22
+    },
+    {
       "from": "entry:shop:rpc:action:app/actions/orders.ts#cancelOrder",
       "to": "shop#app/actions/orders.ts:cancelOrder",
       "type": "handles",
@@ -174,6 +191,14 @@
       "confidence": "static",
       "file": "app/actions/orders.ts",
       "line": 28
+    },
+    {
+      "from": "shop#app/actions/orders.ts:action archiveOrder@22",
+      "to": "shop#lib/orders-store.ts:archive",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/actions/orders.ts",
+      "line": 23
     },
     {
       "from": "shop#app/actions/orders.ts:cancelOrder",

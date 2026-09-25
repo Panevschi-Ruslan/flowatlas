@@ -37,11 +37,19 @@ handler through `ctx.functions.byId(makeSymbolId(repo, file, functionName))`.
 That index comes from `moduleFunctions` in `packages/core/src/functions.ts`,
 which treats `const x = <arrow>` as a named function and `const x = builder(<arrow>)`
 as nothing. So there is no indexed function named `archiveOrder`, and the
-callers reference `archiveOrder` rather than the arrow inside it. Beside it sits
-a second, independent defect: that pass drops inline handlers altogether, where
-the NestJS pass resolves them with `functionAt`, so `archiveOrder` has no
-`handles` edge either.
+callers reference `archiveOrder` rather than the arrow inside it.
 
-Both belong to `packages/extractor-react`, which is why they are recorded here
-rather than fixed here. When they are fixed, two `calls` edges and one `handles`
-edge appear in this fixture's snapshot, and that movement is the proof.
+Beside it sat a second, independent defect — that pass dropped inline handlers
+altogether, where the NestJS pass resolves them with `functionAt` — and that
+half is **fixed**, though not by anyone working on this fixture. A Next.js
+repository is now read by the server reader with both file kinds open, so
+`archiveOrder`'s inline arrow gets a function node, a `handles` edge from the
+entry, and a `calls` edge into the store it writes through. None of that was
+visible until two branches met, which is why it is recorded here in the tense
+it is: the fixture was written for one defect and now demonstrates one and a
+half.
+
+What is still missing is the caller edge, which belongs to
+`packages/extractor-react`. When it is fixed, `OrdersPage` reaches
+`archiveOrder` as it already reaches `cancelOrder`, and that movement is the
+proof.
