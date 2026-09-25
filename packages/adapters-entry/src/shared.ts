@@ -217,6 +217,79 @@ export const inlineHandlerOf = (
 };
 
 /**
+ * The call an initializer is, when the value was built by one.
+ *
+ * The body of a built export is the whole initializer, so the export reaches
+ * whatever the code inside the call reaches — which is what a person asking
+ * what a route handler touches means, and the reason this edge is worth
+ * drawing at all.
+ */
+const builtValue = (initializer: TsNode | undefined): TsNode | undefined => {
+  if (initializer === undefined) return undefined;
+  const value = unwrapValue(initializer);
+  return Node.isCallExpression(value) ? value : undefined;
+};
+
+/** `export const GET = withWorkspace(…)`: the declaration is what the name belongs to. */
+const builtFromDeclaration = (declaration: TsNode): NamedFunction | undefined => {
+  if (!Node.isVariableDeclaration(declaration)) return undefined;
+  // A declaration whose name is a pattern names no single value; its elements
+  // do, and they are read below.
+  if (!Node.isIdentifier(declaration.getNameNode())) return undefined;
+  const body = builtValue(declaration.getInitializer());
+  if (body === undefined) return undefined;
+  return {
+    name: declaration.getName(),
+    declaration,
+    body,
+    line: declaration.getStartLineNumber(),
+  };
+};
+
+/**
+ * `export const { POST } = serve<Input>(…)`: one name taken out of a built value.
+ *
+ * A library that answers several verbs from one configuration hands back an
+ * object and the module exports a piece of it, which is a `BindingElement`
+ * rather than a declaration of its own. What the name reaches is still the
+ * call, because nothing here can tell which part of the returned object the
+ * piece is, and the call is what was written.
+ *
+ * The declaration recorded is the variable declaration around the pattern,
+ * which is the node this package's `NamedFunction` can carry. Two names taken
+ * out of one call therefore share a declaration, and a reader that keys on the
+ * declaration will see the first of them; the names, the ids and the lines
+ * stay distinct, which is what every reading downstream of here asks for.
+ *
+ * Only an element written directly in the declaration's own pattern is read. A
+ * name nested a level deeper stands for a piece of a piece, and saying it
+ * reaches the call would be claiming more than was written.
+ */
+const builtFromBindingElement = (element: TsNode): NamedFunction | undefined => {
+  if (!Node.isBindingElement(element)) return undefined;
+  const name = element.getNameNode();
+  if (!Node.isIdentifier(name)) return undefined;
+  const declaration = element.getParent()?.getParent();
+  if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return undefined;
+  const body = builtValue(declaration.getInitializer());
+  if (body === undefined) return undefined;
+  return { name: name.getText(), declaration, body, line: element.getStartLineNumber() };
+};
+
+/**
+ * How a built export is read, by the kind of node the export table hands back.
+ *
+ * A table rather than a chain of tests because the two shapes are two readings
+ * of equal standing, and a third — should a framework invent one — is a row
+ * here and nothing else.
+ */
+const BUILT_EXPORT_READINGS: ReadonlyMap<SyntaxKind, (node: TsNode) => NamedFunction | undefined> =
+  new Map([
+    [SyntaxKind.VariableDeclaration, builtFromDeclaration],
+    [SyntaxKind.BindingElement, builtFromBindingElement],
+  ]);
+
+/**
  * The function an export stands for when a call built its value.
  *
  * `export const GET = withWorkspace(async (req) => { … })` declares a value, so
@@ -229,28 +302,48 @@ export const inlineHandlerOf = (
  * the index that owns the node it points at cannot disagree about what the
  * function behind an export is (R72).
  *
- * Every condition here is load-bearing and each side depends on all of them:
- *
- * - only a `const` the module exports, because the hole this fills is about a
- *   name another module writes, and counting every local `const x = f()` would
- *   turn every configured client in a repository into a function;
- * - the `VariableDeclaration` is the declaration, because that is the node the
- *   exported name belongs to and the node references resolve to;
- * - the body is the whole initializer, so the export reaches whatever the code
- *   inside the call reaches — which is what a person asking what a route
- *   handler touches means, and the reason this edge is worth drawing at all.
+ * What is *not* here any more is the test that the declaration carries an
+ * `export` keyword, and its absence is the point rather than an oversight. That
+ * test was standing in for the question that actually matters — does the module
+ * export this — and it answered wrongly for a value bound to a local name and
+ * re-exported under another (`const handler = NextAuth(opts); export { handler
+ * as GET, handler as POST }`), which is neither a rare spelling nor a private
+ * value. The question is now asked of the module's export table, once, in
+ * `builtExportFunctions` below and in the adapter that looks a verb up in the
+ * same table. Passing a declaration nobody exports to this function will
+ * therefore get an answer, and that is why both callers reach it through an
+ * export table: indexing every local `const x = f()` would turn every
+ * configured client and every memoised value in a repository into a "function",
+ * which is exactly what the old test existed to prevent (R74).
  */
-export const builtExportFunction = (declaration: TsNode): NamedFunction | undefined => {
-  if (!Node.isVariableDeclaration(declaration)) return undefined;
-  if (declaration.getVariableStatement()?.isExported() !== true) return undefined;
-  const initializer = declaration.getInitializer();
-  if (initializer === undefined) return undefined;
-  const value = unwrapValue(initializer);
-  if (!Node.isCallExpression(value)) return undefined;
-  return {
-    name: declaration.getName(),
-    declaration,
-    body: value,
-    line: declaration.getStartLineNumber(),
-  };
+export const builtExportFunction = (declaration: TsNode): NamedFunction | undefined =>
+  BUILT_EXPORT_READINGS.get(declaration.getKind())?.(declaration);
+
+/**
+ * Every export of a module whose value a call built.
+ *
+ * Driven by the export table rather than by the variable declarations written
+ * in the file, because that table is the one place that already knows what the
+ * module exports however it was spelled: a declaration marked `export`, a local
+ * re-exported under another name, or a name taken out of a pattern.
+ *
+ * Two things the table hands back are deliberately dropped. A declaration that
+ * lives in another file arrives here through `export { x } from './other'`, and
+ * indexing it under this file would put a second node where the other module's
+ * reader already made one. And one declaration exported under two names is one
+ * function, recorded under the name it was declared with, because that is the
+ * name the node carries and the one an adapter naming the same declaration will
+ * compute.
+ */
+export const builtExportFunctions = (sourceFile: SourceFile): NamedFunction[] => {
+  const found = new Map<TsNode, NamedFunction>();
+  for (const [, declarations] of sourceFile.getExportedDeclarations()) {
+    for (const declaration of declarations) {
+      if (declaration.getSourceFile() !== sourceFile) continue;
+      if (found.has(declaration)) continue;
+      const fn = builtExportFunction(declaration);
+      if (fn !== undefined) found.set(declaration, fn);
+    }
+  }
+  return [...found.values()];
 };

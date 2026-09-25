@@ -16,3 +16,12 @@ import { withAdmin } from '../../../../lib/with-admin';
  * into `listInvoices`.
  */
 export const GET = withAdmin(async () => Response.json(await listInvoices()));
+
+/**
+ * The same route answered whichever verb the caller uses.
+ *
+ * An alias of a built export: following the name reaches a declaration that is
+ * itself a value a call handed back, which is why the alias is read as a verb
+ * in its own right rather than as a name that must already be a function.
+ */
+export const POST = GET;
