@@ -384,6 +384,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Name the table under adapters.entry.registries in flowatlas.config.json so each registration becomes an entry point.',
   'server-action-unread': () =>
     'Describe the builder that made it, or declare the action as an exported function, so the way in and its callers are visible.',
+  'route-verb-unread': () =>
+    'The file is served at a path but exports no verb this could read. Export GET, POST and the rest by name; a verb assembled at run time cannot be joined to anything that asks for it.',
+  'middleware-matcher-unread': () =>
+    'The matcher is a regular expression, so which routes it guards was not read and every one of them is reported as unguarded. Write it as a path pattern, or name the routes under doctor.publicRoutes.',
   'entry-http-description-inactive': () =>
     'Ordinary in a project of several repositories. If this is the one it was written for, check the spelling of its packages.',
   'entry-http-types-unmatched': () =>
@@ -429,6 +433,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'If the data layer is a class of this repository, add its base to adapters.db.localBaseClasses; if it is a library, add a descriptor for it.',
   'sql-parse-failed': () =>
     'The query is not a literal, so the tables it touches cannot be read. Use a literal, or annotate the call.',
+  'dynamic-table-name': () =>
+    'The table this touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.',
+  'db-call-at-module-level': () =>
+    'The query runs when the module is imported, so there is no function or method to record it under. Move it into one to make it visible.',
 
   // Settings, caches and outgoing addresses (adapters-db/leaves-pass)
   'dynamic-config-key': () => 'The key is computed, so nothing can be recorded. Use a literal key.',
@@ -483,6 +491,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     '@CallsService points at a route the named service does not serve. Check its controllers, or correct the annotation.',
   'duplicate-node-id': () =>
     'Two repositories declared the same id. One of them was kept; rename the other, or split the shared file out into a package.',
+
+  // An end that was declared rather than read (doctor/age.ts)
+  'openapi-document-age': () =>
+    'Nothing here can check a document against the running service, so how recently the document was updated is the only evidence there is that it is still true. Fetch the current one from whoever owns the service if it is behind.',
 
   // Boundaries nothing could be compared on (contracts)
   ...Object.fromEntries(

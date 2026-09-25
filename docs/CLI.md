@@ -513,12 +513,34 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `baseUrlEnv` | string[] | `[]` | settings keys other services use to address this one |
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |
+| `openapi` | string | none | an OpenAPI document that *declares* this service, for an end nothing here can read; path relative to this file |
 | `tsconfig` | string | found in the repository | which TypeScript configuration to parse with |
 | `bootstrap` | string | `src/main.ts` | the application entry file, when it is elsewhere |
 
 **`baseUrlEnv` is what turns a request into an edge.** When a request's address
 is rooted at one of these keys, it resolves to that service's route. A key two
 services both claim resolves to neither, and says so.
+
+**`openapi` is for the ends of a project nobody here can read.** A payment
+provider, another team's service, something written in another language: there
+is no repository to open and no extractor to choose, so the document is read
+instead and its routes and shapes land in the graph exactly as a repository's
+would. `repo` still says where the document lives; `type` is ignored, since no
+extractor runs.
+
+```json
+{ "name": "billing", "repo": "./contracts", "type": "declared", "openapi": "contracts/billing.json" }
+```
+
+Every node, every edge and every join into a declared service carries
+`marker` confidence rather than `static`, because a declaration is somebody's
+word for itself and an edge may not claim more than the weakest of its two ends.
+Nothing here can check a document against the running service, so `doctor`
+reports how recently the document changed — against the newest commit among the
+repositories that *were* read — under `openapi-document-age`. That age is
+worked out when `doctor` runs rather than recorded when the graph is built,
+because it is a question about today. `fixtures/multi-repo-declared` is the
+worked example.
 
 ### Top level
 

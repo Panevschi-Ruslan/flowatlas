@@ -7,6 +7,7 @@
 # I2  no source carries a raw control character
 # I11 fixture snapshots carry the current schema version
 # I12 no extractor is reachable from a sibling extractor
+# I13 every reason a row carries is a reason doctor knows
 #
 # Usage: invariants.sh [--root DIR] [--only NAME]
 #
@@ -109,9 +110,24 @@ check_I12() {
   return 1
 }
 
+# An unregistered reason does not break a report, which is why this has to be a
+# gate. The row's own hint wins over the catalogue, so a reason whose rows all
+# carry their own hint reads perfectly while `isKnownReason` says no, and the
+# only thing that ever says so is one line in a footer. Twice in one month that
+# line was the only notice anybody got. The script explains what it can and
+# cannot see; the blind spots are written down there on purpose.
+check_I13() {
+  echo "I13 every reason a row carries is a reason doctor knows"
+  if node scripts/check-doctor-reasons.mjs; then
+    echo "    ok"
+    return 0
+  fi
+  return 1
+}
+
 # The gates, in the order they are reported. A list and a name per function
 # rather than a run of branches, so adding one is adding a name.
-CHECKS='I1 I2 I11 I12'
+CHECKS='I1 I2 I11 I12 I13'
 
 for name in $CHECKS; do
   [ -n "$only" ] && [ "$only" != "$name" ] && continue
