@@ -644,6 +644,7 @@ three words version 2 knew.
 | `db.localBaseClasses` | string[] | `[]` | classes of your own that behave like a repository, so calls through them are data access |
 | `broker.custom` | object[] | `[]` | an in-house message bus, described so its publishers and handlers are found |
 | `entry.registries` | object[] | `[]` | a table of handlers you keep yourself, described so each registration is a way in |
+| `entry.http` | object[] | `[]` | an HTTP framework nothing here ships an adapter for, described so its routes are read |
 
 A custom broker entry:
 
@@ -714,6 +715,78 @@ handlers registered through an object it declares itself gets one `unresolved`
 row per receiver, saying how many registrations were seen and naming this key. A
 repository that depends on a bot library and has no readable registration at all
 gets one `bot-handlers-not-found` row.
+
+An HTTP framework entry:
+
+```jsonc
+{
+  "name": "minihttp-routes",                 // how it is named in reports
+  "packages": ["minihttp"],                  // a dependency that means it is in use
+  "appTypes": [
+    {
+      "packages": ["minihttp"],              // where the type comes from
+      "typeNames": ["Server"]                // the type routes are declared on
+    }
+  ],
+  "verbs": { "get": "GET", "post": "POST" }, // method name to the verb it answers
+  "verbArgument": "on",                      // a method taking the verb as its first argument
+  "pathArg": 0,                              // which argument spells the path
+  "handlerArg": -1,                          // which one answers; -1 is the last
+  "middlewareBetween": true,                 // the ones between them are that route's middleware
+  "prefixMethod": "basePath",                // returns the application with a prefix in front
+  "prefixMutates": false,                    // true when it changes the one it is called on
+  "prefixOption": "prefix",                  // a constructor option that prefixes the whole router
+  "pathMethod": "route",                     // returns a route object the verbs are written on
+  "mount": {
+    "method": "attach",                      // the call that hangs one application in another
+    "appArg": 1,                             // which argument is the application; -1 is the last
+    "pathArg": 0,                            // which one spells the path it is hung at
+    "prefixKey": { "arg": 1, "key": "prefix" },  // or an options key that spells it
+    "asPlugin": false,                       // true when the application is the argument's first parameter
+    "through": ["routes"]                    // methods turning an application into middleware
+  },
+  "middleware": {
+    "method": "use",                         // the call that installs it on a whole application
+    "scoped": true,                          // the first argument may be a path it is scoped to
+    "named": false,                          // true when the first argument names a lifecycle hook
+    "optionKeys": ["preHandler"]             // keys of a route's options object holding middleware
+  },
+  "routeObject": {
+    "method": "route",                       // a route declared by one object argument
+    "verbKey": "method",
+    "pathKey": "url",
+    "handlerKey": "handler"
+  }
+}
+```
+
+Only `name`, `appTypes` and whichever of the rest the framework actually uses
+are needed; every other key above has a default and most frameworks leave most
+of them out. `verbs` defaults to the eight a method is usually named after, so a
+framework spelling `app.get('/orders', handler)` needs no verb table at all.
+
+**This is the same description the four shipped frameworks are written in.**
+Express, Fastify, Koa and Hono are rows of exactly this shape in
+`packages/adapters-entry/src/route-dialects.ts`, validated by the same schema
+and turned into a reader by the same function, so a description that reads a
+repository correctly for one of them reads it correctly for yours. A field
+nothing here uses would be a field only configuration had ever tested.
+
+**A description cannot turn its own reader on.** An adapter is offered the
+repository's manifest and nothing else, so it cannot know a description exists
+until it is already running. Name `entry-http-custom` under
+`adapters.force.entry` to put it there — and remember that `force` replaces the
+detected list for the whole project, so a project with other services should
+name their adapters beside it.
+
+**A description that matched nothing is a row, not a quiet zero.** Silence is
+the failure mode of every configuration-driven reader, because a repository
+nothing was read from looks exactly like a repository with nothing in it. Three
+rows say which part matched nothing: `entry-http-description-inactive` when none
+of the description's `packages` is a dependency here (ordinary in a project of
+several repositories, and `info`), `entry-http-types-unmatched` when nothing in
+the repository is a value of any type it names, and `entry-http-routes-unmatched`
+when calls on those types were found and none of them spelled a verb and a path.
 
 ### More than one framework in one repository
 

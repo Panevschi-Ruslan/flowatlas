@@ -1,4 +1,5 @@
 import type { AdapterRegistry, EntryAdapter } from '@flowatlas/core';
+import { configuredRoutesAdapter } from './configured-routes.js';
 import { entryRegistriesAdapter } from './entry-registries.js';
 import {
   expressRoutesAdapter,
@@ -33,17 +34,20 @@ export const entryAdapters: readonly EntryAdapter[] = [
   nestjsTelegrafAdapter,
   telegrafCallsAdapter,
   entryRegistriesAdapter,
+  configuredRoutesAdapter,
 ];
 
 export const registerEntryAdapters = (registry: AdapterRegistry): AdapterRegistry =>
   registry.registerAll('entry', entryAdapters);
 
+export { CONFIGURED_ROUTES, configuredRoutesAdapter } from './configured-routes.js';
 export {
   callRoutesAdapter,
   expressRoutesAdapter,
   fastifyRoutesAdapter,
   koaRoutesAdapter,
 } from './call-routes.js';
+export type { CallRoutesOptions } from './call-routes.js';
 export type {
   AppType,
   MiddlewareShape,
@@ -51,7 +55,9 @@ export type {
   RouteDialect,
   RouteObjectShape,
 } from './route-dialects.js';
-export { EXPRESS, FASTIFY, HONO, KOA, ROUTE_DIALECTS } from './route-dialects.js';
+export { dialectOf, EXPRESS, FASTIFY, HONO, KOA, ROUTE_DIALECTS } from './route-dialects.js';
+export type { ActionBuilder } from './action-builders.js';
+export { ACTION_BUILDERS, NEXT_SAFE_ACTION, ZSA } from './action-builders.js';
 export { APP_PAGES, APP_ROUTER, PAGES_API, routePathOfFile } from './nextjs-paths.js';
 export type { FsRouter } from './nextjs-paths.js';
 export {

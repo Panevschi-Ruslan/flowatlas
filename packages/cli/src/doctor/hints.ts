@@ -378,6 +378,14 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Give the handler a name and register that, so the code behind this can be pointed at.',
   'entry-registry-unconfigured': () =>
     'Name the table under adapters.entry.registries in flowatlas.config.json so each registration becomes an entry point.',
+  'server-action-unread': () =>
+    'Describe the builder that made it, or declare the action as an exported function, so the way in and its callers are visible.',
+  'entry-http-description-inactive': () =>
+    'Ordinary in a project of several repositories. If this is the one it was written for, check the spelling of its packages.',
+  'entry-http-types-unmatched': () =>
+    'Nothing here is a value of any type that description names. Check its appTypes against the package the framework is imported from.',
+  'entry-http-routes-unmatched': () =>
+    'Its types match and its routes do not. Check verbs, verbArgument, pathArg and handlerArg on that description.',
 
   // Bots (adapters-entry/nestjs-telegraf, telegraf-calls)
   'dynamic-bot-trigger': () =>
