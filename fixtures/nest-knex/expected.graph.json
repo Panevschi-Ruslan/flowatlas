@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-knex",
-  "generatedAt": "2026-09-24T16:19:34.221Z",
+  "generatedAt": "2026-09-25T13:31:22.276Z",
   "nodes": [
     {
       "id": "db_query:nest-knex#src/users/users.service.ts:13:12",
@@ -391,6 +391,8 @@
       "meta": {
         "stats": {
           "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
           "classes": 3,
           "skippedExternalCalls": {
             "knex": 20,

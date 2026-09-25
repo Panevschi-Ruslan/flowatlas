@@ -13,6 +13,8 @@ import {
   type GraphNode,
   type NamedFunction,
   type NodeType,
+  type RepoStats,
+  type SourceCounts,
   type Unresolved,
 } from '@flowatlas/core';
 import type { ClassDeclaration } from 'ts-morph';
@@ -22,16 +24,15 @@ import type { BootstrapInfo } from './bootstrap.js';
 import { emptyCollection, type EntryRecord, type WrappingCollection } from './wrapping/types.js';
 import { createNestFieldMetaReader } from './types/field-meta-reader.js';
 
-export interface NestStats {
-  files: number;
+/**
+ * What this reader counted, on top of what every reader counts.
+ *
+ * The shared part is {@link RepoStats}: the files opened, the files read and
+ * the difference, plus the tally of calls into installed packages. Only the
+ * classes are this reader's own, and this is the whole of what it adds.
+ */
+export interface NestStats extends RepoStats {
   classes: number;
-  /**
-   * Calls whose receiver is declared in an installed package, counted per
-   * package. They are not edges and not unresolved rows: they are the leaves a
-   * later phase turns into data, cache and outgoing-call nodes. Counting them
-   * keeps that decision visible instead of silent.
-   */
-  skippedExternalCalls: Record<string, number>;
 }
 
 /** Node type and `kind` implied by a class's role. */
@@ -109,17 +110,19 @@ export interface CreateContextOptions {
   base: ExtractContext;
   classes: NestClassIndex;
   bootstrap: BootstrapInfo;
+  /** What the parser made of the repository's sources, counted before any pass ran. */
+  sources: SourceCounts;
   /** How deep anonymous shapes are written out. Defaults to the configured value. */
   maxDepth?: number;
 }
 
 export const createNestContext = (options: CreateContextOptions): NestExtractContext => {
-  const { base, classes, bootstrap } = options;
+  const { base, classes, bootstrap, sources } = options;
   const { builder, repo, repoDir } = base;
   const modules = new ModuleIndex();
   const di = new DiMap();
   const stats: NestStats = {
-    files: 0,
+    ...sources,
     classes: classes.size,
     skippedExternalCalls: {},
   };

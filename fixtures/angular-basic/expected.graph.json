@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "angular-basic",
-  "generatedAt": "2026-09-20T21:55:12.308Z",
+  "generatedAt": "2026-09-25T13:30:56.468Z",
   "nodes": [
     {
       "id": "angular-basic#node_modules/@angular/common:HttpClient",
@@ -304,6 +304,8 @@
       "meta": {
         "stats": {
           "files": 15,
+          "filesRead": 15,
+          "filesUnreadable": 0,
           "classes": 10,
           "templates": 5,
           "skippedExternalCalls": {

@@ -53,5 +53,6 @@ export class OrdersService {
 // these be written without the keyword — a smaller declaration is allowed, a
 // differently shaped one is not.
 //
-// The note sits at the foot of the file because node ids carry line numbers;
-// see the fixture section of the repository README.
+// The note sits at the foot of the file because it is about every method above
+// rather than any one of them: the stub's signature is what decides the shape,
+// and nothing here may re-state by hand what the stub already says.

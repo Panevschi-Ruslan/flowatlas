@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-leaves",
-  "generatedAt": "2026-09-25T11:47:33.041Z",
+  "generatedAt": "2026-09-25T13:31:23.006Z",
   "nodes": [
     {
       "id": "cache_op:nest-leaves#src/orders/orders.service.ts:19:12",
@@ -445,6 +445,8 @@
       "meta": {
         "stats": {
           "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
           "classes": 3,
           "skippedExternalCalls": {
             "ioredis": 5,

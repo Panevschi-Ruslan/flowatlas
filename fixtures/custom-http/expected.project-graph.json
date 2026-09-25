@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-25T10:26:47.282Z",
+  "builtAt": "2026-09-25T13:31:00.164Z",
   "services": [
     {
       "name": "api",
@@ -138,6 +138,8 @@
       "meta": {
         "stats": {
           "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
           "classes": 0,
           "skippedExternalCalls": {
             "minihttp": 5

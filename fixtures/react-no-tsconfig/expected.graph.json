@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "react-no-tsconfig",
-  "generatedAt": "2026-09-25T11:34:31.898Z",
+  "generatedAt": "2026-09-25T13:31:36.176Z",
   "nodes": [
     {
       "id": "react-no-tsconfig#src/OrdersPanel.tsx:OrdersPanel",
@@ -28,6 +28,8 @@
       "meta": {
         "stats": {
           "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
           "functions": 2,
           "components": 1,
           "hooks": 0,

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-guards",
-  "generatedAt": "2026-09-20T21:18:31.069Z",
+  "generatedAt": "2026-09-25T13:31:19.428Z",
   "nodes": [
     {
       "id": "entry:nest-guards:http:GET:/admin/audit",
@@ -389,6 +389,8 @@
       "meta": {
         "stats": {
           "files": 14,
+          "filesRead": 14,
+          "filesUnreadable": 0,
           "classes": 10,
           "skippedExternalCalls": {
             "@nestjs/common": 8,

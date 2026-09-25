@@ -1,6 +1,13 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { Project, ts, type DiagnosticMessageChain } from 'ts-morph';
+import {
+  Project,
+  ts,
+  type DiagnosticWithLocation,
+  type DiagnosticMessageChain,
+  type Program,
+  type SourceFile,
+} from 'ts-morph';
 import type { GraphBuilder } from './builder.js';
 import { normalizeFilePath } from './ids.js';
 import type { Unresolved } from './model/graph.js';
@@ -154,6 +161,71 @@ const firstSentence = (text: string | DiagnosticMessageChain): string =>
   typeof text === 'string' ? text : (text.getMessageText() ?? '');
 
 /**
+ * The parser's first complaint about a file, when it has one.
+ *
+ * Written once because two things ask it — the rows below and the counts beside
+ * them — and a file that is unreadable for the report but readable for the
+ * count would be the arithmetic this whole shape exists to remove.
+ */
+const firstSyntaxError = (program: Program, file: SourceFile): DiagnosticWithLocation | undefined =>
+  program.getSyntacticDiagnostics(file)[0];
+
+/**
+ * How many source files a reading opened, and how many of them it could read.
+ *
+ * Every reader answers these three the same way, because the question is about
+ * the files and not about what any reader makes of them. It used to be one
+ * number per reader, named `files`, and it counted everything opened; a file
+ * the parser gave up on was in it, so the only figure that said anything about
+ * that file said it had been read. The difference is written out rather than
+ * left to be worked out, because a reader who does not know to subtract reads
+ * the first number as the second.
+ */
+export interface SourceCounts {
+  /** Source files the reader opened. */
+  readonly files: number;
+  /** Of those, the ones the parser read. */
+  readonly filesRead: number;
+  /** The rest, each of which has a row of its own naming it. */
+  readonly filesUnreadable: number;
+}
+
+/**
+ * What every reader records about the repository it read.
+ *
+ * The part of a reader's counts that is not about that reader. A reader adds
+ * what only it counts by extending this, so a count that is everyone's is
+ * declared once and cannot be spelled three ways.
+ */
+export interface RepoStats extends SourceCounts {
+  /**
+   * Calls whose receiver is declared in an installed package, counted per
+   * package. They are not edges and not unresolved rows: they are what a
+   * reading decided not to follow, and counting them keeps that decision
+   * visible instead of silent.
+   */
+  skippedExternalCalls: Record<string, number>;
+}
+
+/**
+ * Counts the sources of a parsed project, readable and not.
+ *
+ * Takes the project rather than the whole reading context, because that is all
+ * the question needs: a half of a reading that shares a project with another
+ * half gets the same answer without either half having to ask the other.
+ */
+export const countSources = (project: Project): SourceCounts => {
+  const program = project.getProgram();
+  const files = project.getSourceFiles();
+  const unreadable = files.filter((file) => firstSyntaxError(program, file) !== undefined);
+  return {
+    files: files.length,
+    filesRead: files.length - unreadable.length,
+    filesUnreadable: unreadable.length,
+  };
+};
+
+/**
  * Records every file the parser could not read, as a row naming it.
  *
  * This is one function rather than one per reader on purpose. Every reader
@@ -171,8 +243,9 @@ const firstSentence = (text: string | DiagnosticMessageChain): string =>
  *
  * The row is left at the default level, which is `action`. A file that did not
  * parse is not the tool describing its own limits; it is a hole in the graph
- * with a cause somebody can go and fix, and the count of files read is the only
- * other place the evidence survives — where it says the file was read.
+ * with a cause somebody can go and fix. The other place the evidence survives
+ * is {@link SourceCounts}, which since R75 says how many files were opened and
+ * how many were read rather than leaving the two to be told apart by hand.
  *
  * One row per file, not one per diagnostic. A single missing brace produces a
  * cascade of complaints that are all the same event, and the first of them is
@@ -185,7 +258,7 @@ export const reportUnreadableSources = (
   const program = project.getProgram();
   const rows: Unresolved[] = [];
   for (const file of project.getSourceFiles()) {
-    const [first] = program.getSyntacticDiagnostics(file);
+    const first = firstSyntaxError(program, file);
     if (first === undefined) continue;
     const row: Unresolved = {
       file: normalizeFilePath(file.getFilePath(), repoDir),

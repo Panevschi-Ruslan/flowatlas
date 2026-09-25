@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "fastify-service",
-  "generatedAt": "2026-09-24T22:21:50.649Z",
+  "generatedAt": "2026-09-25T13:31:01.588Z",
   "nodes": [
     {
       "id": "db_query:fastify-service#src/orders/orders.repository.ts:12:12",
@@ -274,6 +274,8 @@
       "meta": {
         "stats": {
           "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
           "classes": 1,
           "skippedExternalCalls": {
             "pg": 3,

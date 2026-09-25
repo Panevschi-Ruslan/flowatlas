@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-types",
-  "generatedAt": "2026-09-14T12:13:07.790Z",
+  "generatedAt": "2026-09-25T13:31:32.105Z",
   "nodes": [
     {
       "id": "entry:nest-types:http:GET:/catalog/categories",
@@ -501,6 +501,8 @@
       "meta": {
         "stats": {
           "files": 18,
+          "filesRead": 18,
+          "filesUnreadable": 0,
           "classes": 10,
           "skippedExternalCalls": {
             "@nestjs/common": 1

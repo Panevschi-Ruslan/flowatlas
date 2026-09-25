@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "fn-data-layer",
-  "generatedAt": "2026-09-24T22:21:51.109Z",
+  "generatedAt": "2026-09-25T13:31:03.153Z",
   "nodes": [
     {
       "id": "db_query:fn-data-layer#src/orders/orders.class.ts:17:12",
@@ -269,6 +269,8 @@
       "meta": {
         "stats": {
           "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
           "classes": 3,
           "skippedExternalCalls": {
             "typeorm": 4

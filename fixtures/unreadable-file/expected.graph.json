@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "unreadable-file",
-  "generatedAt": "2026-09-25T12:13:40.434Z",
+  "generatedAt": "2026-09-25T13:31:39.894Z",
   "nodes": [
     {
       "id": "entry:unreadable-file:http:GET:/orders",
@@ -27,6 +27,8 @@
       "meta": {
         "stats": {
           "files": 4,
+          "filesRead": 3,
+          "filesUnreadable": 1,
           "classes": 2,
           "skippedExternalCalls": {}
         },

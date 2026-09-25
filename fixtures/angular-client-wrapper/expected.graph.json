@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "angular-client-wrapper",
-  "generatedAt": "2026-09-25T10:24:45.684Z",
+  "generatedAt": "2026-09-25T13:30:58.013Z",
   "nodes": [
     {
       "id": "angular-client-wrapper#node_modules/@angular/common:HttpClient",
@@ -387,6 +387,8 @@
       "meta": {
         "stats": {
           "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
           "classes": 7,
           "templates": 1,
           "skippedExternalCalls": {

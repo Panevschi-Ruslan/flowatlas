@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-basic",
-  "generatedAt": "2026-09-10T15:40:35.454Z",
+  "generatedAt": "2026-09-25T13:31:14.548Z",
   "nodes": [
     {
       "id": "entry:nest-basic:http:DELETE:/api/orders/:param",
@@ -321,6 +321,8 @@
       "meta": {
         "stats": {
           "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
           "classes": 7,
           "skippedExternalCalls": {
             "@nestjs/common": 2

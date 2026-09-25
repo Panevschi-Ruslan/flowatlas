@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-entries",
-  "generatedAt": "2026-09-09T22:29:12.896Z",
+  "generatedAt": "2026-09-25T13:31:18.794Z",
   "nodes": [
     {
       "id": "channel:order.created",
@@ -357,6 +357,8 @@
       "meta": {
         "stats": {
           "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
           "classes": 4,
           "skippedExternalCalls": {}
         },
