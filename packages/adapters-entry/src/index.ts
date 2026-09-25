@@ -95,6 +95,7 @@ export type {
   WizardChain,
 } from './nestjs-telegraf/index.js';
 export {
+  builtExportFunction,
   enclosingClass,
   enclosingHandler,
   handlerInside,
@@ -104,4 +105,5 @@ export {
   repoClasses,
   repoFunctionOf,
   repoSources,
+  unwrapValue,
 } from './shared.js';

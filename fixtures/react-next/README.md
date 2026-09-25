@@ -12,6 +12,11 @@ address, only functions calling functions.
 `shop` is both a browser and a server. Its routes are declared by where its
 files are — `app/api/orders/[id]/route.ts` exporting `GET` and `PATCH` is two
 ways in at `/api/orders/:param` — and nothing in any of those files says so.
+One of them, `app/api/(admin)/invoices/route.ts`, exports its verb as the value
+a wrapper handed back rather than as a function the module declares, which is
+how the ecosystem's larger repositories write every handler they have. The way
+in was read from the start; what it took until R72 to read was the code behind
+it, so a flow that reached that route used to stop at the boundary.
 It also holds the two things that have no equivalent anywhere else the tool
 reads:
 

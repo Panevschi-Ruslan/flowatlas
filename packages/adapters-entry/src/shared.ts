@@ -115,7 +115,7 @@ export const handlerInside = (
 };
 
 /** `await x`, `(x)` and `x as T` all stand for whatever is inside them. */
-const unwrapValue = (expr: TsNode): TsNode => {
+export const unwrapValue = (expr: TsNode): TsNode => {
   if (Node.isAwaitExpression(expr)) return unwrapValue(expr.getExpression());
   if (Node.isParenthesizedExpression(expr) || Node.isAsExpression(expr)) {
     return unwrapValue(expr.getExpression());
@@ -214,4 +214,43 @@ export const inlineHandlerOf = (
   const sourceFile = argument.getSourceFile();
   const at = sourceFile.getLineAndColumnAtPos(argument.getStart());
   return { file: fileOfNode(argument, ctx), line: at.line, column: at.column, label, inline: true };
+};
+
+/**
+ * The function an export stands for when a call built its value.
+ *
+ * `export const GET = withWorkspace(async (req) => { … })` declares a value, so
+ * every reader that asks what a module *declares a function* to be says there
+ * is none here — and that is the wrong answer twice over, because this is how
+ * a route handler and a wrapped screen are ordinarily written, and because the
+ * name an importer writes is the exported one. The React function index reads
+ * such an export as a function under its own name (R61); this is the same
+ * reading, in one place, so that an adapter naming the code behind a way in and
+ * the index that owns the node it points at cannot disagree about what the
+ * function behind an export is (R72).
+ *
+ * Every condition here is load-bearing and each side depends on all of them:
+ *
+ * - only a `const` the module exports, because the hole this fills is about a
+ *   name another module writes, and counting every local `const x = f()` would
+ *   turn every configured client in a repository into a function;
+ * - the `VariableDeclaration` is the declaration, because that is the node the
+ *   exported name belongs to and the node references resolve to;
+ * - the body is the whole initializer, so the export reaches whatever the code
+ *   inside the call reaches — which is what a person asking what a route
+ *   handler touches means, and the reason this edge is worth drawing at all.
+ */
+export const builtExportFunction = (declaration: TsNode): NamedFunction | undefined => {
+  if (!Node.isVariableDeclaration(declaration)) return undefined;
+  if (declaration.getVariableStatement()?.isExported() !== true) return undefined;
+  const initializer = declaration.getInitializer();
+  if (initializer === undefined) return undefined;
+  const value = unwrapValue(initializer);
+  if (!Node.isCallExpression(value)) return undefined;
+  return {
+    name: declaration.getName(),
+    declaration,
+    body: value,
+    line: declaration.getStartLineNumber(),
+  };
 };

@@ -102,6 +102,43 @@ describe('ways in a Next.js repository declares by where its files are', () => {
     expect(first?.handler !== undefined && isFunctionHandler(first.handler)).toBe(true);
   });
 
+  // The dominant spelling in a real repository, and the one that read as a way
+  // in with nothing behind it: every route in dub is written this way, and the
+  // entry was right while the handler was missing, so nothing past the boundary
+  // was attached to the route (R72).
+  it('names the code behind a verb whose value a call built', () => {
+    const read = extract({
+      '/app/api/orders/route.ts': `
+        import { withWorkspace } from '../../../lib/auth';
+        export const GET = withWorkspace(async (req) => null);
+      `,
+      '/lib/auth.ts': `export const withWorkspace = (fn: unknown) => fn;`,
+    });
+    expect(ids(read)).toEqual(['entry:shop:http:GET:/api/orders']);
+    const handler = read.entries[0]?.handler;
+    // Named after the export, because that is the node the function index gives
+    // such an export, and the two readings are one function for that reason.
+    expect(handler !== undefined && isFunctionHandler(handler) ? handler.functionName : undefined).toBe(
+      'GET',
+    );
+    expect(read.entries[0]?.meta?.['handlerVia']).toBe('function');
+  });
+
+  // A verb whose value is not built by a call is still a value, and a guess
+  // here would be a handler nobody can point at.
+  it('leaves a verb nobody can name as the row it already produced', () => {
+    const read = extract({
+      '/app/api/orders/route.ts': `
+        import { handlers } from '../../../lib/handlers';
+        export const GET = handlers.orders;
+      `,
+      '/lib/handlers.ts': `export const handlers = { orders: async () => null };`,
+    });
+    expect(ids(read)).toEqual(['entry:shop:http:GET:/api/orders']);
+    expect(read.entries[0]?.handler).toBeUndefined();
+    expect(read.entries[0]?.meta?.['handlerVia']).toBe('unread');
+  });
+
   // Aliasing and re-exporting are how a repository shares one handler between
   // two addresses, and both are common enough that missing them loses routes
   // without saying anything.

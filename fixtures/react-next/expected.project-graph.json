@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-25T10:21:16.835Z",
+  "builtAt": "2026-09-25T12:10:20.962Z",
   "services": [
     {
       "name": "shop",
@@ -118,7 +118,7 @@
       "label": "GET /api/invoices",
       "repo": "shop",
       "file": "app/api/(admin)/invoices/route.ts",
-      "line": 10,
+      "line": 18,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -251,12 +251,12 @@
       "repo": "shop",
       "meta": {
         "stats": {
-          "files": 9,
+          "files": 10,
           "classes": 0,
           "skippedExternalCalls": {
             "@prisma/client": 8
           },
-          "functions": 16,
+          "functions": 17,
           "components": 1,
           "hooks": 0
         },
@@ -313,7 +313,7 @@
       "label": "GET",
       "repo": "shop",
       "file": "app/api/(admin)/invoices/route.ts",
-      "line": 10
+      "line": 18
     },
     {
       "id": "shop#app/api/orders/[id]/route.ts:GET",
@@ -406,6 +406,14 @@
       "repo": "shop",
       "file": "lib/orders-store.ts",
       "line": 25
+    },
+    {
+      "id": "shop#lib/with-admin.ts:withAdmin",
+      "type": "function",
+      "label": "withAdmin",
+      "repo": "shop",
+      "file": "lib/with-admin.ts",
+      "line": 11
     },
     {
       "id": "shop#pages/api/legacy-orders.ts:handler",
@@ -703,7 +711,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "app/api/(admin)/invoices/route.ts",
-      "line": 10
+      "line": 18
     },
     {
       "from": "entry:shop:http:GET:/api/orders",
@@ -775,7 +783,15 @@
       "type": "calls",
       "confidence": "static",
       "file": "app/api/(admin)/invoices/route.ts",
-      "line": 11
+      "line": 18
+    },
+    {
+      "from": "shop#app/api/(admin)/invoices/route.ts:GET",
+      "to": "shop#lib/with-admin.ts:withAdmin",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/(admin)/invoices/route.ts",
+      "line": 18
     },
     {
       "from": "shop#app/api/orders/[id]/route.ts:GET",
