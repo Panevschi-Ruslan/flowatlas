@@ -688,7 +688,7 @@ walkthrough from `fixtures/multi-repo`.
 
 ### The rules the code is held to
 
-Eleven invariants, two of which a grep gate enforces on every run:
+Twelve invariants, four of which `pnpm invariants` enforces on every run:
 
 1. The core names no technology. Anything that knows what TypeORM is lives
    behind an adapter.
@@ -705,6 +705,9 @@ Eleven invariants, two of which a grep gate enforces on every run:
 10. Annotations only where reading is blind.
 11. The schema is versioned; a model change bumps it, updates the parser and the
     tests, and regenerates every snapshot.
+12. Extractors are siblings. None of them can be reached from another, through
+    its dependencies or anything behind them; work two of them share lives in a
+    package neither owns.
 
 ---
 
