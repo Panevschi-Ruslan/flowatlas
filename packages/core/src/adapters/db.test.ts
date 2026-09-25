@@ -87,6 +87,49 @@ describe('classifying a call', () => {
     });
     expect(result).toMatchObject({ table: null, op: null, confidence: 'heuristic' });
     expect(result?.unresolved?.reason).toBe('db-receiver-name-only');
+    expect(result?.unresolved?.hint).toContain('declared in this repository');
+    expect(result?.unresolved?.hint).toContain('localBaseClasses');
+  });
+
+  /**
+   * Advice a reader can act on, which depends on who declared the type.
+   *
+   * The only row this produced on one real repository named a type a framework
+   * declares and told the reader to name its base class in their own
+   * configuration — a thing they cannot do, on a list whose whole value is that
+   * everything in it can be done (R64).
+   */
+  it('does not tell a reader to configure a type a package declares', () => {
+    const result = classifyDbCall({
+      method: 'set',
+      origin: origin({ package: 'some-framework', typeName: 'ReadonlyStore', typeArgs: [] }),
+      receiverText: 'cookieStore',
+      nameHints,
+    });
+    expect(result?.unresolved?.reason).toBe('db-receiver-name-only');
+    expect(result?.unresolved?.hint).toContain('the some-framework package declares');
+    expect(result?.unresolved?.hint).not.toContain('localBaseClasses');
+  });
+
+  it('says so when the type came from the language itself', () => {
+    const result = classifyDbCall({
+      method: 'get',
+      origin: origin({ package: null, isLocal: false, typeName: '__type', typeArgs: [] }),
+      receiverText: 'cookieStore',
+      nameHints,
+    });
+    expect(result?.unresolved?.hint).toContain("language's own library");
+    expect(result?.unresolved?.hint).not.toContain('localBaseClasses');
+  });
+
+  it('still asks for an install when nothing resolved at all', () => {
+    const result = classifyDbCall({
+      method: 'find',
+      origin: null,
+      receiverText: 'this.localRepo',
+      nameHints,
+    });
+    expect(result?.unresolved?.hint).toContain("Install the repository's dependencies");
   });
 
   it('does not mistake a static helper on a class for a use of one', () => {

@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { Project } from 'ts-morph';
+import { Project, ts } from 'ts-morph';
 
 export interface CreateProjectOptions {
   /** Absolute path to the repository root. */
@@ -53,6 +53,37 @@ export const TSCONFIG_CANDIDATES = [
   'tsconfig.app.json',
 ] as const;
 
+/**
+ * What the compiler is told when the repository tells it nothing.
+ *
+ * A repository with no tsconfig is not an exotic case: it is what `extract`
+ * meets whenever it is pointed at a bare directory, and since
+ * {@link SOURCE_EXTENSIONS} names both kinds of source, every reader meets it
+ * with `.tsx` files in hand.
+ *
+ * `jsx` is here because without it the compiler answers `Cannot use JSX unless
+ * the '--jsx' flag is provided` on every file of markup in such a repository.
+ * Measured, that is a semantic complaint and not a parse failure — the file is
+ * still parsed as markup, because the extension is what decides that, and the
+ * two readers recognise a component from the syntax rather than from its type,
+ * so the graph of the fixture beside this comment is the same either way. What
+ * the setting fixes is the claim: a project configured to reject the only kind
+ * of file half its globs match is describing a repository nobody has, and
+ * anything that ever asks the checker about markup — a component's own return
+ * type, a prop's shape — would be asking an error type. `Preserve` is the one
+ * setting that asks for parsing and nothing else; the others each name a
+ * runtime whose types would then have to resolve.
+ *
+ * `strict` is off because this reads other people's code and a shape that does
+ * not typecheck is still a shape worth reading; `allowJs` is off because a
+ * repository's compiled output is not its source.
+ */
+const FALLBACK_COMPILER_OPTIONS = {
+  allowJs: false,
+  strict: false,
+  jsx: ts.JsxEmit.Preserve,
+} as const;
+
 export const findTsconfig = (rootDir: string, tsconfig?: string): string | undefined => {
   if (tsconfig !== undefined) {
     const path = tsconfig.startsWith('/') ? tsconfig : join(rootDir, tsconfig);
@@ -80,9 +111,7 @@ export const createProject = (options: CreateProjectOptions): Project => {
   const project = new Project({
     ...(tsConfigFilePath === undefined ? {} : { tsConfigFilePath }),
     skipAddingFilesFromTsConfig: true,
-    ...(tsConfigFilePath === undefined
-      ? { compilerOptions: { allowJs: false, strict: false } }
-      : {}),
+    ...(tsConfigFilePath === undefined ? { compilerOptions: FALLBACK_COMPILER_OPTIONS } : {}),
   });
 
   const sourceRoot = existsSync(join(rootDir, 'src')) ? 'src' : '.';

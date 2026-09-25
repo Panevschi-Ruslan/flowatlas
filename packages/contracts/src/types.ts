@@ -88,7 +88,11 @@ export type ContractStatus = (typeof CONTRACT_STATUSES)[number];
  *             which is a different sentence from the one below and used to be
  *             told in the same words (R43).
  * `unknown` — it writes something, documents of what it writes were read, and
- *             none of them declares this field.
+ *             none of them declares this field. A nested path means exactly
+ *             this too, and is walked key by key through the registry to
+ *             establish it; it used to be answered with this word without
+ *             anything having been compared, which is a fourth thing wearing a
+ *             third thing's name (R67).
  * `none`    — no write was found under the handler within the distance this
  *             walks. A preview endpoint genuinely writes nothing; so does a
  *             handler whose data layer the reader could not follow, and the

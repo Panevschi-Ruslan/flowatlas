@@ -148,6 +148,58 @@ const tableFromOverride = (
 };
 
 /**
+ * Where the receiver's type was declared, which is what decides which advice
+ * can be acted on.
+ *
+ * Four places and not two. The advice used to be chosen on whether the origin
+ * resolved at all, so every type that did resolve was described as one this
+ * repository declares — including a type declared by a package nobody here
+ * controls, whose base class cannot be named in this project's configuration
+ * because this project does not own the declaration. A list whose whole value
+ * is that every row in it can be acted on cannot afford a row that cannot.
+ */
+type OriginPlace = 'unresolved' | 'local' | 'package' | 'library';
+
+const placeOf = (origin: TypeOrigin | null): OriginPlace => {
+  if (origin === null) return 'unresolved';
+  if (origin.isLocal) return 'local';
+  // Neither local nor from a package is the language's own declarations. A
+  // receiver typed as a built-in collection can read as a store by name, and
+  // there is nothing to describe when it does.
+  return origin.package === null ? 'library' : 'package';
+};
+
+/** What a reader is told about the receiver whose name was the only evidence. */
+interface ReceiverOrigin {
+  receiver: string;
+  typeName: string;
+  package: string;
+}
+
+/**
+ * The advice for each place, as a lookup rather than a chain of conditions, so
+ * that a place with no advice of its own is a missing key here rather than a
+ * silent fall-through into a sentence written about somewhere else.
+ */
+const RECEIVER_HINTS: Record<OriginPlace, (at: ReceiverOrigin) => string> = {
+  unresolved: ({ receiver }) =>
+    `The type of ${receiver} could not be resolved. Install the repository's dependencies, or name its base class under adapters.db.localBaseClasses.`,
+  local: ({ receiver, typeName }) =>
+    `${receiver} is typed as ${typeName}, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.`,
+  package: ({ receiver, typeName, package: pkg }) =>
+    `${receiver} is typed as ${typeName}, which the ${pkg} package declares rather than this repository. Add a descriptor for ${pkg} if it is a data layer; there is no local base class to name for it.`,
+  library: ({ receiver, typeName }) =>
+    `${receiver} is typed as ${typeName}, which comes from the language's own library rather than from this repository or any package. There is nothing here to describe as a data layer; the name is the only reason it was read as one.`,
+};
+
+const receiverNameHint = (receiver: string, origin: TypeOrigin | null): string =>
+  RECEIVER_HINTS[placeOf(origin)]({
+    receiver,
+    typeName: origin?.typeName ?? '',
+    package: origin?.package ?? '',
+  });
+
+/**
  * Decides whether a call is data access, and what it touches.
  *
  * Three answers in descending order of confidence, exactly as the plan lays out.
@@ -243,9 +295,7 @@ export const classifyDbCall = (input: DbCallInput): DbClassification | null => {
       source: 'none',
       unresolved: {
         reason: 'db-receiver-name-only',
-        hint: origin === null
-          ? `The type of ${receiver} could not be resolved. Install the repository's dependencies, or name its base class under adapters.db.localBaseClasses.`
-          : `${receiver} is typed as ${origin.typeName}, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.`,
+        hint: receiverNameHint(receiver, origin),
       },
     };
   }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { bySeverity, checkContracts, errorsOf } from './check.js';
-import type { TypeRegistry } from '@flowatlas/core';
+import { bySeverity, checkContracts, errorsOf, stripImpact } from './check.js';
+import type { TypeEntry, TypeRegistry } from '@flowatlas/core';
 import type { ContractReport } from './types.js';
 import { edge, field, graphOf, node, object } from './test-graph.js';
 
@@ -690,5 +690,69 @@ describe('a stripped field, by what it can lose', () => {
       (finding) => finding.rule !== 'whitelist-strip',
     );
     expect(others.every((finding) => finding.impact === undefined)).toBe(true);
+  });
+});
+
+/**
+ * A nested path, which used to be a fourth answer wearing a third one's word.
+ *
+ * `options.name` answered `unknown` — "the documents were read and none of
+ * them declares it" — without anything having been compared at all. Nothing in
+ * the fixture corpus is in that case, because a whitelisting pipe is only read
+ * as stripping at the top of a body, so the case was made to stop existing
+ * rather than given a word of its own and a format version with it (R67).
+ *
+ * `stripImpact` is exercised directly because the comparison cannot yet produce
+ * a nested strip to drive it through `checkContracts`, and code nobody can
+ * reach in a test is code nobody has checked.
+ */
+describe('what a nested path is compared against', () => {
+  const registry: TypeRegistry = {
+    'type:api#Options': object('Options', [field('name', 'string')]),
+    'type:api#ItemSchema': object('ItemSchema', [field('options', 'type:api#Options')]),
+    'type:api#ListSchema': object('ListSchema', [field('options', 'type:api#Options[]')]),
+    'type:api#OpaqueSchema': object('OpaqueSchema', [field('options', 'Record<string, unknown>')]),
+    'type:api#OtherSchema': object('OtherSchema', [field('name', 'string')]),
+  };
+  const typeOf = (id: string) => registry[id];
+  const writing = (...ids: string[]) => ({
+    any: true,
+    documents: ids.map((id) => registry[id] as TypeEntry),
+  });
+
+  it('is stored when the document declares every key of the path', () => {
+    expect(stripImpact(writing('type:api#ItemSchema'), 'options.name', typeOf)).toBe('stored');
+  });
+
+  it('is unknown when the document has the path opened and not the key at the end', () => {
+    expect(stripImpact(writing('type:api#ItemSchema'), 'options.colour', typeOf)).toBe('unknown');
+  });
+
+  it('is unknown when nothing written has the first key either', () => {
+    expect(stripImpact(writing('type:api#OtherSchema'), 'options.name', typeOf)).toBe('unknown');
+  });
+
+  it('reads through an array, because the element is what is written', () => {
+    expect(stripImpact(writing('type:api#ListSchema'), 'options[].name', typeOf)).toBe('stored');
+  });
+
+  it('is unread when the path runs into a shape nothing here can open', () => {
+    // A document that declares the key as a bag says nothing about what is in
+    // it, and saying "none of them declares it" of a bag would be the same
+    // claim R43 was raised about.
+    expect(stripImpact(writing('type:api#OpaqueSchema'), 'options.name', typeOf)).toBe('unread');
+  });
+
+  it('answers stored when any one of several documents declares the path', () => {
+    expect(
+      stripImpact(writing('type:api#OtherSchema', 'type:api#ItemSchema'), 'options.name', typeOf),
+    ).toBe('stored');
+  });
+
+  it('still answers a top-level key the way it always did', () => {
+    expect(stripImpact(writing('type:api#OtherSchema'), 'name', typeOf)).toBe('stored');
+    expect(stripImpact(writing('type:api#OtherSchema'), 'course', typeOf)).toBe('unknown');
+    expect(stripImpact({ any: true, documents: [] }, 'course', typeOf)).toBe('unread');
+    expect(stripImpact({ any: false, documents: [] }, 'course', typeOf)).toBe('none');
   });
 });
