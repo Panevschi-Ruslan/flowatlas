@@ -333,6 +333,10 @@ export const SHARPENERS: Readonly<Record<string, (row: Unresolved, context: Hint
  * is named under `unknownReasons` so that the gap is visible rather than quiet.
  */
 export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
+  // Reading (core/project.ts)
+  'file-not-parsed': () =>
+    'The parser could not read this file, so nothing in it is in the graph — no node, no edge, and no row but this one. Fix the syntax, or keep the file out of the globs the reader is given.',
+
   // Types (core/types/collector.ts)
   'type-unresolved': () =>
     'The checker could not resolve this type. Install the dependencies of the repository, or fix the paths in its tsconfig.',

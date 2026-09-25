@@ -1,6 +1,9 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { Project, ts } from 'ts-morph';
+import { Project, ts, type DiagnosticMessageChain } from 'ts-morph';
+import type { GraphBuilder } from './builder.js';
+import { normalizeFilePath } from './ids.js';
+import type { Unresolved } from './model/graph.js';
 
 export interface CreateProjectOptions {
   /** Absolute path to the repository root. */
@@ -122,6 +125,83 @@ export const createProject = (options: CreateProjectOptions): Project => {
     ...SKIPPED_SUFFIXES.map((suffix) => `!${join(rootDir, `**/*${suffix}`)}`),
   ]);
   return project;
+};
+
+/**
+ * The reason written on a file the parser could not read.
+ *
+ * Exported because the advice catalogue in the command keys on it, and a reason
+ * spelled in two places is a reason that will one day be spelled two ways.
+ */
+export const UNREADABLE_FILE_REASON = 'file-not-parsed';
+
+/**
+ * The shape {@link reportUnreadableSources} needs from whoever is reading.
+ *
+ * Deliberately narrower than the extraction context every reader already holds,
+ * which satisfies it: this function has no business with the configuration, the
+ * manifest or the adapters, and a parameter that named the whole context would
+ * let it grow one.
+ */
+export interface UnreadableSourceContext {
+  readonly project: Project;
+  readonly repoDir: string;
+  readonly builder: GraphBuilder;
+}
+
+/** The first sentence of a diagnostic, which may arrive as a chain of them. */
+const firstSentence = (text: string | DiagnosticMessageChain): string =>
+  typeof text === 'string' ? text : (text.getMessageText() ?? '');
+
+/**
+ * Records every file the parser could not read, as a row naming it.
+ *
+ * This is one function rather than one per reader on purpose. Every reader
+ * opens its repository through {@link createProject} and every reader has a
+ * builder to write into, so the question "could this file be parsed at all" is
+ * the same question in all three and its answer should be worded once. Asked
+ * three times it would drift: three reasons, three levels, three sentences, and
+ * a report that groups by reason would show the same hole under three headings.
+ *
+ * The question asked is syntactic and nothing more. `getPreEmitDiagnostics`
+ * over a project answers a much larger one — every unresolved import in every
+ * repository whose dependencies are not installed — and that answer is noise
+ * here, because a file whose types do not resolve is still read and still
+ * produces nodes and edges. A file with a syntax error produces nothing at all.
+ *
+ * The row is left at the default level, which is `action`. A file that did not
+ * parse is not the tool describing its own limits; it is a hole in the graph
+ * with a cause somebody can go and fix, and the count of files read is the only
+ * other place the evidence survives — where it says the file was read.
+ *
+ * One row per file, not one per diagnostic. A single missing brace produces a
+ * cascade of complaints that are all the same event, and the first of them is
+ * the one that points at where the reading came apart.
+ */
+export const reportUnreadableSources = (
+  context: UnreadableSourceContext,
+): readonly Unresolved[] => {
+  const { project, repoDir, builder } = context;
+  const program = project.getProgram();
+  const rows: Unresolved[] = [];
+  for (const file of project.getSourceFiles()) {
+    const [first] = program.getSyntacticDiagnostics(file);
+    if (first === undefined) continue;
+    const row: Unresolved = {
+      file: normalizeFilePath(file.getFilePath(), repoDir),
+      line: first.getLineNumber(),
+      reason: UNREADABLE_FILE_REASON,
+      message: 'the parser could not read this file, so nothing in it is in the graph',
+      // The compiler's own complaint goes in the advice rather than in the
+      // message, because the report prints one sentence beside a place and that
+      // sentence is this one. What the parser choked on is the only thing that
+      // tells a reader where to start, and saying it twice in one row would
+      // only make the row longer.
+      hint: `${firstSentence(first.getMessageText())} Fix the syntax, or keep the file out of the globs the reader is given.`,
+    };
+    rows.push(builder.addUnresolved(row));
+  }
+  return rows;
 };
 
 /**

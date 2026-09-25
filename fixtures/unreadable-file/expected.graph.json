@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 3,
+  "repo": "unreadable-file",
+  "generatedAt": "2026-09-25T12:13:40.434Z",
+  "nodes": [
+    {
+      "id": "entry:unreadable-file:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "unreadable-file",
+      "file": "src/orders/orders.controller.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "repo:unreadable-file",
+      "type": "repo",
+      "label": "unreadable-file",
+      "repo": "unreadable-file",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "unreadable-file#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "unreadable-file",
+      "file": "src/app.module.ts",
+      "line": 4,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "unreadable-file#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "unreadable-file",
+      "file": "src/orders/orders.controller.ts",
+      "line": 3,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "unreadable-file#src/orders/orders.controller.ts:OrdersController.list",
+      "type": "method",
+      "label": "OrdersController.list",
+      "repo": "unreadable-file",
+      "file": "src/orders/orders.controller.ts",
+      "line": 5
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:unreadable-file:http:GET:/orders",
+      "to": "unreadable-file#src/orders/orders.controller.ts:OrdersController.list",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 5,
+      "params": [],
+      "returns": "string[]"
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/orders/broken.ts",
+      "line": 1,
+      "reason": "file-not-parsed",
+      "message": "the parser could not read this file, so nothing in it is in the graph",
+      "hint": "Property destructuring pattern expected. Fix the syntax, or keep the file out of the globs the reader is given."
+    }
+  ]
+}

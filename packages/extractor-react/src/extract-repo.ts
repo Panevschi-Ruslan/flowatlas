@@ -4,6 +4,7 @@ import {
   GraphBuilder,
   parseConfig,
   readPackageJson,
+  reportUnreadableSources,
   silentLogger,
   type ExtractContext,
   type FlowatlasConfig,
@@ -156,6 +157,13 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     adapters,
     logger,
   };
+
+  // Before any adapter runs, because a file the parser could not read is a hole
+  // in everything that follows and nothing downstream can notice it: a source
+  // with a syntax error is still a source file, still counted among them, and
+  // simply holds nothing any pass can find. The wording lives in the core, so
+  // this reader and its siblings say the same thing about the same event.
+  reportUnreadableSources(base);
 
   // Every adapter goes through the registry, this one included: a repository no
   // frontend adapter recognises is read by none of them.

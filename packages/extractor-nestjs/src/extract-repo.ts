@@ -6,6 +6,7 @@ import {
   normalizeFilePath,
   parseConfig,
   readPackageJson,
+  reportUnreadableSources,
   silentLogger,
   type ExtractContext,
   type FlowatlasConfig,
@@ -165,6 +166,14 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
       ...(bootstrap.globalPrefix === undefined ? {} : { globalPrefix: bootstrap.globalPrefix }),
     },
   };
+
+  // Before any pass runs, because a file the parser could not read is a hole in
+  // everything that follows and the rest of this function has no way of
+  // noticing it: a source with a syntax error is still a source file, still
+  // counted among them, and simply holds nothing any walk can find. Written
+  // here rather than after the halves have run so that it is recorded even if a
+  // pass throws on the wreckage.
+  reportUnreadableSources(base);
 
   // The other half of the same directory. A repository built on a file-system
   // router is a browser and a server at once: its route handlers sit beside the

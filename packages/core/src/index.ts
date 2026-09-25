@@ -185,8 +185,15 @@ export {
   siteOf,
 } from './nodes.js';
 
-export { createProject, findTsconfig, listRepoSources, TSCONFIG_CANDIDATES } from './project.js';
-export type { CreateProjectOptions } from './project.js';
+export {
+  createProject,
+  findTsconfig,
+  listRepoSources,
+  reportUnreadableSources,
+  TSCONFIG_CANDIDATES,
+  UNREADABLE_FILE_REASON,
+} from './project.js';
+export type { CreateProjectOptions, UnreadableSourceContext } from './project.js';
 
 export { namesGivenTo, takesNames } from './markers.js';
 export type { MarkerNames, RecordedMarker, RefusedArg } from './markers.js';
