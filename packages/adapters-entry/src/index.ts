@@ -7,6 +7,7 @@ import {
   koaRoutesAdapter,
 } from './call-routes.js';
 import { nestjsHttpAdapter } from './nestjs-http.js';
+import { nextjsRoutesAdapter } from './nextjs-routes.js';
 import { nestjsMicroserviceAdapter } from './nestjs-microservice.js';
 import { nestjsScheduleAdapter } from './nestjs-schedule.js';
 import { nestjsTelegrafAdapter } from './nestjs-telegraf/index.js';
@@ -22,6 +23,7 @@ export const PACKAGE_NAME = '@flowatlas/adapters-entry';
  */
 export const entryAdapters: readonly EntryAdapter[] = [
   nestjsHttpAdapter,
+  nextjsRoutesAdapter,
   honoRoutesAdapter,
   expressRoutesAdapter,
   fastifyRoutesAdapter,
@@ -50,6 +52,8 @@ export type {
   RouteObjectShape,
 } from './route-dialects.js';
 export { EXPRESS, FASTIFY, HONO, KOA, ROUTE_DIALECTS } from './route-dialects.js';
+export { APP_PAGES, APP_ROUTER, PAGES_API, routePathOfFile } from './nextjs-paths.js';
+export type { FsRouter } from './nextjs-paths.js';
 export {
   entryRegistriesAdapter,
   honoRoutesAdapter,
@@ -57,6 +61,7 @@ export {
   nestjsMicroserviceAdapter,
   nestjsScheduleAdapter,
   nestjsTelegrafAdapter,
+  nextjsRoutesAdapter,
   telegrafCallsAdapter,
 };
 export {

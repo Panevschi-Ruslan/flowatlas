@@ -14,6 +14,12 @@ export const TYPE_SIGNATURES: ReadonlyArray<readonly [type: string, dependency: 
   // Nest application. The first match wins, so the most specific goes first.
   ['nestjs', '@nestjs/core'],
   ['angular', '@angular/core'],
+  // Before `react`, and for the same reason NestJS comes before Express: a
+  // repository built on the file-system router declares both, and it is the
+  // more specific of the two. Reading it as plain React would find its screens
+  // and its requests and none of the routes it answers.
+  ['nextjs', 'next'],
+  ['react', 'react'],
   ['express', 'express'],
   ['fastify', 'fastify'],
   ['koa', 'koa'],
@@ -32,13 +38,13 @@ export const UNKNOWN_TYPE = 'unknown';
  * strength of a second dependency it happens to declare.
  */
 export const UNREAD_SIGNATURES: ReadonlyArray<readonly [framework: string, dependency: string]> = [
-  // The three file-system routers. What they have in common is that the path a
-  // route is served at is the path of the file declaring it, which is a
-  // different fact from a call with a path in it and needs a different reader.
-  ['Next.js', 'next'],
+  // The two file-system routers that are left. What they have in common with
+  // the one that is now read is that the path a route is served at is the path
+  // of the file declaring it — a different fact from a call with a path in it.
+  // What they do not have in common with it is the language the rest is
+  // written in, which is what would have to be read next.
   ['Nuxt', 'nuxt'],
   ['Remix', '@remix-run/react'],
-  ['React', 'react'],
   ['Vue', 'vue'],
   ['Svelte', 'svelte'],
 ];
