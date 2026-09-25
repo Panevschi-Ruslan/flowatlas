@@ -29,19 +29,21 @@ import { inlineName, refOf, registerComponents, sealHashes, type ShapeContext } 
 /**
  * How an edge taken from a document is marked.
  *
- * `marker` is the confidence for a fact somebody asserted rather than one the
- * type system proved, and that is exactly what a document is: an assertion, by
- * a party that is usually not in the room, about code nothing here can open. It
- * ranks below `static` wherever two contributions of one edge meet, which is
- * the right way round — if the service is ever added as a repository, what is
- * read wins over what was declared, without anybody having to remember to.
+ * `declared` is the confidence for a fact a third party asserted about code
+ * nothing here can open, which is exactly what a document is. It ranks below
+ * `static` wherever two contributions of one edge meet, which is the right way
+ * round — if the service is ever added as a repository, what is read wins over
+ * what was declared, without anybody having to remember to. It ranks below
+ * `marker` too, because an annotation is at least written by somebody who can
+ * see the code, and a document is not.
  *
- * The confidence alone does not say a document said it, so every node and edge
- * produced here also carries `declaredBy`, naming the file. That is what lets a
- * report say which end was trusted rather than leaving a reader to infer it
- * from a word that also covers annotations written in a repository's own source.
+ * It used to borrow `marker`, which was true as far as it went — both are
+ * assertions rather than proofs — and wrong in the way that matters: a reader
+ * filtering on `marker` to find annotations to delete was handed a service.
+ * The confidence alone still does not name the document, so every node and edge
+ * produced here also carries `declaredBy`, naming the file.
  */
-const DECLARED_CONFIDENCE = 'marker';
+const DECLARED_CONFIDENCE = 'declared';
 
 /** The key every fact from a document carries, naming the document. */
 export const DECLARED_BY = 'declaredBy';

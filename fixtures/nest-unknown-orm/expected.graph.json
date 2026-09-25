@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "repo": "nest-unknown-orm",
-  "generatedAt": "2026-09-25T13:31:33.683Z",
+  "generatedAt": "2026-09-25T14:34:05.811Z",
   "nodes": [
     {
       "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:16:12",

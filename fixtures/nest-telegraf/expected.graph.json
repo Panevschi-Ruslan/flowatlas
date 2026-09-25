@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "repo": "nest-telegraf",
-  "generatedAt": "2026-09-25T13:31:30.229Z",
+  "generatedAt": "2026-09-25T14:34:03.544Z",
   "nodes": [
     {
       "id": "entry:nest-telegraf:bot_callback:/^order_(\\d+)$/",

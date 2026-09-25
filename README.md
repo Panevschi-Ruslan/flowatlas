@@ -528,7 +528,8 @@ async submit(order: Order) {
 ```
 
 Every edge carries how much to trust it: `static` was read from the code,
-`marker` was declared, `heuristic` was inferred.
+`marker` was asserted by an annotation in the code, `declared` was asserted by
+a document about code that is not here, `heuristic` was inferred.
 
 ---
 

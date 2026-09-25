@@ -4,13 +4,13 @@ import { fileURLToPath } from 'node:url';
 import { loadConfig, parseRepoGraph, type GraphEdge, type RepoGraph } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import { linkGraphs } from '../link.js';
-import { readOpenapiDocument } from './read.js';
+import { DECLARED_BY, readOpenapiDocument } from './read.js';
 
 /**
  * The join itself, run over the fixture, rather than over a graph written here.
  *
  * This file exists because of three rows. The rule that an edge into a declared
- * route is `marker` was written down in a hand-built test and was not in the
+ * route is `declared` was written down in a hand-built test and was not in the
  * build: `readOpenapiDocument` really did mark everything it produced, and the
  * three `http_calls` edges the linker drew *into* those routes stayed `static`,
  * because nothing that drew them had been told. A test that builds its own
@@ -85,16 +85,63 @@ describe('the join, where one end is a service nobody could read', () => {
 
   it('weakens the join edges in particular, not merely the document own edges', () => {
     // Said separately because the document's own `handles` edges were already
-    // `marker` while the joins were `static`, and an assertion over both
+    // weakened while the joins were `static`, and an assertion over both
     // together would have passed on two thirds of the graph.
     const { project } = linked();
     const ids = declaredIds(project);
     const joins = project.edges.filter((edge) => edge.type === 'http_calls' && ids.has(edge.to));
     expect(joins.map((edge) => `${edge.confidence} ${edge.to}`).sort()).toEqual([
-      'marker entry:billing:http:GET:/customers/:param',
-      'marker entry:billing:http:GET:/invoices/:param',
-      'marker entry:billing:http:POST:/invoices',
+      'declared entry:billing:http:GET:/customers/:param',
+      'declared entry:billing:http:GET:/invoices/:param',
+      'declared entry:billing:http:POST:/invoices',
     ]);
+  });
+
+  it('says declared, never marker, about anything the document contributed', () => {
+    // R77. The two used to be one word, so an edge could be an annotation or a
+    // third party's self-description and read identically. Nothing the document
+    // touches may now wear the annotation's word.
+    const { project } = linked();
+    const ids = declaredIds(project);
+    expect(touching(project.edges, ids).map((edge) => edge.confidence).sort()).toEqual(
+      touching(project.edges, ids).map(() => 'declared'),
+    );
+  });
+
+  it('raises the declared edges the day the service is read for real', () => {
+    // The rank ordering is the whole mechanism: `declared` sits below `static`,
+    // so when the same route arrives a second time from a repository that was
+    // actually read, the stronger contribution wins and the edge stops being a
+    // document's word for itself. Nobody has to remember to clear anything.
+    const { project } = linked();
+    const ids = declaredIds(project);
+    const routes = [...ids].filter((id) => id.startsWith('entry:billing:http:'));
+    expect(routes.length).toBeGreaterThan(0);
+
+    // The same graph with the two marks of a document taken off it: nothing
+    // says `declaredBy` any more, and every edge is `static` because it was
+    // read. Everything else is left alone on purpose — this has to be the same
+    // routes at the same ids, or it is not the same service arriving twice.
+    const asRead = declaredGraph();
+    const undeclare = <T extends { meta?: Record<string, unknown> }>(each: T): T => {
+      const { [DECLARED_BY]: _document, ...rest } = each.meta ?? {};
+      return { ...each, meta: rest };
+    };
+    const asIfRead: RepoGraph = {
+      ...asRead,
+      nodes: asRead.nodes.map(undeclare),
+      edges: asRead.edges.map((edge) => ({ ...undeclare(edge), confidence: 'static' as const })),
+    };
+    const { config } = loadConfig(join(FIXTURE, 'flowatlas.config.json'));
+    const { project: reread } = linkGraphs([callerGraph(), asIfRead], config, {
+      builtAt: '2026-01-01T00:00:00.000Z',
+    });
+
+    const joins = reread.edges.filter(
+      (edge) => edge.type === 'http_calls' && routes.includes(edge.to),
+    );
+    expect(joins.length).toBe(3);
+    expect(joins.every((edge) => edge.confidence === 'static')).toBe(true);
   });
 
   it('leaves an edge between two read services exactly as strong as it was', () => {

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "repo": "nest-broker-markers",
-  "generatedAt": "2026-09-25T13:31:15.526Z",
+  "generatedAt": "2026-09-25T14:33:49.143Z",
   "nodes": [
     {
       "id": "channel:order.archived",

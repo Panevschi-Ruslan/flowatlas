@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "repo": "nest-entries",
-  "generatedAt": "2026-09-25T13:31:18.794Z",
+  "generatedAt": "2026-09-25T14:33:53.313Z",
   "nodes": [
     {
       "id": "channel:order.created",

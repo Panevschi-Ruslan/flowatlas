@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "repo": "nest-prisma",
-  "generatedAt": "2026-09-25T13:31:26.204Z",
+  "generatedAt": "2026-09-25T14:34:00.841Z",
   "nodes": [
     {
       "id": "db_query:nest-prisma#src/orders/orders.service.ts:12:12",

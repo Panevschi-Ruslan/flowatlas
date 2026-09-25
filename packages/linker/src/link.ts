@@ -183,14 +183,17 @@ const buildUiIndex = (
  * and it is the confidence a person actually meets, because `impact` and `flow`
  * walk these edges and print what they carry.
  *
+ * `declared` is the word for exactly this and for nothing else, so the join
+ * says what it is rather than borrowing the word for an annotation.
+ *
  * It only ever weakens. A request whose path the extractor had to guess is
  * `heuristic` whoever answers it, and a route somebody declared does not make a
  * guess any better than it was.
  */
 const boundedByRoute = (confidence: Confidence, entry: GraphNode): Confidence =>
-  entry.meta?.['declaredBy'] === undefined || CONFIDENCE_RANK[confidence] <= CONFIDENCE_RANK.marker
+  entry.meta?.['declaredBy'] === undefined || CONFIDENCE_RANK[confidence] <= CONFIDENCE_RANK.declared
     ? confidence
-    : 'marker';
+    : 'declared';
 
 /** The edge a resolved call becomes. */
 const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked' }>): GraphEdge => {
