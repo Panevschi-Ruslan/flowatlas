@@ -56,6 +56,7 @@ was constructed from a variable, so there is no token and no channel.
 | `@Processor('mail')` + `@Process('send-email')` | `src/mail/legacy-mail.processor.ts:15` | `mail` | `mail` | `send-email` | static | — |
 | `@Processor('mail')` + `@Process()` | `src/mail/legacy-mail.processor.ts:22` | `mail` | `mail` | `null` | static | — |
 | `@Processor()` + `process(job)` | `src/mail/anonymous.processor.ts:11` | none | `null` | — | heuristic | `channel-dynamic` |
+| `@Processor('reports')` + `process(job)`, unreached | `src/mail/reports.processor.ts:24` | `reports` | `reports` | — | static | — |
 
 The bullmq shape yields **one** consumer for the whole class, on `process`, with
 `meta.jobNames` read from the literal `case` labels of `switch (job.name)`
@@ -65,6 +66,15 @@ producer set and three consumers.
 
 None of these is a P01 entry, so every consumer here carries
 `meta.entryId: null`.
+
+`ReportsProcessor` is the one class here that no module lists, no constructor
+asks for and nothing calls. It is the R60 case: receiving used to be skipped
+unless an earlier pass had already put the method in the graph, so a worker
+whose only way in is its own queue was read as if it did not exist. It is the
+only consumer whose `provider` and `method` nodes are created by the consumer
+emitter rather than found already there, and `channel:reports` is the only
+channel in this fixture with a reader and no writer — which is what a worker
+deployed on its own looks like from inside one repository.
 
 ## Deliberately unresolvable constructs
 

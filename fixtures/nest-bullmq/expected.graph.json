@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "nest-bullmq",
-  "generatedAt": "2026-09-09T22:29:11.825Z",
+  "generatedAt": "2026-09-25T10:14:27.390Z",
   "nodes": [
     {
       "id": "channel:digest",
@@ -24,6 +24,20 @@
       "repo": "nest-bullmq",
       "file": "src/mail/legacy-mail.processor.ts",
       "line": 15,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:reports",
+      "type": "channel",
+      "label": "reports",
+      "repo": "nest-bullmq",
+      "file": "src/mail/reports.processor.ts",
+      "line": 24,
       "meta": {
         "channelKind": "queue",
         "adapters": [
@@ -84,6 +98,21 @@
       "repo": "nest-bullmq",
       "file": "src/mail/mail.processor.ts",
       "line": 16,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "Processor",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:nest-bullmq#src/mail/reports.processor.ts:ReportsProcessor.process",
+      "type": "consumer",
+      "label": "ReportsProcessor.process",
+      "repo": "nest-bullmq",
+      "file": "src/mail/reports.processor.ts",
+      "line": 24,
       "kind": "job",
       "meta": {
         "kind": "job",
@@ -302,6 +331,23 @@
       "line": 25
     },
     {
+      "id": "nest-bullmq#src/mail/reports.processor.ts:ReportsProcessor",
+      "type": "provider",
+      "label": "ReportsProcessor",
+      "repo": "nest-bullmq",
+      "file": "src/mail/reports.processor.ts",
+      "line": 22,
+      "kind": "injectable"
+    },
+    {
+      "id": "nest-bullmq#src/mail/reports.processor.ts:ReportsProcessor.process",
+      "type": "method",
+      "label": "ReportsProcessor.process",
+      "repo": "nest-bullmq",
+      "file": "src/mail/reports.processor.ts",
+      "line": 24
+    },
+    {
       "id": "producer:nest-bullmq#src/mail/mail.service.ts:26:12",
       "type": "producer",
       "label": "job mail",
@@ -372,8 +418,8 @@
       "repo": "nest-bullmq",
       "meta": {
         "stats": {
-          "files": 8,
-          "classes": 6,
+          "files": 9,
+          "classes": 7,
           "skippedExternalCalls": {
             "bullmq": 4
           }
@@ -413,6 +459,14 @@
       "line": 16
     },
     {
+      "from": "channel:reports",
+      "to": "consumer:nest-bullmq#src/mail/reports.processor.ts:ReportsProcessor.process",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/mail/reports.processor.ts",
+      "line": 24
+    },
+    {
       "from": "consumer:nest-bullmq#src/mail/anonymous.processor.ts:AnonymousProcessor.process",
       "to": "nest-bullmq#src/mail/anonymous.processor.ts:AnonymousProcessor.process",
       "type": "handles",
@@ -446,6 +500,15 @@
       "confidence": "static",
       "file": "src/mail/mail.processor.ts",
       "line": 16,
+      "returns": "void"
+    },
+    {
+      "from": "consumer:nest-bullmq#src/mail/reports.processor.ts:ReportsProcessor.process",
+      "to": "nest-bullmq#src/mail/reports.processor.ts:ReportsProcessor.process",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/mail/reports.processor.ts",
+      "line": 24,
       "returns": "void"
     },
     {
