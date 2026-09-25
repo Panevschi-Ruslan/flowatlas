@@ -1,8 +1,6 @@
 import {
   classifyDbCall,
   declaredParameterType,
-  memberFunction,
-  moduleFunctions,
   narrowUnionByLiteral,
   writtenBodyOutward,
   writtenKeysOf,
@@ -22,10 +20,12 @@ import {
   enclosingMethod,
   evaluateExpression,
   forEachCall,
-  methodBodies,
   parametersOf,
+  scopesOf,
+  type Holder,
   type NestExtractContext,
   type NestExtractorPass,
+  type Scope,
 } from '@flowatlas/extractor-nestjs';
 import type {
   CallExpression,
@@ -128,15 +128,6 @@ const returnsResponse = (node: TsNode): boolean =>
 /** Verbs a request can carry, for reading one out of an argument. */
 const KNOWN_VERBS = new Set(Object.values(HTTP_METHODS));
 
-const WALKED = new Set([
-  'controller',
-  'injectable',
-  'guard',
-  'interceptor',
-  'pipe',
-  'middleware',
-  'plain',
-]);
 
 interface Site {
   file: string;
@@ -161,19 +152,10 @@ const siteOf = (ctx: NestExtractContext, node: TsNode, file: string): Site => {
  * opened, because a repository is mostly functions that touch nothing and a
  * node for each of them is not what anybody asked the graph for.
  */
-interface Holder {
-  id: string;
-  /** Repo-relative path the calls are written in. */
-  file: string;
-  ensure(): void;
-}
-
-/** A holder together with the body to read and the class it belongs to, if any. */
-interface Scope extends Holder {
-  body: TsNode;
-  /** The class the body belongs to, absent when it belongs to none. */
-  owner?: ClassDeclaration;
-}
+// `Holder` and `Scope` come from the extractor, which is where the walk that
+// produces them lives. They were declared here first, and copied when the
+// broker reader needed the same walk; one of the two copies had to go, and the
+// one that stays is the one beside the walk.
 
 /**
  * The leaves a chain of calls ends at.
@@ -871,69 +853,6 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     }
   };
 
-  const scopes = function* (): Generator<Scope> {
-    for (const indexed of ctx.classes.all()) {
-      if (!WALKED.has(indexed.role)) continue;
-      for (const { declaration: method, body } of methodBodies(indexed.declaration)) {
-        const id = ctx.methodIdOf(method);
-        if (id === undefined) continue;
-        yield {
-          id,
-          file: indexed.file,
-          body,
-          owner: indexed.declaration,
-          ensure: () => {
-            ctx.ensureMethodNode(method);
-          },
-        };
-      }
-    }
-
-    // Two ways in may name the same function, and it is still one body to read.
-    const seen = new Set<NamedFunction['declaration']>();
-    const scopeOf = (fn: NamedFunction): Scope => ({
-      id: ctx.functionIdOf(fn),
-      file: ctx.fileOf(fn.declaration),
-      body: fn.body,
-      ensure: () => {
-        ctx.ensureFunctionNode(fn);
-      },
-    });
-
-    for (const source of repoFiles()) {
-      for (const fn of moduleFunctions(source)) {
-        if (seen.has(fn.declaration)) continue;
-        seen.add(fn.declaration);
-        yield scopeOf(fn);
-      }
-
-      // A module of functions spelled as an object: `export const orders = {
-      // list: async () => … }`. A call through one of those is already followed
-      // by name elsewhere, so the function it names is something the graph can
-      // point at and a query inside it belongs to that function.
-      for (const declaration of source.getVariableDeclarations()) {
-        const initializer = declaration.getInitializer();
-        if (initializer === undefined || !Node.isObjectLiteralExpression(initializer)) continue;
-        for (const property of initializer.getProperties()) {
-          if (!Node.isPropertyAssignment(property) && !Node.isMethodDeclaration(property)) continue;
-          const fn = memberFunction(declaration.getNameNode(), property.getName());
-          if (fn === undefined || seen.has(fn.declaration)) continue;
-          seen.add(fn.declaration);
-          yield scopeOf(fn);
-        }
-      }
-    }
-
-    // A handler written in the registration itself — `router.get('/x', async (req) => …)`
-    // — is nobody's module-level function and is where a great deal of Express
-    // and Hono code keeps its queries. The entries pass has already given it a
-    // name and a node.
-    for (const fn of ctx.handlerFunctions) {
-      if (seen.has(fn.declaration)) continue;
-      seen.add(fn.declaration);
-      yield scopeOf(fn);
-    }
-  };
 
   /**
    * A query written where there is no body to hang it off.
@@ -989,7 +908,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
 
   for (const source of repoFiles()) reportModuleLevel(source, ctx.fileOf(source));
 
-  for (const scope of scopes()) {
+  for (const scope of scopesOf(ctx)) {
     forEachCall(scope.body, (call) => {
       const expression = call as unknown as CallExpression;
       if (emitDb(expression, scope)) return;

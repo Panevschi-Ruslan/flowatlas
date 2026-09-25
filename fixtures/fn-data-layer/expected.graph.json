@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "fn-data-layer",
-  "generatedAt": "2026-09-24T21:36:09.624Z",
+  "generatedAt": "2026-09-24T22:21:51.109Z",
   "nodes": [
     {
       "id": "db_query:fn-data-layer#src/orders/orders.class.ts:17:12",
@@ -500,13 +500,6 @@
     }
   },
   "unresolved": [
-    {
-      "file": "src/main.ts",
-      "line": 1,
-      "reason": "bootstrap-not-found",
-      "hint": "Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.",
-      "symbol": "bootstrap"
-    },
     {
       "file": "src/orders/orders.object.ts",
       "line": 22,

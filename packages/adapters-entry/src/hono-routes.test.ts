@@ -73,6 +73,9 @@ const extract = (worker: string, files: Record<string, string> = {}): Read => {
 
 const ids = (read: Read): string[] => read.entries.map((entry) => entry.id).sort();
 
+const middlewareOf = (read: Read, id: string): string[] =>
+  (read.entries.find((entry) => entry.id === id)?.meta?.['middleware'] as string[] | undefined) ?? [];
+
 describe('routes declared by calling the application', () => {
   it('runs where the framework is a dependency', () => {
     expect(honoRoutesAdapter.detect({ dependencies: { hono: '^4.0.0' } })).toBe(true);
@@ -225,6 +228,40 @@ describe('routes declared by calling the application', () => {
       'entry:api:http:GET:/probe',
       'entry:api:http:HEAD:/probe',
     ]);
+  });
+
+  it('carries middleware installed for a whole prefix onto the routes under it', () => {
+    // Read like the other three, and for the audit's sake as much as the
+    // reader's: a route behind `app.use` is behind something, and while this
+    // row said nothing the audit had to tell every reader of a Hono repository
+    // to go and look for themselves.
+    const read = extract(`
+      import { Hono } from 'hono';
+      import { log, requireKey } from './middleware.js';
+      const app = new Hono();
+      app.use('*', log);
+      app.get('/health', (c) => c.text('ok'));
+      app.use('/admin/*', requireKey);
+      app.get('/admin/reports', (c) => c.text('reports'));
+    `, { '/src/middleware.ts': 'export const log = (c: unknown) => c;\nexport const requireKey = (c: unknown) => c;' });
+    expect(middlewareOf(read, 'entry:api:http:GET:/health')).toEqual(['log']);
+    expect(middlewareOf(read, 'entry:api:http:GET:/admin/reports')).toEqual(['log', 'requireKey']);
+  });
+
+  it('keeps that middleware in front of an application handed back with a prefix', () => {
+    // `basePath` returns a new application, and it answers through the one it
+    // came from. A route written on it is behind what was installed above,
+    // even though nothing was installed on the application it is written on.
+    const read = extract(`
+      import { Hono } from 'hono';
+      import { log } from './middleware.js';
+      const app = new Hono();
+      app.use('*', log);
+      const internal = app.basePath('/internal');
+      internal.post('/reload', (c) => c.text('ok'));
+    `, { '/src/middleware.ts': 'export const log = (c: unknown) => c;' });
+    expect(ids(read)).toEqual(['entry:api:http:POST:/internal/reload']);
+    expect(middlewareOf(read, 'entry:api:http:POST:/internal/reload')).toEqual(['log']);
   });
 
   it('says nothing about middleware, which is not a way in', () => {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-20T15:39:41.037Z",
+  "builtAt": "2026-09-24T22:21:53.914Z",
   "services": [
     {
       "name": "api",
@@ -200,6 +200,10 @@
         "rawPath": "/api/*",
         "adapter": "hono-routes",
         "registration": "app.all",
+        "middlewareRead": true,
+        "middleware": [
+          "requestLogger"
+        ],
         "handlerVia": "call"
       }
     },
@@ -217,6 +221,10 @@
         "rawPath": "/api/depots/:depotId/cache",
         "adapter": "hono-routes",
         "registration": "app.on",
+        "middlewareRead": true,
+        "middleware": [
+          "requestLogger"
+        ],
         "handlerVia": "inline"
       }
     },
@@ -234,6 +242,10 @@
         "rawPath": "/api/admin/events",
         "adapter": "hono-routes",
         "registration": "adminRoutes.get",
+        "middlewareRead": true,
+        "middleware": [
+          "requestLogger"
+        ],
         "handlerVia": "function"
       }
     },
@@ -251,6 +263,10 @@
         "rawPath": "/api/admin/orders/:orderId",
         "adapter": "hono-routes",
         "registration": "adminRoutes.get",
+        "middlewareRead": true,
+        "middleware": [
+          "requestLogger"
+        ],
         "handlerVia": "inline"
       }
     },
@@ -285,6 +301,10 @@
         "rawPath": "/api/depots/:depotId/stock-stream",
         "adapter": "hono-routes",
         "registration": "app.get",
+        "middlewareRead": true,
+        "middleware": [
+          "requestLogger"
+        ],
         "handlerVia": "function"
       }
     },
@@ -302,6 +322,10 @@
         "rawPath": "/api/depots/:depotId/stream",
         "adapter": "hono-routes",
         "registration": "app.get",
+        "middlewareRead": true,
+        "middleware": [
+          "requestLogger"
+        ],
         "handlerVia": "function"
       }
     },
@@ -319,6 +343,10 @@
         "rawPath": "/health",
         "adapter": "hono-routes",
         "registration": "app.get",
+        "middlewareRead": true,
+        "middleware": [
+          "requestLogger"
+        ],
         "handlerVia": "inline"
       }
     },
@@ -353,7 +381,9 @@
         "rawPath": "/api/messenger/webhook",
         "adapter": "hono-routes",
         "registration": "app.post",
+        "middlewareRead": true,
         "middleware": [
+          "requestLogger",
           "withNest"
         ],
         "handlerVia": "inline"
@@ -373,6 +403,10 @@
         "rawPath": "/internal/reload",
         "adapter": "hono-routes",
         "registration": "internal.post",
+        "middlewareRead": true,
+        "middleware": [
+          "requestLogger"
+        ],
         "handlerVia": "call"
       }
     },

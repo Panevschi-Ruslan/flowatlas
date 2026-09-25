@@ -91,15 +91,4 @@ export interface BrokerSpec extends BrokerAdapter {
    * be said about — the library talking to itself, drawn as architecture.
    */
   reservedChannels?: readonly string[];
-  /**
-   * Whether the publishing method's own declaration says nothing useful.
-   *
-   * A bus typed for its own catalogue declares what it carries, and that
-   * declaration beats any one call's argument. A socket does not: its `emit` is
-   * `(event: string, ...args: any[])`, so reading the declaration back gives the
-   * rest parameter's array and hides the only shape anybody wrote down. Where
-   * this is set the argument at the call site is the answer, because it is the
-   * only answer there is.
-   */
-  payloadFromCallSite?: boolean;
 }

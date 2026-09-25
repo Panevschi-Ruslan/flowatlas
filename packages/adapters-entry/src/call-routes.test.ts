@@ -30,7 +30,14 @@ export type NextFunction = (error?: unknown) => void;
 export interface Request<P = any, R = any, B = any> { params: P; body: B }
 export interface Response { json(body: unknown): Response; send(body?: unknown): Response }
 export type RequestHandler = (req: Request, res: Response, next: NextFunction) => unknown;
+export interface IRoute {
+  get(...handlers: RequestHandler[]): IRoute;
+  post(...handlers: RequestHandler[]): IRoute;
+  put(...handlers: RequestHandler[]): IRoute;
+  all(...handlers: RequestHandler[]): IRoute;
+}
 export interface IRouter {
+  route(path: string): IRoute;
   get(path: string, ...handlers: RequestHandler[]): this;
   post(path: string, ...handlers: RequestHandler[]): this;
   delete(path: string, ...handlers: RequestHandler[]): this;
@@ -180,6 +187,69 @@ describe('express routes', () => {
       'entry:api:http:GET:/health',
       'entry:api:http:POST:/orders/:param/cancel',
     ]);
+  });
+
+  it('reads a route whose path is declared on the chain rather than on the call', () => {
+    // `app.route('/books')` hands back an `IRoute`, which is a type no row here
+    // names, so every verb written on it used to be read as nothing at all —
+    // silently, which is the failure worth fixing. The path is on the chain and
+    // the verbs are on the route object, and one chain declares as many routes
+    // as it has verbs.
+    const read = express(`
+      import express from 'express';
+      import { list, create } from './books.js';
+      const app = express();
+      app.route('/books').get(list).post(create);
+    `, {
+      '/src/books.ts': `
+        import type { Request, Response } from 'express';
+        export const list = (req: Request, res: Response) => res.json([]);
+        export const create = (req: Request, res: Response) => res.json({});
+      `,
+    });
+    expect(ids(read)).toEqual(['entry:api:http:GET:/books', 'entry:api:http:POST:/books']);
+    expect(read.unresolved).toEqual([]);
+    const entry = read.entries.find((candidate) => candidate.id === 'entry:api:http:GET:/books');
+    // Said as it is written. The reader rewrites the chain into the positional
+    // form to read it, and the entry must not go on to claim the source says
+    // something it does not.
+    expect(entry?.meta?.['registration']).toBe("app.route('/books').get");
+    expect(entry?.handler).toBeDefined();
+  });
+
+  it('puts what a chained route is mounted under, and installed behind, in front of it', () => {
+    const read = express(`
+      import express, { Router } from 'express';
+      import { authenticate } from './auth.js';
+      import { list } from './books.js';
+      const app = express();
+      const books = Router();
+      books.route('/:isbn').get(list);
+      app.use(authenticate);
+      app.use('/library', books);
+    `, {
+      '/src/auth.ts': `
+        import type { Request, Response, NextFunction } from 'express';
+        export const authenticate = (req: Request, res: Response, next: NextFunction) => next();
+      `,
+      '/src/books.ts': `
+        import type { Request, Response } from 'express';
+        export const list = (req: Request, res: Response) => res.json([]);
+      `,
+    });
+    expect(ids(read)).toEqual(['entry:api:http:GET:/library/:param']);
+    expect(middlewareOf(read, 'entry:api:http:GET:/library/:param')).toEqual(['authenticate']);
+  });
+
+  it('says so when the path on the chain is assembled at run time', () => {
+    const read = express(`
+      import express from 'express';
+      const app = express();
+      const pathFor = (name: string) => '/' + name;
+      app.route(pathFor('books')).get((req, res) => res.json([]));
+    `);
+    expect(read.entries).toEqual([]);
+    expect(reasons(read)).toEqual(['route-path-dynamic']);
   });
 
   it('reads a setting rather than a route when only one argument is given', () => {

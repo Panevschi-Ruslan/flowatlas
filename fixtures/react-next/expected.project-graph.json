@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-24T21:37:46.664Z",
+  "builtAt": "2026-09-24T22:22:15.143Z",
   "services": [
     {
       "name": "shop",
@@ -29,6 +29,7 @@
         "path": "/api/legacy-orders",
         "adapter": "nextjs-routes",
         "registration": "pages/api",
+        "middlewareRead": true,
         "middleware": [
           "middleware.ts"
         ],
@@ -48,6 +49,7 @@
         "path": "/api/invoices",
         "adapter": "nextjs-routes",
         "registration": "app/route",
+        "middlewareRead": true,
         "middleware": [
           "middleware.ts"
         ],
@@ -67,6 +69,7 @@
         "path": "/api/orders",
         "adapter": "nextjs-routes",
         "registration": "app/route",
+        "middlewareRead": true,
         "middleware": [
           "middleware.ts"
         ],
@@ -86,6 +89,7 @@
         "path": "/api/orders/:param",
         "adapter": "nextjs-routes",
         "registration": "app/route",
+        "middlewareRead": true,
         "middleware": [
           "middleware.ts"
         ],
@@ -105,6 +109,7 @@
         "path": "/api/orders/:param",
         "adapter": "nextjs-routes",
         "registration": "app/route",
+        "middlewareRead": true,
         "middleware": [
           "middleware.ts"
         ],
@@ -124,6 +129,7 @@
         "path": "/api/orders",
         "adapter": "nextjs-routes",
         "registration": "app/route",
+        "middlewareRead": true,
         "middleware": [
           "middleware.ts"
         ],

@@ -1,0 +1,8 @@
+{
+  "name": "fn-broker-api",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

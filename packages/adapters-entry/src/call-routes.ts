@@ -107,6 +107,15 @@ interface AppCall {
   args: TsNode[];
   /** Where in the repository it is written, for putting installs in order. */
   site: Site;
+  /**
+   * How the call is written, when that is not `<receiver>.<method>`.
+   *
+   * A chained declaration is rewritten into the positional form before anything
+   * reads it, and the rewritten shape is not what anybody would find in the
+   * file. The entry says how a route was registered, so it has to say the form
+   * that is really there.
+   */
+  as?: string;
 }
 
 /** Where something was written, kept so a folded row still points somewhere. */
@@ -123,6 +132,43 @@ const siteOf = (node: TsNode, ctx: ExtractContext): Site => ({
   pos: node.getStart(),
 });
 
+/**
+ * The application and the path behind a verb written on a chained route object.
+ *
+ * `app.route('/books').get(list).post(create)` declares both routes at
+ * `/books`, and neither verb is written on the application: the receiver of
+ * `get` is an `IRoute`, a type no row here mentions and nothing downstream
+ * would recognise. Rather than teach the rest of the reader about a second kind
+ * of receiver, the chain is walked back to the call that carries the path — it
+ * is a chain of verbs, since the route object answers with itself — and the
+ * declaration is handed on as the positional form the framework's other
+ * spelling would have produced.
+ */
+const chainedRoute = (
+  receiver: TsNode,
+  dialect: RouteDialect,
+): { app: TsNode; path: TsNode; written: string } | undefined => {
+  if (dialect.pathMethod === undefined) return undefined;
+  let at = unwrap(receiver);
+  for (let depth = 0; depth < 16; depth += 1) {
+    if (!Node.isCallExpression(at)) return undefined;
+    const callee = at.getExpression();
+    if (!Node.isPropertyAccessExpression(callee)) return undefined;
+    const method = callee.getName();
+    const inner = callee.getExpression();
+    if (method === dialect.pathMethod) {
+      const path = at.getArguments()[0];
+      if (path === undefined || !isApp(inner, dialect)) return undefined;
+      return { app: inner, path, written: `${label(inner)}.${method}(${label(path)})` };
+    }
+    // Anything but a verb means this is not a route object: `app.use(…)` hands
+    // back the application itself, which the ordinary path already reads.
+    if (dialect.verbs[method] === undefined) return undefined;
+    at = unwrap(inner);
+  }
+  return undefined;
+};
+
 const appCallsIn = function* (
   sourceFile: SourceFile,
   dialect: RouteDialect,
@@ -132,14 +178,22 @@ const appCallsIn = function* (
     const callee = call.getExpression();
     if (!Node.isPropertyAccessExpression(callee)) continue;
     const receiver = callee.getExpression();
+    const method = callee.getName();
+    const site = siteOf(call, ctx);
+    const chained = dialect.verbs[method] === undefined ? undefined : chainedRoute(receiver, dialect);
+    if (chained !== undefined) {
+      yield {
+        call,
+        receiver: chained.app,
+        method,
+        args: [chained.path, ...call.getArguments()],
+        site,
+        as: `${chained.written}.${method}`,
+      };
+      continue;
+    }
     if (!isApp(receiver, dialect)) continue;
-    yield {
-      call,
-      receiver,
-      method: callee.getName(),
-      args: call.getArguments(),
-      site: siteOf(call, ctx),
-    };
+    yield { call, receiver, method, args: call.getArguments(), site };
   }
 };
 
@@ -414,14 +468,17 @@ interface Mount {
  */
 class Applications {
   readonly #dialect: RouteDialect;
+  /** Held so that a walk started anywhere can say where a call is written. */
+  readonly #ctx: ExtractContext;
   readonly #mounts = new Map<TsNode, Mount[]>();
   readonly #installs = new Map<TsNode, Install[]>();
   /** Prefixes a mutating prefix call put in front of a whole router. */
   readonly #shifted = new Map<TsNode, string | undefined>();
   #shifts = false;
 
-  constructor(dialect: RouteDialect) {
+  constructor(dialect: RouteDialect, ctx: ExtractContext) {
     this.#dialect = dialect;
+    this.#ctx = ctx;
   }
 
   get shifts(): boolean {
@@ -560,9 +617,21 @@ class Applications {
           if (passesThrough(method, dialect)) return inner;
           if (method === dialect.prefixMethod) {
             const at = stringArg(node.getArguments()[0]);
-            return at === undefined
-              ? undefined
-              : inner.map((context) => ({ ...context, prefix: joinPath(context.prefix, at) }));
+            if (at === undefined) return undefined;
+            // An application handed back with a prefix in front of it is a new
+            // application only as far as the address goes: it answers through
+            // the one it came from, so everything installed there before this
+            // line is in front of every route written on it. Without this,
+            // `const internal = app.basePath('/internal')` loses the
+            // `app.use('*', …)` above it for every route under `internal` —
+            // which used to be invisible, because the one framework with a
+            // prefix method of this kind had no installs read at all.
+            const owner = appOwner(callee.getExpression(), dialect);
+            const here = siteOf(node, this.#ctx);
+            return inner.map((context) => ({
+              prefix: joinPath(context.prefix, at),
+              guards: [...context.guards, ...this.guardsOn(owner, here, context.prefix)],
+            }));
           }
           return undefined;
         }
@@ -896,7 +965,7 @@ export const callRoutesAdapter = (dialect: RouteDialect): EntryAdapter => ({
   detect: (pkg) => hasAnyDependency(pkg, dialect.packages),
   extractEntries: (ctx: ExtractContext) => {
     const sources = [...repoSources(ctx)];
-    const applications = new Applications(dialect);
+    const applications = new Applications(dialect, ctx);
     for (const sourceFile of sources) {
       for (const site of appCallsIn(sourceFile, dialect, ctx)) applications.collect(site);
     }
@@ -971,7 +1040,15 @@ export const callRoutesAdapter = (dialect: RouteDialect): EntryAdapter => ({
                 path,
                 rawPath,
                 adapter: dialect.name,
-                registration: `${label(site.receiver)}.${site.method}`,
+                registration: site.as ?? `${label(site.receiver)}.${site.method}`,
+                // Whether the middleware list above is the whole of what stands
+                // in front of this route, or only what the declaration itself
+                // named. A dialect describing where installs are written has
+                // had them read, mounts and all; one that does not describe
+                // them has not, and the audit must not claim a guard it never
+                // looked for — nor, once it does look, go on warning that it
+                // did not.
+                middlewareRead: dialect.middleware !== undefined,
                 ...(middleware.length > 0 ? { middleware } : {}),
                 ...(conditional ? { conditional: true } : {}),
                 // Said plainly, because a walk from this entry is only as narrow

@@ -113,6 +113,16 @@ export interface RouteDialect {
   readonly prefixMutates?: boolean;
   /** A key of the constructor's options object that prefixes the whole router. */
   readonly prefixOption?: string;
+  /**
+   * A method returning a route object already bound to a path, on which the
+   * verbs are then written: Express's `app.route('/books').get(handler)`.
+   *
+   * The path is declared on a type that is not the application, so nothing
+   * downstream would recognise the verb call as a route at all. Naming the
+   * method here is enough, because the reader rewrites the chain into the
+   * ordinary positional form before anything else looks at it.
+   */
+  readonly pathMethod?: string;
   readonly mount?: MountShape;
   readonly middleware?: MiddlewareShape;
   readonly routeObject?: RouteObjectShape;
@@ -152,11 +162,13 @@ const COMMON_VERBS: Readonly<Record<string, string>> = {
  * its own `class ApiRouter extends Router` is read too, because the check walks
  * the base classes.
  *
- * Not read: `app.route('/books').get(handler)`, which declares the path on an
- * `IRoute` rather than on the application. Nothing in the repositories this was
- * measured against writes it, and a row per shape nobody uses is noise; a
- * repository that does write it loses those routes, silently, and that is the
- * one thing here worth fixing next.
+ * `app.route('/books').get(handler)` declares the path on an `IRoute` rather
+ * than on the application, so `pathMethod` names the method that returns it.
+ * Nothing in the four repositories measured writes it, which is why it was left
+ * for a while; what decided it in the end is that the failure was silent — the
+ * verb call is written on a type no row mentions, so those routes were not read
+ * and nothing said so. A wrong address is worse than none, and no address at
+ * all with no row to say so is worse than either.
  */
 export const EXPRESS: RouteDialect = {
   name: 'express-routes',
@@ -167,6 +179,7 @@ export const EXPRESS: RouteDialect = {
     ['Express', 'Application', 'Router', 'IRouter'],
   ),
   verbs: COMMON_VERBS,
+  pathMethod: 'route',
   // One method both mounts and installs: `use(path, router)` is a mount and
   // `use(handler)` is middleware, and which it is depends on whether the last
   // argument is an application. Nothing but the type can say.
@@ -239,11 +252,16 @@ export const KOA: RouteDialect = {
  * one here does; and `basePath` returns a *new* application carrying a prefix,
  * where Koa's `prefix` changes the router it is called on.
  *
- * It declares no `middleware`, and `app.use('*', logger)` is therefore read as
- * neither a route nor a guard. That is a deliberate hole and not a fact about
- * Hono: the Hono fixture's snapshot is the proof that turning one reader into
- * four changed nothing about what the first one read, and filling the hole
- * moves it. It is one field on this row and a snapshot to re-seed.
+ * Its `middleware` row was left empty for a while, which meant `app.use('*',
+ * logger)` was read as neither a route nor a guard. That was never a fact about
+ * Hono: it was the Hono fixture's snapshot standing as proof that turning one
+ * reader into four changed nothing about what the first one read, and filling
+ * the field moves it. The proof has served its purpose and the field is filled,
+ * because the audit now asks each adapter whether it read installs and an
+ * adapter that could read them but does not makes that answer a lie.
+ *
+ * `use` is not the mount here — Hono mounts with `route` — so unlike Express
+ * and Koa this install has nothing to be told apart from.
  */
 export const HONO: RouteDialect = {
   name: 'hono-routes',
@@ -257,6 +275,7 @@ export const HONO: RouteDialect = {
   verbArgument: 'on',
   prefixMethod: 'basePath',
   mount: { method: 'route', appAt: 1, pathAt: 0 },
+  middleware: { install: 'use', scoped: true },
 };
 
 /** Every framework that registers a route by calling the application. */

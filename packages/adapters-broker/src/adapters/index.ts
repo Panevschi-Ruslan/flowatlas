@@ -179,7 +179,6 @@ const socketio: BrokerSpec = {
     { method: 'on', channelArg: 0, handlerArg: 1, receiverPackages: SOCKET_PACKAGES, kind: 'event' },
     { method: 'once', channelArg: 0, handlerArg: 1, receiverPackages: SOCKET_PACKAGES, kind: 'event' },
   ],
-  payloadFromCallSite: true,
   acknowledgedKind: 'rpc',
   channelPrefix: { classDecorator: 'WebSocketGateway', optionKey: 'namespace', separator: '/' },
   reservedChannels: [

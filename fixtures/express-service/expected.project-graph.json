@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-24T21:24:54.447Z",
+  "builtAt": "2026-09-24T22:21:50.177Z",
   "services": [
     {
       "name": "api",
@@ -160,6 +160,7 @@
         "rawPath": "/orders",
         "adapter": "express-routes",
         "registration": "ordersRouter.get",
+        "middlewareRead": true,
         "middleware": [
           "express.json()",
           "authenticate",
@@ -182,6 +183,7 @@
         "rawPath": "/orders/:orderId",
         "adapter": "express-routes",
         "registration": "ordersRouter.get",
+        "middlewareRead": true,
         "middleware": [
           "express.json()",
           "authenticate",
@@ -204,6 +206,7 @@
         "rawPath": "/public/health",
         "adapter": "express-routes",
         "registration": "router.get",
+        "middlewareRead": true,
         "handlerVia": "inline"
       }
     },
@@ -221,6 +224,7 @@
         "rawPath": "/public/summary",
         "adapter": "express-routes",
         "registration": "router.get",
+        "middlewareRead": true,
         "handlerVia": "inline"
       }
     },
@@ -238,6 +242,7 @@
         "rawPath": "/orders",
         "adapter": "express-routes",
         "registration": "ordersRouter.post",
+        "middlewareRead": true,
         "middleware": [
           "express.json()",
           "authenticate",
@@ -668,14 +673,6 @@
   "types": {},
   "unresolved": [
     {
-      "file": "src/main.ts",
-      "line": 1,
-      "reason": "bootstrap-not-found",
-      "hint": "Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.",
-      "symbol": "bootstrap",
-      "service": "api"
-    },
-    {
       "file": "src/orders/orders.routes.ts",
       "line": 45,
       "reason": "route-path-dynamic",
@@ -689,8 +686,7 @@
       "file": "src/public/public.routes.ts",
       "line": 18,
       "reason": "route-unguarded",
-      "level": "info",
-      "message": "GET /public/summary has no route middleware and reaches orders; middleware installed for a whole prefix is not read, so check it by hand.",
+      "message": "GET /public/summary has no guard in front of it and reaches orders.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
       "symbol": "GET /public/summary"
     }

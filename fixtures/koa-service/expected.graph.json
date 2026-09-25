@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repo": "koa-service",
-  "generatedAt": "2026-09-24T16:27:55.060Z",
+  "generatedAt": "2026-09-24T22:21:54.384Z",
   "nodes": [
     {
       "id": "db_query:koa-service#src/orders/orders.repository.ts:12:12",
@@ -74,6 +74,7 @@
         "rawPath": "/orders",
         "adapter": "koa-routes",
         "registration": "ordersRouter.get",
+        "middlewareRead": true,
         "middleware": [
           "authenticate",
           "withTenant"
@@ -95,6 +96,7 @@
         "rawPath": "/orders/:orderId",
         "adapter": "koa-routes",
         "registration": "ordersRouter.get",
+        "middlewareRead": true,
         "middleware": [
           "authenticate",
           "withTenant"
@@ -116,6 +118,7 @@
         "rawPath": "/public/health",
         "adapter": "koa-routes",
         "registration": "publicRouter.get",
+        "middlewareRead": true,
         "handlerVia": "inline"
       }
     },
@@ -133,6 +136,7 @@
         "rawPath": "/public/summary",
         "adapter": "koa-routes",
         "registration": "publicRouter.get",
+        "middlewareRead": true,
         "handlerVia": "inline"
       }
     },
@@ -150,6 +154,7 @@
         "rawPath": "/orders",
         "adapter": "koa-routes",
         "registration": "ordersRouter.post",
+        "middlewareRead": true,
         "middleware": [
           "authenticate",
           "withTenant",
@@ -394,13 +399,6 @@
   ],
   "types": {},
   "unresolved": [
-    {
-      "file": "src/main.ts",
-      "line": 1,
-      "reason": "bootstrap-not-found",
-      "hint": "Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.",
-      "symbol": "bootstrap"
-    },
     {
       "file": "src/orders/orders.routes.ts",
       "line": 38,

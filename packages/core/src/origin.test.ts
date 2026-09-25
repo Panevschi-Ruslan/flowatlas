@@ -1,6 +1,7 @@
 import { Project, SyntaxKind, type SourceFile } from 'ts-morph';
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
+  declaredParameterType,
   entityNameOf,
   packageOfPath,
   resolveTypeOrigin,
@@ -26,6 +27,8 @@ export class Api {
   overBase!: OrdersStore;
   wrapping!: WrappedClient;
   awaited!: Promise<Repository<Order>>;
+  intersected!: Repository<Order> & { $client: Client };
+  bolted!: { $client: Client } & Repository<Order>;
   plain!: string;
 }
 `;
@@ -88,6 +91,23 @@ describe('where a type came from', () => {
 
   it('says nothing about a primitive', () => {
     expect(of('plain')).toBeNull();
+  });
+
+  /**
+   * An intersection has no symbol of its own, so before R53 every receiver
+   * typed as one answered null: no package, no descriptor, no table. That is
+   * how a modern database client is handed out, so it was not a corner case.
+   */
+  it('reads the package out of an intersection', () => {
+    const origin = of('intersected');
+    expect(origin).toMatchObject({ package: 'some-orm', typeName: 'Repository' });
+    if (origin !== null) expect(entityNameOf(origin)).toBe('Order');
+  });
+
+  it('picks the same member whichever half was written first', () => {
+    // The anonymous `{ $client }` is the bolt-on, not the client, and which one
+    // answers must not depend on the order the author typed them in.
+    expect(of('bolted')).toMatchObject({ package: 'some-orm', typeName: 'Repository' });
   });
 });
 
@@ -183,5 +203,59 @@ describe('the keys an object written at a call site puts on the wire', () => {
   it('answers with nothing when there is no object to read', () => {
     expect(written('patch')).toBeUndefined();
     expect(writtenKeysOf([])).toBeUndefined();
+  });
+});
+
+
+/**
+ * A rest parameter is the array the callee is handed, never the thing one call
+ * site passes. A socket library declares `emit(event: string, ...args: any[])`,
+ * and reading that back as the payload answered `any[]` - which is not `any`,
+ * so the `any`/`unknown` guard let it through - and discarded the one argument
+ * with a shape in it.
+ */
+describe('the declared type of an argument', () => {
+  const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: true } });
+  const source = project.createSourceFile(
+    'rest.ts',
+    [
+      'interface Sent { id: string }',
+      'declare class Transport {',
+      '  emit(event: string, ...args: any[]): void;',
+      '  publish(event: string, ...events: Sent[]): void;',
+      '  send(body: Sent): void;',
+      '}',
+      'declare const transport: Transport;',
+      "transport.emit('created', { id: 'a' } as Sent);",
+      "transport.publish('created', { id: 'a' } as Sent, { id: 'b' } as Sent);",
+      "transport.send({ id: 'a' });",
+    ].join('\n'),
+  );
+  const checker = project.getTypeChecker();
+  const calls = source.getDescendantsOfKind(SyntaxKind.CallExpression);
+  const declaredAt = (at: number, index: number) =>
+    declaredParameterType(calls[at]!, index, checker as never)?.getText();
+
+  it('refuses a rest parameter that promises nothing', () => {
+    // `any[]` is not `any`, which is exactly why this slipped through: the
+    // caller falls back to the argument written at the call site only when the
+    // declaration says nothing, and the array made it look as though it had.
+    expect(declaredAt(0, 1)).toBeUndefined();
+  });
+
+  it('answers with the element a rest parameter collects, not the array', () => {
+    expect(declaredAt(1, 1)).toBe('Sent');
+  });
+
+  it('keeps answering past the end of the declared list while one collects', () => {
+    expect(declaredAt(1, 2)).toBe('Sent');
+  });
+
+  it('leaves an ordinary parameter as it is', () => {
+    expect(declaredAt(2, 0)).toBe('Sent');
+  });
+
+  it('says nothing about a position no parameter takes', () => {
+    expect(declaredAt(2, 1)).toBeUndefined();
   });
 });

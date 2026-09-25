@@ -49,6 +49,14 @@ reported. No route under `/orders` is, because `authenticate` is. That is the
 one question this fixture exists to answer, and the answer is in
 `expected.link-report.json`.
 
+It is reported as an ordinary finding and not at `info`. The audit used to list
+any route registered by calling an application as something to check by hand,
+on the grounds that middleware installed for a whole prefix went unread — true
+of the one reader that existed when the sentence was written, and untrue of this
+one, which reads the installs above the mount and says so in
+`meta.middlewareRead` (R50). A hole this fixture was built to show was being
+reported as a limitation of the tool.
+
 ## The prefix, and where it comes from
 
 `publicRouter` is exported by default and imported under a name of `app.ts`'s

@@ -44,11 +44,11 @@ application that declare no route at all.
 
 | Site | Line | Entry | `handlerVia` |
 |---|---|---|---|
-| `app.use('*', requestLogger)` | 20 | — | middleware, not a way in |
+| `app.use('*', requestLogger)` | 20 | — | not a way in; installed in front of every route below it |
 | `app.get('/health', (c) => …)` | 23 | `GET /health` | `inline` |
 | `app.get('/api/depots/:depotId/stream', orderStream)` | 27 | `GET /api/depots/:param/stream` | `function` |
 | `app.get('/api/depots/:depotId/stock-stream', stockStream)` | 28 | `GET /api/depots/:param/stock-stream` | `function` |
-| `app.post('/api/messenger/webhook', withNest, …)` | 34 | `POST /api/messenger/webhook` | `inline`, `meta.middleware: ["withNest"]` |
+| `app.post('/api/messenger/webhook', withNest, …)` | 34 | `POST /api/messenger/webhook` | `inline`, `meta.middleware: ["requestLogger", "withNest"]` |
 | `app.on('DELETE', '…/cache', …)` | 42 | `DELETE /api/depots/:param/cache` | `inline` |
 | `app.get(pathFor('stats'), …)` | 45 | none | `route-path-dynamic` |
 | `app.route('/api/admin', adminRoutes)` | 48 | two, declared in another file | — |
@@ -64,6 +64,12 @@ The receiver's type is what makes a call a route, and the type has to be the
 application: `c.get('orders')` in `src/stream/sse.ts` is written on a receiver
 from the same package and declares nothing. `app.use` and `app.route` are on the
 application and are not routes either.
+
+Every route here carries `requestLogger` in `meta.middleware`, the install above
+them all, and `POST /internal/reload` carries it too although it is written on
+what `basePath` handed back: that is a new application only as far as the
+address goes. `meta.middlewareRead` is `true` on all of them, which is how the
+route audit knows not to say the middleware in front of them went unread.
 
 `GET /health` carries no `/api`, and that is not an oversight — the real worker's
 probe route does not either. A prefix a route does not declare is not added.
