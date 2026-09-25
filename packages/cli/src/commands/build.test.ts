@@ -6,7 +6,7 @@ import { openGraphDb } from '@flowatlas/linker';
 import { afterAll, describe, expect, it } from 'vitest';
 import { resolveNodeId } from '../../../../scripts/fixture-nodes.mjs';
 import { loadBuildCache } from '../build/cache.js';
-import { buildProject, summariseBuild, summariseRebuild, unresolvedLine } from './build.js';
+import { buildProject, inPools, summariseBuild, summariseRebuild, unresolvedLine } from './build.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
 const FIXTURES = join(ROOT, 'fixtures');
@@ -38,28 +38,28 @@ const copyOfMultiRepo = (): string => {
 const FIXTURE = copyOfMultiRepo();
 
 /**
- * A second copy, for the one test whose build is meant to fail.
+ * A second copy, for the tests whose build is meant to fail.
  *
- * A build reads its repositories in a pool and waits on them with
- * `Promise.all`, which settles on the first rejection and leaves the others
- * running. The test below deletes a graph the build would have reused, so the
- * build refuses in about two milliseconds — while the extraction of `orders`
- * it had already started carries on for most of a second and then writes
- * `orders/.flowatlas/graph.json`, long after the test that caused it has
- * finished.
+ * A build used to wait on its extraction pool with `Promise.all`, which settles
+ * on the first rejection and leaves every sibling running. The test below
+ * deletes a graph the build would have reused, so the build refuses in about
+ * two milliseconds — and the extraction of `orders` it had already started went
+ * on for most of a second and then wrote `orders/.flowatlas/graph.json`, long
+ * after the test that caused it had finished. Measured rather than guessed: the
+ * graph was rewritten roughly 720ms after the refusal, with nothing else
+ * running.
  *
  * Every repository graph carries a `generatedAt`, so that late write is a
- * different file, and the next build over the same repository answers
- * `full (graph changed outside the build)` — correctly, because something did
- * change it. Whether it lands before or after the following test records the
- * graph's hash is a race, which is why the rebuild summary below reddened
- * about one run in many and passed on its own every time.
+ * different file whatever the source says, and the next build over the same
+ * repository answered `full (graph changed outside the build)` — correctly,
+ * because something did change it. Whether it landed before or after the next
+ * test recorded the graph's hash was a race, which is why the rebuild summary
+ * below reddened about one run in many and passed on its own every time.
  *
- * Measured rather than guessed: after the refusing build rejects, the graph is
- * rewritten roughly 750ms later with nothing else running.
- *
- * So the refusing build gets a tree nobody else reads. What it leaves running
- * writes where it cannot be mistaken for anybody's answer.
+ * The pool now stops what it started before it returns, and the two tests below
+ * are what hold that. The separate tree stays: they are the tests that would
+ * spread the damage if it ever came back, and a copy of the fixture costs one
+ * directory.
  */
 const DOOMED_FIXTURE = copyOfMultiRepo();
 
@@ -114,6 +114,11 @@ const web = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+const sleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
 /** A directory that looks like a repository but cannot be read. */
 const brokenRepo = (): string => {
   const dir = join(scratch, 'broken-repo');
@@ -123,6 +128,64 @@ const brokenRepo = (): string => {
   writeFileSync(join(dir, 'src', 'main.ts'), 'export const nothing = 1;\n');
   return dir;
 };
+
+describe('the pool the repositories are read in', () => {
+  it('keeps the pool full while nothing fails', async () => {
+    const seen: number[] = [];
+    const results = await inPools([1, 2, 3, 4, 5], 2, async (item) => {
+      seen.push(item);
+      await sleep(1);
+      return item * 2;
+    });
+    expect(results).toEqual([2, 4, 6, 8, 10]);
+    expect(seen.sort()).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it('waits for the jobs it started before it rejects', async () => {
+    let running = 0;
+    const promise = inPools(['fails', 'slow'], 2, async (item) => {
+      running += 1;
+      if (item === 'fails') {
+        running -= 1;
+        throw new Error('first');
+      }
+      await sleep(50);
+      running -= 1;
+    });
+
+    await expect(promise).rejects.toThrow('first');
+    // Read the instant the rejection arrives: a pool that returned early would
+    // still have the slow job in flight here, which is the writer that used to
+    // outlive the build.
+    expect(running).toBe(0);
+  });
+
+  it('throws the first failure, not what a sibling said on its way down', async () => {
+    const promise = inPools(['first', 'second'], 2, async (item) => {
+      if (item === 'first') throw new Error('the one the caller asked about');
+      await sleep(20);
+      throw new Error('the one the abort caused');
+    });
+    await expect(promise).rejects.toThrow('the one the caller asked about');
+  });
+
+  it('starts nothing new once one job has failed, and tells the rest to stop', async () => {
+    const started: string[] = [];
+    let aborted = false;
+    const promise = inPools(['bad', 'slow', 'never'], 2, async (item, signal) => {
+      started.push(item);
+      if (item === 'bad') throw new Error('no');
+      signal.addEventListener('abort', () => {
+        aborted = true;
+      });
+      await sleep(20);
+    });
+
+    await expect(promise).rejects.toThrow('no');
+    expect(started).toEqual(['bad', 'slow']);
+    expect(aborted).toBe(true);
+  });
+});
 
 describe('the line the summary ends on', () => {
   const row = (over: Partial<Unresolved> = {}): Unresolved => ({
@@ -398,9 +461,9 @@ describe('building only some of the repositories', () => {
     expect(JSON.stringify(single.project)).toBe(JSON.stringify(whole.project));
   }, 240_000);
 
-  // On its own tree, because a build that refuses leaves the extraction it had
-  // already started running, and that extraction rewrites a repository graph
-  // some later test is entitled to find unchanged. See `DOOMED_FIXTURE`.
+  // On its own tree, because a build that refuses used to leave the extraction
+  // it had already started running, and that extraction rewrote a repository
+  // graph some later test was entitled to find unchanged. See `DOOMED_FIXTURE`.
   it('refuses when a repository it would have reused has never been read', async () => {
     const doomed = [
       serviceIn(DOOMED_FIXTURE, 'gateway'),
@@ -419,9 +482,41 @@ describe('building only some of the repositories', () => {
       retryDelay: 100,
     });
 
+    const graphPath = join(DOOMED_FIXTURE, 'orders', '.flowatlas', 'graph.json');
+    const before = readFileSync(graphPath, 'utf8');
+
     await expect(
       buildProject({ config, builtAt: FIXED, service: ['orders'] }),
     ).rejects.toThrow(/missing graph for gateway/);
+
+    // The refusal costs two milliseconds and the extraction of `orders` it had
+    // already started costs most of a second, so a build that returned without
+    // waiting left a writer behind. A second of quiet is several times what
+    // that writer was measured to need, and the graph has to be the same file
+    // at the end of it: whatever the build did with the extraction it started,
+    // it did before it answered.
+    await sleep(1_000);
+    expect(readFileSync(graphPath, 'utf8')).toBe(before);
+  }, 240_000);
+
+  // Two builds in one process, which is what a watch, the server and any
+  // embedder do. The first refuses; the second must see the tree the first one
+  // found, not a version of it some orphan of the first one rewrote.
+  it('leaves the next build in the same process nothing to trip over', async () => {
+    const doomed = [
+      serviceIn(DOOMED_FIXTURE, 'gateway'),
+      serviceIn(DOOMED_FIXTURE, 'orders', { baseUrlEnv: ['ORDERS_URL'] }),
+    ];
+    const result = await buildProject({
+      config: configFor('no-graph-first', doomed),
+      builtAt: FIXED,
+    });
+
+    // `gateway` is read in full because the test above deleted its graph, which
+    // is the point: the refusing build only ever had a reason to touch
+    // `orders`, and `orders` is where a late write would show, as a graph whose
+    // `generatedAt` no longer matches the hash the first build recorded.
+    expect(result.plan['orders']).toEqual({ mode: 'skip', reason: '0 files changed' });
   }, 240_000);
 
   it('refuses a name no service has, and lists the ones that do', async () => {

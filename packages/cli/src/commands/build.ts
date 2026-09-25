@@ -115,24 +115,55 @@ export interface BuildResult extends LinkResult {
   cacheProblem?: CacheProblem;
 }
 
-/** Runs a handful of jobs at a time, keeping the pool full. */
-const inPools = async <T, R>(
+/**
+ * Runs a handful of jobs at a time, keeping the pool full.
+ *
+ * A pool that fails stops before it returns. `Promise.all` settles on the first
+ * rejection and leaves every sibling running, so the caller got its failure
+ * while the jobs it had started carried on and wrote their results into the
+ * repositories, minutes of process lifetime after the call that started them
+ * had already failed. In a command that exits immediately nobody sees it; a
+ * watch, the server and any embedder call this repeatedly in one process, and
+ * there the next build races a writer it cannot see.
+ *
+ * So the first failure aborts the signal every job was handed, no further item
+ * is taken, and the pool returns only once every worker it started has stopped.
+ * What it throws is that first failure and not what a sibling said on its way
+ * down: the first one is the answer to the question the caller asked, and the
+ * rest are answers to the abort.
+ */
+export const inPools = async <T, R>(
   items: readonly T[],
   limit: number,
-  work: (item: T) => Promise<R>,
+  work: (item: T, signal: AbortSignal) => Promise<R>,
 ): Promise<R[]> => {
   const results: R[] = new Array(items.length);
+  const stop = new AbortController();
+  // Boxed rather than held bare, so that a job rejecting with `undefined` is
+  // still a job that failed.
+  let failure: { error: unknown } | undefined;
   let next = 0;
   const workers = Array.from({ length: Math.min(Math.max(limit, 1), items.length) }, async () => {
-    for (;;) {
+    while (failure === undefined) {
       const index = next;
       next += 1;
       const item = items[index];
       if (item === undefined) return;
-      results[index] = await work(item);
+      try {
+        results[index] = await work(item, stop.signal);
+      } catch (error) {
+        if (failure === undefined) {
+          failure = { error };
+          stop.abort();
+        }
+        return;
+      }
     }
   });
+  // No worker rejects any more, so this waits for all of them rather than for
+  // the first bad news.
   await Promise.all(workers);
+  if (failure !== undefined) throw failure.error;
   return results;
 };
 
@@ -283,10 +314,20 @@ const normalise = (graph: RepoGraph): RepoGraph =>
  * also mean a repository that cannot be read fails alone. A watch pays that
  * price once and then keeps the program, which is what `sessions` is for.
  */
-const extractApart = async (repoDir: string, configPath: string): Promise<RepoGraph> => {
+const extractApart = async (
+  repoDir: string,
+  configPath: string,
+  signal?: AbortSignal,
+): Promise<RepoGraph> => {
   const out = join(repoDir, DEFAULT_OUTPUT);
+  // A separate process is also a process that can be stopped. When the build
+  // around it has already failed, the child is killed rather than left to write
+  // a graph for an answer nobody will receive. It writes by renaming a
+  // temporary into place, so it is either killed before that or has finished;
+  // there is no half-written graph to find.
   await run(process.execPath, [binPath(), 'extract', repoDir, '--config', configPath, '--out', out], {
     maxBuffer: 64 * 1024 * 1024,
+    ...(signal === undefined ? {} : { signal }),
   });
   return readGraph(serviceGraphPath(repoDir));
 };
@@ -334,6 +375,8 @@ interface ExtractOneOptions {
   builtAt?: string;
   /** When the newest commit of everything read landed, for a document's age. */
   newestCommit?: Date;
+  /** Aborted when the build this read belongs to has already failed. */
+  signal?: AbortSignal;
 }
 
 /**
@@ -438,9 +481,15 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
   try {
     const graph =
       session === undefined
-        ? await extractApart(repoDir, options.configPath)
+        ? await extractApart(repoDir, options.configPath, options.signal)
         : normalise(await extractWarm(session, plan, repoDir));
-    if (session !== undefined) await writeJson(serviceGraphPath(repoDir), graph);
+    // An open repository is read in this process and cannot be interrupted
+    // part-way, so a warm read finishes even when the build around it has
+    // already failed. What it must not do then is write: a graph left behind by
+    // a build that never returned is exactly what the next build trips over.
+    if (session !== undefined && options.signal?.aborted !== true) {
+      await writeJson(serviceGraphPath(repoDir), graph);
+    }
     const facts =
       session === undefined
         ? readRepoFacts(join(repoDir, DEFAULT_OUTPUT, 'cache.json'), service.name)
@@ -632,7 +681,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
     ? await newestCommitAcross(readable.map((service) => loaded.repoDir(service)))
     : undefined;
 
-  const extracted = await inPools(loaded.config.services, limit, (service) => {
+  const extracted = await inPools(loaded.config.services, limit, (service, signal) => {
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
     const surveyed = surveys.find((entry) => entry.service === service.name);
@@ -648,6 +697,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
       ...(session === undefined ? {} : { session }),
       ...(previous === undefined ? {} : { previous }),
       ...(surveyed === undefined ? {} : { stamps: surveyed.files }),
+      signal,
     });
   });
   const extractedAt = Date.now();
