@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-25T09:35:16.390Z",
+  "configHash": "4e88876e469f",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 18,
+      "edges": 17,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 488
+    },
+    {
+      "name": "worker",
+      "repo": "./worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 16,
+      "edges": 11,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 602
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 3,
+    "linked": 3,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:api:http:POST:/orders",
+      "entry:api:http:POST:/orders/:param/cancel"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 31,
+    "edges": 28,
+    "types": 2,
+    "unresolved": 2
+  }
+}

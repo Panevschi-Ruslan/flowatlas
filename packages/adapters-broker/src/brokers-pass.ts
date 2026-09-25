@@ -4,7 +4,6 @@ import {
   narrowUnionByLiteral,
   makeLeafId,
   makeSymbolId,
-  methodBodies,
   type CallPattern,
   type GraphNode,
 } from '@flowatlas/core';
@@ -15,6 +14,9 @@ import {
   findDecorators,
   forEachCall,
   getDecorator,
+  scopesOf,
+  type Holder,
+  type Scope,
   type NestExtractContext,
   type NestExtractorPass,
 } from '@flowatlas/extractor-nestjs';
@@ -31,8 +33,6 @@ import {
   type ChannelShaping,
 } from './channel-name.js';
 import { pairKey, readBrokerMarkers } from './markers.js';
-
-const WALKED = new Set(['controller', 'injectable', 'guard', 'interceptor', 'pipe', 'middleware', 'plain']);
 
 const lineColOf = (node: TsNode): { line: number; column: number } =>
   node.getSourceFile().getLineAndColumnAtPos(node.getStart());
@@ -51,11 +51,17 @@ type ClassShaping = ChannelShaping | { readonly unreadable: string };
 const isUnreadable = (shaping: ClassShaping): shaping is { readonly unreadable: string } =>
   'unreadable' in shaping;
 
-const shapingOf = (owner: ClassDeclaration, spec: BrokerSpec): ClassShaping => {
+/**
+ * `owner` is absent for a publish written outside any class — a module-level
+ * function, or a handler written in the registration. Only the endpoint half of
+ * the shaping is a class's to declare, so what is left is the transport's own
+ * reserved names, which apply wherever the call is written.
+ */
+const shapingOf = (owner: ClassDeclaration | undefined, spec: BrokerSpec): ClassShaping => {
   const reserved = spec.reservedChannels;
   const base: ChannelShaping = reserved === undefined ? {} : { reserved };
   const shape = spec.channelPrefix;
-  if (shape === undefined) return base;
+  if (shape === undefined || owner === undefined) return base;
   const decorator = getDecorator(owner, shape.classDecorator);
   if (decorator === undefined) return base;
   for (const argument of decorator.getArguments()) {
@@ -157,13 +163,18 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
     });
   };
 
-  /** The queue a receiver is bound to, named on the parameter that injected it. */
+  /**
+   * The queue a receiver is bound to, named on the parameter that injected it.
+   *
+   * Only a class has constructor injection to read, so a publish written
+   * outside one has no parameter to carry the name.
+   */
   const channelFromParameter = (
-    owner: ClassDeclaration,
+    owner: ClassDeclaration | undefined,
     receiver: TsNode,
     decoratorName: string,
   ): string | undefined => {
-    if (!Node.isPropertyAccessExpression(receiver)) return undefined;
+    if (owner === undefined || !Node.isPropertyAccessExpression(receiver)) return undefined;
     const entry = ctx.di.lookup(owner, receiver.getName());
     if (entry?.parameter === undefined) return undefined;
     const decorator = getDecorator(entry.parameter, decoratorName);
@@ -172,14 +183,24 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
     return first?.resolved === true && typeof first.value === 'string' ? first.value : undefined;
   };
 
+  /**
+   * Records one publish, wherever it is written.
+   *
+   * `holder` is the body the call sits in: a method, a module-level function, a
+   * member of an object of functions, or a handler written in the registration.
+   * The reader used to walk class methods only, so a publish from a module-level
+   * function yielded no producer and no channel — and a Next.js route handler is
+   * an exported function and never a method, so a handler that published an
+   * event produced nothing at all (R54).
+   */
   const emitProducer = (
     call: CallExpression,
     pattern: CallPattern,
     spec: BrokerSpec,
-    owner: ClassDeclaration,
-    methodId: string,
-    file: string,
+    holder: Holder,
+    owner: ClassDeclaration | undefined,
   ): boolean => {
+    const { id: methodId, file } = holder;
     const args = call.getArguments();
     const { line, column } = lineColOf(call);
     const callee = call.getExpression();
@@ -226,7 +247,7 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
     // The shape of one argument is only an instance of that, and is used only
     // when the declaration promises nothing.
     const declaredWide =
-      pattern.payloadArg === undefined || spec.payloadFromCallSite === true
+      pattern.payloadArg === undefined
         ? undefined
         : declaredParameterType(call, pattern.payloadArg, ctx.checker);
     // A bus declares every event it can carry; this call sends one of them.
@@ -269,6 +290,10 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
     // printed `order:*:*` for a producer that knows the three names behind it —
     // the wildcard the fold exists to remove, still on the screen (R44).
     const reaches = names.length > 0 ? names.join(', ') : undefined;
+    // The body is now known to hold a publish, which is the point at which it
+    // earns a node: `ensure` is deferred precisely so that the thousands of
+    // functions in a repository that publish nothing stay out of the graph.
+    holder.ensure();
     ctx.builder.addNode({
       id: producerId,
       type: 'producer',
@@ -296,7 +321,11 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
     });
 
     if (channelName === null) {
-      const symbol = `${owner.getName() ?? '?'}.${methodId.split('.').pop() ?? ''}`;
+      // The label the graph gives the body, which is what `doctor` joins a row
+      // to when it asks whether an annotation here is justified. Asking the
+      // node rather than spelling `Class.method` again is what lets a function
+      // be named as a function rather than as a method of nothing.
+      const symbol = ctx.builder.getNode(methodId)?.label ?? methodId;
       if (isUnreadable(shaping)) reportEndpoint(shaping, spec, file, line, symbol);
       else reportChannel(resolution, file, line, symbol);
       return true;
@@ -446,9 +475,13 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
       return;
     }
     // One edge per channel the address reaches: a hole holding a closed set of
-    // values is several channels, not one wildcard (R42).
+    // values is several channels, not one wildcard (R42). Each is recorded in
+    // `alreadyStatic` for the same reason a publish is: a `@Consumes` naming any
+    // of them says what the code already says, and has to read that way at both
+    // ends of the channel rather than only at the publishing one (R45).
     for (const name of names) {
       const channel = channelNodeOf(name, spec, file, line);
+      alreadyStatic.add(pairKey(methodId, name));
       ctx.builder.addEdge({
         from: channel.id,
         to: consumerId,
@@ -557,8 +590,12 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
             else reportChannel(resolution, file, line, symbol);
             continue;
           }
+          // Recorded against the handler, which is the method a `@Consumes`
+          // would be written on — not against the method that registered the
+          // subscription, which is usually `onModuleInit` and annotates nothing.
           for (const name of names) {
             const channel = channelNodeOf(name, spec, file, line);
+            alreadyStatic.add(pairKey(handlerId, name));
             ctx.builder.addEdge({
               from: channel.id,
               to: consumerId,
@@ -576,52 +613,73 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
   const matches = (pattern: CallPattern, receiver: TsNode, method: string): boolean =>
     pattern.method === method && receiverIsFrom(receiver, pattern);
 
-  for (const indexed of ctx.classes.all()) {
-    if (!WALKED.has(indexed.role)) continue;
-    const owner = indexed.declaration;
-    const file = indexed.file;
+  // A publish is read wherever it is written. The scope walk is shared with the
+  // data-layer reader rather than copied here, because two copies of the
+  // judgement "what counts as a body" diverge the first time one is reconsidered.
+  /**
+   * Receiving, for a body that is a method of an indexed class.
+   *
+   * Both ways a handler is registered — a decorator on the method, and a
+   * subscribe call that hands over one of the class's own methods — need the
+   * class the method belongs to, so this half stays class-shaped and is asked
+   * only of the scopes that have one. It is read in the same pass as the
+   * publish rather than in a walk of its own so that the two keep arriving in
+   * the order they are written in: a channel node records the first place it
+   * was seen, and splitting the walks moved that from the handler to the
+   * publish for every channel both ends of a repository name.
+   */
+  const readReceiving = (scope: Scope): void => {
+    const { owner, method } = scope;
+    // A handler is registered by a decorator, and a decorator on a property
+    // registers nothing in any of these frameworks: what it publishes is read
+    // above, and there is no subscription here to find.
+    if (owner === undefined || method === undefined || !Node.isMethodDeclaration(method)) return;
+    // Unchanged from before the producer walk was widened: a handler is
+    // recognised on a method the graph already holds. Publishing dropped that
+    // gate because `ensure` now creates the node a producer hangs off; whether
+    // receiving should drop it too is a different question from this one.
+    if (!ctx.builder.has(scope.id)) return;
+    const className = ctx.classes.get(owner)?.name ?? owner.getName() ?? '?';
+    const file = scope.file;
 
-    for (const { declaration: method, body } of methodBodies(owner)) {
-      const methodId = ctx.methodIdOf(method);
-      if (methodId === undefined || !ctx.builder.has(methodId)) continue;
+    emitSubscribers(method, owner, file, className);
 
-      {
-        forEachCall(body, (call) => {
-          const expression = call as unknown as CallExpression;
-          const callee = expression.getExpression();
-          if (!Node.isPropertyAccessExpression(callee)) return;
-          const receiver = callee.getExpression();
-          const name = callee.getName();
-          for (const spec of specs) {
-            for (const pattern of spec.producerPatterns) {
-              if (!matches(pattern, receiver, name)) continue;
-              emitProducer(expression, pattern, spec, owner, methodId, file);
-              return;
-            }
-          }
-        });
-      }
-
-      // A handler is registered by a decorator, and a decorator on a property
-      // registers nothing in any of these frameworks: what it publishes is read
-      // above, and there is no subscription here to find.
-      if (!Node.isMethodDeclaration(method)) continue;
-
-      emitSubscribers(method, owner, file, indexed.name);
-
-      for (const spec of specs) {
-        for (const pattern of spec.consumerPatterns) {
-          if (pattern.channelFrom === 'class-decorator' && pattern.nameArgIndex === undefined) {
-            // A worker class handles its queue through one named method.
-            if (method.getName() !== 'process') continue;
-            if (getDecorator(owner, pattern.classDecorator ?? '') === undefined) continue;
-          } else if (findDecorators(method, { names: [pattern.decorator] }).length === 0) {
-            continue;
-          }
-          emitConsumer(method, owner, pattern, spec, file, indexed.name);
+    for (const spec of specs) {
+      for (const pattern of spec.consumerPatterns) {
+        if (pattern.channelFrom === 'class-decorator' && pattern.nameArgIndex === undefined) {
+          // A worker class handles its queue through one named method.
+          if (method.getName() !== 'process') continue;
+          if (getDecorator(owner, pattern.classDecorator ?? '') === undefined) continue;
+        } else if (findDecorators(method, { names: [pattern.decorator] }).length === 0) {
+          continue;
         }
+        emitConsumer(method, owner, pattern, spec, file, className);
       }
     }
+  };
+
+  // A publish is read wherever it is written: a method, a module-level
+  // function, a member of an object of functions, a handler written in the
+  // registration. The scope walk is shared with the data-layer reader rather
+  // than copied here, because two copies of the judgement "what counts as a
+  // body" diverge the first time one of them is reconsidered (R54).
+  for (const scope of scopesOf(ctx)) {
+    forEachCall(scope.body, (call) => {
+      const expression = call as unknown as CallExpression;
+      const callee = expression.getExpression();
+      if (!Node.isPropertyAccessExpression(callee)) return;
+      const receiver = callee.getExpression();
+      const name = callee.getName();
+      for (const spec of specs) {
+        for (const pattern of spec.producerPatterns) {
+          if (!matches(pattern, receiver, name)) continue;
+          emitProducer(expression, pattern, spec, scope, scope.owner);
+          return;
+        }
+      }
+    });
+
+    readReceiving(scope);
   }
 
   readBrokerMarkers(ctx, specs[0] ?? brokerAdapters[0], alreadyStatic);

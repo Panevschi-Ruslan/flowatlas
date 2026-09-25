@@ -549,8 +549,9 @@ hole, as is a segment typed `string`.
 repository can see, as ordinary rows under `doctor`'s unresolved section:
 `route-unguarded` (an HTTP route with no guard or middleware in front of it that
 reaches stored data; a guard is read through a decorator of the project's own
-that returns `applyDecorators(UseGuards(...), ...)`, one level deep; a route a worker declares is listed at `info`, because
-middleware a worker installs for a whole prefix is not read yet),
+that returns `applyDecorators(UseGuards(...), ...)`, one level deep; a route
+whose reader says it did not read the middleware installed for a whole prefix is
+listed at `info` instead, since a guard that may be there is not a hole),
 `route-guard-skipped` (the same route, except that a decorator named under
 `doctor.skipGuardDecorators` switches the guard off for it — somebody decided
 this in writing on the handler, so it is listed at `info` and does not ask to be

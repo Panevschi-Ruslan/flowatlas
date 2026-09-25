@@ -1,0 +1,32 @@
+{
+  "services": [{ "name": "worker", "repo": "./worker", "type": "nestjs" }],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "house-bus",
+          "channelKind": "channel",
+          "producers": [
+            {
+              "receiverType": ["EventBus"],
+              "method": "publish",
+              "channelArg": 0,
+              "payloadArg": 1,
+              "kind": "event"
+            }
+          ],
+          "subscribers": [
+            {
+              "receiverType": ["EventBus"],
+              "method": "pSubscribe",
+              "channelArg": 0,
+              "handlerArg": 1,
+              "kind": "event"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

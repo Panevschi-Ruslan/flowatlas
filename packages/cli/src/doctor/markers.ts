@@ -317,6 +317,38 @@ const producersOf = (
     }));
 
 /**
+ * The consumers that hand this method a message, and every channel each reads.
+ *
+ * The publishing half of this was fixed first (R42, R44); the receiving half
+ * kept the old line and read one `consumes` edge per consumer. It is the same
+ * arithmetic on the same graph: `brokers-pass` draws one edge per name a
+ * subscription reaches, so a subscription written as a folded template reaches
+ * several channels, and a method carrying one `@Consumes` per channel got a
+ * single row. Follow it, and two annotations stay in the file with nothing to
+ * say they are next (R45).
+ *
+ * `viaMarker` is the annotation's own handiwork, which cannot be the evidence
+ * for the annotation, and is the mirror of the same flag on a producer.
+ */
+const consumersOf = (
+  db: GraphDb,
+  methodId: string,
+): Array<{ node: GraphNode; channels: readonly string[]; viaMarker: boolean }> =>
+  db
+    .edgesTo(methodId, ['handles'])
+    .map((edge) => db.node(edge.from))
+    .filter(isNode)
+    .map((consumer) => ({
+      node: consumer,
+      channels: db
+        .edgesTo(consumer.id, ['consumes'])
+        .map((consumes) => db.node(consumes.from))
+        .filter(isNode)
+        .map((channel) => channel.label),
+      viaMarker: consumer.meta?.['decorator'] === 'Consumes',
+    }));
+
+/**
  * `@Emits('x')` against what the method actually publishes.
  *
  * The annotation itself puts a producer in the graph, so its own handiwork
@@ -380,12 +412,9 @@ const checkConsumes = (
   blind: boolean,
   add: Add,
 ): void => {
-  const consumers = db
-    .edgesTo(node.id, ['handles'])
-    .map((edge) => db.node(edge.from))
-    .filter(isNode);
+  const consumers = consumersOf(db, node.id);
   const fromCode = consumers.filter(
-    (consumer) => consumer.type !== 'consumer' || consumer.meta?.['decorator'] !== 'Consumes',
+    (consumer) => consumer.node.type !== 'consumer' || consumer.viaMarker !== true,
   );
   const referenced = db.edgesTo(node.id, ['calls']).length > 0;
 
@@ -401,11 +430,9 @@ const checkConsumes = (
     return;
   }
 
-  const shadowing = fromCode.find((consumer) => {
-    if (consumer.type !== 'consumer') return false;
-    const [consumes] = db.edgesTo(consumer.id, ['consumes']);
-    return consumes !== undefined && db.node(consumes.from)?.label === channel;
-  });
+  const shadowing = fromCode.find(
+    (consumer) => consumer.node.type === 'consumer' && consumer.channels.includes(channel),
+  );
   if (shadowing !== undefined) {
     add(
       node,

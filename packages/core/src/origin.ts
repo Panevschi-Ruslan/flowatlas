@@ -107,6 +107,97 @@ const firstObjectOfUnion = (type: Type): Type => {
 };
 
 /**
+ * Names the checker gives a type that was written without one.
+ *
+ * An object type written inline — the `& { $client: Client }` a driver bolts
+ * onto its own client — is declared under `__type`, and an anonymous object is
+ * never the thing a package is known by.
+ */
+const ANONYMOUS_TYPE_NAMES = new Set(['__type', '__object']);
+
+const symbolOf = (type: Type) => type.getSymbol() ?? type.getAliasSymbol();
+
+const isNamedType = (type: Type): boolean => {
+  const name = symbolOf(type)?.getName();
+  return name !== undefined && !ANONYMOUS_TYPE_NAMES.has(name);
+};
+
+const isPackagedType = (type: Type): boolean => {
+  const declaration = symbolOf(type)?.getDeclarations()[0];
+  if (declaration === undefined) return false;
+  const filePath = declaration.getSourceFile().getFilePath();
+  return packageOfPath(filePath) !== null || packageNameOf(filePath) !== null;
+};
+
+/**
+ * What makes one member of an intersection a better answer than another,
+ * most telling first.
+ *
+ * Being *named* comes first because the anonymous half of `Client & { extra }`
+ * is the bolt-on and never the client. Being declared in a *package* comes
+ * second because that is the member a descriptor can be found for; it is a
+ * weaker signal on its own, since a local wrapper type is still the receiver's
+ * real type when nothing else names it.
+ */
+const MEMBER_TRAITS: readonly ((type: Type) => boolean)[] = [isNamedType, isPackagedType];
+
+const traitScoreOf = (type: Type): number =>
+  MEMBER_TRAITS.reduce(
+    (score, hasTrait, at) =>
+      hasTrait(type) ? score + 2 ** (MEMBER_TRAITS.length - 1 - at) : score,
+    0,
+  );
+
+/**
+ * The member of an intersection that answers for the whole of it.
+ *
+ * An intersection has no symbol of its own, so a receiver typed as one had no
+ * origin at all: no package, no descriptor, no table, and every query through
+ * it fell back to reading the receiver's name. That is not an exotic shape. It
+ * is how a modern database client is handed out — `Database<Schema> & { client }`
+ * — so the whole of a repository's data access could be unreadable for it.
+ *
+ * More than one member can answer, so which one does is decided here by
+ * `MEMBER_TRAITS` rather than left to the order the members happen to be
+ * written in. Order breaks a tie only between members alike in every trait,
+ * where there is nothing left to prefer; any other reading would make the
+ * answer depend on which half of the intersection the author typed first.
+ */
+const bestOfIntersection = (type: Type): Type => {
+  if (!type.isIntersection()) return type;
+  // An intersection given a name of its own is already answerable, and the name
+  // is the better answer: an alias is declared somewhere, and where it is
+  // declared is the honest origin. A framework's read-only cookie store is
+  // written that way, and reducing it to a member threw its package away.
+  // Only an intersection written out in place has nothing to ask of itself,
+  // and that is the one a driver hands back from its constructor.
+  if (symbolOf(type) !== undefined) return type;
+  const members = type.getIntersectionTypes();
+  const [first] = members;
+  if (first === undefined) return type;
+  let best = first;
+  let bestScore = traitScoreOf(first);
+  for (const member of members.slice(1)) {
+    const score = traitScoreOf(member);
+    if (score > bestScore) {
+      best = member;
+      bestScore = score;
+    }
+  }
+  return best;
+};
+
+/**
+ * The type that can actually be asked where it came from.
+ *
+ * Both a union and an intersection are compounds the checker gives no symbol
+ * of their own, and asking either one directly answers nothing. Unions are
+ * reduced first because an intersection is a perfectly ordinary member of one:
+ * `(Database & { client }) | undefined` is what an optional receiver is.
+ */
+const resolvableType = (type: Type): Type => bestOfIntersection(firstObjectOfUnion(type));
+
+/**
  * The first base class declared in a package.
  *
  * Wrapping a library's client in a class of one's own is the ordinary way to put
@@ -177,7 +268,7 @@ export const resolveTypeOrigin = (
   node: TsNode,
   options: ResolveOriginOptions = {},
 ): TypeOrigin | null => {
-  const resolved = firstObjectOfUnion(unwrapDelivery(node.getType()));
+  const resolved = resolvableType(unwrapDelivery(node.getType()));
   const symbol = resolved.getSymbol() ?? resolved.getAliasSymbol();
   if (symbol === undefined) return null;
 
@@ -267,7 +358,9 @@ export const stripWrapperSuffix = (name: string): string => {
  * instance of that contract, and the compiler already checks it locally.
  *
  * Returns undefined when the parameter is declared as `unknown` or `any`, since
- * a declaration that promises nothing says less than the value does.
+ * a declaration that promises nothing says less than the value does. A rest
+ * parameter is read as the element it collects rather than as the array it
+ * gathers them into, so `...args: any[]` promises nothing either.
  */
 export const declaredParameterType = (
   call: TsNode,
@@ -276,10 +369,12 @@ export const declaredParameterType = (
 ): Type | undefined => {
   try {
     const signature = checker.getResolvedSignature(call as never);
-    const parameter = signature?.getParameters()[index];
+    const parameters = signature?.getParameters() ?? [];
+    const parameter = parameterFor(parameters, index);
     if (parameter === undefined) return undefined;
-    const type = parameter.getTypeAtLocation(call);
-    if (type.isAny() || type.isUnknown()) return undefined;
+    const declared = parameter.getTypeAtLocation(call);
+    const type = isRestParameter(parameter) ? declared.getArrayElementType() : declared;
+    if (type === undefined || type.isAny() || type.isUnknown()) return undefined;
     return type;
   } catch {
     return undefined;
@@ -288,7 +383,45 @@ export const declaredParameterType = (
 
 interface TsSymbolLike {
   getTypeAtLocation(node: TsNode): Type;
+  getValueDeclaration?(): TsNode | undefined;
 }
+
+/**
+ * Whether this parameter collects the rest of the arguments.
+ *
+ * Worth asking because a rest parameter's declared type is the array the callee
+ * will be handed, and never the thing one call site passes. `...args: any[]` is
+ * not `any`, so the guard above let it through and answered with the array —
+ * throwing away the only argument that had a shape. That is a fact about every
+ * signature ending in a rest parameter, not about any one library.
+ */
+const isRestParameter = (parameter: TsSymbolLike): boolean => {
+  const declaration = parameter.getValueDeclaration?.();
+  return (
+    declaration !== undefined &&
+    Node.isParameterDeclaration(declaration) &&
+    declaration.isRestParameter()
+  );
+};
+
+/**
+ * The parameter an argument at this position is passed to.
+ *
+ * Past the end of the declared list there is still a parameter when the last
+ * one collects: `emit(event, ...args)` called with three arguments passes the
+ * third to `args` just as it passed the second. Anything else past the end is
+ * a call the compiler would reject, and reading the last parameter for it would
+ * answer with a contract the argument was never measured against.
+ */
+const parameterFor = (
+  parameters: readonly TsSymbolLike[],
+  index: number,
+): TsSymbolLike | undefined => {
+  const direct = parameters[index];
+  if (direct !== undefined) return direct;
+  const last = parameters[parameters.length - 1];
+  return last !== undefined && isRestParameter(last) ? last : undefined;
+};
 
 /**
  * Where a type or value was declared.
@@ -355,8 +488,13 @@ const isLanguageValue = (type: Type): boolean => {
 
 /** Where the type of an expression comes from. */
 export const originOfType = (node: TsNode): Origin => {
-  const type = node.getType();
-  if (isLanguageValue(type)) return { kind: 'builtin', typeName: type.getText() };
+  const declared = node.getType();
+  if (isLanguageValue(declared)) return { kind: 'builtin', typeName: declared.getText() };
+  // The same question as in `resolveTypeOrigin`, reaching the same early return
+  // from the other side: an intersection carries no symbol, so without this the
+  // fallback below called a receiver typed as one a builtin named by the whole
+  // text of the intersection — a value of the language, which it plainly is not.
+  const type = bestOfIntersection(declared);
   const symbol = type.getSymbol() ?? type.getAliasSymbol();
   const declaration = symbol?.getDeclarations()[0];
   if (declaration === undefined) {
