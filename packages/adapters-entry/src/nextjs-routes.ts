@@ -142,11 +142,25 @@ export const nextjsRoutesAdapter: EntryAdapter = {
     const unreadable: UnreadableAction[] = [];
     const middleware = readMiddleware(ctx);
 
+    /**
+     * Whether what stands in front of a route was read, rather than guessed.
+     *
+     * A repository with no `middleware.ts` has nothing installed for a whole
+     * prefix, and that is read rather than assumed: the file is looked for. A
+     * matcher written as a regular expression is the one case where it was
+     * not — the file is there, it guards something, and which routes is
+     * exactly what could not be told — so every route in such a repository
+     * says its guard may be one nobody here saw.
+     */
+    const middlewareRead = middleware === undefined || middleware.unread.length === 0;
+
     /** What a route says about the guard in front of it. */
     const gateOf = (path: string): Record<string, unknown> => {
-      if (middleware === undefined) return {};
-      if (middleware.covers === undefined) return { middleware: [middleware.file] };
-      return middleware.covers(path) ? { middleware: [middleware.file] } : {};
+      if (middleware === undefined) return { middlewareRead };
+      if (middleware.covers === undefined) return { middlewareRead, middleware: [middleware.file] };
+      return middleware.covers(path)
+        ? { middlewareRead, middleware: [middleware.file] }
+        : { middlewareRead };
     };
 
     const httpEntry = (options: {

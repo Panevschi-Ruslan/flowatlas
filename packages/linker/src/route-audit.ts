@@ -185,10 +185,25 @@ export const auditRoutes = (
       });
       continue;
     }
-    // A route a worker declares may be covered by middleware the worker installs
-    // for a whole prefix (`app.use('/api/*', auth)`), which is not read yet. It
-    // is listed, but as something to look at rather than a finding.
-    const byWorker = entry.meta?.['registration'] !== undefined && controller === '';
+    // A route may be covered by middleware installed for a whole prefix
+    // (`app.use('/api/*', auth)`) rather than named in its own declaration.
+    // Some readers follow those installs through every mount and some cannot,
+    // and only the reader knows which it was, so the reader says so and this
+    // asks. Where it says it did not look, the route is listed as something to
+    // check by hand rather than as a finding: a guard that may be there is not
+    // a hole.
+    //
+    // Only an outright `false` counts. A reader that says nothing is not
+    // admitting anything — the NestJS one, for instance, reads what is in front
+    // of a route as edges rather than as metadata — and reading silence as
+    // doubt would turn every finding this audit has into a caution.
+    //
+    // What was asked here before was the shape of the route: a registration
+    // with no controller behind it. That was a fair proxy while the only reader
+    // of that shape was one that did not read installs. It stopped being fair
+    // the moment three more did, and a route with a real hole in front of it
+    // was being reported as a caution about a limitation that had gone.
+    const prefixUnread = entry.meta?.['middlewareRead'] === false;
     /**
      * A route nobody guarded and a route somebody unguarded are not one finding.
      *
@@ -198,14 +213,14 @@ export const auditRoutes = (
      * row, and above all not worth being told to write the same decision a
      * second time into `doctor.publicRoutes` (R33).
      */
-    const decided = !byWorker && skipped.length > 0;
+    const decided = !prefixUnread && skipped.length > 0;
     rows.push({
       service: entry.repo,
       file: entry.file ?? '',
       line: entry.line ?? 0,
       reason: decided ? 'route-guard-skipped' : 'route-unguarded',
-      ...(byWorker || decided ? { level: 'info' as const } : {}),
-      message: byWorker
+      ...(prefixUnread || decided ? { level: 'info' as const } : {}),
+      message: prefixUnread
         ? `${method} ${path} has no route middleware and reaches ${data.label}; middleware installed for a whole prefix is not read, so check it by hand.`
         : decided
           ? `${method} ${path} reaches ${data.label} with no guard in front of it, because ${skipped.sort(cmp).join(', ')}.`

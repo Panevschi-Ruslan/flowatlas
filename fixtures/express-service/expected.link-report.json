@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-24T16:27:51.380Z",
+  "builtAt": "2026-09-24T22:21:50.177Z",
   "configHash": "396abb586d11",
   "services": [
     {
@@ -11,8 +11,8 @@
       "nodes": 19,
       "edges": 15,
       "types": 0,
-      "unresolved": 2,
-      "durationMs": 0
+      "unresolved": 1,
+      "durationMs": 496
     },
     {
       "name": "web",
@@ -23,7 +23,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 522
     }
   ],
   "httpOut": {
@@ -68,8 +68,7 @@
       "file": "src/public/public.routes.ts",
       "line": 18,
       "reason": "route-unguarded",
-      "level": "info",
-      "message": "GET /public/summary has no route middleware and reaches orders; middleware installed for a whole prefix is not read, so check it by hand.",
+      "message": "GET /public/summary has no guard in front of it and reaches orders.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
       "symbol": "GET /public/summary"
     }
@@ -78,6 +77,6 @@
     "nodes": 31,
     "edges": 25,
     "types": 0,
-    "unresolved": 3
+    "unresolved": 2
   }
 }

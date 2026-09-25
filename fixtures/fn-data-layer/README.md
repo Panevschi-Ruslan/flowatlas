@@ -45,5 +45,6 @@ project that does not suffix its entities recorded no document for any write, an
 
 ## Deliberately unresolvable constructs
 
-None, apart from the `bootstrap-not-found` row every fixture without a `src/main.ts`
-produces. Both repositories resolve to level 1 / `static`.
+None. There is no `bootstrap-not-found` row here: this repository declares no NestJS
+dependency, and `bootstrap` names a NestJS file, so asking for one would be asking
+for a setting that does nothing (R51). Both repositories resolve to level 1 / `static`.

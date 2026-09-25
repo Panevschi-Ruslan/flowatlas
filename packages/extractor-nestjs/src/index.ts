@@ -35,6 +35,9 @@ export type { CreateProjectOptions } from '@flowatlas/core';
 export { createNestContext } from './context.js';
 export type { NestExtractContext, NestStats, CreateContextOptions } from './context.js';
 
+export { repoSourceFiles, scopesOf, WALKED_ROLES } from './scopes.js';
+export type { Holder, Scope } from './scopes.js';
+
 export { buildClassIndex, ClassIndex, NEST_COMMON } from './index-classes.js';
 export type {
   BuildClassIndexOptions,
