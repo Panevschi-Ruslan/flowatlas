@@ -1,5 +1,6 @@
+import { builtExportFunction } from '@flowatlas/adapters-entry';
 import { makeSymbolId, moduleFunctions, normalizeFilePath, type NamedFunction } from '@flowatlas/core';
-import type { Node as TsNode, Project, SourceFile } from 'ts-morph';
+import type { Project, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 
 /**
@@ -211,20 +212,8 @@ const defaultExportFunction = (sourceFile: SourceFile, file: string): NamedFunct
   return undefined;
 };
 
-/** `(x)`, `x as T` and `await x` all stand for whatever is inside them. */
-const unwrapValue = (node: TsNode): TsNode => {
-  if (
-    Node.isParenthesizedExpression(node) ||
-    Node.isAsExpression(node) ||
-    Node.isAwaitExpression(node)
-  ) {
-    return unwrapValue(node.getExpression());
-  }
-  return node;
-};
-
 /**
- * An export whose value a call built, read as a function under its own name.
+ * The exports of a module whose values a call built, as functions of their own.
  *
  * `moduleFunctions` answers what a module *declares*, and by that reading
  * `export const archiveOrder = client.schema(…).action(fn)` declares a value
@@ -236,42 +225,20 @@ const unwrapValue = (node: TsNode): TsNode => {
  * the middle of the graph, so the guess is worth making in the reader that
  * pays for it (R61).
  *
- * Only exports, because the hole is about a name another module writes: a
- * `const` nobody exports cannot be the thing an importer called, and counting
- * every local `const x = f()` as a function would turn every configured client
- * and memoised value in a repository into one.
- *
- * The `VariableDeclaration` is kept as the declaration rather than anything
- * inside the call, because that is the node the exported name belongs to.
- * References resolve to it, so the callers can be found; and a call written
- * inside it resolves to it too, so a pass walking outwards from a call site
- * attributes the call to this name.
- *
- * The body is the whole initializer, including any function written in the
- * call. That is a decision and not a detail, since every pass here walks
- * `fn.body`: it means the export reaches whatever the code behind it reaches —
- * `archiveOrder` calls `archive` — which is what a person asking what an action
- * touches means. The finer reading is not lost, because the function written
- * in the call is a node of its own wherever a pass names it, and this edge sits
- * beside that one rather than replacing it. The cost is that a step of the
- * builder chain is read as a call of this name as well; that is true of it, and
- * a chain step resolves to an installed package, where it is counted and not
- * drawn.
+ * What counts as such an export, and what its declaration and its body are, is
+ * `builtExportFunction`, which lives beside the adapters rather than here. The
+ * reason is R72: the adapter that reads a route file has to name the code
+ * behind a verb export, and the node it names is the one this index makes, so
+ * a second rule written here would be a rule that could disagree with it. The
+ * decision that the body is the whole initializer — which is why the export
+ * reaches whatever the function written inside the call reaches — is recorded
+ * there with the rest of the reading.
  */
 const builtExports = (sourceFile: SourceFile): NamedFunction[] => {
   const found: NamedFunction[] = [];
   for (const declaration of sourceFile.getVariableDeclarations()) {
-    if (declaration.getVariableStatement()?.isExported() !== true) continue;
-    const initializer = declaration.getInitializer();
-    if (initializer === undefined) continue;
-    const value = unwrapValue(initializer);
-    if (!Node.isCallExpression(value)) continue;
-    found.push({
-      name: declaration.getName(),
-      declaration,
-      body: value,
-      line: declaration.getStartLineNumber(),
-    });
+    const fn = builtExportFunction(declaration);
+    if (fn !== undefined) found.push(fn);
   }
   return found;
 };

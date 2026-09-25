@@ -17,7 +17,14 @@ import { Node } from 'ts-morph';
 import type { ActionBuilder } from './action-builders.js';
 import { ACTION_BUILDERS } from './action-builders.js';
 import { APP_ROUTER, PAGES_API, routePathOfFile } from './nextjs-paths.js';
-import { handlerOfFunction, inlineHandlerOf, repoFunctionOf, repoSources } from './shared.js';
+import {
+  builtExportFunction,
+  handlerOfFunction,
+  inlineHandlerOf,
+  repoFunctionOf,
+  repoSources,
+  unwrapValue,
+} from './shared.js';
 
 /** The dependency that gives the framework away. */
 const PACKAGE = 'next';
@@ -48,6 +55,28 @@ const opensWith = (statements: readonly TsNode[], directive: string): boolean =>
 /** The named function a declaration stands for, wherever it was exported from. */
 const exportedFunction = (declaration: TsNode): NamedFunction | undefined =>
   namedFunction(declaration);
+
+/**
+ * The same, for a verb export, which may be a function a call handed back.
+ *
+ * `export const GET = withWorkspace(async (req) => { … })` is a route handler
+ * and reads as no function at all by the rule above, because what the module
+ * declares is a value. Every entry in such a file was correct — the route, the
+ * verb and the path are all read from where the file is — and none of them had
+ * anything behind it, so nothing on the far side of the boundary was attached
+ * to the way in (R72). `builtExportFunction` is the reading the React function
+ * index uses to give that export a node, shared rather than written again here,
+ * because two rules for what the function behind an export is would name two
+ * different things within a release.
+ *
+ * Deliberately not folded into `exportedFunction`, which the server actions
+ * below also use: there, an export that is not a function written in place is
+ * the signal to read the builder chain, which names the action inside the call
+ * and records which library built it. That is a finer answer than this one and
+ * it would be lost if this rule answered first.
+ */
+const verbFunction = (declaration: TsNode): NamedFunction | undefined =>
+  exportedFunction(declaration) ?? builtExportFunction(declaration);
 
 /**
  * How far a matcher pattern reaches, as a test on a path.
@@ -279,7 +308,7 @@ const readAppRoute = (
     const [declaration] = exported.get(method) ?? [];
     if (declaration === undefined) continue;
     found += 1;
-    const handler = exportedFunction(declaration);
+    const handler = verbFunction(declaration);
     emit({
       method,
       path,
@@ -406,18 +435,6 @@ const readServerActions = (
     record({ name, line: fn.line, handler: handlerOfFunction(fn, ctx), via: 'function' });
   }
   return unreadable;
-};
-
-/** `(x)`, `x as T` and `await x` all stand for whatever is inside them. */
-const unwrapValue = (expr: TsNode): TsNode => {
-  if (
-    Node.isParenthesizedExpression(expr) ||
-    Node.isAsExpression(expr) ||
-    Node.isAwaitExpression(expr)
-  ) {
-    return unwrapValue(expr.getExpression());
-  }
-  return expr;
 };
 
 /** Whether an expression is a function, written here or named elsewhere. */
