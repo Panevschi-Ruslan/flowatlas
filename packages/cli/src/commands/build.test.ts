@@ -4,6 +4,7 @@ import { join, resolve } from 'node:path';
 import type { Unresolved } from '@flowatlas/core';
 import { openGraphDb } from '@flowatlas/linker';
 import { afterAll, describe, expect, it } from 'vitest';
+import { resolveNodeId } from '../../../../scripts/fixture-nodes.mjs';
 import { loadBuildCache } from '../build/cache.js';
 import { buildProject, summariseBuild, summariseRebuild, unresolvedLine } from './build.js';
 
@@ -25,14 +26,45 @@ const scratch = mkdtempSync(join(tmpdir(), 'flowatlas-build-'));
  * Beside the fixtures rather than in a temporary directory, so the copy still
  * resolves the type stubs hoisted there.
  */
-const FIXTURE = join(mkdtempSync(join(FIXTURES, '.scratch-build-')), 'multi-repo');
-cpSync(join(FIXTURES, 'multi-repo'), FIXTURE, {
-  recursive: true,
-  filter: (from) => !from.endsWith('/.flowatlas'),
-});
+const copyOfMultiRepo = (): string => {
+  const dir = join(mkdtempSync(join(FIXTURES, '.scratch-build-')), 'multi-repo');
+  cpSync(join(FIXTURES, 'multi-repo'), dir, {
+    recursive: true,
+    filter: (from) => !from.endsWith('/.flowatlas'),
+  });
+  return dir;
+};
+
+const FIXTURE = copyOfMultiRepo();
 
 /**
- * Both trees, with retries.
+ * A second copy, for the one test whose build is meant to fail.
+ *
+ * A build reads its repositories in a pool and waits on them with
+ * `Promise.all`, which settles on the first rejection and leaves the others
+ * running. The test below deletes a graph the build would have reused, so the
+ * build refuses in about two milliseconds — while the extraction of `orders`
+ * it had already started carries on for most of a second and then writes
+ * `orders/.flowatlas/graph.json`, long after the test that caused it has
+ * finished.
+ *
+ * Every repository graph carries a `generatedAt`, so that late write is a
+ * different file, and the next build over the same repository answers
+ * `full (graph changed outside the build)` — correctly, because something did
+ * change it. Whether it lands before or after the following test records the
+ * graph's hash is a race, which is why the rebuild summary below reddened
+ * about one run in many and passed on its own every time.
+ *
+ * Measured rather than guessed: after the refusing build rejects, the graph is
+ * rewritten roughly 750ms later with nothing else running.
+ *
+ * So the refusing build gets a tree nobody else reads. What it leaves running
+ * writes where it cannot be mistaken for anybody's answer.
+ */
+const DOOMED_FIXTURE = copyOfMultiRepo();
+
+/**
+ * Every tree this file made, with retries.
  *
  * A recursive delete walks the tree and removes as it goes, so a directory it
  * has already emptied and is about to remove can acquire a file again before it
@@ -45,7 +77,9 @@ cpSync(join(FIXTURES, 'multi-repo'), FIXTURE, {
  */
 afterAll(() => {
   rmSync(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
-  rmSync(resolve(FIXTURE, '..'), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  for (const tree of [FIXTURE, DOOMED_FIXTURE]) {
+    rmSync(resolve(tree, '..'), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  }
 });
 
 /** A configuration in its own directory, pointing at the fixture repositories. */
@@ -60,12 +94,15 @@ const configFor = (name: string, services: unknown[]): string => {
   return path;
 };
 
-const service = (name: string, over: Record<string, unknown> = {}) => ({
+const serviceIn = (root: string, name: string, over: Record<string, unknown> = {}) => ({
   name,
-  repo: join(FIXTURE, name),
+  repo: join(root, name),
   type: 'nestjs',
   ...over,
 });
+
+const service = (name: string, over: Record<string, unknown> = {}) =>
+  serviceIn(FIXTURE, name, over);
 
 /** The browser of the fixture, configured the way its README describes. */
 const web = (over: Record<string, unknown> = {}) => ({
@@ -172,9 +209,16 @@ describe('building a project', () => {
     ]);
     const result = await buildProject({ config, builtAt: FIXED });
 
+    // The click the whole chain starts at, asked for by the method it reaches
+    // rather than by the line the template happens to sit on.
+    const click = resolveNodeId(result.project, {
+      type: 'ui_action',
+      handling: 'web#src/app/checkout.component.ts:CheckoutComponent.checkout',
+    });
+
     const db = openGraphDb(result.dbPath);
     const walk = db.traverse({
-      from: 'ui_action:web#src/app/checkout.component.ts:15:22',
+      from: click,
       direction: 'out',
       maxDepth: 12,
       maxNodes: 60,
@@ -354,9 +398,26 @@ describe('building only some of the repositories', () => {
     expect(JSON.stringify(single.project)).toBe(JSON.stringify(whole.project));
   }, 240_000);
 
+  // On its own tree, because a build that refuses leaves the extraction it had
+  // already started running, and that extraction rewrites a repository graph
+  // some later test is entitled to find unchanged. See `DOOMED_FIXTURE`.
   it('refuses when a repository it would have reused has never been read', async () => {
-    const config = configFor('no-graph', services);
-    rmSync(join(FIXTURE, 'gateway', '.flowatlas'), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+    const doomed = [
+      serviceIn(DOOMED_FIXTURE, 'gateway'),
+      serviceIn(DOOMED_FIXTURE, 'orders', { baseUrlEnv: ['ORDERS_URL'] }),
+    ];
+    // A graph to reuse has to exist before one can be taken away; on a tree
+    // nothing has been built in, every skipped repository is missing one and
+    // the message could name any of them.
+    await buildProject({ config: configFor('no-graph-first', doomed), builtAt: FIXED });
+
+    const config = configFor('no-graph', doomed);
+    rmSync(join(DOOMED_FIXTURE, 'gateway', '.flowatlas'), {
+      recursive: true,
+      force: true,
+      maxRetries: 10,
+      retryDelay: 100,
+    });
 
     await expect(
       buildProject({ config, builtAt: FIXED, service: ['orders'] }),
