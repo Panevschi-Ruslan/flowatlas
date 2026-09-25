@@ -693,31 +693,35 @@ object where the real one is a class with statics, and `pg`'s `PoolClient` is a
 class where the real one is an interface. All three resolve to the same origin
 either way, which is the only fact the tool reads off them.
 
-Adding or removing a line in a fixture source is not free. A node id carries the
-line the node was read at, and twenty-three assertions under `packages/`
-hard-code one: eighteen in `packages/cli/src/commands/ground-truth.test.ts`,
-four in `packages/mcp/src/tools/tools.test.ts` and one in
-`packages/cli/src/commands/build.test.ts`. Two more are pinned as scenario
-inputs in `scripts/mcp-snapshots.mjs`, and three in `scripts/demo/scenes/`.
-Seven fixture files are held in place by them:
+Adding or removing a line in a fixture source is free, and deliberately so. A
+node id still carries the line the node was read at — identity by place is what
+lets two builds of the same source agree — but nothing asserts a coordinate any
+more. `scripts/fixture-nodes.mjs` answers for the one node a description picks
+out, given a node type and one relation:
 
-| File | Lines pinned |
-|---|---|
-| `fixtures/ground-truth/client/src/orders/orders.client.ts` | 21, 26, 35 |
-| `fixtures/multi-repo/gateway/src/clients/orders.client.ts` | 33, 44, 59 |
-| `fixtures/multi-repo/gateway/src/clients/billing.client.ts` | 33 |
-| `fixtures/multi-repo/orders/src/orders/orders.service.ts` | 26, 49 |
-| `fixtures/multi-repo/web/src/app/orders-api.service.ts` | 21, 34, 48, 61 |
-| `fixtures/multi-repo/web/src/app/checkout.component.ts` | 15 |
-| `fixtures/nest-leaves/src/orders/orders.service.ts` | 44, 54, 65 |
+```js
+resolveNodeId(graph, {
+  type: 'http_out',
+  calledBy: 'gateway#src/clients/orders.client.ts:OrdersClient.fetchOne',
+});
+```
 
-A line added above any of those cannot be made without an edit under
-`packages/`, which puts a cost on exactly the operation that should be cheapest:
-adding a line to a fixture to reproduce a defect. Coordinates elsewhere in the
-tests — `packages/cli/src/{analysis/config-keys,doctor/hints,render/render}.test.ts`,
-`packages/cli/src/test-graph.ts` and the two `packages/linker` tests — belong to
-graphs built in the test itself and name no fixture, so they are not part of
-this.
+It answers with exactly one node or throws, naming the candidates when a
+description fits more than one and saying what the symbol does reach when it
+fits none; `packages/cli/src/fixture-nodes.test.ts` holds it to both. The
+command-line tests, the server tests, `scripts/mcp-snapshots.mjs` and the
+recorded demo scenes all go through it, the last of those via
+`scripts/fixture-node-id.mjs`, so a scene types the real id without having one
+written into it.
+
+So a line added to a fixture source moves the recorded snapshots, which are
+regenerated with `node scripts/fixtures-check.mjs --update`,
+`pnpm mcp:snapshots -- --update` and `pnpm cli:snapshots -- --update`, and
+moves no test. Coordinates still written out in the tests —
+`packages/cli/src/{analysis/config-keys,doctor/hints,render/render}.test.ts`,
+`packages/cli/src/test-graph.ts`, `packages/cli/src/fixture-nodes.test.ts` and
+the two `packages/linker` tests — belong to graphs built in the test itself and
+name no fixture, so they hold nothing in place.
 
 Two fixtures state in their own README what their source ought to produce, and
 are asserted fact by fact rather than compared against a recording:

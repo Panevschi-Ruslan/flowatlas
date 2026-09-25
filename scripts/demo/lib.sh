@@ -6,6 +6,22 @@
 DEMO_TYPE_DELAY=${DEMO_TYPE_DELAY:-0.022}
 PROMPT=$'\033[38;5;114m$\033[0m '
 
+# The repository this demo is recorded from, so that a scene can reach its
+# scripts without knowing where it was sourced from.
+FLOWATLAS_REPO=${FLOWATLAS_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}
+
+# The id of one node of the demo project, asked for by what it is:
+#
+#   node_id ui_action handling 'web#src/app/checkout.component.ts:Component.method'
+#
+# A scene types a real command at a real prompt, so one that shows a node id has
+# to have the real id to type. Node ids carry the line the thing was written at,
+# and a scene with one written into it holds that fixture line in place. This
+# asks the built graph instead, and fails loudly rather than typing nothing.
+node_id() {
+  node "$FLOWATLAS_REPO/scripts/fixture-node-id.mjs" "$PWD/.flowatlas/project-graph.json" "$@"
+}
+
 # Types a command one character at a time, then runs it.
 say() {
   printf '%s' "$PROMPT"
