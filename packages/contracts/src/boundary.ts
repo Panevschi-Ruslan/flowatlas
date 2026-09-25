@@ -63,11 +63,34 @@ const bodyTypeOf = (handles: GraphEdge | undefined): string | undefined => {
 const handlesOf = (lookup: GraphLookup, entryId: string): GraphEdge[] =>
   lookup.edgesFrom(entryId, ['handles']).sort((a, b) => (a.to < b.to ? -1 : a.to > b.to ? 1 : 0));
 
-const party = (service: string, typeId: string | undefined, symbol: string): ContractParty => ({
-  service,
-  typeId: namesAShape(typeId) ? typeId : null,
-  symbol,
-});
+/**
+ * The document an end was declared by, when nobody here could read its source.
+ *
+ * Read off the node rather than off the configuration, because by the time a
+ * boundary is being judged the configuration is two packages away and the fact
+ * is already on every node and edge the document produced. A service that was
+ * read carries nothing here and the key is left off the party entirely, so the
+ * absence of it means "read" rather than "not looked into".
+ */
+const declaredBy = (lookup: GraphLookup, id: string): string | undefined => {
+  const said = lookup.node(id)?.meta?.['declaredBy'];
+  return typeof said === 'string' ? said : undefined;
+};
+
+const party = (
+  lookup: GraphLookup,
+  service: string,
+  typeId: string | undefined,
+  symbol: string,
+): ContractParty => {
+  const document = declaredBy(lookup, symbol);
+  return {
+    service,
+    typeId: namesAShape(typeId) ? typeId : null,
+    symbol,
+    ...(document === undefined ? {} : { declaredBy: document }),
+  };
+};
 
 /**
  * Both halves of a request, whichever way the request was made.
@@ -102,8 +125,8 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
     return (['request', 'response'] as const).map((direction) => ({
       ...both(
         direction,
-        party(callerService, undefined, caller),
-        party(handlerService, undefined, edge.to),
+        party(lookup, callerService, undefined, caller),
+        party(lookup, handlerService, undefined, edge.to),
       ),
       blocked,
     }));
@@ -115,17 +138,17 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
   const request = both(
     'request',
     {
-      ...party(callerService, edge.params?.[0], caller),
+      ...party(lookup, callerService, edge.params?.[0], caller),
       ...(readable
         ? { writes: written as string[], writesEvery: sender?.['bodyFrom'] === 'literal' }
         : {}),
     },
-    party(handlerService, bodyTypeOf(handles[0]), handler),
+    party(lookup, handlerService, bodyTypeOf(handles[0]), handler),
   );
   const response = both(
     'response',
-    party(handlerService, handles[0]?.returns, handler),
-    party(callerService, edge.returns, caller),
+    party(lookup, handlerService, handles[0]?.returns, handler),
+    party(lookup, callerService, edge.returns, caller),
   );
   return [request, response];
 };
@@ -167,8 +190,8 @@ const channelExchanges = (lookup: GraphLookup, channel: GraphNode): Exchange[] =
         edge: { from: side?.from ?? channel.id, to: side?.to ?? channel.id, type: side?.type ?? 'emits' },
         edgeKey: `${channel.id}|${emits.length === 0 ? 'consumes' : 'emits'}|${end}`,
         direction: 'payload',
-        sender: party(repoOf(lookup, end), undefined, end),
-        receiver: party(repoOf(lookup, end), undefined, end),
+        sender: party(lookup, repoOf(lookup, end), undefined, end),
+        receiver: party(lookup, repoOf(lookup, end), undefined, end),
         symbols: [],
         blocked: { reason, subject: channel.id },
       },
@@ -191,8 +214,8 @@ const channelExchanges = (lookup: GraphLookup, channel: GraphNode): Exchange[] =
         edge: shape,
         edgeKey,
         direction: 'payload',
-        sender: party(publisherService, emit.params?.[0], publisher),
-        receiver: party(handlerService, bodyTypeOf(handles) ?? handles?.params?.[0], handler),
+        sender: party(lookup, publisherService, emit.params?.[0], publisher),
+        receiver: party(lookup, handlerService, bodyTypeOf(handles) ?? handles?.params?.[0], handler),
         symbols: [publisher, handler],
       });
       // A request and an answer, over a channel. Only some transports have one,
@@ -202,8 +225,8 @@ const channelExchanges = (lookup: GraphLookup, channel: GraphNode): Exchange[] =
           edge: shape,
           edgeKey,
           direction: 'response',
-          sender: party(handlerService, handles?.returns, handler),
-          receiver: party(publisherService, emit.returns, publisher),
+          sender: party(lookup, handlerService, handles?.returns, handler),
+          receiver: party(lookup, publisherService, emit.returns, publisher),
           symbols: [publisher, handler],
         });
       }

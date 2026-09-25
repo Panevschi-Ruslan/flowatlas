@@ -1,5 +1,5 @@
 {
-  "contractsFormatVersion": 3,
+  "contractsFormatVersion": 4,
   "schemaVersion": 3,
   "generatedAt": "1970-01-01T00:00:00.000Z",
   "edges": [
@@ -418,6 +418,81 @@
         "service": "gateway",
         "typeId": "type:gateway#DraftResultDto",
         "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.previewDraft"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:149:12",
+        "to": "entry:orders:http:POST:/orders/drafts/batch",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:149:12|http_calls|entry:orders:http:POST:/orders/drafts/batch",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#BatchDraftDto[]",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.batchDrafts"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto[]",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.batchDrafts"
+      },
+      "findings": [
+        {
+          "severity": "warning",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:149:12",
+            "to": "entry:orders:http:POST:/orders/drafts/batch",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:149:12|http_calls|entry:orders:http:POST:/orders/drafts/batch",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#BatchDraftDto[]",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.batchDrafts"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateDraftDto[]",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.batchDrafts"
+          },
+          "typeId": "type:orders#CreateDraftDto[]",
+          "field": "[].note",
+          "expected": null,
+          "actual": "string",
+          "rule": "whitelist-strip",
+          "impact": "stored",
+          "message": "the type sender gateway declares permits `[].note: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:149:12",
+        "to": "entry:orders:http:POST:/orders/drafts/batch",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:149:12|http_calls|entry:orders:http:POST:/orders/drafts/batch",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto[]",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.batchDrafts"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#DraftResultDto[]",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.batchDrafts"
       },
       "findings": [],
       "rulesApplied": []
@@ -2263,6 +2338,36 @@
       "severity": "warning",
       "kind": "extra_field",
       "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:149:12",
+        "to": "entry:orders:http:POST:/orders/drafts/batch",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:149:12|http_calls|entry:orders:http:POST:/orders/drafts/batch",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#BatchDraftDto[]",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.batchDrafts"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateDraftDto[]",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.batchDrafts"
+      },
+      "typeId": "type:orders#CreateDraftDto[]",
+      "field": "[].note",
+      "expected": null,
+      "actual": "string",
+      "rule": "whitelist-strip",
+      "impact": "stored",
+      "message": "the type sender gateway declares permits `[].note: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "extra_field",
+      "edge": {
         "from": "http_out:gateway#src/clients/orders.client.ts:122:12",
         "to": "entry:orders:http:POST:/orders/drafts/tag",
         "type": "http_calls"
@@ -2950,13 +3055,13 @@
     }
   ],
   "summary": {
-    "edges": 30,
+    "edges": 32,
     "shared": 2,
     "identical": 8,
-    "hash_differs": 20,
+    "hash_differs": 22,
     "unchecked": 6,
     "errors": 14,
-    "warnings": 5,
+    "warnings": 6,
     "infos": 12,
     "ignored": 4
   }

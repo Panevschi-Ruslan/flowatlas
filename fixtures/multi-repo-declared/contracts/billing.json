@@ -1,0 +1,144 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Billing",
+    "version": "2026-09-01"
+  },
+  "paths": {
+    "/invoices": {
+      "post": {
+        "operationId": "createInvoice",
+        "summary": "Raise an invoice",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateInvoice" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "the invoice",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Invoice" }
+              }
+            }
+          },
+          "422": {
+            "description": "the request was refused",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invoices/{invoiceId}": {
+      "get": {
+        "operationId": "getInvoice",
+        "parameters": [
+          {
+            "name": "invoiceId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the invoice",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Invoice" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "voidInvoice",
+        "parameters": [
+          {
+            "name": "invoiceId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "voided" }
+        }
+      }
+    },
+    "/customers/{customerId}": {
+      "get": {
+        "operationId": "getCustomer",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the customer",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CustomerRef" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateInvoice": {
+        "type": "object",
+        "required": ["customerId", "amount", "currency", "note"],
+        "properties": {
+          "customerId": { "type": "string" },
+          "amount": { "type": "number" },
+          "currency": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      },
+      "Invoice": {
+        "type": "object",
+        "required": ["id", "total", "issuedAt"],
+        "properties": {
+          "id": { "type": "string" },
+          "total": { "type": "number" },
+          "issuedAt": { "type": "string", "format": "date-time" },
+          "state": { "$ref": "#/components/schemas/InvoiceState" }
+        }
+      },
+      "InvoiceState": {
+        "type": "string",
+        "enum": ["draft", "issued", "paid"]
+      },
+      "CustomerRef": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" }
+        }
+      },
+      "Problem": {
+        "type": "object",
+        "required": ["detail"],
+        "properties": {
+          "detail": { "type": "string" }
+        }
+      }
+    }
+  }
+}

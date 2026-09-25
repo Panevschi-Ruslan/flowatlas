@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { ContractIgnore } from '@flowatlas/markers';
 import type { MoneyDto } from '@fx/wire';
 
-import type { AddressDto, CreateOrderDto, DraftDto, DraftResultDto, OrderDto } from './dto';
+import type { AddressDto, BatchDraftDto, CreateOrderDto, DraftDto, DraftResultDto, OrderDto } from './dto';
 
 /**
  * Every call this fixture measures, aimed at `orders` through `ORDERS_URL`.
@@ -134,6 +134,21 @@ export class OrdersClient {
     return this.http.post<DraftResultDto>(
       `${this.config.get('ORDERS_URL')}/orders/drafts/preview`,
       { title: 'first', note: 'keep me' },
+    );
+  }
+
+  /**
+   * The same strip, sent as a list (R71).
+   *
+   * The body is declared rather than written at the call site, so the declared
+   * element type is what is compared, and it is compared at path `[]`. Expected:
+   * `extra_field [].note`, rule `whitelist-strip`, `impact: stored` — the same
+   * row `storeDraft` gets, one array deep.
+   */
+  batchDrafts(body: BatchDraftDto[]) {
+    return this.http.post<DraftResultDto[]>(
+      `${this.config.get('ORDERS_URL')}/orders/drafts/batch`,
+      body,
     );
   }
 }

@@ -31,6 +31,8 @@ const partySchema = z.strictObject({
   writes: z.array(z.string()).optional(),
   /** False when the keys are one object per caller rather than one object (R34). */
   writesEvery: z.boolean().optional(),
+  /** The document a service nobody here can read was taken from (P19). */
+  declaredBy: z.string().optional(),
 });
 
 export const contractFindingSchema = z.strictObject({

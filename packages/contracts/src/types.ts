@@ -19,8 +19,14 @@ import type { GraphEdge, GraphNode, TypeEntry } from '@flowatlas/core';
  * for. A reader that branches on the three older words would take a field
  * nobody could look for as a field nobody found, so the widening is a version
  * of its own rather than a quiet addition (R43).
+ *
+ * 4 — a party may carry `declaredBy`, naming the document a service whose
+ * source nobody here has was taken from. A reader that did not know about it
+ * would present a declared end exactly as it presents a read one, which is the
+ * single thing this way in must never be allowed to do, so the widening is a
+ * version rather than a quiet addition (P19).
  */
-export const CONTRACTS_FORMAT_VERSION = 3;
+export const CONTRACTS_FORMAT_VERSION = 4;
 
 /** How bad a finding is. */
 export const SEVERITIES = ['error', 'warning', 'info'] as const;
@@ -134,6 +140,17 @@ export interface ContractParty {
    * (R34).
    */
   writesEvery?: boolean;
+  /**
+   * The document this end was declared by, when nobody here could read it.
+   *
+   * A service may be configured as an OpenAPI document instead of a repository,
+   * for the ends of a project nobody can clone — a payment provider, another
+   * team's service, something written in another language. Everything about
+   * such an end is that document's word for it, and this names the file so that
+   * a reader of `contracts.json` knows which half was trusted without having to
+   * read the prose. Absent for every end that was read, which is most of them.
+   */
+  declaredBy?: string;
 }
 
 /** One disagreement between two shapes, as the comparator found it. */

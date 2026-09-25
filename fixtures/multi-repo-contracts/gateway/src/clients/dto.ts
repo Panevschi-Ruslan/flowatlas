@@ -50,3 +50,15 @@ export interface DraftDto {
 export interface DraftResultDto {
   title: string;
 }
+
+/**
+ * The caller's shape for one draft in a batch: `note` on top of `title`.
+ *
+ * `note` is on `DraftSchema` and not on `CreateDraftDto`, so the receiver's
+ * whitelisting pipe drops it and the document behind the handler declares it —
+ * the `impact: stored` row of R30, reached through an array (R71).
+ */
+export interface BatchDraftDto {
+  title: string;
+  note: string;
+}
