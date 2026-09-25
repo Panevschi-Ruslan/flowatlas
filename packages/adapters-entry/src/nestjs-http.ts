@@ -1,12 +1,15 @@
 import type { EntryAdapter, EntryNode } from '@flowatlas/core';
-import { hasAnyDependency, makeEntryId, makeHttpEntryKey, normalizePath } from '@flowatlas/core';
 import {
   decoratorArgs,
   decoratorName,
   findDecorators,
   getDecorator,
+  hasAnyDependency,
+  makeEntryId,
+  makeHttpEntryKey,
+  normalizePath,
   stringListArg,
-} from '@flowatlas/extractor-nestjs';
+} from '@flowatlas/core';
 import { Node, type MethodDeclaration } from 'ts-morph';
 import { fileOfNode, handlerOf, joinPath, repoClasses } from './shared.js';
 

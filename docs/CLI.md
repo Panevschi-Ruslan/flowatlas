@@ -646,6 +646,22 @@ three words version 2 knew.
 | `entry.registries` | object[] | `[]` | a table of handlers you keep yourself, described so each registration is a way in |
 | `entry.http` | object[] | `[]` | an HTTP framework nothing here ships an adapter for, described so its routes are read |
 
+**`force` is said once, for the whole project, and cannot be said per service.**
+A slot it names replaces the detected list in every repository, so a project
+that forces one entry adapter for one service must name the adapters of all its
+other services beside it. That is a real limitation and it is written here
+rather than worked around, because the thing that used to make people reach for
+it is gone: a described HTTP framework now detects itself where its `packages`
+say it lives, which was the one case where a whole project had to be overridden
+for the sake of a single repository. What is left for `force` is what it was
+named for — detection guessed wrong for this project — and that answer is the
+same for every repository in it. A per-service `force` would have to be
+honoured by all three readers to mean anything, and a configuration key that
+two of them ignore is worse than a documented limitation; when it is added it
+belongs where the readers are chosen, so that each of them is handed a
+configuration already narrowed to the service it is reading, rather than in
+three copies of the same merge.
+
 A custom broker entry:
 
 ```jsonc
@@ -708,7 +724,11 @@ The object has to be declared in the repository being read, so an import from a
 package that happens to share the name is not matched. `receiver` may be a list.
 This is read wherever handlers are installed by call rather than by decorator,
 which today means a repository depending on `telegraf`; anywhere else, turn it on
-with `adapters.force.entry`.
+with `adapters.force.entry`. Unlike an HTTP description, this one has no
+`packages` key, so it cannot say which repository it belongs to and cannot turn
+its own reader on: a table of functions you wrote yourself appears in no
+manifest, and detecting on the mere presence of the key would name this adapter
+on every repository of the project.
 
 **A table nobody configured is reported rather than skipped.** A repository with
 handlers registered through an object it declares itself gets one `unresolved`
@@ -772,12 +792,14 @@ and turned into a reader by the same function, so a description that reads a
 repository correctly for one of them reads it correctly for yours. A field
 nothing here uses would be a field only configuration had ever tested.
 
-**A description cannot turn its own reader on.** An adapter is offered the
-repository's manifest and nothing else, so it cannot know a description exists
-until it is already running. Name `entry-http-custom` under
-`adapters.force.entry` to put it there — and remember that `force` replaces the
-detected list for the whole project, so a project with other services should
-name their adapters beside it.
+**A description turns its own reader on.** Detection is offered the
+configuration as well as the manifest, so `entry-http-custom` recognises a
+repository when one of your descriptions is about it: the description names its
+`packages`, the repository declares one of them, and it is read. Nothing needs
+naming under `adapters.force.entry`. A description that names no `packages` is
+tried everywhere, and so turns the reader on in every repository of the
+project — which is what such a description says, since a framework with no
+package to point at cannot be found any other way.
 
 **A description that matched nothing is a row, not a quiet zero.** Silence is
 the failure mode of every configuration-driven reader, because a repository

@@ -124,7 +124,17 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const pkg: PackageJson = readPackageJson(rootDir) ?? {};
 
   const registry = options.registry ?? new AdapterRegistry();
-  const adapters = registry.detect(pkg, config.adapters.auto ? config.adapters.force : {});
+  // Detection is handed the configuration as well as the manifest. A manifest
+  // answers for an adapter that stands for a package, and cannot answer for one
+  // that runs descriptions the project wrote: those are in the configuration,
+  // which this function read a few lines above and which used to stop here.
+  // Without it such an adapter recognises nothing and has to be named under
+  // `adapters.force.entry` to run at all.
+  const adapters = registry.detect(
+    pkg,
+    config.adapters.auto ? config.adapters.force : {},
+    config,
+  );
 
   const classes = buildClassIndex({ project, repo, repoDir: rootDir });
 

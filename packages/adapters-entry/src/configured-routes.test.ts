@@ -155,11 +155,39 @@ describe('a framework described rather than shipped', () => {
     expect(reasons(found)).toEqual(['entry-http-description-inactive']);
   });
 
-  // Detection is offered the manifest and nothing else, so it cannot know a
-  // description exists; `adapters.force.entry` is what turns this on.
-  it('recognises nothing on its own', () => {
-    expect(configuredRoutesAdapter.detect({ dependencies: { minihttp: '^1.0.0' } })).toBe(false);
+  // Detection is offered the configuration as well as the manifest, so a
+  // description turns its own reader on where its packages say it lives.
+  it('recognises a repository a description is about', () => {
+    const config = parseConfig({ adapters: { entry: { http: [DESCRIPTION] } } });
+    expect(configuredRoutesAdapter.detect({ dependencies: { minihttp: '^1.0.0' } }, config)).toBe(
+      true,
+    );
     expect(configuredRoutesAdapter.name).toBe(CONFIGURED_ROUTES);
+  });
+
+  it('recognises nothing where no description is about this repository', () => {
+    const config = parseConfig({ adapters: { entry: { http: [DESCRIPTION] } } });
+    expect(
+      configuredRoutesAdapter.detect({ dependencies: { 'other-framework': '^1.0.0' } }, config),
+    ).toBe(false);
+  });
+
+  // The whole reason this adapter recognised nothing for so long: a project
+  // that has described no framework must not carry its name on every
+  // repository node it has.
+  it('recognises nothing where nothing was described, and nothing without a configuration', () => {
+    expect(configuredRoutesAdapter.detect({ dependencies: { minihttp: '^1.0.0' } }, parseConfig({})))
+      .toBe(false);
+    expect(configuredRoutesAdapter.detect({ dependencies: { minihttp: '^1.0.0' } })).toBe(false);
+  });
+
+  // A description with no packages cannot be placed by a manifest, so it says
+  // it is tried everywhere and the reader is on everywhere it is written.
+  it('recognises every repository when a description names no packages', () => {
+    const config = parseConfig({
+      adapters: { entry: { http: [{ ...DESCRIPTION, packages: [] }] } },
+    });
+    expect(configuredRoutesAdapter.detect({}, config)).toBe(true);
   });
 });
 

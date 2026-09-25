@@ -38,12 +38,13 @@ import { entryHttpSchema } from '@flowatlas/core';
  * wrapper is still the handler. None of those is a fact about a framework, so
  * none of them is a field.
  *
- * The second did not fit and is named here rather than worked around: a
- * description cannot turn its own reader on. Detection is handed a manifest
- * and nothing else, so a framework nobody shipped an adapter for is read only
- * where `adapters.force.entry` names the described reader. That is a fact
- * about the adapter interface rather than about any framework, and the honest
- * fix is to let detection see the configuration.
+ * The second is the one field-shaped thing in a description that is not about
+ * reading a route at all: `packages`. It earns its place twice over, because it
+ * is also what lets a description turn its own reader on. Detection is handed
+ * the configuration as well as the manifest, so a framework nobody shipped an
+ * adapter for is recognised exactly where its description says it lives, and
+ * `adapters.force.entry` is back to being an override for when detection
+ * guessed wrong rather than the only way in (R66).
  */
 
 /** A type whose values declare routes, or hold middleware for the ones that do. */

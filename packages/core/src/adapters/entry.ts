@@ -1,3 +1,4 @@
+import type { FlowatlasConfig } from '../config.js';
 import type { EntryKind } from '../model/nodes.js';
 import type { ExtractContext, PackageJson } from './context.js';
 
@@ -88,6 +89,22 @@ export interface EntryAdapter {
    * guards, pipes and middleware never run for those, so none are drawn.
    */
   outsideApplication?: boolean;
-  detect(pkg: PackageJson): boolean;
+  /**
+   * Whether this adapter applies to a repository.
+   *
+   * The manifest answers it for an adapter that stands for a package: the
+   * dependency is there or it is not. It cannot answer it for an adapter that
+   * runs descriptions the project wrote, because what such an adapter
+   * recognises is in the configuration rather than in the repository, so the
+   * configuration is offered alongside it.
+   *
+   * Offered rather than promised: a caller that has no configuration to hand
+   * passes none, and an adapter that reads the manifest alone declares one
+   * parameter and is none the wiser. Only this slot is given it, because only
+   * here does a description decide whether an adapter runs at all: the broker
+   * and data-layer descriptions are read by passes that go looking for them
+   * whatever was detected, so nothing about them is waiting on this answer.
+   */
+  detect(pkg: PackageJson, config?: FlowatlasConfig): boolean;
   extractEntries(ctx: ExtractContext): EntryNode[];
 }

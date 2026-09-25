@@ -1,6 +1,11 @@
 import type { EntryAdapter, EntryKind, EntryNode } from '@flowatlas/core';
-import { hasAnyDependency, makeEntryId } from '@flowatlas/core';
-import { decoratorArgs, findDecorators, stableKey } from '@flowatlas/extractor-nestjs';
+import {
+  decoratorArgs,
+  findDecorators,
+  hasAnyDependency,
+  makeEntryId,
+  stableKey,
+} from '@flowatlas/core';
 import { fileOfNode, handlerOf, repoClasses } from './shared.js';
 
 const NEST_MICROSERVICES = ['@nestjs/microservices'] as const;
