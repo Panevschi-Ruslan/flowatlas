@@ -28,22 +28,22 @@ export class OrdersController {
   ) {}
 
   @Get(':id')
-  findOne(@Param('id') id: string): { data: unknown } {
+  findOne(@Param('id') id: string) {
     return this.orders.fetchOne(id);
   }
 
   @Post(':id/cancel')
-  cancel(@Param('id') id: string): { data: unknown } {
+  cancel(@Param('id') id: string) {
     return this.orders.cancel(id);
   }
 
   @Post(':id/invoice')
-  invoice(@Body() order: OrderDto): { data: unknown } {
+  invoice(@Body() order: OrderDto) {
     return this.billing.requestInvoice(order);
   }
 
   @Post('pay')
-  pay(@Body() order: OrderDto): { data: unknown } {
+  pay(@Body() order: OrderDto) {
     return this.payments.pay(order);
   }
 
@@ -58,18 +58,29 @@ export class OrdersController {
    * matches neither, which is the reading that has to be improved on.
    */
   @Post(':id/ship')
-  ship(@Param('id') id: string): { data: unknown } {
+  ship(@Param('id') id: string) {
     return this.orders.cancel(id);
   }
 
   @Post(':id/refund')
-  refund(@Param('id') id: string): { data: unknown } {
+  refund(@Param('id') id: string) {
     return this.orders.cancel(id);
   }
 
   /** The half of the same pair that exists: `hold` has no route, on purpose. */
   @Post(':id/resume')
-  resume(@Param('id') id: string): { data: unknown } {
+  resume(@Param('id') id: string) {
     return this.orders.cancel(id);
   }
 }
+
+// The handlers above declare no return type on purpose. Each forwards the
+// client's `Observable<AxiosResponse<T>>` unchanged, and letting the library's
+// signature decide is what makes this fixture a test of its shape rather than
+// of a shape somebody retyped. They used to say `{ data: unknown }`, which no
+// real Nest handler can say and which hid the delivery wrapper the graph reads
+// through.
+//
+// Do not put an annotation back. It would need two imports, and every line
+// below them would move; node ids carry line numbers, and the fixture section
+// of the repository README lists what that breaks.

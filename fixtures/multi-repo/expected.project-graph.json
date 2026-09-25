@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-24T21:18:46.052Z",
+  "builtAt": "2026-09-25T11:47:23.902Z",
   "services": [
     {
       "name": "gateway",
@@ -1907,7 +1907,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 30,
       "meta": {
@@ -1922,7 +1922,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 35,
       "meta": {
@@ -1937,7 +1937,7 @@
       "params": [
         "type:@fx/contracts#OrderDto"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:gateway#InvoiceDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 40,
       "meta": {
@@ -1952,7 +1952,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 65,
       "meta": {
@@ -1967,7 +1967,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 71,
       "meta": {
@@ -1982,7 +1982,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 60,
       "meta": {
@@ -2012,7 +2012,7 @@
       "params": [
         "type:@fx/contracts#OrderDto"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<unknown>",
       "file": "src/orders/orders.controller.ts",
       "line": 45,
       "meta": {
@@ -2286,7 +2286,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 37
     },
@@ -2310,7 +2310,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 32
     },
@@ -2322,7 +2322,7 @@
       "params": [
         "type:@fx/contracts#OrderDto"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:gateway#InvoiceDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 42
     },
@@ -2334,7 +2334,7 @@
       "params": [
         "type:@fx/contracts#OrderDto"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<unknown>",
       "file": "src/orders/orders.controller.ts",
       "line": 47
     },
@@ -2346,7 +2346,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 67
     },
@@ -2358,7 +2358,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 73
     },
@@ -2370,7 +2370,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 62
     },
@@ -2931,6 +2931,36 @@
         "declKind": "alias",
         "exported": true,
         "sharedPackage": "@fx/contracts"
+      }
+    },
+    "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:axios#AxiosResponse<type:gateway#InvoiceDto>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:axios#AxiosResponse<unknown>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
       }
     },
     "type:billing#CreateInvoiceDto": {
