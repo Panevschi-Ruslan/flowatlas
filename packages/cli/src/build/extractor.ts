@@ -84,13 +84,26 @@ export const createRegistry = (): AdapterRegistry => {
  *
  * Recorded in the build cache because an adapter appearing or disappearing
  * changes what the same sources produce, without any file having changed.
+ *
+ * Detection is handed the configuration here for the same reason the readers
+ * hand it over: an adapter that runs descriptions the project wrote recognises
+ * a repository from those descriptions and from nothing else, so asking without
+ * them records a list the reading will not agree with. Nothing downstream was
+ * wrong while this was missing — the cache hashes the whole configuration
+ * beside this list, so a changed description throws the entry away whatever the
+ * list says — but a list that answers a different question than detection does
+ * is a wrong answer to anybody who reads it, which is reason enough.
  */
 export const adapterNames = (
   registry: AdapterRegistry,
   pkg: PackageJson,
   config: FlowatlasConfig,
 ): string[] => {
-  const detected = registry.detect(pkg, config.adapters.auto ? config.adapters.force : {});
+  const detected = registry.detect(
+    pkg,
+    config.adapters.auto ? config.adapters.force : {},
+    config,
+  );
   const names = ADAPTER_SLOTS.flatMap((slot) => detected[slot].map((adapter) => adapter.name));
   return [...names, ...config.adapters.broker.custom.map((broker) => broker.name)].sort();
 };

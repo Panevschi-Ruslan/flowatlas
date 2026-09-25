@@ -172,6 +172,35 @@ export const customBrokerSchema = z.strictObject({
  * This is how the project points at one — which object holds the table, which
  * method fills it, and which arguments carry the key and the function — so the
  * core still knows nothing about what is behind it.
+ *
+ * It names no packages, and that is a decision rather than an omission. Its
+ * counterpart for HTTP frameworks says where it applies by naming a dependency,
+ * which works there because a framework is something installed and a manifest
+ * is where installed things are listed. A table of functions the project wrote
+ * is installed from nowhere. What says where it lives is `receiver`: the name
+ * the object is written under in this repository's own source, and a truer
+ * statement of where the description applies than any dependency could be,
+ * since it names the table itself rather than a library that happens to sit
+ * beside it. It is also the one thing detection cannot read, because detection
+ * answers from the manifest before a single source file has been opened.
+ *
+ * Adding a `packages` key anyway would buy the two descriptions the same
+ * spelling and not the same meaning. Empty would have to mean everywhere, as it
+ * does there — and empty is exactly what a project with a table of its own
+ * writes, because it has no dependency to name, so describing one table in one
+ * repository would put this reader's name on every repository of the project.
+ * Non-empty would be no better: the dependency named would stand for the
+ * repository rather than for the table, and every repository of the project
+ * that happens to share that dependency would claim the description too.
+ *
+ * So this description does state where it applies, in `receiver`, and it is the
+ * reading rather than detection that acts on the statement: a description whose
+ * receiver is written nowhere in the repository matches nothing there, which is
+ * the same outcome a dependency that is absent would have produced. What
+ * decides whether the reader runs at all stays with the adapter's own
+ * dependency list, and with `adapters.force.entry` for a repository that is on
+ * neither — both statements about the repository, which is the question
+ * detection is actually asking.
  */
 export const entryRegistrySchema = z.strictObject({
   /** How this registry is named in reports and on the entries it produces. */

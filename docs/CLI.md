@@ -746,11 +746,27 @@ The object has to be declared in the repository being read, so an import from a
 package that happens to share the name is not matched. `receiver` may be a list.
 This is read wherever handlers are installed by call rather than by decorator,
 which today means a repository depending on `telegraf`; anywhere else, turn it on
-with `adapters.force.entry`. Unlike an HTTP description, this one has no
-`packages` key, so it cannot say which repository it belongs to and cannot turn
-its own reader on: a table of functions you wrote yourself appears in no
-manifest, and detecting on the mere presence of the key would name this adapter
-on every repository of the project.
+with `adapters.force.entry`.
+
+**A registry description has no `packages` key, and will not be getting one.**
+An HTTP description names a dependency because a framework is something you
+install, and what you installed is written in your manifest. A table of
+functions you wrote yourself is installed from nowhere, so there is nothing
+there to name. Where such a description applies is `receiver` — the name your
+own source writes the table under — and that is a stronger statement than a
+dependency would be, because it names the table rather than a library sitting
+next to it. It is also read too late to decide detection, which answers from
+`package.json` before a source file is opened: a description whose receiver is
+written nowhere in a repository simply matches nothing there, which is what an
+absent dependency would have got you anyway. A `packages` key would have to mean
+what it means for HTTP, where empty means everywhere — and empty is exactly what
+you would write, having no dependency to name, so describing one table in one
+repository would put `entry-registries` on every repository node of your
+project. Naming some dependency to avoid that would name the repository rather
+than the table, and every repository of yours that shares it would claim the
+description too. So whether this reader runs is decided by the repository's
+dependencies and by `adapters.force.entry`, and the description decides only
+where inside a repository it matches.
 
 **A table nobody configured is reported rather than skipped.** A repository with
 handlers registered through an object it declares itself gets one `unresolved`
