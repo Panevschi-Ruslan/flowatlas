@@ -42,6 +42,7 @@ import { isDeclared, readDeclaredService } from '../build/declared.js';
 import { adapterNames, createRegistry, EXTRACTORS, isFrontend } from '../build/extractor.js';
 import { noReaderNote } from '../stacks.js';
 import {
+  hashGraphFile,
   planRebuild,
   type RebuildPlan,
   type RepoSurvey,
@@ -249,7 +250,7 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
       ...(options.trustTimestamps === undefined ? {} : { trustTimestamps: options.trustTimestamps }),
     }),
     graphPath,
-    graphHash: existsSync(graphPath) ? hashFile(graphPath) : null,
+    graphHash: existsSync(graphPath) ? hashGraphFile(graphPath) : null,
   };
 };
 
@@ -759,7 +760,7 @@ const nextCache = (
       globalFiles: carried?.globalFiles ?? survey.globalFiles,
       files: carried?.files ?? survey.files,
       graphPath: survey.graphPath,
-      graphHash: hashFile(survey.graphPath),
+      graphHash: hashGraphFile(survey.graphPath),
       counts: countsOf(item.graph),
     };
   }

@@ -1,6 +1,29 @@
-import { describe, expect, it } from 'vitest';
-import { emptyCache, type BuildCache, type FileStamp, type RepoCache } from './cache.js';
-import { planRebuild, type RepoSurvey } from './incremental.js';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterAll, describe, expect, it } from 'vitest';
+import { emptyCache, hashFile, type BuildCache, type FileStamp, type RepoCache } from './cache.js';
+import { hashGraphFile, planRebuild, type RepoSurvey } from './incremental.js';
+
+const scratch = mkdtempSync(join(tmpdir(), 'flowatlas-plan-'));
+
+afterAll(() => rmSync(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
+
+/** A repository graph as the builder writes one, timestamp and all. */
+const graphFile = (name: string, generatedAt: string, nodes: unknown[] = [], indent = 2): string => {
+  const path = join(scratch, name);
+  const graph = {
+    schemaVersion: 2,
+    generatedAt,
+    repo: 'orders',
+    nodes,
+    edges: [],
+    types: {},
+    unresolved: [],
+  };
+  writeFileSync(path, JSON.stringify(graph, null, indent));
+  return path;
+};
 
 const NESTJS = '@flowatlas/extractor-nestjs';
 
@@ -194,5 +217,71 @@ describe('planning what to re-read', () => {
       'src/orders/orders.module.ts',
       'src/orders/orders.service.ts',
     ]);
+  });
+});
+
+describe('hashing a graph for the rebuild plan', () => {
+  it('gives two extractions of an unchanged tree the same hash', () => {
+    const first = graphFile('same-a.json', '2026-01-01T00:00:00.000Z');
+    const second = graphFile('same-b.json', '2026-09-25T11:22:33.444Z');
+    expect(hashGraphFile(first)).toBe(hashGraphFile(second));
+    // The premise of the fix: as bytes these two files genuinely differ.
+    expect(hashFile(first)).not.toBe(hashFile(second));
+  });
+
+  it('still parts two graphs that say different things', () => {
+    const plain = graphFile('body-a.json', '2026-01-01T00:00:00.000Z');
+    const withNode = graphFile('body-b.json', '2026-01-01T00:00:00.000Z', [{ id: 'orders:one' }]);
+    expect(hashGraphFile(plain)).not.toBe(hashGraphFile(withNode));
+  });
+
+  it('reads a graph reprinted with other whitespace as the same graph', () => {
+    const wide = graphFile('print-a.json', '2026-01-01T00:00:00.000Z', [], 2);
+    const flat = graphFile('print-b.json', '2026-01-01T00:00:00.000Z', [], 0);
+    expect(hashGraphFile(wide)).toBe(hashGraphFile(flat));
+  });
+
+  it('keeps a broken graph apart from a sound one and from another broken one', () => {
+    const missing = join(scratch, 'absent.json');
+    const truncated = join(scratch, 'truncated.json');
+    writeFileSync(truncated, '{"schemaVersion":2,"nodes":[');
+    const sound = graphFile('sound.json', '2026-01-01T00:00:00.000Z');
+    expect(hashGraphFile(truncated)).not.toBe(hashGraphFile(sound));
+    expect(hashGraphFile(truncated)).not.toBe(hashGraphFile(missing));
+  });
+});
+
+describe('planning against a graph file on disk', () => {
+  it('does not re-read a repository whose graph was touched but not changed', () => {
+    const path = graphFile('touched-before.json', '2026-01-01T00:00:00.000Z');
+    const recorded = hashGraphFile(path);
+    // Whatever rewrote the file — an editor, a sync, an abandoned extraction —
+    // left the body alone and only moved the clock.
+    const rewritten = graphFile('touched-after.json', '2026-09-25T09:10:11.000Z');
+    const plan = planRebuild([survey({ graphPath: rewritten, graphHash: hashGraphFile(rewritten) })], {
+      cache: cacheOf(['orders', entry({ graphPath: path, graphHash: recorded })]),
+    });
+    expect(plan.orders).toEqual({ mode: 'skip', reason: '0 files changed' });
+  });
+
+  it('re-reads a repository whose source changed, graph or no graph', () => {
+    const path = graphFile('source-changed.json', '2026-01-01T00:00:00.000Z');
+    const hash = hashGraphFile(path);
+    const next = files();
+    next['src/main.ts'] = stamp('sha1:main-edited');
+    const plan = planRebuild([survey({ files: next, graphPath: path, graphHash: hash })], {
+      cache: cacheOf(['orders', entry({ graphPath: path, graphHash: hash })]),
+    });
+    expect(plan.orders).toEqual({ mode: 'full', reason: 'global file src/main.ts' });
+  });
+
+  it('still calls out a graph whose body was edited behind the build', () => {
+    const path = graphFile('edited-before.json', '2026-01-01T00:00:00.000Z');
+    const recorded = hashGraphFile(path);
+    const edited = graphFile('edited-after.json', '2026-01-01T00:00:00.000Z', [{ id: 'by-hand' }]);
+    const plan = planRebuild([survey({ graphPath: edited, graphHash: hashGraphFile(edited) })], {
+      cache: cacheOf(['orders', entry({ graphPath: path, graphHash: recorded })]),
+    });
+    expect(plan.orders?.reason).toBe('graph changed outside the build');
   });
 });
