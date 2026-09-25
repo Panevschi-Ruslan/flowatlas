@@ -920,7 +920,7 @@ const compareEntries = (
   const key = pairKey(senderEntry, receiverEntry);
   if (walk.open.has(key)) {
     // The same pair again on the same path: a shape that contains itself. The
-    // hashes above already settled it, so ssticker here loses nothing.
+    // hashes above already settled it, so stopping here loses nothing.
     walk.rules.add(at('cycle', path));
     return;
   }

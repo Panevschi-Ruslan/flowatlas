@@ -394,6 +394,66 @@ const writesReachedBy = (
   return { any, documents };
 };
 
+/** A key of some shape, with the reference to whatever is under it. */
+interface Key {
+  name: string;
+  type: TypeRefAst;
+}
+
+const keysOfEntry = (entry: TypeEntry): Key[] =>
+  (entry.fields ?? []).map((each) => ({ name: each.name, type: parse(each.type) }));
+
+/**
+ * The keys one step down a path, or nothing when there is no reading them.
+ *
+ * An array is unwrapped rather than refused: a path through `items[].name` is
+ * about the element, and the document written is the element's shape. A shape
+ * written inline in the reference answers for itself; a reference to a
+ * declaration is looked up; anything else — a union, a primitive, a generic
+ * nobody instantiated — is a shape this cannot descend into, which is a
+ * different answer from a shape that does not have the key.
+ */
+const keysUnder = (
+  ref: TypeRefAst,
+  typeOf: (id: string) => TypeEntry | undefined,
+): Key[] | undefined => {
+  let ast = ref;
+  while (ast.kind === 'array') ast = ast.element;
+  if (ast.kind === 'object') return ast.fields.map((each) => ({ name: each.name, type: each.type }));
+  if (ast.kind !== 'id' || ast.args !== undefined) return undefined;
+  const entry = typeOf(ast.id);
+  return entry === undefined ? undefined : keysOfEntry(entry);
+};
+
+/** Index and element markers, which name no key of anything. */
+const NOT_A_KEY = /(\[[^\]]*\])+$/;
+
+const segmentsOf = (field: string): string[] =>
+  field
+    .split('.')
+    .map((segment) => segment.replace(NOT_A_KEY, ''))
+    .filter((segment) => segment !== '');
+
+/** What one document has to say about one path: three answers, not two. */
+type Declares = 'declares' | 'absent' | 'unreadable';
+
+const declaresPath = (
+  document: TypeEntry,
+  segments: readonly string[],
+  typeOf: (id: string) => TypeEntry | undefined,
+): Declares => {
+  let keys = keysOfEntry(document);
+  for (let at = 0; at < segments.length; at += 1) {
+    const key = keys.find((each) => each.name === segments[at]);
+    if (key === undefined) return 'absent';
+    if (at === segments.length - 1) return 'declares';
+    const next = keysUnder(key.type, typeOf);
+    if (next === undefined) return 'unreadable';
+    keys = next;
+  }
+  return 'absent';
+};
+
 /**
  * What a field the receiver strips off the body actually costs.
  *
@@ -406,26 +466,38 @@ const writesReachedBy = (
  * Neither test is a name heuristic. `_id` and `createdAt` need no special case:
  * they fail the second test on their own, because the handler does not read
  * them off the body.
+ *
+ * A nested path is walked rather than refused (R67). It used to answer
+ * `unknown`, which is the word for "the documents were read and none of them
+ * declares it" and was being used for "nobody compared this against anything" —
+ * a fourth thing wearing a third thing's word. The choice was between giving
+ * that fourth thing a word of its own and making it stop existing, and it stops
+ * existing here: the segments are the keys of one shape after another, and the
+ * registry holds every shape a key names. Measured, no row in the fixture
+ * corpus is in this case at all, because a whitelisting pipe is only read as
+ * stripping at the top of a body, so a fourth word would have named nothing and
+ * cost every reader of `contracts.json` a version. Walking costs nothing and is
+ * already right for the day the comparison strips below the top — an array body
+ * is one such day, and its paths read `[].name`.
  */
-const stripImpact = (
+export const stripImpact = (
   writes: { any: boolean; documents: TypeEntry[] },
   field: string,
+  typeOf: (id: string) => TypeEntry | undefined,
 ): StripImpact => {
   if (!writes.any) return 'none';
-  // Only a key of the body itself. A nested path's last segment is not a
-  // top-level field of the document: `options.name` matched against a document
-  // with a `name` said the sender believed it had saved something, about a
-  // different field entirely.
-  if (field.includes('.') || field.includes('[')) return 'unknown';
   // Something is written and no shape of it was read, so there is nothing to
   // look the field up in. Answering `unknown` here said "nothing it writes
   // declares this field", which is a claim nobody was in a position to make
   // (R43).
   if (writes.documents.length === 0) return 'unread';
-  const stored = writes.documents.some((entry) =>
-    (entry.fields ?? []).some((each) => each.name === field),
-  );
-  return stored ? 'stored' : 'unknown';
+  const segments = segmentsOf(field);
+  const answers = writes.documents.map((document) => declaresPath(document, segments, typeOf));
+  if (answers.includes('declares')) return 'stored';
+  // Every document ran out into a shape that could not be read before the path
+  // ended, so nothing here has looked at the key at all — which is the same
+  // position as having read no document, and says so in the same word.
+  return answers.every((answer) => answer === 'unreadable') ? 'unread' : 'unknown';
 };
 
 /**
@@ -518,7 +590,7 @@ export const checkContracts = (
           // Only a strip has anything to lose, and only the receiving end of a
           // request has a handler to ask about it.
           diff.rule === 'whitelist-strip' && exchange.direction === 'request'
-            ? stripImpact(writesOf(exchange.edge.to), diff.path)
+            ? stripImpact(writesOf(exchange.edge.to), diff.path, (id) => lookup.type(id))
             : undefined,
         ),
       );
