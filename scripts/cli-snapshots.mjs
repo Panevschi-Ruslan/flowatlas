@@ -131,6 +131,21 @@ const FOLDED_CASES = [
   ['expected.doctor.txt', (io) => runDoctorCommand({ config: foldedConfig }, io)],
 ];
 
+const socketFixture = join(root, 'fixtures', 'socket-channels');
+const socketConfig = join(socketFixture, 'flowatlas.config.json');
+
+/**
+ * A channel whose two ends are in different repositories and neither is a route.
+ *
+ * The one query that shows what the socket reader is for: a gateway publishing
+ * and a browser handling the same name, under the namespace the gateway
+ * declares. The graph beneath it is already gated by the fixture's own
+ * snapshot; this holds the bytes a person reads.
+ */
+const SOCKET_CASES = [
+  ['expected.channel.updated.tree.txt', (io) => runChannel('orders/order:updated', { config: socketConfig, color: false, ascii: true, format: 'tree' }, io)],
+];
+
 /**
  * Sets of recordings, in several places.
  *
@@ -143,6 +158,7 @@ const SUITES = [
   { dir: contractsFixture, owned: false, cases: CONTRACT_CASES },
   { dir: doctorFixture, owned: false, cases: DOCTOR_CASES },
   { dir: foldedFixture, owned: false, cases: FOLDED_CASES },
+  { dir: socketFixture, owned: false, cases: SOCKET_CASES },
 ];
 
 /**

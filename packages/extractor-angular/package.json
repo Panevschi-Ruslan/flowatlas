@@ -49,6 +49,7 @@
   },
   "dependencies": {
     "@angular/compiler": "^19.2.0",
+    "@flowatlas/adapters-broker": "workspace:*",
     "@flowatlas/core": "workspace:*",
     "ts-morph": "^28.0.0"
   },

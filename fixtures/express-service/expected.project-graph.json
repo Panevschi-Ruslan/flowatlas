@@ -1,0 +1,698 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-24T16:27:51.380Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/orders/orders.controller.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "id": "api#src/orders/orders.repository.ts:OrdersRepository",
+      "type": "provider",
+      "label": "OrdersRepository",
+      "repo": "api",
+      "file": "src/orders/orders.repository.ts",
+      "line": 12,
+      "kind": "injectable"
+    },
+    {
+      "id": "api#src/orders/orders.repository.ts:OrdersRepository.byId",
+      "type": "method",
+      "label": "OrdersRepository.byId",
+      "repo": "api",
+      "file": "src/orders/orders.repository.ts",
+      "line": 19
+    },
+    {
+      "id": "api#src/orders/orders.repository.ts:OrdersRepository.insert",
+      "type": "method",
+      "label": "OrdersRepository.insert",
+      "repo": "api",
+      "file": "src/orders/orders.repository.ts",
+      "line": 23
+    },
+    {
+      "id": "api#src/orders/orders.repository.ts:OrdersRepository.list",
+      "type": "method",
+      "label": "OrdersRepository.list",
+      "repo": "api",
+      "file": "src/orders/orders.repository.ts",
+      "line": 15
+    },
+    {
+      "id": "api#src/orders/orders.routes.ts:GET /:orderId@25",
+      "type": "function",
+      "label": "GET /:orderId@25",
+      "repo": "api",
+      "file": "src/orders/orders.routes.ts",
+      "line": 25
+    },
+    {
+      "id": "api#src/orders/orders.routes.ts:POST /@36",
+      "type": "function",
+      "label": "POST /@36",
+      "repo": "api",
+      "file": "src/orders/orders.routes.ts",
+      "line": 36
+    },
+    {
+      "id": "api#src/public/public.routes.ts:GET /health@14",
+      "type": "function",
+      "label": "GET /health@14",
+      "repo": "api",
+      "file": "src/public/public.routes.ts",
+      "line": 14
+    },
+    {
+      "id": "api#src/public/public.routes.ts:GET /summary@18",
+      "type": "function",
+      "label": "GET /summary@18",
+      "repo": "api",
+      "file": "src/public/public.routes.ts",
+      "line": 18
+    },
+    {
+      "id": "db_query:api#src/orders/orders.repository.ts:16:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "api",
+      "file": "src/orders/orders.repository.ts",
+      "line": 16,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:api#src/orders/orders.repository.ts:20:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "api",
+      "file": "src/orders/orders.repository.ts",
+      "line": 20,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:api#src/orders/orders.repository.ts:24:12",
+      "type": "db_query",
+      "label": "write orders",
+      "repo": "api",
+      "file": "src/orders/orders.repository.ts",
+      "line": 24,
+      "meta": {
+        "op": "write",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "api",
+      "file": "src/orders/orders.routes.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "express-routes",
+        "registration": "ordersRouter.get",
+        "middleware": [
+          "express.json()",
+          "authenticate",
+          "withTenant"
+        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "api",
+      "file": "src/orders/orders.routes.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:orderId",
+        "adapter": "express-routes",
+        "registration": "ordersRouter.get",
+        "middleware": [
+          "express.json()",
+          "authenticate",
+          "withTenant"
+        ],
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/public/health",
+      "type": "entry",
+      "label": "GET /public/health",
+      "repo": "api",
+      "file": "src/public/public.routes.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/public/health",
+        "rawPath": "/public/health",
+        "adapter": "express-routes",
+        "registration": "router.get",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/public/summary",
+      "type": "entry",
+      "label": "GET /public/summary",
+      "repo": "api",
+      "file": "src/public/public.routes.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/public/summary",
+        "rawPath": "/public/summary",
+        "adapter": "express-routes",
+        "registration": "router.get",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "api",
+      "file": "src/orders/orders.routes.ts",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "express-routes",
+        "registration": "ordersRouter.post",
+        "middleware": [
+          "express.json()",
+          "authenticate",
+          "withTenant",
+          "requireAdmin"
+        ],
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "classes": 1,
+          "skippedExternalCalls": {
+            "pg": 3,
+            "express": 6
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "classes": 2,
+          "templates": 1,
+          "skippedExternalCalls": {
+            "@angular/common": 2,
+            "rxjs": 2
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:api#orders",
+      "type": "table",
+      "label": "orders",
+      "repo": "api"
+    },
+    {
+      "id": "ui_action:web#src/app/orders.component.ts:10:13",
+      "type": "ui_action",
+      "label": "click=\"place()\"",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 10,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "place()",
+        "component": "web#src/app/orders.component.ts:OrdersComponent",
+        "template": "src/app/orders.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/orders.component.ts:9:13",
+      "type": "ui_action",
+      "label": "click=\"load()\"",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "load()",
+        "component": "web#src/app/orders.component.ts:OrdersComponent",
+        "template": "src/app/orders.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:12:12",
+      "type": "ui_api_call",
+      "label": "GET /orders",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:16:12",
+      "type": "ui_api_call",
+      "label": "POST /orders",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": "{total:number}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "total"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "provider",
+      "label": "OrdersApiService",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+      "type": "method",
+      "label": "OrdersApiService.create",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 15
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.list",
+      "type": "method",
+      "label": "OrdersApiService.list",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 11
+    },
+    {
+      "id": "web#src/app/orders.component.ts:OrdersComponent",
+      "type": "ui_component",
+      "label": "OrdersComponent",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 5,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-orders"
+      }
+    },
+    {
+      "id": "web#src/app/orders.component.ts:OrdersComponent.load",
+      "type": "method",
+      "label": "OrdersComponent.load",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 16
+    },
+    {
+      "id": "web#src/app/orders.component.ts:OrdersComponent.place",
+      "type": "method",
+      "label": "OrdersComponent.place",
+      "repo": "web",
+      "file": "src/app/orders.component.ts",
+      "line": 20
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/orders/orders.controller.ts:listOrders",
+      "to": "api#src/orders/orders.repository.ts:OrdersRepository.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "api#src/orders/orders.repository.ts:OrdersRepository.byId",
+      "to": "db_query:api#src/orders/orders.repository.ts:20:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 20
+    },
+    {
+      "from": "api#src/orders/orders.repository.ts:OrdersRepository.insert",
+      "to": "db_query:api#src/orders/orders.repository.ts:24:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 24
+    },
+    {
+      "from": "api#src/orders/orders.repository.ts:OrdersRepository.list",
+      "to": "db_query:api#src/orders/orders.repository.ts:16:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 16
+    },
+    {
+      "from": "api#src/orders/orders.routes.ts:GET /:orderId@25",
+      "to": "api#src/orders/orders.repository.ts:OrdersRepository.byId",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.routes.ts",
+      "line": 26
+    },
+    {
+      "from": "api#src/orders/orders.routes.ts:POST /@36",
+      "to": "api#src/orders/orders.repository.ts:OrdersRepository.insert",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.routes.ts",
+      "line": 37
+    },
+    {
+      "from": "api#src/public/public.routes.ts:GET /summary@18",
+      "to": "api#src/orders/orders.repository.ts:OrdersRepository.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/public/public.routes.ts",
+      "line": 19
+    },
+    {
+      "from": "db_query:api#src/orders/orders.repository.ts:16:12",
+      "to": "table:api#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 16
+    },
+    {
+      "from": "db_query:api#src/orders/orders.repository.ts:20:12",
+      "to": "table:api#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 20
+    },
+    {
+      "from": "db_query:api#src/orders/orders.repository.ts:24:12",
+      "to": "table:api#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 24
+    },
+    {
+      "from": "entry:api:http:GET:/orders",
+      "to": "api#src/orders/orders.controller.ts:listOrders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:api:http:GET:/orders/:param",
+      "to": "api#src/orders/orders.routes.ts:GET /:orderId@25",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 25
+    },
+    {
+      "from": "entry:api:http:GET:/public/health",
+      "to": "api#src/public/public.routes.ts:GET /health@14",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/public/public.routes.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:api:http:GET:/public/summary",
+      "to": "api#src/public/public.routes.ts:GET /summary@18",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/public/public.routes.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:api:http:POST:/orders",
+      "to": "api#src/orders/orders.routes.ts:POST /@36",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 36
+    },
+    {
+      "from": "ui_action:web#src/app/orders.component.ts:10:13",
+      "to": "web#src/app/orders.component.ts:OrdersComponent.place",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 10
+    },
+    {
+      "from": "ui_action:web#src/app/orders.component.ts:9:13",
+      "to": "web#src/app/orders.component.ts:OrdersComponent.load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:12:12",
+      "to": "entry:api:http:GET:/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 12,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:16:12",
+      "to": "entry:api:http:POST:/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 16,
+      "params": [
+        "{total:number}"
+      ],
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "to": "web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 9
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:16:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 16
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.list",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:12:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 12
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 14
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent.load",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 17
+    },
+    {
+      "from": "web#src/app/orders.component.ts:OrdersComponent.place",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 21
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/main.ts",
+      "line": 1,
+      "reason": "bootstrap-not-found",
+      "hint": "Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.",
+      "symbol": "bootstrap",
+      "service": "api"
+    },
+    {
+      "file": "src/orders/orders.routes.ts",
+      "line": 45,
+      "reason": "route-path-dynamic",
+      "hint": "Give the route a string literal or a const string; a computed path cannot be matched against callers.",
+      "symbol": "ordersRouter.delete(archivePath('old'))",
+      "adapter": "express-routes",
+      "service": "api"
+    },
+    {
+      "service": "api",
+      "file": "src/public/public.routes.ts",
+      "line": 18,
+      "reason": "route-unguarded",
+      "level": "info",
+      "message": "GET /public/summary has no route middleware and reaches orders; middleware installed for a whole prefix is not read, so check it by hand.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "GET /public/summary"
+    }
+  ]
+}

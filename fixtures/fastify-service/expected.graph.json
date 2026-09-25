@@ -1,0 +1,451 @@
+{
+  "schemaVersion": 3,
+  "repo": "fastify-service",
+  "generatedAt": "2026-09-24T16:27:51.836Z",
+  "nodes": [
+    {
+      "id": "db_query:fastify-service#src/orders/orders.repository.ts:12:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.repository.ts",
+      "line": 12,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:fastify-service#src/orders/orders.repository.ts:16:12",
+      "type": "db_query",
+      "label": "write orders",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.repository.ts",
+      "line": 16,
+      "meta": {
+        "op": "write",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:fastify-service#src/orders/orders.repository.ts:8:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.repository.ts",
+      "line": 8,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "entry:fastify-service:http:DELETE:/orders/:param",
+      "type": "entry",
+      "label": "DELETE /orders/:param",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 45,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:orderId",
+        "adapter": "fastify-routes",
+        "registration": "app.route",
+        "middleware": [
+          "authenticate",
+          "withTenant"
+        ],
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:fastify-service:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "fastify-routes",
+        "registration": "app.get",
+        "middleware": [
+          "authenticate",
+          "withTenant"
+        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:fastify-service:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:orderId",
+        "adapter": "fastify-routes",
+        "registration": "app.get",
+        "middleware": [
+          "authenticate",
+          "withTenant"
+        ],
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:fastify-service:http:GET:/public/health",
+      "type": "entry",
+      "label": "GET /public/health",
+      "repo": "fastify-service",
+      "file": "src/public/public.routes.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/public/health",
+        "rawPath": "/public/health",
+        "adapter": "fastify-routes",
+        "registration": "app.get",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:fastify-service:http:GET:/public/summary",
+      "type": "entry",
+      "label": "GET /public/summary",
+      "repo": "fastify-service",
+      "file": "src/public/public.routes.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/public/summary",
+        "rawPath": "/public/summary",
+        "adapter": "fastify-routes",
+        "registration": "app.get",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:fastify-service:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "fastify-routes",
+        "registration": "app.post",
+        "middleware": [
+          "authenticate",
+          "withTenant",
+          "requireAdmin"
+        ],
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "fastify-service#src/orders/orders.controller.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.controller.ts",
+      "line": 5
+    },
+    {
+      "id": "fastify-service#src/orders/orders.repository.ts:OrdersRepository",
+      "type": "provider",
+      "label": "OrdersRepository",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.repository.ts",
+      "line": 4,
+      "kind": "injectable"
+    },
+    {
+      "id": "fastify-service#src/orders/orders.repository.ts:OrdersRepository.byId",
+      "type": "method",
+      "label": "OrdersRepository.byId",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.repository.ts",
+      "line": 11
+    },
+    {
+      "id": "fastify-service#src/orders/orders.repository.ts:OrdersRepository.insert",
+      "type": "method",
+      "label": "OrdersRepository.insert",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.repository.ts",
+      "line": 15
+    },
+    {
+      "id": "fastify-service#src/orders/orders.repository.ts:OrdersRepository.list",
+      "type": "method",
+      "label": "OrdersRepository.list",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.repository.ts",
+      "line": 7
+    },
+    {
+      "id": "fastify-service#src/orders/orders.routes.ts:DELETE /:orderId@48",
+      "type": "function",
+      "label": "DELETE /:orderId@48",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 48
+    },
+    {
+      "id": "fastify-service#src/orders/orders.routes.ts:GET /:orderId@29",
+      "type": "function",
+      "label": "GET /:orderId@29",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 29
+    },
+    {
+      "id": "fastify-service#src/orders/orders.routes.ts:POST /@38",
+      "type": "function",
+      "label": "POST /@38",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 38
+    },
+    {
+      "id": "fastify-service#src/public/public.routes.ts:GET /health@10",
+      "type": "function",
+      "label": "GET /health@10",
+      "repo": "fastify-service",
+      "file": "src/public/public.routes.ts",
+      "line": 10
+    },
+    {
+      "id": "fastify-service#src/public/public.routes.ts:GET /summary@14",
+      "type": "function",
+      "label": "GET /summary@14",
+      "repo": "fastify-service",
+      "file": "src/public/public.routes.ts",
+      "line": 14
+    },
+    {
+      "id": "repo:fastify-service",
+      "type": "repo",
+      "label": "fastify-service",
+      "repo": "fastify-service",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "classes": 1,
+          "skippedExternalCalls": {
+            "pg": 3,
+            "fastify": 8
+          }
+        },
+        "adapters": {
+          "entry": [
+            "fastify-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:fastify-service#orders",
+      "type": "table",
+      "label": "orders",
+      "repo": "fastify-service"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:fastify-service#src/orders/orders.repository.ts:12:12",
+      "to": "table:fastify-service#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 12
+    },
+    {
+      "from": "db_query:fastify-service#src/orders/orders.repository.ts:16:12",
+      "to": "table:fastify-service#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 16
+    },
+    {
+      "from": "db_query:fastify-service#src/orders/orders.repository.ts:8:12",
+      "to": "table:fastify-service#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:fastify-service:http:DELETE:/orders/:param",
+      "to": "fastify-service#src/orders/orders.routes.ts:DELETE /:orderId@48",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 48
+    },
+    {
+      "from": "entry:fastify-service:http:GET:/orders",
+      "to": "fastify-service#src/orders/orders.controller.ts:listOrders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:fastify-service:http:GET:/orders/:param",
+      "to": "fastify-service#src/orders/orders.routes.ts:GET /:orderId@29",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 29
+    },
+    {
+      "from": "entry:fastify-service:http:GET:/public/health",
+      "to": "fastify-service#src/public/public.routes.ts:GET /health@10",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/public/public.routes.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:fastify-service:http:GET:/public/summary",
+      "to": "fastify-service#src/public/public.routes.ts:GET /summary@14",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/public/public.routes.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:fastify-service:http:POST:/orders",
+      "to": "fastify-service#src/orders/orders.routes.ts:POST /@38",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 38
+    },
+    {
+      "from": "fastify-service#src/orders/orders.controller.ts:listOrders",
+      "to": "fastify-service#src/orders/orders.repository.ts:OrdersRepository.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "fastify-service#src/orders/orders.repository.ts:OrdersRepository.byId",
+      "to": "db_query:fastify-service#src/orders/orders.repository.ts:12:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 12
+    },
+    {
+      "from": "fastify-service#src/orders/orders.repository.ts:OrdersRepository.insert",
+      "to": "db_query:fastify-service#src/orders/orders.repository.ts:16:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 16
+    },
+    {
+      "from": "fastify-service#src/orders/orders.repository.ts:OrdersRepository.list",
+      "to": "db_query:fastify-service#src/orders/orders.repository.ts:8:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 8
+    },
+    {
+      "from": "fastify-service#src/orders/orders.routes.ts:GET /:orderId@29",
+      "to": "fastify-service#src/orders/orders.repository.ts:OrdersRepository.byId",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 30,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "fastify-service#src/orders/orders.routes.ts:POST /@38",
+      "to": "fastify-service#src/orders/orders.repository.ts:OrdersRepository.insert",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 39,
+      "params": [
+        "number"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "fastify-service#src/public/public.routes.ts:GET /summary@14",
+      "to": "fastify-service#src/orders/orders.repository.ts:OrdersRepository.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/public/public.routes.ts",
+      "line": 15,
+      "params": [],
+      "returns": "unknown"
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/main.ts",
+      "line": 1,
+      "reason": "bootstrap-not-found",
+      "hint": "Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.",
+      "symbol": "bootstrap"
+    },
+    {
+      "file": "src/orders/orders.routes.ts",
+      "line": 52,
+      "reason": "route-path-dynamic",
+      "hint": "Give the route a string literal or a const string; a computed path cannot be matched against callers.",
+      "symbol": "app.get(archivePath('old'))",
+      "adapter": "fastify-routes"
+    }
+  ]
+}

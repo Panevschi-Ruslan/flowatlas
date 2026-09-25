@@ -5,12 +5,8 @@ import {
   makeLeafId,
   makeSymbolId,
   methodBodies,
-  methodNamedOn,
-  resolveTypeOrigin,
   type CallPattern,
-  type ClassMethod,
   type GraphNode,
-  type TypeOrigin,
 } from '@flowatlas/core';
 import {
   decoratorArgs,
@@ -25,7 +21,15 @@ import {
 import type { CallExpression, ClassDeclaration, MethodDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { brokerAdapters, createCustomBrokerAdapter, type BrokerSpec, type ConsumerPattern } from './adapters/index.js';
-import { isResolved, resolveChannelName, type ChannelResolution } from './channel-name.js';
+import { hasAcknowledgement, receiverIsFrom, targetOfHandler } from './call-site.js';
+import {
+  isResolved,
+  resolveChannelName,
+  shapeChannelNames,
+  trimEndpoint,
+  type ChannelResolution,
+  type ChannelShaping,
+} from './channel-name.js';
 import { pairKey, readBrokerMarkers } from './markers.js';
 
 const WALKED = new Set(['controller', 'injectable', 'guard', 'interceptor', 'pipe', 'middleware', 'plain']);
@@ -34,26 +38,39 @@ const lineColOf = (node: TsNode): { line: number; column: number } =>
   node.getSourceFile().getLineAndColumnAtPos(node.getStart());
 
 /**
- * Whether the value a call is made on is the one a pattern names.
+ * What the class a call sits in says about the names written in it.
  *
- * A library is identified by the package that declares it; a bus a project wrote
- * itself has no package, so the type as written at the call site is all there is.
- * A pattern naming neither matches nothing, which is why the last answer is no
- * rather than yes: a method name alone is not evidence of anything.
+ * Either the transport's rules applied to this class, or the one case where
+ * the class declares an endpoint and that endpoint cannot be read. The second
+ * is not a detail to shrug at: falling back to the default endpoint would put
+ * every channel of a namespaced gateway on the node the unnamespaced ones use,
+ * and quietly join services that never speak.
  */
-const receiverMatches = (
-  origin: TypeOrigin | null,
-  pattern: { receiverType?: string | readonly string[]; receiverPackages?: readonly string[] },
-): boolean => {
-  if (pattern.receiverType !== undefined) {
-    const names =
-      typeof pattern.receiverType === 'string' ? [pattern.receiverType] : pattern.receiverType;
-    return origin !== null && names.includes(origin.typeName);
+type ClassShaping = ChannelShaping | { readonly unreadable: string };
+
+const isUnreadable = (shaping: ClassShaping): shaping is { readonly unreadable: string } =>
+  'unreadable' in shaping;
+
+const shapingOf = (owner: ClassDeclaration, spec: BrokerSpec): ClassShaping => {
+  const reserved = spec.reservedChannels;
+  const base: ChannelShaping = reserved === undefined ? {} : { reserved };
+  const shape = spec.channelPrefix;
+  if (shape === undefined) return base;
+  const decorator = getDecorator(owner, shape.classDecorator);
+  if (decorator === undefined) return base;
+  for (const argument of decorator.getArguments()) {
+    if (!Node.isObjectLiteralExpression(argument)) continue;
+    const property = argument.getProperty(shape.optionKey);
+    if (property === undefined || !Node.isPropertyAssignment(property)) continue;
+    const initializer = property.getInitializer();
+    if (initializer === undefined) return { unreadable: property.getText() };
+    const value = evaluateExpression(initializer);
+    if (!value.resolved || typeof value.value !== 'string') {
+      return { unreadable: initializer.getText() };
+    }
+    return { ...base, prefix: trimEndpoint(value.value), separator: shape.separator };
   }
-  if (pattern.receiverPackages !== undefined) {
-    return origin?.package != null && pattern.receiverPackages.includes(origin.package);
-  }
-  return false;
+  return base;
 };
 
 /** Every adapter that applies: the detected ones plus any described in configuration. */
@@ -113,6 +130,30 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
       reason: resolution.unresolved,
       hint: `The channel name cannot be read here. Annotate ${symbol} with the channel it uses.`,
       symbol: `${symbol} -> ${resolution.text.slice(0, 60)}`,
+    });
+  };
+
+  /**
+   * The class declares the endpoint its channels sit under, and it cannot be read.
+   *
+   * Reported once per call site rather than once per class, because a call site
+   * is where a reader can do something about it, and because the row has to say
+   * which publish or which handler lost its channel.
+   */
+  const reportEndpoint = (
+    shaping: { readonly unreadable: string },
+    spec: BrokerSpec,
+    file: string,
+    line: number,
+    symbol: string,
+  ): void => {
+    const option = spec.channelPrefix?.optionKey ?? 'endpoint';
+    ctx.report({
+      file,
+      line,
+      reason: 'channel-dynamic',
+      hint: `The ${option} this class declares cannot be read, so neither can any channel name under it. Write it as a literal or a constant.`,
+      symbol: `${symbol} -> ${shaping.unreadable.slice(0, 60)}`,
     });
   };
 
@@ -185,7 +226,7 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
     // The shape of one argument is only an instance of that, and is used only
     // when the declaration promises nothing.
     const declaredWide =
-      pattern.payloadArg === undefined
+      pattern.payloadArg === undefined || spec.payloadFromCallSite === true
         ? undefined
         : declaredParameterType(call, pattern.payloadArg, ctx.checker);
     // A bus declares every event it can carry; this call sends one of them.
@@ -200,25 +241,44 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
           ? undefined
           : ctx.types.collectType(payloadArg.getType(), payloadArg);
 
+    // The transport has the last word on the name the call wrote: an endpoint
+    // the class declares is part of it, and a name the transport keeps for its
+    // own signalling is not a channel at all.
+    const shaping = shapingOf(owner, spec);
+    const names = isResolved(resolution) && !isUnreadable(shaping)
+      ? shapeChannelNames(resolution.names, shaping)
+      : [];
+    // Every name this call wrote belongs to the transport rather than to the
+    // application, so there is nothing here to draw and nothing to report: the
+    // library signalling to itself is not a publish.
+    if (isResolved(resolution) && !isUnreadable(shaping) && names.length === 0) return true;
+
+    // A call that hands over somewhere to send the answer is a request, not a
+    // publish, and the graph should not call the two the same thing.
+    const kind =
+      spec.acknowledgedKind !== undefined && hasAcknowledgement(args)
+        ? spec.acknowledgedKind
+        : (pattern.kind ?? 'event');
+
     const producerId = makeLeafId('producer', ctx.repo, file, line, column);
-    const channelName = isResolved(resolution) ? resolution.name : null;
+    const channelName = names[0] ?? null;
     const channelVia = isResolved(resolution) ? resolution.via : 'unresolved';
     // The label names every channel the address reaches, which is how the
     // marker path already spells a producer of several (R38). `name` is the
     // representative pattern and stays the dedupe key, but showing it alone
     // printed `order:*:*` for a producer that knows the three names behind it —
     // the wildcard the fold exists to remove, still on the screen (R44).
-    const reaches = isResolved(resolution) ? resolution.names.join(', ') : undefined;
+    const reaches = names.length > 0 ? names.join(', ') : undefined;
     ctx.builder.addNode({
       id: producerId,
       type: 'producer',
-      label: `${pattern.kind ?? 'event'} ${reaches ?? '?'}`,
+      label: `${kind} ${reaches ?? '?'}`,
       repo: ctx.repo,
       file,
       line,
-      kind: pattern.kind ?? 'event',
+      kind,
       meta: {
-        kind: pattern.kind ?? 'event',
+        kind,
         adapter: spec.name,
         channelVia,
         method: pattern.method,
@@ -236,14 +296,16 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
     });
 
     if (channelName === null) {
-      reportChannel(resolution, file, line, `${owner.getName() ?? '?'}.${methodId.split('.').pop() ?? ''}`);
+      const symbol = `${owner.getName() ?? '?'}.${methodId.split('.').pop() ?? ''}`;
+      if (isUnreadable(shaping)) reportEndpoint(shaping, spec, file, line, symbol);
+      else reportChannel(resolution, file, line, symbol);
       return true;
     }
 
     // One edge per channel the address reaches. `alreadyStatic` records each of
     // them, so an `@Emits` naming any is recognised as saying what the code
     // already said rather than adding a second edge (R42).
-    for (const name of isResolved(resolution) ? resolution.names : [channelName]) {
+    for (const name of names) {
       const channel = channelNodeOf(name, spec, file, line);
       alreadyStatic.add(pairKey(methodId, name));
       ctx.builder.addEdge({
@@ -336,6 +398,13 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
     if (methodId === undefined) return;
     const { line } = lineColOf(method);
     const { resolution, jobName } = consumerChannel(pattern, method, owner);
+    const shaping = shapingOf(owner, spec);
+    const names = isResolved(resolution) && !isUnreadable(shaping)
+      ? shapeChannelNames(resolution.names, shaping)
+      : [];
+    // A handler for one of the transport's own signals handles nothing the
+    // application named, so there is no consumer of anything to record.
+    if (isResolved(resolution) && !isUnreadable(shaping) && names.length === 0) return;
     const consumerId = `consumer:${makeSymbolId(ctx.repo, file, className, method.getName())}`;
 
     // The framework's own transports already produced an entry for this handler;
@@ -370,13 +439,15 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
       returns,
     });
 
-    if (!isResolved(resolution)) {
-      reportChannel(resolution, file, line, `${className}.${method.getName()}`);
+    if (names.length === 0) {
+      const symbol = `${className}.${method.getName()}`;
+      if (isUnreadable(shaping)) reportEndpoint(shaping, spec, file, line, symbol);
+      else reportChannel(resolution, file, line, symbol);
       return;
     }
     // One edge per channel the address reaches: a hole holding a closed set of
     // values is several channels, not one wildcard (R42).
-    for (const name of resolution.names) {
+    for (const name of names) {
       const channel = channelNodeOf(name, spec, file, line);
       ctx.builder.addEdge({
         from: channel.id,
@@ -387,39 +458,6 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
         line,
       });
     }
-  };
-
-  /**
-   * The method a listener ultimately runs.
-   *
-   * A handler that does exactly one thing is really an alias for that thing, and
-   * pointing the chain at it is what a reader wants. A handler that does several
-   * is its own step, and saying so beats picking one of them.
-   */
-  const targetOfHandler = (
-    handler: TsNode,
-    owner: ClassDeclaration,
-  ): ClassMethod | undefined => {
-    const body = Node.isArrowFunction(handler) || Node.isFunctionExpression(handler)
-      ? handler.getBody()
-      : undefined;
-    if (body === undefined) return undefined;
-    const called: ClassMethod[] = [];
-    // A concise arrow body is the call itself, not a descendant of one.
-    const visit = (node: TsNode): void => {
-      if (!Node.isCallExpression(node)) return;
-      const callee = node.getExpression();
-      if (!Node.isPropertyAccessExpression(callee)) return;
-      if (!Node.isThisExpression(callee.getExpression())) return;
-      // A consumer that delegates to `this.handle()`, where `handle` may be a
-      // field holding an arrow — which is how a handler keeps its `this` (R29).
-      const found = methodNamedOn(owner, callee.getName());
-      if (found !== undefined) called.push(found);
-    };
-    visit(body);
-    body.forEachDescendant(visit);
-    const unique = [...new Set(called)];
-    return unique.length === 1 ? unique[0] : undefined;
   };
 
   const emitSubscribers = (
@@ -440,7 +478,7 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
           const callee = call.getExpression();
           if (!Node.isPropertyAccessExpression(callee)) continue;
           if (callee.getName() !== pattern.method) continue;
-          if (!receiverMatches(resolveTypeOrigin(callee.getExpression()), pattern)) continue;
+          if (!receiverIsFrom(callee.getExpression(), pattern)) continue;
 
           const args = call.getArguments();
           const channelArg = args[pattern.channelArg];
@@ -449,6 +487,14 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
               ? { unresolved: 'channel-dynamic' as const, text: call.getText().slice(0, 60) }
               : resolveChannelName(channelArg, ctx.config);
           const { line } = lineColOf(call);
+          const shaping = shapingOf(owner, spec);
+          const names = isResolved(resolution) && !isUnreadable(shaping)
+            ? shapeChannelNames(resolution.names, shaping)
+            : [];
+          // The transport's own signals — a socket saying it connected — are
+          // registered with the same call as an application event. Listening
+          // for one is not consuming anything the application named.
+          if (isResolved(resolution) && !isUnreadable(shaping) && names.length === 0) continue;
 
           // The handler is either this call's own argument or one registered
           // separately on the same receiver.
@@ -505,11 +551,13 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
             line,
           });
 
-          if (!isResolved(resolution)) {
-            reportChannel(resolution, file, line, `${className}.${method.getName()}`);
+          if (names.length === 0) {
+            const symbol = `${className}.${method.getName()}`;
+            if (isUnreadable(shaping)) reportEndpoint(shaping, spec, file, line, symbol);
+            else reportChannel(resolution, file, line, symbol);
             continue;
           }
-          for (const name of resolution.names) {
+          for (const name of names) {
             const channel = channelNodeOf(name, spec, file, line);
             ctx.builder.addEdge({
               from: channel.id,
@@ -526,7 +574,7 @@ export const extractBrokers = (ctx: NestExtractContext): void => {
   };
 
   const matches = (pattern: CallPattern, receiver: TsNode, method: string): boolean =>
-    pattern.method === method && receiverMatches(resolveTypeOrigin(receiver), pattern);
+    pattern.method === method && receiverIsFrom(receiver, pattern);
 
   for (const indexed of ctx.classes.all()) {
     if (!WALKED.has(indexed.role)) continue;

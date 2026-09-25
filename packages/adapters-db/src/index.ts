@@ -8,7 +8,22 @@
 export const PACKAGE_NAME = '@flowatlas/adapters-db';
 
 export { extractLeaves, leavesPass } from './leaves-pass.js';
-export { dataNameHints, dbAdapters, localBaseDescriptor, pgDescriptor, prismaDescriptor, typeormDescriptor } from './descriptors/index.js';
+export {
+  dataNameHints,
+  dbAdapters,
+  drizzleDescriptor,
+  knexDescriptor,
+  localBaseDescriptor,
+  mongodbDescriptor,
+  mongooseDescriptor,
+  pgDescriptor,
+  prismaDescriptor,
+  sequelizeDescriptor,
+  tableLocators,
+  typeormDescriptor,
+} from './descriptors/index.js';
+export { locateTable } from './descriptors/table.js';
+export type { TableLocator } from './descriptors/table.js';
 export { sqlOperation, sqlTables } from './sql.js';
 export { readConfig } from './leaves/config.js';
 export type { ConfigRead, ConfigSource } from './leaves/config.js';

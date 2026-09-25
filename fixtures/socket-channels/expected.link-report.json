@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 3,
+  "builtAt": "2026-09-24T16:11:51.856Z",
+  "configHash": "a879888786b8",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 29,
+      "edges": 18,
+      "types": 4,
+      "unresolved": 2,
+      "durationMs": 0
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 27,
+      "edges": 19,
+      "types": 2,
+      "unresolved": 2,
+      "durationMs": 0
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 6,
+    "linked": 5,
+    "noConsumers": [],
+    "noProducers": [
+      "channel:order:updated"
+    ]
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 6,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 51,
+    "edges": 37,
+    "types": 6,
+    "unresolved": 4
+  }
+}

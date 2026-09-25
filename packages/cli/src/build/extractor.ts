@@ -13,9 +13,21 @@ import type { NestExtractorPass } from '@flowatlas/extractor-nestjs';
 export const NESTJS_EXTRACTOR = '@flowatlas/extractor-nestjs';
 export const ANGULAR_EXTRACTOR = '@flowatlas/extractor-angular';
 
+/**
+ * Repository types the TypeScript server reader handles.
+ *
+ * One reader, several frameworks. `@flowatlas/extractor-nestjs` opens a
+ * TypeScript project and walks it; which ways in it finds is decided by the
+ * entry adapters that detect the repository's dependencies, not by the reader.
+ * A repository whose routes are registered by calling an application is read by
+ * exactly the same passes as a NestJS one, so its type belongs here rather than
+ * in a reader of its own.
+ */
+export const SERVER_TYPES: readonly string[] = ['nestjs', 'express', 'fastify', 'koa'];
+
 /** Package that reads each kind of repository. */
 export const EXTRACTORS: Record<string, string> = {
-  nestjs: NESTJS_EXTRACTOR,
+  ...Object.fromEntries(SERVER_TYPES.map((type) => [type, NESTJS_EXTRACTOR])),
   angular: ANGULAR_EXTRACTOR,
 };
 

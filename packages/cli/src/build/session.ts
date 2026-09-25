@@ -9,7 +9,7 @@ import {
   repoFiles,
   type WarmRepo,
 } from '@flowatlas/extractor-nestjs';
-import { createRegistry, EXTRA_PASSES } from './extractor.js';
+import { createRegistry, EXTRA_PASSES, SERVER_TYPES } from './extractor.js';
 import type { IncrementalExtractor, PartialExtract } from './incremental.js';
 
 export interface OpenOptions {
@@ -78,10 +78,16 @@ const sessionOf = <Ctx>(extractor: WarmExtractor<Ctx>, options: OpenOptions): Se
   };
 };
 
-/** Repository types that can be rebuilt without being parsed again. */
-const OPENERS: Record<string, (options: OpenOptions) => ServiceSession> = {
-  nestjs: (options) => sessionOf(nestjs, options),
-};
+/**
+ * Repository types that can be rebuilt without being parsed again.
+ *
+ * Every type the TypeScript server reader handles, because what is held open is
+ * the parsed project and that is the same whichever framework declares the
+ * routes in it.
+ */
+const OPENERS: Record<string, (options: OpenOptions) => ServiceSession> = Object.fromEntries(
+  SERVER_TYPES.map((type) => [type, (options: OpenOptions) => sessionOf(nestjs, options)]),
+);
 
 export const isIncremental = (type: string): boolean => OPENERS[type] !== undefined;
 

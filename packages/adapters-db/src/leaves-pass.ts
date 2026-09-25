@@ -8,6 +8,7 @@ import {
   makeExternalApiId,
   makeLeafId,
   makeTableId,
+  operationOf,
   resolveTypeOrigin,
   type DbDescriptor,
   type TypeOrigin,
@@ -31,7 +32,8 @@ import type {
   ParameterDeclaration,
 } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
-import { dataNameHints } from './descriptors/index.js';
+import { dataNameHints, tableLocators } from './descriptors/index.js';
+import { locateTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
 import { dataLayerOf } from './leaves/silence.js';
 import { analyzeUrl, routePathOf, type UrlInfo } from './leaves/url.js';
@@ -163,7 +165,26 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return byPackage.get(origin.package);
   };
 
+  /**
+   * The same descriptor with its table override dropped, prepared once.
+   *
+   * A library that keeps its table in an argument still sometimes carries the
+   * entity in a type argument as well — an injected `Model<OrderDocument>` is
+   * the ordinary way to hold a mongoose model — and an override that found
+   * nothing must not be allowed to hide the answer the type system already had.
+   * Handing the call a descriptor without the override is how it falls back,
+   * and it keeps `meta.source` honest about where the name came from, which a
+   * fallback stuffed into `stringArg` would not.
+   */
+  const withoutOverride = new Map<string, DbDescriptor>();
+  for (const [name, descriptor] of byPackage) {
+    if (tableLocators[name] === undefined) continue;
+    const { tableOverride: _dropped, ...rest } = descriptor;
+    withoutOverride.set(name, rest);
+  }
+
   const seenConfig = new Set<string>();
+  const reportedTables = new Set<string>();
 
   /**
    * What reads as a data layer, and what was actually read through it.
@@ -291,15 +312,30 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       }
     }
 
+    // A library whose table is in an expression rather than in the types. The
+    // locators say where to look; what comes back is either the name or the
+    // fact that it was decided at run time, which is reported below rather than
+    // guessed at.
+    const locators = descriptor === undefined ? undefined : tableLocators[descriptor.package];
+    const located =
+      locators === undefined || descriptor === undefined
+        ? null
+        : locateTable(call, locators, (name) => operationOf(descriptor, name) !== null);
+    const effective =
+      locators === undefined || located !== null
+        ? descriptor
+        : (withoutOverride.get(descriptor?.package ?? '') ?? descriptor);
+
     const classification = classifyDbCall({
       method,
       origin,
-      ...(descriptor === undefined ? {} : { descriptor }),
+      ...(effective === undefined ? {} : { descriptor: effective }),
       receiverText: receiver.getText(),
       nameHints: dataNameHints,
       ...(parsedTables === undefined ? {} : { sqlTables: parsedTables }),
       ...(parsedOp === undefined ? {} : { sqlOp: parsedOp }),
       ...(Node.isPropertyAccessExpression(receiver) ? { receiverProp: receiver.getName() } : {}),
+      ...(located === null ? {} : { stringArg: located }),
     });
     if (classification === null) return false;
     if (!classification.emit) {
@@ -377,6 +413,27 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         line: site.line,
         reason: classification.unresolved.reason,
         hint: classification.unresolved.hint,
+        symbol: `${receiver.getText().slice(0, 60)}.${method}`,
+      });
+    }
+
+    // A builder whose table was decided at run time. The query itself is still
+    // in the graph — losing the whole call because one of its two facts could
+    // not be read is what a tool that stays silent about what it did not
+    // understand does — and the row says which fact is missing, so a reader can
+    // see the difference between a table nothing touches and a table nothing
+    // could name.
+    // Once per query, not once per link. A chain can carry two operations —
+    // `knex.count('*').first()` is one visit to the database written as two
+    // calls that start in the same place — and they land on one node, so a row
+    // per call would say the same thing twice about it.
+    if (locators !== undefined && classification.table === null && !reportedTables.has(id)) {
+      reportedTables.add(id);
+      ctx.report({
+        file,
+        line: site.line,
+        reason: 'dynamic-table-name',
+        hint: `The table ${receiver.getText().slice(0, 40)}.${method} touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.`,
         symbol: `${receiver.getText().slice(0, 60)}.${method}`,
       });
     }

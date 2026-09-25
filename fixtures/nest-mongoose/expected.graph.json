@@ -1,0 +1,570 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-mongoose",
+  "generatedAt": "2026-09-24T16:07:09.102Z",
+  "nodes": [
+    {
+      "id": "db_query:nest-mongoose#src/orders/orders.service.ts:11:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 11,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "mongoose",
+        "method": "find",
+        "receiver": "OrderModel",
+        "source": "string-arg",
+        "entityType": "OrderDocument"
+      }
+    },
+    {
+      "id": "db_query:nest-mongoose#src/orders/orders.service.ts:15:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 15,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "mongoose",
+        "method": "findById",
+        "receiver": "OrderModel",
+        "source": "string-arg",
+        "entityType": "OrderDocument"
+      }
+    },
+    {
+      "id": "db_query:nest-mongoose#src/orders/orders.service.ts:22:12",
+      "type": "db_query",
+      "label": "write orders",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 22,
+      "meta": {
+        "op": "write",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "mongoose",
+        "method": "create",
+        "receiver": "OrderModel",
+        "source": "string-arg",
+        "entityType": "OrderDocument",
+        "entityTypeId": "type:nest-mongoose#OrderDocument"
+      }
+    },
+    {
+      "id": "db_query:nest-mongoose#src/orders/orders.service.ts:26:12",
+      "type": "db_query",
+      "label": "write orders",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 26,
+      "meta": {
+        "op": "write",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "mongoose",
+        "method": "updateOne",
+        "receiver": "OrderModel",
+        "source": "string-arg",
+        "entityType": "OrderDocument",
+        "entityTypeId": "type:nest-mongoose#OrderDocument"
+      }
+    },
+    {
+      "id": "db_query:nest-mongoose#src/orders/orders.service.ts:33:12",
+      "type": "db_query",
+      "label": "write orders",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 33,
+      "meta": {
+        "op": "write",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "mongoose",
+        "method": "save",
+        "receiver": "document",
+        "source": "string-arg",
+        "entityType": "OrderDocument",
+        "entityTypeId": "type:nest-mongoose#OrderDocument"
+      }
+    },
+    {
+      "id": "db_query:nest-mongoose#src/orders/orders.service.ts:37:12",
+      "type": "db_query",
+      "label": "delete orders",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 37,
+      "meta": {
+        "op": "delete",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "mongoose",
+        "method": "deleteOne",
+        "receiver": "OrderModel",
+        "source": "string-arg",
+        "entityType": "OrderDocument"
+      }
+    },
+    {
+      "id": "db_query:nest-mongoose#src/orders/orders.service.ts:44:12",
+      "type": "db_query",
+      "label": "read ?",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 44,
+      "meta": {
+        "op": "read",
+        "table": null,
+        "tables": [],
+        "package": "mongoose",
+        "method": "countDocuments",
+        "receiver": "models[collection]!",
+        "source": "none"
+      }
+    },
+    {
+      "id": "entry:nest-mongoose:http:DELETE:/orders",
+      "type": "entry",
+      "label": "DELETE /orders",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-mongoose:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-mongoose:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-mongoose#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-mongoose",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-mongoose#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-mongoose#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15
+    },
+    {
+      "id": "nest-mongoose#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "method",
+      "label": "OrdersController.findAll",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "id": "nest-mongoose#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "method",
+      "label": "OrdersController.remove",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20
+    },
+    {
+      "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService.countOf",
+      "type": "method",
+      "label": "OrdersService.countOf",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 43
+    },
+    {
+      "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 21
+    },
+    {
+      "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "method",
+      "label": "OrdersService.findAll",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 10
+    },
+    {
+      "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "method",
+      "label": "OrdersService.findOne",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 14
+    },
+    {
+      "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService.markPaid",
+      "type": "method",
+      "label": "OrdersService.markPaid",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 25
+    },
+    {
+      "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService.note",
+      "type": "method",
+      "label": "OrdersService.note",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 31
+    },
+    {
+      "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "method",
+      "label": "OrdersService.remove",
+      "repo": "nest-mongoose",
+      "file": "src/orders/orders.service.ts",
+      "line": 36
+    },
+    {
+      "id": "repo:nest-mongoose",
+      "type": "repo",
+      "label": "nest-mongoose",
+      "repo": "nest-mongoose",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "mongoose": 7
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:nest-mongoose#orders",
+      "type": "table",
+      "label": "orders",
+      "repo": "nest-mongoose"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:nest-mongoose#src/orders/orders.service.ts:11:12",
+      "to": "table:nest-mongoose#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 11
+    },
+    {
+      "from": "db_query:nest-mongoose#src/orders/orders.service.ts:15:12",
+      "to": "table:nest-mongoose#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "db_query:nest-mongoose#src/orders/orders.service.ts:22:12",
+      "to": "table:nest-mongoose#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "from": "db_query:nest-mongoose#src/orders/orders.service.ts:26:12",
+      "to": "table:nest-mongoose#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "db_query:nest-mongoose#src/orders/orders.service.ts:33:12",
+      "to": "table:nest-mongoose#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 33
+    },
+    {
+      "from": "db_query:nest-mongoose#src/orders/orders.service.ts:37:12",
+      "to": "table:nest-mongoose#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "from": "entry:nest-mongoose:http:DELETE:/orders",
+      "to": "nest-mongoose#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "entry:nest-mongoose:http:GET:/orders",
+      "to": "nest-mongoose#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "params": [],
+      "returns": "type:nest-mongoose#OrderDocument[]"
+    },
+    {
+      "from": "entry:nest-mongoose:http:POST:/orders",
+      "to": "nest-mongoose#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "params": [
+        "type:nest-mongoose#OrderDocument"
+      ],
+      "returns": "type:nest-mongoose#OrderDocument",
+      "meta": {
+        "body": "type:nest-mongoose#OrderDocument"
+      }
+    },
+    {
+      "from": "nest-mongoose#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-mongoose#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "nest-mongoose#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "nest-mongoose#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17,
+      "params": [
+        "type:nest-mongoose#OrderDocument"
+      ],
+      "returns": "type:nest-mongoose#OrderDocument"
+    },
+    {
+      "from": "nest-mongoose#src/orders/orders.controller.ts:OrdersController.findAll",
+      "to": "nest-mongoose#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12,
+      "params": [],
+      "returns": "type:nest-mongoose#OrderDocument[]"
+    },
+    {
+      "from": "nest-mongoose#src/orders/orders.controller.ts:OrdersController.remove",
+      "to": "nest-mongoose#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-mongoose#src/orders/orders.service.ts:OrdersService.countOf",
+      "to": "db_query:nest-mongoose#src/orders/orders.service.ts:44:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 44
+    },
+    {
+      "from": "nest-mongoose#src/orders/orders.service.ts:OrdersService.create",
+      "to": "db_query:nest-mongoose#src/orders/orders.service.ts:22:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "from": "nest-mongoose#src/orders/orders.service.ts:OrdersService.findAll",
+      "to": "db_query:nest-mongoose#src/orders/orders.service.ts:11:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 11
+    },
+    {
+      "from": "nest-mongoose#src/orders/orders.service.ts:OrdersService.findOne",
+      "to": "db_query:nest-mongoose#src/orders/orders.service.ts:15:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "nest-mongoose#src/orders/orders.service.ts:OrdersService.markPaid",
+      "to": "db_query:nest-mongoose#src/orders/orders.service.ts:26:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "nest-mongoose#src/orders/orders.service.ts:OrdersService.note",
+      "to": "db_query:nest-mongoose#src/orders/orders.service.ts:33:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 33
+    },
+    {
+      "from": "nest-mongoose#src/orders/orders.service.ts:OrdersService.remove",
+      "to": "db_query:nest-mongoose#src/orders/orders.service.ts:37:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    }
+  ],
+  "types": {
+    "type:nest-mongoose#OrderDocument": {
+      "name": "OrderDocument",
+      "kind": "object",
+      "declaredIn": "nest-mongoose#src/orders/order.model.ts",
+      "structuralHash": "7cc437b59eae3b81",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "userId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 44,
+      "reason": "dynamic-table-name",
+      "hint": "The table models[collection]!.countDocuments touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.",
+      "symbol": "models[collection]!.countDocuments"
+    }
+  ]
+}
