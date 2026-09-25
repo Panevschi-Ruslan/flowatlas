@@ -18,7 +18,10 @@ interface Read {
   unresolved: Unresolved[];
 }
 
-const extract = (files: Record<string, string>): Read => {
+const extract = (
+  files: Record<string, string>,
+  dependencies: Record<string, string> = {},
+): Read => {
   const project = new Project({
     useInMemoryFileSystem: true,
     compilerOptions: { strict: false, jsx: 4 },
@@ -30,7 +33,7 @@ const extract = (files: Record<string, string>): Read => {
     repoDir: '/',
     service: { name: 'shop', repo: '/', type: 'nextjs' },
     config: parseConfig({}),
-    pkg: { dependencies: { next: '^15.0.0' } },
+    pkg: { dependencies: { next: '^15.0.0', ...dependencies } },
     project,
     checker: project.getTypeChecker(),
     builder: new GraphBuilder({ repo: 'shop' }),
@@ -164,6 +167,101 @@ describe('ways in a Next.js repository declares by where its files are', () => {
     const row = read.unresolved.find((each) => each.reason === 'server-action-unread');
     expect(row?.sites).toBe(1);
     expect(row?.symbol).toBe('lib/actions/archive.ts#archiveOrderAction');
+  });
+
+  // The dominant spelling in this ecosystem, and the one that read as nothing
+  // at all until a row said which argument of which method is the action.
+  it('makes a way in of an action a described builder was handed', () => {
+    const read = extract(
+      {
+        '/app/actions/orders.ts': `
+        'use server';
+        import { client } from '../lib/client';
+        export const archiveOrder = client.schema({}).action(async () => null);
+      `,
+        '/lib/client.ts': `export const client = { schema: (s: unknown) => ({ action: (fn: unknown) => fn }) };`,
+      },
+      { 'next-safe-action': '^8.0.0' },
+    );
+    expect(ids(read)).toEqual(['entry:shop:rpc:action:app/actions/orders.ts#archiveOrder']);
+    const entry = read.entries[0];
+    expect(entry?.kind).toBe('rpc');
+    expect(entry?.label).toBe('action archiveOrder');
+    expect(entry?.meta?.['viaImport']).toBe(true);
+    expect(entry?.meta?.['registration']).toBe("module 'use server'");
+    expect(entry?.meta?.['builder']).toBe('next-safe-action');
+    expect(read.unresolved.map((row) => row.reason)).not.toContain('server-action-unread');
+  });
+
+  it('points at the function a builder was handed by name', () => {
+    const read = extract(
+      {
+        '/app/actions/orders.ts': `
+        'use server';
+        import { client } from '../lib/client';
+        const renameOrderAction = async () => null;
+        export const renameOrder = client.schema({}).action(renameOrderAction);
+      `,
+        '/lib/client.ts': `export const client = { schema: (s: unknown) => ({ action: (fn: unknown) => fn }) };`,
+      },
+      { 'next-safe-action': '^8.0.0' },
+    );
+    const handler = read.entries[0]?.handler;
+    expect(handler !== undefined && isFunctionHandler(handler) ? handler.functionName : undefined).toBe(
+      'renameOrderAction',
+    );
+    expect(read.entries[0]?.meta?.['handlerVia']).toBe('function');
+  });
+
+  // A second library was a row and nothing else, which is the whole claim the
+  // description makes about itself.
+  it('reads a second library from its own row', () => {
+    const read = extract(
+      {
+        '/app/actions/orders.ts': `
+        'use server';
+        import { server } from '../lib/server';
+        export const exportOrders = server.input({}).handler(async () => null);
+      `,
+        '/lib/server.ts': `export const server = { input: (s: unknown) => ({ handler: (fn: unknown) => fn }) };`,
+      },
+      { zsa: '^0.5.0' },
+    );
+    expect(ids(read)).toEqual(['entry:shop:rpc:action:app/actions/orders.ts#exportOrders']);
+  });
+
+  // The library is described, the method is not, so nothing about the call says
+  // where the action is and guessing would put a boundary where none exists.
+  it('leaves a method no row names to the aggregate row', () => {
+    const read = extract(
+      {
+        '/app/actions/orders.ts': `
+        'use server';
+        import { client } from '../lib/client';
+        export const archiveOrder = client.wrap(async () => null);
+      `,
+        '/lib/client.ts': `export const client = { wrap: (fn: unknown) => fn };`,
+      },
+      { 'next-safe-action': '^8.0.0' },
+    );
+    expect(read.entries).toHaveLength(0);
+    expect(read.unresolved.map((row) => row.reason)).toContain('server-action-unread');
+  });
+
+  it('leaves a described method handed a value rather than a function alone', () => {
+    const read = extract(
+      {
+        '/app/actions/orders.ts': `
+        'use server';
+        import { client } from '../lib/client';
+        export const limits = client.schema({}).action(3);
+      `,
+        '/lib/client.ts': `export const client = { schema: (s: unknown) => ({ action: (fn: unknown) => fn }) };`,
+      },
+      { 'next-safe-action': '^8.0.0' },
+    );
+    expect(read.entries).toHaveLength(0);
+    expect(read.unresolved.map((row) => row.reason)).toContain('server-action-unread');
   });
 
   it('makes a way in of one function that marks itself, in a module that is not marked', () => {

@@ -6,6 +6,7 @@
 # I1  the core names no technology
 # I2  no source carries a raw control character
 # I11 fixture snapshots carry the current schema version
+# I12 no extractor is reachable from a sibling extractor
 #
 # Usage: invariants.sh [--root DIR] [--only NAME]
 #
@@ -95,9 +96,22 @@ check_I11() {
   return 1
 }
 
+# The extractors are siblings and none of them is above any other, so none of
+# them should be buildable only by building another. I1 keeps a technology out
+# of the core; this keeps an ecosystem out of the extractor for a different one.
+# The reasoning, and the one chain that is still allowed, are in the script.
+check_I12() {
+  echo "I12 no extractor is reachable from a sibling extractor"
+  if node scripts/check-extractor-siblings.mjs; then
+    echo "    ok"
+    return 0
+  fi
+  return 1
+}
+
 # The gates, in the order they are reported. A list and a name per function
 # rather than a run of branches, so adding one is adding a name.
-CHECKS='I1 I2 I11'
+CHECKS='I1 I2 I11 I12'
 
 for name in $CHECKS; do
   [ -n "$only" ] && [ "$only" != "$name" ] && continue

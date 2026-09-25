@@ -667,6 +667,72 @@ export class Items {
     expect(calls.every((call) => call.meta?.['guessed'] === true)).toBe(true);
   });
 
+  it('does not multiply a request by a table the address never reads', () => {
+    // Both tables travel through the same wrapper call, so both are offered to
+    // the reader; only one of them moves the address. Before R43 the other one
+    // doubled the requests, and six nodes and six heuristic edges stood for
+    // three addresses.
+    const graph = extract(
+      '',
+      {},
+      `${PASS_THROUGH}
+const LABEL_PATH: Record<'item' | 'category' | 'sticker', string> =
+  { item: 'parcels', category: 'categories', sticker: 'stickers' };
+const LABEL_ORDER: Record<'newest' | 'oldest', string> = { newest: 'desc', oldest: 'asc' };
+@Injectable({ providedIn: 'root' })
+export class Labels {
+  constructor(private readonly api: ApiClient) {}
+  print(target: 'item' | 'category' | 'sticker', order: 'newest' | 'oldest'): Observable<OrderDto> {
+    return this.api.post<OrderDto>(\`/labels/\${LABEL_PATH[target]}\`, { order: LABEL_ORDER[order] });
+  }
+}
+`,
+    );
+    // `ApiClient.get` is never called here, so it keeps its own unread row;
+    // this is about the one verb that was called.
+    const calls = callsOf(graph).filter((call) => call.meta?.['path'] !== null);
+    expect(calls.map((call) => String(call.meta?.['path'])).sort()).toEqual([
+      '/labels/categories',
+      '/labels/parcels',
+      '/labels/stickers',
+    ]);
+    expect(new Set(calls.map((call) => call.id)).size).toBe(3);
+  });
+
+  /** A class calling `Shared.save` `count` times, each with an object of its own. */
+  const savers = (count: number): string => `
+@Injectable({ providedIn: 'root' })
+export class Shared {
+  private readonly base = environment.apiUrl;
+  constructor(private readonly http: HttpClient) {}
+  save(body: unknown): Observable<OrderDto> {
+    return this.http.post<OrderDto>(\`\${this.base}/shared\`, body);
+  }
+}
+@Injectable({ providedIn: 'root' })
+export class Callers {
+  constructor(private readonly shared: Shared) {}
+${Array.from({ length: count }, (_, i) => `  c${i}(): Observable<OrderDto> { return this.shared.save({ k${i}: '${i}' }); }`).join('\n')}
+}
+`;
+
+  it('reads a body across the few callers that write one', () => {
+    const graph = extract('', {}, savers(3));
+    const call = callsOf(graph).find((each) => String(each.meta?.['path']) === '/shared');
+    expect(call?.meta?.['bodyFrom']).toBe('literals');
+    expect(call?.meta?.['bodyKeys']).toEqual(['k0', 'k1', 'k2']);
+  });
+
+  it('reads a body as declared once too many callers write one', () => {
+    // The union is what a finding is then phrased from, and "what any of its
+    // callers may send" stops describing anything once the callers are a crowd
+    // (R43). Sixteen is comfortably past the cap.
+    const graph = extract('', {}, savers(16));
+    const call = callsOf(graph).find((each) => String(each.meta?.['path']) === '/shared');
+    expect(call?.meta?.['bodyFrom']).toBe('type');
+    expect(call?.meta?.['bodyKeys']).toBeUndefined();
+  });
+
   it('keeps the wrapper row when a caller sits outside any method', () => {
     const graph = extract(
       '',
