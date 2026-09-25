@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-25T13:36:08.170Z",
+  "builtAt": "2026-09-25T13:46:28.287Z",
   "services": [
     {
       "name": "api",
@@ -274,6 +274,8 @@
       "meta": {
         "stats": {
           "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
           "classes": 2,
           "skippedExternalCalls": {
             "@nestjs/axios": 3,

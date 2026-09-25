@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-25T13:34:41.474Z",
+  "builtAt": "2026-09-25T13:45:35.916Z",
   "services": [
     {
       "name": "shop",
@@ -352,6 +352,8 @@
       "meta": {
         "stats": {
           "files": 13,
+          "filesRead": 13,
+          "filesUnreadable": 0,
           "classes": 0,
           "skippedExternalCalls": {
             "@prisma/client": 8
@@ -378,6 +380,8 @@
       "meta": {
         "stats": {
           "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
           "functions": 8,
           "components": 2,
           "hooks": 2,
