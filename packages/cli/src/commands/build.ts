@@ -38,7 +38,7 @@ import {
   type FileStamp,
   type RepoCache,
 } from '../build/cache.js';
-import { isDeclared, newestCommitAcross, readDeclaredService } from '../build/declared.js';
+import { isDeclared, readDeclaredService } from '../build/declared.js';
 import { adapterNames, createRegistry, EXTRACTORS, isFrontend } from '../build/extractor.js';
 import { noReaderNote } from '../stacks.js';
 import {
@@ -373,8 +373,6 @@ interface ExtractOneOptions {
   rootDir: string;
   /** Fixed timestamp, for reproducible output. */
   builtAt?: string;
-  /** When the newest commit of everything read landed, for a document's age. */
-  newestCommit?: Date;
   /** Aborted when the build this read belongs to has already failed. */
   signal?: AbortSignal;
 }
@@ -384,8 +382,9 @@ interface ExtractOneOptions {
  *
  * Reported as a service that was read, because it was — one file, completely,
  * every time. What it is not is a service that was *checked*: the graph says so
- * on every node and edge it contributes, and the age row the reader attaches
- * says how much the document's word is currently worth.
+ * on every node and edge it contributes, and how much the document's word is
+ * currently worth is a question about today, which `doctor` asks when it runs
+ * rather than the build recording an answer that starts going stale at once.
  *
  * A failure here is a failure of the build rather than a repository that could
  * not be opened. A repository that fails to parse leaves the rest of the
@@ -402,7 +401,6 @@ const extractDeclared = async (options: ExtractOneOptions): Promise<Extracted> =
       service,
       rootDir: options.rootDir,
       ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
-      ...(options.newestCommit === undefined ? {} : { newestCommit: options.newestCommit }),
     });
     return {
       service,
@@ -674,13 +672,6 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
       ? Math.max(cpus().length - 1, 1)
       : Math.max(Number(options.concurrency), 1);
 
-  // Asked once, before anything is read, and only when somebody is going to
-  // ask how old a document is. It is what a declared service's age is measured
-  // against: whether the work has moved on since the document was last fetched.
-  const newestCommit = loaded.config.services.some(isDeclared)
-    ? await newestCommitAcross(readable.map((service) => loaded.repoDir(service)))
-    : undefined;
-
   const extracted = await inPools(loaded.config.services, limit, (service, signal) => {
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
@@ -691,7 +682,6 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
       configPath: loaded.configPath,
       rootDir: loaded.rootDir,
       ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
-      ...(newestCommit === undefined ? {} : { newestCommit }),
       plan: plan[service.name] ?? { mode: 'full', reason: 'not planned' },
       ...(options.skipFrontend === undefined ? {} : { skipFrontend: options.skipFrontend }),
       ...(session === undefined ? {} : { session }),

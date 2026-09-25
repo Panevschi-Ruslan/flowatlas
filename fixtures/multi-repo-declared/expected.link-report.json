@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "builtAt": "2026-09-25T12:35:03.893Z",
+  "builtAt": "2026-09-25T13:36:08.170Z",
   "configHash": "14afc89d6d8c",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 5,
       "unresolved": 2,
-      "durationMs": 721
+      "durationMs": 826
     },
     {
       "name": "billing",
@@ -22,8 +22,8 @@
       "nodes": 8,
       "edges": 4,
       "types": 5,
-      "unresolved": 1,
-      "durationMs": 18
+      "unresolved": 0,
+      "durationMs": 9
     }
   ],
   "httpOut": {
@@ -65,6 +65,6 @@
     "nodes": 20,
     "edges": 15,
     "types": 10,
-    "unresolved": 3
+    "unresolved": 2
   }
 }

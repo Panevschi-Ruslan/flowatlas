@@ -62,16 +62,24 @@ weakest of its two ends. This is the confidence a person actually meets, because
 why `packages/linker/src/openapi/join.test.ts` runs the real join over this
 fixture rather than over a graph written by hand.
 
-## What is snapshotted here, and what is not
+## What is snapshotted here
 
-`expected.link-report.json` is recorded: it holds that `billing` was read by
+Both halves. `expected.link-report.json` holds that `billing` was read by
 `openapi-document` out of `contracts/billing.json`, that all three calls linked
 with none counted as third party, and that one route went uncalled.
+`expected.project-graph.json` holds the graph those numbers count.
 
-There is no `expected.project-graph.json`. The graph carries one row saying how
-old the document is, and its two dates are the document's last commit and the
-newest commit in this checkout, both of which move whenever anybody commits.
-That row is the point of the feature — a stale document is a wrong answer
-wearing a confident face — and it is also exactly the kind of fact a byte-for-
-byte snapshot cannot hold. The claims about the graph are in the tests instead,
-where they are claims rather than recordings (R09).
+The graph used to be unsnapshottable, and it is worth saying why it no longer
+is. It carried one row saying how old the document is, whose two dates were the
+document's last commit and the newest commit in this checkout — both of which
+move whenever anybody commits to this repository. That row is the point of the
+feature, and it was also exactly the kind of fact a byte-for-byte snapshot
+cannot hold, so the most carefully argued feature in the tool was the one
+fixture whose graph nothing compared.
+
+The row has moved to where it is reported. `doctor` reads the document's last
+commit when it runs, so the graph records only what does not move and this
+snapshot survives every commit (R78). The age itself is asserted in
+`packages/cli/src/doctor/age.test.ts`, where it is a claim rather than a
+recording (R09), and `openapi-document-age` is registered in the hint catalogue
+where I13 can see it.

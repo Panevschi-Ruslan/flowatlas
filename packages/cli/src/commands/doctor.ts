@@ -20,6 +20,7 @@ import type { GraphDb } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { openProjectDb } from '../analysis/open.js';
 import { CliError, EXIT } from '../exit.js';
+import { documentAgeRows, gitAgeReader, type DeclaredDocument } from '../doctor/age.js';
 import { processIo, type QueryIo } from '../query/answer.js';
 import { VERSION } from '../version.js';
 import {
@@ -115,6 +116,10 @@ interface FromConfig {
   envOwners: Map<string, string[]>;
   /** Each service's directory as the configuration writes it, `./` stripped. */
   repoDirs: Map<string, string>;
+  /** The services described by a document instead of a repository. */
+  declared: DeclaredDocument[];
+  /** Absolute directories of the services that really were read. */
+  readableDirs: string[];
 }
 
 const fromConfig = (options: DoctorOptions): FromConfig => {
@@ -124,12 +129,16 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
     check: {},
     envOwners: new Map(),
     repoDirs: new Map(),
+    declared: [],
+    readableDirs: [],
   };
   try {
     const loaded = loadConfig(options.config ?? process.cwd(), { checkRepos: false });
     const { doctor, contracts, services } = loaded.config;
     const envOwners = new Map<string, string[]>();
     const repoDirs = new Map<string, string>();
+    const declared: DeclaredDocument[] = [];
+    const readableDirs: string[] = [];
     for (const service of services) {
       for (const env of service.baseUrlEnv ?? []) {
         envOwners.set(env, [...(envOwners.get(env) ?? []), service.name]);
@@ -139,7 +148,14 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
       // is no repository under it. Putting its directory in front would spell
       // `contracts/contracts/billing.json` and send a reader to a file that is
       // not there.
-      if (service.openapi !== undefined) continue;
+      if (service.openapi !== undefined) {
+        declared.push({
+          service: service.name,
+          documentPath: service.openapi.replace(/\\/g, '/').replace(/^\.\//, ''),
+        });
+        continue;
+      }
+      readableDirs.push(loaded.repoDir(service));
       const dir = service.repo.replace(/^\.\//, '').replace(/\/+$/, '');
       if (dir !== '' && dir !== '.') repoDirs.set(service.name, dir);
     }
@@ -156,6 +172,8 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
       },
       envOwners,
       repoDirs,
+      declared,
+      readableDirs,
     };
   } catch {
     // Pointed at a bare database with no configuration beside it there is
@@ -307,9 +325,20 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
   const { db, close } = openProjectDb(options);
   try {
     const { rows: raw, note } = rowsFor(db, settings.outputDir);
+    // How old each declared document is, asked now rather than read off the
+    // graph. Both of its dates move whenever anybody commits, so the build
+    // records neither and this is the only place the question is answered
+    // (R78). A project with no declared service pays nothing for this.
+    const age =
+      settings.rootDir === undefined
+        ? []
+        : documentAgeRows(
+            settings.declared,
+            gitAgeReader(settings.rootDir, settings.readableDirs),
+          );
     // Demoted here rather than inside the report, so that the baseline the
     // accept writes and the count the report prints are the same rows (R36).
-    const rows = withAnsweredDemoted(raw, db);
+    const rows = withAnsweredDemoted([...raw, ...age], db);
     const path = baselinePathFor(options, settings);
 
     // Reading the baseline is separate from comparing it, so that "there is no
