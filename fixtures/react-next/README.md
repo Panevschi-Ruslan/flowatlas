@@ -21,16 +21,30 @@ reads:
 - **`middleware.ts`**, the guard equivalent, which applies by matcher rather
   than by being named on a route.
 
-Three things are deliberately left unread, each with a row in the output saying
+`shop` is also the fixture for a repository read by both halves of the tool at
+once. It is read by the server reader, which opens `.ts` and `.tsx` alike, and
+that reader asks the frontend adapter to read the browser half through the same
+parsed project. So one directory produces one graph holding the screens, the
+server action, the route handlers and — this is the part that used to be
+missing — the data layer:
+
+- `lib/orders-store.ts` is a data layer written as a module of exported
+  functions, which is the ordinary shape here because there is no container to
+  ask for a repository. Four queries on one model, and the route handlers and
+  the server action reach them, so a flow that starts at a button with no
+  address in it ends at a write. Before R57 this file produced nothing at all,
+  and the reason was which reader ran rather than how the queries are written.
+
+Two things are deliberately left unread, each with a row in the output saying
 so rather than a silence:
 
 - `useResource(props.resourcePath)` builds its address from a property of the
   screen, so following it outward settles nothing;
-- `lib/orders-store.ts` is a data layer written as a module of functions. The
-  data-layer reader reads that shape, but it does not run here at all: a
-  Next.js repository is read by the browser reader, because the server reader
-  opens no `.tsx` file, and the data-layer pass belongs to the server reader.
-  So no query node comes of it, and the reason is which reader ran rather than
-  how the queries are written;
 - nothing here declares which component a Next.js `layout.tsx` wraps, so a
   screen's surroundings are not part of the graph.
+
+One more row is there for the same reason and is worth naming, because it is
+new and it is not a gap in this fixture: `pages/api/legacy-orders.ts` answers on
+a response object whose type this fixture does not install, so the call to it is
+reported as a dynamic receiver at `info` level. That row is the server half
+saying which call it could not follow, which is what it is for.

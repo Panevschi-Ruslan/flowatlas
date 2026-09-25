@@ -818,6 +818,7 @@ describe('channels', () => {
     expect(leafOf('nest-bullmq', 'channel').map((node) => node.label).sort()).toEqual([
       'digest',
       'mail',
+      'reports',
     ]);
     const producer = graph.nodes.find(
       (node) => node.type === 'producer' && node.meta?.['jobName'] === 'send-email',
@@ -826,6 +827,27 @@ describe('channels', () => {
     for (const channel of leafOf('nest-bullmq', 'channel')) {
       expect(channel.meta?.['channelKind']).toBe('queue');
     }
+  });
+
+  it('reads a handler on a class nothing else in the repository reaches', () => {
+    // The only way into `ReportsProcessor.process` is the queue it is
+    // subscribed to: no module lists the class, no constructor asks for it and
+    // nothing calls it, so no earlier pass puts it in the graph. Receiving used
+    // to require that it already be there, which made a worker deployed on its
+    // own read as a channel nobody listens to (R60).
+    const consumer = leafOf('nest-bullmq', 'consumer').find(
+      (node) => node.label === 'ReportsProcessor.process',
+    );
+    expect(consumer).toBeDefined();
+    const graph = load('nest-bullmq');
+    const consumes = graph.edges.filter(
+      (edge) => edge.type === 'consumes' && edge.to === consumer?.id,
+    );
+    expect(consumes.map((edge) => edge.from)).toEqual(['channel:reports']);
+    // The method the `handles` edge points at is created by the consumer
+    // emitter rather than found there, which is what makes dropping the gate
+    // safe rather than merely permissive.
+    expect(graph.nodes.some((node) => node.label === 'ReportsProcessor.process' && node.type === 'method')).toBe(true);
   });
 
   it('addresses a channel written in two parts by the part that identifies it', () => {

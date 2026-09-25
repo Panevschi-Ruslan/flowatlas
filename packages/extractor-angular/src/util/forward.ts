@@ -156,13 +156,30 @@ const enumerated = (
     );
     if (combinations.length > MOST_ENUMERATED) return [];
   }
-  const out: Array<{ address: ApiUrl; choice: string }> = [];
+  // Keyed by the address, because a combination that comes to an address
+  // another combination already came to is not a second request: it is the same
+  // request reached by a table the address never reads. `choicesAcross` asks
+  // every argument of every frame, so a `sort: 'asc' | 'desc'` beside the path
+  // multiplies the combinations without moving the address, and each one of
+  // them used to become its own node and its own heuristic edge to one route
+  // (R43). `pathsOf` has always deduped this way; only the branch that turns a
+  // combination into a request did not.
+  const byAddress = new Map<string, { address: ApiUrl; choice: string }>();
   for (const picked of combinations) {
     const address = analyzeForwardedApiUrl(urlArg, frames, picked);
     if (!isRead(address)) return [];
-    out.push({ address: { ...address, guessed: true }, choice: [...picked.values()].join(',') });
+    const key = JSON.stringify(address);
+    // The first combination to reach an address names it. Which of the
+    // combinations that is, is not arbitrary: the lookups come back in the
+    // order they were found and each one's values sorted, so the same source
+    // reads to the same ids on every run.
+    if (byAddress.has(key)) continue;
+    byAddress.set(key, {
+      address: { ...address, guessed: true },
+      choice: [...picked.values()].join(','),
+    });
   }
-  return out;
+  return [...byAddress.values()];
 };
 
 /**

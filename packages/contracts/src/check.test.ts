@@ -603,7 +603,7 @@ describe('a stripped field, by what it can lose', () => {
     'type:api#OtherSchema': object('OtherSchema', [field('name', 'string')]),
   };
 
-  const posting = (writes?: { entity: string }): ContractReport =>
+  const posting = (writes?: { entity?: string }): ContractReport =>
     checkContracts(
       graphOf({
         nodes: [
@@ -619,7 +619,11 @@ describe('a stripped field, by what it can lose', () => {
             ? []
             : [
                 node('db_query:api#1', 'db_query', 'api', {
-                  meta: { op: 'write', table: 'Item', entityType: writes.entity },
+                  meta: {
+                    op: 'write',
+                    table: 'Item',
+                    ...(writes.entity === undefined ? {} : { entityType: writes.entity }),
+                  },
                 }),
                 node('table:api#Item', 'table', 'api'),
               ]),
@@ -668,6 +672,16 @@ describe('a stripped field, by what it can lose', () => {
   it('says it is on nothing the handler writes when no written document declares it', () => {
     const found = strip(posting({ entity: 'OtherSchema' }));
     expect(found?.impact).toBe('unknown');
+    expect(found?.severity).toBe('warning');
+  });
+
+  it('says the document could not be read when the write names none', () => {
+    // A knex or drizzle write names a table and no document, and fifteen of
+    // the twenty-three writes across these fixtures are that shape. "Nothing
+    // the handler writes declares this field" would be a claim nobody made:
+    // nothing was read to make it with (R43).
+    const found = strip(posting({}));
+    expect(found?.impact).toBe('unread');
     expect(found?.severity).toBe('warning');
   });
 

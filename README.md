@@ -595,10 +595,14 @@ Known gaps in what it can read:
   123. Also unread there: a layout, which decides what surrounds a screen rather
   than what crosses a boundary, and a `middleware.ts` whose matcher is a regular
   expression, which is reported rather than treated as coverage nobody checked.
-- A Next.js repository's dependency injection, guards and data layer. It is read
-  by the browser reader, because the screens and half the route handlers are in
-  files the server reader does not open, and that reader's passes do not run —
-  so a query there produces no node even when it is written in a class.
+- A Next.js repository's layouts, as above. Everything else the server side of
+  such a repository has is read: it is one repository read once, by the reader
+  that opens both `.ts` and `.tsx`, and the browser half is read through the
+  same project by the frontend adapter. So dependency injection, the wrapping
+  chain, the data layer, the brokers, the contract types and the incremental
+  session all apply to it, and a query in a module of exported functions —
+  which is how such a repository usually writes its data layer — is a node like
+  any other.
 - On Express, Fastify and Koa, what is read is the route — verb, path and
   handler — the router it is declared on, the prefix it is mounted under, and
   the middleware in front of it, including middleware installed on an
@@ -684,7 +688,7 @@ walkthrough from `fixtures/multi-repo`.
 
 ### The rules the code is held to
 
-Eleven invariants, two of which a grep gate enforces on every run:
+Twelve invariants, four of which `pnpm invariants` enforces on every run:
 
 1. The core names no technology. Anything that knows what TypeORM is lives
    behind an adapter.
@@ -701,6 +705,9 @@ Eleven invariants, two of which a grep gate enforces on every run:
 10. Annotations only where reading is blind.
 11. The schema is versioned; a model change bumps it, updates the parser and the
     tests, and regenerates every snapshot.
+12. Extractors are siblings. None of them can be reached from another, through
+    its dependencies or anything behind them; work two of them share lives in a
+    package neither owns.
 
 ---
 
