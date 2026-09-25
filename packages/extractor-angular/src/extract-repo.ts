@@ -21,6 +21,7 @@ import { classesPass } from './passes/classes.js';
 import { httpPass } from './passes/http.js';
 import { markersPass } from './passes/markers.js';
 import { modulesPass } from './passes/modules.js';
+import { socketsPass } from './passes/sockets.js';
 import { ssePass } from './passes/sse.js';
 import { templatesPass } from './passes/templates.js';
 import type { AngularExtractorPass } from './passes/types.js';
@@ -51,6 +52,11 @@ export interface ExtractRepoOptions {
  * where the routes lead, injection is resolved before a template handler on an
  * injected service can be followed, and the annotations run last so that a
  * request already read from the source wins over one merely asserted.
+ *
+ * `sse` and `sockets` sit next to each other on purpose: they read the two ways
+ * a browser is handed something it did not ask for one message at a time, and
+ * they answer the question of what that is differently — a stream is a request
+ * to an address, a socket is one end of a named channel (R08).
  */
 export const BUILT_IN_PASSES: readonly AngularExtractorPass[] = [
   modulesPass,
@@ -59,6 +65,7 @@ export const BUILT_IN_PASSES: readonly AngularExtractorPass[] = [
   callsPass,
   httpPass,
   ssePass,
+  socketsPass,
   markersPass,
 ];
 

@@ -1,0 +1,413 @@
+{
+  "schemaVersion": 3,
+  "repo": "koa-service",
+  "generatedAt": "2026-09-24T16:27:55.060Z",
+  "nodes": [
+    {
+      "id": "db_query:koa-service#src/orders/orders.repository.ts:12:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "koa-service",
+      "file": "src/orders/orders.repository.ts",
+      "line": 12,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:koa-service#src/orders/orders.repository.ts:16:12",
+      "type": "db_query",
+      "label": "write orders",
+      "repo": "koa-service",
+      "file": "src/orders/orders.repository.ts",
+      "line": 16,
+      "meta": {
+        "op": "write",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:koa-service#src/orders/orders.repository.ts:8:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "koa-service",
+      "file": "src/orders/orders.repository.ts",
+      "line": 8,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "entry:koa-service:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "koa-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "koa-routes",
+        "registration": "ordersRouter.get",
+        "middleware": [
+          "authenticate",
+          "withTenant"
+        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:koa-service:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "koa-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:orderId",
+        "adapter": "koa-routes",
+        "registration": "ordersRouter.get",
+        "middleware": [
+          "authenticate",
+          "withTenant"
+        ],
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:koa-service:http:GET:/public/health",
+      "type": "entry",
+      "label": "GET /public/health",
+      "repo": "koa-service",
+      "file": "src/public/public.routes.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/public/health",
+        "rawPath": "/public/health",
+        "adapter": "koa-routes",
+        "registration": "publicRouter.get",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:koa-service:http:GET:/public/summary",
+      "type": "entry",
+      "label": "GET /public/summary",
+      "repo": "koa-service",
+      "file": "src/public/public.routes.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/public/summary",
+        "rawPath": "/public/summary",
+        "adapter": "koa-routes",
+        "registration": "publicRouter.get",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:koa-service:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "koa-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 32,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "koa-routes",
+        "registration": "ordersRouter.post",
+        "middleware": [
+          "authenticate",
+          "withTenant",
+          "requireAdmin"
+        ],
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "koa-service#src/orders/orders.controller.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "koa-service",
+      "file": "src/orders/orders.controller.ts",
+      "line": 5
+    },
+    {
+      "id": "koa-service#src/orders/orders.repository.ts:OrdersRepository",
+      "type": "provider",
+      "label": "OrdersRepository",
+      "repo": "koa-service",
+      "file": "src/orders/orders.repository.ts",
+      "line": 4,
+      "kind": "injectable"
+    },
+    {
+      "id": "koa-service#src/orders/orders.repository.ts:OrdersRepository.byId",
+      "type": "method",
+      "label": "OrdersRepository.byId",
+      "repo": "koa-service",
+      "file": "src/orders/orders.repository.ts",
+      "line": 11
+    },
+    {
+      "id": "koa-service#src/orders/orders.repository.ts:OrdersRepository.insert",
+      "type": "method",
+      "label": "OrdersRepository.insert",
+      "repo": "koa-service",
+      "file": "src/orders/orders.repository.ts",
+      "line": 15
+    },
+    {
+      "id": "koa-service#src/orders/orders.repository.ts:OrdersRepository.list",
+      "type": "method",
+      "label": "OrdersRepository.list",
+      "repo": "koa-service",
+      "file": "src/orders/orders.repository.ts",
+      "line": 7
+    },
+    {
+      "id": "koa-service#src/orders/orders.routes.ts:GET /:orderId@27",
+      "type": "function",
+      "label": "GET /:orderId@27",
+      "repo": "koa-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 27
+    },
+    {
+      "id": "koa-service#src/orders/orders.routes.ts:POST /@32",
+      "type": "function",
+      "label": "POST /@32",
+      "repo": "koa-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 32
+    },
+    {
+      "id": "koa-service#src/public/public.routes.ts:GET /health@12",
+      "type": "function",
+      "label": "GET /health@12",
+      "repo": "koa-service",
+      "file": "src/public/public.routes.ts",
+      "line": 12
+    },
+    {
+      "id": "koa-service#src/public/public.routes.ts:GET /summary@16",
+      "type": "function",
+      "label": "GET /summary@16",
+      "repo": "koa-service",
+      "file": "src/public/public.routes.ts",
+      "line": 16
+    },
+    {
+      "id": "repo:koa-service",
+      "type": "repo",
+      "label": "koa-service",
+      "repo": "koa-service",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "classes": 1,
+          "skippedExternalCalls": {
+            "pg": 3
+          }
+        },
+        "adapters": {
+          "entry": [
+            "koa-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:koa-service#orders",
+      "type": "table",
+      "label": "orders",
+      "repo": "koa-service"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:koa-service#src/orders/orders.repository.ts:12:12",
+      "to": "table:koa-service#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 12
+    },
+    {
+      "from": "db_query:koa-service#src/orders/orders.repository.ts:16:12",
+      "to": "table:koa-service#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 16
+    },
+    {
+      "from": "db_query:koa-service#src/orders/orders.repository.ts:8:12",
+      "to": "table:koa-service#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:koa-service:http:GET:/orders",
+      "to": "koa-service#src/orders/orders.controller.ts:listOrders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:koa-service:http:GET:/orders/:param",
+      "to": "koa-service#src/orders/orders.routes.ts:GET /:orderId@27",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 27
+    },
+    {
+      "from": "entry:koa-service:http:GET:/public/health",
+      "to": "koa-service#src/public/public.routes.ts:GET /health@12",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/public/public.routes.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:koa-service:http:GET:/public/summary",
+      "to": "koa-service#src/public/public.routes.ts:GET /summary@16",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/public/public.routes.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:koa-service:http:POST:/orders",
+      "to": "koa-service#src/orders/orders.routes.ts:POST /@32",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 32
+    },
+    {
+      "from": "koa-service#src/orders/orders.controller.ts:listOrders",
+      "to": "koa-service#src/orders/orders.repository.ts:OrdersRepository.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "koa-service#src/orders/orders.repository.ts:OrdersRepository.byId",
+      "to": "db_query:koa-service#src/orders/orders.repository.ts:12:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 12
+    },
+    {
+      "from": "koa-service#src/orders/orders.repository.ts:OrdersRepository.insert",
+      "to": "db_query:koa-service#src/orders/orders.repository.ts:16:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 16
+    },
+    {
+      "from": "koa-service#src/orders/orders.repository.ts:OrdersRepository.list",
+      "to": "db_query:koa-service#src/orders/orders.repository.ts:8:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 8
+    },
+    {
+      "from": "koa-service#src/orders/orders.routes.ts:GET /:orderId@27",
+      "to": "koa-service#src/orders/orders.repository.ts:OrdersRepository.byId",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 28,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "koa-service#src/orders/orders.routes.ts:POST /@32",
+      "to": "koa-service#src/orders/orders.repository.ts:OrdersRepository.insert",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 33,
+      "params": [
+        "number"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "koa-service#src/public/public.routes.ts:GET /summary@16",
+      "to": "koa-service#src/orders/orders.repository.ts:OrdersRepository.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/public/public.routes.ts",
+      "line": 17,
+      "params": [],
+      "returns": "unknown"
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/main.ts",
+      "line": 1,
+      "reason": "bootstrap-not-found",
+      "hint": "Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.",
+      "symbol": "bootstrap"
+    },
+    {
+      "file": "src/orders/orders.routes.ts",
+      "line": 38,
+      "reason": "route-path-dynamic",
+      "hint": "Give the route a string literal or a const string; a computed path cannot be matched against callers.",
+      "symbol": "ordersRouter.del(archivePath('old'))",
+      "adapter": "koa-routes"
+    }
+  ]
+}

@@ -8,10 +8,17 @@
 export const PACKAGE_NAME = '@flowatlas/adapters-broker';
 
 export { brokerSpecsFor, brokersPass, extractBrokers } from './brokers-pass.js';
-export { brokerAdapters, createCustomBrokerAdapter } from './adapters/index.js';
-export type { BrokerSpec, ConsumerPattern } from './adapters/index.js';
-export { isResolved, resolveChannelName } from './channel-name.js';
-export type { ChannelResolution, ChannelVia, ResolvedChannel, UnresolvedChannel } from './channel-name.js';
+export { brokerAdapters, createCustomBrokerAdapter, socketio } from './adapters/index.js';
+export type { BrokerSpec, ChannelPrefix, ConsumerPattern, SubscriberPattern } from './adapters/index.js';
+export { hasAcknowledgement, receiverIsFrom, targetOfHandler } from './call-site.js';
+export { isResolved, resolveChannelName, shapeChannelNames, trimEndpoint } from './channel-name.js';
+export type {
+  ChannelResolution,
+  ChannelShaping,
+  ChannelVia,
+  ResolvedChannel,
+  UnresolvedChannel,
+} from './channel-name.js';
 export { pairKey, readBrokerMarkers } from './markers.js';
 
 import type { AdapterRegistry } from '@flowatlas/core';

@@ -1,0 +1,669 @@
+{
+  "schemaVersion": 3,
+  "repo": "nest-knex",
+  "generatedAt": "2026-09-24T16:19:34.221Z",
+  "nodes": [
+    {
+      "id": "db_query:nest-knex#src/users/users.service.ts:13:12",
+      "type": "db_query",
+      "label": "read users",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 13,
+      "meta": {
+        "op": "read",
+        "table": "users",
+        "tables": [
+          "users"
+        ],
+        "package": "knex",
+        "method": "select",
+        "receiver": "this.db('users')",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-knex#src/users/users.service.ts:19:12",
+      "type": "db_query",
+      "label": "read users",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 19,
+      "meta": {
+        "op": "read",
+        "table": "users",
+        "tables": [
+          "users"
+        ],
+        "package": "knex",
+        "method": "first",
+        "receiver": "this.db('users').where({ id }).orderBy('email')",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-knex#src/users/users.service.ts:24:12",
+      "type": "db_query",
+      "label": "read users",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 24,
+      "meta": {
+        "op": "read",
+        "table": "users",
+        "tables": [
+          "users"
+        ],
+        "package": "knex",
+        "method": "count",
+        "receiver": "this.db(USERS)",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-knex#src/users/users.service.ts:33:12",
+      "type": "db_query",
+      "label": "read users",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 33,
+      "meta": {
+        "op": "read",
+        "table": "users",
+        "tables": [
+          "users"
+        ],
+        "package": "knex",
+        "method": "first",
+        "receiver": "this.db.select('id').from('users').whereRaw('lower(email) = ?')",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-knex#src/users/users.service.ts:38:12",
+      "type": "db_query",
+      "label": "write users",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 38,
+      "meta": {
+        "op": "write",
+        "table": "users",
+        "tables": [
+          "users"
+        ],
+        "package": "knex",
+        "method": "insert",
+        "receiver": "this.db('users')",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-knex#src/users/users.service.ts:43:12",
+      "type": "db_query",
+      "label": "write user_events",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 43,
+      "meta": {
+        "op": "write",
+        "table": "user_events",
+        "tables": [
+          "user_events"
+        ],
+        "package": "knex",
+        "method": "insert",
+        "receiver": "this.db('user_events')",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-knex#src/users/users.service.ts:47:12",
+      "type": "db_query",
+      "label": "write users",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 47,
+      "meta": {
+        "op": "write",
+        "table": "users",
+        "tables": [
+          "users"
+        ],
+        "package": "knex",
+        "method": "update",
+        "receiver": "this.db('users').where({ id })",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-knex#src/users/users.service.ts:51:12",
+      "type": "db_query",
+      "label": "delete users",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 51,
+      "meta": {
+        "op": "delete",
+        "table": "users",
+        "tables": [
+          "users"
+        ],
+        "package": "knex",
+        "method": "del",
+        "receiver": "this.db('users').where({ id })",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-knex#src/users/users.service.ts:58:12",
+      "type": "db_query",
+      "label": "read ?",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 58,
+      "meta": {
+        "op": "read",
+        "table": null,
+        "tables": [],
+        "package": "knex",
+        "method": "first",
+        "receiver": "this.db.count('*')",
+        "source": "none"
+      }
+    },
+    {
+      "id": "db_query:nest-knex#src/users/users.service.ts:65:12",
+      "type": "db_query",
+      "label": "delete ?",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 65,
+      "meta": {
+        "op": "delete",
+        "table": null,
+        "tables": [],
+        "package": "knex",
+        "method": "del",
+        "receiver": "this.db(table)",
+        "source": "none"
+      }
+    },
+    {
+      "id": "entry:nest-knex:http:DELETE:/users",
+      "type": "entry",
+      "label": "DELETE /users",
+      "repo": "nest-knex",
+      "file": "src/users/users.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/users",
+        "rawPath": "/users",
+        "controller": "UsersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-knex:http:GET:/users",
+      "type": "entry",
+      "label": "GET /users",
+      "repo": "nest-knex",
+      "file": "src/users/users.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/users",
+        "rawPath": "/users",
+        "controller": "UsersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-knex:http:POST:/users",
+      "type": "entry",
+      "label": "POST /users",
+      "repo": "nest-knex",
+      "file": "src/users/users.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/users",
+        "rawPath": "/users",
+        "controller": "UsersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-knex#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-knex",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "UsersController"
+        ],
+        "providers": [
+          "UsersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-knex#src/users/users.controller.ts:UsersController",
+      "type": "provider",
+      "label": "UsersController",
+      "repo": "nest-knex",
+      "file": "src/users/users.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-knex#src/users/users.controller.ts:UsersController.create",
+      "type": "method",
+      "label": "UsersController.create",
+      "repo": "nest-knex",
+      "file": "src/users/users.controller.ts",
+      "line": 14
+    },
+    {
+      "id": "nest-knex#src/users/users.controller.ts:UsersController.findAll",
+      "type": "method",
+      "label": "UsersController.findAll",
+      "repo": "nest-knex",
+      "file": "src/users/users.controller.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-knex#src/users/users.controller.ts:UsersController.remove",
+      "type": "method",
+      "label": "UsersController.remove",
+      "repo": "nest-knex",
+      "file": "src/users/users.controller.ts",
+      "line": 19
+    },
+    {
+      "id": "nest-knex#src/users/users.service.ts:UsersService",
+      "type": "provider",
+      "label": "UsersService",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-knex#src/users/users.service.ts:UsersService.audit",
+      "type": "method",
+      "label": "UsersService.audit",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 42
+    },
+    {
+      "id": "nest-knex#src/users/users.service.ts:UsersService.byEmail",
+      "type": "method",
+      "label": "UsersService.byEmail",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 32
+    },
+    {
+      "id": "nest-knex#src/users/users.service.ts:UsersService.count",
+      "type": "method",
+      "label": "UsersService.count",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 23
+    },
+    {
+      "id": "nest-knex#src/users/users.service.ts:UsersService.create",
+      "type": "method",
+      "label": "UsersService.create",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 37
+    },
+    {
+      "id": "nest-knex#src/users/users.service.ts:UsersService.findAll",
+      "type": "method",
+      "label": "UsersService.findAll",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 12
+    },
+    {
+      "id": "nest-knex#src/users/users.service.ts:UsersService.findOne",
+      "type": "method",
+      "label": "UsersService.findOne",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 18
+    },
+    {
+      "id": "nest-knex#src/users/users.service.ts:UsersService.purge",
+      "type": "method",
+      "label": "UsersService.purge",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 64
+    },
+    {
+      "id": "nest-knex#src/users/users.service.ts:UsersService.remove",
+      "type": "method",
+      "label": "UsersService.remove",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 50
+    },
+    {
+      "id": "nest-knex#src/users/users.service.ts:UsersService.rename",
+      "type": "method",
+      "label": "UsersService.rename",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 46
+    },
+    {
+      "id": "nest-knex#src/users/users.service.ts:UsersService.total",
+      "type": "method",
+      "label": "UsersService.total",
+      "repo": "nest-knex",
+      "file": "src/users/users.service.ts",
+      "line": 57
+    },
+    {
+      "id": "repo:nest-knex",
+      "type": "repo",
+      "label": "nest-knex",
+      "repo": "nest-knex",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "knex": 20,
+            "knex.orderBy": 1,
+            "knex.where": 3,
+            "knex.whereRaw": 1,
+            "knex.from": 1,
+            "knex.returning": 2
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:nest-knex#user_events",
+      "type": "table",
+      "label": "user_events",
+      "repo": "nest-knex"
+    },
+    {
+      "id": "table:nest-knex#users",
+      "type": "table",
+      "label": "users",
+      "repo": "nest-knex"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:nest-knex#src/users/users.service.ts:13:12",
+      "to": "table:nest-knex#users",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 13
+    },
+    {
+      "from": "db_query:nest-knex#src/users/users.service.ts:19:12",
+      "to": "table:nest-knex#users",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 19
+    },
+    {
+      "from": "db_query:nest-knex#src/users/users.service.ts:24:12",
+      "to": "table:nest-knex#users",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 24
+    },
+    {
+      "from": "db_query:nest-knex#src/users/users.service.ts:33:12",
+      "to": "table:nest-knex#users",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 33
+    },
+    {
+      "from": "db_query:nest-knex#src/users/users.service.ts:38:12",
+      "to": "table:nest-knex#users",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 38
+    },
+    {
+      "from": "db_query:nest-knex#src/users/users.service.ts:43:12",
+      "to": "table:nest-knex#user_events",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 43
+    },
+    {
+      "from": "db_query:nest-knex#src/users/users.service.ts:47:12",
+      "to": "table:nest-knex#users",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 47
+    },
+    {
+      "from": "db_query:nest-knex#src/users/users.service.ts:51:12",
+      "to": "table:nest-knex#users",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 51
+    },
+    {
+      "from": "entry:nest-knex:http:DELETE:/users",
+      "to": "nest-knex#src/users/users.controller.ts:UsersController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/users/users.controller.ts",
+      "line": 19,
+      "params": [],
+      "returns": "number"
+    },
+    {
+      "from": "entry:nest-knex:http:GET:/users",
+      "to": "nest-knex#src/users/users.controller.ts:UsersController.findAll",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/users/users.controller.ts",
+      "line": 9,
+      "params": [],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "entry:nest-knex:http:POST:/users",
+      "to": "nest-knex#src/users/users.controller.ts:UsersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/users/users.controller.ts",
+      "line": 14,
+      "params": [],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "nest-knex#src/users/users.controller.ts:UsersController",
+      "to": "nest-knex#src/users/users.service.ts:UsersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/users/users.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-knex#src/users/users.controller.ts:UsersController.create",
+      "to": "nest-knex#src/users/users.service.ts:UsersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/users/users.controller.ts",
+      "line": 16,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "nest-knex#src/users/users.controller.ts:UsersController.findAll",
+      "to": "nest-knex#src/users/users.service.ts:UsersService.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/users/users.controller.ts",
+      "line": 11,
+      "params": [],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "nest-knex#src/users/users.controller.ts:UsersController.remove",
+      "to": "nest-knex#src/users/users.service.ts:UsersService.remove",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/users/users.controller.ts",
+      "line": 21,
+      "params": [
+        "string"
+      ],
+      "returns": "number"
+    },
+    {
+      "from": "nest-knex#src/users/users.service.ts:UsersService.audit",
+      "to": "db_query:nest-knex#src/users/users.service.ts:43:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 43
+    },
+    {
+      "from": "nest-knex#src/users/users.service.ts:UsersService.byEmail",
+      "to": "db_query:nest-knex#src/users/users.service.ts:33:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 33
+    },
+    {
+      "from": "nest-knex#src/users/users.service.ts:UsersService.count",
+      "to": "db_query:nest-knex#src/users/users.service.ts:24:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 24
+    },
+    {
+      "from": "nest-knex#src/users/users.service.ts:UsersService.create",
+      "to": "db_query:nest-knex#src/users/users.service.ts:38:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 38
+    },
+    {
+      "from": "nest-knex#src/users/users.service.ts:UsersService.findAll",
+      "to": "db_query:nest-knex#src/users/users.service.ts:13:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 13
+    },
+    {
+      "from": "nest-knex#src/users/users.service.ts:UsersService.findOne",
+      "to": "db_query:nest-knex#src/users/users.service.ts:19:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 19
+    },
+    {
+      "from": "nest-knex#src/users/users.service.ts:UsersService.purge",
+      "to": "db_query:nest-knex#src/users/users.service.ts:65:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/users/users.service.ts",
+      "line": 65
+    },
+    {
+      "from": "nest-knex#src/users/users.service.ts:UsersService.remove",
+      "to": "db_query:nest-knex#src/users/users.service.ts:51:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 51
+    },
+    {
+      "from": "nest-knex#src/users/users.service.ts:UsersService.rename",
+      "to": "db_query:nest-knex#src/users/users.service.ts:47:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/users/users.service.ts",
+      "line": 47
+    },
+    {
+      "from": "nest-knex#src/users/users.service.ts:UsersService.total",
+      "to": "db_query:nest-knex#src/users/users.service.ts:58:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/users/users.service.ts",
+      "line": 58
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/users/users.service.ts",
+      "line": 13,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "db on UsersService is a field assigned a function from elsewhere, so there is no one body to follow. Declare it as a method to make the edge visible.",
+      "symbol": "UsersService.findAll -> this.db",
+      "sites": 8
+    },
+    {
+      "file": "src/users/users.service.ts",
+      "line": 58,
+      "reason": "dynamic-table-name",
+      "hint": "The table this.db.count('*').first touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.",
+      "symbol": "this.db.count('*').first"
+    },
+    {
+      "file": "src/users/users.service.ts",
+      "line": 65,
+      "reason": "dynamic-table-name",
+      "hint": "The table this.db(table).del touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.",
+      "symbol": "this.db(table).del"
+    }
+  ]
+}
