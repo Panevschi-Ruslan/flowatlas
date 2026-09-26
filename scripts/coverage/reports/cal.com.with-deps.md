@@ -35,46 +35,50 @@ land on one address.
 |  | count | of what the counting rule found |
 |---|---|---|
 | addresses placed | 84 |  |
-| declarations with a body attached | 50 | 50 of 79 |
-| …whose body reaches anything | 47 | 47 of 79 |
+| declarations with a body attached | 53 | 53 of 79 |
+| …whose body reaches anything | 50 | 50 of 79 |
 | …behind middleware or a guard | 0 | 0 of 79 |
 
 ## What joined
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 32 | 21 |
-| requests between services | 38 | 0 |
+| requests from a browser | 139 | 0 |
+| requests between services | 197 | 0 |
 | channels | 0 | 0 with both ends |
 
 ## Storage and screens
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 73 | 73 of 80 |
-| …that name a table | 4 | 4 of 73 |
+| query sites read | 444 | 444 of 80 |
+| …that name a table | 4 | 4 of 444 |
 | tables | 1 | no denominator: the rule has no probe for it |
-| components | 773 | no denominator: the rule has no probe for it |
+| components | 1433 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
-| every other binding a template makes | 775 | not counted by the rule |
+| every other binding a template makes | 1045 | not counted by the rule |
 
 ## What it could not read
 
-106 places somebody could act on, 50 the tool
+996 places somebody could act on, 1401 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| api-path-dynamic | action | 7 |  |
-| call-dynamic-receiver | info | 50 |  |
-| db-layer-unread | action | 6 |  |
-| db-receiver-name-only | action | 69 |  |
-| dynamic-http-url | action | 6 |  |
-| route-wildcard-only | action | 9 |  |
+| api-method-dynamic | action | 2 |  |
+| api-path-dynamic | action | 28 |  |
+| call-dynamic-receiver | info | 1256 |  |
+| db-layer-unread | action | 8 |  |
+| db-receiver-name-only | action | 440 |  |
+| dynamic-config-key | action | 2 |  |
+| dynamic-http-url | action | 40 |  |
 | server-action-unread | action | 2 |  |
-| target-route-not-found | action | 2 |  |
-| unknown-base-url-env | action | 1 |  |
+| target-route-not-found | action | 92 |  |
+| type-depth-exceeded | info | 84 |  |
+| type-generic-uninstantiated | info | 61 |  |
+| type-unresolved | action | 376 |  |
+| unknown-base-url-env | action | 2 |  |
 | unknown-db-package | action | 4 |  |
 
 ## The denominators
@@ -104,7 +108,7 @@ applied identically to all eight targets and knows nothing about any of them.
 
 ## Cost
 
-Wall clock 5 to 15 s, peak resident memory 2 to 3 GB.
+Wall clock 15 to 60 s, peak resident memory 2 to 3 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

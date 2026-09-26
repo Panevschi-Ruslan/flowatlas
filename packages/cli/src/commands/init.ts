@@ -7,11 +7,20 @@ import {
   FlowatlasError,
   parseConfig,
   readPackageJson,
+  workspaceGlobs,
+  workspacePackages,
+  workspaceRootOf,
   type FlowatlasConfig,
   type PackageJson,
 } from '@flowatlas/core';
 import type { Command } from 'commander';
-import { guessType, guessUnread, TYPE_SIGNATURES, UNKNOWN_TYPE } from '../stacks.js';
+import {
+  guessUnread,
+  guessWorkspaceType,
+  looksLikeApplication,
+  TYPE_SIGNATURES,
+  UNKNOWN_TYPE,
+} from '../stacks.js';
 import { installMcp } from './mcp.js';
 
 /** Directories that are never a service of their own. */
@@ -28,6 +37,13 @@ export interface Candidate {
   type: string;
   /** The framework found when there is no reader for it. Absent otherwise. */
   unread?: string;
+  /**
+   * The name the manifest declares, scope and all.
+   *
+   * Kept beside the suggested name because the scope is what tells two members of
+   * one workspace apart when the suggestion drops it and they collide.
+   */
+  declared?: string;
 }
 
 /** `@scope/name` becomes `name`; anything unusable falls back to the directory. */
@@ -68,10 +84,102 @@ export const toPosixRelative = (from: string, to: string): string => {
 };
 
 /**
+ * The same list, with no two services sharing a name.
+ *
+ * A service name is the key everything else in the configuration refers to, and
+ * two of them the same is a configuration the schema refuses — which, now that
+ * one directory can yield several services, is something a scan can produce
+ * without anybody doing anything wrong: `@shop/web` and `@admin/web` are two
+ * members of one workspace and both are called `web` once the scope is dropped.
+ *
+ * What tells them apart is the scope the name was declared with, so the scope
+ * comes back: `shop-web`. A package with no scope to fall back on is named by the
+ * directory it is in instead. The first of a repeated name keeps the plain one,
+ * because renaming a service that was never ambiguous would be a worse surprise
+ * than a long name, and this is a suggestion somebody is about to read anyway.
+ */
+const withDistinctNames = (candidates: readonly Candidate[]): Candidate[] => {
+  const taken = new Set<string>();
+  return candidates.map((candidate) => {
+    if (!taken.has(candidate.name)) {
+      taken.add(candidate.name);
+      return candidate;
+    }
+    const scope = candidate.declared?.startsWith('@') === true
+      ? candidate.declared.slice(1).split('/')[0]
+      : basename(resolve(candidate.absPath, '..'));
+    let name = `${scope}-${candidate.name}`;
+    for (let nth = 2; taken.has(name); nth += 1) name = `${scope}-${candidate.name}-${nth}`;
+    taken.add(name);
+    return { ...candidate, name };
+  });
+};
+
+/**
+ * The services one directory holds, which is not always one.
+ *
+ * A directory with a manifest used to be a service, exactly one, and R107 is
+ * what that cost. Run against PeerTube, `init` wrote a single service and
+ * silently left out the Angular client that is half the repository, because the
+ * client is a directory below the one the manifest was in. Both halves are
+ * declared, in `pnpm-workspace.yaml`, and had been all along.
+ *
+ * So a directory that declares a workspace is asked what is in it, and every
+ * member that is an application — rather than a library the applications import —
+ * becomes a service of its own. A directory that declares no workspace, and a
+ * workspace with no application in it, are one service as before: the second
+ * case matters, because a repository of nothing but libraries still has code
+ * worth reading and offering nothing at all would be a worse answer than
+ * offering the whole of it.
+ *
+ * A member that is itself the root of a nested workspace — PeerTube's `client`
+ * declares members of its own — is read as the application it is, because the
+ * question asked of it is whether it looks like one and not what is beneath it.
+ */
+const servicesIn = (absPath: string, configDir: string, pkg: PackageJson): Candidate[] => {
+  const asOne = (dir: string, manifest: PackageJson, root?: PackageJson): Candidate => {
+    const type = guessWorkspaceType(manifest, root);
+    const unread = type === UNKNOWN_TYPE ? guessUnread(manifest) : undefined;
+    return {
+      absPath: dir,
+      repo: toPosixRelative(configDir, dir),
+      name: suggestName(manifest, dir),
+      ...(typeof manifest.name === 'string' ? { declared: manifest.name } : {}),
+      type,
+      ...(unread === undefined ? {} : { unread }),
+    };
+  };
+
+  if (workspaceGlobs(absPath).length === 0) {
+    // A directory scanned on its own may still be a member of a workspace
+    // somewhere above it — `init --dir peertube` finds `server` and `client` as
+    // ordinary subdirectories — and a member's type is read the same way whether
+    // the scan arrived from above it or beside it. Anything else would make the
+    // suggestion depend on where the person happened to stand.
+    const above = workspaceRootOf(absPath);
+    return [asOne(absPath, pkg, above === undefined ? undefined : readPackageJson(above))];
+  }
+
+  const found: Candidate[] = [];
+  for (const member of workspacePackages(absPath)) {
+    const manifest = readPackageJson(member.dir);
+    if (manifest === undefined || !looksLikeApplication(manifest, pkg)) continue;
+    found.push(asOne(member.dir, manifest, pkg));
+  }
+  // A workspace whose members include applications is a workspace and not one of
+  // them: offering the root as well would read every application twice, once on
+  // its own and once as part of the whole. PeerTube is the case — its root
+  // declares Express because that is where the server's dependencies are kept,
+  // so the root looks exactly like the server it is not.
+  return found.length === 0 ? [asOne(absPath, pkg)] : found;
+};
+
+/**
  * Looks for repositories directly under `scanDir`.
  *
- * A directory counts when it holds a `package.json`. The directory holding the
- * configuration is skipped, so the tool never lists itself as a service.
+ * A directory counts when it holds a `package.json`, and may hold more than one
+ * service: see {@link servicesIn}. The directory holding the configuration is
+ * skipped, so the tool never lists itself as a service.
  */
 export const scanCandidates = (scanDir: string, configDir: string): Candidate[] => {
   const root = resolve(scanDir);
@@ -96,17 +204,15 @@ export const scanCandidates = (scanDir: string, configDir: string): Candidate[] 
     if (absPath === self) continue;
     const pkg = readPackageJson(absPath);
     if (pkg === undefined) continue;
-    const type = guessType(pkg);
-    const unread = type === UNKNOWN_TYPE ? guessUnread(pkg) : undefined;
-    found.push({
-      absPath,
-      repo: toPosixRelative(self, absPath),
-      name: suggestName(pkg, absPath),
-      type,
-      ...(unread === undefined ? {} : { unread }),
-    });
+    found.push(...servicesIn(absPath, self, pkg));
   }
-  return found.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  // By name, and then by where it is, because a workspace can hold two members
+  // whose manifests were copied from each other and a list that reordered
+  // between runs would make every snapshot of it a coin toss.
+  const sorted = found.sort((a, b) =>
+    a.name === b.name ? (a.repo < b.repo ? -1 : 1) : a.name < b.name ? -1 : 1,
+  );
+  return withDistinctNames(sorted);
 };
 
 export interface InitOptions {

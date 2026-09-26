@@ -37,15 +37,15 @@ land on one address.
 |  | found | joined |
 |---|---|---|
 | requests from a browser | 0 | 0 |
-| requests between services | 0 | 0 |
+| requests between services | 20 | 0 |
 | channels | 0 | 0 with both ends |
 
 ## Storage and screens
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 3 | 3 of 6 |
-| …that name a table | 0 | 0 of 3 |
+| query sites read | 72 | 72 of 6 |
+| …that name a table | 0 | 0 of 72 |
 | tables | 0 | nothing of this kind here |
 | components | 0 | nothing of this kind here |
 | clicks | 0 | nothing of this kind here |
@@ -53,16 +53,19 @@ land on one address.
 
 ## What it could not read
 
-11 places somebody could act on, 58 the tool
+3055 places somebody could act on, 5289 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| call-dynamic-receiver | info | 57 |  |
-| db-receiver-name-only | action | 3 |  |
-| entry-http-types-unmatched | info | 1 |  |
-| type-unresolved | action | 8 |  |
+| call-dynamic-receiver | info | 5186 |  |
+| db-receiver-name-only | action | 72 |  |
+| dynamic-config-key | action | 9 |  |
+| dynamic-http-url | action | 5 |  |
+| type-depth-exceeded | info | 26 |  |
+| type-generic-uninstantiated | info | 77 |  |
+| type-unresolved | action | 2969 |  |
 
 ## The denominators
 
@@ -91,7 +94,7 @@ applied identically to all eight targets and knows nothing about any of them.
 
 ## Cost
 
-Wall clock under 5 s, peak resident memory under 0.5 GB.
+Wall clock 15 to 60 s, peak resident memory 1 to 2 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

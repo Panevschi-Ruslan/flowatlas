@@ -58,8 +58,18 @@ describe('normalizeFilePath', () => {
     expect(normalizeFilePath('/repos/orders/src/app.ts', '/repos/orders/')).toBe('src/app.ts');
   });
 
-  it('leaves a path outside the repo alone', () => {
-    expect(normalizeFilePath('/elsewhere/app.ts', '/repos/orders')).toBe('/elsewhere/app.ts');
+  it('climbs out of the repo for a path beside it', () => {
+    // A file of a workspace package the service reads. Naming it relative to the
+    // service keeps one machine's absolute paths out of the graph's ids.
+    expect(normalizeFilePath('/repos/packages/lib/x.ts', '/repos/orders')).toBe(
+      '../packages/lib/x.ts',
+    );
+  });
+
+  it('climbs all the way out for a path that shares nothing', () => {
+    expect(normalizeFilePath('/elsewhere/app.ts', '/repos/orders')).toBe(
+      '../../elsewhere/app.ts',
+    );
   });
 
   it('strips a leading ./ and collapses repeated slashes', () => {
