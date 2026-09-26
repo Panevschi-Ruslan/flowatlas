@@ -17,7 +17,7 @@ import {
   type ServiceConfig,
 } from '@flowatlas/core';
 import type { Project } from 'ts-morph';
-import { findBootstrapFile, readBootstrap } from './bootstrap.js';
+import { addressingFindings, findBootstrapFile, readBootstrap } from './bootstrap.js';
 import { createNestContext, type NestStats } from './context.js';
 import { buildClassIndex } from './index-classes.js';
 import { callsPass } from './passes/calls.js';
@@ -141,11 +141,14 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const classes = buildClassIndex({ project, repo, repoDir: rootDir });
 
   const bootstrapPath = findBootstrapFile(rootDir, options.bootstrap ?? service.bootstrap);
-  const bootstrap = readBootstrap(
+  const bootstrap = readBootstrap({
     project,
-    bootstrapPath,
-    bootstrapPath === undefined ? undefined : normalizeFilePath(bootstrapPath, rootDir),
-  );
+    rootDir,
+    ...(bootstrapPath === undefined ? {} : { absolutePath: bootstrapPath }),
+    ...(bootstrapPath === undefined
+      ? {}
+      : { relativePath: normalizeFilePath(bootstrapPath, rootDir) }),
+  });
 
   const builder = new GraphBuilder({
     repo,
@@ -165,8 +168,18 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     logger,
     meta: {
       ...(bootstrap.globalPrefix === undefined ? {} : { globalPrefix: bootstrap.globalPrefix }),
+      // Handed to the entry adapters as data rather than as a type they would
+      // have to import from this package, which is what keeps an adapter for one
+      // framework free of every other reader.
+      ...(bootstrap.versioning === undefined ? {} : { versioning: bootstrap.versioning }),
     },
   };
+
+  // Before the passes, because these rows are about lines that decide every
+  // address in the service, and a reader who sees four hundred short paths
+  // deserves to meet the reason at the top of the list rather than to work it
+  // out (R89).
+  for (const row of addressingFindings(bootstrap)) builder.addUnresolved(row);
 
   // Before any pass runs, because a file the parser could not read is a hole in
   // everything that follows and the rest of this function has no way of

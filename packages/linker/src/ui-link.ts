@@ -21,8 +21,16 @@ export interface UiIndex {
   services(): readonly string[];
 }
 
-/** How the service on the other end was decided. */
-export type UiVia = 'api-target' | 'base-url-env' | 'unique-route';
+/**
+ * How the service on the other end was decided.
+ *
+ * `same-service` is the browser asking the server it was served from, which is
+ * what a relative address means and by far the commonest shape there is. It
+ * ranks with the two configured answers rather than with the guess: a path that
+ * matches a route in the very repository the call was written in is evidence
+ * from one reading of one directory, and nothing about it is a guess (R93).
+ */
+export type UiVia = 'api-target' | 'base-url-env' | 'same-service' | 'unique-route';
 
 /** What each way a request can end carries with it. */
 interface Details {
@@ -132,17 +140,98 @@ export const missingChoiceFinding = (
     'A renamed or missing handler looks exactly like this; check the ones named.',
 });
 
+/** One request, with everything any way of answering it may look at. */
+interface Ask {
+  /** The call as written, which is the only thing that knows whose repository it is. */
+  call: GraphNode;
+  method: string;
+  path: string;
+  /** The settings key the address is rooted at, when it is rooted at one. */
+  env: string | undefined;
+  index: UiIndex;
+}
+
+/** A settings entry naming the service this frontend's key stands for. */
+const byApiTarget = ({ call, method, path, env, index }: Ask): UiOutcome | undefined => {
+  const named = env === undefined ? undefined : index.targetOf(call.repo, env);
+  // Terminal once a target is named, wrong answer included: somebody wrote down
+  // which service that key means, and a search behind their back would only
+  // hide the fact that the route they named is gone.
+  return named === undefined ? undefined : within(named, 'api-target', method, path, index);
+};
+
+/** Exactly one service declaring the same settings key as its own base. */
+const byBaseUrlEnv = ({ method, path, env, index }: Ask): UiOutcome | undefined => {
+  if (env === undefined) return undefined;
+  const claiming = index.claimantsOf(env);
+  return claiming.length === 1
+    ? within(claiming[0] as string, 'base-url-env', method, path, index)
+    : undefined;
+};
+
+/**
+ * The service the call was written in, answering its own browser.
+ *
+ * This is what a relative `fetch('/api/thing')` means, and until R93 it was the
+ * one service excluded from the question. Nothing names a service in such a
+ * call, so neither of the two ways above fires and this is the only reading
+ * available — no line of configuration could have supplied one. On cal.com that
+ * cost thirty-two requests every edge they had, and produced twenty-three rows
+ * saying no configured service serves an address sitting in the same graph.
+ *
+ * It gives way rather than answering `noRoute`, because a frontend that also
+ * serves routes may still be calling somebody else's: the caller's own service
+ * not serving an address is no reason to stop looking for one that does.
+ */
+const bySameService = ({ call, method, path, index }: Ask): UiOutcome | undefined => {
+  const own = within(call.repo, 'same-service', method, path, index);
+  return own.kind === 'noRoute' ? undefined : own;
+};
+
+/**
+ * Whoever happens to serve that route, when nothing said who should.
+ *
+ * A guess, and it comes back as one: the same address may be served by two
+ * services for entirely different callers, so one candidate is a usable guess
+ * and several is a question only the configuration can settle.
+ */
+const byUniqueRoute = ({ method, path, index }: Ask): UiOutcome | undefined => {
+  const answering = index
+    .services()
+    .filter((service) => {
+      const routes = index.routesOf(service) ?? [];
+      if (isMatch(matchRoute(method, path, routes))) return true;
+      const prefixed = withGlobalPrefix(path, routes);
+      return prefixed !== undefined && isMatch(matchRoute(method, prefixed, routes));
+    })
+    .sort(cmp);
+
+  if (answering.length === 1) {
+    return within(answering[0] as string, 'unique-route', method, path, index);
+  }
+  return answering.length > 1 ? { kind: 'ambiguous', method, path, candidates: answering } : undefined;
+};
+
+/**
+ * The ways one request's answering service can be decided, strongest first.
+ *
+ * A list rather than a run of branches, because the order *is* the rule and this
+ * is the only spelling where the order can be read off the page. Each way
+ * answers with an outcome it will stand behind, or with nothing, which means the
+ * next way is asked; when all of them pass, nothing serves the address.
+ */
+const WAYS: ReadonlyArray<(ask: Ask) => UiOutcome | undefined> = [
+  byApiTarget,
+  byBaseUrlEnv,
+  bySameService,
+  byUniqueRoute,
+];
+
 /**
  * Decides which route a request made in the browser reaches.
  *
  * Answers a question and changes nothing, so the decision can be read, tested
  * and reported on separately from what is done about it.
- *
- * The order is what the configuration knows first: a target named outright, then
- * a service that claims the same settings key as its own base, and only then a
- * search for whoever happens to serve that route. The first two are proof and
- * the third is a guess, which is why it comes back as one — the same route may
- * be served by two services for entirely different callers.
  */
 export const resolveUiCall = (call: GraphNode, index: UiIndex): UiOutcome => {
   const method = call.meta?.['method'];
@@ -158,36 +247,23 @@ export const resolveUiCall = (call: GraphNode, index: UiIndex): UiOutcome => {
   if (!wasRead(path)) return { kind: 'dynamic', reason: 'api-path-partly-read' };
   if (typeof method !== 'string') return { kind: 'dynamic', reason: 'api-method-dynamic' };
 
-  const named = typeof env === 'string' ? index.targetOf(call.repo, env) : undefined;
-  if (named !== undefined) return within(named, 'api-target', method, path, index);
-
-  if (typeof env === 'string') {
-    const claiming = index.claimantsOf(env);
-    if (claiming.length === 1) {
-      return within(claiming[0] as string, 'base-url-env', method, path, index);
-    }
+  const ask: Ask = { call, method, path, env: typeof env === 'string' ? env : undefined, index };
+  for (const way of WAYS) {
+    const found = way(ask);
+    if (found !== undefined) return found;
   }
 
-  // Nothing said which service is meant, so ask which ones could answer. One is
-  // a usable guess; several is a question only the configuration can settle.
-  const answering = index
-    .services()
-    .filter((service) => service !== call.repo)
-    .filter((service) => {
-      const routes = index.routesOf(service) ?? [];
-      if (isMatch(matchRoute(method, path, routes))) return true;
-      const prefixed = withGlobalPrefix(path, routes);
-      return prefixed !== undefined && isMatch(matchRoute(method, prefixed, routes));
-    })
-    .sort(cmp);
-
-  if (answering.length === 1) {
-    return within(answering[0] as string, 'unique-route', method, path, index);
-  }
-  if (answering.length > 1) {
-    return { kind: 'ambiguous', method, path, candidates: answering };
-  }
-  return { kind: 'noRoute', targetService: null, method, path, verbs: [] };
+  // Nothing serves it. The verbs come from the caller's own service, which is
+  // the only service here that certainly exists and is now the likeliest place
+  // the address was meant for, so "that path answers GET" is a sentence worth
+  // having beside a request written as a POST.
+  return {
+    kind: 'noRoute',
+    targetService: null,
+    method,
+    path,
+    verbs: verbsAnswering(path, index.routesOf(call.repo) ?? []),
+  };
 };
 
 /**

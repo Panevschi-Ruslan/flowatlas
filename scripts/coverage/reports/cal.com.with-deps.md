@@ -43,7 +43,7 @@ land on one address.
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 32 | 0 |
+| requests from a browser | 32 | 21 |
 | requests between services | 38 | 0 |
 | channels | 0 | 0 with both ends |
 
@@ -60,7 +60,7 @@ land on one address.
 
 ## What it could not read
 
-118 places somebody could act on, 50 the tool
+106 places somebody could act on, 50 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -71,8 +71,9 @@ was never an edge to draw. The three are never added together.
 | db-layer-unread | action | 6 |  |
 | db-receiver-name-only | action | 69 |  |
 | dynamic-http-url | action | 6 |  |
+| route-wildcard-only | action | 9 |  |
 | server-action-unread | action | 2 |  |
-| target-route-not-found | action | 23 |  |
+| target-route-not-found | action | 2 |  |
 | unknown-base-url-env | action | 1 |  |
 | unknown-db-package | action | 4 |  |
 
