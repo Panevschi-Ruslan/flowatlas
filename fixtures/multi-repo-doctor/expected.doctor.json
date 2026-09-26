@@ -201,7 +201,7 @@
             "symbol": "POST /orders",
             "level": "action",
             "sites": 1,
-            "message": "POST /orders has no guard in front of it and reaches Order.",
+            "message": "POST /orders has no guard in front of it and reaches stored data.",
             "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
           },
           {
@@ -211,7 +211,7 @@
             "symbol": "POST /orders/legacy",
             "level": "action",
             "sites": 1,
-            "message": "POST /orders/legacy has no guard in front of it and reaches Order.",
+            "message": "POST /orders/legacy has no guard in front of it and reaches stored data.",
             "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
           },
           {
@@ -221,7 +221,7 @@
             "symbol": "GET /orders/:param",
             "level": "action",
             "sites": 1,
-            "message": "GET /orders/:param has no guard in front of it and reaches Order.",
+            "message": "GET /orders/:param has no guard in front of it and reaches stored data.",
             "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
           }
         ]

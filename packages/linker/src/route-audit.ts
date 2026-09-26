@@ -78,7 +78,16 @@ export const auditRoutes = (
   const from = (id: string, type: GraphEdge['type']): GraphEdge[] =>
     (out.get(id) ?? []).filter((edge) => edge.type === type);
 
-  /** The first stored data a route reaches, by the shortest walk. */
+  /**
+   * The first stored data a route reaches, by the shortest walk.
+   *
+   * The table where there is one, and the query itself where there is not. A
+   * query whose table could not be read is still a route reaching stored data,
+   * and asking only for the `queries` edge meant a library nobody has written a
+   * descriptor for hid every unguarded route behind it. That is precisely
+   * backwards: the less of a data layer this can read, the more a reader needs
+   * to be told which routes reach it (R83).
+   */
   const dataReached = (entryId: string): GraphNode | undefined => {
     const seen = new Set<string>([entryId]);
     let frontier = [entryId];
@@ -89,6 +98,11 @@ export const auditRoutes = (
         if (query !== undefined) return nodes.get(query.to);
         for (const edge of [...from(id, 'handles'), ...from(id, 'calls')]) {
           if (seen.has(edge.to)) continue;
+          const reached = nodes.get(edge.to);
+          // Only where the table is missing: a query that names one answers with
+          // the table on the next step round, which is the better name for it
+          // and the one every message here already carries.
+          if (reached?.type === 'db_query' && from(edge.to, 'queries').length === 0) return reached;
           seen.add(edge.to);
           next.push(edge.to);
         }
@@ -164,8 +178,13 @@ export const auditRoutes = (
     if (gates.length > 0 || middleware.length > 0) continue;
     if (decorators.some((name) => options.publicDecorators.includes(name))) continue;
     if (options.publicRoutes.some((pattern) => matchesRoutePattern(pattern, method, path))) continue;
-    const data = dataReached(entry.id);
-    if (data === undefined) continue;
+    const found = dataReached(entry.id);
+    if (found === undefined) continue;
+    // What to call it. A table is named; a query whose table could not be read
+    // has a label of its own — `access ?` — which reads as a typo in a sentence.
+    // What the sentence has to say is that the route reaches the database at
+    // all, and which table it reaches is the part nothing could establish (R83).
+    const data = found.type === 'db_query' ? 'stored data' : found.label;
 
     // The handler says it refuses a request itself, which nothing here can see
     // and nothing here can check. Taken at its word — but listed, because
@@ -179,7 +198,7 @@ export const auditRoutes = (
         line: entry.line ?? 0,
         reason: 'route-guard-skipped',
         level: 'info' as const,
-        message: `${method} ${path} reaches ${data.label} with no guard in front of it, and says it checks the request itself: ${claimed}.`,
+        message: `${method} ${path} reaches ${data} with no guard in front of it, and says it checks the request itself: ${claimed}.`,
         hint: 'This cannot verify that. Check that the handler still does what its annotation says.',
         symbol: `${method} ${path}`,
       });
@@ -221,10 +240,10 @@ export const auditRoutes = (
       reason: decided ? 'route-guard-skipped' : 'route-unguarded',
       ...(prefixUnread || decided ? { level: 'info' as const } : {}),
       message: prefixUnread
-        ? `${method} ${path} has no route middleware and reaches ${data.label}; middleware installed for a whole prefix is not read, so check it by hand.`
+        ? `${method} ${path} has no route middleware and reaches ${data}; middleware installed for a whole prefix is not read, so check it by hand.`
         : decided
-          ? `${method} ${path} reaches ${data.label} with no guard in front of it, because ${skipped.sort(cmp).join(', ')}.`
-          : `${method} ${path} has no guard in front of it and reaches ${data.label}.`,
+          ? `${method} ${path} reaches ${data} with no guard in front of it, because ${skipped.sort(cmp).join(', ')}.`
+          : `${method} ${path} has no guard in front of it and reaches ${data}.`,
       hint: decided
         ? 'Decided on purpose, so nothing is missing. Check that the decision still holds; a handler that checks the request in its own body can say so with /** @flowatlas-auth <how> */.'
         : 'Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.',

@@ -51,9 +51,19 @@ export type DbSource = 'type-arg' | 'receiver-prop' | 'sql-parse' | 'string-arg'
 
 export interface DbClassification {
   /**
+   * Whether there is a node to draw, and nothing else.
+   *
    * False when the call reaches a described package by a method that package
    * does not use to touch data, such as walking a cursor the query already
    * produced. Counting those beats emitting a second query that never happened.
+   * False also when the only evidence that this was data access at all was the
+   * receiver's name, which is not evidence.
+   *
+   * It says nothing about whether there is something to report: `unresolved`
+   * answers that on its own, and the two used to be one decision. They are not
+   * one decision. A call can be worth a row and not worth a node — that is what
+   * the whole of R83 is about — and while the flag governed both, the only way
+   * to keep a row was to mint a node beside it.
    */
   emit: boolean;
   /** Primary table, or null when the call is data access whose target is unknown. */
@@ -89,6 +99,23 @@ export interface DbCallInput {
   stringArg?: string;
   /** Patterns the caller uses to recognise a data layer by name. */
   nameHints?: DataNameHints;
+  /**
+   * True when the type argument the entity name would come from is declared by
+   * an installed package rather than by the repository being read.
+   *
+   * A type argument is the stored entity only when the repository declares it.
+   * PeerTube puts a base class of its own over the ORM's `Model` and
+   * parameterises it with `AttributesOnly<…>`, a generic helper out of the ORM's
+   * own typings, so walking to the first type argument named 1,898 of that
+   * repository's 1,958 queries after a mapped type in `node_modules`: one table
+   * node standing for a hundred real tables, and `impact AttributesOnly`
+   * returning the whole server (R83).
+   *
+   * Supplied by the caller rather than worked out here, for the same reason
+   * `nameHints` is: answering it needs the checker, and undefined means the
+   * caller did not answer, which leaves the name alone.
+   */
+  entityFromPackage?: boolean;
 }
 
 /**
@@ -211,7 +238,17 @@ const receiverNameHint = (receiver: string, origin: TypeOrigin | null): string =
  */
 export const classifyDbCall = (input: DbCallInput): DbClassification | null => {
   const { origin, descriptor, method } = input;
-  const rawEntity = origin === null ? null : entityNameOf(origin);
+  /**
+   * The name the receiver's first type argument carries, whoever declared it.
+   *
+   * Two questions are asked of it and they have different answers. Whether the
+   * receiver is a parameterised data layer — asked below, of a package nobody has
+   * described — is settled by there being a name at all. Whether that name is a
+   * table is settled by this repository declaring it, which is why the two are
+   * separate values here rather than one (R83).
+   */
+  const declared = origin === null ? null : entityNameOf(origin);
+  const rawEntity = input.entityFromPackage === true ? null : declared;
   const entity = rawEntity === null ? null : stripWrapperSuffix(rawEntity);
 
   if (descriptor !== undefined) {
@@ -255,23 +292,45 @@ export const classifyDbCall = (input: DbCallInput): DbClassification | null => {
     return base;
   }
 
-  // A package nobody has described yet still names the entity in its types,
-  // but only when the type itself reads as a data layer.
+  // A data layer nobody has described, recognised by what declares its type and
+  // by the type reading as a data layer — and by nothing else, because nothing
+  // else here is readable.
+  //
+  // Asked of `declared` rather than of `entity`, so that a type argument this
+  // repository does not declare still answers it. A receiver typed
+  // `Model<AttributesOnly<Video>>` is as much a data layer as one typed
+  // `Repo<Order>`; the difference between them is only which of the two names a
+  // table, and reading this question off the table would have dropped PeerTube's
+  // 1,949 rows the moment the name stopped being one (R83).
   const hints = input.nameHints ?? {};
   const lastSegment = (input.receiverText ?? '').split('.').pop() ?? '';
   const looksLikeData =
     origin !== null &&
     ((hints.type?.test(origin.typeName) ?? false) || (hints.receiver?.test(lastSegment) ?? false));
-  if (origin?.package != null && entity !== null && looksLikeData) {
+  if (origin?.package != null && declared !== null && looksLikeData) {
     return {
       emit: true,
-      table: entity,
-      tables: [entity],
+      // The type argument is not a table, and this row is the proof: a package
+      // nobody has described is a package whose type parameters nobody here can
+      // read. `Kysely<DB>` is a connection typed by the whole schema and the
+      // table is a string argument, so taking the type argument gave immich two
+      // table nodes — `DB` and `MapDB` — with 407 `queries` edges pointing at
+      // them, beside these 407 rows saying the package was not understood. A
+      // reader that has decided a value is unreadable does not then name a node
+      // after it (R83).
+      //
+      // The query itself stays. Its receiver is typed by a package and carries a
+      // type argument, which is more than a name, and a visit to the database
+      // whose target could not be read is still a visit to the database. What it
+      // loses is the identity anything joins on, which is the honest state: the
+      // row below is what a reader acts on, and one descriptor turns all of them
+      // into tables at once.
+      table: null,
+      tables: [],
       op: null,
       confidence: 'heuristic',
       package: origin.package,
-      source: 'type-arg',
-      ...(rawEntity !== null && rawEntity !== entity ? { entityType: rawEntity } : {}),
+      source: 'none',
       unresolved: {
         reason: 'unknown-db-package',
         hint: `Add a descriptor for ${origin.package} to record which of its methods read and which write.`,
@@ -286,7 +345,23 @@ export const classifyDbCall = (input: DbCallInput): DbClassification | null => {
   const isClassReference = /^[A-Z]/.test(last);
   if (!isClassReference && (hints.receiver?.test(last) ?? false)) {
     return {
-      emit: true,
+      // A name is not evidence, so there is nothing here to draw.
+      //
+      // This branch has already established that nothing but the spelling of the
+      // receiver suggested data: no descriptor, no package-declared type
+      // carrying an entity, nothing the checker would vouch for. immich names
+      // every adapter `Repository`, and 463 of the 1,153 `db_query` nodes this
+      // minted there were the job queue, the event bus, the filesystem, ffmpeg
+      // and child_process. On cal.com the only four nodes that named a table
+      // named a component's state store, while the real queries named none (R83).
+      //
+      // A missing answer is a gap; a confident wrong one is a lie the rest of
+      // the tool reasons from — `dead` called every real immich event orphaned
+      // and `hotspots` ranked the event bus as a database. So the row stands
+      // alone: it still says which receiver looked like data and what a reader
+      // would have to write to make it certain, and naming the base class under
+      // `adapters.db.localBaseClasses` is what turns the guess into a query.
+      emit: false,
       table: null,
       tables: [],
       op: null,

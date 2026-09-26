@@ -45,8 +45,8 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 73 | 73 of 80 |
-| …that name a table | 0 | 0 of 73 |
+| query sites read | 0 | 0 of 80 |
+| …that name a table | 0 | nothing of this kind here |
 | tables | 0 | nothing of this kind here |
 | components | 773 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |

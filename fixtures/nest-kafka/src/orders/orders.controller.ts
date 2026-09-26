@@ -34,6 +34,14 @@ export class OrdersController {
     void event.orderId;
   }
 
+  // The other end of the job above, which addresses the channel by its name.
+  // This is the node the publish should have joined and could not, and it stays
+  // here with only one end so the difference is visible.
+  @EventPattern('order.checksum')
+  onChecksum(@Payload() event: OrderCreatedEvent): void {
+    void event.orderId;
+  }
+
   // A decorator with no arguments at all. Expected: unresolved
   // `channel-dynamic`, and above all no crash (§10, last row).
   @EventPattern()

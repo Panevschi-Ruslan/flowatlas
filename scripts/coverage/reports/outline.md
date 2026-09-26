@@ -36,7 +36,7 @@ land on one address.
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 30 | 0 |
+| requests from a browser | 2 | 0 |
 | requests between services | 32 | 0 |
 | channels | 0 | 0 with both ends |
 
@@ -44,8 +44,8 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 77 | no denominator: the rule has no probe for it |
-| …that name a table | 0 | 0 of 77 |
+| query sites read | 0 | nothing of this kind here |
+| …that name a table | 0 | nothing of this kind here |
 | tables | 0 | 0 of 103 |
 | components | 644 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
@@ -53,22 +53,21 @@ land on one address.
 
 ## What it could not read
 
-868 places somebody could act on, 3456 the tool
+835 places somebody could act on, 3456 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| api-path-dynamic | action | 4 |  |
+| api-path-dynamic | action | 2 |  |
 | call-dynamic-receiver | info | 2716 |  |
-| db-layer-unread | action | 4 |  |
+| db-layer-unread | action | 7 |  |
 | db-receiver-name-only | action | 77 |  |
 | dynamic-config-key | action | 2 |  |
 | dynamic-http-url | action | 24 |  |
-| target-route-not-found | action | 26 |  |
 | type-depth-exceeded | info | 571 |  |
 | type-generic-uninstantiated | info | 169 |  |
-| type-unresolved | action | 730 |  |
+| type-unresolved | action | 722 |  |
 | unknown-base-url-env | action | 1 |  |
 
 ## The denominators

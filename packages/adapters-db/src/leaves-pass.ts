@@ -292,6 +292,27 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     });
   };
 
+  /**
+   * Whether the type an entity name would be read from is declared by a package.
+   *
+   * The core states the rule — a type argument is the stored entity only when
+   * this repository declares it — and this answers it, because answering needs
+   * the checker and the core is not given one. A workspace package reached
+   * through a link has no `node_modules` in the path of its own sources, so a
+   * monorepo's shared entities still read as declarations of the project.
+   *
+   * Undefined where there is nothing to judge: no type argument, or one the
+   * checker gives no declaration for. Undefined leaves the name alone, so this
+   * only ever takes a name away, never invents one.
+   */
+  const entityFromPackage = (origin: TypeOrigin | null): boolean | undefined => {
+    const [first] = origin?.typeArgs ?? [];
+    if (first === undefined) return undefined;
+    const declaration = (first.getSymbol() ?? first.getAliasSymbol())?.getDeclarations()[0];
+    if (declaration === undefined) return undefined;
+    return declaration.getSourceFile().getFilePath().includes('/node_modules/');
+  };
+
   const emitDb = (call: CallExpression, scope: Scope): boolean => {
     const { id: holderId, file, owner } = scope;
     const callee = call.getExpression();
@@ -342,24 +363,45 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         ? descriptor
         : (withoutOverride.get(descriptor?.package ?? '') ?? descriptor);
 
+    const fromPackage = entityFromPackage(origin);
+
     const classification = classifyDbCall({
       method,
       origin,
       ...(effective === undefined ? {} : { descriptor: effective }),
       receiverText: receiver.getText(),
       nameHints: dataNameHints,
+      ...(fromPackage === undefined ? {} : { entityFromPackage: fromPackage }),
       ...(parsedTables === undefined ? {} : { sqlTables: parsedTables }),
       ...(parsedOp === undefined ? {} : { sqlOp: parsedOp }),
       ...(Node.isPropertyAccessExpression(receiver) ? { receiverProp: receiver.getName() } : {}),
       ...(located === null ? {} : { stringArg: located }),
     });
     if (classification === null) return false;
+    const site = siteOf(ctx, call, file);
+
+    /** The row a classification asked for, wherever in this function it asked. */
+    const reportUnresolved = (unresolved: { reason: string; hint: string }): void => {
+      ctx.report({
+        file,
+        line: site.line,
+        reason: unresolved.reason,
+        hint: unresolved.hint,
+        symbol: `${receiver.getText().slice(0, 60)}.${method}`,
+      });
+    };
+
+    // Nothing to draw, which is not the same as nothing to say. A method a
+    // described package does not use to touch data is counted and forgotten; a
+    // receiver that only looked like a data layer because of its name gets the
+    // row it always got, and no longer has to mint a node to carry it (R83).
     if (!classification.emit) {
-      ctx.countExternalCall(`${classification.package ?? 'unknown'}.${method}`);
+      if (classification.unresolved === undefined) {
+        ctx.countExternalCall(`${classification.package ?? 'unknown'}.${method}`);
+      } else reportUnresolved(classification.unresolved);
       return true;
     }
 
-    const site = siteOf(ctx, call, file);
     const id = makeLeafId('db_query', ctx.repo, file, site.line, site.column);
 
     // One node per visit to the database, and one count per node.
@@ -445,25 +487,25 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       });
     }
 
-    if (classification.unresolved !== undefined) {
-      ctx.report({
-        file,
-        line: site.line,
-        reason: classification.unresolved.reason,
-        hint: classification.unresolved.hint,
-        symbol: `${receiver.getText().slice(0, 60)}.${method}`,
-      });
-    }
+    if (classification.unresolved !== undefined) reportUnresolved(classification.unresolved);
 
-    // A builder whose table was decided at run time. The query itself is still
-    // in the graph — losing the whole call because one of its two facts could
-    // not be read is what a tool that stays silent about what it did not
-    // understand does — and the row says which fact is missing, so a reader can
-    // see the difference between a table nothing touches and a table nothing
-    // could name.
+    // A query in the graph whose table is not. The query itself stays — losing
+    // the whole call because one of its two facts could not be read is what a
+    // tool that stays silent about what it did not understand does — and the row
+    // says which fact is missing, so a reader can see the difference between a
+    // table nothing touches and a table nothing could name.
     // Once per query, not once per link: the chain was settled above, so this
     // is reached by the one call the node was recorded for.
-    if (locators !== undefined && classification.table === null) {
+    //
+    // Every such query and not only a builder's. A described library that keeps
+    // its entity in a type argument loses the name too — when the argument is
+    // the generic parameter of a data layer written generically, and now also
+    // when it resolves to a declaration in `node_modules` rather than in this
+    // repository (R83) — and said nothing at all about it. A node with no table
+    // and no row is the one shape this pass must not produce, because it is
+    // invisible to `doctor` and therefore to everybody. Guarded on there being
+    // no row already, so the queries that carry their own reason keep it.
+    if (classification.table === null && classification.unresolved === undefined) {
       ctx.report({
         file,
         line: site.line,

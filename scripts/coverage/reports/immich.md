@@ -44,8 +44,8 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 1560 | 1560 of 579 |
-| …that name a table | 0 | 0 of 1560 |
+| query sites read | 0 | 0 of 579 |
+| …that name a table | 0 | nothing of this kind here |
 | tables | 0 | 0 of 68 |
 | components | 9 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
@@ -53,14 +53,14 @@ land on one address.
 
 ## What it could not read
 
-2534 places somebody could act on, 4811 the tool
+2588 places somebody could act on, 4811 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
 | call-dynamic-receiver | info | 4751 |  |
-| db-layer-unread | action | 2 |  |
+| db-layer-unread | action | 56 |  |
 | db-receiver-name-only | action | 1560 |  |
 | di-token-unknown | action | 1 |  |
 | di-type-unresolved | action | 43 |  |

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 4,
   "repo": "nest-kafka",
-  "generatedAt": "2026-09-25T14:33:56.687Z",
+  "generatedAt": "2026-09-26T20:16:54.392Z",
   "nodes": [
     {
       "id": "channel:get.order",
@@ -9,7 +9,7 @@
       "label": "get.order",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 55,
+      "line": 63,
       "meta": {
         "channelKind": "topic",
         "adapters": [
@@ -23,7 +23,7 @@
       "label": "get.order.raw",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 62,
+      "line": 70,
       "meta": {
         "channelKind": "topic",
         "adapters": [
@@ -51,7 +51,21 @@
       "label": "order.audit",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 47,
+      "line": 55,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ]
+      }
+    },
+    {
+      "id": "channel:order.checksum",
+      "type": "channel",
+      "label": "order.checksum",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 40,
       "meta": {
         "channelKind": "topic",
         "adapters": [
@@ -149,7 +163,7 @@
       "label": "ORDER_TOPIC",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 99,
+      "line": 112,
       "meta": {
         "key": "ORDER_TOPIC",
         "source": "config.get"
@@ -161,7 +175,7 @@
       "label": "OrdersController.getOrder",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 55,
+      "line": 63,
       "kind": "rpc",
       "meta": {
         "kind": "rpc",
@@ -176,7 +190,7 @@
       "label": "OrdersController.getOrderRaw",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 62,
+      "line": 70,
       "kind": "rpc",
       "meta": {
         "kind": "rpc",
@@ -191,7 +205,7 @@
       "label": "OrdersController.onAnything",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 39,
+      "line": 47,
       "kind": "event",
       "meta": {
         "kind": "event",
@@ -206,13 +220,28 @@
       "label": "OrdersController.onAudit",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 47,
+      "line": 55,
       "kind": "event",
       "meta": {
         "kind": "event",
         "adapter": "nestjs-kafka",
         "decorator": "EventPattern",
         "entryId": "entry:nest-kafka:event:order.audit"
+      }
+    },
+    {
+      "id": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onChecksum",
+      "type": "consumer",
+      "label": "OrdersController.onChecksum",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 40,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:nest-kafka:event:order.checksum"
       }
     },
     {
@@ -266,10 +295,23 @@
       "label": "event order.audit",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 47,
+      "line": 55,
       "kind": "event",
       "meta": {
         "pattern": "order.audit",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "entry:nest-kafka:event:order.checksum",
+      "type": "entry",
+      "label": "event order.checksum",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 40,
+      "kind": "event",
+      "meta": {
+        "pattern": "order.checksum",
         "adapter": "nestjs-microservice"
       }
     },
@@ -320,7 +362,7 @@
       "label": "rpc get.order",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 55,
+      "line": 63,
       "kind": "rpc",
       "meta": {
         "pattern": "get.order",
@@ -333,7 +375,7 @@
       "label": "rpc get.order.raw",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 62,
+      "line": 70,
       "kind": "rpc",
       "meta": {
         "pattern": "get.order.raw",
@@ -401,7 +443,7 @@
       "label": "OrdersController.getOrder",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 55
+      "line": 63
     },
     {
       "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrderRaw",
@@ -409,7 +451,7 @@
       "label": "OrdersController.getOrderRaw",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 62
+      "line": 70
     },
     {
       "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onAnything",
@@ -417,7 +459,7 @@
       "label": "OrdersController.onAnything",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 39
+      "line": 47
     },
     {
       "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onAudit",
@@ -425,7 +467,15 @@
       "label": "OrdersController.onAudit",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 47
+      "line": 55
+    },
+    {
+      "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onChecksum",
+      "type": "method",
+      "label": "OrdersController.onChecksum",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.controller.ts",
+      "line": 40
     },
     {
       "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderCreated",
@@ -472,6 +522,14 @@
       "line": 71
     },
     {
+      "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.checksum",
+      "type": "method",
+      "label": "OrdersService.checksum",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 103
+    },
+    {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.create",
       "type": "method",
       "label": "OrdersService.create",
@@ -485,7 +543,7 @@
       "label": "OrdersService.emitConfigured",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 98
+      "line": 111
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitDynamic",
@@ -493,7 +551,7 @@
       "label": "OrdersService.emitDynamic",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 103
+      "line": 116
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitLegacy",
@@ -517,7 +575,7 @@
       "label": "OrdersService.emitSpread",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 109
+      "line": 122
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.getAnything",
@@ -525,7 +583,7 @@
       "label": "OrdersService.getAnything",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 122
+      "line": 135
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.getOrder",
@@ -533,7 +591,7 @@
       "label": "OrdersService.getOrder",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 116
+      "line": 129
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.importAll",
@@ -581,7 +639,7 @@
       "label": "OrdersService.track",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 129
+      "line": 142
     },
     {
       "id": "nest-kafka#src/orders/telemetry.service.ts:TelemetryService",
@@ -619,12 +677,12 @@
       }
     },
     {
-      "id": "producer:nest-kafka#src/orders/orders.service.ts:110:5",
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:112:5",
       "type": "producer",
       "label": "event ?",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 110,
+      "line": 112,
       "kind": "event",
       "meta": {
         "kind": "event",
@@ -634,12 +692,42 @@
       }
     },
     {
-      "id": "producer:nest-kafka#src/orders/orders.service.ts:117:27",
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:117:5",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 117,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "unresolved",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:123:5",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "nest-kafka",
+      "file": "src/orders/orders.service.ts",
+      "line": 123,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "unresolved",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:130:27",
       "type": "producer",
       "label": "rpc get.order",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 117,
+      "line": 130,
       "kind": "rpc",
       "meta": {
         "kind": "rpc",
@@ -649,12 +737,12 @@
       }
     },
     {
-      "id": "producer:nest-kafka#src/orders/orders.service.ts:123:12",
+      "id": "producer:nest-kafka#src/orders/orders.service.ts:136:12",
       "type": "producer",
       "label": "rpc get.order.raw",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 123,
+      "line": 136,
       "kind": "rpc",
       "meta": {
         "kind": "rpc",
@@ -799,21 +887,6 @@
       }
     },
     {
-      "id": "producer:nest-kafka#src/orders/orders.service.ts:99:5",
-      "type": "producer",
-      "label": "event ?",
-      "repo": "nest-kafka",
-      "file": "src/orders/orders.service.ts",
-      "line": 99,
-      "kind": "event",
-      "meta": {
-        "kind": "event",
-        "adapter": "nestjs-kafka",
-        "channelVia": "unresolved",
-        "method": "emit"
-      }
-    },
-    {
       "id": "repo:nest-kafka",
       "type": "repo",
       "label": "nest-kafka",
@@ -846,7 +919,7 @@
       "type": "consumes",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 55
+      "line": 63
     },
     {
       "from": "channel:get.order.raw",
@@ -854,7 +927,7 @@
       "type": "consumes",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 62
+      "line": 70
     },
     {
       "from": "channel:order.audit",
@@ -862,7 +935,15 @@
       "type": "consumes",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 47
+      "line": 55
+    },
+    {
+      "from": "channel:order.checksum",
+      "to": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onChecksum",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 40
     },
     {
       "from": "channel:order.created",
@@ -894,7 +975,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 55,
+      "line": 63,
       "returns": "type:nest-kafka#Order"
     },
     {
@@ -903,7 +984,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 62,
+      "line": 70,
       "returns": "any"
     },
     {
@@ -912,7 +993,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 39,
+      "line": 47,
       "returns": "void"
     },
     {
@@ -921,7 +1002,16 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 47,
+      "line": 55,
+      "returns": "void"
+    },
+    {
+      "from": "consumer:nest-kafka#src/orders/orders.controller.ts:OrdersController.onChecksum",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onChecksum",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 40,
       "returns": "void"
     },
     {
@@ -957,10 +1047,22 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 47,
+      "line": 55,
       "params": [
         "type:nest-kafka#OrderCreatedEvent",
         "type:@nestjs/microservices#KafkaContext"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "entry:nest-kafka:event:order.checksum",
+      "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onChecksum",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 40,
+      "params": [
+        "type:nest-kafka#OrderCreatedEvent"
       ],
       "returns": "void"
     },
@@ -1006,7 +1108,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 55,
+      "line": 63,
       "params": [
         "type:nest-kafka#OrderQuery"
       ],
@@ -1018,7 +1120,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 62,
+      "line": 70,
       "params": [
         "type:nest-kafka#OrderQuery"
       ],
@@ -1060,6 +1162,14 @@
       "line": 72
     },
     {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.checksum",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:104:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 104
+    },
+    {
       "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.create",
       "to": "producer:nest-kafka#src/orders/orders.service.ts:35:5",
       "type": "calls",
@@ -1073,23 +1183,23 @@
       "type": "reads_config",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
-      "line": 99
+      "line": 112
     },
     {
       "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitConfigured",
-      "to": "producer:nest-kafka#src/orders/orders.service.ts:99:5",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:112:5",
       "type": "calls",
       "confidence": "heuristic",
       "file": "src/orders/orders.service.ts",
-      "line": 99
+      "line": 112
     },
     {
       "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitDynamic",
-      "to": "producer:nest-kafka#src/orders/orders.service.ts:104:5",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:117:5",
       "type": "calls",
       "confidence": "heuristic",
       "file": "src/orders/orders.service.ts",
-      "line": 104
+      "line": 117
     },
     {
       "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitLegacy",
@@ -1109,27 +1219,27 @@
     },
     {
       "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitSpread",
-      "to": "producer:nest-kafka#src/orders/orders.service.ts:110:5",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:123:5",
       "type": "calls",
       "confidence": "heuristic",
-      "file": "src/orders/orders.service.ts",
-      "line": 110
-    },
-    {
-      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.getAnything",
-      "to": "producer:nest-kafka#src/orders/orders.service.ts:123:12",
-      "type": "calls",
-      "confidence": "static",
       "file": "src/orders/orders.service.ts",
       "line": 123
     },
     {
-      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.getOrder",
-      "to": "producer:nest-kafka#src/orders/orders.service.ts:117:27",
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.getAnything",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:136:12",
       "type": "calls",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
-      "line": 117
+      "line": 136
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.getOrder",
+      "to": "producer:nest-kafka#src/orders/orders.service.ts:130:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 130
     },
     {
       "from": "nest-kafka#src/orders/orders.service.ts:OrdersService.importAll",
@@ -1177,7 +1287,7 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
-      "line": 130,
+      "line": 143,
       "params": [
         "string",
         "object"
@@ -1185,23 +1295,23 @@
       "returns": "void"
     },
     {
-      "from": "producer:nest-kafka#src/orders/orders.service.ts:117:27",
+      "from": "producer:nest-kafka#src/orders/orders.service.ts:130:27",
       "to": "channel:get.order",
       "type": "emits",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
-      "line": 117,
+      "line": 130,
       "params": [
         "type:nest-kafka#OrderQuery"
       ]
     },
     {
-      "from": "producer:nest-kafka#src/orders/orders.service.ts:123:12",
+      "from": "producer:nest-kafka#src/orders/orders.service.ts:136:12",
       "to": "channel:get.order.raw",
       "type": "emits",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
-      "line": 123,
+      "line": 136,
       "params": [
         "type:nest-kafka#OrderQuery"
       ]
@@ -1447,14 +1557,14 @@
   "unresolved": [
     {
       "file": "src/orders/orders.controller.ts",
-      "line": 39,
+      "line": 47,
       "reason": "channel-dynamic",
       "hint": "The channel name cannot be read here. Annotate OrdersController.onAnything with the channel it uses.",
       "symbol": "OrdersController.onAnything -> EventPattern"
     },
     {
       "file": "src/orders/orders.controller.ts",
-      "line": 39,
+      "line": 47,
       "reason": "decorator-arg-dynamic",
       "hint": "Use a literal or a const pattern; a computed one cannot be matched to a producer.",
       "symbol": "OrdersController.onAnything",
@@ -1476,21 +1586,28 @@
     },
     {
       "file": "src/orders/orders.service.ts",
-      "line": 99,
+      "line": 104,
+      "reason": "channel-dynamic",
+      "hint": "The channel name cannot be read here. Annotate OrdersService.checksum with the channel it uses.",
+      "symbol": "OrdersService.checksum -> { name: 'order.checksum', data: {} }"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 112,
       "reason": "channel-from-config",
       "hint": "The channel name cannot be read here. Annotate OrdersService.emitConfigured with the channel it uses.",
       "symbol": "OrdersService.emitConfigured -> this.config.get('ORDER_TOPIC')"
     },
     {
       "file": "src/orders/orders.service.ts",
-      "line": 104,
+      "line": 117,
       "reason": "channel-const-unresolved",
       "hint": "The channel name cannot be read here. Annotate OrdersService.emitDynamic with the channel it uses.",
       "symbol": "OrdersService.emitDynamic -> topic"
     },
     {
       "file": "src/orders/orders.service.ts",
-      "line": 110,
+      "line": 123,
       "reason": "channel-dynamic",
       "hint": "The channel name cannot be read here. Annotate OrdersService.emitSpread with the channel it uses.",
       "symbol": "OrdersService.emitSpread -> ...args"
