@@ -60,7 +60,7 @@ land on one address.
 
 ## What it could not read
 
-118 places somebody could act on, 50 the tool
+149 places somebody could act on, 50 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -71,6 +71,7 @@ was never an edge to draw. The three are never added together.
 | db-layer-unread | action | 6 |  |
 | db-receiver-name-only | action | 69 |  |
 | dynamic-http-url | action | 6 |  |
+| route-handler-unread | action | 31 |  |
 | server-action-unread | action | 2 |  |
 | target-route-not-found | action | 23 |  |
 | unknown-base-url-env | action | 1 |  |

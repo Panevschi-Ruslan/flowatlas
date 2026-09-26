@@ -12,6 +12,14 @@ fails a build on three things and nothing else:
 
 Everything else is printed and costs nothing.
 
+With one exception, which is not about how strict you asked it to be. A graph
+that holds nothing, a graph whose build recorded that a repository could not be
+read, and a graph a service was read into and contributed nothing to are all
+refused with exit 2 — the code that has always meant "the check could not be
+run". A job that treats 2 as a failure is treating it correctly: the reading is
+broken rather than the project, and 0 over one of those graphs is a clean bill of
+health on something nobody read.
+
 ## What to turn on first
 
 Almost no project can adopt all three on the first day, and one that fails on

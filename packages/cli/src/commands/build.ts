@@ -39,7 +39,13 @@ import {
   type RepoCache,
 } from '../build/cache.js';
 import { isDeclared, readDeclaredService } from '../build/declared.js';
-import { adapterNames, createRegistry, EXTRACTORS, isFrontend } from '../build/extractor.js';
+import {
+  adapterNames,
+  createRegistry,
+  declinedNote,
+  EXTRACTORS,
+  isFrontend,
+} from '../build/extractor.js';
 import { noReaderNote } from '../stacks.js';
 import {
   hashGraphFile,
@@ -110,6 +116,16 @@ export interface BuildResult extends LinkResult {
   cachePath: string;
   /** True when at least one repository could not be read. */
   failed: boolean;
+  /**
+   * False when the failure left the last good graph where it was.
+   *
+   * A caller that prints `graphPath` has to know whether it is printing this
+   * build's answer or the previous one's, and so does anything that reads the
+   * file afterwards.
+   */
+  wrote: boolean;
+  /** Services that were read and put nothing in the graph, with why. */
+  readNothing: readonly ReadNothing[];
   plan: RebuildPlan;
   timing: BuildTiming;
   /** Why the cache was thrown away, when it was. */
@@ -290,6 +306,77 @@ const reportOf = (
   ...emptyReport(service, extractor),
   ...countsOf(graph),
   durationMs,
+});
+
+/** A service that was read and whose repository is not in the graph. */
+export interface ReadNothing {
+  service: string;
+  /** The reader that was used, which is what makes this different to no reader. */
+  extractor: string;
+  /** The file a row about it points at: its manifest, or the document it declared. */
+  file: string;
+  /** Why, when it can be said from the manifest. */
+  note?: string;
+}
+
+/**
+ * Repositories that were read and contributed no node.
+ *
+ * Not the same thing as a repository with no reader, which the summary has named
+ * for some time, and not the same thing as a failure either: nothing went wrong,
+ * a reader ran to completion, and the part of the project it was pointed at is
+ * absent from the answer. That is the silent zero — `build` printed `0 nodes`,
+ * `doctor` read the empty graph and exited 0, and the sentence that explained it
+ * was written to a log at `-v` and dropped (R106).
+ */
+const readNothing = (
+  config: FlowatlasConfig,
+  repoDirOf: (service: ServiceConfig) => string,
+  extracted: readonly Extracted[],
+): ReadNothing[] =>
+  extracted.flatMap((item) => {
+    const { graph, report } = item;
+    if (graph === undefined || graph.nodes.length > 0 || report.extractor === null) return [];
+    const declared = isDeclared(item.service);
+    const note = declared
+      ? undefined
+      : declinedNote(item.service.type, readPackageJson(repoDirOf(item.service)) ?? {}, config);
+    return [
+      {
+        service: item.service.name,
+        extractor: report.extractor,
+        // A document's own path, where there is one: a declared service has no
+        // manifest, and pointing at one that is not there would send a reader
+        // looking for a file rather than at the file that came up empty.
+        file: declared ? report.repo : 'package.json',
+        ...(note === undefined ? {} : { note }),
+      },
+    ];
+  });
+
+/**
+ * The row that says a service is missing from the graph, in the graph.
+ *
+ * Put into the repository's own rows before the graphs are joined rather than
+ * onto the project afterwards, so that it travels the way every other row does:
+ * it is sorted with them, counted with them, written into the database with them
+ * and grouped by `doctor` with them. Appending it to a joined graph would have
+ * produced a row in the wrong order and a total that disagreed with the list it
+ * was a total of.
+ */
+const readNothingRow = (found: ReadNothing): Unresolved => ({
+  file: found.file,
+  line: 1,
+  reason: 'service-read-nothing',
+  service: found.service,
+  message:
+    `${found.service} was read by ${found.extractor} and contributed no node to the graph` +
+    (found.note === undefined ? '' : `: ${found.note}`),
+  hint:
+    'Nothing downstream of this service is in the graph, so every question asked about it will' +
+    ' answer nothing rather than answer wrongly. Check its type in flowatlas.config.json against' +
+    ' what its manifest declares, or write an adapter for the framework it is built on.',
+  symbol: found.service,
 });
 
 const readGraph = async (path: string): Promise<RepoGraph> =>
@@ -693,7 +780,18 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   });
   const extractedAt = Date.now();
 
-  const graphs = extracted.flatMap((item) => (item.graph === undefined ? [] : [item.graph]));
+  const silent = readNothing(loaded.config, (service) => loaded.repoDir(service), extracted);
+  const rowFor = new Map(silent.map((found) => [found.service, readNothingRow(found)]));
+  const graphs = extracted.flatMap((item) => {
+    if (item.graph === undefined) return [];
+    const row = rowFor.get(item.service.name);
+    // A copy rather than the graph itself, because the same object is what the
+    // cache counts and what was already written to the repository's own
+    // graph.json, and neither of those should gain a row that this build
+    // derived from the project rather than read from the repository.
+    if (row === undefined) return [item.graph];
+    return [{ ...item.graph, unresolved: [...item.graph.unresolved, row] }];
+  });
   const result = linkGraphs(graphs, loaded.config, {
     ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
     services: extracted.map((item) => item.report),
@@ -704,9 +802,30 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   const dbPath = join(outputDir, 'graph.db');
   const reportPath = join(outputDir, 'link-report.json');
 
-  await writeJson(graphPath, result.project);
-  await writeJson(reportPath, result.report);
-  writeGraphDb(result.project, result.report, dbPath, { flowatlasVersion: VERSION });
+  /**
+   * A build that failed does not leave a graph that reads as successful.
+   *
+   * A repository that could not be read contributes nothing, so the graph this
+   * build holds is the project minus that repository — and written over the last
+   * good one it is indistinguishable from a project that really is that small.
+   * That is how a crash in one dependency's type declarations came to be reported
+   * as `unresolved: total=0 … none`, exit 0: the build failed, overwrote a good
+   * graph with an empty one, and `doctor` gave the empty one a clean bill of
+   * health (R85).
+   *
+   * So a failed build leaves what is there alone. It is older than this build and
+   * it is true, which is the right way round; the failure is on stderr and in the
+   * exit code, where a caller has to deal with it rather than read past it. When
+   * there is nothing to keep, the partial answer is written after all — with the
+   * failure recorded against the service in the report beside it, which is what
+   * `doctor` reads to refuse it.
+   */
+  const keeping = failed(extracted) && existsSync(graphPath) && existsSync(dbPath);
+  if (!keeping) {
+    await writeJson(graphPath, result.project);
+    await writeJson(reportPath, result.report);
+    writeGraphDb(result.project, result.report, dbPath, { flowatlasVersion: VERSION });
+  }
 
   // Written even when it was ignored: `--no-cache` means read everything now,
   // not stay slow next time.
@@ -720,7 +839,9 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
     dbPath,
     reportPath,
     cachePath,
-    failed: extracted.some((item) => item.report.skipped === 'extract-failed'),
+    failed: failed(extracted),
+    wrote: !keeping,
+    readNothing: silent,
     plan,
     timing: {
       hash: hashed - startedAt,
@@ -733,6 +854,10 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
     ...(cacheProblem === undefined ? {} : { cacheProblem }),
   };
 };
+
+/** Whether any repository could not be read at all. */
+const failed = (extracted: readonly Extracted[]): boolean =>
+  extracted.some((item) => item.report.skipped === 'extract-failed');
 
 const filesRead = (plan: RebuildPlan): string[] =>
   Object.entries(plan)
@@ -852,6 +977,55 @@ export const summariseBuild = (result: BuildResult): string[] => {
     `routes: ${routes.total} total, ${routes.called} reached, ${routes.uncalled.length} never called` +
       (routes.duplicated.length === 0 ? '' : `, ${routes.duplicated.length} claimed by two handlers`),
   );
+  /**
+   * Ways in found, against ways in whose body was read.
+   *
+   * Two numbers, and only the second is coverage. The line above counts
+   * addresses: a route is there, it has a verb and a path, and something placed
+   * it — which is a fact about the file system and says nothing about whether
+   * anything behind the route was read. Where a handler is assembled by a helper
+   * the first number is the whole surface and the second is a fraction of it: one
+   * repository reported seventeen of seventeen where two of nine reached a body
+   * that calls anything, and there was no line anywhere that could have said so
+   * (R94). A `handles` edge is the test because it is the graph's own answer to
+   * "what runs when this is called", whichever adapter read it.
+   */
+  const handled = new Set(
+    result.project.edges.filter((edge) => edge.type === 'handles').map((edge) => edge.from),
+  );
+  const ways = result.project.nodes.filter((node) => node.type === 'entry');
+  // Two conditions, and the second is why the first is not enough: an adapter
+  // that named a handler it could not follow says so on the node, and the edge
+  // onto that handler is real — it points at the call the framework enters — so
+  // the edge alone would count a way in nobody read as read.
+  const read = ways.filter(
+    (node) => handled.has(node.id) && node.meta?.['handlerBodyRead'] !== false,
+  ).length;
+  if (ways.length > 0) {
+    lines.push(
+      `ways in: ${ways.length} found, ${read} with a handler that was read, ${ways.length - read} without` +
+        ' — only the second number is coverage of what happens after the request arrives',
+    );
+  }
+  /**
+   * Services that were read and are not in the graph.
+   *
+   * Said in the summary with the reason, because the alternative is what this
+   * used to print: a line of zeroes among the services, indistinguishable from a
+   * repository that really has no routes in it (R106).
+   */
+  for (const found of result.readNothing) {
+    lines.push(
+      `${found.service} contributed no node: read by ${found.extractor}` +
+        (found.note === undefined ? '' : `, and ${found.note}`),
+    );
+  }
+  if (!result.wrote) {
+    lines.push(
+      `a repository could not be read, so ${result.graphPath} was left as the last build wrote it` +
+        ' — nothing in it describes this build',
+    );
+  }
   lines.push(`types: ${report.types.total} (${report.types.sharedPackage} from shared packages)`);
   /**
    * The ends of this project nobody here can read.

@@ -13,12 +13,12 @@ Next.js, nested application roots, a heap the default limit does not hold.
 
 ## Outcome
 
-**The tool did not finish.** build **exit 2**, doctor exit 0, link exit 0
+**The tool did not finish.** build **exit 2**, doctor exit 2, link exit 0
 
 What it said:
 
 ```
-payload-monorepo skipped (extract-failed: 108: 0x1067220b0 node::NodeMainInstance::Run() [/opt/homebrew/Cellar/node/25.9.0_3/lib/libnode.141.dylib] 109: 0x1066c5b98 node::Start(int, char**) [/opt/homebrew/Cellar/node/25.9.0_3/lib/libnode.141.dylib] 110: 0x18de1c4e4 start [/usr/lib/dyld])
+payload-monorepo skipped (extract-failed: 116: 0x1052b20b0 node::NodeMainInstance::Run() [/opt/homebrew/Cellar/node/25.9.0_3/lib/libnode.141.dylib] 117: 0x105255b98 node::Start(int, char**) [/opt/homebrew/Cellar/node/25.9.0_3/lib/libnode.141.dylib] 118: 0x18de1c4e4 start [/usr/lib/dyld])
 ```
 
 It reached over 4 GB before it stopped.
@@ -100,7 +100,7 @@ applied identically to all eight targets and knows nothing about any of them.
 
 ## Cost
 
-Wall clock 15 to 60 s, peak resident memory over 4 GB.
+Wall clock 1 to 5 min, peak resident memory over 4 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

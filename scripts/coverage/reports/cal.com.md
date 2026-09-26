@@ -54,7 +54,7 @@ land on one address.
 
 ## What it could not read
 
-117 places somebody could act on, 71 the tool
+153 places somebody could act on, 71 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -64,6 +64,7 @@ was never an edge to draw. The three are never added together.
 | call-dynamic-receiver | info | 71 |  |
 | db-receiver-name-only | action | 73 |  |
 | dynamic-http-url | action | 6 |  |
+| route-handler-unread | action | 36 |  |
 | server-action-unread | action | 2 |  |
 | target-route-not-found | action | 22 |  |
 | type-unresolved | action | 6 |  |

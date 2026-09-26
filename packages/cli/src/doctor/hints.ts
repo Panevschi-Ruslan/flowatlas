@@ -337,6 +337,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'file-not-parsed': () =>
     'The parser could not read this file, so nothing in it is in the graph — no node, no edge, and no row but this one. Fix the syntax, or keep the file out of the globs the reader is given.',
 
+  // The build itself (cli/commands/build.ts)
+  'service-read-nothing': () =>
+    'A reader ran over this service and produced no node, so nothing about it is in the graph and every question asked about it answers nothing. Check its type in flowatlas.config.json against what its manifest declares, or write an adapter for the framework it is built on.',
+
   // Types (core/types/collector.ts)
   'type-unresolved': () =>
     'The checker could not resolve this type. Install the dependencies of the repository, or fix the paths in its tsconfig.',
@@ -386,6 +390,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Describe the builder that made it, or declare the action as an exported function, so the way in and its callers are visible.',
   'route-verb-unread': () =>
     'The file is served at a path but exports no verb this could read. Export GET, POST and the rest by name; a verb assembled at run time cannot be joined to anything that asks for it.',
+  'route-handler-unread': () =>
+    'The verb is exported and the code behind it was not read, so the way in is in the graph and nothing that happens after it is. Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares.',
   'middleware-matcher-unread': () =>
     'The matcher is a regular expression, so which routes it guards was not read and every one of them is reported as unguarded. Write it as a path pattern, or name the routes under doctor.publicRoutes.',
   'entry-http-description-inactive': () =>

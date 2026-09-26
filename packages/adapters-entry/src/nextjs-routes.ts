@@ -84,10 +84,34 @@ const exportedFunction = (declaration: TsNode): NamedFunction | undefined =>
  * and records which library built it. That is a finer answer than this one and
  * it would be lost if this rule answered first.
  */
-const verbFunction = (declaration: TsNode, depth = 0): NamedFunction | undefined =>
-  exportedFunction(declaration) ??
-  builtExportFunction(declaration) ??
-  aliasedFunction(declaration, depth);
+const verbReading = (declaration: TsNode, depth = 0): VerbReading | undefined => {
+  const written = exportedFunction(declaration);
+  // A function declared here: its body is the body, and there is nothing to
+  // doubt about whether it was read.
+  if (written !== undefined) return { fn: written, bodyRead: true };
+  const built = builtExportFunction(declaration);
+  // A value a call handed back: what the node points at is the call, so whether
+  // anything was read depends on what the call was handed.
+  if (built !== undefined) return { fn: built, bodyRead: callHandedWork(built.body) };
+  return aliasedFunction(declaration, depth);
+};
+
+/**
+ * What a verb export stands for, and whether there is code behind it.
+ *
+ * The two facts travel together because only the reading that answered knows the
+ * second one. A `NamedFunction` carries a `body`, and what that body is depends
+ * on which reading produced it — the function's own body, or the call that built
+ * the value. Asking the question afterwards, of the body alone, cannot tell the
+ * difference: `async () => Response.json(x)` has a call for a body and was read
+ * in full, and `restHandler(config)` has a call for a body and was not read at
+ * all.
+ */
+interface VerbReading {
+  fn: NamedFunction;
+  /** False when the node points at a call that was handed nothing to read. */
+  bodyRead: boolean;
+}
 
 /** How far a verb written as another verb's name is followed. */
 const ALIAS_DEPTH = 4;
@@ -110,7 +134,7 @@ const ALIAS_DEPTH = 4;
  * built export's function; a chain is followed a few links and then abandoned,
  * which also settles the mutually aliased pair nobody writes on purpose.
  */
-const aliasedFunction = (declaration: TsNode, depth: number): NamedFunction | undefined => {
+const aliasedFunction = (declaration: TsNode, depth: number): VerbReading | undefined => {
   if (depth >= ALIAS_DEPTH) return undefined;
   if (!Node.isVariableDeclaration(declaration)) return undefined;
   const initializer = declaration.getInitializer();
@@ -120,7 +144,41 @@ const aliasedFunction = (declaration: TsNode, depth: number): NamedFunction | un
   const origin = originOfValue(value);
   // A name that resolves into a package is that package's function, and this
   // repository has no node for it to point at.
-  return origin.kind === 'local' ? verbFunction(origin.declaration, depth + 1) : undefined;
+  return origin.kind === 'local' ? verbReading(origin.declaration, depth + 1) : undefined;
+};
+
+/**
+ * Whether a call that built a verb was handed anything to read.
+ *
+ * A verb exported as the value a call handed back is read as a function by
+ * `builtExportFunction`, and the node it produces points at the call. That is
+ * right when the call was handed the work — `withAdmin(async () => …)` has the
+ * handler written inside it — and it is a hollow node when the call was handed
+ * nothing this repository declares: `export const GET = REST_GET(config)` is a
+ * way in whose body lives in a package, and an entry pointing at it says a
+ * handler was read when none was.
+ *
+ * That distinction is the whole of R94. A route with no verb at all already had
+ * a row; a verb whose body could not be followed produced an entry, sometimes a
+ * `handles` edge onto a node with nothing in it, and no row at all — so a
+ * repository where every handler is assembled by a helper reported full coverage
+ * of routes nobody had read: seventeen of seventeen, where two of nine reached a
+ * body that calls anything.
+ *
+ * What counts as work: a function written in the call, or an argument that
+ * resolves to a function declared in this repository. Nothing else is followed,
+ * because anything else is the same guess in a longer form.
+ */
+const callHandedWork = (body: TsNode): boolean => {
+  if (!Node.isCallExpression(body)) return true;
+  return body.getArguments().some((argument) => {
+    const value = unwrapValue(argument);
+    return (
+      Node.isArrowFunction(value) ||
+      Node.isFunctionExpression(value) ||
+      repoFunctionOf(value) !== undefined
+    );
+  });
 };
 
 /**
@@ -197,6 +255,57 @@ const readMiddleware = (ctx: ExtractContext): Middleware | undefined => {
   return undefined;
 };
 
+/** One way in, as both readers of this file describe it. */
+interface HttpEntryOptions {
+  method: string;
+  path: string;
+  file: string;
+  line: number;
+  handler?: NamedFunction;
+  via: string;
+  /** False when a handler was named and there is nothing behind the name. */
+  bodyRead?: boolean;
+}
+
+/**
+ * Why one verb's body was not read, and what to do about it.
+ *
+ * A lookup rather than a pair of branches, because the two cases differ only in
+ * the sentence they say: one reading decides which of them applies, and adding a
+ * third spelling should be adding an entry here.
+ */
+const UNREAD_HANDLER: Readonly<Record<'none' | 'built', (where: string) => string>> = Object.freeze({
+  none: (where) =>
+    `${where} is exported and nothing this could read is behind it, so the way in has no handler.`,
+  built: (where) =>
+    `${where} is the value a call handed back, and nothing declared in this repository was handed to that call, so the way in has no handler that could be read.`,
+});
+
+/**
+ * A verb that is there and whose body is not.
+ *
+ * One row per verb rather than one folded row for the repository, which is the
+ * opposite of the choice made for unreadable server actions below, and the
+ * difference is what the number is for. An action a builder made is a limit of
+ * this tool, said once. A route whose body was not read is a hole in the coverage
+ * of that one route, and how many there are against how many routes were found
+ * is the only honest way to read the summary, so each one is a place (R94).
+ */
+const reportUnreadHandler = (
+  ctx: ExtractContext,
+  options: { file: string; line: number; label: string; path: string; why: 'none' | 'built' },
+): void => {
+  ctx.builder.addUnresolved({
+    file: options.file,
+    line: options.line,
+    reason: 'route-handler-unread',
+    message: `${UNREAD_HANDLER[options.why](options.label)} It answers at ${options.path}.`,
+    hint: 'Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.',
+    symbol: options.label,
+    adapter: 'nextjs-routes',
+  });
+};
+
 /**
  * Entry points a Next.js repository declares by where its files are.
  *
@@ -248,14 +357,7 @@ export const nextjsRoutesAdapter: EntryAdapter = {
         : { middlewareRead };
     };
 
-    const httpEntry = (options: {
-      method: string;
-      path: string;
-      file: string;
-      line: number;
-      handler?: NamedFunction;
-      via: string;
-    }): void => {
+    const httpEntry = (options: HttpEntryOptions): void => {
       const key = makeHttpEntryKey(options.method, options.path);
       const id = makeEntryId(ctx.repo, 'http', key);
       if (seen.has(id)) return;
@@ -277,6 +379,12 @@ export const nextjsRoutesAdapter: EntryAdapter = {
           registration: options.via,
           ...gateOf(options.path),
           handlerVia: options.handler === undefined ? 'unread' : 'function',
+          // Two different facts, and the second is the one a summary must not
+          // read off the first. `handlerVia` says whether a function was named;
+          // this says whether there is code behind the name. A route counted as
+          // covered because a name was found is how seventeen of seventeen came
+          // to stand for two of nine (R94).
+          ...(options.bodyRead === false ? { handlerBodyRead: false } : {}),
         },
       });
     };
@@ -295,6 +403,7 @@ export const nextjsRoutesAdapter: EntryAdapter = {
         // way in, and which method arrives is the handler's own business.
         const [declaration] = sourceFile.getExportedDeclarations().get('default') ?? [];
         const handler = declaration === undefined ? undefined : exportedFunction(declaration);
+        const read = handler !== undefined;
         httpEntry({
           method: 'ALL',
           path: pagesPath,
@@ -302,7 +411,22 @@ export const nextjsRoutesAdapter: EntryAdapter = {
           line: handler?.line ?? 1,
           ...(handler === undefined ? {} : { handler }),
           via: 'pages/api',
+          bodyRead: read,
         });
+        // A file under the older router is a way in whether or not its default
+        // export is a function this can follow, and until now the second case
+        // was the first case with a quieter graph. Only one reading applies
+        // here — a function written in place — so a handler that was found is a
+        // handler that was read, and there is one case to report rather than two.
+        if (!read) {
+          reportUnreadHandler(ctx, {
+            file,
+            line: 1,
+            label: `ALL ${pagesPath}`,
+            path: pagesPath,
+            why: 'none',
+          });
+        }
         continue;
       }
 
@@ -333,14 +457,7 @@ const readAppRoute = (
   sourceFile: SourceFile,
   file: string,
   path: string,
-  emit: (options: {
-    method: string;
-    path: string;
-    file: string;
-    line: number;
-    handler?: NamedFunction;
-    via: string;
-  }) => void,
+  emit: (options: HttpEntryOptions) => void,
 ): void => {
   // Asked of the compiler rather than of the statements, so that the three
   // shapes a real repository writes all answer: a function declared here, a
@@ -353,15 +470,31 @@ const readAppRoute = (
     const [declaration] = exported.get(method) ?? [];
     if (declaration === undefined) continue;
     found += 1;
-    const handler = verbFunction(declaration);
+    const line = declaration.getStartLineNumber();
+    const reading = verbReading(declaration);
+    const read = reading?.bodyRead === true;
     emit({
       method,
       path,
       file,
-      line: declaration.getStartLineNumber(),
-      ...(handler === undefined ? {} : { handler }),
+      line,
+      ...(reading === undefined ? {} : { handler: reading.fn }),
       via: 'app/route',
+      bodyRead: read,
     });
+    // The entry is still emitted, and the handler with it where there was one:
+    // the route exists, the wrapper call is where the framework enters, and
+    // dropping either would lose a fact that was read. What was missing was
+    // this row (R94).
+    if (!read) {
+      reportUnreadHandler(ctx, {
+        file,
+        line,
+        label: `${method} ${path}`,
+        path,
+        why: reading === undefined ? 'none' : 'built',
+      });
+    }
   }
 
   if (found > 0) return;

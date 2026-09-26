@@ -13,7 +13,7 @@ a repository with no server.
 
 ## Outcome
 
-build **exit 0**, doctor exit 0, link exit 0
+build **exit 0**, doctor exit 2, link exit 0
 
 ## Dependencies
 

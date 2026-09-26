@@ -54,7 +54,7 @@ land on one address.
 
 ## What it could not read
 
-657 places somebody could act on, 541 the tool
+916 places somebody could act on, 541 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -65,6 +65,7 @@ was never an edge to draw. The three are never added together.
 | db-receiver-name-only | action | 313 |  |
 | dynamic-config-key | action | 7 |  |
 | dynamic-http-url | action | 74 |  |
+| route-handler-unread | action | 259 |  |
 | target-route-not-found | action | 68 |  |
 | type-depth-exceeded | info | 1 |  |
 | type-generic-uninstantiated | info | 6 |  |
