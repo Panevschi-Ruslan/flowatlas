@@ -51,8 +51,8 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 4 | 4 of 80 |
-| …that name a table | 0 | 0 of 4 |
+| query sites read | 55 | 55 of 80 |
+| …that name a table | 0 | 0 of 55 |
 | tables | 0 | nothing of this kind here |
 | components | 773 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
@@ -60,7 +60,7 @@ land on one address.
 
 ## What it could not read
 
-126 places somebody could act on, 50 the tool
+100 places somebody could act on, 50 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -68,13 +68,12 @@ was never an edge to draw. The three are never added together.
 |---|---|---|---|
 | api-path-dynamic | action | 7 |  |
 | call-dynamic-receiver | info | 50 |  |
-| db-layer-unread | action | 14 |  |
-| db-receiver-name-only | action | 69 |  |
+| db-layer-unread | action | 6 |  |
+| db-receiver-name-only | action | 55 |  |
 | dynamic-http-url | action | 6 |  |
 | server-action-unread | action | 2 |  |
 | target-route-not-found | action | 23 |  |
 | unknown-base-url-env | action | 1 |  |
-| unknown-db-package | action | 4 |  |
 
 ## The denominators
 

@@ -1,0 +1,733 @@
+{
+  "schemaVersion": 4,
+  "repo": "nest-kysely",
+  "generatedAt": "2026-09-26T21:55:47.574Z",
+  "nodes": [
+    {
+      "id": "db_query:nest-kysely#src/assets/assets.service.ts:16:12",
+      "type": "db_query",
+      "label": "read asset",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 16,
+      "meta": {
+        "op": "read",
+        "table": "asset",
+        "tables": [
+          "asset"
+        ],
+        "package": "kysely",
+        "method": "selectFrom",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-kysely#src/assets/assets.service.ts:23:12",
+      "type": "db_query",
+      "label": "read asset",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 23,
+      "meta": {
+        "op": "read",
+        "table": "asset",
+        "tables": [
+          "asset"
+        ],
+        "package": "kysely",
+        "method": "selectFrom",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-kysely#src/assets/assets.service.ts:32:12",
+      "type": "db_query",
+      "label": "read asset",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 32,
+      "meta": {
+        "op": "read",
+        "table": "asset",
+        "tables": [
+          "asset"
+        ],
+        "package": "kysely",
+        "method": "selectFrom",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-kysely#src/assets/assets.service.ts:37:12",
+      "type": "db_query",
+      "label": "write asset",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 37,
+      "meta": {
+        "op": "write",
+        "table": "asset",
+        "tables": [
+          "asset"
+        ],
+        "package": "kysely",
+        "method": "insertInto",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-kysely#src/assets/assets.service.ts:42:12",
+      "type": "db_query",
+      "label": "write asset_exif",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 42,
+      "meta": {
+        "op": "write",
+        "table": "asset_exif",
+        "tables": [
+          "asset_exif"
+        ],
+        "package": "kysely",
+        "method": "insertInto",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-kysely#src/assets/assets.service.ts:50:12",
+      "type": "db_query",
+      "label": "write asset",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 50,
+      "meta": {
+        "op": "write",
+        "table": "asset",
+        "tables": [
+          "asset"
+        ],
+        "package": "kysely",
+        "method": "updateTable",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-kysely#src/assets/assets.service.ts:54:12",
+      "type": "db_query",
+      "label": "delete asset_metadata",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 54,
+      "meta": {
+        "op": "delete",
+        "table": "asset_metadata",
+        "tables": [
+          "asset_metadata"
+        ],
+        "package": "kysely",
+        "method": "deleteFrom",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-kysely#src/assets/assets.service.ts:61:13",
+      "type": "db_query",
+      "label": "delete asset_metadata",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 61,
+      "meta": {
+        "op": "delete",
+        "table": "asset_metadata",
+        "tables": [
+          "asset_metadata"
+        ],
+        "package": "kysely",
+        "method": "deleteFrom",
+        "receiver": "tx",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-kysely#src/assets/assets.service.ts:62:14",
+      "type": "db_query",
+      "label": "write asset_metadata",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 62,
+      "meta": {
+        "op": "write",
+        "table": "asset_metadata",
+        "tables": [
+          "asset_metadata"
+        ],
+        "package": "kysely",
+        "method": "insertInto",
+        "receiver": "tx",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-kysely#src/assets/assets.service.ts:73:12",
+      "type": "db_query",
+      "label": "read ?",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 73,
+      "meta": {
+        "op": "read",
+        "table": null,
+        "tables": [],
+        "package": "kysely",
+        "method": "selectFrom",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-kysely#src/assets/assets.service.ts:74:27",
+      "type": "db_query",
+      "label": "read asset",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 74,
+      "meta": {
+        "op": "read",
+        "table": "asset",
+        "tables": [
+          "asset"
+        ],
+        "package": "kysely",
+        "method": "selectFrom",
+        "receiver": "eb",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "entry:nest-kysely:http:DELETE:/assets",
+      "type": "entry",
+      "label": "DELETE /assets",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/assets",
+        "rawPath": "/assets",
+        "controller": "AssetsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-kysely:http:GET:/assets",
+      "type": "entry",
+      "label": "GET /assets",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/assets",
+        "rawPath": "/assets",
+        "controller": "AssetsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-kysely:http:POST:/assets",
+      "type": "entry",
+      "label": "POST /assets",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/assets",
+        "rawPath": "/assets",
+        "controller": "AssetsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-kysely#node_modules/kysely:Kysely",
+      "type": "provider",
+      "label": "Kysely",
+      "repo": "nest-kysely",
+      "file": "node_modules/kysely",
+      "kind": "external",
+      "meta": {
+        "package": "kysely",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-kysely#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-kysely",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "AssetsController"
+        ],
+        "providers": [
+          "AssetsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.controller.ts:AssetsController",
+      "type": "provider",
+      "label": "AssetsController",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.controller.ts:AssetsController.create",
+      "type": "method",
+      "label": "AssetsController.create",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.controller.ts",
+      "line": 14
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.controller.ts:AssetsController.findAll",
+      "type": "method",
+      "label": "AssetsController.findAll",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.controller.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.controller.ts:AssetsController.remove",
+      "type": "method",
+      "label": "AssetsController.remove",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.controller.ts",
+      "line": 19
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.service.ts:AssetsService",
+      "type": "provider",
+      "label": "AssetsService",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.byOwner",
+      "type": "method",
+      "label": "AssetsService.byOwner",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 31
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.close",
+      "type": "method",
+      "label": "AssetsService.close",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 81
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.create",
+      "type": "method",
+      "label": "AssetsService.create",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 36
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.findAll",
+      "type": "method",
+      "label": "AssetsService.findAll",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 15
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.fromSubquery",
+      "type": "method",
+      "label": "AssetsService.fromSubquery",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 72
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.joined",
+      "type": "method",
+      "label": "AssetsService.joined",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 22
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.move",
+      "type": "method",
+      "label": "AssetsService.move",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 59
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.remove",
+      "type": "method",
+      "label": "AssetsService.remove",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 53
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.rename",
+      "type": "method",
+      "label": "AssetsService.rename",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 49
+    },
+    {
+      "id": "nest-kysely#src/assets/assets.service.ts:AssetsService.upsertExif",
+      "type": "method",
+      "label": "AssetsService.upsertExif",
+      "repo": "nest-kysely",
+      "file": "src/assets/assets.service.ts",
+      "line": 41
+    },
+    {
+      "id": "repo:nest-kysely",
+      "type": "repo",
+      "label": "nest-kysely",
+      "repo": "nest-kysely",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "kysely": 41,
+            "kysely.execute": 11,
+            "kysely.orderBy": 1,
+            "kysely.selectAll": 4,
+            "kysely.innerJoin": 1,
+            "kysely.where": 4,
+            "kysely.returningAll": 1,
+            "kysely.values": 3,
+            "kysely.onConflict": 1,
+            "kysely.set": 1,
+            "kysely.transaction": 1,
+            "kysely.as": 1,
+            "kysely.destroy": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:nest-kysely#asset",
+      "type": "table",
+      "label": "asset",
+      "repo": "nest-kysely"
+    },
+    {
+      "id": "table:nest-kysely#asset_exif",
+      "type": "table",
+      "label": "asset_exif",
+      "repo": "nest-kysely"
+    },
+    {
+      "id": "table:nest-kysely#asset_metadata",
+      "type": "table",
+      "label": "asset_metadata",
+      "repo": "nest-kysely"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:nest-kysely#src/assets/assets.service.ts:16:12",
+      "to": "table:nest-kysely#asset",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 16
+    },
+    {
+      "from": "db_query:nest-kysely#src/assets/assets.service.ts:23:12",
+      "to": "table:nest-kysely#asset",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 23
+    },
+    {
+      "from": "db_query:nest-kysely#src/assets/assets.service.ts:32:12",
+      "to": "table:nest-kysely#asset",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 32
+    },
+    {
+      "from": "db_query:nest-kysely#src/assets/assets.service.ts:37:12",
+      "to": "table:nest-kysely#asset",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 37
+    },
+    {
+      "from": "db_query:nest-kysely#src/assets/assets.service.ts:42:12",
+      "to": "table:nest-kysely#asset_exif",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 42
+    },
+    {
+      "from": "db_query:nest-kysely#src/assets/assets.service.ts:50:12",
+      "to": "table:nest-kysely#asset",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 50
+    },
+    {
+      "from": "db_query:nest-kysely#src/assets/assets.service.ts:54:12",
+      "to": "table:nest-kysely#asset_metadata",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 54
+    },
+    {
+      "from": "db_query:nest-kysely#src/assets/assets.service.ts:61:13",
+      "to": "table:nest-kysely#asset_metadata",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 61
+    },
+    {
+      "from": "db_query:nest-kysely#src/assets/assets.service.ts:62:14",
+      "to": "table:nest-kysely#asset_metadata",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 62
+    },
+    {
+      "from": "db_query:nest-kysely#src/assets/assets.service.ts:74:27",
+      "to": "table:nest-kysely#asset",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 74
+    },
+    {
+      "from": "entry:nest-kysely:http:DELETE:/assets",
+      "to": "nest-kysely#src/assets/assets.controller.ts:AssetsController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/assets/assets.controller.ts",
+      "line": 19,
+      "params": [],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "entry:nest-kysely:http:GET:/assets",
+      "to": "nest-kysely#src/assets/assets.controller.ts:AssetsController.findAll",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/assets/assets.controller.ts",
+      "line": 9,
+      "params": [],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "entry:nest-kysely:http:POST:/assets",
+      "to": "nest-kysely#src/assets/assets.controller.ts:AssetsController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/assets/assets.controller.ts",
+      "line": 14,
+      "params": [],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.controller.ts:AssetsController",
+      "to": "nest-kysely#src/assets/assets.service.ts:AssetsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/assets/assets.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.controller.ts:AssetsController.create",
+      "to": "nest-kysely#src/assets/assets.service.ts:AssetsService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assets/assets.controller.ts",
+      "line": 16,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.controller.ts:AssetsController.findAll",
+      "to": "nest-kysely#src/assets/assets.service.ts:AssetsService.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assets/assets.controller.ts",
+      "line": 11,
+      "params": [],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.controller.ts:AssetsController.remove",
+      "to": "nest-kysely#src/assets/assets.service.ts:AssetsService.remove",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assets/assets.controller.ts",
+      "line": 21,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.service.ts:AssetsService",
+      "to": "nest-kysely#node_modules/kysely:Kysely",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 11
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.service.ts:AssetsService.byOwner",
+      "to": "db_query:nest-kysely#src/assets/assets.service.ts:32:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 32
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.service.ts:AssetsService.create",
+      "to": "db_query:nest-kysely#src/assets/assets.service.ts:37:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 37
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.service.ts:AssetsService.findAll",
+      "to": "db_query:nest-kysely#src/assets/assets.service.ts:16:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 16
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.service.ts:AssetsService.fromSubquery",
+      "to": "db_query:nest-kysely#src/assets/assets.service.ts:73:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/assets/assets.service.ts",
+      "line": 73
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.service.ts:AssetsService.fromSubquery",
+      "to": "db_query:nest-kysely#src/assets/assets.service.ts:74:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 74
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.service.ts:AssetsService.joined",
+      "to": "db_query:nest-kysely#src/assets/assets.service.ts:23:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 23
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.service.ts:AssetsService.move",
+      "to": "db_query:nest-kysely#src/assets/assets.service.ts:61:13",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 61
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.service.ts:AssetsService.move",
+      "to": "db_query:nest-kysely#src/assets/assets.service.ts:62:14",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 62
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.service.ts:AssetsService.remove",
+      "to": "db_query:nest-kysely#src/assets/assets.service.ts:54:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 54
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.service.ts:AssetsService.rename",
+      "to": "db_query:nest-kysely#src/assets/assets.service.ts:50:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 50
+    },
+    {
+      "from": "nest-kysely#src/assets/assets.service.ts:AssetsService.upsertExif",
+      "to": "db_query:nest-kysely#src/assets/assets.service.ts:42:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/assets/assets.service.ts",
+      "line": 42
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/assets/assets.service.ts",
+      "line": 73,
+      "reason": "dynamic-table-name",
+      "hint": "The table this.db.selectFrom touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.",
+      "symbol": "this.db.selectFrom"
+    }
+  ]
+}

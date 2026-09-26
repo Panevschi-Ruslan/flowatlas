@@ -1,7 +1,7 @@
 {
   "schemaVersion": 4,
   "repo": "nest-di-tokens",
-  "generatedAt": "2026-09-26T20:16:50.286Z",
+  "generatedAt": "2026-09-26T22:22:18.057Z",
   "nodes": [
     {
       "id": "nest-di-tokens#src/app.module.ts:AppModule",
@@ -433,13 +433,6 @@
       "reason": "call-through-token",
       "hint": "Cannot follow a value provided for CLIENT; provide it with useClass to make calls visible.",
       "symbol": "OrdersService.place -> this.client.send"
-    },
-    {
-      "file": "src/orders/orders.service.ts",
-      "line": 37,
-      "reason": "db-receiver-name-only",
-      "hint": "this.store is typed as Cache, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
-      "symbol": "this.store.get"
     }
   ]
 }

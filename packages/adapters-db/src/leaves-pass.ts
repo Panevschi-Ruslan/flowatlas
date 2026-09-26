@@ -36,7 +36,7 @@ import type {
   SourceFile,
 } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
-import { dataNameHints, tableLocators } from './descriptors/index.js';
+import { dataNameHints, descriptorAliases, tableReadings } from './descriptors/index.js';
 import { locateTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
 import { dataLayerOf } from './leaves/silence.js';
@@ -174,7 +174,11 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   const descriptorFor = (origin: TypeOrigin | null): DbDescriptor | undefined => {
     if (origin?.package == null) return undefined;
     if (origin.package.startsWith('local:')) return byPackage.get('local');
-    return byPackage.get(origin.package);
+    // The package that declares the receiver's type is not always the package
+    // the descriptor was written for; one library reached under two names is an
+    // alias rather than a second description of it.
+    const described = descriptorAliases[origin.package] ?? origin.package;
+    return byPackage.get(described);
   };
 
   /**
@@ -190,7 +194,11 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    */
   const withoutOverride = new Map<string, DbDescriptor>();
   for (const [name, descriptor] of byPackage) {
-    if (tableLocators[name] === undefined) continue;
+    // Only where the type argument is the stored thing. A connection
+    // parameterised by the whole schema has nothing to fall back to, and
+    // falling back put the name of a schema type on 407 of immich's nodes as
+    // though it were a table.
+    if (tableReadings[name]?.entityInTypeArgs !== true) continue;
     const { tableOverride: _dropped, ...rest } = descriptor;
     withoutOverride.set(name, rest);
   }
@@ -353,13 +361,16 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // locators say where to look; what comes back is either the name or the
     // fact that it was decided at run time, which is reported below rather than
     // guessed at.
-    const locators = descriptor === undefined ? undefined : tableLocators[descriptor.package];
+    const reading = descriptor === undefined ? undefined : tableReadings[descriptor.package];
     const located =
-      locators === undefined || descriptor === undefined
+      reading === undefined || descriptor === undefined
         ? null
-        : locateTable(call, locators, (name) => operationOf(descriptor, name) !== null);
+        : locateTable(call, reading.locators, {
+            isOperation: (name) => operationOf(descriptor, name) !== null,
+            ...(origin?.declaration === undefined ? {} : { typeDeclaration: origin.declaration }),
+          });
     const effective =
-      locators === undefined || located !== null
+      reading === undefined || located !== null
         ? descriptor
         : (withoutOverride.get(descriptor?.package ?? '') ?? descriptor);
 
@@ -430,7 +441,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (ownLayer !== undefined) readAsData.add(ownLayer);
     // Only for a write: a read cannot lose what a sender believed it saved, and
     // collecting a type nobody will ask about is a type in everybody's registry.
-    const entityArg = classification.op === 'write' ? origin?.typeArgs[0] : undefined;
+    //
+    // And only where the type argument is the thing being stored. A connection
+    // parameterised by the whole schema would otherwise register the schema as
+    // the shape of every row written through it, which is the same fabrication
+    // as reading it as a table, hidden in another field.
+    const entityArg =
+      classification.op === 'write' && reading?.entityInTypeArgs !== false
+        ? origin?.typeArgs[0]
+        : undefined;
     const entityTypeId = entityArg === undefined ? undefined : ctx.types.collectType(entityArg, call);
     ctx.builder.addNode({
       id,
