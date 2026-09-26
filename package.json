@@ -20,6 +20,10 @@
     "cli:snapshots": "node scripts/cli-snapshots.mjs",
     "check": "pnpm clean && pnpm -r build && pnpm -r typecheck && pnpm fixtures:run && pnpm -r test && pnpm invariants && pnpm fixtures:check",
     "fixtures:run": "node scripts/fixtures-run.mjs",
+    "coverage": "node scripts/coverage/run.mjs",
+    "coverage:deps": "node scripts/coverage/run.mjs --install",
+    "coverage:render": "node scripts/coverage/run.mjs --render",
+    "coverage:pin": "node scripts/coverage/run.mjs --pin",
     "clean": "node scripts/clean.mjs"
   },
   "devDependencies": {

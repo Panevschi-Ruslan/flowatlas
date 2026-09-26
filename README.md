@@ -736,7 +736,9 @@ not changed; only something written from the source proves it is right.
 `scripts/demo/page.mjs` writes the same thing as `docs/index.html`, which is what
 GitHub Pages serves at <https://panevschi-ruslan.github.io/flowatlas/>.
 `docs/CLI.md` is the complete reference: every command, every flag, every
-configuration key. `docs/ci.md` is how to run it in a build. `PUBLISHING.md` is
+configuration key. `docs/ci.md` is how to run it in a build. `docs/coverage.md`
+is how this tool is measured against eight repositories nobody here wrote, with
+the reports committed so an improvement arrives as a diff. `PUBLISHING.md` is
 the release runbook. `scripts/demo/record.sh` remakes every recording in the
 walkthrough from `fixtures/multi-repo`.
 

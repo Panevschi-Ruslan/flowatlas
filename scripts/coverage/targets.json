@@ -1,0 +1,80 @@
+{
+  "$comment": "The eight repositories the tool is measured against. This file is data: a record per target, no code. `commit` is the pinned revision every run clones; `node scripts/coverage/run.mjs --pin` resolves today's default branch and writes it back here, and that is the only thing allowed to change it. `read` lists the directories inside the clone that are linked into the project - one entry becomes one service, and by default that service's type is whatever `flowatlas link` decides from its manifest. `types` overrides that for one directory, and it is the only judgement this file is allowed to carry: choosing a service's type is configuration a real user writes, which `init` invites them to, and where `link` guesses wrong the report prints both what it guessed and what was set, so the wrong guess stays visible instead of being papered over. It is not licence to tune anything else: the counting rule behind every denominator lives in counting-rule.mjs and takes no argument from here. `why` is what the target is for; it is printed in the report so a number arrives with the reason somebody chose to measure it.",
+  "targets": [
+    {
+      "name": "immich",
+      "repository": "immich-app/immich",
+      "commit": "f8f4051a24fffa49accb96bd4f107f8b8d5915e9",
+      "read": [
+        "server"
+      ],
+      "why": "NestJS at scale, Kysely, an in-house bus"
+    },
+    {
+      "name": "novu",
+      "repository": "novuhq/novu",
+      "commit": "85ae4fdfcd12b1189633b0bc369c23a76883d76f",
+      "read": [
+        "apps/api"
+      ],
+      "why": "NestJS, versioning, deep-subpath imports"
+    },
+    {
+      "name": "outline",
+      "repository": "outline/outline",
+      "commit": "aacc98475d1f5bb0f192665b539db00126d491ee",
+      "read": [
+        "."
+      ],
+      "types": { ".": "koa" },
+      "why": "Koa + React + socket.io + Sequelize in one repository"
+    },
+    {
+      "name": "medusa",
+      "repository": "medusajs/medusa",
+      "commit": "62a520014886df3838aa9f31f2990afecae38333",
+      "read": [
+        "packages/medusa"
+      ],
+      "why": "a file-system router with no reader"
+    },
+    {
+      "name": "cal.com",
+      "repository": "calcom/cal.com",
+      "commit": "54343aa685ae8f33159d2f485ec4a57bad5c574a",
+      "read": [
+        "apps/web"
+      ],
+      "why": "Next.js in a monorepo, tRPC, wrapped Prisma"
+    },
+    {
+      "name": "payload",
+      "repository": "payloadcms/payload",
+      "commit": "124b55a8747d9b45db0af30aad337569d37a9b3e",
+      "read": [
+        "."
+      ],
+      "why": "Next.js, nested application roots, a heap the default limit does not hold"
+    },
+    {
+      "name": "peertube",
+      "repository": "Chocobozzz/PeerTube",
+      "commit": "faa76bad2c1969a088ef1df38dc666dfe7259b5c",
+      "read": [
+        "server",
+        "client"
+      ],
+      "types": { "server": "express" },
+      "why": "Angular and Express in one repository"
+    },
+    {
+      "name": "excalidraw",
+      "repository": "excalidraw/excalidraw",
+      "commit": "c10499eebb6267f24c056a03c5daf436aada0446",
+      "read": [
+        "."
+      ],
+      "why": "a repository with no server"
+    }
+  ]
+}
