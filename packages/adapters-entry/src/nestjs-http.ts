@@ -2,13 +2,14 @@ import type { EntryAdapter, EntryNode, ExtractContext } from '@flowatlas/core';
 import {
   decoratorArgs,
   decoratorName,
+  evaluateExpression,
   hasAnyDependency,
   makeEntryId,
   makeHttpEntryKey,
   normalizePath,
   stringListArg,
 } from '@flowatlas/core';
-import { Node, type Decorator, type MethodDeclaration } from 'ts-morph';
+import { Node, type Decorator, type MethodDeclaration, type Node as TsNode } from 'ts-morph';
 import {
   decoratorNames,
   decoratorsFrom,
@@ -108,54 +109,154 @@ const FRAMEWORK_DECORATORS = new Set([
   'Injectable',
 ]);
 
+/**
+ * The versions one route is served at.
+ *
+ * A list because `@Version(['1', '2'])` registers the same handler twice, and an
+ * empty list because the framework has a word for a route that carries no version
+ * at all. `undefined` is neither of those: it means this level said nothing and
+ * the next one out should be asked.
+ */
+type Versions = readonly string[];
+
+/**
+ * What the application was told about versions, as the entry context carries it.
+ *
+ * Read out of plain metadata rather than imported, because the reader that puts
+ * it there is the one for a single framework and this adapter is not allowed to
+ * depend on it. So the shape is checked here rather than assumed.
+ */
+interface Versioning {
+  type: string;
+  prefix: string;
+  defaultVersion?: string;
+}
+
+const versioningIn = (meta: Record<string, unknown> | undefined): Versioning | undefined => {
+  const value = meta?.['versioning'];
+  if (typeof value !== 'object' || value === null) return undefined;
+  const { type, prefix, defaultVersion } = value as Record<string, unknown>;
+  if (typeof type !== 'string' || typeof prefix !== 'string') return undefined;
+  return {
+    type,
+    prefix,
+    ...(typeof defaultVersion === 'string' ? { defaultVersion } : {}),
+  };
+};
+
+/**
+ * Reads a version written as an option or as an argument.
+ *
+ * `VERSION_NEUTRAL` is matched by the name in the source rather than by its
+ * value, because it is a symbol exported by an installed package: there is
+ * nothing to evaluate on a fresh clone, and a route that names it is not a route
+ * whose version could not be read — it is a route that deliberately has none.
+ */
+const readVersions = (node: TsNode | undefined): Versions | undefined => {
+  if (node === undefined) return undefined;
+  if (/\bVERSION_NEUTRAL\b/.test(node.getText())) return [];
+  const value = evaluateExpression(node);
+  if (!value.resolved) return undefined;
+  if (typeof value.value === 'string') return [value.value];
+  return Array.isArray(value.value) && value.value.every((item) => typeof item === 'string')
+    ? (value.value as string[])
+    : undefined;
+};
+
+/** The paths a `path` option names, or nothing when it names something unreadable. */
+const readPaths = (node: TsNode | undefined): string[] | undefined => {
+  if (node === undefined) return [''];
+  const value = evaluateExpression(node);
+  if (!value.resolved) return undefined;
+  if (typeof value.value === 'string') return [value.value];
+  if (Array.isArray(value.value) && value.value.every((item) => typeof item === 'string')) {
+    return value.value.length > 0 ? (value.value as string[]) : [''];
+  }
+  return undefined;
+};
+
+/** The initialiser of one property of an object written out in place. */
+const propertyIn = (node: TsNode, name: string): TsNode | undefined => {
+  if (!Node.isObjectLiteralExpression(node)) return undefined;
+  const property = node.getProperty(name);
+  return property !== undefined && Node.isPropertyAssignment(property)
+    ? property.getInitializer()
+    : undefined;
+};
+
 interface ControllerPrefix {
   paths: string[];
-  version?: string;
+  versions?: Versions;
   dynamic: boolean;
 }
 
 /** `@Controller('x')`, `@Controller(['x','y'])` and `@Controller({ path, version })`. */
 const readControllerPrefix = (decorator: Decorator): ControllerPrefix => {
+  const [node] = decorator.getArguments();
+  if (node === undefined) return { paths: [''], dynamic: false };
+
+  // An options object is read one property at a time. Evaluating it whole lets
+  // one unreadable property poison the readable ones, and
+  // `@Controller({ path: '.well-known/x', version: VERSION_NEUTRAL })` — a real
+  // controller in a repository this tool measures — was therefore dropped
+  // entirely, with a row claiming its path was computed (R89).
+  if (Node.isObjectLiteralExpression(node)) {
+    const paths = readPaths(propertyIn(node, 'path'));
+    if (paths === undefined) return { paths: [''], dynamic: true };
+    const versions = readVersions(propertyIn(node, 'version'));
+    return { paths, ...(versions === undefined ? {} : { versions }), dynamic: false };
+  }
+
   const [first] = decoratorArgs(decorator);
   if (first === undefined) return { paths: [''], dynamic: false };
   if (!first.resolved) return { paths: [''], dynamic: true };
-
   const asList = stringListArg(first);
-  if (asList !== undefined) return { paths: asList, dynamic: false };
-
-  if (typeof first.value === 'object' && first.value !== null) {
-    const options = first.value as { path?: unknown; version?: unknown };
-    const paths =
-      typeof options.path === 'string'
-        ? [options.path]
-        : Array.isArray(options.path)
-          ? options.path.filter((item): item is string => typeof item === 'string')
-          : [''];
-    return {
-      paths: paths.length > 0 ? paths : [''],
-      ...(typeof options.version === 'string' ? { version: options.version } : {}),
-      dynamic: false,
-    };
-  }
-  return { paths: [''], dynamic: true };
+  return asList === undefined ? { paths: [''], dynamic: true } : { paths: asList, dynamic: false };
 };
 
-const versionOf = (node: { getDecorators(): Decorator[] }): string | undefined => {
+const versionsOf = (node: { getDecorators(): Decorator[] }): Versions | undefined => {
   const decorator = firstNestDecorator(node, 'Version');
   if (decorator === undefined) return undefined;
-  const [first] = decoratorArgs(decorator);
-  return first !== undefined && first.resolved && typeof first.value === 'string'
-    ? first.value
-    : undefined;
+  return readVersions(decorator.getArguments()[0]);
 };
+
+/**
+ * One entry per version the route is served at, with the segment its address
+ * carries.
+ *
+ * Only URI versioning puts the version in the address; the header and media-type
+ * kinds serve one address and choose a handler by what the request carried, so
+ * there the version is worth recording and worth nothing to a path. Getting this
+ * wrong in the other direction is not a lost detail: two controllers for one
+ * resource at two versions land on one id, and the tool then reports a route
+ * claimed by two handlers, which on novu was fourteen warnings and all of them
+ * false (R89).
+ */
+const servedAt = (
+  versions: Versions,
+  versioning: Versioning | undefined,
+): ReadonlyArray<{ version?: string; segment?: string }> =>
+  versions.length === 0
+    ? [{}]
+    : versions.map((version) => ({
+        version,
+        ...(versioning?.type === 'uri' ? { segment: `${versioning.prefix}${version}` } : {}),
+      }));
 
 /**
  * HTTP routes.
  *
- * The path recorded is the one the framework prints at start-up, global prefix
- * included, so that counting entries against that log is a meaningful check. The
- * prefix is also kept on its own, because a client calling the service may not
- * include it.
+ * The path recorded is the one the framework prints at start-up: the global
+ * prefix, then the version where versioning puts one in the address, then the
+ * controller and the route. Counting entries against that log is then a
+ * meaningful check, which is the whole reason the path is assembled this way.
+ * The prefix is also kept on its own, because a client calling the service may
+ * not include it.
+ *
+ * Where a part of the address could not be read, the part that could is kept and
+ * the rest is the marker that matches nothing, so a caller is never joined to an
+ * address nobody has seen in full. The line that could not be read gets a row of
+ * its own, written where the application was read rather than here.
  */
 export const nestjsHttpAdapter: EntryAdapter = {
   name: 'nestjs-http',
@@ -166,6 +267,12 @@ export const nestjsHttpAdapter: EntryAdapter = {
       typeof ctx.meta?.['globalPrefix'] === 'string'
         ? (ctx.meta['globalPrefix'] as string)
         : undefined;
+    const versioning = versioningIn(ctx.meta);
+    // A route that names no version of its own is served at the default one, and
+    // that is not a detail: on novu it is 356 of 415 routes, every one of which
+    // was recorded at an address the framework never answers on.
+    const defaultVersions: Versions | undefined =
+      versioning?.defaultVersion === undefined ? undefined : [versioning.defaultVersion];
 
     for (const declaration of repoClasses(ctx)) {
       const found = nestDecorators(declaration, ['Controller']);
@@ -257,7 +364,10 @@ export const nestjsHttpAdapter: EntryAdapter = {
             continue;
           }
 
-          const version = versionOf(method) ?? prefix.version;
+          // The route's own word, then the controller's, then the application's
+          // default. That is the order the framework resolves it in, and each
+          // level answers `undefined` only when it said nothing at all.
+          const versions = versionsOf(method) ?? prefix.versions ?? defaultVersions ?? [];
           const authNote = authNoteOf(method);
           const handler = handlerOf(method, ctx);
           const otherDecorators = method
@@ -273,29 +383,31 @@ export const nestjsHttpAdapter: EntryAdapter = {
               ),
             }));
 
-          for (const controllerPath of prefix.paths) {
-            for (const routePath of paths) {
-              const rawPath = joinPath(globalPrefix, controllerPath, routePath);
-              const path = normalizePath(rawPath);
-              entries.push({
-                id: makeEntryId(ctx.repo, 'http', makeHttpEntryKey(httpMethod, path)),
-                kind: 'http',
-                label: `${httpMethod} ${path}`,
-                key: makeHttpEntryKey(httpMethod, path),
-                handler,
-                file,
-                line: method.getStartLineNumber(),
-                meta: {
-                  method: httpMethod,
-                  path,
-                  rawPath,
-                  ...(globalPrefix === undefined ? {} : { globalPrefix }),
-                  ...(version === undefined ? {} : { version }),
-                  controller: controllerName,
-                  ...(otherDecorators.length > 0 ? { decorators: otherDecorators } : {}),
-                  ...(authNote === undefined ? {} : { authNote }),
-                },
-              });
+          for (const served of servedAt(versions, versioning)) {
+            for (const controllerPath of prefix.paths) {
+              for (const routePath of paths) {
+                const rawPath = joinPath(globalPrefix, served.segment, controllerPath, routePath);
+                const path = normalizePath(rawPath);
+                entries.push({
+                  id: makeEntryId(ctx.repo, 'http', makeHttpEntryKey(httpMethod, path)),
+                  kind: 'http',
+                  label: `${httpMethod} ${path}`,
+                  key: makeHttpEntryKey(httpMethod, path),
+                  handler,
+                  file,
+                  line: method.getStartLineNumber(),
+                  meta: {
+                    method: httpMethod,
+                    path,
+                    rawPath,
+                    ...(globalPrefix === undefined ? {} : { globalPrefix }),
+                    ...(served.version === undefined ? {} : { version: served.version }),
+                    controller: controllerName,
+                    ...(otherDecorators.length > 0 ? { decorators: otherDecorators } : {}),
+                    ...(authNote === undefined ? {} : { authNote }),
+                  },
+                });
+              }
             }
           }
         }

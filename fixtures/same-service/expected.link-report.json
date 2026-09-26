@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 4,
+  "builtAt": "2026-09-26T21:08:51.374Z",
+  "configHash": "554932e24a02",
+  "services": [
+    {
+      "name": "site",
+      "repo": ".",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 20,
+      "edges": 16,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 517
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 3
+  },
+  "ui": {
+    "total": 3,
+    "resolved": 2,
+    "unresolved": 1,
+    "byReason": {
+      "target-route-not-found": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 2,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "site",
+      "file": "lib/things-client.ts",
+      "line": 21,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves DELETE /api/things/:param",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls DELETE /api/things/:param */.",
+      "symbol": "ui_api_call:site#lib/things-client.ts:21:24"
+    }
+  ],
+  "totals": {
+    "nodes": 20,
+    "edges": 18,
+    "types": 0,
+    "unresolved": 1
+  }
+}

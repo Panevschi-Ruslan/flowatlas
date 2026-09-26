@@ -43,7 +43,7 @@ land on one address.
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 32 | 0 |
+| requests from a browser | 32 | 21 |
 | requests between services | 38 | 0 |
 | channels | 0 | 0 with both ends |
 
@@ -51,16 +51,16 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 55 | 55 of 80 |
-| …that name a table | 0 | 0 of 55 |
-| tables | 0 | nothing of this kind here |
+| query sites read | 73 | 73 of 80 |
+| …that name a table | 4 | 4 of 73 |
+| tables | 1 | no denominator: the rule has no probe for it |
 | components | 773 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
 | every other binding a template makes | 775 | not counted by the rule |
 
 ## What it could not read
 
-100 places somebody could act on, 50 the tool
+106 places somebody could act on, 50 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -69,11 +69,13 @@ was never an edge to draw. The three are never added together.
 | api-path-dynamic | action | 7 |  |
 | call-dynamic-receiver | info | 50 |  |
 | db-layer-unread | action | 6 |  |
-| db-receiver-name-only | action | 55 |  |
+| db-receiver-name-only | action | 69 |  |
 | dynamic-http-url | action | 6 |  |
+| route-wildcard-only | action | 9 |  |
 | server-action-unread | action | 2 |  |
-| target-route-not-found | action | 23 |  |
+| target-route-not-found | action | 2 |  |
 | unknown-base-url-env | action | 1 |  |
+| unknown-db-package | action | 4 |  |
 
 ## The denominators
 

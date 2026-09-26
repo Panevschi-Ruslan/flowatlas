@@ -531,6 +531,16 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 is rooted at one of these keys, it resolves to that service's route. A key two
 services both claim resolves to neither, and says so.
 
+**A relative request needs no configuration at all.** `fetch('/api/thing')` names
+no service and is rooted at no key, because it means the server the page came
+from. Such a request is resolved against the routes of the service it was written
+in, before any search of the others, and the edge says `via: "same-service"` with
+`confidence: "static"` — a path matching a route in the same repository is one
+reading of one directory rather than a guess between services. A frontend that
+serves routes of its own and calls somebody else's is unaffected: where its own
+service answers nothing, the search goes on exactly as before, and where nothing
+anywhere answers, the row says so and names the verbs that path does answer.
+
 **`openapi` is for the ends of a project nobody here can read.** A payment
 provider, another team's service, something written in another language: there
 is no repository to open and no extractor to choose, so the document is read
@@ -899,6 +909,40 @@ live elsewhere — and it reads exactly like a repository whose routes are decla
 in a way no reader here knows, which is what Medusa v2's file-system router is.
 The reader cannot tell those two apart; what it can do is say which two it cannot
 tell apart, rather than counting the repository as clean (R84).
+
+### Where a NestJS route's address comes from
+
+The path recorded is the one the framework prints at start-up: the global prefix,
+then the version where versioning puts one in the address, then the controller's
+path and the route's own. So counting entries against that log, or pasting a path
+out of the graph into a request, is meant to work.
+
+Both of the things that decide it are looked for anywhere in the repository, not
+only in the entry file. `app.setGlobalPrefix('api')` and
+`app.enableVersioning({ … })` are routinely called from a helper that the
+application's several workers and its tests share, and a service whose prefix was
+read from the wrong file has every one of its addresses wrong by the same amount
+— which is an address that cannot be joined to anything. Where two files disagree
+about a prefix, none is used and a row says which values were found. Which
+application is created is still read from `services[].bootstrap` and from nowhere
+else: that question has one right answer per entry point, and searching for it
+picks the wrong one silently.
+
+Under `VersioningType.URI` the version is part of the address, so a route at
+version `2` is recorded at `/api/v2/…`, a route that names none is recorded at
+the application's `defaultVersion`, and `VERSION_NEUTRAL` is recorded with no
+version segment at all. Under the header and media-type kinds one address serves
+every version, so the version is recorded on the entry and changes no path. A
+handler naming several versions is several addresses and therefore several
+entries.
+
+Where part of an address could not be read — a prefix assembled from a setting,
+say — the part that could is kept and the rest is written as `${…}`, which
+nothing matches. Such a route is in the graph and is never joined to a caller,
+because an address nobody has seen in full is not an address. One row per site
+says which line could not be read and what it costs; there is no row per route,
+since a service has one prefix and four hundred copies of one sentence help
+nobody.
 
 ### More than one framework in one repository
 
