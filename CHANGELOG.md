@@ -6,8 +6,82 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
-Three ways the data-layer reader was dishonest, two of them found by work on
-other things.
+The tool read NestJS and Angular deeply and almost nothing else. It now reads
+the shapes most TypeScript is actually written in — a route registered by a
+call, a component that is a function, a query outside a class, a service whose
+source you do not have — and it says so about each one rather than producing a
+graph that is smaller than the project without mentioning it.
+
+Measured against repositories nobody here chose for being convenient:
+`dubinc/dub`, 653 of 653 route verbs with a handler and 134 of 134 server
+actions with a caller; `directus/directus`, 263 of 280 route declarations
+placed with none at a wrong address and 23 real tables where Knex had read
+none; `vercel/ai-chatbot`, 43 queries and 7 tables where there had been none of
+either.
+
+### Added
+
+- **Express, Fastify and Koa**, where a route is registered by a call rather
+  than declared by a decorator. One reader over all four call-registered
+  frameworks, parameterised by a description of each; Hono became the first row
+  of that table rather than the only implementation. The routers a route is
+  mounted through and the middleware in front of it — including middleware
+  installed on an application above the mount and inherited through it — are
+  read, which is what lets the route audit answer on these repositories rather
+  than defer to a person.
+- **React and Next.js.** A request is found wherever it is written and walked
+  back to the component or hook that decided the address. A Next.js route is a
+  directory path and a file name, with no call and no decorator registering it;
+  a server action is a boundary with no address at all, crossed by an import.
+  A repository that is a browser and a server at once is read once, by both
+  halves, into one node.
+- **socket.io, read from both ends.** `@SubscribeMessage` in a gateway and
+  `socket.emit` in a browser are two ends of one channel, under the namespace
+  the gateway declares. A stream is still not a channel: a browser holding one
+  open never names what it is waiting for, and a socket client writes the name
+  itself.
+- **Drizzle, Mongoose, Sequelize and Knex**, where the table is named in the
+  call rather than in a type — `from(users)`, `knex('orders')`,
+  `Model.init(…, { tableName })`. A table assembled at run time is reported
+  rather than guessed at.
+- **A service whose source you do not have.** A service entry may name an
+  OpenAPI document instead of a repository, and its routes and shapes join and
+  compare like any other end. Every edge that exists because a document said so
+  is marked `declared`, every party names the document, and every finding's
+  sentence says the end was declared and not read. Nothing here checks a
+  document against the service it describes, and the tool says so rather than
+  implying otherwise.
+- **An HTTP framework described in configuration.** `adapters.entry.http`
+  exposes the same description the four shipped readers are written as, so a
+  framework nobody here has heard of can be read without a pull request. All
+  four were rewritten as descriptions through that schema, which is what proves
+  it rather than asserting it.
+- **A file the parser cannot read says so.** It used to produce no node, no
+  edge, no row and no mention — the count of files read was the only place it
+  appeared, and it argued the opposite of the truth.
+- Three gates: **I2**, no raw control character in a source; **I12**, no
+  extractor reachable from a sibling extractor; **I13**, every reason a row
+  carries is a reason `doctor` knows. Each was watched failing before it was
+  trusted.
+
+### Changed
+
+- **`SCHEMA_VERSION` is 4.** A graph written by an earlier version is refused
+  with a message saying to rebuild, rather than half read. Nothing needs doing
+  beyond a rebuild.
+- **`confidence` has a fifth level, `declared`**, ranking below `marker` and
+  above `heuristic`. An annotation is written by somebody who can see the code;
+  a document is written by somebody who cannot see yours. Before this, a third
+  party's self-description wore the same word as an annotation in your own
+  source.
+- The rebuild plan hashes a graph's body rather than the file, so the clock
+  inside it no longer makes every reading of an unchanged tree look like a
+  change. A graph reprinted with different whitespace now plans `skip`.
+- A repository node reports files opened, files read, and the difference,
+  instead of one number that counted what it could not read.
+- `contracts.json` is at format version 4: a party can name the document that
+  declared it, and a reader that did not know would present a declared end
+  exactly as it presents a read one.
 
 ### Fixed
 
@@ -53,12 +127,25 @@ other things.
   than written out by hand. The hand-written list had missed a reader, so a tool
   rebuilt with it answered from the cache written before that reader existed —
   a real change read as no change.
-
-### Added
-
-- `fixtures/fn-data-layer`, the same four queries written twice — as a module of
-  exported functions and as a class — so that the two can be compared rather
-  than described, and both spellings of an entity name are covered.
+- A receiver whose type is an intersection has an origin. Every modern database
+  driver hands out its client as one, so a whole data layer resolved to no
+  package and no table — 43 queries on one real repository, every one of them a
+  guess made on the name.
+- An exported const built by a call is a function. A server action or a route
+  handler written `export const GET = withWorkspace(…)` had no node, so every
+  caller of it reached nothing and nothing it called was on the graph at all.
+- A verb aliased to another verb, a built value re-exported under two names,
+  and a destructured built export are each read as the handler they name.
+- A build that fails stops its readers before it returns. It settled on the
+  first failure and left the others running, so an abandoned extraction went on
+  writing into a repository — invisible in the command, which exits, and not
+  invisible to a watch, an embedder or a second build.
+- A whitelisting pipe on an array body produces the findings it produces on an
+  object body. The check that exists to notice a stripped field said nothing at
+  all for a `Dto[]`, and a nested field path is now walked rather than answered
+  `unknown` without having been compared.
+- A hint no longer says a type was declared in this repository when the same row
+  says it came from a package.
 
 ## [0.4.1][] - 2026-09-22
 
