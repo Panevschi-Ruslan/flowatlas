@@ -892,6 +892,14 @@ several repositories, and `info`), `entry-http-types-unmatched` when nothing in
 the repository is a value of any type it names, and `entry-http-routes-unmatched`
 when calls on those types were found and none of them spelled a verb and a path.
 
+The same two rows are written for a framework shipped with the tool, at `info`
+rather than as something to act on. A repository that depends on Express and
+declares no route on it is ordinary — a library, a worker, a service whose routes
+live elsewhere — and it reads exactly like a repository whose routes are declared
+in a way no reader here knows, which is what Medusa v2's file-system router is.
+The reader cannot tell those two apart; what it can do is say which two it cannot
+tell apart, rather than counting the repository as clean (R84).
+
 ### More than one framework in one repository
 
 Nothing to configure. `services[].type` picks the reader that opens a

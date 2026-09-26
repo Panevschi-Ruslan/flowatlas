@@ -375,5 +375,60 @@ export const HONO: RouteDialect = described({
   middleware: { method: 'use', scoped: true },
 });
 
+/**
+ * A helper package that mounts one application inside another.
+ *
+ * `app.use(mount('/api', api))` — `koa-mount` takes a prefix and an application
+ * and hands back middleware, so what `use` receives is not an application and
+ * the framework's own row cannot say where anything went. The reader already
+ * finds the application among such a call's arguments and records it as mounted
+ * with no readable path, which stopped a wrong address being published and left
+ * the right one unread: on outline, 253 routes at an address nothing serves
+ * became 233 rows saying the address could not be told (R84, R110).
+ *
+ * The prefix is in the call. What is not in the call is which argument it is,
+ * and that is a fact about one published package rather than about anything the
+ * reader could work out — so it is written down once, here, and `koa-mount`
+ * becomes one record instead of a condition inside the reader. A helper nobody
+ * described is not a special case: it keeps the row it already had.
+ *
+ * Keyed by the package the helper is imported from, and not by the name it is
+ * imported under, because the name belongs to the importer: outline writes
+ * `import mount from 'koa-mount'` and the next repository may write anything.
+ */
+export interface MountHelper {
+  /** Which argument is the application; negative counts from the end. */
+  readonly appAt: number;
+  /**
+   * Which argument spells the prefix.
+   *
+   * When the helper is called with the application alone — `mount(routes)`, which
+   * outline also writes — this position holds the application itself, and the
+   * mount is at its parent's base, which is what the helper does with it.
+   */
+  readonly pathAt: number;
+}
+
+/**
+ * Every mount helper described, by the package it comes from.
+ *
+ * A map rather than a list of rows with a package field on each, because the
+ * reader asks exactly one question of it — what does this package mean — and a
+ * lookup is that question. It sits beside the dialects rather than inside one
+ * because a helper is not part of any framework's calling convention: it is a
+ * third-party module that happens to take an application, and `koa-mount` is
+ * no more a fact about Koa than `express-session` is about Express.
+ *
+ * Not yet something a person can write in configuration. The dialects above go
+ * in through `entryHttpSchema` so that what ships is proof the description can
+ * say what a real framework needs, and a helper field on that schema belongs to
+ * the same change in core that registers it; this row is the description, and
+ * the schema that publishes it is the ticket after this one.
+ */
+export const MOUNT_HELPERS: ReadonlyMap<string, MountHelper> = new Map([
+  // `mount(prefix, app)` and `mount(app)`: the application is last either way.
+  ['koa-mount', { appAt: -1, pathAt: 0 }],
+]);
+
 /** Every framework that registers a route by calling the application. */
 export const ROUTE_DIALECTS: readonly RouteDialect[] = [EXPRESS, FASTIFY, KOA, HONO];

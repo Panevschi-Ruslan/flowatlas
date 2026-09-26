@@ -1,19 +1,85 @@
-import type { EntryAdapter, EntryNode } from '@flowatlas/core';
+import type { EntryAdapter, EntryNode, ExtractContext } from '@flowatlas/core';
 import {
   decoratorArgs,
   decoratorName,
-  findDecorators,
-  getDecorator,
   hasAnyDependency,
   makeEntryId,
   makeHttpEntryKey,
   normalizePath,
   stringListArg,
 } from '@flowatlas/core';
-import { Node, type MethodDeclaration } from 'ts-morph';
-import { fileOfNode, handlerOf, joinPath, repoClasses } from './shared.js';
+import { Node, type Decorator, type MethodDeclaration } from 'ts-morph';
+import {
+  decoratorNames,
+  decoratorsFrom,
+  fileOfNode,
+  handlerOf,
+  joinPath,
+  repoClasses,
+  type ForeignDecorator,
+} from './shared.js';
 
-const NEST_COMMON = ['@nestjs/common'] as const;
+/**
+ * The package the decorators read here come from, matched as a package.
+ *
+ * Not as a module specifier: `@nestjs/common/decorators` is the same package and
+ * the same `@Controller`, and matching the string exactly meant a controller
+ * written that way reached the `continue` below before any row was written (R84).
+ */
+const NEST_PACKAGES = ['@nestjs/common'] as const;
+
+/** Decorators of one node from Nest's own package, and the ones only named like them. */
+const nestDecorators = (node: { getDecorators(): Decorator[] }, names: readonly string[]) =>
+  decoratorsFrom(node, names, NEST_PACKAGES);
+
+const firstNestDecorator = (
+  node: { getDecorators(): Decorator[] },
+  name: string,
+): Decorator | undefined => nestDecorators(node, [name]).matched[0];
+
+/**
+ * A decorator spelled like one of Nest's and imported from somewhere else.
+ *
+ * Either Nest's after all, re-exported through a barrel the checker could not
+ * follow, or a local decorator sharing the name. Nothing here can tell which,
+ * and both readings matter to whoever is looking at the graph: the first means
+ * routes are missing, the second means nothing is. So the class is named, the
+ * module it imported from is quoted, and the reader decides — which is the whole
+ * of the contract R84 is about, since what happened before was that the class
+ * was passed over in silence.
+ *
+ * Informational, because a repository with its own `@Controller` is doing
+ * nothing wrong and this is a limit of static reading rather than a mistake
+ * somebody made.
+ *
+ * The reason is borrowed rather than invented, and it is worth saying why. Every
+ * reason must be registered in `doctor`'s catalogue or I13 fails, and that
+ * catalogue is in a package this ticket may not touch, so a new reason was not
+ * available. `entry-http-types-unmatched` is the nearest true one — a reader that
+ * recognised the framework and could not match where a declaration came from —
+ * and a row carrying its own `hint`, as this one does, uses that sentence rather
+ * than the catalogue's. What the borrowed reason costs is the heading this row is
+ * grouped under, and the right fix is a reason of its own the day the catalogue
+ * can be edited.
+ */
+const reportForeign = (
+  ctx: ExtractContext,
+  foreign: readonly ForeignDecorator[],
+  where: { file: string; line: number; symbol: string },
+): void => {
+  for (const { decorator, module } of foreign) {
+    ctx.builder.addUnresolved({
+      file: where.file,
+      line: where.line,
+      reason: 'entry-http-types-unmatched',
+      level: 'info',
+      message: `${where.symbol} is decorated with @${decoratorName(decorator)} imported from '${module}', which this could not place as ${NEST_PACKAGES[0]}, so no route was read from it.`,
+      hint: `Import the decorator from ${NEST_PACKAGES[0]} or a subpath of it, rather than through a module that re-exports it.`,
+      symbol: where.symbol,
+      adapter: 'nestjs-http',
+    });
+  }
+};
 
 /** Decorator name to HTTP method. `All` stands for every method at once. */
 const ROUTE_DECORATORS: Record<string, string> = {
@@ -49,9 +115,7 @@ interface ControllerPrefix {
 }
 
 /** `@Controller('x')`, `@Controller(['x','y'])` and `@Controller({ path, version })`. */
-const readControllerPrefix = (declaration: Parameters<typeof getDecorator>[0]): ControllerPrefix => {
-  const decorator = getDecorator(declaration, 'Controller', NEST_COMMON);
-  if (decorator === undefined) return { paths: [''], dynamic: false };
+const readControllerPrefix = (decorator: Decorator): ControllerPrefix => {
   const [first] = decoratorArgs(decorator);
   if (first === undefined) return { paths: [''], dynamic: false };
   if (!first.resolved) return { paths: [''], dynamic: true };
@@ -76,8 +140,8 @@ const readControllerPrefix = (declaration: Parameters<typeof getDecorator>[0]): 
   return { paths: [''], dynamic: true };
 };
 
-const versionOf = (node: Parameters<typeof getDecorator>[0]): string | undefined => {
-  const decorator = getDecorator(node, 'Version', NEST_COMMON);
+const versionOf = (node: { getDecorators(): Decorator[] }): string | undefined => {
+  const decorator = firstNestDecorator(node, 'Version');
   if (decorator === undefined) return undefined;
   const [first] = decoratorArgs(decorator);
   return first !== undefined && first.resolved && typeof first.value === 'string'
@@ -104,11 +168,22 @@ export const nestjsHttpAdapter: EntryAdapter = {
         : undefined;
 
     for (const declaration of repoClasses(ctx)) {
-      const controller = getDecorator(declaration, 'Controller', NEST_COMMON);
-      if (controller === undefined) continue;
-      const prefix = readControllerPrefix(declaration);
+      const found = nestDecorators(declaration, ['Controller']);
+      const controller = found.matched[0];
       const controllerName = declaration.getName() ?? '<anonymous>';
       const file = fileOfNode(declaration, ctx);
+      if (controller === undefined) {
+        // A class carrying no `@Controller` at all is most of the repository and
+        // says nothing; one carrying something spelled that way from a module
+        // this could not place is a reading that failed, and it gets a row.
+        reportForeign(ctx, found.foreign, {
+          file,
+          line: declaration.getStartLineNumber(),
+          symbol: controllerName,
+        });
+        continue;
+      }
+      const prefix = readControllerPrefix(controller);
 
       if (prefix.dynamic) {
         ctx.builder.addUnresolved({
@@ -123,12 +198,34 @@ export const nestjsHttpAdapter: EntryAdapter = {
       }
 
       for (const method of declaration.getMethods()) {
-        for (const decorator of findDecorators(method, {
-          names: Object.keys(ROUTE_DECORATORS),
-          fromModules: NEST_COMMON,
-        })) {
-          const httpMethod = ROUTE_DECORATORS[decoratorName(decorator)];
-          if (httpMethod === undefined) continue;
+        const routes = nestDecorators(method, Object.keys(ROUTE_DECORATORS));
+        reportForeign(ctx, routes.foreign, {
+          file,
+          line: method.getStartLineNumber(),
+          symbol: `${controllerName}.${method.getName()}`,
+        });
+        for (const decorator of routes.matched) {
+          // Both spellings, because `import { Get as HttpGet }` is still a GET
+          // and the table is keyed by the names Nest exports. A decorator that
+          // matched by name and answers to neither is not a thing that exists
+          // today; it gets a row rather than a `continue`, because the one thing
+          // this reader may not do is drop a route it recognised (R84).
+          const httpMethod = decoratorNames(decorator)
+            .map((name) => ROUTE_DECORATORS[name])
+            .find((verb) => verb !== undefined);
+          if (httpMethod === undefined) {
+            ctx.builder.addUnresolved({
+              file,
+              line: method.getStartLineNumber(),
+              reason: 'entry-http-types-unmatched',
+              level: 'info',
+              message: `@${decoratorName(decorator)} on ${controllerName}.${method.getName()} came from ${NEST_PACKAGES[0]} and stands for no HTTP method this knows, so no route was read from it.`,
+              hint: 'Write the decorator under the name Nest exports it as.',
+              symbol: `${controllerName}.${method.getName()}`,
+              adapter: 'nestjs-http',
+            });
+            continue;
+          }
           const [pathArg] = decoratorArgs(decorator);
 
           let paths: string[];
@@ -165,8 +262,11 @@ export const nestjsHttpAdapter: EntryAdapter = {
           const handler = handlerOf(method, ctx);
           const otherDecorators = method
             .getDecorators()
-            .filter((item) => !FRAMEWORK_DECORATORS.has(decoratorName(item)))
-            .map((item: import("ts-morph").Decorator) => ({
+            // Under either name: a framework decorator written as an alias is
+            // still the framework's, and listing it as one of the handler's own
+            // would put `@HttpGet` in the meta of the route it declares.
+            .filter((item) => !decoratorNames(item).some((name) => FRAMEWORK_DECORATORS.has(name)))
+            .map((item: Decorator) => ({
               name: decoratorName(item),
               args: decoratorArgs(item).map((value) =>
                 value.resolved ? value.value : { unresolved: value.text },

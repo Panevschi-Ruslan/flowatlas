@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 4,
+  "repo": "koa-mount-helper",
+  "generatedAt": "2026-09-26T21:03:11.251Z",
+  "nodes": [
+    {
+      "id": "entry:koa-mount-helper:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "koa-mount-helper",
+      "file": "src/health.routes.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "koa-routes",
+        "registration": "healthRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:koa-mount-helper:http:GET:/pages.list",
+      "type": "entry",
+      "label": "GET /pages.list",
+      "repo": "koa-mount-helper",
+      "file": "src/pages.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/pages.list",
+        "rawPath": "/pages.list",
+        "adapter": "koa-routes",
+        "registration": "pagesRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:koa-mount-helper:http:POST:/api/documents.info",
+      "type": "entry",
+      "label": "POST /api/documents.info",
+      "repo": "koa-mount-helper",
+      "file": "src/api/documents.routes.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/documents.info",
+        "rawPath": "/api/documents.info",
+        "adapter": "koa-routes",
+        "registration": "documentsRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:koa-mount-helper:http:POST:/api/documents.list",
+      "type": "entry",
+      "label": "POST /api/documents.list",
+      "repo": "koa-mount-helper",
+      "file": "src/api/documents.routes.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/documents.list",
+        "rawPath": "/api/documents.list",
+        "adapter": "koa-routes",
+        "registration": "documentsRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "koa-mount-helper#src/api/documents.routes.ts:POST /documents.info@13",
+      "type": "function",
+      "label": "POST /documents.info@13",
+      "repo": "koa-mount-helper",
+      "file": "src/api/documents.routes.ts",
+      "line": 13
+    },
+    {
+      "id": "koa-mount-helper#src/api/documents.routes.ts:POST /documents.list@17",
+      "type": "function",
+      "label": "POST /documents.list@17",
+      "repo": "koa-mount-helper",
+      "file": "src/api/documents.routes.ts",
+      "line": 17
+    },
+    {
+      "id": "koa-mount-helper#src/health.routes.ts:GET /@7",
+      "type": "function",
+      "label": "GET /@7",
+      "repo": "koa-mount-helper",
+      "file": "src/health.routes.ts",
+      "line": 7
+    },
+    {
+      "id": "koa-mount-helper#src/pages.ts:GET /pages.list@17",
+      "type": "function",
+      "label": "GET /pages.list@17",
+      "repo": "koa-mount-helper",
+      "file": "src/pages.ts",
+      "line": 17
+    },
+    {
+      "id": "repo:koa-mount-helper",
+      "type": "repo",
+      "label": "koa-mount-helper",
+      "repo": "koa-mount-helper",
+      "meta": {
+        "stats": {
+          "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "koa-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:koa-mount-helper:http:GET:/health",
+      "to": "koa-mount-helper#src/health.routes.ts:GET /@7",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/health.routes.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:koa-mount-helper:http:GET:/pages.list",
+      "to": "koa-mount-helper#src/pages.ts:GET /pages.list@17",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages.ts",
+      "line": 17
+    },
+    {
+      "from": "entry:koa-mount-helper:http:POST:/api/documents.info",
+      "to": "koa-mount-helper#src/api/documents.routes.ts:POST /documents.info@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/api/documents.routes.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:koa-mount-helper:http:POST:/api/documents.list",
+      "to": "koa-mount-helper#src/api/documents.routes.ts:POST /documents.list@17",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/api/documents.routes.ts",
+      "line": 17
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/admin/admin.routes.ts",
+      "line": 14,
+      "reason": "route-path-dynamic",
+      "message": "adminRouter is mounted somewhere this cannot read, so /users.list is not the path it is served at.",
+      "hint": "The path is an argument of underFlag(admin), a mount helper this tool has no record of. Mount the application with the framework's own method and a literal path, or have that helper described.",
+      "symbol": "GET /users.list",
+      "adapter": "koa-routes"
+    }
+  ]
+}

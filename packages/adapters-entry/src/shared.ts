@@ -6,8 +6,22 @@ import type {
   InlineHandler,
   NamedFunction,
 } from '@flowatlas/core';
-import { methodNamedOn, namedFunction, normalizeFilePath, originOfValue } from '@flowatlas/core';
-import type { ClassDeclaration, MethodDeclaration, Node as TsNode, SourceFile } from 'ts-morph';
+import {
+  decoratorExportedName,
+  decoratorModule,
+  decoratorName,
+  methodNamedOn,
+  namedFunction,
+  normalizeFilePath,
+  originOfValue,
+} from '@flowatlas/core';
+import type {
+  ClassDeclaration,
+  Decorator,
+  MethodDeclaration,
+  Node as TsNode,
+  SourceFile,
+} from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 
 /** Files of the repository, ignoring anything that came from a package. */
@@ -25,6 +39,186 @@ export const repoClasses = function* (ctx: ExtractContext): Generator<ClassDecla
 
 export const fileOfNode = (node: { getSourceFile(): SourceFile }, ctx: ExtractContext): string =>
   normalizeFilePath(node.getSourceFile().getFilePath(), ctx.repoDir);
+
+/**
+ * The package a module specifier names, or undefined when it names a file.
+ *
+ * `@nestjs/common/decorators` is `@nestjs/common`: a subpath import of a package
+ * is an import of that package, and a reader that matched the specifier exactly
+ * skipped every controller written the second way. On novu that was 21 routes in
+ * 3 files, dropped with no row to say so, while the classes and the methods
+ * around them were read normally — so nothing in the output even hinted that a
+ * file had been half read (R84).
+ */
+export const packageOfSpecifier = (specifier: string): string | undefined => {
+  if (specifier === '' || specifier.startsWith('.') || specifier.startsWith('/')) return undefined;
+  const [first, second] = specifier.split('/');
+  if (first === undefined || first === '') return undefined;
+  if (!first.startsWith('@')) return first;
+  return second === undefined || second === '' ? undefined : `${first}/${second}`;
+};
+
+/**
+ * The package the function a call names was imported from.
+ *
+ * `mount('/api', api)` says nothing about itself; `import mount from 'koa-mount'`
+ * at the top of the same file says everything, and that is where this reads. The
+ * import statement first and the checker second, for the reason `importedAs`
+ * below gives at greater length: the statement is there in every state of the
+ * repository, including a fixture and a fresh clone where no package resolves,
+ * and the checker is the fallback for a namespace import or a re-export it
+ * managed to follow. A subpath import is an import of the package, which
+ * `packageOfSpecifier` settles.
+ *
+ * A namespace access is read through to the namespace — `helpers.mount(...)`
+ * comes from wherever `helpers` was imported from — because that is the same
+ * fact written differently, and a description keyed on the package would
+ * otherwise match one spelling of an import and not the other.
+ */
+export const packageOfCall = (call: TsNode): string | undefined => {
+  if (!Node.isCallExpression(call)) return undefined;
+  const callee = call.getExpression();
+  const named = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
+  if (!Node.isIdentifier(named)) return undefined;
+  for (const declaration of named.getSymbol()?.getDeclarations() ?? []) {
+    const statement = declaration.getFirstAncestorByKind(SyntaxKind.ImportDeclaration);
+    if (statement === undefined) continue;
+    const pkg = packageOfSpecifier(statement.getModuleSpecifierValue());
+    if (pkg !== undefined) return pkg;
+  }
+  const origin = originOfValue(named);
+  return origin.kind === 'external' ? origin.package : undefined;
+};
+
+/**
+ * The identifier a decorator applies, through a call and a namespace access.
+ *
+ * The same reading core's decorator matcher does, needed here because what this
+ * module wants out of it is the import specifier rather than the module alone:
+ * the name a package exports and the module it was imported from are one fact
+ * written in one place, and asking two questions of two functions is how the
+ * second half of R84 came to be answerable only when the checker could resolve
+ * the package.
+ */
+const appliedIdentifier = (decorator: Decorator): TsNode | undefined => {
+  const expression = decorator.getExpression();
+  const applied = Node.isCallExpression(expression) ? expression.getExpression() : expression;
+  if (Node.isPropertyAccessExpression(applied)) return applied.getNameNode();
+  return Node.isIdentifier(applied) ? applied : undefined;
+};
+
+/**
+ * The import a decorator's name is bound by: the module, and the name inside it.
+ *
+ * Read off the import statement rather than resolved through the checker, and
+ * that is the point. `import { Get as HttpGet } from '@nestjs/common/decorators'`
+ * says both things in the file, in plain sight, whether or not the package is
+ * installed — and a fixture, a fresh clone and a repository whose dependencies
+ * do not resolve are all cases where the checker has no aliased symbol to offer
+ * and the statement still says everything needed.
+ */
+const importedAs = (decorator: Decorator): { module: string; name: string } | undefined => {
+  const identifier = appliedIdentifier(decorator);
+  if (identifier === undefined || !Node.isIdentifier(identifier)) return undefined;
+  for (const declaration of identifier.getSymbol()?.getDeclarations() ?? []) {
+    if (!Node.isImportSpecifier(declaration)) continue;
+    return {
+      module: declaration.getImportDeclaration().getModuleSpecifierValue(),
+      // As written before any `as`, which is the name the package exports.
+      name: declaration.getName(),
+    };
+  }
+  return undefined;
+};
+
+/**
+ * Where a decorator came from, as far as the checker can tell.
+ *
+ * `unreadable` is not `elsewhere`: a symbol the checker could not follow is a
+ * limit of this reading rather than evidence that somebody else exported the
+ * name, and the matcher below gives it the benefit of the doubt exactly as the
+ * one in core does. Refusing it would drop real routes wherever a re-export
+ * cannot be resolved.
+ */
+export type DecoratorOrigin =
+  | { readonly from: 'asked'; readonly package: string }
+  | { readonly from: 'elsewhere'; readonly module: string }
+  | { readonly from: 'unreadable' };
+
+export const decoratorOrigin = (
+  decorator: Decorator,
+  packages: readonly string[],
+): DecoratorOrigin => {
+  // The import statement first, the checker second: the statement is there in
+  // every state of the repository, and the checker's answer is what it falls
+  // back to for a namespace import or a symbol it followed into a package.
+  const module = importedAs(decorator)?.module ?? decoratorModule(decorator);
+  if (module === undefined) return { from: 'unreadable' };
+  const pkg = packageOfSpecifier(module);
+  if (pkg !== undefined && packages.includes(pkg)) return { from: 'asked', package: pkg };
+  return { from: 'elsewhere', module };
+};
+
+/** A decorator this reader recognised by name and could not place by package. */
+export interface ForeignDecorator {
+  readonly decorator: Decorator;
+  /** The module it was imported from, as written. */
+  readonly module: string;
+}
+
+/**
+ * Decorators named here, told apart by whether these packages exported them.
+ *
+ * The second list is the whole reason this exists rather than a call to
+ * `getDecorator` with a list of module names. A decorator spelled like a
+ * framework's and imported from somewhere else is either the framework's after
+ * all — re-exported through a barrel this cannot follow — or a local one that
+ * happens to share the name, and the reader cannot tell which. What it must not
+ * do is treat the two the same as a class carrying no such decorator at all:
+ * that is the silence R84 is about, so the caller is handed what it could not
+ * place and is expected to write a row about it.
+ */
+export interface SortedDecorators {
+  readonly matched: readonly Decorator[];
+  readonly foreign: readonly ForeignDecorator[];
+}
+
+export const decoratorsFrom = (
+  node: { getDecorators(): Decorator[] },
+  names: readonly string[],
+  packages: readonly string[],
+): SortedDecorators => {
+  const matched: Decorator[] = [];
+  const foreign: ForeignDecorator[] = [];
+  // Matched here rather than by `findDecorators`, because the names this asks
+  // about include the one the import statement spells and that function knows
+  // only the written name and whatever the checker could alias it to.
+  for (const decorator of node.getDecorators()) {
+    if (!decoratorNames(decorator).some((name) => names.includes(name))) continue;
+    const origin = decoratorOrigin(decorator, packages);
+    if (origin.from === 'elsewhere') foreign.push({ decorator, module: origin.module });
+    else matched.push(decorator);
+  }
+  return { matched, foreign };
+};
+
+/**
+ * Every name a decorator answers to: as written, as imported, as exported.
+ *
+ * `import { Get as HttpGet }` is still `Get`, and a table keyed by the names a
+ * package exports has no answer for the alias. The written name comes first
+ * because it is what the file says and nothing can be wrong about it; the
+ * imported name comes next because the import statement is there whether or not
+ * the package is; the checker's answer comes last, for a name that reached the
+ * file some other way.
+ */
+export const decoratorNames = (decorator: Decorator): readonly string[] => {
+  const names = [decoratorName(decorator)];
+  for (const name of [importedAs(decorator)?.name, decoratorExportedName(decorator)]) {
+    if (name !== undefined && !names.includes(name)) names.push(name);
+  }
+  return names;
+};
 
 export const handlerOf = (method: ClassMethod, ctx: ExtractContext) => {
   const owner = method.getParent() as ClassDeclaration;
