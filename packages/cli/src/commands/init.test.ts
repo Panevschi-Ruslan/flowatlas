@@ -139,6 +139,7 @@ describe('runInit', () => {
       entry: { registries: [], http: [] },
       broker: { custom: [] },
       db: { localBaseClasses: [] },
+      frontend: { localClientClasses: [] },
     });
 
     const loaded = loadConfig(out);

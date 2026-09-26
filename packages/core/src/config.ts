@@ -387,6 +387,24 @@ export const flowatlasConfigSchema = z
             localBaseClasses: z.array(z.string().min(1)).default([]),
           })
           .default({ localBaseClasses: [] }),
+        frontend: z
+          .strictObject({
+            /**
+             * Classes declared in a repository that stand for its HTTP client.
+             *
+             * The browser's half of what `db.localBaseClasses` does for the data
+             * half, and it is needed for the same reason: a class wrapping
+             * `fetch` behind `get` and `post` is the normal way to write a front
+             * end, and there is no package to point at. The reader recognises
+             * such a class on its own wherever it can follow the class's own
+             * verbs to the network; this is how a project says so where it
+             * cannot — a base the verbs are inherited from, a transport reached
+             * through a helper module, a repository whose dependencies are not
+             * installed. Naming the class or any class it extends is enough.
+             */
+            localClientClasses: z.array(z.string().min(1)).default([]),
+          })
+          .default({ localClientClasses: [] }),
       })
       .default({
         auto: true,
@@ -394,6 +412,7 @@ export const flowatlasConfigSchema = z
         entry: { registries: [], http: [] },
         broker: { custom: [] },
         db: { localBaseClasses: [] },
+        frontend: { localClientClasses: [] },
       }),
     /** Directory for generated artefacts, relative to the configuration file. */
     output: z.string().min(1).default(DEFAULT_OUTPUT),

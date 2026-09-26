@@ -37,7 +37,7 @@ land on one address.
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 159 | 0 |
+| requests from a browser | 160 | 0 |
 | requests between services | 161 | 0 |
 | channels | 0 | 0 with both ends |
 
@@ -54,13 +54,14 @@ land on one address.
 
 ## What it could not read
 
-657 places somebody could act on, 541 the tool
+659 places somebody could act on, 541 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| api-path-dynamic | action | 74 |  |
+| api-client-unread | action | 1 |  |
+| api-path-dynamic | action | 75 |  |
 | call-dynamic-receiver | info | 534 |  |
 | db-receiver-name-only | action | 313 |  |
 | dynamic-config-key | action | 7 |  |

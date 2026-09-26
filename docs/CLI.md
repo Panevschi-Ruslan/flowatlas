@@ -666,6 +666,7 @@ three words version 2 knew.
 | `auto` | boolean | `true` | detect which adapters apply from each repository's manifest |
 | `force` | object | `{}` | use these adapters regardless of what was detected |
 | `db.localBaseClasses` | string[] | `[]` | classes of your own that behave like a repository, so calls through them are data access |
+| `frontend.localClientClasses` | string[] | `[]` | classes of your own that make HTTP requests, so `get`/`post`/… called on them are requests |
 | `broker.custom` | object[] | `[]` | an in-house message bus, described so its publishers and handlers are found |
 | `entry.registries` | object[] | `[]` | a table of handlers you keep yourself, described so each registration is a way in |
 | `entry.http` | object[] | `[]` | an HTTP framework nothing here ships an adapter for, described so its routes are read |
@@ -685,6 +686,37 @@ two of them ignore is worse than a documented limitation; when it is added it
 belongs where the readers are chosen, so that each of them is handed a
 configuration already narrowed to the service it is reading, rather than in
 three copies of the same merge.
+
+**A client class of your own.** A class wrapping `fetch` behind `get` and `post`,
+exported as one instance every screen imports, is the ordinary way to write a
+front end, and there is no package for a description to point at. The reader
+works it out where it can: a class is a client when one of its own verb-named
+members can be followed to `fetch` or to an `axios` value, directly or through
+another member of the same class. That is evidence and not a name — a store with
+`get` and `delete` reaches nothing and is not read as a client.
+
+Where the chain leaves the class, recognition stops: a transport in a helper
+module, a base class whose source is not here, a client handed to the
+constructor, dependencies that are not installed. Name the class — or any class
+it extends — under `frontend.localClientClasses` and nothing more is asked; every
+verb it declares is then a request, and a class that declares none of its own
+answers to all seven. Requests carry `client` set to the class name and
+`localClient` set to `recognised` or `declared`, so a graph says which of the two
+happened.
+
+Where a verb is called on a class of yours that could not be read as a client
+*and* the call writes an address — a path with a leading slash, or a URL — one
+row per site says so and names the class. Where the address could not be read
+either, nothing is said: naming the client would only buy a row about an address
+built at run time.
+
+```jsonc
+{
+  "adapters": {
+    "frontend": { "localClientClasses": ["ApiClient"] }
+  }
+}
+```
 
 A custom broker entry:
 

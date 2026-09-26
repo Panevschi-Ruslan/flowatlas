@@ -416,6 +416,8 @@ them in, and what to check when a client will not list the server.
   "adapters": {
     "auto": true,
     "db": { "localBaseClasses": ["BaseRepository"] },
+    // a client class of your own the reader could not follow to a request
+    "frontend": { "localClientClasses": ["ApiClient"] },
     "broker": {
       "custom": [
         {

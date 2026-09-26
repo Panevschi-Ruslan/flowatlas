@@ -452,6 +452,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The verb is chosen at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.',
   'api-base-unknown': () =>
     'Add the settings key to services[].apiBaseEnv, and services[].apiTarget to say which service answers it.',
+  'api-client-unread': () =>
+    'A class of this repository is called by an HTTP verb and nothing could follow that verb to a request. Add the class to adapters.frontend.localClientClasses in flowatlas.config.json if it is a client of your own.',
   'handler-not-found': (row) =>
     `${named(row)} is bound in a template and declared nowhere on the component. Rename the binding, or declare the method.`,
   'handler-not-a-method': () =>

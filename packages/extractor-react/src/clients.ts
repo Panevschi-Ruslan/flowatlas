@@ -17,7 +17,15 @@
 
 /** A type whose values make requests, and the package that declares it. */
 export interface ClientType {
-  readonly package: string;
+  /**
+   * The package declaring the type, or null when the repository being read does.
+   *
+   * Null is not a placeholder. A client class a project wrote itself is declared
+   * in no package at all, and that absence is the whole of what tells it apart
+   * from a type of the same name installed from somewhere — which is why the
+   * description carries it rather than the reader inferring it from the name.
+   */
+  readonly package: string | null;
   readonly typeName: string;
 }
 
@@ -76,6 +84,30 @@ export const FETCH: RequestClient = {
 };
 
 /**
+ * A verb named as a method, and where the parts of that call sit.
+ *
+ * One table, shared by every client spelled this way, because the spelling is
+ * not any one client's invention: `post(url, body)` is what `axios` does, what
+ * every generated client does, and what a class somebody wrote this morning
+ * does, and they agree because there is nowhere else for the two arguments to
+ * go. A client that names its verbs otherwise says so in its own row; a client
+ * that names them this way says nothing and is read by this.
+ *
+ * The four verbs with no `bodyAt` are the ones whose second argument is not a
+ * body — `get(url, params)` puts it in the query string — and recording a body
+ * type for them would describe a request nobody makes.
+ */
+export const VERB_CALLS: Readonly<Record<string, CallShape>> = {
+  get: { method: 'GET', urlAt: 0 },
+  delete: { method: 'DELETE', urlAt: 0 },
+  head: { method: 'HEAD', urlAt: 0 },
+  options: { method: 'OPTIONS', urlAt: 0 },
+  post: { method: 'POST', urlAt: 0, bodyAt: 1 },
+  put: { method: 'PUT', urlAt: 0, bodyAt: 1 },
+  patch: { method: 'PATCH', urlAt: 0, bodyAt: 1 },
+};
+
+/**
  * The client library most repositories that do not use `fetch` reach for.
  *
  * Both spellings are listed because both are ordinary: `axios.get(url)` on the
@@ -90,17 +122,41 @@ export const AXIOS: RequestClient = {
   packages: ['axios'],
   receiver: {
     types: ['AxiosInstance', 'AxiosStatic'].map((typeName) => ({ package: 'axios', typeName })),
-    verbs: {
-      get: { method: 'GET', urlAt: 0 },
-      delete: { method: 'DELETE', urlAt: 0 },
-      head: { method: 'HEAD', urlAt: 0 },
-      options: { method: 'OPTIONS', urlAt: 0 },
-      post: { method: 'POST', urlAt: 0, bodyAt: 1 },
-      put: { method: 'PUT', urlAt: 0, bodyAt: 1 },
-      patch: { method: 'PATCH', urlAt: 0, bodyAt: 1 },
-    },
+    verbs: VERB_CALLS,
   },
 };
 
-/** Every client this extractor reads. */
+/** Every client this extractor reads without being told anything. */
 export const REQUEST_CLIENTS: readonly RequestClient[] = [FETCH, AXIOS];
+
+/**
+ * A client class the repository being read wrote itself.
+ *
+ * This is the shape the two rows above cannot describe and the one most front
+ * ends are actually written in: a class wrapping `fetch` behind `get` and
+ * `post`, exported as a single instance, with every request in the application
+ * written through it. Nothing about it is installed, so no dependency announces
+ * it and no fixed row can name it; the description has to be made out of the
+ * class itself, which is what this is for.
+ *
+ * It is the same row `axios` gets, with two differences and no third. The
+ * package is null because there is none. The verbs are the ones the class
+ * declares rather than all seven, so a class with `get` and `post` is never
+ * read as answering to `patch` — which matters, because a name a class does not
+ * declare is a name that means something else wherever it does appear.
+ * Everything after that — the shape of the call, the body, the address, the row
+ * when the address cannot be read — is the code already proved against the two.
+ */
+export const localClient = (typeName: string, verbs: readonly string[]): RequestClient => ({
+  name: typeName,
+  package: null,
+  receiver: {
+    types: [{ package: null, typeName }],
+    verbs: Object.fromEntries(
+      verbs.flatMap((verb) => {
+        const shape = VERB_CALLS[verb];
+        return shape === undefined ? [] : [[verb, shape] as const];
+      }),
+    ),
+  },
+});
