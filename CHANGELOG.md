@@ -85,6 +85,23 @@ either.
 
 ### Fixed
 
+- **Adapter detection reads the workspace a repository belongs to.** It asked
+  the service directory's own `package.json`, and in a workspace that manifest
+  is usually a name, a version and an exports map with no dependencies in it at
+  all: every adapter switched off and the repository was reported with no
+  routes, no channels and no data layer, which is indistinguishable from a
+  repository that has none. The question is now answered off the whole workspace
+  chain — the directory's own manifest, any manifest above it that lists it as a
+  member through `workspaces` or `pnpm-workspace.yaml`, and, where the directory
+  is itself a workspace root, the packages inside it whose sources are read as
+  part of it. On PeerTube, whose server declares nothing of its own, that is
+  seven socket.io channels and the Sequelize data layer where there had been
+  none of either; on the excalidraw monorepo, whose root declares `@types/react`
+  and not `react`, it is 396 components and 12 requests where there had been
+  nothing, and `adapters.force` is no longer the only way to read either. A
+  service's *type* is still guessed from its own manifest first, so a package
+  that declares Express is not read as React because the monorepo around it has
+  React in its tooling.
 - A query written in a module-level function is read. The leaf walk read the
   methods of the indexed classes and nothing else, so a `pool.query(…)` or a
   `db.select(…)` in a module of exported functions — the shape most TypeScript

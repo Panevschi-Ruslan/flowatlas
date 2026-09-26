@@ -670,6 +670,25 @@ three words version 2 knew.
 | `entry.registries` | object[] | `[]` | a table of handlers you keep yourself, described so each registration is a way in |
 | `entry.http` | object[] | `[]` | an HTTP framework nothing here ships an adapter for, described so its routes are read |
 
+**Detection reads the workspace, not only the leaf manifest.** A service that is
+a package inside a workspace is asked what it can import, and the answer is
+every dependency declared along the workspace chain it belongs to: the
+directory's own `package.json`, the manifest of any directory above it that
+lists it as a member — through `workspaces` or `pnpm-workspace.yaml` — and,
+where the directory handed over is itself a workspace root, the manifests of the
+packages inside it, whose sources are read as part of it. A dependency declared
+at the root of a workspace is available to a package inside it; that is the fact
+being followed. Without it, a leaf manifest that is a name, a version and an
+exports map — the normal shape of a workspace member — switched every adapter
+off, and the repository came back with no routes, no channels and no data layer,
+which reads exactly like a repository that has none.
+
+The type of a service is a narrower question and is answered narrowly: `link`
+guesses it from the repository's own manifest, and only falls back to the
+workspace when its own says nothing that gives a framework away. A package that
+declares Express is an Express service whatever the monorepo around it keeps in
+its tooling.
+
 **`force` is said once, for the whole project, and cannot be said per service.**
 A slot it names replaces the detected list in every repository, so a project
 that forces one entry adapter for one service must name the adapters of all its

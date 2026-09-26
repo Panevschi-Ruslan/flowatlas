@@ -7,7 +7,7 @@ a repository with no server.
 | repository | `excalidraw/excalidraw` |
 | commit | `c10499eebb6267f24c056a03c5daf436aada0446` |
 | read | `.` |
-| read by | excalidraw-monorepo (`unknown`) |
+| read by | excalidraw-monorepo (`nextjs`) |
 | source files counted | 519 |
 | flowatlas | 0.4.1 |
 
@@ -36,28 +36,38 @@ land on one address.
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 0 | 0 |
-| requests between services | 0 | 0 |
+| requests from a browser | 12 | 0 |
+| requests between services | 11 | 0 |
 | channels | 0 | 0 with both ends |
 
 ## Storage and screens
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 0 | nothing of this kind here |
-| …that name a table | 0 | nothing of this kind here |
+| query sites read | 80 | no denominator: the rule has no probe for it |
+| …that name a table | 0 | 0 of 80 |
 | tables | 0 | nothing of this kind here |
-| components | 0 | nothing of this kind here |
+| components | 396 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
-| every other binding a template makes | 0 | not counted by the rule |
+| every other binding a template makes | 425 | not counted by the rule |
 
 ## What it could not read
 
-0 places somebody could act on, 0 the tool
+119 places somebody could act on, 724 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
-Nothing.
+| reason | level | places |  |
+|---|---|---|---|
+| api-path-dynamic | action | 7 |  |
+| call-dynamic-receiver | info | 638 |  |
+| db-receiver-name-only | action | 80 |  |
+| dynamic-http-url | action | 6 |  |
+| target-route-not-found | action | 3 |  |
+| type-depth-exceeded | info | 39 |  |
+| type-generic-uninstantiated | info | 47 |  |
+| type-unresolved | action | 20 |  |
+| unknown-base-url-env | action | 3 |  |
 
 ## The denominators
 
@@ -86,7 +96,7 @@ applied identically to all eight targets and knows nothing about any of them.
 
 ## Cost
 
-Wall clock under 5 s, peak resident memory under 0.5 GB.
+Wall clock 5 to 15 s, peak resident memory 0.5 to 1 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

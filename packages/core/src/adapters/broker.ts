@@ -1,4 +1,4 @@
-import type { PackageJson } from './context.js';
+import type { PackageJson } from './manifest.js';
 
 /** What the transport calls the thing a message is addressed to. */
 export type ChannelKind = 'topic' | 'queue' | 'exchange' | 'channel';
