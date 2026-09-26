@@ -11,8 +11,8 @@ One map of a project that lives in several repositories.
 compiler's own checker, without running them, and joins them into one graph you
 can query — from a terminal or from a coding agent over the Model Context
 Protocol.** It knows NestJS and Angular, React and Next.js, Express, Fastify and
-Koa, Telegraf and Hono, TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Knex,
-Mongo, node-postgres, Redis, Kafka, RabbitMQ, BullMQ and socket.io.
+Koa, Telegraf and Hono, TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Kysely,
+Knex, Mongo, node-postgres, Redis, Kafka, RabbitMQ, BullMQ and socket.io.
 
 Each repository is read on its own, then the readings are joined: a request made
 in one service is matched to the route that answers it in another, a message
@@ -541,12 +541,13 @@ Working and verified against a real five-repository project:
   components and templates; Express, Fastify, Koa and Hono, where a route is
   registered by a call rather than declared by a decorator, with the routers it
   is mounted through and the middleware in front of it.
-- **Leaves** for TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Knex,
+- **Leaves** for TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Kysely, Knex,
   node-postgres, MongoDB and a repository base named in the configuration; Redis
   and cache-manager; outgoing requests; settings keys. Where the table is named
   in the call rather than in a type — `from(users)`, `knex('orders')`,
-  `Model.init(..., { tableName })` — it is read from the expression, and a table
-  assembled at run time is reported rather than guessed at.
+  `selectFrom('asset')`, `Model.init(..., { tableName })`,
+  `@Table({ tableName })` — it is read from the expression or the declaration,
+  and a table assembled at run time is reported rather than guessed at.
 - **Channels** for Kafka, RabbitMQ, BullMQ, Redis pub/sub, socket.io and an
   in-house bus described in the configuration. A socket is read from both ends:
   `@SubscribeMessage` in a gateway and `socket.emit` in a browser are two ends
@@ -623,9 +624,19 @@ Known gaps in what it can read:
   the table is not, because a modern driver's handle is typed as an
   intersection and a type's origin is not read through one. So those rows say
   the receiver was recognised by name alone, which is what they mean.
-- A model reached only through its type. `sequelize-typescript` injects a class
-  and names the table with a decorator the library resolves at run time, so
-  neither end of it is an expression anything here can walk.
+- A generated client that was never generated. Prisma's client is code its own
+  build step writes, and a repository cloned without running that step has no
+  `PrismaClient` declaration anywhere — so every query through it is a receiver
+  whose type could not be resolved, and says so. On cal.com, whose persistence
+  goes through a workspace package that re-exports the client, that is all 80 of
+  its query sites. A wrapper package is not itself the obstacle: where the
+  client's types exist, a query through a re-export is read under the library's
+  own name, because the type of what the wrapper hands on is still the library's.
+- A data layer this repository declares and does not name. Where a query goes
+  through a repository class of the project's own, the class is what says which
+  table is meant, and `adapters.db.localBaseClasses` is where a reader names it.
+  Until it is named, those calls are rows saying so — 1,141 of them on immich and
+  69 on cal.com — rather than queries nobody checked.
 - An address built entirely at run time, where no part of it is written down.
   Each one is reported rather than guessed at.
 - A helper whose tail depends on whether an argument is empty, where the caller

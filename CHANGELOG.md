@@ -40,6 +40,22 @@ either.
   the gateway declares. A stream is still not a channel: a browser holding one
   open never names what it is waiting for, and a socket client writes the name
   itself.
+- **Kysely**, where the connection is the whole database and every query begins
+  by naming its table: `selectFrom('asset')` and the three calls beside it. The
+  schema is in the connection's type argument and is not a table, so the
+  descriptor says so rather than letting the fallback name one. On immich, whose
+  every query is written this way, 579 of 579 query-builder sites are now read,
+  561 of them naming one of 61 tables where the tool had named 2.
+- **The decorated form of a Sequelize model**, which is how a TypeScript project
+  declares one: the table is in `@Table({ tableName })`, the model class is
+  declared in the repository while the base it extends comes from
+  `sequelize-typescript`, and `Model.scope('withOwner')` retypes the receiver to
+  a name no reader could parse. All three are records now — an alias saying the
+  two package names are one library, a decorator to read the table out of, and
+  the list of calls that narrow a model and hand back the same model. On outline
+  that is 1,272 query sites naming 41 tables where there had been 168 naming
+  none; 1,165 of the 1,272 name a table read from a decorator rather than
+  guessed at.
 - **Drizzle, Mongoose, Sequelize and Knex**, where the table is named in the
   call rather than in a type — `from(users)`, `knex('orders')`,
   `Model.init(…, { tableName })`. A table assembled at run time is reported
@@ -66,6 +82,15 @@ either.
 
 ### Changed
 
+- **A receiver named `store` is no longer read as a data layer.** It was the last
+  of the name hints, used only where the types say nothing, and across the eight
+  repositories the coverage harness reads it produced 97 rows of which none was a
+  data layer: arrays, maps, mutex and plugin registries, a browser object store, a
+  framework's cookie store, and the state stores three of those repositories keep
+  their screens in. No table and no query that names one changed on any target
+  when it went. A *type* called `OrderStore` is still read as a data layer, which
+  is the half of the hint with a class behind it.
+
 - **`SCHEMA_VERSION` is 4.** A graph written by an earlier version is refused
   with a message saying to rebuild, rather than half read. Nothing needs doing
   beyond a rebuild.
@@ -85,6 +110,17 @@ either.
 
 ### Fixed
 
+- An alias over a library's type no longer hides the library. An intersection
+  with a name of its own answers for itself, which is right when a framework
+  declares the name — its read-only cookie store is written that way — and wrong
+  when the repository being read declares it. outline names its authenticated
+  socket `type SocketWithAuthentication = Socket & { user: User }` and registers
+  every listener on it, so socket.io never matched and 29 of its 31 channels had
+  one end. The alias is now preferred only where the alias itself comes from a
+  package; both halves have a test.
+- A write through a connection parameterised by the whole schema no longer
+  registers the schema as the shape of the row it wrote. The same fabrication as
+  reading a schema type as a table, one field further along.
 - A query written in a module-level function is read. The leaf walk read the
   methods of the indexed classes and nothing else, so a `pool.query(…)` or a
   `db.select(…)` in a module of exported functions — the shape most TypeScript

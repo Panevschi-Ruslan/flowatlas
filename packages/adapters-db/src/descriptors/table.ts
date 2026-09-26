@@ -1,5 +1,11 @@
 import { declarationOf, evaluateExpression } from '@flowatlas/core';
-import { Node, SyntaxKind, type CallExpression, type Node as TsNode } from 'ts-morph';
+import {
+  Node,
+  SyntaxKind,
+  type CallExpression,
+  type ClassDeclaration,
+  type Node as TsNode,
+} from 'ts-morph';
 
 /**
  * Where a library keeps the name of the table, when its types do not carry it.
@@ -21,7 +27,8 @@ export type TableLocator =
   | { kind: 'argument'; index: number }
   | { kind: 'chain-call'; method: string; index: number }
   | { kind: 'chain-root-argument'; index: number }
-  | { kind: 'receiver' };
+  | { kind: 'receiver' }
+  | { kind: 'receiver-type' };
 
 /**
  * Whether a method name is one of the library's operations.
@@ -34,11 +41,26 @@ export type TableLocator =
  */
 export type IsOperation = (method: string) => boolean;
 
+/**
+ * What the locators are allowed to ask about the call they are reading.
+ *
+ * Two questions and no more: whether a method name is one of the library's
+ * operations, and what declares the type of the thing the call was made on. The
+ * second is the caller's answer rather than one worked out here, because
+ * resolving a receiver's type is the core's job and it has already been done by
+ * the time a call is being classified.
+ */
+export interface TableContext {
+  isOperation: IsOperation;
+  /** Declaration of the receiver's type, when the core resolved one. */
+  typeDeclaration?: TsNode;
+}
+
 type LocatorResolvers = {
   [K in TableLocator['kind']]: (
     call: CallExpression,
     locator: Extract<TableLocator, { kind: K }>,
-    isOperation: IsOperation,
+    context: TableContext,
   ) => TsNode | undefined;
 };
 
@@ -157,9 +179,15 @@ const receiverOf = (call: CallExpression): TsNode | undefined => {
 const resolvers: LocatorResolvers = {
   argument: (call, locator) => call.getArguments()[locator.index],
   'chain-call': (call, locator) => chainArgument(call, locator.method, locator.index),
-  'chain-root-argument': (call, locator, isOperation) =>
-    chainRoot(call, isOperation)?.getArguments()[locator.index],
+  'chain-root-argument': (call, locator, context) =>
+    chainRoot(call, context.isOperation)?.getArguments()[locator.index],
   receiver: (call) => receiverOf(call),
+  // Not an expression at all, but the declaration one was resolved to. A method
+  // called on an instance — `document.save()` — writes nothing about a table
+  // anywhere in the call, and the class the instance is typed as is where the
+  // table is stated. The reading below takes a declaration as readily as an
+  // expression that names one, so the two paths meet immediately.
+  'receiver-type': (_call, _locator, context) => context.typeDeclaration,
 };
 
 // One cast, because a key and the map it indexes cannot be narrowed together.
@@ -168,15 +196,15 @@ const resolvers: LocatorResolvers = {
 const expressionFor = (
   call: CallExpression,
   locator: TableLocator,
-  isOperation: IsOperation,
+  context: TableContext,
 ): TsNode | undefined =>
   (
     resolvers[locator.kind] as (
       c: CallExpression,
       l: TableLocator,
-      o: IsOperation,
+      o: TableContext,
     ) => TsNode | undefined
-  )(call, locator, isOperation);
+  )(call, locator, context);
 
 /**
  * Calls that declare a stored collection, and the argument each one names it in.
@@ -200,6 +228,37 @@ const NAMING_CALLS: Record<string, number> = {
 
 /** Keys a model class states its table under, in the order a reader prefers them. */
 const MODEL_NAME_KEYS = ['tableName', 'modelName'] as const;
+
+/**
+ * Decorators a model class states its table with, and the argument that holds it.
+ *
+ * `sequelize-typescript` is the ordinary way a TypeScript project declares a
+ * sequelize model, and it states the table in a decorator rather than in an
+ * `init` call: `@Table({ tableName: 'documents' })`. The options are the same
+ * options `init` takes, so the keys above are read out of them unchanged — the
+ * only new fact is where the object is written, which is what makes this a
+ * record beside the other one rather than a second way of reading a name.
+ */
+const NAMING_DECORATORS: Record<string, number> = {
+  Table: 0,
+};
+
+/**
+ * Calls that narrow a data layer and hand back the same data layer.
+ *
+ * `Document.scope('withOwner').findAll()` reads the documents table, and the
+ * receiver of the read is a call rather than a name. Retyping is the point of
+ * these calls — sequelize's `scope` returns the library's own `ModelStatic`,
+ * which is what makes the call recognisable as data access at all — but a scope
+ * is a filter over one model and never another table. Walking through the call
+ * to what it was made on is what reads the name; on outline, where nearly every
+ * query is scoped, it is the difference between 91 unreadable tables and none.
+ *
+ * A list rather than a rule, because "a call whose receiver names the table" is
+ * true of these methods and false of most: reading through any call at all would
+ * make `Document.findAll()` claim that `findAll` returns documents to store in.
+ */
+const NARROWING_CALLS = new Set(['scope', 'unscoped', 'schema', 'withSchema']);
 
 /**
  * A table written with an alias, which is the table.
@@ -237,6 +296,18 @@ const stringProperty = (node: TsNode, keys: readonly string[]): string | null =>
   return null;
 };
 
+/** The name a decorator states for a class, out of the options it was given. */
+const nameFromDecorators = (declaration: ClassDeclaration): string | null => {
+  for (const decorator of declaration.getDecorators()) {
+    const index = NAMING_DECORATORS[decorator.getName()];
+    if (index === undefined) continue;
+    const argument = decorator.getArguments()[index];
+    const found = argument === undefined ? null : stringProperty(argument, MODEL_NAME_KEYS);
+    if (found !== null) return found;
+  }
+  return null;
+};
+
 /** The name a `Model.init(attributes, options)` call states for a model class. */
 const nameFromInit = (declaration: TsNode, className: string): string | null => {
   const file = declaration.getSourceFile();
@@ -260,10 +331,7 @@ const nameFromInit = (declaration: TsNode, className: string): string | null => 
  * schema object, a mongoose model, a sequelize model, and a document made from
  * one of them are four spellings of the same fact.
  */
-const nameFromDeclaration = (node: TsNode, depth: number): string | null => {
-  const declaration = declarationOf(node);
-  if (declaration === undefined) return null;
-
+const nameOfDeclaration = (declaration: TsNode, depth: number): string | null => {
   if (Node.isClassDeclaration(declaration)) {
     const name = declaration.getName();
     if (name === undefined) return null;
@@ -272,7 +340,7 @@ const nameFromDeclaration = (node: TsNode, depth: number): string | null => {
       stated !== undefined && Node.isPropertyDeclaration(stated)
         ? stringOf(stated.getInitializer())
         : null;
-    return literal ?? nameFromInit(declaration, name);
+    return literal ?? nameFromDecorators(declaration) ?? nameFromInit(declaration, name);
   }
 
   const initializer = Node.isVariableDeclaration(declaration)
@@ -301,8 +369,29 @@ const nameFromDeclaration = (node: TsNode, depth: number): string | null => {
  * same fact written twice and neither needs following. Everything else is a
  * name in the repository, and what it was declared as is where the answer is.
  */
-const nameFromExpression = (node: TsNode, depth = 0): string | null =>
-  stringOf(node) ?? nameFromDeclaration(node, depth);
+const nameFromExpression = (node: TsNode, depth = 0): string | null => {
+  const literal = stringOf(node);
+  if (literal !== null) return literal;
+  const narrowed = throughNarrowing(node);
+  if (narrowed !== undefined) return depth >= 4 ? null : nameFromExpression(narrowed, depth + 1);
+  // A declaration as readily as an expression that names one: `declarationOf`
+  // answers for a name and nothing else, and the `receiver-type` locator hands
+  // over a declaration directly.
+  return nameOfDeclaration(declarationOf(node) ?? node, depth);
+};
+
+/**
+ * What a narrowing call was made on, when the expression is one.
+ *
+ * Declared beside `nameFromExpression` because it is only ever a step on the way
+ * to a name: the answer is the same question asked of a smaller expression.
+ */
+const throughNarrowing = (node: TsNode): TsNode | undefined => {
+  if (!Node.isCallExpression(node)) return undefined;
+  const callee = node.getExpression();
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  return NARROWING_CALLS.has(callee.getName()) ? callee.getExpression() : undefined;
+};
 
 /**
  * The table a call touches, read through the locators its library declares.
@@ -318,10 +407,10 @@ const nameFromExpression = (node: TsNode, depth = 0): string | null =>
 export const locateTable = (
   call: CallExpression,
   locators: readonly TableLocator[],
-  isOperation: IsOperation,
+  context: TableContext,
 ): string | null => {
   for (const locator of locators) {
-    const expression = expressionFor(call, locator, isOperation);
+    const expression = expressionFor(call, locator, context);
     if (expression === undefined) continue;
     const name = nameFromExpression(expression);
     if (name !== null) return name;

@@ -2,6 +2,26 @@ import { hasAnyDependency, type DbAdapter, type DbDescriptor } from '@flowatlas/
 import type { TableLocator } from './table.js';
 
 /**
+ * How one library's table name is read.
+ *
+ * `locators` say where the name is written, tried in order; the first that
+ * yields one wins.
+ *
+ * `entityInTypeArgs` says whether the receiver's first type argument names the
+ * stored thing, so that a locator finding nothing may fall back to it. It is
+ * true of every library whose receiver is a model or a repository of one thing —
+ * an injected `Model<OrderDocument>` names an order and the fallback is the
+ * answer. It is false of a connection parameterised by the whole schema:
+ * `Kysely<DB>` says which database, and `DB` is not a table. Reading it as one
+ * is worse than saying nothing, because a name that looks like an answer is not
+ * checked again.
+ */
+export interface TableReading {
+  locators: readonly TableLocator[];
+  entityInTypeArgs: boolean;
+}
+
+/**
  * What each data layer's methods do.
  *
  * The entity comes from the type system; only the operation and, where the types
@@ -15,9 +35,24 @@ import type { TableLocator } from './table.js';
  * The last resort, and the only place a guess is made from a name. It lives here
  * rather than in the core because a list of library names and project
  * conventions is precisely the knowledge the core must not hold.
+ *
+ * `store` is not among the receiver names, and that is a measurement rather than
+ * a taste. Across the eight repositories the coverage harness reads, a receiver
+ * whose name ends in `store` produced 97 rows and not one of them was a data
+ * layer: they were arrays, maps, mutex registries, a plugin registry, a browser
+ * object store, a framework's cookie store, and the state stores three of those
+ * repositories keep their screens in. Nothing else moved when it went — no table
+ * on any target, no query that names one — so the whole of what it did was to
+ * ask a reader to describe things that do not store anything.
+ *
+ * It stays among the *type* names, where a class called `OrderStore` is an
+ * ordinary name for a real data layer and where the evidence is the class rather
+ * than the word at the end of a variable. Trimming it there was measured too and
+ * costs four rows on outline that tell a reader to name a base class, while
+ * changing no query and no table anywhere.
  */
 export const dataNameHints = {
-  receiver: /(repository|repo|db|prisma|knex|dao|store)$/i,
+  receiver: /(repository|repo|db|prisma|knex|dao)$/i,
   type: /(repository|repo|model|collection|dao|store|table|entitymanager|queryrunner|knex|prisma|db)$/i,
 };
 
@@ -267,6 +302,35 @@ const sequelizeDescriptor: DbDescriptor = {
 };
 
 /**
+ * The typed query builder whose every query starts by naming its table.
+ *
+ * `selectFrom`, `insertInto`, `updateTable` and `deleteFrom` are the four ways
+ * in, and each one takes the table as its first argument, so the name is read
+ * from exactly where the author wrote it. Everything else in a query —
+ * `where`, `set`, `values`, `returning`, `execute` — is chained onto one of
+ * them and describes what that one query will ask for, which is why listing it
+ * here would report one visit to the database as half a dozen.
+ *
+ * The receiver is `Kysely<Schema>`, and the schema is the whole database rather
+ * than one table, which is the reason this library needs `entityInTypeArgs`
+ * turned off below: on immich, where every one of 579 queries is written this
+ * way, the type argument was read as an entity and put the name of the schema
+ * type on 407 nodes as though it were a table.
+ */
+const kyselyDescriptor: DbDescriptor = {
+  package: 'kysely',
+  tableOverride: NAMED_IN_ARGUMENT,
+  operations: {
+    selectFrom: READ,
+    insertInto: WRITE,
+    replaceInto: WRITE,
+    mergeInto: WRITE,
+    updateTable: WRITE,
+    deleteFrom: DELETE,
+  },
+};
+
+/**
  * The query builder that starts from the table: `knex('orders')` makes a
  * builder for one table, and every method chained onto it is about that table.
  *
@@ -299,12 +363,18 @@ const knexDescriptor: DbDescriptor = {
 };
 
 /**
- * Where each library keeps the expression that names the table.
+ * How each library's table name is found, when its types do not carry it.
  *
  * Beside the descriptors rather than inside them, because `DbDescriptor` is the
  * core's type and the core is not allowed to learn a fourth way of finding a
  * name. Keyed by the package the descriptor is chosen by, so a library either
  * has both records or neither.
+ *
+ * Both facts about reading a name live in one record per library, rather than in
+ * two records that could disagree: where the name is written, and whether the
+ * receiver's type argument may answer when it is not written anywhere. Kysely is
+ * the library that made the second fact necessary and is the only one that
+ * answers no to it.
  *
  * Drizzle has two locators because it writes the table in two places: in the
  * call itself when it writes (`db.insert(orders)`) and in a `from` elsewhere in
@@ -319,17 +389,49 @@ const knexDescriptor: DbDescriptor = {
  * `id` as a table on most of a real repository's queries, so the `from` is
  * asked first and the root is the fallback.
  */
-export const tableLocators: Record<string, readonly TableLocator[]> = {
-  'drizzle-orm': [
-    { kind: 'argument', index: 0 },
-    { kind: 'chain-call', method: 'from', index: 0 },
-  ],
-  mongoose: [{ kind: 'receiver' }],
-  sequelize: [{ kind: 'receiver' }],
-  knex: [
-    { kind: 'chain-call', method: 'from', index: 0 },
-    { kind: 'chain-root-argument', index: 0 },
-  ],
+export const tableReadings: Record<string, TableReading> = {
+  'drizzle-orm': {
+    locators: [
+      { kind: 'argument', index: 0 },
+      { kind: 'chain-call', method: 'from', index: 0 },
+    ],
+    entityInTypeArgs: true,
+  },
+  mongoose: { locators: [{ kind: 'receiver' }], entityInTypeArgs: true },
+  sequelize: {
+    // The receiver first, because a model named outright is the clearest
+    // statement of which table is meant; its declared type second, for an
+    // instance, where the expression is a variable and the class behind it is
+    // the only thing that states a table.
+    locators: [{ kind: 'receiver' }, { kind: 'receiver-type' }],
+    entityInTypeArgs: true,
+  },
+  knex: {
+    locators: [
+      { kind: 'chain-call', method: 'from', index: 0 },
+      { kind: 'chain-root-argument', index: 0 },
+    ],
+    entityInTypeArgs: true,
+  },
+  kysely: { locators: [{ kind: 'argument', index: 0 }], entityInTypeArgs: false },
+};
+
+/**
+ * Packages that hand out another library's data layer under their own name.
+ *
+ * A descriptor is chosen by the package that declares the receiver's type, and
+ * that is not always the package the descriptor was written for. The mapper a
+ * project actually imports may be a thin layer over the library the descriptor
+ * describes: `sequelize-typescript` declares the `Model` that a decorated model
+ * class extends, while every method on it, and every word of the descriptor, is
+ * `sequelize`'s. On outline that one row is the difference between reading the
+ * data layer and dropping every call to it.
+ *
+ * A record rather than a second descriptor, because the two packages are not two
+ * libraries to describe; they are one library reached under two names.
+ */
+export const descriptorAliases: Record<string, string> = {
+  'sequelize-typescript': 'sequelize',
 };
 
 export const dbAdapters: readonly DbAdapter[] = [
@@ -375,6 +477,13 @@ export const dbAdapters: readonly DbAdapter[] = [
     descriptor: knexDescriptor,
   },
   {
+    name: 'kysely',
+    // `nestjs-kysely` is how a Nest application is handed the connection, and a
+    // repository that imports only the wrapper still queries kysely.
+    detect: (pkg) => hasAnyDependency(pkg, ['kysely', 'nestjs-kysely']),
+    descriptor: kyselyDescriptor,
+  },
+  {
     name: 'local-base',
     // Always available: whether it applies is decided by the configuration
     // naming a base class, not by any dependency.
@@ -386,6 +495,7 @@ export const dbAdapters: readonly DbAdapter[] = [
 export {
   drizzleDescriptor,
   knexDescriptor,
+  kyselyDescriptor,
   localBaseDescriptor,
   mongodbDescriptor,
   mongooseDescriptor,

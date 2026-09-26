@@ -50,16 +50,16 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 1560 | 1560 of 579 |
-| …that name a table | 407 | 407 of 1560 |
-| tables | 2 | 2 of 68 |
+| query sites read | 1720 | 1720 of 579 |
+| …that name a table | 561 | 561 of 1720 |
+| tables | 61 | 61 of 68 |
 | components | 9 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
 | every other binding a template makes | 0 | not counted by the rule |
 
 ## What it could not read
 
-1612 places somebody could act on, 285 the tool
+1211 places somebody could act on, 285 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -71,16 +71,16 @@ was never an edge to draw. The three are never added together.
 | channel-dynamic | action | 2 |  |
 | consumer-handler-unresolved | action | 3 |  |
 | db-layer-unread | action | 2 |  |
-| db-receiver-name-only | action | 1153 |  |
+| db-receiver-name-only | action | 1141 |  |
 | di-token-unknown | action | 1 |  |
 | di-type-unresolved | action | 1 |  |
 | dynamic-cache-key | action | 6 |  |
 | dynamic-http-url | action | 6 |  |
+| dynamic-table-name | action | 18 |  |
 | module-import-dynamic | action | 7 |  |
 | type-depth-exceeded | info | 206 |  |
 | type-generic-uninstantiated | info | 41 |  |
 | type-unresolved | action | 14 |  |
-| unknown-db-package | action | 407 |  |
 
 ## The denominators
 

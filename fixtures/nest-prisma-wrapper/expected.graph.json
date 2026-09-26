@@ -1,0 +1,501 @@
+{
+  "schemaVersion": 4,
+  "repo": "nest-prisma-wrapper",
+  "generatedAt": "2026-09-26T22:00:33.953Z",
+  "nodes": [
+    {
+      "id": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:17:12",
+      "type": "db_query",
+      "label": "read order",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "meta": {
+        "op": "read",
+        "table": "order",
+        "tables": [
+          "order"
+        ],
+        "package": "@prisma/client",
+        "method": "findMany",
+        "receiver": "prisma.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:21:12",
+      "type": "db_query",
+      "label": "read order",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.service.ts",
+      "line": 21,
+      "meta": {
+        "op": "read",
+        "table": "order",
+        "tables": [
+          "order"
+        ],
+        "package": "@prisma/client",
+        "method": "findUnique",
+        "receiver": "prisma.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:25:12",
+      "type": "db_query",
+      "label": "write order",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.service.ts",
+      "line": 25,
+      "meta": {
+        "op": "write",
+        "table": "order",
+        "tables": [
+          "order"
+        ],
+        "package": "@prisma/client",
+        "method": "create",
+        "receiver": "prisma.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:29:12",
+      "type": "db_query",
+      "label": "delete order",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.service.ts",
+      "line": 29,
+      "meta": {
+        "op": "delete",
+        "table": "order",
+        "tables": [
+          "order"
+        ],
+        "package": "@prisma/client",
+        "method": "delete",
+        "receiver": "prisma.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:35:12",
+      "type": "db_query",
+      "label": "read order",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.service.ts",
+      "line": 35,
+      "meta": {
+        "op": "read",
+        "table": "order",
+        "tables": [
+          "order"
+        ],
+        "package": "@prisma/client",
+        "method": "findMany",
+        "receiver": "readonlyPrisma.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:39:12",
+      "type": "db_query",
+      "label": "write user",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.service.ts",
+      "line": 39,
+      "meta": {
+        "op": "write",
+        "table": "user",
+        "tables": [
+          "user"
+        ],
+        "package": "@prisma/client",
+        "method": "update",
+        "receiver": "prisma.user",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "entry:nest-prisma-wrapper:http:DELETE:/orders",
+      "type": "entry",
+      "label": "DELETE /orders",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-prisma-wrapper:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-prisma-wrapper:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-prisma-wrapper#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-prisma-wrapper#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-prisma-wrapper#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15
+    },
+    {
+      "id": "nest-prisma-wrapper#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "method",
+      "label": "OrdersController.findAll",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "id": "nest-prisma-wrapper#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "method",
+      "label": "OrdersController.remove",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20
+    },
+    {
+      "id": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.service.ts",
+      "line": 14,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.service.ts",
+      "line": 24
+    },
+    {
+      "id": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "method",
+      "label": "OrdersService.findAll",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "id": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "method",
+      "label": "OrdersService.findOne",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.service.ts",
+      "line": 20
+    },
+    {
+      "id": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "method",
+      "label": "OrdersService.remove",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.service.ts",
+      "line": 28
+    },
+    {
+      "id": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.report",
+      "type": "method",
+      "label": "OrdersService.report",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.service.ts",
+      "line": 34
+    },
+    {
+      "id": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.touchUser",
+      "type": "method",
+      "label": "OrdersService.touchUser",
+      "repo": "nest-prisma-wrapper",
+      "file": "src/orders/orders.service.ts",
+      "line": 38
+    },
+    {
+      "id": "repo:nest-prisma-wrapper",
+      "type": "repo",
+      "label": "nest-prisma-wrapper",
+      "repo": "nest-prisma-wrapper",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "@prisma/client": 6
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:nest-prisma-wrapper#order",
+      "type": "table",
+      "label": "order",
+      "repo": "nest-prisma-wrapper"
+    },
+    {
+      "id": "table:nest-prisma-wrapper#user",
+      "type": "table",
+      "label": "user",
+      "repo": "nest-prisma-wrapper"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:17:12",
+      "to": "table:nest-prisma-wrapper#order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 17
+    },
+    {
+      "from": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:21:12",
+      "to": "table:nest-prisma-wrapper#order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 21
+    },
+    {
+      "from": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:25:12",
+      "to": "table:nest-prisma-wrapper#order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 25
+    },
+    {
+      "from": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:29:12",
+      "to": "table:nest-prisma-wrapper#order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 29
+    },
+    {
+      "from": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:35:12",
+      "to": "table:nest-prisma-wrapper#order",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 35
+    },
+    {
+      "from": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:39:12",
+      "to": "table:nest-prisma-wrapper#user",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 39
+    },
+    {
+      "from": "entry:nest-prisma-wrapper:http:DELETE:/orders",
+      "to": "nest-prisma-wrapper#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "params": [],
+      "returns": "type:@prisma/client#Order"
+    },
+    {
+      "from": "entry:nest-prisma-wrapper:http:GET:/orders",
+      "to": "nest-prisma-wrapper#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "params": [],
+      "returns": "type:@prisma/client#Order[]"
+    },
+    {
+      "from": "entry:nest-prisma-wrapper:http:POST:/orders",
+      "to": "nest-prisma-wrapper#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "params": [],
+      "returns": "type:@prisma/client#Order"
+    },
+    {
+      "from": "nest-prisma-wrapper#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "nest-prisma-wrapper#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17,
+      "params": [
+        "string"
+      ],
+      "returns": "type:@prisma/client#Order"
+    },
+    {
+      "from": "nest-prisma-wrapper#src/orders/orders.controller.ts:OrdersController.findAll",
+      "to": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12,
+      "params": [],
+      "returns": "type:@prisma/client#Order[]"
+    },
+    {
+      "from": "nest-prisma-wrapper#src/orders/orders.controller.ts:OrdersController.remove",
+      "to": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22,
+      "params": [
+        "string"
+      ],
+      "returns": "type:@prisma/client#Order"
+    },
+    {
+      "from": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.create",
+      "to": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:25:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 25
+    },
+    {
+      "from": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.findAll",
+      "to": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:17:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 17
+    },
+    {
+      "from": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.findOne",
+      "to": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 21
+    },
+    {
+      "from": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.remove",
+      "to": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:29:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 29
+    },
+    {
+      "from": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.report",
+      "to": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:35:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 35
+    },
+    {
+      "from": "nest-prisma-wrapper#src/orders/orders.service.ts:OrdersService.touchUser",
+      "to": "db_query:nest-prisma-wrapper#src/orders/orders.service.ts:39:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 39
+    }
+  ],
+  "types": {
+    "type:@prisma/client#Order": {
+      "name": "Order",
+      "kind": "external",
+      "declaredIn": "@prisma/client",
+      "structuralHash": "17e2e3eff7b20b9f",
+      "meta": {
+        "declKind": "external",
+        "package": "@prisma/client"
+      }
+    }
+  },
+  "unresolved": []
+}
