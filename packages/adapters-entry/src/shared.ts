@@ -59,6 +59,38 @@ export const packageOfSpecifier = (specifier: string): string | undefined => {
 };
 
 /**
+ * The package the function a call names was imported from.
+ *
+ * `mount('/api', api)` says nothing about itself; `import mount from 'koa-mount'`
+ * at the top of the same file says everything, and that is where this reads. The
+ * import statement first and the checker second, for the reason `importedAs`
+ * below gives at greater length: the statement is there in every state of the
+ * repository, including a fixture and a fresh clone where no package resolves,
+ * and the checker is the fallback for a namespace import or a re-export it
+ * managed to follow. A subpath import is an import of the package, which
+ * `packageOfSpecifier` settles.
+ *
+ * A namespace access is read through to the namespace — `helpers.mount(...)`
+ * comes from wherever `helpers` was imported from — because that is the same
+ * fact written differently, and a description keyed on the package would
+ * otherwise match one spelling of an import and not the other.
+ */
+export const packageOfCall = (call: TsNode): string | undefined => {
+  if (!Node.isCallExpression(call)) return undefined;
+  const callee = call.getExpression();
+  const named = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
+  if (!Node.isIdentifier(named)) return undefined;
+  for (const declaration of named.getSymbol()?.getDeclarations() ?? []) {
+    const statement = declaration.getFirstAncestorByKind(SyntaxKind.ImportDeclaration);
+    if (statement === undefined) continue;
+    const pkg = packageOfSpecifier(statement.getModuleSpecifierValue());
+    if (pkg !== undefined) return pkg;
+  }
+  const origin = originOfValue(named);
+  return origin.kind === 'external' ? origin.package : undefined;
+};
+
+/**
  * The identifier a decorator applies, through a call and a namespace access.
  *
  * The same reading core's decorator matcher does, needed here because what this

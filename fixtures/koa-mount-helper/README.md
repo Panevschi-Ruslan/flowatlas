@@ -1,7 +1,7 @@
 # koa-mount-helper fixture
 
-One Koa application mounted inside another by a helper, which is how outline
-mounts five of them.
+Koa applications mounted inside another by a helper, which is how outline mounts
+five of them.
 
 Type-checked, never executed:
 
@@ -14,34 +14,88 @@ Type-checked, never executed:
 ## The shape
 
 ```ts
-app.use(mount('/api', api));   // a mount nothing here can see through
-app.use(healthRouter.routes()); // an install this has always read
+export default function init(app: Koa = new Koa()) {
+  app.use(mount('/api', api));    // a described helper, given a prefix
+  app.use(underFlag(admin));      // a helper nobody described, and nobody can
+  app.use(mount(pages));          // the described helper, handed the application alone
+  app.use(healthRouter.routes()); // an install this has always read
+}
 ```
 
 `koa-mount` hands back middleware. The argument `use` receives is therefore not
 an application, and the one thing that separates a mount from a middleware
 install on this framework's row is whether what is handed over is an application.
 So the line read as an install, the prefix was dropped, and every route on `api`
-kept the address it is written at.
+kept the address it is written at: `POST /documents.info` for what the service
+serves at `POST /api/documents.info`. On outline that was 253 of its 257 routes,
+with no row anywhere to say so (R84).
 
-## What was wrong (R84)
+The first fix was to stop publishing the address: such a mount became a mount
+with no readable path, which put the routes under it through the sentence the
+reader already had — *mounted somewhere this cannot read*. That is a missing
+address instead of a wrong one, and it cost outline 224 addresses.
 
-`POST /documents.info` was recorded for what the service serves at
-`POST /api/documents.info`. On outline that was 253 of its 257 routes, and there
-was no row: the reader already owns the right sentence — *mounted somewhere this
-cannot read* — and fired it only for a different shape. A wrong address is worse
-than a missing one, because it cannot join to the caller that asks for the real
-one and it looks as though it could.
+## How it is described (R110)
 
-## What is read now
+The prefix is in the call. What is not in the call is which argument it is, and
+that is a fact about one published package rather than about Koa or about
+anything a reader could work out — so it is one record in `MOUNT_HELPERS`, beside
+the four framework descriptions and keyed by the package the helper is imported
+from:
+
+```ts
+['koa-mount', { appAt: -1, pathAt: 0 }]
+```
+
+Two positions and no condition. `mount(prefix, app)` and `mount(app)` are both
+covered by them, because the application is the last argument either way and the
+prefix's position holding the application *is* the answer for the second form:
+the helper mounts it at its parent's base. Both forms are written here, because
+outline writes both.
+
+Keyed by the package and not by the name, because the name belongs to the
+importer: outline writes `import mount from 'koa-mount'`, and the next repository
+may write anything.
+
+## What is read
 
 | Site | Read as |
 |---|---|
 | `healthRouter`, installed on the application directly | `GET /health` |
-| `documentsRouter.post('/documents.info', …)` | a row: mounted somewhere this cannot read |
-| `documentsRouter.post('/documents.list', …)` | the same |
+| `documentsRouter.post('/documents.info', …)` under `mount('/api', api)` | `POST /api/documents.info` |
+| `documentsRouter.post('/documents.list', …)` | `POST /api/documents.list` |
+| `pagesRouter.get('/pages.list', …)` under `mount(pages)` | `GET /pages.list` |
+| `adminRouter.get('/users.list', …)` under `underFlag(admin)` | a row: mounted somewhere this cannot read |
 
-The prefix lives inside the helper's own arguments under the helper's own
-meaning, and nothing here knows that meaning. What *is* known is that `api` is
-mounted somewhere, which is enough to stop claiming it is served where its routes
-are written.
+## The application is a parameter, as outline's is
+
+The prefix on its own places nothing. `init(app: Koa = new Koa())` is how outline's
+web service declares the application all five mounts hang from, and the reader
+walked a `const`'s value and a property's and not a parameter's — so the mount was
+followed to an application whose own base was unknowable, and every route under it
+stayed unplaceable with the prefix in hand.
+
+outline starts its services through a map of dynamic imports, so no call to that
+function can be followed from anywhere in the repository: the default is the only
+statement there is about what `app` is, and it is the same kind of statement a
+`const` makes. It is also strictly better evidence than what the reader did
+before, which was to assume the root of the service wherever the repository moved
+no application at all.
+
+A caller handing in a sub-application instead would make the default the wrong
+answer. A caller who writes `= new Koa()` has said this function may own the
+application, and where it is served is then read from the mounts as usual.
+
+## A helper nobody described
+
+`underFlag` is three lines of this repository, and no record of it could exist:
+`MOUNT_HELPERS` holds published packages, and the next repository's helper will
+be three different lines. So it stands here for every helper the tool has no row
+for, and it keeps the reading it had before any row existed — the application is
+found among the arguments, the mount has no path, and the route under it is
+reported rather than recorded at an address nothing serves.
+
+What changed for it is the row's hint. It used to ask the reader to mount the
+application at a literal path, which is what outline had done all along; it now
+names the call the path is inside, because that is the one fact that makes the
+row something to act on.

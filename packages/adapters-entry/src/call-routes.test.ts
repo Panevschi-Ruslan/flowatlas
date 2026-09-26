@@ -38,6 +38,8 @@ export interface IRoute {
 }
 export interface IRouter {
   route(path: string): IRoute;
+  /** A list of paths is legal on every verb, and declares one route per entry. */
+  get(path: string[], ...handlers: RequestHandler[]): this;
   get(path: string, ...handlers: RequestHandler[]): this;
   post(path: string, ...handlers: RequestHandler[]): this;
   delete(path: string, ...handlers: RequestHandler[]): this;
@@ -50,6 +52,8 @@ export interface Application extends IRouter {
   get(name: string): unknown;
   get(path: string, ...handlers: RequestHandler[]): this;
   set(name: string, value: unknown): this;
+  /** Answers with the application, which is what makes a chained declaration legal. */
+  disable(name: string): this;
 }
 export interface Express extends Application {}
 export declare function Router(options?: unknown): Router;
@@ -102,10 +106,25 @@ export declare class Router {
 export default Router;
 `;
 
+/**
+ * The one mount helper the tool has a record of, as a package.
+ *
+ * It has to be a package and not a file of the repository, because the record is
+ * keyed by the package a helper is imported from: a helper written here would be
+ * the undescribed case however its arguments are spelled.
+ */
+const KOA_MOUNT_TYPES = `
+import type Application from 'koa';
+import type { Middleware } from 'koa';
+declare function mount(path: string, app: Application): Middleware;
+declare function mount(app: Application): Middleware;
+export default mount;
+`;
+
 const PACKAGES: Record<string, Record<string, string>> = {
   express: { express: EXPRESS_TYPES },
   fastify: { fastify: FASTIFY_TYPES },
-  koa: { koa: KOA_TYPES, '@koa/router': KOA_ROUTER_TYPES },
+  koa: { koa: KOA_TYPES, '@koa/router': KOA_ROUTER_TYPES, 'koa-mount': KOA_MOUNT_TYPES },
 };
 
 interface Read {
@@ -252,6 +271,60 @@ describe('express routes', () => {
     // And that it read no route at all, which is the second row: a reader that
     // came away with nothing says so, whatever the reason for each site (R84).
     expect(reasons(read).sort()).toEqual(['entry-http-routes-unmatched', 'route-path-dynamic']);
+  });
+
+  it('reads an application declared by a chain of calls', () => {
+    const read = express(`
+      import express, { Router } from 'express';
+      import { list } from './books.js';
+      const app = express().disable('x-powered-by');
+      const books = Router();
+      books.get('/books', list);
+      app.use('/api/v1', books);
+      app.get('/health', (req, res) => res.send('ok'));
+    `, {
+      '/src/books.ts': `
+        import type { Request, Response } from 'express';
+        export const list = (req: Request, res: Response) => res.json([]);
+      `,
+    });
+    // `express().disable(…)` hands the application back, so this is the ordinary
+    // declaration of one with a setting turned off. The reader followed only the
+    // methods a row names, so `app` had no base it could tell and every route in
+    // the repository was reported as unplaceable — 344 of them on PeerTube, from
+    // one line written once (R101).
+    expect(ids(read)).toEqual(['entry:api:http:GET:/api/v1/books', 'entry:api:http:GET:/health']);
+    expect(read.unresolved).toEqual([]);
+  });
+
+  it('records one route for each path a registration was given', () => {
+    const read = express(`
+      import express, { Router } from 'express';
+      import { show, list } from './items.js';
+      const app = express();
+      const items = Router();
+      const LEGACY = ['/legacy/items', '/old/items'];
+      items.get(['/items/:id', '/i/:id'], show);
+      items.get(LEGACY, list);
+      app.use('/api', items);
+    `, {
+      '/src/items.ts': `
+        import type { Request, Response } from 'express';
+        export const show = (req: Request, res: Response) => res.json({});
+        export const list = (req: Request, res: Response) => res.json([]);
+      `,
+    });
+    // A list of verbs has been folded since the day verbs were read; a list of
+    // paths was read by a function that answered with one string or with
+    // nothing, so both addresses went missing under a row saying the path was
+    // dynamic. Written as a literal or named elsewhere, both fold (R101).
+    expect(ids(read)).toEqual([
+      'entry:api:http:GET:/api/i/:param',
+      'entry:api:http:GET:/api/items/:param',
+      'entry:api:http:GET:/api/legacy/items',
+      'entry:api:http:GET:/api/old/items',
+    ]);
+    expect(read.unresolved).toEqual([]);
   });
 
   it('reads a setting rather than a route when only one argument is given', () => {
@@ -578,7 +651,7 @@ describe('koa routes', () => {
     expect(ids(read)).toEqual(['entry:api:http:GET:/orders/:param']);
   });
 
-  it('reports a route under a mount written through a helper rather than misplacing it', () => {
+  it('reports a route under a mount through a helper nobody described, and names the helper', () => {
     const read = koa(
       `
       import Koa from 'koa';
@@ -611,6 +684,92 @@ describe('koa routes', () => {
     const row = read.unresolved.find((item) => item.reason === 'route-path-dynamic');
     expect(row?.message).toContain('mounted somewhere this cannot read');
     expect(row?.symbol).toBe('POST /documents.info');
+    // And the hint names the call the path is inside. It used to ask for the
+    // application to be mounted at a literal path, which is exactly what this
+    // repository has done: the path is `'/api'`, one argument along (R110).
+    expect(row?.hint).toContain("mount('/api', api)");
+  });
+
+  it('reads the prefix of a mount helper it has a record of', () => {
+    const read = koa(
+      `
+      import Koa from 'koa';
+      import mount from 'koa-mount';
+      import { api } from './api.js';
+      const app = new Koa();
+      app.use(mount('/api', api));
+    `,
+      {
+        '/src/api.ts': `
+          import Koa from 'koa';
+          import Router from '@koa/router';
+          const router = new Router();
+          router.post('/documents.info', async (ctx) => { ctx.body = 'ok'; });
+          export const api = new Koa();
+          api.use(router.routes());
+        `,
+      },
+    );
+    // The same repository as the test above with one thing changed: the helper
+    // comes from a package `MOUNT_HELPERS` has a record of, so which argument is
+    // the prefix is known and the address is read rather than reported.
+    expect(ids(read)).toEqual(['entry:api:http:POST:/api/documents.info']);
+    expect(read.unresolved.filter((row) => row.reason === 'route-path-dynamic')).toEqual([]);
+  });
+
+  it('reads the application a parameter is given as its default', () => {
+    const read = koa(
+      `
+      import Koa from 'koa';
+      import mount from 'koa-mount';
+      import { api } from './api.js';
+      export default function init(app: Koa = new Koa()) {
+        app.use(mount('/api', api));
+        return app;
+      }
+    `,
+      {
+        '/src/api.ts': `
+          import Koa from 'koa';
+          import Router from '@koa/router';
+          const router = new Router();
+          router.post('/documents.info', async (ctx) => { ctx.body = 'ok'; });
+          export const api = new Koa();
+          api.use(router.routes());
+        `,
+      },
+    );
+    // outline's shape exactly: the service is started through a map of dynamic
+    // imports, so no call to `init` can be followed, and the default is the only
+    // statement in the repository about what `app` is. Reading the prefix and not
+    // the parameter leaves the route as unplaceable as it was before (R110).
+    expect(ids(read)).toEqual(['entry:api:http:POST:/api/documents.info']);
+  });
+
+  it('mounts an application a described helper is handed alone at its parent base', () => {
+    const read = koa(
+      `
+      import Koa from 'koa';
+      import mount from 'koa-mount';
+      import { api } from './api.js';
+      const app = new Koa();
+      app.use(mount(api));
+    `,
+      {
+        '/src/api.ts': `
+          import Koa from 'koa';
+          import Router from '@koa/router';
+          const router = new Router();
+          router.post('/documents.info', async (ctx) => { ctx.body = 'ok'; });
+          export const api = new Koa();
+          api.use(router.routes());
+        `,
+      },
+    );
+    // `mount(routes)`, which outline writes beside four that name a prefix. The
+    // application standing in the prefix's position is the answer rather than an
+    // absence: the helper serves it at the base of what it is installed on.
+    expect(ids(read)).toEqual(['entry:api:http:POST:/documents.info']);
   });
 
   it('does not read a helper handed the application it is installed on as a mount', () => {

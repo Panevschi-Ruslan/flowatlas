@@ -13,7 +13,7 @@ import {
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { MountShape, RouteDialect } from './route-dialects.js';
-import { EXPRESS, FASTIFY, HONO, KOA } from './route-dialects.js';
+import { EXPRESS, FASTIFY, HONO, KOA, MOUNT_HELPERS } from './route-dialects.js';
 import {
   enclosingClass,
   fileOfNode,
@@ -21,12 +21,29 @@ import {
   handlerReturned,
   inlineHandlerOf,
   joinPath,
+  packageOfCall,
   repoFunctionOf,
   repoSources,
 } from './shared.js';
 
 const DYNAMIC_PATH_HINT =
   'Give the route a string literal or a const string; a computed path cannot be matched against callers.';
+
+/**
+ * What to do about a route on an application whose base could not be read.
+ *
+ * Two sentences rather than one, because the old single sentence told a great
+ * many people to do what they had already done: outline mounts its applications
+ * at literal paths, through a helper, and was asked to mount them at literal
+ * paths. Where the helper is known the row names it, which is the one fact that
+ * turns the row into something somebody can act on; where the application
+ * arrives as a parameter or through a directory loader there is no call to name,
+ * and the older sentence is still the right one.
+ */
+const unplacedHint = (helper: string | undefined): string =>
+  helper === undefined
+    ? 'Mount the application at a literal path, or declare its routes on the application that is served.'
+    : `The path is an argument of ${helper}, a mount helper this tool has no record of. Mount the application with the framework's own method and a literal path, or have that helper described.`;
 
 /** How much of an expression is quoted when it is named rather than followed. */
 const LABEL_LENGTH = 40;
@@ -58,6 +75,28 @@ const verbsArg = (argument: TsNode | undefined): string[] | undefined => {
     verbs.push(item.toUpperCase());
   }
   return verbs.length > 0 ? verbs : undefined;
+};
+
+/**
+ * The paths a call was given, as written: one, or a list of them.
+ *
+ * `router.get(['/items/:id', '/i/:id'], handler)` is legal Express and declares
+ * two addresses, both of which a caller may ask for. The verbs beside this were
+ * folded from the day they were read; the paths were not, so one of those calls
+ * read as a route whose path could not be told — a row in the report and two
+ * addresses missing from the graph (R101).
+ */
+const pathsArg = (argument: TsNode | undefined): string[] | undefined => {
+  if (argument === undefined) return undefined;
+  const value = evaluateExpression(argument);
+  if (!value.resolved) return undefined;
+  const raw = Array.isArray(value.value) ? value.value : [value.value];
+  const paths: string[] = [];
+  for (const item of raw) {
+    if (typeof item !== 'string') return undefined;
+    paths.push(item);
+  }
+  return paths.length > 0 ? paths : undefined;
 };
 
 /** The value of one key of an object written at the call site. */
@@ -320,7 +359,7 @@ const mountedApp = (
 };
 
 /**
- * The application handed to a helper the reader cannot see through.
+ * An application hung inside another by a helper, and where the helper put it.
  *
  * `app.use(mount('/api', api))` — `koa-mount` takes a prefix and an application
  * and hands back middleware, so the argument of `use` is not an application and
@@ -329,32 +368,64 @@ const mountedApp = (
  * address it is written at. On outline that was 253 of 257 routes recorded at an
  * address nothing serves, with no row anywhere to say so (R84).
  *
- * What the helper does with the application is the helper's business — which of
- * its arguments is the prefix, whether there is one at all — so this finds the
- * application and nothing else, and the mount it leads to has no path. A route
- * underneath is then reported as mounted somewhere this cannot read, which is a
- * missing address instead of a wrong one: the first can be acted on, the second
- * joins to callers that do not exist.
+ * Two answers, and which one a repository gets is decided by a record rather
+ * than by a condition. A helper this tool has a `MOUNT_HELPERS` row for is read
+ * whole: the row says which argument is the application and which spells the
+ * prefix, and the mount is placed. A helper nobody described is read as far as
+ * it can be — the application is found among the arguments and the mount has no
+ * path — so a route under it is reported as mounted somewhere this cannot read,
+ * which is a missing address instead of a wrong one: the first can be acted on,
+ * the second joins to callers that do not exist (R110).
  *
  * The application the call is written on is not an answer. `app.use(session(app))`
  * hands a middleware factory the very application it is being installed on, which
  * is ordinary and mounts nothing; reading it as a mount would make every route in
  * such a repository unplaceable.
  */
-const wrappedApp = (
+interface HelperMount {
+  readonly declaration: TsNode;
+  /** Absent where nobody described the helper, or where it spells no readable path. */
+  readonly at?: string;
+}
+
+/** Reads the one and the other; see the note above. */
+const helperMount = (
   argument: TsNode | undefined,
   receiver: TsNode,
   dialect: RouteDialect,
-): TsNode | undefined => {
+): HelperMount | undefined => {
   if (argument === undefined) return undefined;
   const node = unwrap(argument);
   if (!Node.isCallExpression(node)) return undefined;
   const own = appDeclaration(receiver);
-  for (const written of node.getArguments()) {
+  const mounted = (written: TsNode | undefined): TsNode | undefined => {
+    if (written === undefined) return undefined;
     const value = unwrap(written);
-    if (!isApp(value, dialect)) continue;
+    if (!isApp(value, dialect)) return undefined;
     const declaration = appDeclaration(value);
-    if (declaration !== undefined && declaration !== own) return declaration;
+    return declaration !== undefined && declaration !== own ? declaration : undefined;
+  };
+
+  const args = node.getArguments();
+  const pkg = packageOfCall(node);
+  const described = pkg === undefined ? undefined : MOUNT_HELPERS.get(pkg);
+  if (described !== undefined) {
+    const written = argumentAt(args, described.appAt);
+    const declaration = mounted(written);
+    if (declaration !== undefined) {
+      const spelled = argumentAt(args, described.pathAt);
+      // A helper handed the application alone puts it at its parent's base:
+      // `mount(routes)`, which outline writes beside four mounts that name a
+      // prefix. The application sitting in the prefix's position is how that is
+      // spelled, and it is an answer rather than an absence.
+      const at = spelled === undefined || spelled === written ? '' : stringArg(spelled);
+      return { declaration, ...(at === undefined ? {} : { at }) };
+    }
+  }
+
+  for (const written of args) {
+    const declaration = mounted(written);
+    if (declaration !== undefined) return { declaration };
   }
   return undefined;
 };
@@ -419,6 +490,32 @@ const assignedApps = (declaration: TsNode, dialect: RouteDialect): TsNode[] => {
 };
 
 /**
+ * The value written for a declaration, wherever a declaration can carry one.
+ *
+ * A parameter's default is one of them, and it is the one that earns this its own
+ * function. `export default function init(app: Koa = new Koa(), server?: Server)`
+ * is how outline's web service declares the application every one of its routes
+ * is served on: the service is started through a map of dynamic imports, so no
+ * call to `init` can be followed from here, and the default is the only statement
+ * in the repository about what `app` is.
+ *
+ * Read as the parameter's value, with the same walk a `const` gets, because it is
+ * the same kind of fact and it is better evidence than what stood here before: a
+ * parameter with no value read at all falls back to the root of the service where
+ * the repository moves nothing, which is a guess, and to nothing where it does,
+ * which lost every address under a mount the reader had just learned to follow. A
+ * caller handing in a sub-application instead would make the default the wrong
+ * answer; a caller who writes `= new Koa()` has said the function may own the
+ * application, and the address is then read from the mounts as usual.
+ */
+const valueWritten = (declaration: TsNode): TsNode | undefined =>
+  Node.isVariableDeclaration(declaration) ||
+  Node.isPropertyDeclaration(declaration) ||
+  Node.isParameterDeclaration(declaration)
+    ? declaration.getInitializer()
+    : undefined;
+
+/**
  * Methods that hand back the application they were called on.
  *
  * A mount, a middleware install and a route declaration all do, which is what
@@ -430,6 +527,27 @@ const passesThrough = (method: string, dialect: RouteDialect): boolean =>
   method === dialect.middleware?.install ||
   method === dialect.verbArgument ||
   dialect.verbs[method] !== undefined;
+
+/**
+ * Whether a call answers with an application of the kind the row names.
+ *
+ * The methods above are the ones a description names, and no description can
+ * name them all: `const app = express().disable('x-powered-by')` is the ordinary
+ * declaration of an application with one setting turned off, and `disable` is not
+ * a mount, an install or a verb. PeerTube writes that line once, and every one of
+ * its 344 routes was then declared on something the reader could not place, under
+ * a hint telling whoever read the report to mount the application at a literal
+ * path — which the line below it already did (R101).
+ *
+ * Asked of the type rather than of a list of method names, because a method
+ * answering with an application of the same kind *is* that application as far as
+ * an address goes, and the alternative is a list of every setter four frameworks
+ * have. A prefix method is excluded by its caller and not here: Hono's `basePath`
+ * answers with an application of the same type and a different base, which is the
+ * one case where the type says less than the row does.
+ */
+const answersWithApp = (call: TsNode, dialect: RouteDialect): boolean =>
+  Node.isCallExpression(call) && isApp(call, dialect);
 
 /**
  * The declaration an application expression belongs to, through a chain.
@@ -445,7 +563,11 @@ const appOwner = (expr: TsNode, dialect: RouteDialect): TsNode | undefined => {
     if (!Node.isCallExpression(at)) break;
     const callee = at.getExpression();
     if (!Node.isPropertyAccessExpression(callee)) break;
-    if (!passesThrough(callee.getName(), dialect)) break;
+    const method = callee.getName();
+    const through =
+      passesThrough(method, dialect) ||
+      (method !== dialect.prefixMethod && answersWithApp(at, dialect));
+    if (!through) break;
     at = unwrap(callee.getExpression());
   }
   return appDeclaration(at);
@@ -494,6 +616,16 @@ interface Mount {
   site: Site;
   /** Absent when the mount path could not be read. */
   at?: string;
+  /**
+   * The helper call that hid the path, when a helper nobody described did.
+   *
+   * Kept so the row about a route underneath can name it. A reader told that an
+   * application is mounted somewhere unreadable, and asked to mount it at a
+   * literal path, has nothing to act on when the literal path is right there in
+   * a call the tool has no record of — and every such reader had already done
+   * what the hint asked.
+   */
+  through?: string;
 }
 
 /**
@@ -550,11 +682,12 @@ class Applications {
     const written = argumentAt(site.args, mount.appAt);
     const seenThrough = mountedApp(written, mount, this.#dialect);
     // A helper between the mount and the application hides the path and nothing
-    // else: the application is still being hung somewhere, so it is recorded as
-    // mounted with no path rather than left where its routes are written.
-    const wrapped =
-      seenThrough === undefined ? wrappedApp(written, site.receiver, this.#dialect) : undefined;
-    const declaration = seenThrough ?? wrapped;
+    // else: the application is still being hung somewhere, so it is recorded
+    // there — at the path the helper's own row says it put it, or with no path
+    // at all where no row describes the helper.
+    const helper =
+      seenThrough === undefined ? helperMount(written, site.receiver, this.#dialect) : undefined;
+    const declaration = seenThrough ?? helper?.declaration;
     // `use` both mounts and installs, and the only thing that tells them apart
     // is whether what is handed over is an application.
     if (declaration === undefined) {
@@ -576,14 +709,19 @@ class Applications {
     // arguments, under whatever meaning the helper gives them. Reading the
     // argument position this framework describes would find the helper call
     // itself, which is not a path, and `#mountPath` answers "no path given" to
-    // that — the parent's base, which is precisely the wrong address this exists
-    // to stop being recorded.
-    const at = wrapped === undefined ? this.#mountPath(site, mount) : undefined;
+    // that — the parent's base, which is precisely the wrong address a mount
+    // through a helper must not be recorded at.
+    const at = helper === undefined ? this.#mountPath(site, mount) : helper.at;
     const empty =
       Node.isVariableDeclaration(declaration) && declaration.getInitializer() === undefined;
     for (const target of [declaration, ...(empty ? assignedApps(declaration, this.#dialect) : [])]) {
       const found = this.#mounts.get(target) ?? [];
-      found.push({ parent: site.receiver, site: site.site, ...(at === undefined ? {} : { at }) });
+      found.push({
+        parent: site.receiver,
+        site: site.site,
+        ...(at === undefined ? {} : { at }),
+        ...(at === undefined && helper !== undefined ? { through: label(written) } : {}),
+      });
       this.#mounts.set(target, found);
     }
     return true;
@@ -642,6 +780,28 @@ class Applications {
   }
 
   /**
+   * The undescribed helper that hid the path of a mount above an application.
+   *
+   * Asked only once a route has turned out to be unplaceable, and answered by
+   * walking the mounts upwards, because the mount that defeated the reading is
+   * rarely the one written on the application the route is declared on: outline
+   * mounts a router on an application and that application through the helper,
+   * two files apart. The first helper found on the way up is the one to name —
+   * there is no second address to be had by looking further, and naming the
+   * nearest one is what tells somebody which call to look inside.
+   */
+  helperAbove(declaration: TsNode | undefined, seen: Set<TsNode> = new Set()): string | undefined {
+    if (declaration === undefined || seen.has(declaration)) return undefined;
+    seen.add(declaration);
+    for (const mount of this.#mounts.get(declaration) ?? []) {
+      if (mount.through !== undefined) return mount.through;
+      const above = this.helperAbove(appOwner(mount.parent, this.#dialect), seen);
+      if (above !== undefined) return above;
+    }
+    return undefined;
+  }
+
+  /**
    * Every way an application is reached, or undefined when it cannot be told.
    *
    * Usually one, and usually the root: an application that is nobody's
@@ -685,6 +845,10 @@ class Applications {
               guards: [...context.guards, ...this.guardsOn(owner, here, context.prefix)],
             }));
           }
+          // A method no row names, answering with an application of the same
+          // kind: the chain is one declaration of one application, and what is
+          // written on it is written on what it came from.
+          if (answersWithApp(node, dialect)) return inner;
           return undefined;
         }
       }
@@ -736,13 +900,9 @@ class Applications {
     const shifted = this.#shifted.get(declaration);
     if (this.#shifted.has(declaration) && shifted === undefined) return undefined;
 
-    const initializer = Node.isVariableDeclaration(declaration)
-      ? declaration.getInitializer()
-      : Node.isPropertyDeclaration(declaration)
-        ? declaration.getInitializer()
-        : undefined;
-    // A parameter, or a binding whose value is not written here: the base is
-    // whatever the caller had, which only the caller knows.
+    const initializer = valueWritten(declaration);
+    // A binding whose value is not written here: the base is whatever the caller
+    // had, which only the caller knows.
     const written = initializer === undefined ? undefined : this.contextsOf(initializer, seen);
     const own =
       written === undefined || shifted === undefined
@@ -866,7 +1026,14 @@ const answerOf = (call: TsNode, argument: TsNode | undefined, ctx: ExtractContex
 /** One route, as declared. */
 interface Route {
   verbs: string[];
-  path: string;
+  /**
+   * Every address this one registration serves.
+   *
+   * Usually one. A list where the call was given a list: both a list of verbs
+   * and a list of paths are one declaration of several ways in, and a reader
+   * that folded the first and not the second read half of such a call.
+   */
+  paths: string[];
   /** Middleware written for this route alone, as it is spelled. */
   middleware: string[];
   answer: Answer;
@@ -893,14 +1060,14 @@ const objectRouteOf = (site: AppCall, dialect: RouteDialect, ctx: ExtractContext
   const written = site.args[0];
   if (written === undefined) return undefined;
   const verbs = verbsArg(propertyOf(written, shape.verbKey));
-  const path = stringArg(propertyOf(written, shape.pathKey));
-  if (verbs === undefined || path === undefined) return undefined;
+  const paths = pathsArg(propertyOf(written, shape.pathKey));
+  if (verbs === undefined || paths === undefined) return undefined;
   const handlerArg = throughWrapper(propertyOf(written, shape.handlerKey));
   return {
     verbs,
-    path,
+    paths,
     middleware: optionMiddleware(written, dialect),
-    answer: answered(site, handlerArg, verbs, path, ctx),
+    answer: answered(site, handlerArg, verbs, paths, ctx),
   };
 };
 
@@ -931,8 +1098,8 @@ const routeOf = (site: AppCall, dialect: RouteDialect, ctx: ExtractContext): Rou
 
   const verbs = byArgument ? verbsArg(site.args[0]) : [verb as string];
   if (verbs === undefined) return undefined;
-  const path = stringArg(site.args[pathAt]);
-  if (path === undefined) return undefined;
+  const paths = pathsArg(site.args[pathAt]);
+  if (paths === undefined) return undefined;
 
   // Where the answer sits is the dialect's to say, and the arguments between it
   // and the path are the middleware written for this one route.
@@ -952,7 +1119,7 @@ const routeOf = (site: AppCall, dialect: RouteDialect, ctx: ExtractContext): Rou
     middleware.push(label(argument));
   }
 
-  return { verbs, path, middleware, answer: answered(site, handlerArg, verbs, path, ctx) };
+  return { verbs, paths, middleware, answer: answered(site, handlerArg, verbs, paths, ctx) };
 };
 
 /**
@@ -966,14 +1133,15 @@ const answered = (
   site: AppCall,
   handlerArg: TsNode | undefined,
   verbs: readonly string[],
-  path: string,
+  paths: readonly string[],
   ctx: ExtractContext,
 ): Answer => {
   const answer = answerOf(site.call, handlerArg, ctx);
   if (answer.via !== 'inline') return answer;
   // A function written in place is still the code that runs, and a node of its
-  // own is what lets a walk from the route go on into it.
-  const inline = inlineHandlerOf(handlerArg, `${verbs.join('|')} ${path}`, ctx);
+  // own is what lets a walk from the route go on into it. One function answers
+  // every address the registration named, so every one of them is in its name.
+  const inline = inlineHandlerOf(handlerArg, `${verbs.join('|')} ${paths.join('|')}`, ctx);
   return inline === undefined ? answer : { ...answer, handler: inline };
 };
 
@@ -1086,6 +1254,7 @@ export const callRoutesAdapter = (
         // Where nothing in the repository moves an application, every one of
         // them serves what it declares, so an application handed in as an
         // argument needs no caller to be found before its routes can be placed.
+        const own = appOwner(site.receiver, dialect);
         const contexts =
           applications.contextsOf(site.receiver) ?? (applications.shifts ? undefined : [ROOT]);
         if (contexts === undefined) {
@@ -1093,9 +1262,9 @@ export const callRoutesAdapter = (
             file,
             line,
             reason: 'route-path-dynamic',
-            message: `${label(site.receiver)} is mounted somewhere this cannot read, so ${route.path} is not the path it is served at.`,
-            hint: 'Mount the application at a literal path, or declare its routes on the application that is served.',
-            symbol: `${route.verbs.join(',')} ${route.path}`,
+            message: `${label(site.receiver)} is mounted somewhere this cannot read, so ${route.paths.join(', ')} is not the path it is served at.`,
+            hint: unplacedHint(applications.helperAbove(own)),
+            symbol: `${route.verbs.join(',')} ${route.paths.join(',')}`,
             adapter: dialect.name,
           });
           continue;
@@ -1105,10 +1274,15 @@ export const callRoutesAdapter = (
           anonymous.push(site.site);
         }
         const conditional = isConditional(site.call);
-        const own = appOwner(site.receiver, dialect);
 
-        for (const context of contexts) {
-          const rawPath = joinPath(context.prefix, route.path);
+        // One entry for each address, at each place the application is reached: a
+        // registration given two paths on an application mounted twice is four
+        // ways in, and every one of them is a way in a caller may ask for.
+        const placed = contexts.flatMap((context) =>
+          route.paths.map((declared) => ({ context, declared })),
+        );
+        for (const { context, declared } of placed) {
+          const rawPath = joinPath(context.prefix, declared);
           const path = normalizePath(rawPath);
           // Order is what the framework applies: everything inherited from
           // above the mount, then what this application installed before this

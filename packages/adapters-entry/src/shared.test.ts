@@ -1,6 +1,12 @@
-import { Project } from 'ts-morph';
+import { Project, SyntaxKind } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
-import { decoratorNames, decoratorsFrom, joinPath, packageOfSpecifier } from './shared.js';
+import {
+  decoratorNames,
+  decoratorsFrom,
+  joinPath,
+  packageOfCall,
+  packageOfSpecifier,
+} from './shared.js';
 
 describe('joinPath', () => {
   it('joins a prefix, a controller path and a route path', () => {
@@ -40,6 +46,42 @@ describe('packageOfSpecifier', () => {
     expect(packageOfSpecifier('')).toBeUndefined();
     // A scope with no package after it names nothing installable.
     expect(packageOfSpecifier('@nestjs')).toBeUndefined();
+  });
+});
+
+describe('packageOfCall', () => {
+  /** Every call written in one file, in the order it appears. */
+  const callsIn = (source: string) => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: false } });
+    return project
+      .createSourceFile('/src/server.ts', source)
+      .getDescendantsOfKind(SyntaxKind.CallExpression);
+  };
+
+  it('reads the package a helper was imported from, however the import is written', () => {
+    const [byDefault, byName, bySubpath, byNamespace, ofItsOwn] = callsIn(`
+      import mount from 'koa-mount';
+      import { mount as hang } from '@scope/mounts';
+      import { wrap } from '@scope/mounts/lib/wrap';
+      import * as helpers from 'koa-helpers';
+      const local = (value: unknown) => value;
+      mount('/api', 1);
+      hang('/auth', 2);
+      wrap('/oauth', 3);
+      helpers.mount('/mcp', 4);
+      local(5);
+    `);
+    // The import statement is the source, not the checker: none of these packages
+    // exists here, and every one of them is named in plain sight in the file.
+    expect(packageOfCall(byDefault!)).toBe('koa-mount');
+    expect(packageOfCall(byName!)).toBe('@scope/mounts');
+    // A subpath import is an import of the package, so a description keyed on the
+    // package matches both spellings of it.
+    expect(packageOfCall(bySubpath!)).toBe('@scope/mounts');
+    expect(packageOfCall(byNamespace!)).toBe('koa-helpers');
+    // A helper of the repository's own comes from no package, which is what makes
+    // it the case no record can describe.
+    expect(packageOfCall(ofItsOwn!)).toBeUndefined();
   });
 });
 
