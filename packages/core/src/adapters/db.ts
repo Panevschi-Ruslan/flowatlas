@@ -1,6 +1,6 @@
 import type { Confidence } from '../model/edges.js';
 import { entityNameOf, stripWrapperSuffix, type TypeOrigin } from '../origin.js';
-import type { PackageJson } from './context.js';
+import type { PackageJson } from './manifest.js';
 
 /** What a call does to the data it touches. */
 export type DbOp = 'read' | 'write' | 'delete';

@@ -10,6 +10,7 @@ import {
   loadConfig,
   parseConfig,
   readPackageJson,
+  readResolvedPackageJson,
   SCHEMA_VERSION,
   wasMissed,
   type FlowatlasConfig,
@@ -198,10 +199,13 @@ export const runExtract = async (
 
   // The configured type says which extractor reads a repository. Without a
   // configuration there is only the manifest, and a frontend adapter that
-  // recognises it is as good an answer as the server-side default.
+  // recognises it is as good an answer as the server-side default. The manifest
+  // asked here is the resolved one, because this is detection: the same question
+  // the adapters are about to be asked, and it must not be answered twice with
+  // two different answers.
   const readBrowser =
     service === undefined
-      ? detectBrowserReader(registry, readPackageJson(rootDir) ?? {})
+      ? detectBrowserReader(registry, readResolvedPackageJson(rootDir) ?? {})
       : BROWSER_READERS[service.type];
 
   // A server repository is opened here rather than inside the extractor, so the
@@ -276,7 +280,7 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
   cache.repos[repo] = {
     repo: options.service?.repo ?? rootDir,
     extractor: NESTJS_EXTRACTOR,
-    adapters: adapterNames(registry, readPackageJson(rootDir) ?? {}, config),
+    adapters: adapterNames(registry, readResolvedPackageJson(rootDir) ?? {}, config),
     tsconfigHash: tsconfig === undefined ? hashText('') : hashFile(tsconfig),
     packageJsonHash: hashFile(join(rootDir, 'package.json')),
     globalFiles: globalFiles(warm),

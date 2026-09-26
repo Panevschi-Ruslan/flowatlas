@@ -1,7 +1,7 @@
 import type { FlowatlasConfig } from '../config.js';
 import { AdapterNotFoundError, FlowatlasError } from '../errors.js';
 import type { BrokerAdapter } from './broker.js';
-import type { PackageJson } from './context.js';
+import type { PackageJson } from './manifest.js';
 import type { DbAdapter } from './db.js';
 import type { EntryAdapter } from './entry.js';
 import type { FrontendAdapter } from './frontend.js';

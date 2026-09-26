@@ -4,7 +4,7 @@ import {
   countSources,
   GraphBuilder,
   parseConfig,
-  readPackageJson,
+  readResolvedPackageJson,
   reportUnreadableSources,
   silentLogger,
   type ExtractContext,
@@ -136,7 +136,11 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     rootDir,
     ...(tsconfig === undefined ? {} : { tsconfig }),
   });
-  const pkg: PackageJson = readPackageJson(rootDir) ?? {};
+  // The manifest that answers what this repository can import, which on a
+  // package inside a workspace is not the leaf manifest alone. Everything below
+  // gates on it, so widening it here is what lets an adapter stay a statement
+  // about one package name.
+  const pkg: PackageJson = readResolvedPackageJson(rootDir) ?? {};
 
   const registry = options.registry ?? new AdapterRegistry();
   const adapters = registry.detect(pkg, config.adapters.auto ? config.adapters.force : {});

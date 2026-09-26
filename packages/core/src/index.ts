@@ -123,16 +123,16 @@ export type {
   ServiceConfig,
 } from './config.js';
 
+export { LOG_LEVELS, createLogger, silentLogger } from './adapters/context.js';
+export type { ExtractContext, LogLevel, Logger } from './adapters/context.js';
 export {
-  LOG_LEVELS,
   allDependencies,
-  createLogger,
   hasAnyDependency,
   hasDependency,
   readPackageJson,
-  silentLogger,
-} from './adapters/context.js';
-export type { ExtractContext, LogLevel, Logger, PackageJson } from './adapters/context.js';
+  readResolvedPackageJson,
+} from './adapters/manifest.js';
+export type { PackageJson } from './adapters/manifest.js';
 
 export { isFunctionHandler, isInlineHandler } from './adapters/entry.js';
 export type {

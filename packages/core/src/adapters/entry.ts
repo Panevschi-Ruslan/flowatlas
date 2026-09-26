@@ -1,6 +1,7 @@
 import type { FlowatlasConfig } from '../config.js';
 import type { EntryKind } from '../model/nodes.js';
-import type { ExtractContext, PackageJson } from './context.js';
+import type { ExtractContext } from './context.js';
+import type { PackageJson } from './manifest.js';
 
 /** A method of a class, which is where most handlers live. */
 export interface MethodHandler {

@@ -11,6 +11,7 @@ import {
   loadConfig,
   parseRepoGraph,
   readPackageJson,
+  readResolvedPackageJson,
   sitesIn,
   wasMissed,
   SCHEMA_VERSION,
@@ -258,7 +259,9 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
     extractor,
     incremental: isIncremental(service.type),
     adapters:
-      extractor === null ? [] : adapterNames(createRegistry(), readPackageJson(repoDir) ?? {}, config),
+      extractor === null
+        ? []
+        : adapterNames(createRegistry(), readResolvedPackageJson(repoDir) ?? {}, config),
     tsconfigHash: tsconfig === undefined ? hashText('') : hashFile(tsconfig),
     packageJsonHash: hashFile(join(repoDir, 'package.json')),
     globalFiles: session?.globalFiles() ?? [],
@@ -539,7 +542,13 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
   // than the project by exactly that much. Naming the framework turns a line
   // nobody can act on into one that says what would have to exist.
   if (extractor === null) {
-    const note = noReaderNote(readPackageJson(repoDir));
+    // What the repository itself declares first, and only then what the
+    // workspace around it declares. A package that gives its own framework away
+    // is that framework; one whose manifest is a name and a version is still
+    // worth naming from the workspace it belongs to, which is the only place a
+    // member of a monorepo says anything at all.
+    const note =
+      noReaderNote(readPackageJson(repoDir)) ?? noReaderNote(readResolvedPackageJson(repoDir));
     return {
       service,
       report: { ...base, skipped: 'no-extractor', ...(note === undefined ? {} : { error: note }) },

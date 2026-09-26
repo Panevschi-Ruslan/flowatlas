@@ -7,7 +7,7 @@ Angular and Express in one repository.
 | repository | `Chocobozzz/PeerTube` |
 | commit | `faa76bad2c1969a088ef1df38dc666dfe7259b5c` |
 | read | `server`, `client` |
-| read by | peertube-client (`angular`), peertube-server (`express`, set; `link` guessed `unknown`) |
+| read by | peertube-client (`angular`), peertube-server (`express`) |
 | source files counted | 2136 |
 | flowatlas | 0.4.1 |
 
@@ -42,16 +42,16 @@ land on one address.
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 253 | 0 |
+| requests from a browser | 252 | 0 |
 | requests between services | 0 | 0 |
-| channels | 3 | 0 with both ends |
+| channels | 7 | 0 with both ends |
 
 ## Storage and screens
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 1958 | no denominator: the rule has no probe for it |
-| …that name a table | 1949 | 1949 of 1958 |
+| query sites read | 1961 | no denominator: the rule has no probe for it |
+| …that name a table | 1901 | 1901 of 1961 |
 | tables | 2 | 2 of 85 |
 | components | 330 | 330 of 330 |
 | clicks | 307 | 307 of 307 |
@@ -59,32 +59,33 @@ land on one address.
 
 ## What it could not read
 
-3519 places somebody could act on, 1431 the tool
+3873 places somebody could act on, 1431 the tool
 reports as a limit of static reading, and 234 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| api-path-dynamic | action | 5 |  |
+| api-path-dynamic | action | 238 |  |
 | call-dynamic-receiver | info | 1168 |  |
-| channel-const-unresolved | action | 1 |  |
-| channel-dynamic | action | 4 |  |
-| consumer-handler-unresolved | action | 2 |  |
+| channel-dynamic | action | 11 |  |
+| consumer-handler-unresolved | action | 4 |  |
 | db-layer-unread | action | 1 |  |
 | db-receiver-name-only | action | 9 |  |
 | dynamic-cache-key | action | 20 |  |
 | dynamic-config-key | action | 1 |  |
+| dynamic-table-name | action | 51 |  |
 | handler-not-a-method | nothing | 234 |  |
 | handler-not-found | action | 35 |  |
 | inject-token-unresolved | info | 15 |  |
+| payload-type-unknown | action | 2 |  |
 | route-link-dynamic | info | 35 |  |
+| route-path-dynamic | action | 349 |  |
 | route-screen-unread | info | 18 |  |
 | route-target-unresolved | action | 117 |  |
-| target-route-not-found | action | 245 |  |
 | type-depth-exceeded | info | 56 |  |
 | type-generic-uninstantiated | info | 139 |  |
-| type-unresolved | action | 1130 |  |
-| unknown-db-package | action | 1949 |  |
+| type-unresolved | action | 1134 |  |
+| unknown-db-package | action | 1901 |  |
 
 ## The denominators
 
