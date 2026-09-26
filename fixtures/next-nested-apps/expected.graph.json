@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 4,
+  "repo": "next-nested-apps",
+  "generatedAt": "2026-09-26T21:58:46.356Z",
+  "nodes": [
+    {
+      "id": "entry:next-nested-apps:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "next-nested-apps",
+      "file": "app/api/orders/route.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:next-nested-apps:http:GET:/examples/blog/api/orders",
+      "type": "entry",
+      "label": "GET /examples/blog/api/orders",
+      "repo": "next-nested-apps",
+      "file": "examples/blog/src/app/api/orders/route.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/examples/blog/api/orders",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:next-nested-apps:http:GET:/examples/blog/api/posts",
+      "type": "entry",
+      "label": "GET /examples/blog/api/posts",
+      "repo": "next-nested-apps",
+      "file": "examples/blog/src/app/api/posts/route.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/examples/blog/api/posts",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "next-nested-apps#app/api/orders/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "next-nested-apps",
+      "file": "app/api/orders/route.ts",
+      "line": 4
+    },
+    {
+      "id": "next-nested-apps#examples/blog/src/app/api/orders/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "next-nested-apps",
+      "file": "examples/blog/src/app/api/orders/route.ts",
+      "line": 6
+    },
+    {
+      "id": "next-nested-apps#examples/blog/src/app/api/posts/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "next-nested-apps",
+      "file": "examples/blog/src/app/api/posts/route.ts",
+      "line": 2
+    },
+    {
+      "id": "next-nested-apps#lib/orders-store.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "next-nested-apps",
+      "file": "lib/orders-store.ts",
+      "line": 3
+    },
+    {
+      "id": "repo:next-nested-apps",
+      "type": "repo",
+      "label": "next-nested-apps",
+      "repo": "next-nested-apps",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 4,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:next-nested-apps:http:GET:/api/orders",
+      "to": "next-nested-apps#app/api/orders/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:next-nested-apps:http:GET:/examples/blog/api/orders",
+      "to": "next-nested-apps#examples/blog/src/app/api/orders/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "examples/blog/src/app/api/orders/route.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:next-nested-apps:http:GET:/examples/blog/api/posts",
+      "to": "next-nested-apps#examples/blog/src/app/api/posts/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "examples/blog/src/app/api/posts/route.ts",
+      "line": 2
+    },
+    {
+      "from": "next-nested-apps#app/api/orders/route.ts:GET",
+      "to": "next-nested-apps#lib/orders-store.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 5
+    }
+  ],
+  "types": {},
+  "unresolved": []
+}

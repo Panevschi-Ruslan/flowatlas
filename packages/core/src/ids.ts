@@ -129,6 +129,21 @@ export const normalizeFilePath = (file: string, repoDir?: string): string => {
     // separator, and a path that keeps it is not repo-relative.
     if (base === '') out = out.replace(/^\/+/, '');
     else if (out === base || out.startsWith(`${base}/`)) out = out.slice(base.length + 1);
+    // A file the service reads that is not inside it — a handler body in a
+    // sibling workspace package — is still named relative to the service,
+    // because that is what every other path in its graph is relative to. It
+    // used to keep the absolute path it was found at, which put one machine's
+    // home directory into node ids: cal.com's graph carried fifty-eight of
+    // them. Climbing out of the service is a shorter and truer way to say the
+    // same thing, and it is the same on every machine.
+    else if (out.startsWith('/')) {
+      const from = base.split('/');
+      const to = out.split('/');
+      let shared = 0;
+      while (shared < from.length && shared < to.length && from[shared] === to[shared]) shared += 1;
+      const up = '../'.repeat(from.length - shared);
+      out = `${up}${to.slice(shared).join('/')}`;
+    }
   }
   out = out.replace(/\/{2,}/g, '/');
   while (out.startsWith('./')) out = out.slice(2);

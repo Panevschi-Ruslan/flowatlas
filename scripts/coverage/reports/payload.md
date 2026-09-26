@@ -19,7 +19,7 @@ build **exit 0**, doctor exit 0, link exit 0
 
 | kind | entry points |
 |---|---|
-| http | 17 |
+| http | 288 |
 | rpc | 9 |
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
@@ -28,9 +28,9 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| addresses placed | 17 |  |
-| declarations with a body attached | 17 | 17 of 128 |
-| …whose body reaches anything | 3 | 3 of 128 |
+| addresses placed | 288 |  |
+| declarations with a body attached | 288 | 288 of 128 |
+| …whose body reaches anything | 65 | 65 of 128 |
 | …behind middleware or a guard | 0 | 0 of 128 |
 
 ## What joined
@@ -54,14 +54,14 @@ land on one address.
 
 ## What it could not read
 
-657 places somebody could act on, 541 the tool
+657 places somebody could act on, 560 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
 | api-path-dynamic | action | 74 |  |
-| call-dynamic-receiver | info | 534 |  |
+| call-dynamic-receiver | info | 553 |  |
 | db-receiver-name-only | action | 313 |  |
 | dynamic-config-key | action | 7 |  |
 | dynamic-http-url | action | 74 |  |
@@ -98,7 +98,7 @@ applied identically to all eight targets and knows nothing about any of them.
 
 ## Cost
 
-Wall clock 5 to 15 s, peak resident memory 2 to 3 GB.
+Wall clock 15 to 60 s, peak resident memory 2 to 3 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

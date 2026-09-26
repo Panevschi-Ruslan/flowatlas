@@ -56,6 +56,19 @@ more `link`.
 > want when the configuration lives inside one of the repositories, and not what
 > you want when it lives above them. Pass `--dir .` for the second case.
 
+A repository that declares a workspace — `workspaces` in its manifest, or a
+`pnpm-workspace.yaml` — is read as the several services it holds rather than as
+one. Each member that looks like an application becomes a service; the packages
+those applications import do not, because they are already read as part of
+whichever service imports them. A monorepo with a server and a browser in it, or
+with two applications under `apps/`, needs nothing written by hand.
+
+That is also what decides how much of a monorepo one service is. A service is the
+application together with the workspace packages it declares, so a Next.js
+application in `apps/web` whose handler bodies live in `packages/lib` is one
+service and one graph, and a path in it that climbs out — `../../packages/lib/…`
+— is a file of a package the service reads.
+
 ## 2. Build
 
 `build` reads every repository in its own process and joins the readings: a

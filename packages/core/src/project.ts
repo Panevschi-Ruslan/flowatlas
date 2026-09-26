@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import {
   Project,
   ts,
@@ -11,6 +11,7 @@ import {
 import type { GraphBuilder } from './builder.js';
 import { normalizeFilePath } from './ids.js';
 import type { Unresolved } from './model/graph.js';
+import { serviceSourceDirs } from './workspace.js';
 
 export interface CreateProjectOptions {
   /** Absolute path to the repository root. */
@@ -94,6 +95,42 @@ const FALLBACK_COMPILER_OPTIONS = {
   jsx: ts.JsxEmit.Preserve,
 } as const;
 
+/**
+ * The source files of one directory, relative to it and in a settled order.
+ *
+ * The one enumeration, used both to open a directory and to answer "has anything
+ * in it changed" — two questions that must have the same answer, and used to be
+ * asked by a glob on one side and a walk on the other with a fixture standing
+ * between them to check that the two lists had not drifted.
+ */
+const sourceFilesUnder = (dir: string): string[] => {
+  const sourceRoot = existsSync(join(dir, 'src')) ? 'src' : '.';
+  const out: string[] = [];
+
+  const walk = (at: string): void => {
+    let entries;
+    try {
+      entries = readdirSync(join(dir, at), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const path = at === '' ? entry.name : `${at}/${entry.name}`;
+      if (entry.isDirectory()) {
+        if (SKIPPED_DIRECTORIES.has(entry.name) || entry.name.startsWith('.')) continue;
+        walk(path);
+        continue;
+      }
+      if (!SOURCE_EXTENSIONS.some((ext) => entry.name.endsWith(ext))) continue;
+      if (SKIPPED_SUFFIXES.some((suffix) => entry.name.endsWith(suffix))) continue;
+      out.push(path);
+    }
+  };
+
+  walk(sourceRoot === '.' ? '' : sourceRoot);
+  return out.sort();
+};
+
 export const findTsconfig = (rootDir: string, tsconfig?: string): string | undefined => {
   if (tsconfig !== undefined) {
     const path = tsconfig.startsWith('/') ? tsconfig : join(rootDir, tsconfig);
@@ -131,6 +168,26 @@ export const createProject = (options: CreateProjectOptions): Project => {
     ...[...SKIPPED_DIRECTORIES].map((dir) => `!${join(rootDir, `**/${dir}/**`)}`),
     ...SKIPPED_SUFFIXES.map((suffix) => `!${join(rootDir, `**/*${suffix}`)}`),
   ]);
+
+  // Then every other directory this service's code is in. A workspace member
+  // whose handlers live in a sibling package used to have those files opened
+  // anyway — the checker resolved into them, so they were in the project — and
+  // then excluded from every walk, which is how a repository came to have all of
+  // its routes and none of their bodies. Opening them here as well as resolving
+  // them is what lets a clone with nothing installed read the same code as one
+  // with everything installed.
+  //
+  // Listed rather than globbed, and that is not a style choice. A glob makes the
+  // parser walk the directory tree under it, and the tree it walks is the one it
+  // already holds — which includes any directory the tsconfig named. cal.com's
+  // `apps/web` compiles a declaration file from a package that was deleted, so
+  // `packages/app-store` holds a child that exists only in the tsconfig, and a
+  // glob over that package walked into it and stopped the whole reading with
+  // "Directory not found". The list comes from the file system and holds only
+  // files that are there.
+  for (const dir of serviceSourceDirs(rootDir).slice(1)) {
+    for (const file of sourceFilesUnder(dir)) project.addSourceFileAtPath(join(dir, file));
+  }
   return project;
 };
 
@@ -282,32 +339,19 @@ export const reportUnreadableSources = (
  *
  * What a build needs to answer "did anything change here" before deciding to
  * read a repository at all. The two must agree, which `sources.test.ts` checks
- * against a fixture rather than trusting the two lists to stay in step.
+ * against a fixture rather than trusting the two lists to stay in step. They now
+ * agree by construction for every directory but the service's own, which is
+ * still globbed there and walked here; the check earns its keep on that one.
  */
 export const listRepoSources = (rootDir: string): string[] => {
-  const sourceRoot = existsSync(join(rootDir, 'src')) ? 'src' : '.';
-  const out: string[] = [];
-
-  const walk = (relative: string): void => {
-    let entries;
-    try {
-      entries = readdirSync(join(rootDir, relative), { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const entry of entries) {
-      const path = relative === '' ? entry.name : `${relative}/${entry.name}`;
-      if (entry.isDirectory()) {
-        if (SKIPPED_DIRECTORIES.has(entry.name) || entry.name.startsWith('.')) continue;
-        walk(path);
-        continue;
-      }
-      if (!SOURCE_EXTENSIONS.some((ext) => entry.name.endsWith(ext))) continue;
-      if (SKIPPED_SUFFIXES.some((suffix) => entry.name.endsWith(suffix))) continue;
-      out.push(path);
-    }
-  };
-
-  walk(sourceRoot === '.' ? '' : sourceRoot);
+  // One walk per directory the service's code is in, so that a change in a
+  // workspace package the service reads is a change to the service. Without
+  // that, editing a handler body in a sibling package would leave the graph of
+  // the service that calls it on disk unchanged and out of date.
+  const out = serviceSourceDirs(rootDir).flatMap((dir) => {
+    const prefix = relative(rootDir, dir).split(sep).join('/');
+    const files = sourceFilesUnder(dir);
+    return prefix === '' ? files : files.map((file) => `${prefix}/${file}`);
+  });
   return out.sort();
 };

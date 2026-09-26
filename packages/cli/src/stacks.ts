@@ -1,4 +1,4 @@
-import type { PackageJson } from '@flowatlas/core';
+import { allDependencies, type PackageJson } from '@flowatlas/core';
 
 /**
  * Service types `init` and `link` can suggest, and the dependency that gives
@@ -49,20 +49,12 @@ export const UNREAD_SIGNATURES: ReadonlyArray<readonly [framework: string, depen
   ['Svelte', 'svelte'],
 ];
 
-/** Everything a manifest declares, wherever it declares it. */
-const declaredDeps = (pkg: PackageJson): Record<string, unknown> => ({
-  ...pkg.dependencies,
-  ...pkg.devDependencies,
-  ...pkg.peerDependencies,
-  ...pkg.optionalDependencies,
-});
-
 /** The first name in a table whose dependency the manifest declares. */
 const firstMatch = (
   pkg: PackageJson,
   table: ReadonlyArray<readonly [name: string, dependency: string]>,
 ): string | undefined => {
-  const declared = declaredDeps(pkg);
+  const declared = allDependencies(pkg);
   for (const [name, dependency] of table) {
     if (Object.hasOwn(declared, dependency)) return name;
   }
@@ -72,6 +64,75 @@ const firstMatch = (
 /** The type to suggest for a repository, or `unknown` when nothing gave it away. */
 export const guessType = (pkg: PackageJson): string =>
   firstMatch(pkg, TYPE_SIGNATURES) ?? UNKNOWN_TYPE;
+
+/** Keys by which a package offers itself to be imported under its name. */
+const ENTRY_POINT_KEYS = ['main', 'module', 'browser', 'bin'] as const;
+
+/**
+ * Whether a package is something other packages import by name.
+ *
+ * The one distinction in a workspace that is written down rather than inferred:
+ * a library says how to enter it, and an application does not, because nothing
+ * imports an application. A `"."` export is the modern spelling of `main` and
+ * counts the same; an export map of subpaths only — `{"./*": …}`, which is how a
+ * server that is compiled in place but never imported as a whole is spelled —
+ * does not, because there is no whole to import.
+ */
+const importableByName = (pkg: PackageJson): boolean => {
+  if (ENTRY_POINT_KEYS.some((key) => pkg[key] !== undefined)) return true;
+  const exported = pkg['exports'];
+  if (typeof exported === 'string') return true;
+  return typeof exported === 'object' && exported !== null && '.' in exported;
+};
+
+/**
+ * The type to suggest for one member of a workspace.
+ *
+ * A member that declares no dependency of its own and offers nothing to be
+ * imported is not a library that forgot to say what it needs; it is an
+ * application whose dependencies are kept in the workspace root, which is how a
+ * repository with one deployable server and a pile of small packages beside it
+ * is usually arranged. PeerTube is that repository: `server/package.json` names
+ * a package, a version and an export map of subpaths, and the hundred and
+ * thirteen dependencies the server actually has — Express among them — are at
+ * the root. Read on its own it gave nothing away, which is why the coverage
+ * harness had to be told `server` is an Express service by hand.
+ *
+ * Narrow on purpose, in both conditions, and the narrowness is what keeps it
+ * safe. A member that declares even one dependency has said what it is built on
+ * and is taken at its word, so a library with a single dependency does not
+ * inherit a framework it never asked for; and one that can be imported by name is
+ * a library whatever else is true of it. Every other member of PeerTube's
+ * workspace fails one test or the other, so this claims the root's manifest for
+ * exactly the directory it belongs to.
+ *
+ * Widening every member's manifest instead has been measured and it is wrong
+ * here. `packages/medusa` declares Express, the monorepo root carries React in
+ * its tooling, and the table above ranks React above Express because a repository
+ * that declares both is usually the browser half; a medusa read from a widened
+ * manifest is handed to the browser reader and loses every query site it has. The
+ * table is the reason, so the guard belongs beside the table: what a service is
+ * built on is answered from the manifest of the service, and the root is consulted
+ * only where the service's own manifest says nothing whatsoever.
+ */
+export const guessWorkspaceType = (pkg: PackageJson, root: PackageJson | undefined): string => {
+  const own = guessType(pkg);
+  if (own !== UNKNOWN_TYPE || root === undefined) return own;
+  if (importableByName(pkg) || Object.keys(allDependencies(pkg)).length > 0) return own;
+  return guessType(root);
+};
+
+/**
+ * Whether a workspace member is one of the workspace's applications.
+ *
+ * What makes a directory a service is that there is something here that can read
+ * it. A workspace holds both kinds of package and the question `init` has to
+ * answer is which of them somebody would point this tool at; naming a library
+ * as a service of its own would read its code twice, once on its own account and
+ * once for every application that calls it.
+ */
+export const looksLikeApplication = (pkg: PackageJson, root: PackageJson | undefined): boolean =>
+  guessWorkspaceType(pkg, root) !== UNKNOWN_TYPE;
 
 /**
  * The framework a repository is built on when there is no reader for it.

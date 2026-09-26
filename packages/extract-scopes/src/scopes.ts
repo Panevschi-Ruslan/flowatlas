@@ -24,6 +24,7 @@
  * is the altitude, which is above the core and below every framework.
  */
 import {
+  isServiceSource,
   memberFunction,
   methodBodies,
   moduleFunctions,
@@ -86,13 +87,24 @@ export const WALKED_ROLES: ReadonlySet<string> = new Set([
   'plain',
 ]);
 
-/** The files of this repository, which is what the module-level sources read. */
+/**
+ * The files this service's code is in, which is what the module-level sources read.
+ *
+ * "This service's" rather than "this directory's", and that one word is R96. A
+ * workspace member whose handler bodies live in a sibling package had those files
+ * in the project already — the checker had resolved into them so that types would
+ * come out — and this test then threw every one of them away, because they were
+ * not under the directory the manifest was in. The result was a graph with all
+ * eighty-four of cal.com's routes in it and not one of the functions they call:
+ * boundaries or bodies, never both. What a service is includes the packages it
+ * declares (see `serviceSourceDirs`), so what its own files are does too.
+ *
+ * A file of an installed package, or of another repository read into the same
+ * project, is still not this service's to answer for.
+ */
 export const repoSourceFiles = function* (ctx: ScopeContext): Generator<SourceFile> {
   for (const source of ctx.project.getSourceFiles()) {
-    const path = source.getFilePath();
-    // A file of an installed package, or of another repository read into the
-    // same project, is not this repository's to answer for.
-    if (path.includes('/node_modules/') || !path.startsWith(`${ctx.repoDir}/`)) continue;
+    if (!isServiceSource(source.getFilePath(), ctx.repoDir)) continue;
     yield source;
   }
 };

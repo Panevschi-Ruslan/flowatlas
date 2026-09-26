@@ -85,24 +85,68 @@ export const PAGES_API: FsRouter = { root: 'pages/api', prefix: '/api' };
 const FILE_EXTENSION = /\.[cm]?[jt]sx?$/;
 
 /**
+ * The directory the framework's own convention allows between a package and its
+ * application, which is part of neither the package's path nor the address.
+ */
+const SOURCE_DIRECTORY = 'src';
+
+/**
+ * Where an application begins, and what stands in front of everything it serves.
+ *
+ * A repository may hold more than one application, and the ones that do are not
+ * exotic: payload keeps thirty-nine of them under `test/`, `templates/` and
+ * `examples/`, each a whole Next.js application with its own `app/` directory.
+ * Every one of those declares `api/[...slug]/route.ts`, so reading the router
+ * root wherever it occurs and nothing in front of it made two hundred and
+ * seventy-one route declarations claim the seventeen addresses their names
+ * collide on, and the graph kept whichever arrived last. Seventeen of two
+ * hundred and eighty-eight, and the arithmetic said nothing was missing.
+ *
+ * So the segments in front of the router root are kept, and they are what tells
+ * one application from another. The address of a route in the application at the
+ * service's own root is exactly what the framework serves it at, which is the
+ * common case and the one every existing reading depends on. A route in an
+ * application somewhere below is addressed from where that application is —
+ * `/test/fields/api/*` rather than a second claim on `/api/*` — because those
+ * two are never deployed together and a graph that merged them would say one
+ * address is answered by thirty bodies.
+ *
+ * `src` drops out, because the framework itself allows an application to sit
+ * either at a package's root or under `src` and serves both at the same
+ * addresses.
+ */
+const applicationPrefix = (before: readonly string[]): string => {
+  const kept = [...before];
+  if (kept[kept.length - 1] === SOURCE_DIRECTORY) kept.pop();
+  return kept.length === 0 ? '' : `/${kept.join('/')}`;
+};
+
+/**
  * The address a file is served at, or `null` when this router does not serve it.
  *
- * `file` is repo-relative and POSIX, as every path in the graph is. The root is
- * matched wherever it occurs rather than only at the start, because a
- * repository is as likely to keep its application under `src/` as at the top,
- * and both spell the same addresses.
+ * `file` is repo-relative and POSIX, as every path in the graph is. A path that
+ * climbs out of the service — a file of a workspace package the service reads —
+ * is served by nothing: a library has no address space of its own, and an
+ * application inside one belongs to whichever service is that package.
+ *
+ * The root is matched wherever it occurs rather than only at the start, because
+ * a repository is as likely to keep its application under `src/` as at the top.
+ * The first occurrence is the one taken: an application whose own directories
+ * include one called `app` has that inner one as an ordinary segment of its
+ * addresses, and taking the last would both lose it and mistake it for a second
+ * application.
  */
 export const routePathOfFile = (file: string, router: FsRouter): string | null => {
+  if (file.startsWith('../')) return null;
   const parts = file.split('/');
   const rootParts = router.root.split('/');
-  // The last occurrence, so a repository with a component directory called
-  // `app` inside its application is not mistaken for a second router.
   let at = -1;
-  for (let index = 0; index + rootParts.length <= parts.length; index += 1) {
+  for (let index = 0; index + rootParts.length <= parts.length && at < 0; index += 1) {
     if (rootParts.every((part, offset) => parts[index + offset] === part)) at = index;
   }
   if (at < 0) return null;
 
+  const prefix = applicationPrefix(parts.slice(0, at));
   const after = parts.slice(at + rootParts.length);
   const name = (after.pop() ?? '').replace(FILE_EXTENSION, '');
   if (name === '') return null;
@@ -123,5 +167,5 @@ export const routePathOfFile = (file: string, router: FsRouter): string | null =
   // A grouped or slot directory drops out; nothing else may, because a segment
   // that could not be read would make the address a different one.
   const kept = after.map(segmentOf).filter((segment): segment is string => segment !== null);
-  return normalizePath(`${router.prefix ?? ''}/${kept.join('/')}`);
+  return normalizePath(`${prefix}${router.prefix ?? ''}/${kept.join('/')}`);
 };

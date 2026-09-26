@@ -66,6 +66,36 @@ either.
 
 ### Changed
 
+- **A service is an application together with the workspace packages it
+  declares**, rather than a directory with a manifest. Pointed at a Next.js
+  application in `apps/web`, the tool used to find every route it answers and not
+  one of the functions those routes call, because the handler bodies are in
+  `packages/features` and `packages/lib` and those were opened only so that types
+  would resolve; pointed at the monorepo root it found the bodies and no way in,
+  because the root has no application in it. There was no configuration that gave
+  both. The extent is now read from `workspaces` or `pnpm-workspace.yaml` and
+  needs nothing written down: the application's directory stays its identity and
+  the directory every path is measured from, and a file of a package it reads is
+  named as one — `../../packages/lib/orders.ts`, where the absolute path of
+  whoever ran the tool used to be.
+- **`init` derives the service list from the workspace.** A repository that
+  declares one is read as the several services it holds: one per member that
+  looks like an application, and none for the packages those applications import.
+  `init --dir .` on PeerTube used to write a single service and leave out the
+  Angular client that is half the repository; it now writes both halves, with the
+  server's type read from the workspace root where that server's dependencies
+  are actually kept. A repository that declares no workspace, and a workspace
+  with no application in it, are one service exactly as before.
+- **A route's address says which application serves it.** A repository with more
+  than one Next.js application in it — payload keeps thirty-nine, under `test/`,
+  `templates/` and `examples/` — had every one of them claiming the same
+  addresses, because the router root was read wherever it occurred and the
+  directories in front of it were dropped. Two hundred and seventy-one route
+  declarations of two hundred and eighty-eight landed on seventeen addresses and
+  the graph kept whichever was read last, with nothing anywhere saying so. An
+  application below the service's own root is now addressed from where it is:
+  `/test/fields/api/*`. The application at the service root is unaffected, which
+  is every repository with one application in it.
 - **`SCHEMA_VERSION` is 4.** A graph written by an earlier version is refused
   with a message saying to rebuild, rather than half read. Nothing needs doing
   beyond a rebuild.

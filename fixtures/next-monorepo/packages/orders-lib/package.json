@@ -1,0 +1,9 @@
+{
+  "name": "@next-monorepo/orders-lib",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The handler bodies: a member of the workspace, not of the application.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
+}

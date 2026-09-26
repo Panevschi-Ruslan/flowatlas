@@ -19,7 +19,7 @@ build **exit 0**, doctor exit 0, link exit 0
 
 | kind | entry points |
 |---|---|
-| http | 415 |
+| http | 418 |
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
 handlers, which is what the counting rule counts, because two declarations may
@@ -27,8 +27,8 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| addresses placed | 415 |  |
-| declarations with a body attached | 429 | 429 of 456 |
+| addresses placed | 418 |  |
+| declarations with a body attached | 432 | 432 of 456 |
 | …whose body reaches anything | 386 | 386 of 456 |
 | …behind middleware or a guard | 337 | 337 of 456 |
 
@@ -37,15 +37,15 @@ land on one address.
 |  | found | joined |
 |---|---|---|
 | requests from a browser | 0 | 0 |
-| requests between services | 8 | 0 |
+| requests between services | 30 | 0 |
 | channels | 0 | 0 with both ends |
 
 ## Storage and screens
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 1281 | no denominator: the rule has no probe for it |
-| …that name a table | 0 | 0 of 1281 |
+| query sites read | 1654 | no denominator: the rule has no probe for it |
+| …that name a table | 0 | 0 of 1654 |
 | tables | 0 | nothing of this kind here |
 | components | 0 | nothing of this kind here |
 | clicks | 0 | nothing of this kind here |
@@ -53,25 +53,26 @@ land on one address.
 
 ## What it could not read
 
-5526 places somebody could act on, 2287 the tool
+7299 places somebody could act on, 4013 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| call-dynamic-receiver | info | 1927 |  |
-| db-receiver-name-only | action | 1281 |  |
-| di-token-ambiguous | action | 2 |  |
-| di-token-unknown | action | 13 |  |
-| di-type-unresolved | action | 1412 |  |
-| dynamic-config-key | action | 4 |  |
-| dynamic-http-url | action | 2 |  |
+| call-dynamic-receiver | info | 3532 |  |
+| db-receiver-name-only | action | 1654 |  |
+| di-token-ambiguous | action | 3 |  |
+| di-token-unknown | action | 24 |  |
+| di-type-unresolved | action | 1580 |  |
+| dynamic-config-key | action | 22 |  |
+| dynamic-http-url | action | 8 |  |
 | global-wrapper-dynamic | action | 98 |  |
 | module-import-dynamic | action | 15 |  |
 | route-path-dynamic | action | 2 |  |
-| type-depth-exceeded | info | 18 |  |
-| type-generic-uninstantiated | info | 342 |  |
-| type-unresolved | action | 2697 |  |
+| type-depth-exceeded | info | 46 |  |
+| type-generic-uninstantiated | info | 435 |  |
+| type-unresolved | action | 3892 |  |
+| unknown-base-url-env | action | 1 |  |
 
 ## The denominators
 
@@ -100,7 +101,7 @@ applied identically to all eight targets and knows nothing about any of them.
 
 ## Cost
 
-Wall clock 5 to 15 s, peak resident memory 0.5 to 1 GB.
+Wall clock 15 to 60 s, peak resident memory 1 to 2 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

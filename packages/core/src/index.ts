@@ -186,6 +186,15 @@ export {
 } from './nodes.js';
 
 export {
+  isServiceSource,
+  serviceSourceDirs,
+  workspaceGlobs,
+  workspacePackages,
+  workspaceRootOf,
+} from './workspace.js';
+export type { WorkspacePackage } from './workspace.js';
+
+export {
   countSources,
   createProject,
   findTsconfig,
