@@ -44,6 +44,7 @@ describe('parseConfig', () => {
         entry: { registries: [], http: [] },
         broker: { custom: [] },
         db: { localBaseClasses: [] },
+        frontend: { localClientClasses: [] },
       },
       output: DEFAULT_OUTPUT,
       types: { maxDepth: DEFAULT_TYPE_MAX_DEPTH },
@@ -70,6 +71,7 @@ describe('parseConfig', () => {
       entry: { registries: [], http: [] },
       broker: { custom: [] },
       db: { localBaseClasses: [] },
+      frontend: { localClientClasses: [] },
     });
     expect(parseConfig({ types: {} }).types).toEqual({ maxDepth: DEFAULT_TYPE_MAX_DEPTH });
   });

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 4,
+  "builtAt": "2026-09-26T21:59:11.586Z",
+  "configHash": "586a6f4aa63f",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 11,
+      "edges": 8,
+      "types": 1,
+      "unresolved": 2,
+      "durationMs": 0
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 4,
+    "resolved": 0,
+    "unresolved": 4,
+    "byReason": {
+      "api-path-dynamic": 1,
+      "target-route-not-found": 3
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 15,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/orders",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/orders */.",
+      "symbol": "ui_api_call:web#src/screens/OrdersPanel.tsx:15:22"
+    },
+    {
+      "service": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 16,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /api/orders",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /api/orders */.",
+      "symbol": "ui_api_call:web#src/screens/OrdersPanel.tsx:16:36"
+    },
+    {
+      "service": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 17,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves PUT /api/invoices",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls PUT /api/invoices */.",
+      "symbol": "ui_api_call:web#src/screens/OrdersPanel.tsx:17:25"
+    }
+  ],
+  "totals": {
+    "nodes": 11,
+    "edges": 8,
+    "types": 1,
+    "unresolved": 5
+  }
+}
