@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 4,
+  "repo": "koa-mount-helper",
+  "generatedAt": "2026-09-26T20:21:32.565Z",
+  "nodes": [
+    {
+      "id": "entry:koa-mount-helper:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "koa-mount-helper",
+      "file": "src/health.routes.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "koa-routes",
+        "registration": "healthRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "koa-mount-helper#src/health.routes.ts:GET /@7",
+      "type": "function",
+      "label": "GET /@7",
+      "repo": "koa-mount-helper",
+      "file": "src/health.routes.ts",
+      "line": 7
+    },
+    {
+      "id": "repo:koa-mount-helper",
+      "type": "repo",
+      "label": "koa-mount-helper",
+      "repo": "koa-mount-helper",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "koa-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:koa-mount-helper:http:GET:/health",
+      "to": "koa-mount-helper#src/health.routes.ts:GET /@7",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/health.routes.ts",
+      "line": 7
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/api/documents.routes.ts",
+      "line": 13,
+      "reason": "route-path-dynamic",
+      "message": "documentsRouter is mounted somewhere this cannot read, so /documents.info is not the path it is served at.",
+      "hint": "Mount the application at a literal path, or declare its routes on the application that is served.",
+      "symbol": "POST /documents.info",
+      "adapter": "koa-routes"
+    },
+    {
+      "file": "src/api/documents.routes.ts",
+      "line": 17,
+      "reason": "route-path-dynamic",
+      "message": "documentsRouter is mounted somewhere this cannot read, so /documents.list is not the path it is served at.",
+      "hint": "Mount the application at a literal path, or declare its routes on the application that is served.",
+      "symbol": "POST /documents.list",
+      "adapter": "koa-routes"
+    }
+  ]
+}

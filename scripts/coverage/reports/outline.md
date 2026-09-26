@@ -53,7 +53,7 @@ land on one address.
 
 ## What it could not read
 
-832 places somebody could act on, 3456 the tool
+832 places somebody could act on, 3457 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -65,6 +65,7 @@ was never an edge to draw. The three are never added together.
 | db-receiver-name-only | action | 77 |  |
 | dynamic-config-key | action | 2 |  |
 | dynamic-http-url | action | 24 |  |
+| entry-http-types-unmatched | info | 1 |  |
 | type-depth-exceeded | info | 571 |  |
 | type-generic-uninstantiated | info | 169 |  |
 | type-unresolved | action | 722 |  |

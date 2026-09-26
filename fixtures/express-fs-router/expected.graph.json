@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 4,
+  "repo": "express-fs-router",
+  "generatedAt": "2026-09-26T20:21:28.760Z",
+  "nodes": [
+    {
+      "id": "repo:express-fs-router",
+      "type": "repo",
+      "label": "express-fs-router",
+      "repo": "express-fs-router",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared in a way no reader here knows — a file-system convention, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes"
+    }
+  ]
+}

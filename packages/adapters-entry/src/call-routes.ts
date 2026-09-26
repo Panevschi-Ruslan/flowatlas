@@ -320,6 +320,46 @@ const mountedApp = (
 };
 
 /**
+ * The application handed to a helper the reader cannot see through.
+ *
+ * `app.use(mount('/api', api))` — `koa-mount` takes a prefix and an application
+ * and hands back middleware, so the argument of `use` is not an application and
+ * `mountedApp` above says nothing was mounted. The line then read as an ordinary
+ * middleware install: the prefix was dropped, and every route under it kept the
+ * address it is written at. On outline that was 253 of 257 routes recorded at an
+ * address nothing serves, with no row anywhere to say so (R84).
+ *
+ * What the helper does with the application is the helper's business — which of
+ * its arguments is the prefix, whether there is one at all — so this finds the
+ * application and nothing else, and the mount it leads to has no path. A route
+ * underneath is then reported as mounted somewhere this cannot read, which is a
+ * missing address instead of a wrong one: the first can be acted on, the second
+ * joins to callers that do not exist.
+ *
+ * The application the call is written on is not an answer. `app.use(session(app))`
+ * hands a middleware factory the very application it is being installed on, which
+ * is ordinary and mounts nothing; reading it as a mount would make every route in
+ * such a repository unplaceable.
+ */
+const wrappedApp = (
+  argument: TsNode | undefined,
+  receiver: TsNode,
+  dialect: RouteDialect,
+): TsNode | undefined => {
+  if (argument === undefined) return undefined;
+  const node = unwrap(argument);
+  if (!Node.isCallExpression(node)) return undefined;
+  const own = appDeclaration(receiver);
+  for (const written of node.getArguments()) {
+    const value = unwrap(written);
+    if (!isApp(value, dialect)) continue;
+    const declaration = appDeclaration(value);
+    if (declaration !== undefined && declaration !== own) return declaration;
+  }
+  return undefined;
+};
+
+/**
  * The declaration an expression is the value of, when it is written as one.
  *
  * Only through a chain of calls, because that is the shape it exists for:
@@ -508,7 +548,13 @@ class Applications {
     const mount = this.#dialect.mount;
     if (mount === undefined || site.method !== mount.method) return false;
     const written = argumentAt(site.args, mount.appAt);
-    const declaration = mountedApp(written, mount, this.#dialect);
+    const seenThrough = mountedApp(written, mount, this.#dialect);
+    // A helper between the mount and the application hides the path and nothing
+    // else: the application is still being hung somewhere, so it is recorded as
+    // mounted with no path rather than left where its routes are written.
+    const wrapped =
+      seenThrough === undefined ? wrappedApp(written, site.receiver, this.#dialect) : undefined;
+    const declaration = seenThrough ?? wrapped;
     // `use` both mounts and installs, and the only thing that tells them apart
     // is whether what is handed over is an application.
     if (declaration === undefined) {
@@ -526,7 +572,13 @@ class Applications {
       return false;
     }
     this.#shifts = true;
-    const at = this.#mountPath(site, mount);
+    // The path of a mount written through a helper is inside the helper's own
+    // arguments, under whatever meaning the helper gives them. Reading the
+    // argument position this framework describes would find the helper call
+    // itself, which is not a path, and `#mountPath` answers "no path given" to
+    // that — the parent's base, which is precisely the wrong address this exists
+    // to stop being recorded.
+    const at = wrapped === undefined ? this.#mountPath(site, mount) : undefined;
     const empty =
       Node.isVariableDeclaration(declaration) && declaration.getInitializer() === undefined;
     for (const target of [declaration, ...(empty ? assignedApps(declaration, this.#dialect) : [])]) {
@@ -974,15 +1026,23 @@ const isConditional = (call: TsNode): boolean => {
  */
 export interface CallRoutesOptions {
   /**
-   * Whether reading nothing is worth a row of its own.
+   * Whether reading nothing is something somebody should act on.
    *
-   * Off for the frameworks shipped with the tool: one of their adapters is
-   * turned on by a dependency, and a repository that depends on a framework and
-   * declares no route on it is an ordinary thing — a library, a worker, a
-   * service whose routes are all in another repository. On for a framework
-   * somebody described, because there the silence is the failure mode: a
-   * description with a type name spelled wrong reads exactly like a repository
-   * with no routes in it, and nothing else would ever say which it was.
+   * Reading nothing is always worth a row. It was not always: the row was
+   * written only for a framework somebody described, on the argument that a
+   * repository depending on a framework and declaring no route on it is an
+   * ordinary thing — a library, a worker, a service whose routes live
+   * elsewhere. True, and it left medusa measured at 769 of 791 source files
+   * producing no node with nothing anywhere saying so, because a file-system
+   * router reads exactly like a library from in here (R84). The reader cannot
+   * tell those two apart, and the one it must not do is stay quiet about which
+   * it was looking at.
+   *
+   * So the difference is the level rather than the row. On for a description
+   * somebody wrote, where silence is a mistake with a fix — a type name spelled
+   * wrong reads exactly like a clean repository. Off for a framework shipped
+   * with the tool, where it is a limit of this reading and the reader is saying
+   * so rather than asking for anything.
    */
   readonly reportSilence?: boolean;
 }
@@ -1102,17 +1162,17 @@ export const callRoutesAdapter = (
     }
 
     if (anonymous.length > 0) reportAnonymous(ctx, anonymous, dialect);
-    if (options.reportSilence === true && entries.length === 0) {
-      reportSilence(ctx, dialect, onDescribedType);
+    if (entries.length === 0) {
+      reportSilence(ctx, dialect, onDescribedType, options.reportSilence === true);
     }
     return entries;
   },
 });
 
 /**
- * A description that read nothing, and which part of it read nothing.
+ * A reader that read nothing, and which part of it read nothing.
  *
- * The failure mode of every configuration-driven reader is silence that looks
+ * The failure mode of every reader driven by a description is silence that looks
  * like a clean repository, and the two silences want different answers. No call
  * on any described type means the description is pointed at the wrong types —
  * the commonest cause being a framework whose application type is re-exported
@@ -1120,25 +1180,41 @@ export const callRoutesAdapter = (
  * types and no route out of them means the types are right and the methods or
  * the argument positions are not.
  *
- * Written against the manifest, because that is the nearest real file: the
- * description itself is in the project's configuration, which is not part of
- * the repository the row belongs to.
+ * Written against the manifest, because that is the nearest real file: what was
+ * matched against the repository is a dependency of it and a row of description,
+ * and the description itself may be in the project's configuration rather than
+ * in the repository this row belongs to.
+ *
+ * `actionable` is whether somebody wrote the description being reported on. Where
+ * they did, silence is a spelling mistake with a fix; where the tool ships the
+ * row, silence is a fact about this repository that the reader is stating — the
+ * fix, if there is one, is a reader for a convention nobody has written yet.
  */
-const reportSilence = (ctx: ExtractContext, dialect: RouteDialect, onTypes: number): void => {
+const reportSilence = (
+  ctx: ExtractContext,
+  dialect: RouteDialect,
+  onTypes: number,
+  actionable: boolean,
+): void => {
   const types = dialect.appTypes.map((app) => `${app.package}#${app.typeName}`).join(', ');
   const verbs = Object.keys(dialect.verbs).join(', ');
+  const named = actionable ? `${dialect.name} description` : `${dialect.name} reader`;
   ctx.builder.addUnresolved({
     file: 'package.json',
     line: 1,
     reason: onTypes === 0 ? 'entry-http-types-unmatched' : 'entry-http-routes-unmatched',
+    ...(actionable ? {} : { level: 'info' as const }),
     message:
       onTypes === 0
-        ? `Nothing here is a value of any type the ${dialect.name} description names, so none of its routes were read.`
-        : `${onTypes} call${onTypes === 1 ? ' is' : 's are'} written on a type the ${dialect.name} description names, and none of them spelled a verb and a path this could read.`,
-    hint:
-      onTypes === 0
+        ? `Nothing here is a value of any type the ${named} names, so none of its routes were read.`
+        : `${onTypes} call${onTypes === 1 ? ' is' : 's are'} written on a type the ${named} names, and none of them spelled a verb and a path this could read.`,
+    hint: actionable
+      ? onTypes === 0
         ? `Check appTypes on that description; it looks for ${types}.`
-        : `Check verbs, verbArgument, pathArg and handlerArg on that description; it looks for ${verbs}.`,
+        : `Check verbs, verbArgument, pathArg and handlerArg on that description; it looks for ${verbs}.`
+      : onTypes === 0
+        ? `Ordinary where ${dialect.packages[0] as string} is a dependency and no route is declared on it. If this repository does serve routes, they are declared in a way no reader here knows — a file-system convention, or a framework of its own in front of this one.`
+        : `The types match and the routes do not: routes here are declared through something written around ${dialect.packages[0] as string} rather than on it, and no reader here knows that shape.`,
     symbol: dialect.name,
     adapter: dialect.name,
   });

@@ -249,7 +249,9 @@ describe('express routes', () => {
       app.route(pathFor('books')).get((req, res) => res.json([]));
     `);
     expect(read.entries).toEqual([]);
-    expect(reasons(read)).toEqual(['route-path-dynamic']);
+    // And that it read no route at all, which is the second row: a reader that
+    // came away with nothing says so, whatever the reason for each site (R84).
+    expect(reasons(read).sort()).toEqual(['entry-http-routes-unmatched', 'route-path-dynamic']);
   });
 
   it('reads a setting rather than a route when only one argument is given', () => {
@@ -260,7 +262,13 @@ describe('express routes', () => {
       const mode = app.get('env');
     `);
     expect(read.entries).toEqual([]);
-    expect(read.unresolved).toEqual([]);
+    // No row about a route, because neither line is one. The row that is here is
+    // the reader saying it read nothing: these calls are written on a type it
+    // does know, so the silence is reported against the verbs rather than the
+    // types, and it is informational because a repository can legitimately
+    // depend on Express and declare nothing.
+    expect(reasons(read)).toEqual(['entry-http-routes-unmatched']);
+    expect(read.unresolved[0]?.level).toBe('info');
   });
 
   it('serves a mounted router a level down, through a default export', () => {
@@ -406,7 +414,7 @@ describe('express routes', () => {
       },
     );
     expect(read.entries).toEqual([]);
-    expect(reasons(read)).toEqual(['route-path-dynamic']);
+    expect(reasons(read).sort()).toEqual(['entry-http-routes-unmatched', 'route-path-dynamic']);
   });
 
   it('says so when the path of a route is assembled at run time', () => {
@@ -417,7 +425,7 @@ describe('express routes', () => {
       app.get(pathFor('stats'), (req, res) => res.send('ok'));
     `);
     expect(read.entries).toEqual([]);
-    expect(reasons(read)).toEqual(['route-path-dynamic']);
+    expect(reasons(read).sort()).toEqual(['entry-http-routes-unmatched', 'route-path-dynamic']);
   });
 
   it('marks a route registered under a condition as one', () => {
@@ -568,5 +576,66 @@ describe('koa routes', () => {
       router.get('/:orderId', async (ctx) => { ctx.body = 'ok'; });
     `);
     expect(ids(read)).toEqual(['entry:api:http:GET:/orders/:param']);
+  });
+
+  it('reports a route under a mount written through a helper rather than misplacing it', () => {
+    const read = koa(
+      `
+      import Koa from 'koa';
+      import { mount } from './mount.js';
+      import { api } from './api.js';
+      const app = new Koa();
+      app.use(mount('/api', api));
+    `,
+      {
+        '/src/mount.ts': `
+          import type Application from 'koa';
+          import type { Middleware } from 'koa';
+          export const mount = (at: string, app: Application): Middleware => async () => undefined;
+        `,
+        '/src/api.ts': `
+          import Koa from 'koa';
+          import Router from '@koa/router';
+          const router = new Router();
+          router.post('/documents.info', async (ctx) => { ctx.body = 'ok'; });
+          export const api = new Koa();
+          api.use(router.routes());
+        `,
+      },
+    );
+    // Not `POST /documents.info`, which is where the route is written and not
+    // where it is served: the prefix is inside the helper's arguments under the
+    // helper's own meaning, and a wrong address joins to callers that do not
+    // exist. So the route is reported instead (R84).
+    expect(ids(read)).toEqual([]);
+    const row = read.unresolved.find((item) => item.reason === 'route-path-dynamic');
+    expect(row?.message).toContain('mounted somewhere this cannot read');
+    expect(row?.symbol).toBe('POST /documents.info');
+  });
+
+  it('does not read a helper handed the application it is installed on as a mount', () => {
+    const read = koa(
+      `
+      import Koa from 'koa';
+      import Router from '@koa/router';
+      import { session } from './session.js';
+      const app = new Koa();
+      const router = new Router({ prefix: '/orders' });
+      router.get('/', async (ctx) => { ctx.body = 'ok'; });
+      app.use(session(app));
+      app.use(router.routes());
+    `,
+      {
+        '/src/session.ts': `
+          import type Application from 'koa';
+          import type { Middleware } from 'koa';
+          export const session = (app: Application): Middleware => async () => undefined;
+        `,
+      },
+    );
+    // `session(app)` hands a factory the very application it is installed on,
+    // which mounts nothing. Reading it as a mount would leave every route in the
+    // repository with no readable address.
+    expect(ids(read)).toEqual(['entry:api:http:GET:/orders']);
   });
 });

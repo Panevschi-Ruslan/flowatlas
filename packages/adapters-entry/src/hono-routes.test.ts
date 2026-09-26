@@ -272,7 +272,12 @@ describe('routes declared by calling the application', () => {
       app.use('*', log);
     `, { '/src/log.ts': 'export const log = (c: unknown) => c;' });
     expect(read.entries).toEqual([]);
-    expect(read.unresolved).toEqual([]);
+    // Not a route and not reported as one. The one row is the reader saying it
+    // read no route in this repository at all, which it must say however
+    // ordinary the reason (R84), and which is informational rather than
+    // something to act on.
+    expect(read.unresolved.map((row) => row.reason)).toEqual(['entry-http-routes-unmatched']);
+    expect(read.unresolved[0]?.level).toBe('info');
   });
 
   it('says nothing about a value read off the request, which is the same shape', () => {
@@ -295,7 +300,10 @@ describe('routes declared by calling the application', () => {
       app.get(at('stats'), (c) => c.text('x'));
     `);
     expect(read.entries).toEqual([]);
-    expect(read.unresolved.map((row) => row.reason)).toEqual(['route-path-dynamic']);
+    expect(read.unresolved.map((row) => row.reason).sort()).toEqual([
+      'entry-http-routes-unmatched',
+      'route-path-dynamic',
+    ]);
   });
 });
 

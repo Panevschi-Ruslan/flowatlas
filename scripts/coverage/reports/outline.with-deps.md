@@ -25,7 +25,7 @@ build **exit 0**, doctor exit 0, link exit 0
 
 | kind | entry points |
 |---|---|
-| http | 257 |
+| http | 33 |
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
 handlers, which is what the counting rule counts, because two declarations may
@@ -33,10 +33,10 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| addresses placed | 257 |  |
-| declarations with a body attached | 253 | 253 of 266 |
-| …whose body reaches anything | 238 | 238 of 266 |
-| …behind middleware or a guard | 252 | 252 of 266 |
+| addresses placed | 33 |  |
+| declarations with a body attached | 29 | 29 of 266 |
+| …whose body reaches anything | 28 | 28 of 266 |
+| …behind middleware or a guard | 28 | 28 of 266 |
 
 ## What joined
 
@@ -50,8 +50,8 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 168 | no denominator: the rule has no probe for it |
-| …that name a table | 0 | 0 of 168 |
+| query sites read | 146 | no denominator: the rule has no probe for it |
+| …that name a table | 0 | 0 of 146 |
 | tables | 0 | 0 of 103 |
 | components | 644 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
@@ -59,14 +59,14 @@ land on one address.
 
 ## What it could not read
 
-276 places somebody could act on, 1785 the tool
+480 places somebody could act on, 1709 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
 | api-path-dynamic | action | 2 |  |
-| call-dynamic-receiver | info | 344 |  |
+| call-dynamic-receiver | info | 280 |  |
 | channel-const-unresolved | action | 12 |  |
 | channel-dynamic | action | 9 |  |
 | consumer-handler-unresolved | action | 2 |  |
@@ -75,11 +75,11 @@ was never an edge to draw. The three are never added together.
 | dynamic-cache-key | action | 40 |  |
 | dynamic-config-key | action | 2 |  |
 | dynamic-http-url | action | 24 |  |
-| dynamic-table-name | action | 91 |  |
+| dynamic-table-name | action | 69 |  |
 | route-handler-anonymous | info | 4 |  |
-| route-path-dynamic | action | 7 |  |
-| type-depth-exceeded | info | 1209 |  |
-| type-generic-uninstantiated | info | 228 |  |
+| route-path-dynamic | action | 233 |  |
+| type-depth-exceeded | info | 1203 |  |
+| type-generic-uninstantiated | info | 222 |  |
 | type-unresolved | action | 5 |  |
 | unknown-base-url-env | action | 1 |  |
 
@@ -110,7 +110,7 @@ applied identically to all eight targets and knows nothing about any of them.
 
 ## Cost
 
-Wall clock 15 to 60 s, peak resident memory 3 to 4 GB.
+Wall clock 15 to 60 s, peak resident memory 2 to 3 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

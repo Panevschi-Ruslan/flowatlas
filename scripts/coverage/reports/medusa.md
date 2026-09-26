@@ -53,7 +53,7 @@ land on one address.
 
 ## What it could not read
 
-11 places somebody could act on, 57 the tool
+11 places somebody could act on, 58 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -61,6 +61,7 @@ was never an edge to draw. The three are never added together.
 |---|---|---|---|
 | call-dynamic-receiver | info | 57 |  |
 | db-receiver-name-only | action | 3 |  |
+| entry-http-types-unmatched | info | 1 |  |
 | type-unresolved | action | 8 |  |
 
 ## The denominators

@@ -19,7 +19,7 @@ build **exit 0**, doctor exit 0, link exit 0
 
 | kind | entry points |
 |---|---|
-| http | 415 |
+| http | 427 |
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
 handlers, which is what the counting rule counts, because two declarations may
@@ -27,10 +27,10 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| addresses placed | 415 |  |
-| declarations with a body attached | 429 | 429 of 456 |
-| …whose body reaches anything | 386 | 386 of 456 |
-| …behind middleware or a guard | 337 | 337 of 456 |
+| addresses placed | 427 |  |
+| declarations with a body attached | 450 | 450 of 456 |
+| …whose body reaches anything | 403 | 403 of 456 |
+| …behind middleware or a guard | 358 | 358 of 456 |
 
 ## What joined
 
@@ -53,7 +53,7 @@ land on one address.
 
 ## What it could not read
 
-5526 places somebody could act on, 2287 the tool
+5535 places somebody could act on, 2288 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -66,12 +66,13 @@ was never an edge to draw. The three are never added together.
 | di-type-unresolved | action | 1412 |  |
 | dynamic-config-key | action | 4 |  |
 | dynamic-http-url | action | 2 |  |
+| entry-http-types-unmatched | info | 1 |  |
 | global-wrapper-dynamic | action | 98 |  |
 | module-import-dynamic | action | 15 |  |
 | route-path-dynamic | action | 2 |  |
 | type-depth-exceeded | info | 18 |  |
 | type-generic-uninstantiated | info | 342 |  |
-| type-unresolved | action | 2697 |  |
+| type-unresolved | action | 2706 |  |
 
 ## The denominators
 

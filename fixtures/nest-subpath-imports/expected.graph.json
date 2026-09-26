@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 4,
+  "repo": "nest-subpath-imports",
+  "generatedAt": "2026-09-26T20:21:47.555Z",
+  "nodes": [
+    {
+      "id": "entry:nest-subpath-imports:http:GET:/health-check",
+      "type": "entry",
+      "label": "GET /health-check",
+      "repo": "nest-subpath-imports",
+      "file": "src/health/health.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health-check",
+        "rawPath": "/health-check",
+        "controller": "HealthController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-subpath-imports:http:GET:/health-check/ready",
+      "type": "entry",
+      "label": "GET /health-check/ready",
+      "repo": "nest-subpath-imports",
+      "file": "src/health/health.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health-check/ready",
+        "rawPath": "/health-check/ready",
+        "controller": "HealthController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-subpath-imports:http:GET:/reports/daily",
+      "type": "entry",
+      "label": "GET /reports/daily",
+      "repo": "nest-subpath-imports",
+      "file": "src/reports/reports.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/reports/daily",
+        "rawPath": "/reports/daily",
+        "controller": "ReportsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-subpath-imports:http:POST:/health-check/idempotency",
+      "type": "entry",
+      "label": "POST /health-check/idempotency",
+      "repo": "nest-subpath-imports",
+      "file": "src/health/health.controller.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/health-check/idempotency",
+        "rawPath": "/health-check/idempotency",
+        "controller": "HealthController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-subpath-imports#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-subpath-imports",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "HealthController",
+          "LegacyController",
+          "ReportsController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-subpath-imports#src/health/health.controller.ts:HealthController",
+      "type": "provider",
+      "label": "HealthController",
+      "repo": "nest-subpath-imports",
+      "file": "src/health/health.controller.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-subpath-imports#src/health/health.controller.ts:HealthController.check",
+      "type": "method",
+      "label": "HealthController.check",
+      "repo": "nest-subpath-imports",
+      "file": "src/health/health.controller.ts",
+      "line": 15
+    },
+    {
+      "id": "nest-subpath-imports#src/health/health.controller.ts:HealthController.idempotency",
+      "type": "method",
+      "label": "HealthController.idempotency",
+      "repo": "nest-subpath-imports",
+      "file": "src/health/health.controller.ts",
+      "line": 25
+    },
+    {
+      "id": "nest-subpath-imports#src/health/health.controller.ts:HealthController.ready",
+      "type": "method",
+      "label": "HealthController.ready",
+      "repo": "nest-subpath-imports",
+      "file": "src/health/health.controller.ts",
+      "line": 20
+    },
+    {
+      "id": "nest-subpath-imports#src/reports/reports.controller.ts:ReportsController",
+      "type": "provider",
+      "label": "ReportsController",
+      "repo": "nest-subpath-imports",
+      "file": "src/reports/reports.controller.ts",
+      "line": 13,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-subpath-imports#src/reports/reports.controller.ts:ReportsController.daily",
+      "type": "method",
+      "label": "ReportsController.daily",
+      "repo": "nest-subpath-imports",
+      "file": "src/reports/reports.controller.ts",
+      "line": 15
+    },
+    {
+      "id": "repo:nest-subpath-imports",
+      "type": "repo",
+      "label": "nest-subpath-imports",
+      "repo": "nest-subpath-imports",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-subpath-imports:http:GET:/health-check",
+      "to": "nest-subpath-imports#src/health/health.controller.ts:HealthController.check",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/health/health.controller.ts",
+      "line": 15,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-subpath-imports:http:GET:/health-check/ready",
+      "to": "nest-subpath-imports#src/health/health.controller.ts:HealthController.ready",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/health/health.controller.ts",
+      "line": 20,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-subpath-imports:http:GET:/reports/daily",
+      "to": "nest-subpath-imports#src/reports/reports.controller.ts:ReportsController.daily",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 15,
+      "params": [],
+      "returns": "string[]"
+    },
+    {
+      "from": "entry:nest-subpath-imports:http:POST:/health-check/idempotency",
+      "to": "nest-subpath-imports#src/health/health.controller.ts:HealthController.idempotency",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/health/health.controller.ts",
+      "line": 25,
+      "params": [
+        "unknown"
+      ],
+      "returns": "unknown"
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/legacy/legacy.controller.ts",
+      "line": 4,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "LegacyController is decorated with @Controller imported from '../framework/nest', which this could not place as @nestjs/common, so no route was read from it.",
+      "hint": "Import the decorator from @nestjs/common or a subpath of it, rather than through a module that re-exports it.",
+      "symbol": "LegacyController",
+      "adapter": "nestjs-http"
+    }
+  ]
+}
