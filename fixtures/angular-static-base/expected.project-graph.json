@@ -1,0 +1,429 @@
+{
+  "schemaVersion": 4,
+  "builtAt": "2026-09-26T21:01:13.503Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ItemsController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/items/items.controller.ts:ItemsController",
+      "type": "provider",
+      "label": "ItemsController",
+      "repo": "api",
+      "file": "src/items/items.controller.ts",
+      "line": 11,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/items/items.controller.ts:ItemsController.findOne",
+      "type": "method",
+      "label": "ItemsController.findOne",
+      "repo": "api",
+      "file": "src/items/items.controller.ts",
+      "line": 18
+    },
+    {
+      "id": "api#src/items/items.controller.ts:ItemsController.list",
+      "type": "method",
+      "label": "ItemsController.list",
+      "repo": "api",
+      "file": "src/items/items.controller.ts",
+      "line": 13
+    },
+    {
+      "id": "api#src/items/items.controller.ts:ItemsController.pay",
+      "type": "method",
+      "label": "ItemsController.pay",
+      "repo": "api",
+      "file": "src/items/items.controller.ts",
+      "line": 23
+    },
+    {
+      "id": "entry:api:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "api",
+      "file": "src/items/items.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/items/:param",
+      "type": "entry",
+      "label": "GET /items/:param",
+      "repo": "api",
+      "file": "src/items/items.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items/:param",
+        "rawPath": "/items/:id",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/items/pay",
+      "type": "entry",
+      "label": "POST /items/pay",
+      "repo": "api",
+      "file": "src/items/items.controller.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/items/pay",
+        "rawPath": "/items/pay",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "templates": 0,
+          "skippedExternalCalls": {
+            "@angular/common": 4
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/items.service.ts:52:12",
+      "type": "ui_api_call",
+      "label": "GET /items/:param",
+      "repo": "web",
+      "file": "src/app/items.service.ts",
+      "line": 52,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/items/:param",
+        "path": "/items/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "unknown",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/items.service.ts:64:12",
+      "type": "ui_api_call",
+      "label": "POST /items/pay",
+      "repo": "web",
+      "file": "src/app/items.service.ts",
+      "line": 64,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/items/pay",
+        "path": "/items/pay",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "unknown",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/items.service.ts:75:12",
+      "type": "ui_api_call",
+      "label": "GET /${…}/items",
+      "repo": "web",
+      "file": "src/app/items.service.ts",
+      "line": 75,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}${…}/items",
+        "path": "/${…}/items",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "unknown[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/items.service.ts:85:12",
+      "type": "ui_api_call",
+      "label": "GET ?",
+      "repo": "web",
+      "file": "src/app/items.service.ts",
+      "line": 85,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": "unknown[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": null
+      }
+    },
+    {
+      "id": "web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "web#src/app/items.service.ts:ItemsService",
+      "type": "provider",
+      "label": "ItemsService",
+      "repo": "web",
+      "file": "src/app/items.service.ts",
+      "line": 25,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/items.service.ts:ItemsService.findOne",
+      "type": "method",
+      "label": "ItemsService.findOne",
+      "repo": "web",
+      "file": "src/app/items.service.ts",
+      "line": 51,
+      "meta": {
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "web#src/app/items.service.ts:ItemsService.list",
+      "type": "method",
+      "label": "ItemsService.list",
+      "repo": "web",
+      "file": "src/app/items.service.ts",
+      "line": 74,
+      "meta": {
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "web#src/app/items.service.ts:ItemsService.pay",
+      "type": "method",
+      "label": "ItemsService.pay",
+      "repo": "web",
+      "file": "src/app/items.service.ts",
+      "line": 63,
+      "meta": {
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "web#src/app/items.service.ts:ItemsService.search",
+      "type": "method",
+      "label": "ItemsService.search",
+      "repo": "web",
+      "file": "src/app/items.service.ts",
+      "line": 84,
+      "meta": {
+        "unreferenced": true
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:api:http:GET:/items",
+      "to": "api#src/items/items.controller.ts:ItemsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown[]",
+      "file": "src/items/items.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:api:http:GET:/items/:param",
+      "to": "api#src/items/items.controller.ts:ItemsController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/items/items.controller.ts",
+      "line": 18,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/items/pay",
+      "to": "api#src/items/items.controller.ts:ItemsController.pay",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/items/items.controller.ts",
+      "line": 23
+    },
+    {
+      "from": "ui_api_call:web#src/app/items.service.ts:52:12",
+      "to": "entry:api:http:GET:/items/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 52,
+      "returns": "unknown",
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/items.service.ts:64:12",
+      "to": "entry:api:http:POST:/items/pay",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 64,
+      "params": [
+        "object"
+      ],
+      "returns": "unknown",
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "web#src/app/items.service.ts:ItemsService",
+      "to": "web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 43
+    },
+    {
+      "from": "web#src/app/items.service.ts:ItemsService.findOne",
+      "to": "ui_api_call:web#src/app/items.service.ts:52:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 52
+    },
+    {
+      "from": "web#src/app/items.service.ts:ItemsService.list",
+      "to": "ui_api_call:web#src/app/items.service.ts:75:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 75
+    },
+    {
+      "from": "web#src/app/items.service.ts:ItemsService.pay",
+      "to": "ui_api_call:web#src/app/items.service.ts:64:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 64
+    },
+    {
+      "from": "web#src/app/items.service.ts:ItemsService.search",
+      "to": "ui_api_call:web#src/app/items.service.ts:85:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/app/items.service.ts",
+      "line": 85
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/app/items.service.ts",
+      "line": 85,
+      "reason": "api-path-dynamic",
+      "hint": "The address is built at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.",
+      "symbol": "this.http.get<unknown[]>(term + globalThis.String(globalThis.Date.now()))",
+      "service": "web"
+    }
+  ]
+}

@@ -264,6 +264,65 @@ export abstract class BaseApi {
 }
 `;
 
+/**
+ * The address kept in a `static` field, which is how a great many real services
+ * are written and which read as no address at all. A static field is a property
+ * access on the identifier naming the class rather than on `this` (R103), and
+ * the `+` such a field is usually assembled with was not folded (R102). PeerTube
+ * declares 63 of them, and between the two nothing it asked for joined a route.
+ */
+describe('an address a static field holds', () => {
+  it('reads the base out of a static field joined with a plus', () => {
+    const graph = extract(`
+  private static readonly BASE = environment.apiUrl + '/orders';
+  a(id: string): Observable<OrderDto> {
+    return this.http.post<OrderDto>(\`\${OrdersApiService.BASE}/\${id}/cancel\`, {});
+  }
+`);
+    expect(only(graph).meta).toMatchObject({
+      path: '/orders/:param/cancel',
+      baseUrlEnv: 'apiUrl',
+    });
+  });
+
+  it('reads it the same way when the field was written as a template instead', () => {
+    const graph = extract(`
+  private static readonly BASE = \`\${environment.apiUrl}/orders\`;
+  a(id: string): Observable<OrderDto> {
+    return this.http.post<OrderDto>(\`\${OrdersApiService.BASE}/\${id}/cancel\`, {});
+  }
+`);
+    expect(only(graph).meta).toMatchObject({
+      path: '/orders/:param/cancel',
+      baseUrlEnv: 'apiUrl',
+    });
+  });
+
+  it('reads a piece of the path out of a static field holding two literals', () => {
+    const graph = extract(`
+  private static readonly SEGMENT = '/orders' + '/pay';
+  a(): Observable<OrderDto> {
+    return this.http.post<OrderDto>(\`\${environment.apiUrl}\${OrdersApiService.SEGMENT}\`, {});
+  }
+`);
+    expect(only(graph).meta).toMatchObject({ path: '/orders/pay', baseUrlEnv: 'apiUrl' });
+  });
+
+  // The discipline the template-literal path has always had. Reading the half
+  // that can be read and quietly dropping the half that cannot would report this
+  // request against `/orders`, a route it may never reach, and say `static`
+  // about it. A hole nothing matches is the honest answer.
+  it('holds the half of a static field nobody can read as a hole', () => {
+    const graph = extract(`
+  private static readonly BASE = environment.apiUrl + globalThis.String(globalThis.Date.now());
+  a(): Observable<OrderDto> {
+    return this.http.get<OrderDto>(\`\${OrdersApiService.BASE}/orders\`);
+  }
+`);
+    expect(only(graph).meta?.['path']).toBe('/${…}/orders');
+  });
+});
+
 describe('an address a helper assembles', () => {
   it('keeps the path a property has already written, not just the key it is rooted at', () => {
     const graph = extract(`
