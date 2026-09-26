@@ -1,5 +1,8 @@
-import type { GraphDb } from '@flowatlas/linker';
-import type { Unresolved } from '@flowatlas/core';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { openGraphDb, writeGraphDb, type GraphDb, type LinkReport, type ServiceReport } from '@flowatlas/linker';
+import { SCHEMA_VERSION, type GraphNode, type ProjectGraph, type Unresolved } from '@flowatlas/core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildTestProject } from '../test-graph.js';
 import { snapshotOf, type Baseline } from './baseline.js';
@@ -33,6 +36,157 @@ const baselineOf = (rows: readonly Unresolved[]): Baseline => ({
   unresolved: snapshotOf(rows),
   markers: { warnings: 0 },
   contracts: { warnings: 0, infos: 0, ignored: 0 },
+});
+
+/**
+ * A graph with a report of one's own choosing, written and read the way the tool
+ * does it.
+ *
+ * The question these ask is about what the build recorded beside the graph, so
+ * the report has to be real rather than mocked: `doctor` reads it out of the
+ * database, and a fake object would be testing the test.
+ */
+const directory = mkdtempSync(join(tmpdir(), 'flowatlas-verdict-'));
+const FIXED = '2026-01-01T00:00:00.000Z';
+let open: GraphDb[] = [];
+afterAll(() => {
+  for (const db of open) db.close();
+  open = [];
+});
+
+const graphWith = (options: {
+  name: string;
+  nodes: number;
+  services: ServiceReport[];
+}): GraphDb => {
+  const nodes: GraphNode[] = Array.from({ length: options.nodes }, (_, index) => ({
+    id: `gateway#node${index}`,
+    type: 'method',
+    label: `node${index}`,
+    repo: 'gateway',
+  }));
+  const project: ProjectGraph = {
+    schemaVersion: SCHEMA_VERSION,
+    builtAt: FIXED,
+    services: options.services.map((service) => ({
+      name: service.name,
+      repo: service.repo,
+      type: service.type,
+      extractor: service.extractor,
+    })),
+    nodes,
+    edges: [],
+    types: {},
+    unresolved: [],
+  };
+  const report: LinkReport = {
+    schemaVersion: SCHEMA_VERSION,
+    builtAt: FIXED,
+    configHash: 'test',
+    services: options.services,
+    httpOut: {
+      total: 0,
+      linked: 0,
+      byMarker: 0,
+      unknownEnv: 0,
+      noRoute: 0,
+      ambiguous: 0,
+      external: 0,
+      dynamic: 0,
+    },
+    ui: { total: 0, resolved: 0, unresolved: 0, byReason: {} },
+    channels: { total: 0, linked: 0, noConsumers: [], noProducers: [] },
+    routes: { total: 0, called: 0, uncalled: [], duplicated: [] },
+    types: { total: 0, sharedPackage: 0 },
+    unresolved: [],
+    totals: { nodes: nodes.length, edges: 0, types: 0, unresolved: 0 },
+  };
+  const path = join(directory, `${options.name}.db`);
+  writeGraphDb(project, report, path);
+  const db = openGraphDb(path);
+  open.push(db);
+  return db;
+};
+
+const reportOf = (over: Partial<ServiceReport> = {}): ServiceReport => ({
+  name: 'orders',
+  repo: './orders',
+  type: 'nestjs',
+  extractor: '@flowatlas/extractor-nestjs',
+  nodes: 12,
+  edges: 4,
+  types: 0,
+  unresolved: 0,
+  durationMs: 1,
+  ...over,
+});
+
+/**
+ * The three graphs nobody can be told are healthy.
+ *
+ * Exit 2 and not 1, and without `--strict`: the argument is written above the
+ * check in `run.ts`, and these hold it. Every one of them answered 0 before.
+ */
+describe('a graph that cannot be reported on', () => {
+  it('refuses a graph whose build failed, and names the repository', () => {
+    const db = graphWith({
+      name: 'failed',
+      nodes: 3,
+      services: [
+        reportOf(),
+        reportOf({ name: 'broken', nodes: 0, skipped: 'extract-failed', error: 'exit 2: boom' }),
+      ],
+    });
+    const report = runDoctor({ db, unresolved: [] }, { contracts: false });
+    expect(report.verdict.exitCode).toBe(2);
+    expect(report.verdict.reasons.join(' ')).toMatch(/the build that wrote this graph failed/);
+    expect(report.verdict.reasons.join(' ')).toContain('broken');
+  });
+
+  it('refuses a graph with nothing in it', () => {
+    const db = graphWith({ name: 'empty', nodes: 0, services: [] });
+    const report = runDoctor({ db, unresolved: [] }, { contracts: false });
+    expect(report.verdict.exitCode).toBe(2);
+    expect(report.verdict.reasons.join(' ')).toMatch(/holds no node at all/);
+  });
+
+  it('refuses a graph a service was read into and contributed nothing to', () => {
+    const db = graphWith({
+      name: 'silent',
+      nodes: 3,
+      services: [reportOf(), reportOf({ name: 'widget', extractor: '@flowatlas/extractor-react', nodes: 0 })],
+    });
+    const report = runDoctor({ db, unresolved: [] }, { contracts: false });
+    expect(report.verdict.exitCode).toBe(2);
+    expect(report.verdict.reasons.join(' ')).toContain('widget');
+  });
+
+  it('says nothing about a service with no reader, which is not the same thing', () => {
+    // A repository no extractor covers contributes nothing by design, and the
+    // build already names it. Failing over it would fail every project that has
+    // one of those, for ever.
+    const db = graphWith({
+      name: 'no-reader',
+      nodes: 3,
+      services: [reportOf(), reportOf({ name: 'docs', extractor: null, nodes: 0, skipped: 'no-extractor' })],
+    });
+    expect(runDoctor({ db, unresolved: [] }, { contracts: false }).verdict).toEqual({
+      exitCode: 0,
+      reasons: [],
+    });
+  });
+
+  it('leaves a fault about another service out when the run was narrowed', () => {
+    const db = graphWith({
+      name: 'narrowed',
+      nodes: 3,
+      services: [reportOf(), reportOf({ name: 'widget', nodes: 0 })],
+    });
+    const asked = runDoctor({ db, unresolved: [] }, { contracts: false, service: 'orders' });
+    expect(asked.verdict.exitCode).toBe(0);
+    const about = runDoctor({ db, unresolved: [] }, { contracts: false, service: 'widget' });
+    expect(about.verdict.exitCode).toBe(2);
+  });
 });
 
 describe('what makes doctor fail a build', () => {

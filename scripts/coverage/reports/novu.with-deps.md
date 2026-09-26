@@ -13,15 +13,7 @@ NestJS, versioning, deep-subpath imports.
 
 ## Outcome
 
-**The tool did not finish.** build **exit 2**, doctor exit 0, link exit 0
-
-What it said:
-
-```
-api-service    skipped (extract-failed: exit 2 expected a name at 1669 in "false|null|number|object|object|string|true|undefined|{!!:any}|{!:any}|{!=:[any,any]}|{!==:[any,any]}|{%:[type:@types/json-logic-js#RulesLogic,type:@types/json-logic-js#RulesLogic]}|{*:false|null|number|object|object|string|true|type:@types/json-logic-js#RulesLogic)
-```
-
-It reached 1 to 2 GB before it stopped.
+build **exit 0**, doctor exit 0, link exit 0
 
 ## Dependencies
 
@@ -33,7 +25,7 @@ It reached 1 to 2 GB before it stopped.
 
 | kind | entry points |
 |---|---|
-| none | 0 |
+| http | 420 |
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
 handlers, which is what the counting rule counts, because two declarations may
@@ -41,25 +33,25 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| addresses placed | 0 |  |
-| declarations with a body attached | 0 | 0 of 456 |
-| …whose body reaches anything | 0 | 0 of 456 |
-| …behind middleware or a guard | 0 | 0 of 456 |
+| addresses placed | 420 |  |
+| declarations with a body attached | 434 | 434 of 456 |
+| …whose body reaches anything | 391 | 391 of 456 |
+| …behind middleware or a guard | 403 | 403 of 456 |
 
 ## What joined
 
 |  | found | joined |
 |---|---|---|
 | requests from a browser | 0 | 0 |
-| requests between services | 0 | 0 |
+| requests between services | 71 | 0 |
 | channels | 0 | 0 with both ends |
 
 ## Storage and screens
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 0 | nothing of this kind here |
-| …that name a table | 0 | nothing of this kind here |
+| query sites read | 1281 | no denominator: the rule has no probe for it |
+| …that name a table | 0 | 0 of 1281 |
 | tables | 0 | nothing of this kind here |
 | components | 0 | nothing of this kind here |
 | clicks | 0 | nothing of this kind here |
@@ -67,11 +59,26 @@ land on one address.
 
 ## What it could not read
 
-0 places somebody could act on, 0 the tool
+5182 places somebody could act on, 2156 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
-Nothing.
+| reason | level | places |  |
+|---|---|---|---|
+| call-dynamic-receiver | info | 1440 |  |
+| call-module-ref | action | 27 |  |
+| db-receiver-name-only | action | 1281 |  |
+| di-token-ambiguous | action | 2 |  |
+| di-token-unknown | action | 13 |  |
+| di-type-unresolved | action | 1377 |  |
+| dynamic-config-key | action | 4 |  |
+| dynamic-http-url | action | 15 |  |
+| module-import-dynamic | action | 9 |  |
+| route-path-dynamic | action | 1 |  |
+| type-depth-exceeded | info | 369 |  |
+| type-generic-uninstantiated | info | 347 |  |
+| type-unresolved | action | 2448 |  |
+| unknown-base-url-env | action | 5 |  |
 
 ## The denominators
 

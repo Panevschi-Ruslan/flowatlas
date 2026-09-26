@@ -66,6 +66,27 @@ either.
 
 ### Changed
 
+- **`doctor` refuses a graph nobody could report on, with exit 2 and without
+  `--strict`.** Three graphs: one holding no node at all, one whose build
+  recorded that a repository could not be read, and one a service was read into
+  and contributed nothing to. This is a change to what a CI job fails on, and it
+  is deliberate: 2 has always meant "the check could not be run", which is
+  exactly what these are, and every one of them used to answer `unresolved:
+  total=0 … none`, exit 0. It does not wait for `--strict` because a run without
+  the flag still answers a question, and "healthy" is not an answer anybody asked
+  of an unread graph. `--accept` already refuses such a run, which is the same
+  refusal for the same reason.
+- **A build that failed leaves the graph the last good build wrote.** It used to
+  write its own answer — the project minus whatever could not be read — over the
+  top, which is indistinguishable from a project that really is that small, and
+  is how a crash in one dependency's type declarations came to be reported as a
+  clean bill of health. The failure is on stderr and in the exit code; where
+  there is no graph to keep, the partial one is written with the failure recorded
+  against the service beside it, and `doctor` refuses that.
+- **`build` counts ways in apart from ways in whose body was read**, in a line of
+  its own, because only the second number is coverage of what happens after a
+  request arrives. One repository reported seventeen routes of seventeen where
+  two of nine reached a body that calls anything.
 - **`SCHEMA_VERSION` is 4.** A graph written by an earlier version is refused
   with a message saying to rebuild, rather than half read. Nothing needs doing
   beyond a rebuild.
@@ -85,6 +106,26 @@ either.
 
 ### Fixed
 
+- A type reference whose object key is not a name round-trips. The writer emitted
+  keys as they were written and the reader refused them, so a dependency
+  declaring JsonLogic operators — `{ '<=': number }` — stopped every command that
+  parses a reference. On `novu` with its dependencies installed this was the whole
+  target: `build` exited 2 having read nothing, and now reads 420 routes, 434
+  handlers of 456 and 1281 query sites. Keys that are not names are quoted, quoted
+  text carries a backslash escape, and a property test generates references from
+  the grammar and holds the reader to reading back exactly what the writer wrote.
+- A Next.js verb that is exported and whose body could not be followed is a row.
+  Only a file exporting *no* verb raised one, so a verb assembled by a helper —
+  `export const GET = restHandler(config)`, the dominant spelling in the
+  ecosystem's largest repositories — produced a way in, sometimes a `handles` edge
+  onto a node with nothing in it, and no mention anywhere. It is 36 places on
+  `cal.com` and 259 on `payload`, all of them silent until now.
+- A service that was read and contributed no node is named by `build`, with why,
+  and is a row `doctor` reports. The project already argued that knowing the name
+  of a stack it cannot read is worth as much as knowing one it can; that argument
+  was applied to a repository with no reader and not to this case, which is the
+  one that looks like success — a reader that opens the repository, a registry
+  that recognises none of it, and an empty graph nobody is told about.
 - A query written in a module-level function is read. The leaf walk read the
   methods of the indexed classes and nothing else, so a `pool.query(…)` or a
   `db.select(…)` in a module of exported functions — the shape most TypeScript

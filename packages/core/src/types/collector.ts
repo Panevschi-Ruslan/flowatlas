@@ -8,7 +8,7 @@ import type { Unresolved } from '../model/graph.js';
 import type { TypeEntry, TypeField, TypeKind, TypeRegistry } from '../model/types.js';
 import { mergeFieldMeta, type FieldDeclaration, type FieldMetaReader } from './field-meta.js';
 import { DEFAULT_HASH_DEPTH, structuralHash } from './structural-hash.js';
-import { formatTypeRef, parseTypeRef, type TypeRef } from './type-ref.js';
+import { formatFieldKey, formatTypeRef, parseTypeRef, type TypeRef } from './type-ref.js';
 
 export interface TypeCollectorOptions {
   builder: GraphBuilder;
@@ -613,8 +613,12 @@ export class TypeCollector {
     }
     const fields = this.#fieldsOf(type, site, depth);
     if (fields.length === 0) return 'object';
+    // Through the writer's own key rule rather than by writing the name out,
+    // because this is the other half of the same writer: a shape assembled here
+    // is parsed by everything downstream, and a key spelled two ways in one
+    // release is a reference one of them cannot read (R85).
     return `{${fields
-      .map((field) => `${field.name}${field.optional ? '?' : ''}:${field.type}`)
+      .map((field) => `${formatFieldKey(field.name)}${field.optional ? '?' : ''}:${field.type}`)
       .join(';')}}`;
   }
 

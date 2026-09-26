@@ -340,6 +340,75 @@ describe('building a project', () => {
     expect(result.project.nodes.some((node) => node.repo === 'orders')).toBe(true);
   }, 120_000);
 
+  it('leaves the last good graph alone when a repository could not be read', async () => {
+    const good = [service('orders', { baseUrlEnv: ['ORDERS_URL'] })];
+    const broken = [...good, { name: 'broken', repo: brokenRepo(), type: 'nestjs' }];
+    // One configuration for both builds, so both write to one output directory:
+    // the whole question is what the second build does to what the first wrote.
+    const dir = join(scratch, 'kept');
+    mkdirSync(dir, { recursive: true });
+    const configPath = join(dir, 'flowatlas.config.json');
+    const write = (services: unknown[]): void =>
+      writeFileSync(
+        configPath,
+        JSON.stringify({ services, sharedPackages: ['@fx/contracts'], output: '.flowatlas' }, null, 2),
+      );
+
+    write(good);
+    const first = await buildProject({ config: configPath, builtAt: FIXED });
+    expect(first.wrote).toBe(true);
+    const before = readFileSync(first.graphPath, 'utf8');
+    expect(JSON.parse(before).nodes.length).toBeGreaterThan(0);
+
+    write(broken);
+    const second = await buildProject({ config: configPath, builtAt: FIXED, cache: false });
+    expect(second.failed).toBe(true);
+    expect(second.wrote).toBe(false);
+    // The point of the whole ticket: the graph on disk is the good one, not this
+    // build's smaller answer, and not an empty file with a clean bill of health
+    // waiting to be read off it.
+    expect(readFileSync(first.graphPath, 'utf8')).toBe(before);
+    expect(summariseBuild(second).join('\n')).toContain('was left as the last build wrote it');
+
+    // And with nothing to keep, the partial answer is written, because something
+    // has to explain the failure to whatever reads the output next.
+    rmSync(second.graphPath, { force: true });
+    const third = await buildProject({ config: configPath, builtAt: FIXED, cache: false });
+    expect(third.failed).toBe(true);
+    expect(third.wrote).toBe(true);
+    expect(readFileSync(third.graphPath, 'utf8')).not.toBe(before);
+  }, 240_000);
+
+  it('names a service that was read and contributed nothing, and says why', async () => {
+    const config = join(FIXTURES, 'next-hollow', 'flowatlas.config.json');
+    const result = await buildProject({ config, builtAt: FIXED, cache: false });
+
+    expect(result.readNothing.map((found) => found.service)).toEqual(['widget']);
+    const summary = summariseBuild(result).join('\n');
+    expect(summary).toContain('widget contributed no node');
+    expect(summary).toContain('no frontend adapter recognises it');
+    // A row as well as a line, so the fact reaches `doctor` rather than only the
+    // terminal the build was run in.
+    expect(
+      result.project.unresolved.filter((row) => row.reason === 'service-read-nothing'),
+    ).toHaveLength(1);
+  }, 240_000);
+
+  it('counts ways in apart from ways in whose body was read', async () => {
+    const config = join(FIXTURES, 'next-hollow', 'flowatlas.config.json');
+    const result = await buildProject({ config, builtAt: FIXED, cache: false });
+
+    // Six ways in, one of which declares its handler in place. Every other
+    // spelling in that fixture is a way in with nothing behind it, and each one
+    // is a row (R94).
+    expect(summariseBuild(result).join('\n')).toContain(
+      'ways in: 6 found, 1 with a handler that was read, 5 without',
+    );
+    expect(
+      result.project.unresolved.filter((row) => row.reason === 'route-handler-unread').length,
+    ).toBe(5);
+  }, 240_000);
+
   it('writes the graph, the report and a database that agree with each other', async () => {
     const config = configFor('artefacts', [service('orders', { baseUrlEnv: ['ORDERS_URL'] })]);
     const result = await buildProject({ config, builtAt: FIXED });

@@ -424,6 +424,16 @@ graph; it reads no repository, so two runs over one graph say the same thing.
 compare against, which is a different answer from "something got worse". Write
 one with `--accept`, or ask without it using `--no-baseline`.
 
+Three graphs are refused outright, with exit 2 and without `--strict`: one that
+holds no node at all, one whose build recorded that a repository could not be
+read, and one a service was read into that contributed nothing to it. In all
+three the questions below were asked of a project the tool did not read, and
+every one of them answers "nothing wrong" — which is true of the graph and false
+of the project. 2 rather than 1 because the check could not be run, which is what
+2 has always meant here; without `--strict` because a run without the flag still
+answers a question, and "healthy" is not an answer anybody asked of an unread
+graph. `--accept` refuses such a run for the same reason.
+
 Every unresolved row is read at one of three levels, and only the first two say
 the graph is missing something:
 

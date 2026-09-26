@@ -10,7 +10,7 @@
 import { tally, wasMissed, type GraphNode, type Unresolved } from '@flowatlas/core';
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
 import { summarizeForDoctor } from '@flowatlas/contracts';
-import type { GraphDb } from '@flowatlas/linker';
+import type { GraphDb, ServiceReport } from '@flowatlas/linker';
 import {
   compareBaseline,
   isProblem,
@@ -89,6 +89,74 @@ const DESYNC_REASONS: ReadonlySet<string> = new Set([
   'ambiguous-route-target',
   'route-wildcard-only',
 ]);
+
+/**
+ * What the graph and the report beside it say about themselves.
+ *
+ * Read once and handed to the checks below, so that each of them is a sentence
+ * about facts rather than a second way of asking the database.
+ */
+interface GraphFacts {
+  nodes: number;
+  services: readonly ServiceReport[];
+}
+
+/**
+ * Whether this graph can be given a clean bill of health at all.
+ *
+ * Three ways it cannot, and they are one failure wearing three hats: the graph
+ * came from a build that failed, or it holds nothing, or a service that was read
+ * put nothing in it. In every one of them the check that follows is asked about
+ * a project the tool did not read, and every question it asks answers "nothing
+ * wrong here" — which is true of the graph and false of the project. `doctor`
+ * exited 0 on all three (R85, R94, R106).
+ *
+ * A lookup rather than a run of conditions, because each of these is an
+ * independent claim about one graph and a fourth should be an entry here.
+ */
+const GRAPH_FAULTS: ReadonlyArray<(facts: GraphFacts) => string[]> = Object.freeze([
+  (facts) =>
+    facts.services
+      .filter((service) => service.skipped === 'extract-failed')
+      .map(
+        (service) =>
+          `the build that wrote this graph failed: ${service.name} could not be read` +
+          `${service.error === undefined ? '' : ` (${service.error})`}, so this graph is the project without it`,
+      ),
+  (facts) =>
+    facts.nodes === 0
+      ? ['this graph holds no node at all, so nothing in it could be checked']
+      : [],
+  (facts) =>
+    facts.services
+      .filter(
+        (service) =>
+          service.skipped === undefined && service.extractor !== null && service.nodes === 0,
+      )
+      .map(
+        (service) =>
+          `${service.name} was read by ${service.extractor} and contributed no node, so nothing` +
+          ' asked about that service can be answered from this graph',
+      ),
+]);
+
+/**
+ * The sentences, if any, that say this graph is not one to report on.
+ *
+ * Narrowed to one service when the run was, because a fault about a service
+ * nobody asked about is not an answer to the question that was asked. The
+ * graph-wide fault — no nodes anywhere — is never narrowed away, since there is
+ * no service for which it is untrue.
+ */
+const graphFaults = (db: GraphDb, service?: string): string[] => {
+  const report = db.report();
+  const services = report?.services ?? [];
+  const facts: GraphFacts = {
+    nodes: report?.totals.nodes ?? db.allNodes().length,
+    services: service === undefined ? services : services.filter((one) => one.name === service),
+  };
+  return GRAPH_FAULTS.flatMap((check) => check(facts));
+};
 
 const text = (value: unknown): string | null =>
   typeof value === 'string' && value !== '' ? value : null;
@@ -476,8 +544,30 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
     reasons.push(baseline.note ?? 'the baseline could not be read');
   }
 
+  /**
+   * A graph nobody could report on, and why exit 2 rather than 1.
+   *
+   * This is a change to what `doctor` fails on, so it is written down. 1 means a
+   * check found something: a route was renamed, an annotation is wrong, the list
+   * of unresolved places grew. 2 means the check could not be run — which is
+   * exactly the case here, because a graph that is empty, that lost a service, or
+   * that came from a failed build is not a project this looked at and said
+   * nothing was wrong. Calling it 1 would say the project is broken when the
+   * reading is; calling it 0 is what every one of these bugs did.
+   *
+   * Two consequences are deliberate. It does not wait for `--strict`: a run
+   * without the flag answers a question, and "nothing wrong" is not an answer
+   * anybody asked of an unread graph, so the one gate that a team can disable by
+   * dropping a flag is the one gate that must not be the only thing standing
+   * between this and a clean bill of health. And `--accept` already refuses to
+   * write a baseline over exit 2, which is the right refusal for the same reason:
+   * numbers from a graph nobody read are not numbers to accept.
+   */
+  const faults = graphFaults(db, settings.service);
+  reasons.push(...faults);
+
   const exitCode: 0 | 1 | 2 =
-    baseline.status === 'invalid' ? 2 : failing ? 1 : 0;
+    faults.length > 0 || baseline.status === 'invalid' ? 2 : failing ? 1 : 0;
 
   return {
     doctorFormatVersion: DOCTOR_FORMAT_VERSION,

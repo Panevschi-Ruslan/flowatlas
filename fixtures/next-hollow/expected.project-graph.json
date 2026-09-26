@@ -1,0 +1,297 @@
+{
+  "schemaVersion": 4,
+  "builtAt": "2026-09-26T20:15:02.523Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "widget",
+      "repo": "./widget",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:http:ALL:/api/legacy",
+      "type": "entry",
+      "label": "ALL /api/legacy",
+      "repo": "shop",
+      "file": "pages/api/legacy.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/legacy",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "unread",
+        "handlerBodyRead": false
+      }
+    },
+    {
+      "id": "entry:shop:http:DELETE:/api/exports",
+      "type": "entry",
+      "label": "DELETE /api/exports",
+      "repo": "shop",
+      "file": "app/api/exports/route.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/exports",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "unread",
+        "handlerBodyRead": false
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/invoices",
+      "type": "entry",
+      "label": "GET /api/invoices",
+      "repo": "shop",
+      "file": "app/api/invoices/route.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/invoices",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "app/api/orders/route.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "handlerBodyRead": false
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/reports",
+      "type": "entry",
+      "label": "POST /api/reports",
+      "repo": "shop",
+      "file": "app/api/reports/route.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/reports",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "unread",
+        "handlerBodyRead": false
+      }
+    },
+    {
+      "id": "entry:shop:http:PUT:/api/exports",
+      "type": "entry",
+      "label": "PUT /api/exports",
+      "repo": "shop",
+      "file": "app/api/exports/route.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/api/exports",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "unread",
+        "handlerBodyRead": false
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 5,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop#app/api/invoices/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "shop",
+      "file": "app/api/invoices/route.ts",
+      "line": 10
+    },
+    {
+      "id": "shop#app/api/orders/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "shop",
+      "file": "app/api/orders/route.ts",
+      "line": 12
+    },
+    {
+      "id": "shop#lib/invoices-store.ts:listInvoices",
+      "type": "function",
+      "label": "listInvoices",
+      "repo": "shop",
+      "file": "lib/invoices-store.ts",
+      "line": 9
+    },
+    {
+      "id": "shop#lib/rest.ts:legacyHandler",
+      "type": "function",
+      "label": "legacyHandler",
+      "repo": "shop",
+      "file": "lib/rest.ts",
+      "line": 29
+    },
+    {
+      "id": "shop#lib/rest.ts:restHandler",
+      "type": "function",
+      "label": "restHandler",
+      "repo": "shop",
+      "file": "lib/rest.ts",
+      "line": 12
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:http:GET:/api/invoices",
+      "to": "shop#app/api/invoices/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/invoices/route.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#app/api/orders/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 12
+    },
+    {
+      "from": "shop#app/api/invoices/route.ts:GET",
+      "to": "shop#lib/invoices-store.ts:listInvoices",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/invoices/route.ts",
+      "line": 11
+    },
+    {
+      "from": "shop#app/api/orders/route.ts:GET",
+      "to": "shop#lib/rest.ts:restHandler",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 12
+    },
+    {
+      "from": "shop#lib/rest.ts:legacyHandler",
+      "to": "shop#lib/rest.ts:restHandler",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/rest.ts",
+      "line": 29
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "app/api/exports/route.ts",
+      "line": 11,
+      "reason": "route-handler-unread",
+      "message": "PUT /api/exports is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/exports.",
+      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
+      "symbol": "PUT /api/exports",
+      "adapter": "nextjs-routes",
+      "service": "shop"
+    },
+    {
+      "file": "app/api/exports/route.ts",
+      "line": 11,
+      "reason": "route-handler-unread",
+      "message": "DELETE /api/exports is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/exports.",
+      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
+      "symbol": "DELETE /api/exports",
+      "adapter": "nextjs-routes",
+      "service": "shop"
+    },
+    {
+      "file": "app/api/orders/route.ts",
+      "line": 12,
+      "reason": "route-handler-unread",
+      "message": "GET /api/orders is the value a call handed back, and nothing declared in this repository was handed to that call, so the way in has no handler that could be read. It answers at /api/orders.",
+      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
+      "symbol": "GET /api/orders",
+      "adapter": "nextjs-routes",
+      "service": "shop"
+    },
+    {
+      "file": "app/api/reports/route.ts",
+      "line": 10,
+      "reason": "route-handler-unread",
+      "message": "POST /api/reports is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/reports.",
+      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
+      "symbol": "POST /api/reports",
+      "adapter": "nextjs-routes",
+      "service": "shop"
+    },
+    {
+      "file": "pages/api/legacy.ts",
+      "line": 1,
+      "reason": "route-handler-unread",
+      "message": "ALL /api/legacy is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/legacy.",
+      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
+      "symbol": "ALL /api/legacy",
+      "adapter": "nextjs-routes",
+      "service": "shop"
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "service-read-nothing",
+      "service": "widget",
+      "message": "widget was read by @flowatlas/extractor-react and contributed no node to the graph: no frontend adapter recognises it, so its reader walked the repository and had nowhere to put anything; the configuration says \"react\" and its package.json declares no framework this reads",
+      "hint": "Nothing downstream of this service is in the graph, so every question asked about it will answer nothing rather than answer wrongly. Check its type in flowatlas.config.json against what its manifest declares, or write an adapter for the framework it is built on.",
+      "symbol": "widget"
+    }
+  ]
+}
