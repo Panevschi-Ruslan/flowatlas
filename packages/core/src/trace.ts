@@ -3,6 +3,7 @@ import type {
   Identifier,
   ObjectLiteralExpression,
   ParameterDeclaration,
+  PropertyAccessExpression,
   Symbol as TsSymbol,
   TemplateExpression,
   Node as TsNode,
@@ -18,7 +19,7 @@ import {
 } from './di/member-call.js';
 import { holeIn, UNREAD_SPAN } from './ids.js';
 import { writtenObjectLiteral } from './origin.js';
-import { evaluateExpression, literalUnionOf } from './static-value.js';
+import { declarationOf, evaluateExpression, literalUnionOf } from './static-value.js';
 
 /** How far back a value is followed before the answer stops being trustworthy. */
 const BUDGET = 8;
@@ -87,6 +88,34 @@ const classChain = (declaration: ClassNode | undefined, depth = 4): ClassNode[] 
     current = current.getBaseClass();
   }
   return chain;
+};
+
+/**
+ * The class whose own field a property access reads, when it reads one.
+ *
+ * Two spellings say the same thing to anybody looking for what a class wrote
+ * down: `this.base`, read from inside the class, and `ItemsService.BASE` — a
+ * static field, which the syntax makes a property access on the identifier
+ * naming the class. Insisting on a `this` receiver read the first and lost the
+ * second entirely, so a service keeping its base address in a `static` field had
+ * no address at all and none of its requests could be joined to a route (R103).
+ *
+ * `self` is the class the trace is standing in, which is the answer for `this`
+ * when the code being read was written somewhere else. It has nothing to say
+ * about a static field, whose receiver names its own class outright.
+ */
+const fieldOwnerOf = (
+  access: PropertyAccessExpression,
+  self?: ClassNode,
+): ClassNode | undefined => {
+  const receiver = unwrap(access.getExpression());
+  if (receiver.getKind() === SyntaxKind.ThisKeyword) return self ?? enclosingClass(access);
+  if (!Node.isIdentifier(receiver)) return undefined;
+  // The alias is followed because the class is nearly always imported where it
+  // is read, and the import is not the declaration.
+  const declaration = declarationOf(receiver);
+  if (declaration === undefined || !Node.isClassDeclaration(declaration)) return undefined;
+  return declaration;
 };
 
 /** Everywhere `new C(...)` appears for this class. */
@@ -457,19 +486,20 @@ const readString = (value: TsNode, scope: Scope, budget: number): string | null 
   }
 
   // `private uploadPath = '/admin/upload'` — a piece of the path kept in a
-  // property, which is a constant wearing a field's clothes. Only when every
-  // assignment agrees: one that is decided at run time is a hole.
-  if (
-    Node.isPropertyAccessExpression(node) &&
-    node.getExpression().getKind() === SyntaxKind.ThisKeyword
-  ) {
-    const values = new Set<string>();
-    for (const assigned of assignmentsTo(node.getName(), scope.self ?? enclosingClass(node))) {
-      const value = readString(assigned, scope, budget - 1);
-      if (value === null || ABSOLUTE.test(value)) return null;
-      values.add(value);
+  // property, which is a constant wearing a field's clothes, whether the field
+  // belongs to the instance or to the class. Only when every assignment agrees:
+  // one that is decided at run time is a hole.
+  if (Node.isPropertyAccessExpression(node)) {
+    const owner = fieldOwnerOf(node, scope.self);
+    if (owner !== undefined) {
+      const values = new Set<string>();
+      for (const assigned of assignmentsTo(node.getName(), owner)) {
+        const value = readString(assigned, scope, budget - 1);
+        if (value === null || ABSOLUTE.test(value)) return null;
+        values.add(value);
+      }
+      return values.size === 1 ? (([...values][0] as string) ?? null) : null;
     }
-    return values.size === 1 ? (([...values][0] as string) ?? null) : null;
   }
 
   const remembered = rememberedProperty(node, scope, budget);
@@ -486,7 +516,9 @@ const ABSOLUTE = /^[a-z][a-z0-9+.-]*:\/\//i;
  *
  * `private uploadPath = '/admin/upload'` is a piece of every address the service
  * writes, kept in a field because it is written in several methods. Reading it
- * is the difference between a path and a hole where its middle should be.
+ * is the difference between a path and a hole where its middle should be. A
+ * `static` field is the same fact about the class rather than the instance, and
+ * is read the same way.
  *
  * A value naming a host is refused. That is a base address rather than a piece
  * of a path, and where it came from is a question for the settings trace.
@@ -497,9 +529,10 @@ export const constantPropertyValue = (
 ): string | null => {
   const access = unwrap(node);
   if (!Node.isPropertyAccessExpression(access)) return null;
-  if (access.getExpression().getKind() !== SyntaxKind.ThisKeyword) return null;
+  const owner = fieldOwnerOf(access);
+  if (owner === undefined) return null;
   const values = new Set<string>();
-  for (const assigned of assignmentsTo(access.getName(), enclosingClass(access))) {
+  for (const assigned of assignmentsTo(access.getName(), owner)) {
     const value = evaluateExpression(assigned);
     if (!value.resolved || typeof value.value !== 'string') return null;
     // A caller reading the opening of an address may ask for the host too:
@@ -719,6 +752,23 @@ const sharedStart = (a: string, b: string): string => {
   return cut < 0 ? '' : a.slice(0, cut + 1);
 };
 
+/**
+ * Why this reads strings at all, when `evaluateExpression` already does.
+ *
+ * The two are not the same question and both have to exist. `evaluateExpression`
+ * asks what an expression's value is where it stands, and answers only where
+ * there is one whole answer. This asks what address a request reaches, which is
+ * a settings key nothing here can know the value of, followed by a path that may
+ * have holes in it — and it answers by walking out through parameters, call
+ * frames and the class a `this` turns out to be. Neither can be written in terms
+ * of the other.
+ *
+ * What they must not do is disagree about the same expression, which is what
+ * happened with `+`: this folded it and the evaluator did not, so `'/api/' + V`
+ * was an address here and nothing at all one call away (R102). Anything either
+ * of them learns about what a string says belongs in the evaluator, which this
+ * calls, rather than beside it.
+ */
 const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress | null => {
   if (budget <= 0) return null;
   const node = unwrap(value);
@@ -822,27 +872,29 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
     return null;
   }
 
-  // `this.baseUrl` — either assigned somewhere in the class, or handed to the
-  // constructor, in which case the answer is at every `new C(...)`.
-  if (
-    Node.isPropertyAccessExpression(node) &&
-    node.getExpression().getKind() === SyntaxKind.ThisKeyword
-  ) {
-    const owner = scope.self ?? enclosingClass(node);
-    const name = node.getName();
-    for (const assigned of assignmentsTo(name, owner)) {
-      const found = addressOf(assigned, scope, budget - 1);
-      if (found !== null) return found;
+  // `this.baseUrl` or `OrdersService.BASE` — a field of the class, either
+  // assigned somewhere in it or handed to the constructor, in which case the
+  // answer is at every `new C(...)`. Only an instance field can come from a
+  // constructor parameter, and asking for one where there is none costs a lookup
+  // that finds nothing.
+  if (Node.isPropertyAccessExpression(node)) {
+    const owner = fieldOwnerOf(node, scope.self);
+    if (owner !== undefined) {
+      const name = node.getName();
+      for (const assigned of assignmentsTo(name, owner)) {
+        const found = addressOf(assigned, scope, budget - 1);
+        if (found !== null) return found;
+      }
+      const parameter = parameterPropertyOf(name, owner);
+      if (parameter === undefined) return null;
+      for (const site of instantiationsOf(parameter.classNode)) {
+        const argument = site.asKind(SyntaxKind.NewExpression)?.getArguments()[parameter.index];
+        if (argument === undefined) continue;
+        const found = addressOf(argument, scope, budget - 1);
+        if (found !== null) return found;
+      }
+      return null;
     }
-    const parameter = parameterPropertyOf(name, owner);
-    if (parameter === undefined) return null;
-    for (const site of instantiationsOf(parameter.classNode)) {
-      const argument = site.asKind(SyntaxKind.NewExpression)?.getArguments()[parameter.index];
-      if (argument === undefined) continue;
-      const found = addressOf(argument, scope, budget - 1);
-      if (found !== null) return found;
-    }
-    return null;
   }
 
   if (Node.isIdentifier(node)) {

@@ -42,9 +42,9 @@ land on one address.
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 252 | 0 |
+| requests from a browser | 253 | 0 |
 | requests between services | 0 | 0 |
-| channels | 0 | 0 with both ends |
+| channels | 3 | 0 with both ends |
 
 ## Storage and screens
 
@@ -59,15 +59,16 @@ land on one address.
 
 ## What it could not read
 
-3510 places somebody could act on, 1431 the tool
+3519 places somebody could act on, 1431 the tool
 reports as a limit of static reading, and 234 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| api-path-dynamic | action | 238 |  |
+| api-path-dynamic | action | 5 |  |
 | call-dynamic-receiver | info | 1168 |  |
-| channel-dynamic | action | 8 |  |
+| channel-const-unresolved | action | 1 |  |
+| channel-dynamic | action | 4 |  |
 | consumer-handler-unresolved | action | 2 |  |
 | db-layer-unread | action | 1 |  |
 | db-receiver-name-only | action | 9 |  |
@@ -79,6 +80,7 @@ was never an edge to draw. The three are never added together.
 | route-link-dynamic | info | 35 |  |
 | route-screen-unread | info | 18 |  |
 | route-target-unresolved | action | 117 |  |
+| target-route-not-found | action | 245 |  |
 | type-depth-exceeded | info | 56 |  |
 | type-generic-uninstantiated | info | 139 |  |
 | type-unresolved | action | 1130 |  |

@@ -98,6 +98,32 @@ export const evaluateExpression = (expr: TsNode, depth = 0): StaticValue => {
     return resolvedValue(out);
   }
 
+  // `'/api/' + API_VERSION` is one string written in two pieces, and the
+  // checker is no help here: the type of a `+` is the widened `string` even
+  // when both sides are literals, so the type branch below cannot settle it.
+  // Refusing it meant a mount written `app.use('/api/' + API_VERSION, router)`
+  // placed no address at all and every route behind it was lost, while the same
+  // address written as a template literal was read in full (R102).
+  if (Node.isBinaryExpression(node) && node.getOperatorToken().getKind() === SyntaxKind.PlusToken) {
+    const left = evaluateExpression(node.getLeft(), depth + 1);
+    if (!left.resolved) return unresolvedValue(node.getText(), left.reason);
+    const right = evaluateExpression(node.getRight(), depth + 1);
+    if (!right.resolved) return unresolvedValue(node.getText(), right.reason);
+    // The same discipline the template-literal path keeps: a piece that cannot
+    // be read leaves the whole thing unread, never half-read. Here that means
+    // only the two operand kinds `+` has one obvious compile-time answer for.
+    // `true + '/x'` and `{} + ''` are answers nobody wrote down on purpose, and
+    // inventing an address from one is worse than reporting no address.
+    const readable = (value: unknown): value is string | number =>
+      typeof value === 'string' || typeof value === 'number';
+    if (!readable(left.value) || !readable(right.value)) {
+      return unresolvedValue(node.getText(), 'not-a-concatenation');
+    }
+    return typeof left.value === 'number' && typeof right.value === 'number'
+      ? resolvedValue(left.value + right.value)
+      : resolvedValue(`${left.value}${right.value}`);
+  }
+
   // A literal type already carries the value: string enum members, `const`
   // bindings and `as const` all land here without any walking.
   if (Node.isExpression(node)) {
