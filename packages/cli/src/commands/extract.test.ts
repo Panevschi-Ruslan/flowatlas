@@ -645,35 +645,48 @@ describe('data access', () => {
     expect(graph.unresolved.map((row) => row.reason)).toContain('sql-parse-failed');
   });
 
-  it('keeps an unfamiliar data layer in the graph, losing only the operation', () => {
+  /**
+   * A package nobody has described is a package whose type parameters nobody
+   * can read, so the query stays and names nothing.
+   *
+   * It used to name its first type argument. `Kysely<DB>` is a connection typed
+   * by the whole schema, and that gave immich two table nodes with 407 `queries`
+   * edges pointing at them, beside 407 rows saying the package was not
+   * understood (R83).
+   */
+  it('keeps an unfamiliar data layer in the graph, naming no table', () => {
     const graph = load('nest-unknown-orm');
     const fromLibrary = graph.nodes.filter(
       (node) => node.type === 'db_query' && node.meta?.['package'] === 'fake-orm',
     );
-    expect(fromLibrary).toHaveLength(2);
+    expect(fromLibrary).toHaveLength(4);
     for (const node of fromLibrary) {
-      expect(node.meta?.['table']).toBe('Order');
+      expect(node.meta?.['table']).toBeNull();
       expect(node.meta?.['op']).toBeNull();
     }
-    expect(graph.unresolved.filter((row) => row.reason === 'unknown-db-package')).toHaveLength(2);
+    expect(graph.unresolved.filter((row) => row.reason === 'unknown-db-package')).toHaveLength(4);
+    expect(graph.nodes.filter((node) => node.type === 'table')).toHaveLength(0);
   });
 
-  it('says when a name was all it had to go on', () => {
+  /** A name is not evidence, so it produces the row and no node (R83). */
+  it('says when a name was all it had to go on, and draws nothing for it', () => {
     const graph = load('nest-unknown-orm');
-    const guessed = graph.nodes.find(
-      (node) => node.type === 'db_query' && node.meta?.['table'] === null,
+    expect(graph.unresolved.filter((row) => row.reason === 'db-receiver-name-only')).toHaveLength(2);
+    const guessed = graph.nodes.filter(
+      (node) => node.type === 'db_query' && node.meta?.['package'] === null,
     );
-    expect(guessed?.meta?.['source']).toBe('none');
-    expect(graph.unresolved.map((row) => row.reason)).toContain('db-receiver-name-only');
+    expect(guessed).toHaveLength(0);
   });
 
   it('marks a guess as a guess and a proof as proof', () => {
     for (const edge of load('nest-typeorm').edges.filter((item) => item.type === 'queries')) {
       expect(edge.confidence).toBe('static');
     }
-    for (const edge of load('nest-unknown-orm').edges.filter((item) => item.type === 'queries')) {
-      expect(edge.confidence).toBe('heuristic');
-    }
+    // And a guess at a table is no longer drawn at all: an undescribed package
+    // names none, so there is no edge here to be honest about (R83). Asserted as
+    // an emptiness rather than left as a loop over nothing, which would read as
+    // a check and be none.
+    expect(load('nest-unknown-orm').edges.filter((item) => item.type === 'queries')).toHaveLength(0);
   });
 });
 

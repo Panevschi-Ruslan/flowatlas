@@ -1,60 +1,73 @@
 {
   "schemaVersion": 4,
   "repo": "nest-unknown-orm",
-  "generatedAt": "2026-09-25T14:34:05.811Z",
+  "generatedAt": "2026-09-26T20:17:02.582Z",
   "nodes": [
     {
-      "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:16:12",
-      "type": "db_query",
-      "label": "access Order",
-      "repo": "nest-unknown-orm",
-      "file": "src/orders/orders.service.ts",
-      "line": 16,
-      "meta": {
-        "op": null,
-        "table": "Order",
-        "tables": [
-          "Order"
-        ],
-        "package": "fake-orm",
-        "method": "find",
-        "receiver": "this.orderRepo",
-        "source": "type-arg"
-      }
-    },
-    {
-      "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:20:12",
-      "type": "db_query",
-      "label": "access Order",
-      "repo": "nest-unknown-orm",
-      "file": "src/orders/orders.service.ts",
-      "line": 20,
-      "meta": {
-        "op": null,
-        "table": "Order",
-        "tables": [
-          "Order"
-        ],
-        "package": "fake-orm",
-        "method": "persist",
-        "receiver": "this.orderRepo",
-        "source": "type-arg"
-      }
-    },
-    {
-      "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:26:12",
+      "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:30:12",
       "type": "db_query",
       "label": "access ?",
       "repo": "nest-unknown-orm",
       "file": "src/orders/orders.service.ts",
-      "line": 26,
+      "line": 30,
       "meta": {
         "op": null,
         "table": null,
         "tables": [],
-        "package": null,
+        "package": "fake-orm",
         "method": "find",
-        "receiver": "this.localRepo",
+        "receiver": "this.orderRepo",
+        "source": "none"
+      }
+    },
+    {
+      "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:34:12",
+      "type": "db_query",
+      "label": "access ?",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.service.ts",
+      "line": 34,
+      "meta": {
+        "op": null,
+        "table": null,
+        "tables": [],
+        "package": "fake-orm",
+        "method": "persist",
+        "receiver": "this.orderRepo",
+        "source": "none"
+      }
+    },
+    {
+      "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:38:12",
+      "type": "db_query",
+      "label": "access ?",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.service.ts",
+      "line": 38,
+      "meta": {
+        "op": null,
+        "table": null,
+        "tables": [],
+        "package": "fake-orm",
+        "method": "selectFrom",
+        "receiver": "this.db",
+        "source": "none"
+      }
+    },
+    {
+      "id": "db_query:nest-unknown-orm#src/orders/orders.service.ts:45:12",
+      "type": "db_query",
+      "label": "access ?",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.service.ts",
+      "line": 45,
+      "meta": {
+        "op": null,
+        "table": null,
+        "tables": [],
+        "package": "fake-orm",
+        "method": "findAll",
+        "receiver": "this.videos",
         "source": "none"
       }
     },
@@ -64,16 +77,38 @@
       "label": "AppModule",
       "repo": "nest-unknown-orm",
       "file": "src/app.module.ts",
-      "line": 5,
+      "line": 7,
       "kind": "static",
       "meta": {
         "controllers": [],
         "providers": [
           "OrdersService",
-          "OrdersRepository"
+          "OrdersRepository",
+          "JobBus",
+          "VideoModel"
         ],
         "exports": []
       }
+    },
+    {
+      "id": "nest-unknown-orm#src/orders/jobs.ts:JobBus",
+      "type": "provider",
+      "label": "JobBus",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/jobs.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-unknown-orm#src/orders/jobs.ts:JobBus.enqueue",
+      "type": "method",
+      "label": "JobBus.enqueue",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/jobs.ts",
+      "line": 12
     },
     {
       "id": "nest-unknown-orm#src/orders/orders.repository.ts:OrdersRepository",
@@ -101,7 +136,7 @@
       "label": "OrdersService",
       "repo": "nest-unknown-orm",
       "file": "src/orders/orders.service.ts",
-      "line": 6,
+      "line": 9,
       "kind": "injectable",
       "meta": {
         "module": "AppModule"
@@ -113,7 +148,7 @@
       "label": "OrdersService.listFromLibrary",
       "repo": "nest-unknown-orm",
       "file": "src/orders/orders.service.ts",
-      "line": 15
+      "line": 29
     },
     {
       "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listLocally",
@@ -121,7 +156,31 @@
       "label": "OrdersService.listLocally",
       "repo": "nest-unknown-orm",
       "file": "src/orders/orders.service.ts",
-      "line": 25
+      "line": 50
+    },
+    {
+      "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listVideos",
+      "type": "method",
+      "label": "OrdersService.listVideos",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.service.ts",
+      "line": 44
+    },
+    {
+      "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listWidgets",
+      "type": "method",
+      "label": "OrdersService.listWidgets",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.schedule",
+      "type": "method",
+      "label": "OrdersService.schedule",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/orders.service.ts",
+      "line": 57
     },
     {
       "id": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.store",
@@ -129,7 +188,19 @@
       "label": "OrdersService.store",
       "repo": "nest-unknown-orm",
       "file": "src/orders/orders.service.ts",
-      "line": 19
+      "line": 33
+    },
+    {
+      "id": "nest-unknown-orm#src/orders/video.model.ts:VideoModel",
+      "type": "provider",
+      "label": "VideoModel",
+      "repo": "nest-unknown-orm",
+      "file": "src/orders/video.model.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
     },
     {
       "id": "repo:nest-unknown-orm",
@@ -138,12 +209,12 @@
       "repo": "nest-unknown-orm",
       "meta": {
         "stats": {
-          "files": 5,
-          "filesRead": 5,
+          "files": 8,
+          "filesRead": 8,
           "filesUnreadable": 0,
-          "classes": 3,
+          "classes": 5,
           "skippedExternalCalls": {
-            "fake-orm": 2
+            "fake-orm": 4
           }
         },
         "bootstrap": "src/main.ts",
@@ -153,30 +224,16 @@
           ]
         }
       }
-    },
-    {
-      "id": "table:nest-unknown-orm#Order",
-      "type": "table",
-      "label": "Order",
-      "repo": "nest-unknown-orm"
     }
   ],
   "edges": [
     {
-      "from": "db_query:nest-unknown-orm#src/orders/orders.service.ts:16:12",
-      "to": "table:nest-unknown-orm#Order",
-      "type": "queries",
-      "confidence": "heuristic",
+      "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-unknown-orm#src/orders/jobs.ts:JobBus",
+      "type": "injects",
+      "confidence": "static",
       "file": "src/orders/orders.service.ts",
-      "line": 16
-    },
-    {
-      "from": "db_query:nest-unknown-orm#src/orders/orders.service.ts:20:12",
-      "to": "table:nest-unknown-orm#Order",
-      "type": "queries",
-      "confidence": "heuristic",
-      "file": "src/orders/orders.service.ts",
-      "line": 20
+      "line": 26
     },
     {
       "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService",
@@ -184,23 +241,23 @@
       "type": "injects",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
-      "line": 13
+      "line": 24
+    },
+    {
+      "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-unknown-orm#src/orders/video.model.ts:VideoModel",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 25
     },
     {
       "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listFromLibrary",
-      "to": "db_query:nest-unknown-orm#src/orders/orders.service.ts:16:12",
+      "to": "db_query:nest-unknown-orm#src/orders/orders.service.ts:30:12",
       "type": "calls",
       "confidence": "heuristic",
       "file": "src/orders/orders.service.ts",
-      "line": 16
-    },
-    {
-      "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listLocally",
-      "to": "db_query:nest-unknown-orm#src/orders/orders.service.ts:26:12",
-      "type": "calls",
-      "confidence": "heuristic",
-      "file": "src/orders/orders.service.ts",
-      "line": 26
+      "line": 30
     },
     {
       "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listLocally",
@@ -208,17 +265,45 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
-      "line": 26,
+      "line": 51,
       "params": [],
       "returns": "type:nest-unknown-orm#Order[]"
     },
     {
-      "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.store",
-      "to": "db_query:nest-unknown-orm#src/orders/orders.service.ts:20:12",
+      "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listVideos",
+      "to": "db_query:nest-unknown-orm#src/orders/orders.service.ts:45:12",
       "type": "calls",
       "confidence": "heuristic",
       "file": "src/orders/orders.service.ts",
-      "line": 20
+      "line": 45
+    },
+    {
+      "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.listWidgets",
+      "to": "db_query:nest-unknown-orm#src/orders/orders.service.ts:38:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 38
+    },
+    {
+      "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.schedule",
+      "to": "nest-unknown-orm#src/orders/jobs.ts:JobBus.enqueue",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 58,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-unknown-orm#src/orders/orders.service.ts:OrdersService.store",
+      "to": "db_query:nest-unknown-orm#src/orders/orders.service.ts:34:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 34
     }
   ],
   "types": {
@@ -247,25 +332,55 @@
   },
   "unresolved": [
     {
+      "file": "src/orders/orders.repository.ts",
+      "line": 8,
+      "reason": "db-layer-unread",
+      "message": "OrdersRepository reads as a data layer, and nothing was read through it.",
+      "hint": "Add \"OrdersRepository\" to adapters.db.localBaseClasses in flowatlas.config.json, so calls through it are recorded as data access.",
+      "symbol": "OrdersRepository",
+      "adapter": "local-base"
+    },
+    {
       "file": "src/orders/orders.service.ts",
-      "line": 16,
+      "line": 30,
       "reason": "unknown-db-package",
       "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
       "symbol": "this.orderRepo.find"
     },
     {
       "file": "src/orders/orders.service.ts",
-      "line": 20,
+      "line": 34,
       "reason": "unknown-db-package",
       "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
       "symbol": "this.orderRepo.persist"
     },
     {
       "file": "src/orders/orders.service.ts",
-      "line": 26,
+      "line": 38,
+      "reason": "unknown-db-package",
+      "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
+      "symbol": "this.db.selectFrom"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 45,
+      "reason": "unknown-db-package",
+      "hint": "Add a descriptor for fake-orm to record which of its methods read and which write.",
+      "symbol": "this.videos.findAll"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 51,
       "reason": "db-receiver-name-only",
       "hint": "this.localRepo is typed as OrdersRepository, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
       "symbol": "this.localRepo.find"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 58,
+      "reason": "db-receiver-name-only",
+      "hint": "this.jobRepository is typed as JobBus, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
+      "symbol": "this.jobRepository.enqueue"
     }
   ]
 }

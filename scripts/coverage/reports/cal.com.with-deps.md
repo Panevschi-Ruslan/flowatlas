@@ -51,16 +51,16 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 73 | 73 of 80 |
-| …that name a table | 4 | 4 of 73 |
-| tables | 1 | no denominator: the rule has no probe for it |
+| query sites read | 4 | 4 of 80 |
+| …that name a table | 0 | 0 of 4 |
+| tables | 0 | nothing of this kind here |
 | components | 773 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
 | every other binding a template makes | 775 | not counted by the rule |
 
 ## What it could not read
 
-118 places somebody could act on, 50 the tool
+126 places somebody could act on, 50 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -68,7 +68,7 @@ was never an edge to draw. The three are never added together.
 |---|---|---|---|
 | api-path-dynamic | action | 7 |  |
 | call-dynamic-receiver | info | 50 |  |
-| db-layer-unread | action | 6 |  |
+| db-layer-unread | action | 14 |  |
 | db-receiver-name-only | action | 69 |  |
 | dynamic-http-url | action | 6 |  |
 | server-action-unread | action | 2 |  |

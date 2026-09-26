@@ -1,6 +1,6 @@
 {
   "schemaVersion": 4,
-  "builtAt": "2026-09-25T14:33:47.381Z",
+  "builtAt": "2026-09-26T20:18:58.145Z",
   "configHash": "9376cf8f01b0",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 811
+      "durationMs": 940
     },
     {
       "name": "gateway",
@@ -23,18 +23,18 @@
       "edges": 19,
       "types": 4,
       "unresolved": 7,
-      "durationMs": 881
+      "durationMs": 1064
     },
     {
       "name": "orders",
       "repo": "./orders",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 50,
-      "edges": 46,
+      "nodes": 49,
+      "edges": 37,
       "types": 3,
       "unresolved": 17,
-      "durationMs": 837
+      "durationMs": 974
     }
   ],
   "httpOut": {
@@ -115,7 +115,7 @@
       "file": "src/orders/orders.controller.ts",
       "line": 11,
       "reason": "route-unguarded",
-      "message": "POST /orders has no guard in front of it and reaches Order.",
+      "message": "POST /orders has no guard in front of it and reaches stored data.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
       "symbol": "POST /orders"
     },
@@ -124,7 +124,7 @@
       "file": "src/orders/orders.controller.ts",
       "line": 16,
       "reason": "route-unguarded",
-      "message": "POST /orders/legacy has no guard in front of it and reaches Order.",
+      "message": "POST /orders/legacy has no guard in front of it and reaches stored data.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
       "symbol": "POST /orders/legacy"
     },
@@ -133,14 +133,14 @@
       "file": "src/orders/orders.controller.ts",
       "line": 21,
       "reason": "route-unguarded",
-      "message": "GET /orders/:param has no guard in front of it and reaches Order.",
+      "message": "GET /orders/:param has no guard in front of it and reaches stored data.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
       "symbol": "GET /orders/:param"
     }
   ],
   "totals": {
-    "nodes": 85,
-    "edges": 77,
+    "nodes": 84,
+    "edges": 68,
     "types": 8,
     "unresolved": 31
   }

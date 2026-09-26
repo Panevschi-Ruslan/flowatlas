@@ -50,8 +50,8 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 168 | no denominator: the rule has no probe for it |
-| …that name a table | 0 | 0 of 168 |
+| query sites read | 91 | no denominator: the rule has no probe for it |
+| …that name a table | 0 | 0 of 91 |
 | tables | 0 | 0 of 103 |
 | components | 644 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
@@ -59,7 +59,7 @@ land on one address.
 
 ## What it could not read
 
-276 places somebody could act on, 1785 the tool
+278 places somebody could act on, 1785 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -70,7 +70,7 @@ was never an edge to draw. The three are never added together.
 | channel-const-unresolved | action | 12 |  |
 | channel-dynamic | action | 9 |  |
 | consumer-handler-unresolved | action | 2 |  |
-| db-layer-unread | action | 4 |  |
+| db-layer-unread | action | 6 |  |
 | db-receiver-name-only | action | 77 |  |
 | dynamic-cache-key | action | 40 |  |
 | dynamic-config-key | action | 2 |  |

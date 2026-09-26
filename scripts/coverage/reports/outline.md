@@ -44,8 +44,8 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 77 | no denominator: the rule has no probe for it |
-| …that name a table | 0 | 0 of 77 |
+| query sites read | 0 | nothing of this kind here |
+| …that name a table | 0 | nothing of this kind here |
 | tables | 0 | 0 of 103 |
 | components | 644 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
@@ -53,7 +53,7 @@ land on one address.
 
 ## What it could not read
 
-832 places somebody could act on, 3456 the tool
+835 places somebody could act on, 3456 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -61,7 +61,7 @@ was never an edge to draw. The three are never added together.
 |---|---|---|---|
 | api-path-dynamic | action | 2 |  |
 | call-dynamic-receiver | info | 2716 |  |
-| db-layer-unread | action | 4 |  |
+| db-layer-unread | action | 7 |  |
 | db-receiver-name-only | action | 77 |  |
 | dynamic-config-key | action | 2 |  |
 | dynamic-http-url | action | 24 |  |

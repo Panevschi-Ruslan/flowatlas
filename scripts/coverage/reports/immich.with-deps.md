@@ -50,16 +50,16 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 1560 | 1560 of 579 |
-| …that name a table | 407 | 407 of 1560 |
-| tables | 2 | 2 of 68 |
+| query sites read | 407 | 407 of 579 |
+| …that name a table | 0 | 0 of 407 |
+| tables | 0 | 0 of 68 |
 | components | 9 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
 | every other binding a template makes | 0 | not counted by the rule |
 
 ## What it could not read
 
-1612 places somebody could act on, 285 the tool
+1631 places somebody could act on, 285 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -70,7 +70,7 @@ was never an edge to draw. The three are never added together.
 | channel-const-unresolved | action | 5 |  |
 | channel-dynamic | action | 2 |  |
 | consumer-handler-unresolved | action | 3 |  |
-| db-layer-unread | action | 2 |  |
+| db-layer-unread | action | 21 |  |
 | db-receiver-name-only | action | 1153 |  |
 | di-token-unknown | action | 1 |  |
 | di-type-unresolved | action | 1 |  |

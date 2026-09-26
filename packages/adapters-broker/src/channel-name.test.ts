@@ -36,6 +36,8 @@ export class Publisher {
   fromTemplate(id: string) { return \`order:\${id}:created\` }
   allHoles(a: string, b: string) { return \`\${a}\${b}\` }
   objectPattern() { return { cmd: 'sum' } }
+  jobPattern() { return { name: 'IntegrityChecksumFiles', data: {} } }
+  emptyPattern() { return {} }
 
   // R42 — a hole computed from a closed set of strings is not a hole.
   folded(id: string, type: 'TICKET_OPENED' | 'TICKET_ON_HOLD' | 'TICKET_CLOSED') {
@@ -221,6 +223,24 @@ describe('resolving which channel a call addresses', () => {
 
   it('turns an object pattern into a stable name', () => {
     expect(of('objectPattern')).toEqual({ name: '{"cmd":"sum"}', names: ['{"cmd":"sum"}'], via: 'pattern' });
+  });
+
+  /**
+   * A job is not an address.
+   *
+   * `{ name, data }` was stringified into a channel of its own, so the graph
+   * held `channel:{"data":{},"name":"IntegrityChecksumFiles"}` beside the
+   * `channel:IntegrityChecksumFiles` the consumers produced — and the publish
+   * pointed at the one nothing else could ever write (R83).
+   */
+  it('refuses a record that carries a payload rather than addressing a channel', () => {
+    const result = of('jobPattern');
+    expect(isResolved(result)).toBe(false);
+    if (!isResolved(result)) expect(result.unresolved).toBe('channel-dynamic');
+  });
+
+  it('refuses a record that names nothing', () => {
+    expect(isResolved(of('emptyPattern'))).toBe(false);
   });
 
   it('will not guess a channel read from settings, and says which it was', () => {

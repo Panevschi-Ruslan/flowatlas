@@ -91,6 +91,19 @@ export class OrdersService {
     this.client.emit(LEGACY_TOPIC, dto);
   }
 
+  // A job handed over whole, where the address is one property of it and the
+  // rest is the payload. The record is readable and is still not a name: its
+  // stable text used to become a channel of its own, so the graph held
+  // `channel:{"data":{},"name":"order.checksum"}` beside the
+  // `channel:order.checksum` the handler below produces — two nodes for one
+  // channel, and the publish pointed at the one nothing else can ever write
+  // (R83). Which property carries the address is this queue's own convention,
+  // so it is reported rather than guessed at.
+  // Expected: no channel node, unresolved `channel-dynamic`.
+  checksum(dto: OrderCreatedEvent): void {
+    this.client.emit({ name: 'order.checksum', data: {} }, dto);
+  }
+
   // Step 3, the channel comes from configuration. No `channel` node; the
   // `producer` is kept with `meta.channelVia: "config"`.
   // Expected: unresolved `channel-from-config`, hint
