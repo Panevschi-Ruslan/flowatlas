@@ -1,0 +1,93 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 5,
+  "generatedAt": "2026-09-27T17:31:24.114Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/api/orders.ts:21:24",
+        "to": "entry:shop:http:GET:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/api/orders.ts:21:24|hits|entry:shop:http:GET:/api/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/api/orders.ts:listOrders declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/api/orders.ts:21:24",
+        "to": "entry:shop:http:GET:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/api/orders.ts:21:24|hits|entry:shop:http:GET:/api/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "shop#app/api/orders/route.ts:GET declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/api/orders.ts:26:24",
+        "to": "entry:shop:http:PATCH:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/api/orders.ts:26:24|hits|entry:shop:http:PATCH:/api/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "shop#app/api/orders/[id]/route.ts:PATCH declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/api/orders.ts:26:24",
+        "to": "entry:shop:http:PATCH:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/api/orders.ts:26:24|hits|entry:shop:http:PATCH:/api/orders/:param",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "shop#app/api/orders/[id]/route.ts:PATCH declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/api/orders.ts:45:59@41:24",
+        "to": "entry:shop:http:GET:/api/invoices",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/api/orders.ts:45:59@41:24|hits|entry:shop:http:GET:/api/invoices",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/api/orders.ts:listInvoices declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/api/orders.ts:45:59@41:24",
+        "to": "entry:shop:http:GET:/api/invoices",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/api/orders.ts:45:59@41:24|hits|entry:shop:http:GET:/api/invoices",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "shop#app/api/(admin)/invoices/route.ts:GET declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 6,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

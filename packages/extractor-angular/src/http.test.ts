@@ -179,6 +179,9 @@ describe('requests the browser makes', () => {
     );
     expect(only(graph).meta?.['baseUrlEnv']).toBe('otherUrl');
     expect(reasons(graph)).toEqual(['api-base-unknown']);
+    expect(graph.unresolved[0]?.hint).toBe(
+      'Add otherUrl to services[].apiBaseEnv, and services[].apiTarget to say which service answers it.',
+    );
   });
 
   it('says nothing about a settings key when the frontend declares none', () => {

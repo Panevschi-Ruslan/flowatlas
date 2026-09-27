@@ -1,0 +1,372 @@
+{
+  "schemaVersion": 5,
+  "repo": "pg-query-verb",
+  "generatedAt": "2026-09-27T17:48:09.593Z",
+  "nodes": [
+    {
+      "id": "db_query:pg-query-verb#src/orders/orders.service.ts:10:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "pg-query-verb",
+      "file": "src/orders/orders.service.ts",
+      "line": 10,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:pg-query-verb#src/orders/orders.service.ts:17:12",
+      "type": "db_query",
+      "label": "access orders",
+      "repo": "pg-query-verb",
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "meta": {
+        "op": null,
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:pg-query-verb#src/orders/orders.service.ts:23:12",
+      "type": "db_query",
+      "label": "access invoices",
+      "repo": "pg-query-verb",
+      "file": "src/orders/orders.service.ts",
+      "line": 23,
+      "meta": {
+        "op": null,
+        "table": "invoices",
+        "tables": [
+          "invoices"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "entry:pg-query-verb:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "pg-query-verb",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:pg-query-verb:http:GET:/orders/plan",
+      "type": "entry",
+      "label": "GET /orders/plan",
+      "repo": "pg-query-verb",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/plan",
+        "rawPath": "/orders/plan",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:pg-query-verb:http:GET:/orders/report",
+      "type": "entry",
+      "label": "GET /orders/report",
+      "repo": "pg-query-verb",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/report",
+        "rawPath": "/orders/report",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "pg-query-verb#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "pg-query-verb",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "pg-query-verb#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "pg-query-verb",
+      "file": "src/orders/orders.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "pg-query-verb#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "method",
+      "label": "OrdersController.findAll",
+      "repo": "pg-query-verb",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "id": "pg-query-verb#src/orders/orders.controller.ts:OrdersController.plan",
+      "type": "method",
+      "label": "OrdersController.plan",
+      "repo": "pg-query-verb",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18
+    },
+    {
+      "id": "pg-query-verb#src/orders/orders.controller.ts:OrdersController.report",
+      "type": "method",
+      "label": "OrdersController.report",
+      "repo": "pg-query-verb",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13
+    },
+    {
+      "id": "pg-query-verb#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "pg-query-verb",
+      "file": "src/orders/orders.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "pg-query-verb#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "method",
+      "label": "OrdersService.findAll",
+      "repo": "pg-query-verb",
+      "file": "src/orders/orders.service.ts",
+      "line": 9
+    },
+    {
+      "id": "pg-query-verb#src/orders/orders.service.ts:OrdersService.plan",
+      "type": "method",
+      "label": "OrdersService.plan",
+      "repo": "pg-query-verb",
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "id": "pg-query-verb#src/orders/orders.service.ts:OrdersService.report",
+      "type": "method",
+      "label": "OrdersService.report",
+      "repo": "pg-query-verb",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "id": "repo:pg-query-verb",
+      "type": "repo",
+      "label": "pg-query-verb",
+      "repo": "pg-query-verb",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "pg": 3
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:pg-query-verb#invoices",
+      "type": "table",
+      "label": "invoices",
+      "repo": "pg-query-verb"
+    },
+    {
+      "id": "table:pg-query-verb#orders",
+      "type": "table",
+      "label": "orders",
+      "repo": "pg-query-verb"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:pg-query-verb#src/orders/orders.service.ts:10:12",
+      "to": "table:pg-query-verb#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 10
+    },
+    {
+      "from": "db_query:pg-query-verb#src/orders/orders.service.ts:17:12",
+      "to": "table:pg-query-verb#orders",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 17
+    },
+    {
+      "from": "db_query:pg-query-verb#src/orders/orders.service.ts:23:12",
+      "to": "table:pg-query-verb#invoices",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 23
+    },
+    {
+      "from": "entry:pg-query-verb:http:GET:/orders",
+      "to": "pg-query-verb#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "entry:pg-query-verb:http:GET:/orders/plan",
+      "to": "pg-query-verb#src/orders/orders.controller.ts:OrdersController.plan",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "entry:pg-query-verb:http:GET:/orders/report",
+      "to": "pg-query-verb#src/orders/orders.controller.ts:OrdersController.report",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "pg-query-verb#src/orders/orders.controller.ts:OrdersController",
+      "to": "pg-query-verb#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "pg-query-verb#src/orders/orders.controller.ts:OrdersController.findAll",
+      "to": "pg-query-verb#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "pg-query-verb#src/orders/orders.controller.ts:OrdersController.plan",
+      "to": "pg-query-verb#src/orders/orders.service.ts:OrdersService.plan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "pg-query-verb#src/orders/orders.controller.ts:OrdersController.report",
+      "to": "pg-query-verb#src/orders/orders.service.ts:OrdersService.report",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "pg-query-verb#src/orders/orders.service.ts:OrdersService.findAll",
+      "to": "db_query:pg-query-verb#src/orders/orders.service.ts:10:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 10
+    },
+    {
+      "from": "pg-query-verb#src/orders/orders.service.ts:OrdersService.plan",
+      "to": "db_query:pg-query-verb#src/orders/orders.service.ts:23:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 23
+    },
+    {
+      "from": "pg-query-verb#src/orders/orders.service.ts:OrdersService.report",
+      "to": "db_query:pg-query-verb#src/orders/orders.service.ts:17:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 17
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "reason": "unknown-db-operation",
+      "hint": "Add \"query\" to the operations of the pg descriptor to record whether it reads or writes.",
+      "symbol": "this.pool.query"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 23,
+      "reason": "unknown-db-operation",
+      "hint": "Add \"query\" to the operations of the pg descriptor to record whether it reads or writes.",
+      "symbol": "this.pool.query"
+    }
+  ]
+}

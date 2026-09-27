@@ -118,3 +118,39 @@ describe('a document of a kind the reason does not name', () => {
     expect(expandReasons(['db-receiver-name-only'])).toEqual(['db-receiver-name-only']);
   });
 });
+
+/**
+ * The whole row, field by field.
+ *
+ * The cases above hold the sentence by fragments, which is how a message is
+ * best asserted; what they leave loose is everything else a reader and the
+ * baseline key on - where the row points, whose it is, and at which level. That
+ * a real `doctor` run still silences it under the old spelling is asserted over
+ * a built fixture in `commands/doctor-document-age.test.ts`.
+ */
+describe('the row, as a whole', () => {
+  it('points at the document, belongs to the service, and says nothing it cannot know', () => {
+    const rows = documentAgeRows(
+      [{ service: 'billing', documentPath: 'contracts/billing.asyncapi.json', kind: 'asyncapi' }],
+      reader(new Date('2026-01-10T00:00:00Z'), new Date('2026-09-25T00:00:00Z')),
+    );
+    expect(rows).toEqual([
+      {
+        file: 'contracts/billing.asyncapi.json',
+        line: 1,
+        reason: 'document-age',
+        level: 'info',
+        service: 'billing',
+        symbol: 'billing',
+        message:
+          'billing was declared by contracts/billing.asyncapi.json, the asyncapi document last changed 2026-01-10; ' +
+          'the newest commit among the repositories that were read is from 2026-09-25, ' +
+          'so the document may be behind the service it describes',
+        hint:
+          'Fetch the current asyncapi document from whoever owns billing and rebuild. Nothing here can check a ' +
+          'document against the running service, so how recently it was updated is the only evidence there is ' +
+          'that it is still true.',
+      },
+    ]);
+  });
+});

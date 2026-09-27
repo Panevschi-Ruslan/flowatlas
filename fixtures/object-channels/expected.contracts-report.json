@@ -1,0 +1,102 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 5,
+  "generatedAt": "2026-09-27T17:31:22.226Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:api#src/orders/orders.service.ts:23:5",
+        "to": "consumer:worker#src/jobs/jobs.service.ts:JobsService.handleThumbnail",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/orders/orders.service.ts:23:5|emits|consumer:worker#src/jobs/jobs.service.ts:JobsService.handleThumbnail",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "api",
+        "typeId": "type:api#ThumbnailJobData",
+        "symbol": "api#src/orders/orders.service.ts:OrdersService.place"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "type:worker#ThumbnailJob",
+        "symbol": "worker#src/jobs/jobs.service.ts:JobsService.handleThumbnail"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:api#src/orders/orders.service.ts:31:5",
+        "to": "consumer:worker#src/jobs/jobs.service.ts:JobsService.handleMail",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/orders/orders.service.ts:31:5|emits|consumer:worker#src/jobs/jobs.service.ts:JobsService.handleMail",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "api",
+        "typeId": "type:api#MailJobData",
+        "symbol": "api#src/orders/orders.service.ts:OrdersService.confirm"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "type:worker#MailJob",
+        "symbol": "worker#src/jobs/jobs.service.ts:JobsService.handleMail"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:api#src/orders/orders.service.ts:47:5",
+        "to": "channel:digest.send",
+        "type": "emits"
+      },
+      "edgeKey": "channel:digest.send|emits|producer:api#src/orders/orders.service.ts:47:5",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:digest.send is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:api#src/orders/orders.service.ts:37:5",
+        "to": "channel:index.rebuild",
+        "type": "emits"
+      },
+      "edgeKey": "channel:index.rebuild|emits|producer:api#src/orders/orders.service.ts:37:5",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:index.rebuild is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:api#src/orders/orders.service.ts:42:5",
+        "to": "consumer:worker#src/jobs/jobs.service.ts:JobsService.handleMail",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/orders/orders.service.ts:42:5|emits|consumer:worker#src/jobs/jobs.service.ts:JobsService.handleMail",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "api#src/orders/orders.service.ts:OrdersService.notify declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 2,
+    "shared": 0,
+    "identical": 2,
+    "hash_differs": 0,
+    "unchecked": 3,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}
