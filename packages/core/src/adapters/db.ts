@@ -116,6 +116,22 @@ export interface DbCallInput {
    * caller did not answer, which leaves the name alone.
    */
   entityFromPackage?: boolean;
+  /**
+   * True when the receiver's type was read off this repository's own source
+   * rather than resolved by the checker.
+   *
+   * Supplied by the caller, for the same reason the two flags above are: reading
+   * a type annotation and the import that binds its name is work on source files
+   * and the core is not given any.
+   *
+   * It is here because it belongs in the confidence rather than in a footnote.
+   * An annotation states what the author meant and nothing verified it, so an
+   * answer resting on it is `heuristic` however cleanly it read: the table may be
+   * a literal and the method may be on the descriptor's list, and the step nobody
+   * checked is that the name in the annotation is the type it appears to be. A
+   * reader filtering on `static` is filtering on the checker having agreed.
+   */
+  originFromSource?: boolean;
 }
 
 /**
@@ -138,9 +154,19 @@ export interface DataNameHints {
  *
  * The longest matching prefix wins, so a specific rule overrides a general one
  * without depending on the order the keys were written in.
+ *
+ * Own keys only, which is not pedantry. A record written as an object literal
+ * answers `toString` and `constructor` with the language's own, and those are
+ * method names real code calls: `value.toString()` on a receiver a described
+ * package declares was read as an operation whose name is a function, and novu
+ * carried two query nodes labelled with the text of a native function because of
+ * it. A lookup that can be asked about any word a program contains has to be
+ * asked about that word only.
  */
 export const operationOf = (descriptor: DbDescriptor, method: string): DbOp | null => {
-  const exact = descriptor.operations[method];
+  const exact = Object.hasOwn(descriptor.operations, method)
+    ? descriptor.operations[method]
+    : undefined;
   if (exact !== undefined) return exact;
   let best: { length: number; op: DbOp } | undefined;
   for (const [key, op] of Object.entries(descriptor.operations)) {
@@ -259,7 +285,8 @@ export const classifyDbCall = (input: DbCallInput): DbClassification | null => {
       table,
       tables,
       op,
-      confidence: table !== null && op !== null ? 'static' : 'heuristic',
+      confidence:
+        table !== null && op !== null && input.originFromSource !== true ? 'static' : 'heuristic',
       package: origin?.package ?? descriptor.package,
       source,
       ...(rawEntity !== null && rawEntity !== entity ? { entityType: rawEntity } : {}),
