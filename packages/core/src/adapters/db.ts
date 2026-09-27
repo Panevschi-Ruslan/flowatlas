@@ -357,7 +357,7 @@ export const classifyDbCall = (input: DbCallInput): DbClassification | null => {
         ...base,
         unresolved: {
           reason: 'unknown-db-operation',
-          hint: `Add ${JSON.stringify(method)} to the operations of the ${descriptor.package} descriptor to record whether it reads or writes.`,
+          hint: `The query names a table, but its text does not open with a verb that says whether it reads or writes (SELECT, WITH … SELECT, INSERT INTO, UPDATE, DELETE FROM or TRUNCATE, as the very first word): a leading comment hides the verb, and EXPLAIN is not one of them. Start the string with its verb, with any comment after it; a statement that neither reads nor writes, such as EXPLAIN, can be left as it is. The operation of a query read from its text comes from that verb, not from the ${descriptor.package} descriptor, so the descriptor needs no change.`,
         },
       };
     }
