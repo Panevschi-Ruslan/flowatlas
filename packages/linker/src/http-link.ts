@@ -1,6 +1,6 @@
 import { wasRead, type GraphNode } from '@flowatlas/core';
 import { cmp } from './order.js';
-import { isMatch, matchRoute, pathAnswers } from './route-match.js';
+import { callingApplication, isMatch, matchRoute, pathAnswers } from './route-match.js';
 
 /** A reason, a sentence and what to do about it — everything but where it happened. */
 export interface Finding {
@@ -184,6 +184,19 @@ const withGlobalPrefix = (path: string, routes: readonly GraphNode[]): string | 
  */
 export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   const notes: Finding[] = [];
+  /**
+   * The application the caller is written in, where the service asked is the
+   * caller's own.
+   *
+   * The same rule the browser linker applies, written here too so the two
+   * cannot develop different opinions about when a caller's own application
+   * decides a tie (R132). No server reader records this on a call yet, so for
+   * every caller that reaches this it is absent and nothing below changes; a
+   * call that crosses a service boundary is outside every application of the
+   * service it reaches and would be absent regardless.
+   */
+  const callerApplicationIn = (service: string): string | undefined =>
+    service === call.repo ? callingApplication(call) : undefined;
   const method = String(call.meta?.['method'] ?? 'GET');
   const path = call.meta?.['path'];
   const env = call.meta?.['baseUrlEnv'];
@@ -198,13 +211,14 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
       notes.push(MARKER_FINDINGS.serviceUnknown(marker));
       continue;
     }
-    let found = matchRoute(marker.method, marker.path, routes);
+    const from = callerApplicationIn(marker.service);
+    let found = matchRoute(marker.method, marker.path, routes, from);
     // An annotation is written the way the caller sees the route, which is
     // without the prefix the service adds to all of them; the same retry an
     // address read from the code gets.
     if (!isMatch(found) && found.reason === 'not-found') {
       const prefixed = withGlobalPrefix(marker.path, routes);
-      if (prefixed !== undefined) found = matchRoute(marker.method, prefixed, routes);
+      if (prefixed !== undefined) found = matchRoute(marker.method, prefixed, routes, from);
     }
     if (isMatch(found)) reached.push({ entry: found.entry, runnersUp: found.runnersUp ?? [] });
     else notes.push(MARKER_FINDINGS.routeNotFound(marker));
@@ -245,10 +259,11 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
 
   const routes = index.routesOf(targetService) ?? [];
   const requested = path;
-  let found = matchRoute(method, requested, routes);
+  const from = callerApplicationIn(targetService);
+  let found = matchRoute(method, requested, routes, from);
   if (!isMatch(found) && found.reason === 'not-found') {
     const prefixed = withGlobalPrefix(requested, routes);
-    if (prefixed !== undefined) found = matchRoute(method, prefixed, routes);
+    if (prefixed !== undefined) found = matchRoute(method, prefixed, routes, from);
   }
 
   if (isMatch(found)) {

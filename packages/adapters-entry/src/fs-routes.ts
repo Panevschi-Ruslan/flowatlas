@@ -1,5 +1,6 @@
 import {
   applicationsServing,
+  ROOT_APPLICATION,
   HTTP_METHODS,
   namedFunction,
   normalizePath,
@@ -159,16 +160,6 @@ const FILE_EXTENSION = /\.[cm]?[jt]sx?$/;
 const SOURCE_DIRECTORY = 'src';
 
 /**
- * The name of the application at the service's own root.
- *
- * A name rather than an absence, because where a service holds a second
- * application the root one is not the default — it is one of two, and both of
- * them are named or neither is. `.` is the one spelling no directory can have,
- * and it reads as what it is: the application here.
- */
-const ROOT_APPLICATION = '.';
-
-/**
  * Which application a file belongs to, read from the segments in front of the
  * router root.
  *
@@ -307,24 +298,26 @@ export interface FsAddressSpace {
 }
 
 /**
- * The address space of one service, read once for the whole of it.
+ * Which applications one service's file-system routers hold, read once for the
+ * whole of it.
  *
  * Once for the service rather than per file, because no single file can answer
  * the question: whether an id needs to name an application depends on how many
  * applications the service has, and that is a fact about every file in it.
  *
- * The judgement itself is not made here. `applicationsServing` is the one place
+ * The judgement itself is not made here, and not here either. `applicationsServing` is the one place
  * that decides whether an id carries an application — deliberately one place, so
- * that two adapters cannot disagree about it (R119) — and this hands it a map in
- * the shape it already reads. Every application mounts itself, because what the
- * map is asked about here is the application: a file-system router has no
- * declaration to key on, only a directory, and the directory *is* the
- * application.
+ * that two adapters cannot disagree about it (R119) — and every caller below
+ * hands it this map. Every application mounts itself, because what the map is
+ * asked about is the application: a file-system router has no declaration to
+ * key on, only a directory, and the directory *is* the application. That is
+ * also why the same map can say which application a call site is in, which a
+ * map of declarations cannot (R132).
  */
-export const fsAddressSpace = (
+export const fsApplicationMap = (
   files: Iterable<string>,
   routers: readonly FsRouter[],
-): FsAddressSpace => {
+): ApplicationMap => {
   const names = new Set<string>();
   for (const file of files) {
     for (const router of routers) {
@@ -332,10 +325,24 @@ export const fsAddressSpace = (
       if (reading.kind === 'route') names.add(reading.application);
     }
   }
-  const map: ApplicationMap = {
+  return {
     names: [...names].sort(),
     of: Object.fromEntries([...names].map((name) => [name, [name]])),
+    // Directories, and said so: the same map has to answer which application a
+    // file that declares no route at all is in — a component making a request
+    // — and only a map whose keys are directories can (R132).
+    keyedBy: 'directory',
   };
+};
+
+/**
+ * The address space of one service, read once for the whole of it.
+ *
+ * The map is read separately and handed in, because the same map answers a
+ * second question this has no part in: which application a call site belongs to.
+ * One reading of the directories, two callers, and no way for them to disagree.
+ */
+export const fsAddressSpace = (map: ApplicationMap): FsAddressSpace => {
   return {
     addressOf: (file, router) => {
       const reading = readFsFile(file, router);

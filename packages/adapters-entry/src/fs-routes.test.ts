@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fsAddressSpace, pathPatternTest, routePathOfFile, type FsRouter } from './fs-routes.js';
+import { fsAddressSpace, fsApplicationMap, pathPatternTest, routePathOfFile, type FsRouter } from './fs-routes.js';
 import { MEDUSA_API } from './medusa-routes.js';
 import { APP_ROUTER } from './nextjs-paths.js';
 
@@ -56,10 +56,7 @@ describe('routePathOfFile, over more than one router', () => {
     expect(routePathOfFile('plugins/wishlist/src/api/store/wishlists/route.ts', MEDUSA_API)).toBe(
       '/store/wishlists',
     );
-    const space = fsAddressSpace(
-      ['src/api/store/wishlists/route.ts', 'plugins/wishlist/src/api/store/wishlists/route.ts'],
-      [MEDUSA_API],
-    );
+    const space = fsAddressSpace(fsApplicationMap(['src/api/store/wishlists/route.ts', 'plugins/wishlist/src/api/store/wishlists/route.ts'], [MEDUSA_API]));
     expect(space.addressOf('plugins/wishlist/src/api/store/wishlists/route.ts', MEDUSA_API)).toEqual(
       { path: '/store/wishlists', application: 'plugins/wishlist' },
     );

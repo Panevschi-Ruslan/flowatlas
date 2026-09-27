@@ -273,10 +273,16 @@ type Spread =
 const wildcardFinding = (call: GraphNode, entry: GraphNode): Finding => {
   const asked = `${String(call.meta?.['method'] ?? '?')} ${String(call.meta?.['path'] ?? '?')}`;
   const route = `${String(entry.meta?.['method'] ?? '?')} ${String(entry.meta?.['path'] ?? '?')}`;
+  // Which program the sentence is about. A service with two applications has
+  // two address spaces, and the question this row asks — does anything here
+  // spell the address out? — is asked of one of them, so naming the service
+  // alone would send a reader to look at routes of the other one (R132).
+  const application = String(entry.meta?.['application'] ?? '');
+  const where = application === '' ? entry.repo : `${entry.repo}'s ${application} application`;
   return {
     reason: 'route-wildcard-only',
-    message: `only the catch-all ${route} in ${entry.repo} answers ${asked}`,
-    hint: `No route of ${entry.repo} spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.`,
+    message: `only the catch-all ${route} in ${where} answers ${asked}`,
+    hint: `No route of ${where} spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.`,
   };
 };
 

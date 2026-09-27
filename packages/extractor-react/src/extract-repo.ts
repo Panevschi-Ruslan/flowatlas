@@ -5,6 +5,7 @@ import {
   GraphBuilder,
   parseConfig,
   readResolvedPackageJson,
+  recordApplications,
   reportUnreadableSources,
   silentLogger,
   type ExtractContext,
@@ -84,6 +85,12 @@ export const extractReact = (base: ExtractContext, options: FrontendExtractOptio
     ...(options.typesDepth === undefined ? {} : { maxDepth: options.typesDepth }),
   });
 
+  // Which applications this service holds, asked of the entry adapters before
+  // any pass runs. The request pass records which application a call site is
+  // in, and the answer has to be the one the ids carry rather than a second
+  // reading of the same directories (R132).
+  recordApplications(base);
+
   for (const pass of BUILT_IN_PASSES) {
     base.logger.debug(`pass ${pass.name}`);
     pass.run(ctx);
@@ -161,6 +168,10 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     builder,
     adapters,
     logger,
+    // Where an adapter leaves what the rest of the reading needs from it. Empty
+    // here because nothing is known before the adapters are asked; the
+    // applications go in before the passes run.
+    meta: {},
   };
 
   // Before any adapter runs, because a file the parser could not read is a hole

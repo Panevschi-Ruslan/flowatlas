@@ -1,0 +1,594 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T15:28:47.212Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "admin#src/api/orders.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "admin",
+      "file": "src/api/orders.ts",
+      "line": 12
+    },
+    {
+      "id": "entry:shop@.:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders (.)",
+      "repo": "shop",
+      "file": "app/api/orders/route.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "application": ".",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop@.:http:GET:/api/posts",
+      "type": "entry",
+      "label": "GET /api/posts (.)",
+      "repo": "shop",
+      "file": "app/api/posts/route.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/posts",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "application": ".",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop@examples/blog:http:GET:/api/*",
+      "type": "entry",
+      "label": "GET /api/* (examples/blog)",
+      "repo": "shop",
+      "file": "examples/blog/src/app/api/[...slug]/route.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/*",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "application": "examples/blog",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop@examples/blog:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders (examples/blog)",
+      "repo": "shop",
+      "file": "examples/blog/src/app/api/orders/route.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "application": "examples/blog",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop@examples/template:http:GET:/api/*",
+      "type": "entry",
+      "label": "GET /api/* (examples/template)",
+      "repo": "shop",
+      "file": "examples/template/src/app/api/[...slug]/route.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/*",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "application": "examples/template",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "http_out:shop#app/orders-client.ts:8:24",
+      "type": "http_out",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "app/orders-client.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:shop#examples/blog/src/api-client.ts:12:24",
+      "type": "http_out",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 12,
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:shop#examples/blog/src/api-client.ts:17:24",
+      "type": "http_out",
+      "label": "GET /api/posts",
+      "repo": "shop",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 17,
+      "meta": {
+        "method": "GET",
+        "url": "/api/posts",
+        "path": "/api/posts",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:shop#examples/template/src/orders-client.ts:11:24",
+      "type": "http_out",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "examples/template/src/orders-client.ts",
+      "line": 11,
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "functions": 1,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 9,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop#app/api/orders/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "shop",
+      "file": "app/api/orders/route.ts",
+      "line": 2
+    },
+    {
+      "id": "shop#app/api/posts/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "shop",
+      "file": "app/api/posts/route.ts",
+      "line": 8
+    },
+    {
+      "id": "shop#app/orders-client.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "shop",
+      "file": "app/orders-client.ts",
+      "line": 7
+    },
+    {
+      "id": "shop#examples/blog/src/api-client.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "shop",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 11
+    },
+    {
+      "id": "shop#examples/blog/src/api-client.ts:listPosts",
+      "type": "function",
+      "label": "listPosts",
+      "repo": "shop",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 16
+    },
+    {
+      "id": "shop#examples/blog/src/app/api/[...slug]/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "shop",
+      "file": "examples/blog/src/app/api/[...slug]/route.ts",
+      "line": 8
+    },
+    {
+      "id": "shop#examples/blog/src/app/api/orders/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "shop",
+      "file": "examples/blog/src/app/api/orders/route.ts",
+      "line": 2
+    },
+    {
+      "id": "shop#examples/template/src/app/api/[...slug]/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "shop",
+      "file": "examples/template/src/app/api/[...slug]/route.ts",
+      "line": 5
+    },
+    {
+      "id": "shop#examples/template/src/orders-client.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "shop",
+      "file": "examples/template/src/orders-client.ts",
+      "line": 10
+    },
+    {
+      "id": "ui_api_call:admin#src/api/orders.ts:13:24",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "admin",
+      "file": "src/api/orders.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/orders-client.ts:8:24",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "app/orders-client.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "application": ".",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#examples/blog/src/api-client.ts:12:24",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "application": "examples/blog",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#examples/blog/src/api-client.ts:17:24",
+      "type": "ui_api_call",
+      "label": "GET /api/posts",
+      "repo": "shop",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/posts",
+        "path": "/api/posts",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "application": "examples/blog",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#examples/template/src/orders-client.ts:11:24",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "examples/template/src/orders-client.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "application": "examples/template",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "admin#src/api/orders.ts:listOrders",
+      "to": "ui_api_call:admin#src/api/orders.ts:13:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api/orders.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:shop@.:http:GET:/api/orders",
+      "to": "shop#app/api/orders/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:shop@.:http:GET:/api/posts",
+      "to": "shop#app/api/posts/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/posts/route.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:shop@examples/blog:http:GET:/api/*",
+      "to": "shop#examples/blog/src/app/api/[...slug]/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "examples/blog/src/app/api/[...slug]/route.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:shop@examples/blog:http:GET:/api/orders",
+      "to": "shop#examples/blog/src/app/api/orders/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "examples/blog/src/app/api/orders/route.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:shop@examples/template:http:GET:/api/*",
+      "to": "shop#examples/template/src/app/api/[...slug]/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "examples/template/src/app/api/[...slug]/route.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#app/orders-client.ts:listOrders",
+      "to": "http_out:shop#app/orders-client.ts:8:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/orders-client.ts",
+      "line": 8
+    },
+    {
+      "from": "shop#app/orders-client.ts:listOrders",
+      "to": "ui_api_call:shop#app/orders-client.ts:8:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/orders-client.ts",
+      "line": 8
+    },
+    {
+      "from": "shop#examples/blog/src/api-client.ts:listOrders",
+      "to": "http_out:shop#examples/blog/src/api-client.ts:12:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 12
+    },
+    {
+      "from": "shop#examples/blog/src/api-client.ts:listOrders",
+      "to": "ui_api_call:shop#examples/blog/src/api-client.ts:12:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 12
+    },
+    {
+      "from": "shop#examples/blog/src/api-client.ts:listPosts",
+      "to": "http_out:shop#examples/blog/src/api-client.ts:17:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 17
+    },
+    {
+      "from": "shop#examples/blog/src/api-client.ts:listPosts",
+      "to": "ui_api_call:shop#examples/blog/src/api-client.ts:17:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 17
+    },
+    {
+      "from": "shop#examples/template/src/orders-client.ts:listOrders",
+      "to": "http_out:shop#examples/template/src/orders-client.ts:11:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "examples/template/src/orders-client.ts",
+      "line": 11
+    },
+    {
+      "from": "shop#examples/template/src/orders-client.ts:listOrders",
+      "to": "ui_api_call:shop#examples/template/src/orders-client.ts:11:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "examples/template/src/orders-client.ts",
+      "line": 11
+    },
+    {
+      "from": "ui_api_call:shop#app/orders-client.ts:8:24",
+      "to": "entry:shop@.:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/orders-client.ts",
+      "line": 8,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#examples/blog/src/api-client.ts:12:24",
+      "to": "entry:shop@examples/blog:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 12,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#examples/blog/src/api-client.ts:17:24",
+      "to": "entry:shop@examples/blog:http:GET:/api/*",
+      "type": "hits",
+      "confidence": "static",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 17,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#examples/template/src/orders-client.ts:11:24",
+      "to": "entry:shop@examples/template:http:GET:/api/*",
+      "type": "hits",
+      "confidence": "static",
+      "file": "examples/template/src/orders-client.ts",
+      "line": 11,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "service": "admin",
+      "file": "src/api/orders.ts",
+      "line": 13,
+      "reason": "ambiguous-route-application",
+      "message": "2 applications serve GET /api/orders: ., examples/blog",
+      "hint": "Nothing is wrong with the route, and nothing here can choose between them: which of . and examples/blog a request reaches is decided by how they are deployed, and no source says.",
+      "symbol": "ui_api_call:admin#src/api/orders.ts:13:24"
+    },
+    {
+      "service": "shop",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 17,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all GET /api/* in shop's examples/blog application answers GET /api/posts",
+      "hint": "No route of shop's examples/blog application spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "ui_api_call:shop#examples/blog/src/api-client.ts:17:24"
+    }
+  ]
+}

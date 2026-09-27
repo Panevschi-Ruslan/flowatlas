@@ -1,4 +1,5 @@
 import {
+  applicationOfFile,
   makeExternalApiId,
   makeLeafId,
   methodBodies,
@@ -59,6 +60,7 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
     const at = siteOf(site);
     const leaf = makeLeafId('ui_api_call', ctx.repo, file, at.line, at.column);
     const id = requestIdOf(leaf, network, { frames, ...(choice === undefined ? {} : { choice }) });
+    const application = applicationOfFile(ctx.meta, file);
 
     ctx.builder.addNode({
       id,
@@ -79,6 +81,10 @@ export const ssePass = definePass('sse', (ctx: AngularExtractContext) => {
         bodyType: null,
         package: null,
         client: CLIENT,
+        // Which application this request is written in, where the service holds
+        // more than one; the other half of what an entry records about its own
+        // address (R132).
+        ...(application === undefined ? {} : { application }),
         via: address.via,
         ...(address.host === null ? {} : { host: address.host }),
         ...(address.guessed ? { guessed: true } : {}),

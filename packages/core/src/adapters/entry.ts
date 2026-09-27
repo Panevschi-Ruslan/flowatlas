@@ -1,3 +1,4 @@
+import type { ApplicationMap } from './applications.js';
 import type { FlowatlasConfig } from '../config.js';
 import type { EntryKind } from '../model/nodes.js';
 import type { ExtractContext } from './context.js';
@@ -119,4 +120,16 @@ export interface EntryAdapter {
    */
   detect(pkg: PackageJson, config?: FlowatlasConfig): boolean;
   extractEntries(ctx: ExtractContext): EntryNode[];
+  /**
+   * Which applications this adapter reads in the service, for whoever has to
+   * ask the question of something that is not an entry.
+   *
+   * Optional, and most adapters have nothing to say: a service with one address
+   * space answers every such question the same way, and an adapter that cannot
+   * tell one application from another should say nothing rather than invent a
+   * map. Answering is what lets a reader that knows nothing about this
+   * framework — the browser reader, recording which application a call site is
+   * in — get the same answer the ids carry, from the same reading.
+   */
+  applications?(ctx: ExtractContext): ApplicationMap | undefined;
 }

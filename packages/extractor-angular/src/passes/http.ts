@@ -1,4 +1,5 @@
 import {
+  applicationOfFile,
   declaredParameterType,
   evaluateExpression,
   forEachCall,
@@ -190,6 +191,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         ? typeOfBody(network, shape.bodyIndex)
         : bodyThrough(network, shape.bodyIndex, frames);
     const bodyType = body.type;
+    const application = applicationOfFile(ctx.meta, file);
 
     ctx.builder.addNode({
       id,
@@ -214,6 +216,10 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         // is sent, and the checker compares only these (R34).
         ...(body.keys === undefined ? {} : { bodyKeys: body.keys }),
         package: ANGULAR_HTTP,
+        // Which application this request is written in, where the service holds
+        // more than one; the other half of what an entry records about its own
+        // address (R132).
+        ...(application === undefined ? {} : { application }),
         via: address.via,
         ...(address.host === null ? {} : { host: address.host }),
         // Only ever set, never set to false: it is a mark on the few addresses

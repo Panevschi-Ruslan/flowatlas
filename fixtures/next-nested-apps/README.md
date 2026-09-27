@@ -39,18 +39,28 @@ rule, and they disagreed about what an address is; that is what R125 closed, by
 sending the file-system routers through the same `applicationsServing` that
 decides it for every other adapter (R119).
 
-What it costs, said out loud: two applications serving `/api/orders` is now two
-entries of equal specificity, so a request to `/api/orders` from inside either of
-them is ambiguous and the linker declines to choose — which is the right answer
-from where the linker stands, since nothing in the graph records which
-application a *call site* belongs to. It says so in a row of its own,
-`ambiguous-route-application`, naming both. That is a worse answer than choosing
-the caller's own application and a better one than the address being false.
+What it cost, said out loud: two applications serving `/api/orders` are two
+entries of equal specificity, so a request to `/api/orders` was ambiguous and the
+linker declined to choose — the right answer from where the linker stood, since
+nothing in the graph recorded which application a *call site* belonged to. It
+said so in a row of its own, `ambiguous-route-application`, naming both. On
+payload that turned thirty-six browser joins into forty-two of those rows, and
+thirty-five of the thirty-six had been answered only by a catch-all in another
+application.
 
-No caller is written here, so that cost is not asserted by this fixture — it is
-one repository and no link report. It is measured on payload, where the change
-turned thirty-six browser joins into forty-two of those rows, and thirty-five of
-the thirty-six had been answered only by a catch-all in another application.
+R132 is the missing input arriving, and the two callers here are it: each of the
+two applications writes `fetch('/api/orders')`, and each request node records the
+application its file belongs to — `.` and `examples/blog` — read the same way the
+entries are, through the same `applicationsServing`. A relative address asks the
+origin the page came from, so a caller inside an application means its own
+application's route and no deployment decides otherwise. What that buys is a
+join, and a join is a link report: it is asserted in `next-caller-application`,
+which is a project and has one. Note what the two request nodes here do *not*
+agree about — the `http_out` node beside each of them, the server half's reading
+of the same call, carries no application, because the map that half is handed is
+keyed by declaration rather than by directory.
+
+A request from *outside* every application is unchanged and still names both.
 
 The root application's handler calls `lib/orders-store.ts`, so the addresses that
 did survive are still joined to code, and the second application's handlers call

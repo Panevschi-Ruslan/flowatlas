@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T15:28:47.212Z",
+  "configHash": "18e25cffc093",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 496
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 23,
+      "edges": 13,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 511
+    }
+  ],
+  "httpOut": {
+    "total": 4,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 4
+  },
+  "ui": {
+    "total": 5,
+    "resolved": 4,
+    "unresolved": 1,
+    "byReason": {
+      "ambiguous-route-application": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 5,
+    "called": 4,
+    "uncalled": [
+      "entry:shop@.:http:GET:/api/posts"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "admin",
+      "file": "src/api/orders.ts",
+      "line": 13,
+      "reason": "ambiguous-route-application",
+      "message": "2 applications serve GET /api/orders: ., examples/blog",
+      "hint": "Nothing is wrong with the route, and nothing here can choose between them: which of . and examples/blog a request reaches is decided by how they are deployed, and no source says.",
+      "symbol": "ui_api_call:admin#src/api/orders.ts:13:24"
+    },
+    {
+      "service": "shop",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 17,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all GET /api/* in shop's examples/blog application answers GET /api/posts",
+      "hint": "No route of shop's examples/blog application spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "ui_api_call:shop#examples/blog/src/api-client.ts:17:24"
+    }
+  ],
+  "totals": {
+    "nodes": 26,
+    "edges": 18,
+    "types": 0,
+    "unresolved": 2
+  }
+}

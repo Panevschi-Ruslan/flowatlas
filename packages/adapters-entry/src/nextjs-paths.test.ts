@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fsAddressSpace, routePathOfFile } from './fs-routes.js';
+import { fsAddressSpace, fsApplicationMap, routePathOfFile } from './fs-routes.js';
 import { APP_PAGES, APP_ROUTER, PAGES_API } from './nextjs-paths.js';
 
 describe('routePathOfFile', () => {
@@ -45,13 +45,10 @@ describe('routePathOfFile', () => {
     // the id rather than the path. The judgement about whether an id carries one
     // at all is `applicationsServing`'s, which is why a service with a single
     // application is spelled exactly as it was before this change.
-    const one = fsAddressSpace(['app/api/orders/route.ts'], [APP_ROUTER]);
+    const one = fsAddressSpace(fsApplicationMap(['app/api/orders/route.ts'], [APP_ROUTER]));
     expect(one.addressOf('app/api/orders/route.ts', APP_ROUTER)).toEqual({ path: '/api/orders' });
 
-    const two = fsAddressSpace(
-      ['app/api/orders/route.ts', 'examples/blog/src/app/api/orders/route.ts'],
-      [APP_ROUTER],
-    );
+    const two = fsAddressSpace(fsApplicationMap(['app/api/orders/route.ts', 'examples/blog/src/app/api/orders/route.ts'], [APP_ROUTER]));
     expect(two.addressOf('app/api/orders/route.ts', APP_ROUTER)).toEqual({
       path: '/api/orders',
       application: '.',
@@ -68,10 +65,7 @@ describe('routePathOfFile', () => {
     // `app/` and `pages/api/` in one application are one address space, so the
     // two routers must not read as two applications — an id that named one of
     // them would be an id nothing else in the repository agrees with.
-    const space = fsAddressSpace(['app/api/orders/route.ts', 'pages/api/legacy.ts'], [
-      APP_ROUTER,
-      PAGES_API,
-    ]);
+    const space = fsAddressSpace(fsApplicationMap(['app/api/orders/route.ts', 'pages/api/legacy.ts'], [       APP_ROUTER,       PAGES_API,     ]));
     expect(space.addressOf('app/api/orders/route.ts', APP_ROUTER)).toEqual({ path: '/api/orders' });
     expect(space.addressOf('pages/api/legacy.ts', PAGES_API)).toEqual({ path: '/api/legacy' });
   });
