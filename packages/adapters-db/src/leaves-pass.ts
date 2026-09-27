@@ -40,6 +40,7 @@ import { dataNameHints, descriptorAliases, tableReadings } from './descriptors/i
 import { locateTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
 import { dataLayerOf } from './leaves/silence.js';
+import { statedOrigin } from './leaves/stated.js';
 import { analyzeUrl, routePathOf, type UrlInfo } from './leaves/url.js';
 import {
   deref,
@@ -321,21 +322,53 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return declaration.getSourceFile().getFilePath().includes('/node_modules/');
   };
 
+  /**
+   * Where a receiver's type comes from: the checker's answer, and the source's
+   * own when the checker gave nothing a descriptor could be found for.
+   *
+   * One place, because both calls that classify a receiver ask the same question
+   * and a second copy of the order they are asked in is a second answer waiting
+   * to differ. The checker always wins where it answers: an installed repository
+   * reads exactly as it did, and the fallback costs it nothing.
+   *
+   * `resolved` is handed back beside the answer because two different questions
+   * are asked of an origin. Which library to read the call with is answered by
+   * either of them; whether the receiver is a data layer of this repository -
+   * the class a reader would name in the configuration - is a fact about what
+   * the checker found here, and a stated origin is by definition a type this
+   * repository does not declare.
+   */
+  const originOf = (
+    receiver: TsNode,
+  ): { origin: TypeOrigin | null; resolved: TypeOrigin | null; fromSource: boolean } => {
+    const resolved = resolveTypeOrigin(receiver, { localBaseClasses });
+    if (descriptorFor(resolved) !== undefined) return { origin: resolved, resolved, fromSource: false };
+    const stated = statedOrigin(receiver);
+    // Only a library somebody has described. Where nobody has, nothing is known
+    // about the receiver's methods either, so reading its type off the source
+    // would change no answer and would only make a row say something new about
+    // a call it still could not read.
+    if (stated === null || descriptorFor(stated) === undefined) {
+      return { origin: resolved, resolved, fromSource: false };
+    }
+    return { origin: stated, resolved, fromSource: true };
+  };
+
   const emitDb = (call: CallExpression, scope: Scope): boolean => {
     const { id: holderId, file, owner } = scope;
     const callee = call.getExpression();
     if (!Node.isPropertyAccessExpression(callee)) return false;
     const receiver = callee.getExpression();
     const method = callee.getName();
-    const origin = resolveTypeOrigin(receiver, { localBaseClasses });
+    const { origin, resolved, fromSource } = originOf(receiver);
     const descriptor = descriptorFor(origin);
 
     // A data layer is something a class depends on. A call on `this` is a class
     // reaching into itself, which says nothing about whether what it stores can
     // be seen from outside.
     const layer =
-      origin?.isLocal === true && !Node.isThisExpression(receiver)
-        ? dataLayerNameOf(origin.declaration)
+      resolved?.isLocal === true && !Node.isThisExpression(receiver)
+        ? dataLayerNameOf(resolved.declaration)
         : undefined;
 
     // A repository base named in the configuration only applies to what extends it.
@@ -382,6 +415,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       ...(effective === undefined ? {} : { descriptor: effective }),
       receiverText: receiver.getText(),
       nameHints: dataNameHints,
+      ...(fromSource ? { originFromSource: true } : {}),
       ...(fromPackage === undefined ? {} : { entityFromPackage: fromPackage }),
       ...(parsedTables === undefined ? {} : { sqlTables: parsedTables }),
       ...(parsedOp === undefined ? {} : { sqlOp: parsedOp }),
@@ -952,7 +986,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         if (!Node.isCallExpression(node)) return;
         const callee = node.getExpression();
         if (!Node.isPropertyAccessExpression(callee)) return;
-        const origin = resolveTypeOrigin(callee.getExpression(), { localBaseClasses });
+        const { origin } = originOf(callee.getExpression());
         const descriptor = descriptorFor(origin);
         if (descriptor === undefined || operationOf(descriptor, callee.getName()) === null) return;
         const site = siteOf(ctx, node, file);

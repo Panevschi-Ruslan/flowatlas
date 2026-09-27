@@ -47,6 +47,14 @@ describe('operationOf', () => {
   it('says nothing about a method it does not know', () => {
     expect(operationOf(descriptor, 'explain')).toBeNull();
   });
+
+  // Both are methods real code calls on a real value, and a record written as an
+  // object literal answers them with the language's own. novu carried two query
+  // nodes labelled with the text of a native function until this was own-keys.
+  it('says nothing about a name the language answers for every object', () => {
+    expect(operationOf(descriptor, 'toString')).toBeNull();
+    expect(operationOf(descriptor, 'constructor')).toBeNull();
+  });
 });
 
 describe('classifying a call', () => {
