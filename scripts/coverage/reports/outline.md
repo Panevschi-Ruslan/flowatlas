@@ -7,7 +7,7 @@ Koa + React + socket.io + Sequelize in one repository.
 | repository | `outline/outline` |
 | commit | `aacc98475d1f5bb0f192665b539db00126d491ee` |
 | read | `.` |
-| read by | outline (`koa`, set; `link` guessed `react`) |
+| read by | outline (`koa`) |
 | source files counted | 2188 |
 | extent counted over | `.` alone (not a member of any workspace here) |
 | flowatlas | 0.4.1 |

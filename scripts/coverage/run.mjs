@@ -29,6 +29,11 @@
  * that is therefore not there - the report says so rather than quietly counting
  * it as a limit of the tool.
  *
+ * An install that *fails* is not one of those costs and is never written down as
+ * a measurement: `--install` refuses that target rather than answering it, or the
+ * file would carry fresh-clone figures under an installed heading. `install`
+ * below says which two ways that has already happened.
+ *
  * ## It measures the tool in the tree, or it refuses
  *
  * A fix that looks like it did nothing is the one failure a coverage harness must
@@ -360,6 +365,32 @@ const install = async (cloneDir, target, log) => {
       seconds: out.seconds,
       note: out.code === 0 ? null : tail(out.stderr, 4) || tail(out.stdout, 4) || 'no message',
     });
+  }
+  // An install that did not install is not a with-deps measurement.
+  //
+  // `--install` asks a different question from a fresh clone, and the answer is
+  // only worth writing down if the state it names was established. A non-zero
+  // install leaves a tree with no `node_modules` and a report whose heading says
+  // the opposite - every figure in it a fresh-clone figure filed as an installed
+  // one. That has now happened twice: once because Yarn 2 rejects
+  // `--ignore-scripts` and ended the install in a sixth of a second, and once
+  // because `yarn` was not on the machine at all and exited 127 in less than
+  // that, while the run printed `installing . with yarn-berry`, wrote the
+  // report, and removed the notice saying the file had not been measured here.
+  // So the target is refused the way a failed clone is: no report is
+  // overwritten, the run exits non-zero, and the message names the manager and
+  // what it said.
+  //
+  // A crashed *build* is the opposite case and stays a measured outcome: a tool
+  // that dies on a real repository is the most important thing a coverage report
+  // can say. The difference is whose failure it is - the build is what is being
+  // measured, and the install is only the state it is measured in.
+  const broken = results.filter((result) => result.code !== 0);
+  if (broken.length > 0) {
+    const said = broken
+      .map(({ where, manager, code, note }) => `${where} with ${manager} exited ${code}: ${note}`)
+      .join('; ');
+    throw new Error(`dependencies were not installed, so there is nothing to measure. ${said}`);
   }
   return results;
 };
