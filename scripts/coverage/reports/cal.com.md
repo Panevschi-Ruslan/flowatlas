@@ -2,6 +2,12 @@
 
 Next.js in a monorepo, tRPC, wrapped Prisma.
 
+A fresh clone is a partial read by construction: nothing a package declares
+is resolved, so every figure below is a floor for this tool rather than a
+measurement of it. What it still reads is what the repository’s own source
+states. Installing would recover what a package *declares* - never what a
+package *generates*, which `--ignore-scripts` leaves out of both states here.
+
 |  |  |
 |---|---|
 | repository | `calcom/cal.com` |
@@ -21,16 +27,24 @@ build **exit 0**, doctor exit 0, link exit 0
 | kind | entry points |
 |---|---|
 | http | 84 |
-| rpc | 13 |
+| rpc | 190 |
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
 handlers, which is what the counting rule counts, because two declarations may
-land on one address.
+land on one address. An address is an address within one application: a service
+that creates two of them has two address spaces, and the third row counts the
+addresses that exist only because the id says which application serves them —
+every one of which used to be overwritten by the first claim on it. It counts for
+every reader now: a file-system router used to put the application in the *path*
+instead, which kept its ids apart at the price of an address no framework serves,
+and R125 made it answer the same way as everything else. That is why a repository
+addressed that way reads zero here before R125 and its true number after.
 
 |  | count | of what the counting rule found |
 |---|---|---|
 | addresses placed | 84 |  |
-| addresses claimed by more than one declaration | 0 | a collision, or one service holding two applications |
+| addresses claimed by more than one declaration | 0 | two handlers of one application; one of them is dead code |
+| addresses told apart only by their application | 0 | each was overwritten before R119, silently and with no total moving |
 | declarations with a body attached | 50 | 50 of 82 |
 | …whose body reaches anything | 41 | 41 of 82 |
 | …behind middleware or a guard | 0 | 0 of 82 |
@@ -64,7 +78,7 @@ is not a diff.
 
 ## What it could not read
 
-1393 places somebody could act on, 3001 the tool
+1427 places somebody could act on, 3026 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -72,11 +86,14 @@ was never an edge to draw. The three are never added together.
 |---|---|---|---|
 | api-method-dynamic | action | 2 |  |
 | api-path-dynamic | action | 27 |  |
-| call-dynamic-receiver | info | 2927 |  |
+| bootstrap-not-found | action | 1 |  |
+| call-dynamic-receiver | info | 2951 |  |
 | db-layer-unread | action | 16 |  |
-| db-receiver-name-only | action | 416 |  |
+| db-receiver-name-only | action | 420 |  |
 | dynamic-config-key | action | 2 |  |
 | dynamic-http-url | action | 31 |  |
+| entry-http-types-unmatched | info | 1 |  |
+| procedure-router-unread | action | 29 |  |
 | route-handler-unread | action | 36 |  |
 | route-wildcard-only | action | 16 |  |
 | server-action-unread | action | 2 |  |
@@ -88,10 +105,12 @@ was never an edge to draw. The three are never added together.
 
 ## Files with sites and no output
 
-**243 file(s)** the counting rule found sites in yielded neither
-a node of that family nor any row naming them. That is a reader giving up in
-silence, which is the class this gate exists for; a limit somebody has decided to
-accept belongs in the exemption list with a sentence beside it.
+**242 file(s)** the counting rule found sites in yielded neither
+a node of that family nor any row naming them, and no baseline entry accounts for
+them. That is a reader giving up in silence, which is the class this gate exists
+for; a limit somebody has decided to accept belongs in the exemption list with a
+sentence beside it, and a limit somebody has decided to live with belongs in the
+baseline with a count and a ticket.
 
 | file | family | sites |
 |---|---|---|
@@ -108,7 +127,30 @@ accept belongs in the exemption list with a sentence beside it.
 | `apps/web/app/api/link/route.ts` | data | 2 |
 | `apps/web/app/api/me/route.ts` | data | 1 |
 
-and 231 more.
+and 230 more.
+
+### What this gate cannot see
+
+Whatever the result above says, 4 kinds of failure get through this
+assertion, and each was established by breaking something on purpose rather than
+by argument. The list is `BLIND` in `read-gate.mjs`; this section renders it,
+so that neither half of the result can travel without the other.
+
+**R117 - A family this target writes in a style the counting rule has no probe for.**
+
+A query count fell from 77 to 0 on one target and this gate could not have caught it: the rule has no probe for that repository’s query style, so the denominator was 0 and the per-file assertion had nothing to assert over. A vacuous check passes by saying nothing and reads exactly like a check that looked. The instrument for that is the report’s own wording - "no denominator: the rule has no probe for it" rather than "nothing of this kind here" - and not this gate.
+
+**R119 - Two applications colliding, where the file that loses is named by an edge.**
+
+A graph was broken on purpose - two applications collided and one controller’s file contributed nothing - and the gate answered `read gate ok`. The mechanism is structural rather than a tuning problem: the surviving entry takes a `handles` edge to *each* controller’s method, an edge recorded at a site counts as the reader having read that line, so `spokenFor` contains the losing file and the gate skips it. Strength 2 asks whether anything was said about a file; a collision is two files having the same thing said about them. R119 needed a snapshot fixture for exactly this reason.
+
+**R110 - A wrong value.**
+
+A mount read at the wrong address produces a node, in the right file, for the right family, and every count matches. Only a reader that can read the mount can know the address is wrong, so this is a fix and not a gate.
+
+**R111 - A file where one of three verbs was dropped (strength 3, deliberately not done).**
+
+Strength 3 would compare sites found against nodes plus rows per file. It needs a probe-to-adapter mapping, and the counting rule’s whole authority rests on having no per-target judgement in it; that mapping is new judgement in exactly that file, and somewhere a future change could be tuned to pass rather than fixed. Recorded as not done rather than left to be rediscovered.
 
 ## The denominators
 

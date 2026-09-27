@@ -2,13 +2,6 @@
 
 NestJS, versioning, deep-subpath imports.
 
-> **Not measured on this branch, and not to be quoted.** Every figure below was
-> produced on one branch carrying one fix, and the sixteen reports' merge was
-> resolved file by file, so no number here is true of this tree (R113, fifth
-> row). The fresh-clone report beside this one has been re-measured; this one
-> needs a dependency install on the whole repository, which nobody has paid for
-> yet. Regenerate it with `pnpm coverage:deps --target <name>`, which overwrites
-> this notice along with the figures.
 
 |  |  |
 |---|---|
@@ -16,7 +9,8 @@ NestJS, versioning, deep-subpath imports.
 | commit | `85ae4fdfcd12b1189633b0bc369c23a76883d76f` |
 | read | `apps/api` |
 | read by | api-service (`nestjs`) |
-| source files counted | 1872 |
+| source files counted | 4984 |
+| extent counted over | `apps/api` plus 23 declared package(s): `enterprise/packages/ai`, `enterprise/packages/api`, `enterprise/packages/auth`, `enterprise/packages/billing`, `enterprise/packages/shared-services`, `enterprise/packages/translation`, `libs/application-generic`, `libs/dal`, `libs/internal-sdk`, `libs/maily-render`, `libs/maily-tsconfig`, `libs/notifications`, `libs/testing`, `packages/agent-event-protocol`, `packages/chat-adapter-email`, `packages/chat-adapter-photon-imessage`, `packages/chat-adapter-sendblue`, `packages/chat-adapter-web-chat`, `packages/framework`, `packages/novu`, `packages/providers`, `packages/shared`, `packages/stateless` |
 | flowatlas | 0.4.1 |
 
 ## Outcome
@@ -33,60 +27,118 @@ build **exit 0**, doctor exit 0, link exit 0
 
 | kind | entry points |
 |---|---|
-| http | 420 |
+| http | 456 |
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
 handlers, which is what the counting rule counts, because two declarations may
-land on one address.
+land on one address. An address is an address within one application: a service
+that creates two of them has two address spaces, and the third row counts the
+addresses that exist only because the id says which application serves them —
+every one of which used to be overwritten by the first claim on it. It counts for
+every reader now: a file-system router used to put the application in the *path*
+instead, which kept its ids apart at the price of an address no framework serves,
+and R125 made it answer the same way as everything else. That is why a repository
+addressed that way reads zero here before R125 and its true number after.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| addresses placed | 420 |  |
-| declarations with a body attached | 434 | 434 of 456 |
-| …whose body reaches anything | 391 | 391 of 456 |
-| …behind middleware or a guard | 403 | 403 of 456 |
+| addresses placed | 456 |  |
+| addresses claimed by more than one declaration | 3 | two handlers of one application; one of them is dead code |
+| addresses told apart only by their application | 0 | each was overwritten before R119, silently and with no total moving |
+| declarations with a body attached | 459 | 459 of 464 |
+| …whose body reaches anything | 407 | 407 of 464 |
+| …behind middleware or a guard | 424 | 424 of 464 |
+
+Where those addresses are. One row per leading segment, which is enough of an
+address for a dropped global prefix to show and little enough that a new route
+is not a diff.
+
+| first segment | addresses |
+|---|---|
+| `/${…}v1` | 386 |
+| `/${…}v2` | 69 |
+
+1 more at 1 segment(s) of fewer than five addresses each, folded together so that a repository serving two hundred addresses at the top level does not write two hundred rows.
 
 ## What joined
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 0 | 0 |
-| requests between services | 71 | 0 |
+| requests from a browser | 96 | 0 |
+| requests between services | 193 | 0 |
 | channels | 0 | 0 with both ends |
 
 ## Storage and screens
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 1281 | no denominator: the rule has no probe for it |
-| …that name a table | 0 | 0 of 1281 |
-| tables | 0 | nothing of this kind here |
-| components | 0 | nothing of this kind here |
+| query sites read | 100 | no denominator: the rule has no probe for it |
+| …that name a table | 61 | 61 of 100 |
+| tables | 20 | no denominator: the rule has no probe for it |
+| components | 213 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
-| every other binding a template makes | 0 | not counted by the rule |
+| every other binding a template makes | 62 | not counted by the rule |
 
 ## What it could not read
 
-5182 places somebody could act on, 2156 the tool
+6720 places somebody could act on, 2922 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| call-dynamic-receiver | info | 1440 |  |
-| call-module-ref | action | 27 |  |
-| db-receiver-name-only | action | 1281 |  |
-| di-token-ambiguous | action | 2 |  |
-| di-token-unknown | action | 13 |  |
-| di-type-unresolved | action | 1377 |  |
-| dynamic-config-key | action | 4 |  |
-| dynamic-http-url | action | 15 |  |
+| api-method-dynamic | action | 1 |  |
+| api-path-dynamic | action | 12 |  |
+| call-dynamic-receiver | info | 2036 |  |
+| call-module-ref | action | 33 |  |
+| channel-dynamic | action | 2 |  |
+| db-layer-unread | action | 4 |  |
+| db-receiver-name-only | action | 1616 |  |
+| di-token-ambiguous | action | 3 |  |
+| di-token-unknown | action | 24 |  |
+| di-type-unresolved | action | 1501 |  |
+| dynamic-cache-key | action | 25 |  |
+| dynamic-config-key | action | 22 |  |
+| dynamic-http-url | action | 37 |  |
+| dynamic-table-name | action | 39 |  |
+| entry-http-routes-unmatched | info | 1 |  |
+| entry-http-types-unmatched | info | 1 |  |
+| module-controllers-unread | action | 1 |  |
 | module-import-dynamic | action | 9 |  |
 | route-path-dynamic | action | 1 |  |
-| type-depth-exceeded | info | 369 |  |
-| type-generic-uninstantiated | info | 347 |  |
-| type-unresolved | action | 2448 |  |
-| unknown-base-url-env | action | 5 |  |
+| target-route-not-found | action | 60 |  |
+| type-depth-exceeded | info | 401 |  |
+| type-generic-uninstantiated | info | 483 |  |
+| type-unresolved | action | 3316 |  |
+| unknown-base-url-env | action | 14 |  |
+
+## Files with sites and no output
+
+None beyond what is baselined. Every other file the counting rule found a
+declaration site in yielded a node of that family, or a row naming the file.
+
+### What this gate cannot see
+
+Whatever the result above says, 4 kinds of failure get through this
+assertion, and each was established by breaking something on purpose rather than
+by argument. The list is `BLIND` in `read-gate.mjs`; this section renders it,
+so that neither half of the result can travel without the other.
+
+**R117 - A family this target writes in a style the counting rule has no probe for.**
+
+A query count fell from 77 to 0 on one target and this gate could not have caught it: the rule has no probe for that repository’s query style, so the denominator was 0 and the per-file assertion had nothing to assert over. A vacuous check passes by saying nothing and reads exactly like a check that looked. The instrument for that is the report’s own wording - "no denominator: the rule has no probe for it" rather than "nothing of this kind here" - and not this gate.
+
+**R119 - Two applications colliding, where the file that loses is named by an edge.**
+
+A graph was broken on purpose - two applications collided and one controller’s file contributed nothing - and the gate answered `read gate ok`. The mechanism is structural rather than a tuning problem: the surviving entry takes a `handles` edge to *each* controller’s method, an edge recorded at a site counts as the reader having read that line, so `spokenFor` contains the losing file and the gate skips it. Strength 2 asks whether anything was said about a file; a collision is two files having the same thing said about them. R119 needed a snapshot fixture for exactly this reason.
+
+**R110 - A wrong value.**
+
+A mount read at the wrong address produces a node, in the right file, for the right family, and every count matches. Only a reader that can read the mount can know the address is wrong, so this is a fix and not a gate.
+
+**R111 - A file where one of three verbs was dropped (strength 3, deliberately not done).**
+
+Strength 3 would compare sites found against nodes plus rows per file. It needs a probe-to-adapter mapping, and the counting rule’s whole authority rests on having no per-target judgement in it; that mapping is new judgement in exactly that file, and somewhere a future change could be tuned to pass rather than fixed. Recorded as not done rather than left to be rediscovered.
 
 ## The denominators
 
@@ -95,9 +147,9 @@ applied identically to all eight targets and knows nothing about any of them.
 
 | probe | what it counts | sites |
 |---|---|---|
-| `nest-route-decorator` | an HTTP method decorator on a controller method | 456 |
+| `nest-route-decorator` | an HTTP method decorator on a controller method | 459 |
 | `registered-route-call` | a verb called on a router or an application | 0 |
-| `exported-verb-handler` | an exported handler named for an HTTP verb | 0 |
+| `exported-verb-handler` | an exported handler named for an HTTP verb | 5 |
 | `pages-api-module` | a file under `pages/api` that default-exports a handler | 0 |
 | `component-declaration` | an Angular component declaration | 0 |
 | `template-click-binding` | a click bound in a template | 0 |
@@ -107,15 +159,21 @@ applied identically to all eight targets and knows nothing about any of them.
 
 | family | sites |
 |---|---|
-| ways in over HTTP | 456 |
+| ways in over HTTP | 464 |
 | screens | 0 |
 | things a person can click | 0 |
 | places the code reaches storage | 0 |
 | tables or models declared (an upper bound) | 0 |
 
+Counted over the extent named at the top of this report - the read directory and
+the workspace packages it declares - because that is what the tool reads. A
+denominator counted over the read directory alone put more found than there was
+to find, and `extent.mjs` says why the rule works the extent out from the
+repository's manifests instead of asking the tool for it.
+
 ## Cost
 
-Wall clock 5 to 15 s, peak resident memory 1 to 2 GB.
+Wall clock 15 to 60 s, peak resident memory 3 to 4 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.
