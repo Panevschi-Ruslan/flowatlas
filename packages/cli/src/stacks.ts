@@ -1,84 +1,28 @@
 import { allDependencies, type PackageJson } from '@flowatlas/core';
-
-/**
- * Which half of a repository a type's reader is the reader of.
- *
- * A repository can honestly be both halves at once - a server and the browser
- * that talks to it, in one directory, sharing one manifest - and this column is
- * the whole of what decides which reader it gets. A server type's reader opens
- * every kind of TypeScript source and hands the browser half to whichever
- * frontend adapter recognises it, so it can answer for both halves of one
- * directory; a browser type's reader can answer for one. So where both halves
- * are declared the reader that reads both wins, and a repository that is only a
- * browser still gets the reader that is only a browser's.
- *
- * Written down rather than left to the order of the rows, which is what it used
- * to be. outline declares Koa and React in one directory and React sat above Koa
- * for a reason that had nothing to do with either, so its data layer, its
- * channels and the bodies behind its routes - 1,197 query sites, 33 channels and
- * 249 handlers of 257 - turned on which of the two rows somebody had typed first
- * (R88). Order can say "the more specific of two servers"; it cannot say "both
- * halves are here", because that is not a fact about either row.
- *
- * `build/extractor.ts` states the same fact in the other direction - which types
- * each reader handles - and `stacks.test.ts` holds the two to each other, so a
- * type that moves from one reader to the other cannot leave this column behind.
- */
-type Half = 'server' | 'browser';
-
-/** One row: a type, the dependency that gives it away, and the half it reads. */
-type Signature = readonly [type: string, dependency: string, half: Half];
-
-/**
- * Service types `init` and `link` can suggest, and the dependency that gives
- * each one away.
- *
- * The list lives here rather than in the core on purpose: the core must not
- * know the name of any framework, and `type` stays an open string so that a
- * value it has never heard of is still a valid configuration. A repository whose
- * way in is described in configuration rather than declared as a dependency is
- * not in this table at all, for the same reason: nothing here gives it away.
- */
-export const TYPE_SIGNATURES: readonly Signature[] = [
-  // Within a half, order is specificity and nothing else, and NestJS comes first
-  // for that reason: `@nestjs/platform-express` brings Express with it, and a
-  // Nest application that declares `express` is a Nest application. Across the
-  // halves order decides nothing, which is the point of the column.
-  ['nestjs', '@nestjs/core', 'server'],
-  // Above Express for the same reason, and above React for a second one: this
-  // framework brings Express with it and never registers a route on it - its
-  // routes are the paths of its files - and its admin panel is React, so a
-  // repository built on it declares two dependencies that both describe
-  // something it is not. Read as Express it produced one route of four hundred
-  // and eighty-eight; read as React it would lose every query site it has. A
-  // dependency is not a stack, and this is the row that says so (R91).
-  ['medusa', '@medusajs/framework', 'server'],
-  ['medusa', '@medusajs/medusa', 'server'],
-  // The file-system router is a server type although it is also a browser: it is
-  // both halves in one directory, and the reader that reads both is the server
-  // one. It used to earn its place by sitting above `react`; it earns it here by
-  // being what it is.
-  ['nextjs', 'next', 'server'],
-  ['express', 'express', 'server'],
-  ['fastify', 'fastify', 'server'],
-  ['koa', 'koa', 'server'],
-  ['angular', '@angular/core', 'browser'],
-  ['react', 'react', 'browser'],
-];
-
-const inHalf = (half: Half): readonly Signature[] =>
-  TYPE_SIGNATURES.filter(([, , each]) => each === half);
+import { halfOf, rowsInHalf, type ReaderRow } from './readers.js';
 
 /**
  * The rows in the order the rule asks them: everything that can read both
  * halves, and only then everything that can read one.
+ *
+ * A repository can honestly be both halves at once - a server and the browser
+ * that talks to it, in one directory, sharing one manifest - and which half a
+ * type's reader reads is the whole of what decides which reader it gets. Where
+ * both halves are declared the reader that reads both wins, and a repository
+ * that is only a browser still gets the reader that is only a browser's.
+ *
+ * That fact is declared once, in `readers.ts`, beside the reader it follows
+ * from; this file asks that table and restates nothing out of it, which is what
+ * it used to do (R118). And it is asked rather than left to the order of the
+ * rows, which is what it used to be: outline declares Koa and React in one
+ * directory and React sat above Koa for a reason that had nothing to do with
+ * either, so its data layer, its channels and the bodies behind its routes -
+ * 1,197 query sites, 33 channels and 249 handlers of 257 - turned on which of the
+ * two rows somebody had typed first (R88). Order can say "the more specific of
+ * two servers"; it cannot say "both halves are here", because that is not a fact
+ * about either row.
  */
-const READS_BOTH_FIRST = [...inHalf('server'), ...inHalf('browser')];
-
-/** The half a type's reader reads, for a type this table knows. */
-const HALF_OF: Readonly<Record<string, Half>> = Object.freeze(
-  Object.fromEntries(TYPE_SIGNATURES.map(([type, , half]) => [type, half])),
-);
+const READS_BOTH_FIRST: readonly ReaderRow[] = [...rowsInHalf('server'), ...rowsInHalf('browser')];
 
 export const UNKNOWN_TYPE = 'unknown';
 
@@ -88,7 +32,7 @@ export const UNKNOWN_TYPE = 'unknown';
  * Knowing the name of a stack it cannot read is worth as much as knowing one it
  * can: a repository that contributes nothing to the graph should say which
  * repository and why, rather than leave somebody to work out that half their
- * routes are missing. These are consulted only once `TYPE_SIGNATURES` has found
+ * routes are missing. These are consulted only once `READERS` has found
  * nothing, so a repository whose framework is read is never named here on the
  * strength of a second dependency it happens to declare.
  */
@@ -137,9 +81,9 @@ export const guessType = (pkg: PackageJson): string =>
  * can explain the guess to somebody who can see both names in the manifest.
  */
 const otherHalf = (pkg: PackageJson, type: string): string | undefined => {
-  const half = HALF_OF[type];
+  const half = halfOf(type);
   if (half === undefined) return undefined;
-  return firstMatch(pkg, inHalf(half === 'server' ? 'browser' : 'server'));
+  return firstMatch(pkg, rowsInHalf(half === 'server' ? 'browser' : 'server'));
 };
 
 /** Keys by which a package offers itself to be imported under its name. */
@@ -185,10 +129,10 @@ const importableByName = (pkg: PackageJson): boolean => {
  *
  * Widening every member's manifest instead has been measured and it is wrong
  * here. `packages/medusa` declares Express, the monorepo root carries React in
- * its tooling, and the table above ranks React above Express because a repository
- * that declares both is usually the browser half; such a member read from a
- * widened manifest is handed to the browser reader and loses every query site it
- * has. The table is the reason, so the guard belongs beside the table: what a
+ * its tooling, and the table this reads ranked React above Express because a
+ * repository that declares both is usually the browser half; such a member read
+ * from a widened manifest is handed to the browser reader and loses every query
+ * site it has. The table is the reason, so the guard belongs beside it: what a
  * service is built on is answered from the manifest of the service, and the root
  * is consulted only where the service's own manifest says nothing whatsoever.
  *
