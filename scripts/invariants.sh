@@ -8,6 +8,7 @@
 # I11 fixture snapshots carry the current schema version
 # I12 no extractor is reachable from a sibling extractor
 # I13 every reason a row carries is a reason doctor knows
+# I14 the coverage harness and the tool agree what a service is
 #
 # Usage: invariants.sh [--root DIR] [--only NAME]
 #
@@ -125,9 +126,23 @@ check_I13() {
   return 1
 }
 
+# The coverage harness works out a service's extent from the repository's
+# manifests rather than asking the tool, so that a denominator can disagree with
+# the numerator; the price is two implementations of one question, and this is
+# what is paid instead of letting them drift in silence. The script explains the
+# trade and what it can and cannot see.
+check_I14() {
+  echo "I14 the coverage harness and the tool agree what a service is"
+  if node scripts/check-coverage-extent.mjs; then
+    echo "    ok"
+    return 0
+  fi
+  return 1
+}
+
 # The gates, in the order they are reported. A list and a name per function
 # rather than a run of branches, so adding one is adding a name.
-CHECKS='I1 I2 I11 I12 I13'
+CHECKS='I1 I2 I11 I12 I13 I14'
 
 for name in $CHECKS; do
   [ -n "$only" ] && [ "$only" != "$name" ] && continue

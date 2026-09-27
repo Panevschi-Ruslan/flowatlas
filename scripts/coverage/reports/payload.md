@@ -9,6 +9,7 @@ Next.js, nested application roots, a heap the default limit does not hold.
 | read | `.` |
 | read by | payload-monorepo (`nextjs`) |
 | source files counted | 4459 |
+| extent counted over | `.` alone (not a member of any workspace here) |
 | flowatlas | 0.4.1 |
 
 ## Outcome
@@ -29,15 +30,29 @@ land on one address.
 |  | count | of what the counting rule found |
 |---|---|---|
 | addresses placed | 288 |  |
-| declarations with a body attached | 288 | 288 of 128 |
+| addresses claimed by more than one declaration | 0 | a collision, or one service holding two applications |
+| declarations with a body attached | 288 | 288 against 128: **more found than the rule can see, so this is not a fraction** |
 | …whose body reaches anything | 65 | 65 of 128 |
 | …behind middleware or a guard | 0 | 0 of 128 |
+
+Where those addresses are. One row per leading segment, which is enough of an
+address for a dropped global prefix to show and little enough that a new route
+is not a diff.
+
+| first segment | addresses |
+|---|---|
+| `/api` | 8 |
+| `/examples` | 111 |
+| `/templates` | 110 |
+| `/test` | 58 |
+
+1 more at 1 segment(s) of fewer than five addresses each, folded together so that a repository serving two hundred addresses at the top level does not write two hundred rows.
 
 ## What joined
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 159 | 0 |
+| requests from a browser | 160 | 36 |
 | requests between services | 161 | 0 |
 | channels | 0 | 0 with both ends |
 
@@ -45,8 +60,8 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 313 | no denominator: the rule has no probe for it |
-| …that name a table | 0 | 0 of 313 |
+| query sites read | 0 | nothing of this kind here |
+| …that name a table | 0 | nothing of this kind here |
 | tables | 0 | 0 of 2 |
 | components | 1915 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
@@ -54,22 +69,39 @@ land on one address.
 
 ## What it could not read
 
-657 places somebody could act on, 560 the tool
+894 places somebody could act on, 560 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| api-path-dynamic | action | 74 |  |
+| api-client-unread | action | 1 |  |
+| api-path-dynamic | action | 75 |  |
 | call-dynamic-receiver | info | 553 |  |
-| db-receiver-name-only | action | 313 |  |
+| db-package-unread | action | 1 |  |
+| db-receiver-name-only | action | 289 |  |
 | dynamic-config-key | action | 7 |  |
 | dynamic-http-url | action | 74 |  |
-| target-route-not-found | action | 68 |  |
+| route-handler-unread | action | 259 |  |
+| route-wildcard-only | action | 35 |  |
+| target-route-not-found | action | 32 |  |
 | type-depth-exceeded | info | 1 |  |
 | type-generic-uninstantiated | info | 6 |  |
 | type-unresolved | action | 98 |  |
 | unknown-base-url-env | action | 23 |  |
+
+## Files with sites and no output
+
+**3 file(s)** the counting rule found sites in yielded neither
+a node of that family nor any row naming them. That is a reader giving up in
+silence, which is the class this gate exists for; a limit somebody has decided to
+accept belongs in the exemption list with a sentence beside it.
+
+| file | family | sites |
+|---|---|---|
+| `(anywhere)` | models | 2 |
+| `packages/next/src/routes/rest/index.ts` | routes | 6 |
+| `templates/ecommerce/src/app/(app)/next/exit-preview/GET.ts` | routes | 1 |
 
 ## The denominators
 
@@ -95,6 +127,12 @@ applied identically to all eight targets and knows nothing about any of them.
 | things a person can click | 0 |
 | places the code reaches storage | 0 |
 | tables or models declared (an upper bound) | 2 |
+
+Counted over the extent named at the top of this report - the read directory and
+the workspace packages it declares - because that is what the tool reads. A
+denominator counted over the read directory alone put more found than there was
+to find, and `extent.mjs` says why the rule works the extent out from the
+repository's manifests instead of asking the tool for it.
 
 ## Cost
 

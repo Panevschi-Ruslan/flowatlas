@@ -30,6 +30,58 @@ const outCount = (index, id, type) => index.out.get(id)?.get(type) ?? 0;
 const DOES_SOMETHING = ['calls', 'queries', 'http_calls', 'emits', 'caches', 'reads_config'];
 
 /**
+ * The address of an HTTP entry point, as the tool placed it.
+ *
+ * From the node's own metadata where it is there, and otherwise off the key half
+ * of its id, which is `METHOD:/path` by construction. Two spellings of one fact
+ * and both are read, because a figure that silently became zero when one reader
+ * stopped setting the metadata would be the defect this file exists to avoid.
+ */
+const addressOf = (node) => {
+  const declared = node.meta?.path;
+  if (typeof declared === 'string' && declared !== '') return declared;
+  const key = node.id.split(':').slice(4).join(':');
+  return key === '' ? '/' : key;
+};
+
+/**
+ * Addresses counted by their first segment, with the small ones folded.
+ *
+ * This is the smallest thing that makes a lost prefix visible. All of immich's
+ * two hundred and ninety-two paths gaining an `/api` moved no figure in any
+ * report, because no report printed any part of an address; printing every path
+ * would swamp the diff and make every new route a changed file. One row per
+ * leading segment is bounded, and a prefix appearing or disappearing moves every
+ * one of those rows at once, which is exactly the shape of that regression.
+ *
+ * Segments with fewer than `FOLD_BELOW` addresses are counted together rather
+ * than listed, so a repository that serves two hundred addresses at the top
+ * level does not write two hundred rows. The fold is by size, and the rows that
+ * survive it are still ordered by name, so one segment growing does not reorder
+ * anything.
+ */
+const FOLD_BELOW = 5;
+
+const addressShapes = (nodes) => {
+  const counted = new Map();
+  for (const node of nodes) {
+    const address = addressOf(node);
+    const [, first = ''] = address.replace(/^[A-Z]+:/, '').split('/');
+    const segment = first === '' ? '/' : `/${first}`;
+    counted.set(segment, (counted.get(segment) ?? 0) + 1);
+  }
+  const listed = [...counted]
+    .filter(([, count]) => count >= FOLD_BELOW)
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([segment, count]) => ({ segment, addresses: count }));
+  const rest = [...counted].filter(([, count]) => count < FOLD_BELOW);
+  return {
+    listed,
+    folded: { segments: rest.length, addresses: rest.reduce((sum, [, count]) => sum + count, 0) },
+  };
+};
+
+/**
  * A route at the four numbers it is at, which are not one number.
  *
  * `addresses` is how many distinct addresses the tool placed an entry point at.
@@ -42,6 +94,11 @@ const DOES_SOMETHING = ['calls', 'queries', 'http_calls', 'emits', 'caches', 're
  * count of declarations would report eleven routes as missed that were read in
  * full.
  *
+ * `duplicated` and `shapes` are here for a class of regression the first version
+ * of this file could not show at all: a route collapsing onto another one's
+ * address, and a global prefix silently dropped. Fourteen of novu's routes were
+ * claimed by two handlers each and every figure in its report stayed put.
+ *
  * `withBody` is a declaration whose handler the tool actually found; `reaching`
  * is one whose handler goes on to call, query, request, publish, cache or read
  * a setting. A report that printed only `addresses` would say cal.com is
@@ -50,7 +107,8 @@ const DOES_SOMETHING = ['calls', 'queries', 'http_calls', 'emits', 'caches', 're
  */
 const routes = (graph, index) => {
   const entries = graph.nodes.filter((node) => node.type === 'entry');
-  const http = new Set(entries.filter((node) => node.kind === 'http').map((node) => node.id));
+  const httpNodes = entries.filter((node) => node.kind === 'http');
+  const http = new Set(httpNodes.map((node) => node.id));
   const handled = graph.edges.filter((edge) => edge.type === 'handles' && http.has(edge.from));
   const reaching = handled.filter((edge) =>
     DOES_SOMETHING.some((type) => outCount(index, edge.to, type) > 0),
@@ -69,12 +127,30 @@ const routes = (graph, index) => {
   for (const node of entries) {
     byKind[node.kind ?? 'unknown'] = (byKind[node.kind ?? 'unknown'] ?? 0) + 1;
   }
+  // Addresses two or more declarations both claim.
+  //
+  // Not an error figure, and it would be wrong to print it as one. Two things
+  // land here and the graph cannot tell them apart: a route wrongly collapsed
+  // onto another one's address, which is what fourteen of novu's were, and two
+  // applications inside one service each serving the same address, which is
+  // what eleven of immich's are - a controller mounted in the application and
+  // again in a maintenance worker. An address is identified by its service and
+  // its path, so a second application in the same service is invisible to it.
+  //
+  // What it is for is movement. Fourteen becoming three is the whole of R89 and
+  // no figure in any report moved when it happened; now that line moves. Making
+  // it an assertion would need the reader to record which application a route
+  // was mounted in, which it does not.
+  const claims = new Map();
+  for (const edge of handled) claims.set(edge.from, (claims.get(edge.from) ?? 0) + 1);
   return {
     byKind,
     addresses: http.size,
+    duplicated: [...claims.values()].filter((count) => count > 1).length,
     withBody: handled.length,
     reaching: reaching.length,
     guarded: guarded.length,
+    shapes: addressShapes(httpNodes),
   };
 };
 

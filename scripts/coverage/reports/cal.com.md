@@ -8,7 +8,8 @@ Next.js in a monorepo, tRPC, wrapped Prisma.
 | commit | `54343aa685ae8f33159d2f485ec4a57bad5c574a` |
 | read | `apps/web` |
 | read by | web (`nextjs`) |
-| source files counted | 839 |
+| source files counted | 3611 |
+| extent counted over | `apps/web` plus 24 declared package(s): `packages/app-store`, `packages/app-store-cli`, `packages/app-store/dailyvideo`, `packages/app-store/office365video`, `packages/app-store/zoomvideo`, `packages/config`, `packages/coss-ui`, `packages/dayjs`, `packages/embeds/embed-core`, `packages/embeds/embed-react`, `packages/embeds/embed-snippet`, `packages/features`, `packages/i18n`, `packages/lib`, `packages/platform/atoms`, `packages/platform/constants`, `packages/platform/enums`, `packages/platform/types`, `packages/prisma`, `packages/testing`, `packages/trpc`, `packages/tsconfig`, `packages/types`, `packages/ui` |
 | flowatlas | 0.4.1 |
 
 ## Outcome
@@ -29,46 +30,85 @@ land on one address.
 |  | count | of what the counting rule found |
 |---|---|---|
 | addresses placed | 84 |  |
-| declarations with a body attached | 50 | 50 of 79 |
-| …whose body reaches anything | 41 | 41 of 79 |
-| …behind middleware or a guard | 0 | 0 of 79 |
+| addresses claimed by more than one declaration | 0 | a collision, or one service holding two applications |
+| declarations with a body attached | 50 | 50 of 82 |
+| …whose body reaches anything | 41 | 41 of 82 |
+| …behind middleware or a guard | 0 | 0 of 82 |
+
+Where those addresses are. One row per leading segment, which is enough of an
+address for a dropped global prefix to show and little enough that a new route
+is not a diff.
+
+| first segment | addresses |
+|---|---|
+| `/api` | 84 |
 
 ## What joined
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 31 | 0 |
-| requests between services | 37 | 0 |
+| requests from a browser | 137 | 29 |
+| requests between services | 184 | 0 |
 | channels | 0 | 0 with both ends |
 
 ## Storage and screens
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 0 | 0 of 80 |
+| query sites read | 0 | 0 of 1180 |
 | …that name a table | 0 | nothing of this kind here |
-| tables | 0 | nothing of this kind here |
-| components | 773 | no denominator: the rule has no probe for it |
+| tables | 0 | 0 of 100 |
+| components | 1433 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
-| every other binding a template makes | 775 | not counted by the rule |
+| every other binding a template makes | 1045 | not counted by the rule |
 
 ## What it could not read
 
-153 places somebody could act on, 71 the tool
+1393 places somebody could act on, 3001 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| api-path-dynamic | action | 7 |  |
-| call-dynamic-receiver | info | 71 |  |
-| db-receiver-name-only | action | 73 |  |
-| dynamic-http-url | action | 6 |  |
+| api-method-dynamic | action | 2 |  |
+| api-path-dynamic | action | 27 |  |
+| call-dynamic-receiver | info | 2927 |  |
+| db-layer-unread | action | 16 |  |
+| db-receiver-name-only | action | 416 |  |
+| dynamic-config-key | action | 2 |  |
+| dynamic-http-url | action | 31 |  |
 | route-handler-unread | action | 36 |  |
+| route-wildcard-only | action | 16 |  |
 | server-action-unread | action | 2 |  |
-| target-route-not-found | action | 22 |  |
-| type-unresolved | action | 6 |  |
-| unknown-base-url-env | action | 1 |  |
+| target-route-not-found | action | 62 |  |
+| type-depth-exceeded | info | 20 |  |
+| type-generic-uninstantiated | info | 54 |  |
+| type-unresolved | action | 781 |  |
+| unknown-base-url-env | action | 2 |  |
+
+## Files with sites and no output
+
+**243 file(s)** the counting rule found sites in yielded neither
+a node of that family nor any row naming them. That is a reader giving up in
+silence, which is the class this gate exists for; a limit somebody has decided to
+accept belongs in the exemption list with a sentence beside it.
+
+| file | family | sites |
+|---|---|---|
+| `(anywhere)` | models | 100 |
+| `apps/web/app/api/auth/forgot-password/route.ts` | data | 1 |
+| `apps/web/app/api/auth/reset-password/route.ts` | data | 3 |
+| `apps/web/app/api/auth/setup/route.ts` | data | 2 |
+| `apps/web/app/api/auth/two-factor/totp/disable/route.ts` | data | 2 |
+| `apps/web/app/api/auth/two-factor/totp/enable/route.ts` | data | 2 |
+| `apps/web/app/api/auth/two-factor/totp/setup/route.ts` | data | 2 |
+| `apps/web/app/api/avatar/[uuid]/route.ts` | data | 2 |
+| `apps/web/app/api/cron/bookingReminder/route.ts` | data | 3 |
+| `apps/web/app/api/cron/syncAppMeta/route.ts` | data | 2 |
+| `apps/web/app/api/link/route.ts` | data | 2 |
+| `apps/web/app/api/me/route.ts` | data | 1 |
+
+and 231 more.
 
 ## The denominators
 
@@ -79,25 +119,31 @@ applied identically to all eight targets and knows nothing about any of them.
 |---|---|---|
 | `nest-route-decorator` | an HTTP method decorator on a controller method | 0 |
 | `registered-route-call` | a verb called on a router or an application | 0 |
-| `exported-verb-handler` | an exported handler named for an HTTP verb | 44 |
+| `exported-verb-handler` | an exported handler named for an HTTP verb | 47 |
 | `pages-api-module` | a file under `pages/api` that default-exports a handler | 35 |
 | `component-declaration` | an Angular component declaration | 0 |
 | `template-click-binding` | a click bound in a template | 0 |
-| `prisma-call-site` | a model method called through a Prisma client | 80 |
-| `query-builder-site` | a table named in a query builder | 0 |
-| `model-declaration` | a table or model declared as a class or a schema | 0 |
+| `prisma-call-site` | a model method called through a Prisma client | 1149 |
+| `query-builder-site` | a table named in a query builder | 31 |
+| `model-declaration` | a table or model declared as a class or a schema | 100 |
 
 | family | sites |
 |---|---|
-| ways in over HTTP | 79 |
+| ways in over HTTP | 82 |
 | screens | 0 |
 | things a person can click | 0 |
-| places the code reaches storage | 80 |
-| tables or models declared (an upper bound) | 0 |
+| places the code reaches storage | 1180 |
+| tables or models declared (an upper bound) | 100 |
+
+Counted over the extent named at the top of this report - the read directory and
+the workspace packages it declares - because that is what the tool reads. A
+denominator counted over the read directory alone put more found than there was
+to find, and `extent.mjs` says why the rule works the extent out from the
+repository's manifests instead of asking the tool for it.
 
 ## Cost
 
-Wall clock under 5 s, peak resident memory 0.5 to 1 GB.
+Wall clock 15 to 60 s, peak resident memory 1 to 2 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

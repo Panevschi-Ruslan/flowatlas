@@ -8,7 +8,8 @@ NestJS at scale, Kysely, an in-house bus.
 | commit | `f8f4051a24fffa49accb96bd4f107f8b8d5915e9` |
 | read | `server` |
 | read by | immich (`nestjs`) |
-| source files counted | 454 |
+| source files counted | 464 |
+| extent counted over | `server` plus 2 declared package(s): `packages/plugin-sdk`, `packages/sdk` |
 | flowatlas | 0.4.1 |
 
 ## Outcome
@@ -28,9 +29,18 @@ land on one address.
 |  | count | of what the counting rule found |
 |---|---|---|
 | addresses placed | 292 |  |
+| addresses claimed by more than one declaration | 11 | a collision, or one service holding two applications |
 | declarations with a body attached | 303 | 303 of 303 |
 | …whose body reaches anything | 300 | 300 of 303 |
 | …behind middleware or a guard | 303 | 303 of 303 |
+
+Where those addresses are. One row per leading segment, which is enough of an
+address for a dropped global prefix to show and little enough that a new route
+is not a diff.
+
+| first segment | addresses |
+|---|---|
+| `/api` | 292 |
 
 ## What joined
 
@@ -53,7 +63,7 @@ land on one address.
 
 ## What it could not read
 
-2588 places somebody could act on, 4811 the tool
+2588 places somebody could act on, 4812 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -65,11 +75,24 @@ was never an edge to draw. The three are never added together.
 | di-token-unknown | action | 1 |  |
 | di-type-unresolved | action | 43 |  |
 | dynamic-http-url | action | 6 |  |
+| entry-http-types-unmatched | info | 1 |  |
 | global-wrapper-dynamic | action | 2 |  |
 | module-import-dynamic | action | 8 |  |
 | type-depth-exceeded | info | 22 |  |
 | type-generic-uninstantiated | info | 38 |  |
 | type-unresolved | action | 912 |  |
+
+## Files with sites and no output
+
+**2 file(s)** the counting rule found sites in yielded neither
+a node of that family nor any row naming them. That is a reader giving up in
+silence, which is the class this gate exists for; a limit somebody has decided to
+accept belongs in the exemption list with a sentence beside it.
+
+| file | family | sites |
+|---|---|---|
+| `(anywhere)` | models | 68 |
+| `server/src/utils/database.ts` | data | 28 |
 
 ## The denominators
 
@@ -96,9 +119,15 @@ applied identically to all eight targets and knows nothing about any of them.
 | places the code reaches storage | 579 |
 | tables or models declared (an upper bound) | 68 |
 
+Counted over the extent named at the top of this report - the read directory and
+the workspace packages it declares - because that is what the tool reads. A
+denominator counted over the read directory alone put more found than there was
+to find, and `extent.mjs` says why the rule works the extent out from the
+repository's manifests instead of asking the tool for it.
+
 ## Cost
 
-Wall clock under 5 s, peak resident memory 0.5 to 1 GB.
+Wall clock 5 to 15 s, peak resident memory 0.5 to 1 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

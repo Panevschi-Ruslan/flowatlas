@@ -15,12 +15,22 @@
  * fixed set of probes finds in that repository's own source.
  *
  * A **source file** is a file the repository tracks in git, inside the
- * directory being read, whose extension is one of `SOURCE_EXTENSIONS`, and none
+ * **extent** of the service being read, whose extension is one of
+ * `SOURCE_EXTENSIONS`, and none
  * of whose path segments is one of `SKIPPED_SEGMENTS`, and whose name does not
  * match `SKIPPED_FILES`. Nothing is read that git does not carry, so a build
  * directory somebody left behind and an installed dependency are both invisible
  * whatever state the clone is in, and the same file list is counted whether the
  * dependencies are installed or not.
+ *
+ * The extent - a service's own directory plus the workspace packages it declares
+ * - is worked out in `extent.mjs`, from the repository's own manifests and from
+ * nothing else. It is a fact about the files, in the same way that the extension
+ * and the path segments above are, which is why the rule may use it without
+ * acquiring an opinion about the tool: see that file's header for why it reads
+ * the manifests itself rather than asking the tool what a service is. What stays
+ * out of here is unchanged - no probe is switched on per target, and no target
+ * may say how to count.
  *
  * A **probe** is a named pattern with a scope. A `line` probe is a regular
  * expression matched against the whole file with the global flag, and every
@@ -255,22 +265,44 @@ const COUNTERS = {
   file: (probe, path, text) => countFile(probe, path, text),
 };
 
+/** Which family each probe belongs to, so a per-file fold costs no search. */
+const FAMILY_OF = Object.fromEntries(PROBES.map((probe) => [probe.name, probe.family]));
+
 /**
- * Every probe's site count over a list of already-read files.
+ * Every probe's site count over a list of already-read files, twice folded.
  *
  * `files` is `[path, text]` pairs so that each file is read from disk exactly
  * once however many probes want to look at it; on a repository of forty
- * thousand files that is the difference between seconds and minutes.
+ * thousand files that is the difference between seconds and minutes. The two
+ * folds are computed in the one pass for the same reason: the regular
+ * expressions are the expensive part of a measurement and running them twice to
+ * answer two questions about the same match would double it.
+ *
+ * `byProbe` totals the repository. `perFile` is the same counts kept per file
+ * and per family, and only for files where something was found, which is what
+ * lets a gate ask the one question a total cannot answer: did *this* file, where
+ * the rule can see something, produce anything at all.
  */
-export const countSites = (files) => {
+export const measureSites = (files) => {
   const byProbe = Object.fromEntries(PROBES.map((probe) => [probe.name, 0]));
+  const perFile = new Map();
   for (const [path, text] of files) {
+    let found;
     for (const probe of PROBES) {
-      byProbe[probe.name] += COUNTERS[probe.scope](probe, path, text);
+      const sites = COUNTERS[probe.scope](probe, path, text);
+      if (sites === 0) continue;
+      byProbe[probe.name] += sites;
+      found ??= {};
+      const family = FAMILY_OF[probe.name];
+      found[family] = (found[family] ?? 0) + sites;
     }
+    if (found !== undefined) perFile.set(path, found);
   }
-  return byProbe;
+  return { byProbe, perFile };
 };
+
+/** Every probe's site count, for callers that want only the totals. */
+export const countSites = (files) => measureSites(files).byProbe;
 
 /** Site counts folded to one figure per family. */
 export const byFamily = (byProbe) =>
