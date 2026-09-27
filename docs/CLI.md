@@ -607,9 +607,12 @@ word for itself and an edge may not claim more than the weakest of its two ends.
 somebody who can see the code, a document by somebody who cannot see yours.
 Nothing here can check a document against the running service, so `doctor`
 reports how recently the document changed — against the newest commit among the
-repositories that *were* read — under `openapi-document-age`. That age is
-worked out when `doctor` runs rather than recorded when the graph is built,
-because it is a question about today. `fixtures/multi-repo-declared` is the
+repositories that *were* read — under `document-age`, with the kind of document
+named in the row rather than in the reason. That reason was spelled
+`openapi-document-age` before there was a second kind of document; a project that
+silenced the old spelling in `doctor.ignoreReasons` keeps it silenced, because
+both spellings are recognised. That age is worked out when `doctor` runs rather
+than recorded when the graph is built, because it is a question about today. `fixtures/multi-repo-declared` is the
 worked example of a document that declares routes.
 
 ### Top level

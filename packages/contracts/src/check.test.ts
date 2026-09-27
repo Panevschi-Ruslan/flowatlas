@@ -172,6 +172,24 @@ describe('what stops the check before it starts', () => {
     expect(reasonOf(boundary(['string'], 'type:api#Body'))).toEqual(['body-already-serialised']);
   });
 
+  it('compares two ends that both say text, because that is their contract', () => {
+    expect(reasonOf(boundary(['string'], 'string'))).toEqual([]);
+  });
+
+  /**
+   * A handler on a *request* that declares the wire form is making a mistake
+   * rather than recording a limit: the framework parses the body before the
+   * handler is called, so its declared type is a claim about the parsed value.
+   * The channel case is the other way round and is asserted below.
+   */
+  it('still calls a handler declaring text for a parsed body a mismatch', () => {
+    const report = checkContracts(boundary(['type:caller#Body'], 'string'), {
+      generatedAt: FIXED,
+    });
+    expect(report.unchecked.filter((row) => row.direction === 'request')).toEqual([]);
+    expect(report.findings.some((finding) => finding.kind === 'type_mismatch')).toBe(true);
+  });
+
   it('says so when a referenced type is not in the registry', () => {
     expect(reasonOf(boundary(['type:caller#Gone'], 'type:api#Body'))).toEqual(['type-missing']);
   });
@@ -251,6 +269,26 @@ describe('a message on a channel', () => {
     const graph = channel();
     graph.edges = graph.edges.filter((row) => row.type !== 'emits');
     expect(checkContracts(graph).unchecked[0]?.reason).toBe('channel-without-producer');
+  });
+
+  /**
+   * Nothing parses between a publish and a handler, so a handler declaring the
+   * wire form is the place the shape was lost rather than an end that disagrees
+   * about it - `receive(message: string)` with a `JSON.parse` on the next line is
+   * how a redis subscription is written. It became reachable only once a handler
+   * registered by a call had an entry and its parameter was read at all (R126),
+   * and calling it a mismatch would trade a row that said too little for one that
+   * says something false.
+   */
+  it('says the shape was lost when the handler declares the wire form', () => {
+    const graph = channel();
+    graph.edges = graph.edges.map((row) =>
+      row.from === 'entry:billing:event:order.created' ? { ...row, params: ['string'] } : row,
+    );
+    const report = checkContracts(graph, { generatedAt: FIXED });
+    expect(report.unchecked.map((row) => row.reason)).toEqual(['body-already-serialised']);
+    expect(report.unchecked[0]?.message).toContain('billing#Consumer.on has string');
+    expect(report.findings).toEqual([]);
   });
 });
 

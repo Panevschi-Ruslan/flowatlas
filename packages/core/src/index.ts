@@ -164,7 +164,7 @@ export type {
   InlineHandler,
   MethodHandler,
 } from './adapters/entry.js';
-export { classifyDbCall, operationOf } from './adapters/db.js';
+export { classifyDbCall, isUniversalMethod, operationOf } from './adapters/db.js';
 export type {
   DataNameHints,
   DbAdapter,

@@ -7,17 +7,22 @@ import {
   forEachCall,
   getDecorator,
   locatedExpressions,
+  isEntryKind,
   makeChannelId,
   narrowUnionByLiteral,
+  makeEntryId,
   makeLeafId,
   makeSymbolId,
   resolveTypeOrigin,
   type CallPattern,
+  type ClassMethod,
+  type EntryKind,
   type ExtractorPass,
   type GraphNode,
   type LocatorContext,
   type LocatorSite,
   type NameLocator,
+  type TypeRef,
 } from '@flowatlas/core';
 // The context and the body walk, from the package neither extractor owns. This
 // import is the whole of R46's answer at this end: a channel reader is not part
@@ -465,6 +470,19 @@ export const extractBrokers = (ctx: PassContext): void => {
 
     // The framework's own transports already produced an entry for this handler;
     // pointing at it keeps the two views of the same handler joined.
+    //
+    // Deliberately not filled in where no entry reader knows the decorator - a
+    // worker's `@Process`, a described bus's `@OnJob`. Measured, and it makes
+    // the tool say something untrue: a queue handler is handed the library's
+    // own envelope (`Job<SendEmailJob>`, `{ name, data }`), while the publish
+    // the description points at is the payload or the envelope depending on the
+    // description, and nothing says which. Comparing the two turned
+    // `no-type-on-receiver` into `receiver requires orderId; sender does not
+    // send it` on `fixtures/object-channels` - a limit of static reading
+    // reported as somebody's mistake, which is the swap R126 exists to undo
+    // rather than to make in the other direction. A description would have to
+    // say where in the published value the payload sits before this end is
+    // comparable.
     const entryId = ctx.entries.find((entry) => entry.handlerMethod === method)?.node.id ?? null;
     const returns = ctx.types.collectSignature(method).returns;
 
@@ -518,6 +536,95 @@ export const extractBrokers = (ctx: PassContext): void => {
         line,
       });
     }
+  };
+
+  /**
+   * What a handler declares it is given, however the handler is written.
+   *
+   * A method states it directly; a field holding an arrow states it on the
+   * arrow, which is how a handler keeps its `this` (R29) and is the shape the
+   * chain from a subscription most often ends on. Anything else declares
+   * nothing here, and says so by answering nothing rather than by answering an
+   * empty signature.
+   */
+  const signatureOf = (
+    handler: ClassMethod,
+  ): { params: TypeRef[]; returns: TypeRef } | undefined => {
+    if (Node.isMethodDeclaration(handler)) return ctx.types.collectSignature(handler);
+    const written = handler.getInitializer();
+    if (written === undefined) return undefined;
+    if (!Node.isArrowFunction(written) && !Node.isFunctionExpression(written)) return undefined;
+    return ctx.types.collectSignature(written);
+  };
+
+  /**
+   * The way in a subscription is, so that what it receives can be read.
+   *
+   * A handler declared by a decorator the framework's own entry reader knows
+   * already has one: that reader makes an `entry` node for the pattern and
+   * draws `handles` from it to the method, and everything downstream that asks
+   * what a receiver is given asks that edge. A handler registered by a **call**
+   * had none, so the question had nothing to answer with and every boundary
+   * through it came back `no-type-on-receiver` - the row for a shape that
+   * cannot be read at all, given for a shape written plainly in the source. The
+   * parameter of the function handed to the call is the shape; what was missing
+   * was a place to put it.
+   *
+   * So the same two facts are drawn here, in the same shape the entry side
+   * uses: `entry:<service>:<kind>:<address>` and one `handles` edge carrying
+   * the handler's signature. It is written here rather than in an entry reader
+   * because only this pass knows a subscription happened, and the signature is
+   * the target method's - the rule the types pass already applies to every
+   * other `handles` edge - rather than a second judgement about what a receiver
+   * receives. A subscription whose handler could not be followed lands on the
+   * method that registered it, which declares no payload, so the row keeps
+   * meaning what it says.
+   *
+   * The two spellings may reach the same node, and should: the id is the address
+   * and the service, so a repository that declares one handler on `orders:created`
+   * and registers another by a call has one way in with two `handles` edges out
+   * of it, which is what the graph already says about a queue with two handlers.
+   *
+   * The kind is the transport's own word where the model has that word for a
+   * way in, and `event` otherwise: a redis `message` and a socket `event` are
+   * the same one-way arrival, and only the core says which kinds exist.
+   */
+  const entryOfSubscription = (
+    names: readonly string[],
+    kind: string,
+    handlerMethod: ClassMethod,
+    handlerId: string,
+    spec: BrokerSpec,
+    file: string,
+    line: number,
+  ): string | null => {
+    const entryKind: EntryKind = isEntryKind(kind) ? kind : 'event';
+    const signature = signatureOf(handlerMethod);
+    let first: string | null = null;
+    for (const name of names) {
+      const id = makeEntryId(ctx.repo, entryKind, name);
+      ctx.builder.addNode({
+        id,
+        type: 'entry',
+        label: `${entryKind} ${name}`,
+        repo: ctx.repo,
+        file,
+        line,
+        kind: entryKind,
+        meta: { pattern: name, adapter: spec.name },
+      });
+      ctx.builder.addEdge({
+        from: id,
+        to: handlerId,
+        type: 'handles',
+        confidence: 'static',
+        file,
+        line,
+        ...(signature === undefined ? {} : signature),
+      });
+      first ??= id;
+    }
+    return first;
   };
 
   const emitSubscribers = (
@@ -593,6 +700,19 @@ export const extractBrokers = (ctx: PassContext): void => {
           if (handlerId === undefined) continue;
           const consumerId = `consumer:${makeSymbolId(ctx.repo, file, className, handlerMethod.getName())}`;
 
+          ctx.ensureMethodNode(handlerMethod);
+          // Drawn before the consumer, because the consumer records which entry
+          // it answers and a `null` there is exactly what this used to say.
+          const entryId = entryOfSubscription(
+            names,
+            pattern.kind,
+            handlerMethod,
+            handlerId,
+            spec,
+            file,
+            line,
+          );
+
           ctx.builder.addNode({
             id: consumerId,
             type: 'consumer',
@@ -601,9 +721,8 @@ export const extractBrokers = (ctx: PassContext): void => {
             file,
             line,
             kind: pattern.kind,
-            meta: { kind: pattern.kind, adapter: spec.name, decorator: pattern.method, entryId: null },
+            meta: { kind: pattern.kind, adapter: spec.name, decorator: pattern.method, entryId },
           });
-          ctx.ensureMethodNode(handlerMethod);
           ctx.builder.addEdge({
             from: consumerId,
             to: handlerId,

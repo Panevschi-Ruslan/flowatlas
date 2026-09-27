@@ -21,6 +21,7 @@ import type { Command } from 'commander';
 import { openProjectDb } from '../analysis/open.js';
 import { CliError, EXIT } from '../exit.js';
 import { documentAgeRows, gitAgeReader, type DeclaredDocument } from '../doctor/age.js';
+import { expandReasons } from '../doctor/hints.js';
 import { processIo, type QueryIo } from '../query/answer.js';
 import { VERSION } from '../version.js';
 import {
@@ -152,6 +153,9 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
         declared.push({
           service: service.name,
           documentPath: service.document.path.replace(/\\/g, '/').replace(/^\.\//, ''),
+          // Carried through rather than dropped, so the age row can name the
+          // kind of document it is about. The reason no longer does (R127).
+          kind: service.document.kind,
         });
         continue;
       }
@@ -163,7 +167,9 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
       outputDir: loaded.outputDir,
       rootDir: loaded.rootDir,
       ...(doctor.baseline === undefined ? {} : { baseline: doctor.baseline }),
-      ignoreReasons: [...doctor.ignoreReasons],
+      // Both spellings of anything that has been renamed, so a project that
+      // silenced a reason under its old name still has it silenced (R127).
+      ignoreReasons: expandReasons(doctor.ignoreReasons),
       warnAsError: doctor.markers.warnAsError,
       check: {
         depth: contracts.depth,

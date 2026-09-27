@@ -48,3 +48,19 @@ project that does not suffix its entities recorded no document for any write, an
 None. There is no `bootstrap-not-found` row here: this repository declares no NestJS
 dependency, and `bootstrap` names a NestJS file, so asking for one would be asking
 for a setting that does nothing (R51). Both repositories resolve to level 1 / `static`.
+
+## A method every object has
+
+`src/orders/prototype-names.ts` calls `toString`, `constructor`, `valueOf` and
+`hasOwnProperty` on the typeorm repository. None of them is an operation and the
+graph holds no node for any line of that file — asserted in
+`packages/adapters-db/src/leaves-pass.test.ts` as "no node anywhere names this
+file", which is why the calls are in module-level functions: a body earns a node
+only once a leaf is found in it.
+
+The operation a call performs is read by looking its method name up in the
+descriptor's table, and an object literal indexed by a word from source text
+answers `toString` with `Object.prototype.toString`. It did: two `db_query` nodes
+labelled `function toString() { [native code] }` were in novu's graph, minted
+from a value nobody wrote and indistinguishable in a count from a real query
+(R122, R130).

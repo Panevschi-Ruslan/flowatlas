@@ -1,9 +1,10 @@
 /**
  * How old a declared service's document is, asked at the moment it is reported.
  *
- * A service the configuration declared rather than pointed at is described by
- * an OpenAPI document somebody else wrote, and nothing here can check that
- * document against the service it claims to describe. How recently it was
+ * A service the configuration declared rather than pointed at is described by a
+ * document somebody else wrote - an OpenAPI one, an AsyncAPI one, whatever
+ * `document.kind` names next - and nothing here can check that document against
+ * the service it claims to describe. How recently it was
  * updated is therefore the only evidence there is that it is still true, which
  * makes the age a deliverable rather than a detail: a stale document is a wrong
  * answer wearing a confident face.
@@ -29,14 +30,34 @@ import { statSync } from 'node:fs';
 import { isAbsolute, resolve } from 'node:path';
 import type { Unresolved } from '@flowatlas/core';
 
-/** The reason a row about a document's age carries. */
-export const STALE_REASON = 'openapi-document-age';
+/**
+ * The reason a row about a document's age carries.
+ *
+ * It used to be `openapi-document-age`, from when an OpenAPI document was the
+ * only kind there was. The kind belongs in the sentence, which can name it; a
+ * reason is the name of a question, and the question - is the word this service
+ * was taken on older than the code around it - is the same question whatever
+ * format the word is written in. `hints.ts` keeps the old spelling working
+ * wherever a project has already silenced it, because a reason is something a
+ * person writes in their own configuration and renaming one is otherwise a
+ * breaking change wearing the clothes of a rename (R127).
+ */
+export const STALE_REASON = 'document-age';
 
 /** One service the configuration described instead of pointing at. */
 export interface DeclaredDocument {
   service: string;
   /** The document's path as the configuration writes it: relative, POSIX. */
   documentPath: string;
+  /**
+   * What kind of document it is, as the configuration names it.
+   *
+   * Optional, and where it is absent the sentence says `document`, which is true
+   * of every kind. Nothing here guesses a format from a file name: naming the
+   * wrong format is the thing this row was corrected for, and doing it from a
+   * suffix would be the same mistake with more steps.
+   */
+  kind?: string;
 }
 
 /**
@@ -70,12 +91,13 @@ const ageRow = (
   changedAt: Date | undefined,
   newestCommit: Date | undefined,
 ): Unresolved => {
-  const { service, documentPath } = document;
+  const { service, documentPath, kind } = document;
+  const what = kind === undefined ? 'document' : `${kind} document`;
   const behind = changedAt !== undefined && newestCommit !== undefined && newestCommit > changedAt;
   const when =
     changedAt === undefined
-      ? 'and nothing here could say when it last changed'
-      : `last changed ${day(changedAt)}`;
+      ? `and nothing here could say when that ${what} last changed`
+      : `the ${what} last changed ${day(changedAt)}`;
   const against =
     newestCommit === undefined
       ? 'nothing here is a checkout, so there is no commit to compare it with'
@@ -89,8 +111,8 @@ const ageRow = (
     symbol: service,
     message: `${service} was declared by ${documentPath}, ${when}; ${against}${behind ? ', so the document may be behind the service it describes' : ''}`,
     hint: behind
-      ? `Fetch the current document from whoever owns ${service} and rebuild. Nothing here can check a document against the running service, so how recently it was updated is the only evidence there is that it is still true.`
-      : `Nothing here can check a document against the running service. Every route and shape of ${service} in this graph is ${documentPath}'s word for it.`,
+      ? `Fetch the current ${what} from whoever owns ${service} and rebuild. Nothing here can check a document against the running service, so how recently it was updated is the only evidence there is that it is still true.`
+      : `Nothing here can check a document against the running service. Every route, channel and shape of ${service} in this graph is ${documentPath}'s word for it.`,
   };
 };
 

@@ -40,16 +40,16 @@ export type TableContext = LocatorContext;
  * not a declaration, and an expression that reaches one is reported rather than
  * guessed at.
  */
-const NAMING_CALLS: Record<string, number> = {
+const NAMING_CALLS: ReadonlyMap<string, number> = new Map([
   // drizzle, one per dialect
-  pgTable: 0,
-  mysqlTable: 0,
-  sqliteTable: 0,
+  ['pgTable', 0],
+  ['mysqlTable', 0],
+  ['sqliteTable', 0],
   // mongoose
-  model: 0,
+  ['model', 0],
   // sequelize
-  define: 0,
-};
+  ['define', 0],
+]);
 
 /** Keys a model class states its table under, in the order a reader prefers them. */
 const MODEL_NAME_KEYS = ['tableName', 'modelName'] as const;
@@ -64,9 +64,7 @@ const MODEL_NAME_KEYS = ['tableName', 'modelName'] as const;
  * only new fact is where the object is written, which is what makes this a
  * record beside the other one rather than a second way of reading a name.
  */
-const NAMING_DECORATORS: Record<string, number> = {
-  Table: 0,
-};
+const NAMING_DECORATORS: ReadonlyMap<string, number> = new Map([['Table', 0]]);
 
 /**
  * Calls that narrow a data layer and hand back the same data layer.
@@ -124,7 +122,7 @@ const stringProperty = (node: TsNode, keys: readonly string[]): string | null =>
 /** The name a decorator states for a class, out of the options it was given. */
 const nameFromDecorators = (declaration: ClassDeclaration): string | null => {
   for (const decorator of declaration.getDecorators()) {
-    const index = NAMING_DECORATORS[decorator.getName()];
+    const index = NAMING_DECORATORS.get(decorator.getName());
     if (index === undefined) continue;
     const argument = decorator.getArguments()[index];
     const found = argument === undefined ? null : stringProperty(argument, MODEL_NAME_KEYS);
@@ -182,7 +180,7 @@ const nameOfDeclaration = (declaration: TsNode, depth: number): string | null =>
   if (!Node.isCallExpression(initializer)) return null;
   const callee = initializer.getExpression();
   const called = Node.isPropertyAccessExpression(callee) ? callee.getName() : callee.getText();
-  const index = NAMING_CALLS[called];
+  const index = NAMING_CALLS.get(called);
   return index === undefined ? null : stringOf(initializer.getArguments()[index]);
 };
 

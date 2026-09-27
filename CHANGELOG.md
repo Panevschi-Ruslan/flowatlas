@@ -101,6 +101,13 @@ either.
 
 ### Changed
 
+- The `doctor` reason for how old a declared service's document is, was
+  `openapi-document-age` and is now **`document-age`**, with the kind of document
+  named in the row. There are two kinds of document now and the reason named one
+  of them. A reason is configuration surface — it is spelled by hand in
+  `doctor.ignoreReasons` — so the old spelling goes on being recognised there and
+  nothing has to be edited; write `document-age` in new configuration.
+
 - **`doctor` refuses a graph nobody could report on, with exit 2 and without
   `--strict`.** Three graphs: one holding no node at all, one whose build
   recorded that a repository could not be read, and one a service was read into

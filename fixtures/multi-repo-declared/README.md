@@ -87,5 +87,7 @@ The row has moved to where it is reported. `doctor` reads the document's last
 commit when it runs, so the graph records only what does not move and this
 snapshot survives every commit (R78). The age itself is asserted in
 `packages/cli/src/doctor/age.test.ts`, where it is a claim rather than a
-recording (R09), and `openapi-document-age` is registered in the hint catalogue
-where I13 can see it.
+recording (R09), and `document-age` is registered in the hint catalogue where
+I13 can see it. It was `openapi-document-age` until there were two kinds of
+document; the old spelling still answers in `doctor.ignoreReasons`, because a
+reason is something a project writes by hand (R127).

@@ -150,6 +150,30 @@ export interface DataNameHints {
 }
 
 /**
+ * Names every object answers to, whoever wrote the object.
+ *
+ * Read off the language rather than listed, so the set cannot drift from what is
+ * actually reachable and nobody has to remember the four spellings of
+ * `__lookupGetter__`.
+ *
+ * It exists because a reader recognises a call by the package that declares the
+ * receiver's type, and that test says yes to `client.toString()` as readily as
+ * to `client.get(key)`. Recognising the receiver is the right test for whether a
+ * call touches the library; it is not a test of whether the *method* belongs to
+ * the library, and one of these names is on every value in every program whether
+ * anything wrote it or not. A cache reader that did not ask minted a `cache_op`
+ * labelled `other status` for `hasOwnProperty('status')` - a node with a label
+ * no person wrote, which is the failure R122 found in the operations table and
+ * R130 went looking for the rest of.
+ */
+const UNIVERSAL_METHODS: ReadonlySet<string> = new Set(
+  Object.getOwnPropertyNames(Object.prototype),
+);
+
+/** True for a method name the language gives every value. */
+export const isUniversalMethod = (name: string): boolean => UNIVERSAL_METHODS.has(name);
+
+/**
  * The operation a method performs, by exact name first and then by prefix.
  *
  * The longest matching prefix wins, so a specific rule overrides a general one

@@ -1,7 +1,7 @@
 import type { Unresolved } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import { documentAgeRows, STALE_REASON, type AgeReader, type DeclaredDocument } from './age.js';
-import { hintFor, isKnownReason } from './hints.js';
+import { canonicalReason, expandReasons, hintFor, isKnownReason } from './hints.js';
 
 const BILLING: DeclaredDocument = { service: 'billing', documentPath: 'contracts/billing.json' };
 
@@ -65,5 +65,56 @@ describe('how old a declared document is', () => {
     // for it — which is the relationship I13 exists to keep true.
     const { hint: _hint, ...bare } = row as Unresolved;
     expect(hintFor(bare)).not.toContain('unknown reason');
+  });
+});
+
+/**
+ * The row answers for a document of any kind, so the kind is in the sentence.
+ *
+ * `openapi-document-age` was named when an OpenAPI document was the only kind
+ * there was. R79 added AsyncAPI, and the reason and the prose then named one
+ * format while answering for two: a reader with an AsyncAPI document was told
+ * something about OpenAPI (R127).
+ */
+describe('a document of a kind the reason does not name', () => {
+  const ASYNC: DeclaredDocument = {
+    service: 'billing',
+    documentPath: 'contracts/billing.asyncapi.json',
+    kind: 'asyncapi',
+  };
+
+  it('names the kind in the message', () => {
+    const row = only(documentAgeRows([ASYNC], reader(new Date('2026-01-10T00:00:00Z'), undefined)));
+    expect(row.message).toContain('the asyncapi document last changed 2026-01-10');
+    expect(row.message).not.toContain('OpenAPI');
+  });
+
+  it('says `document` where the caller named no kind, rather than guessing one', () => {
+    const row = only(documentAgeRows([BILLING], reader(new Date('2026-01-10T00:00:00Z'), undefined)));
+    expect(row.message).toContain('the document last changed 2026-01-10');
+    expect(row.message).not.toContain('undefined');
+  });
+
+  it('carries a reason named after the question and not after one format', () => {
+    expect(STALE_REASON).toBe('document-age');
+  });
+
+  /**
+   * The compatibility half, and why this was declined once rather than done as a
+   * typo: a reason is spelled by hand in `doctor.ignoreReasons` and can sit in a
+   * committed baseline, so a project that silenced the old name must go on having
+   * it silenced without editing anything.
+   */
+  it('keeps the old spelling working wherever somebody has already written it', () => {
+    expect(isKnownReason('openapi-document-age')).toBe(true);
+    expect(
+      hintFor({ reason: 'openapi-document-age', file: 'contracts/billing.json', line: 1 }),
+    ).not.toContain('unknown reason');
+    expect(canonicalReason('openapi-document-age')).toBe(STALE_REASON);
+    expect(new Set(expandReasons(['openapi-document-age']))).toEqual(
+      new Set(['openapi-document-age', 'document-age']),
+    );
+    // A reason nobody renamed passes through untouched, list and all.
+    expect(expandReasons(['db-receiver-name-only'])).toEqual(['db-receiver-name-only']);
   });
 });
