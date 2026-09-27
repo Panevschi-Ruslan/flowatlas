@@ -41,9 +41,14 @@ export interface TableReading {
  * whose name ends in `store` produced 97 rows and not one of them was a data
  * layer: they were arrays, maps, mutex registries, a plugin registry, a browser
  * object store, a framework's cookie store, and the state stores three of those
- * repositories keep their screens in. Nothing else moved when it went — no table
- * on any target, no query that names one — so the whole of what it did was to
- * ask a reader to describe things that do not store anything.
+ * repositories keep their screens in. On six of the eight nothing else moved when
+ * it went. On cal.com something did, and it was the point: `tables` went from 1
+ * to 0 and the queries that name a table from 4 to 0, because the one table
+ * cal.com was reported to have was the name of a React state type on a zustand
+ * store — minted at heuristic confidence for an undescribed package, with the
+ * receiver's name as the only reason to think it was data (R112). So what the
+ * word did was ask a reader to describe things that store nothing, and once,
+ * name one of them as a table.
  *
  * It stays among the *type* names, where a class called `OrderStore` is an
  * ordinary name for a real data layer and where the evidence is the class rather

@@ -10,6 +10,7 @@ import {
   makeLeafId,
   makeTableId,
   operationOf,
+  packageNameOf,
   resolveTypeOrigin,
   type DbDescriptor,
   type NamedFunction,
@@ -227,7 +228,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    * enough to be worth checking. The two are compared once the walk is over,
    * because a class is only unread after every call on it has been seen.
    */
-  const dataLayers = new Map<string, { file: string; line: number; chain: readonly string[] }>();
+  const dataLayers = new Map<
+    string,
+    { file: string; line: number; chain: readonly string[]; workspacePackage?: string }
+  >();
   const readAsData = new Set<string>();
 
   /**
@@ -237,6 +241,24 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    * the count is the set of nodes itself and cannot drift from it (R49).
    */
   const emitted = new Set<string>();
+
+  /**
+   * The package of this project's own that declares something, when it is not
+   * this repository.
+   *
+   * The same line `repoFiles` draws — a file under `node_modules` is somebody
+   * else's, a file outside this repository's directory is another repository's —
+   * asked of a declaration rather than of a file being walked. A workspace
+   * reaches its own packages through links, so a wrapper's declaration arrives
+   * with no `node_modules` in its path and reads as local; this is what tells the
+   * row it belongs to a sibling, and which one (R97).
+   */
+  const workspacePackageOf = (declaration: TsNode | undefined): string | undefined => {
+    if (declaration === undefined) return undefined;
+    const path = declaration.getSourceFile().getFilePath();
+    if (path.startsWith(`${ctx.repoDir}/`) || path.includes('/node_modules/')) return undefined;
+    return packageNameOf(path) ?? undefined;
+  };
 
   // Answered once per class rather than once per call: a repository asks this
   // of the same few classes thousands of times, and every answer costs a walk
@@ -261,10 +283,12 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (layer === undefined || name === undefined) return undefined;
     if (!dataLayers.has(name)) {
       const source = layer.base.getSourceFile();
+      const workspacePackage = workspacePackageOf(layer.base);
       dataLayers.set(name, {
         file: ctx.fileOf(layer.base),
         line: source.getLineAndColumnAtPos(layer.base.getStart()).line,
         chain: layer.chain,
+        ...(workspacePackage === undefined ? {} : { workspacePackage }),
       });
     }
     return name;
@@ -422,6 +446,8 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         : (withoutOverride.get(descriptor?.package ?? '') ?? descriptor);
 
     const fromPackage = entityFromPackage(origin);
+    const workspacePackage =
+      origin?.isLocal === true ? workspacePackageOf(origin.declaration) : undefined;
 
     const classification = classifyDbCall({
       method,
@@ -431,6 +457,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       nameHints: dataNameHints,
       ...(fromSource ? { originFromSource: true } : {}),
       ...(fromPackage === undefined ? {} : { entityFromPackage: fromPackage }),
+      ...(workspacePackage === undefined ? {} : { workspacePackage }),
       ...(parsedTables === undefined ? {} : { sqlTables: parsedTables }),
       ...(parsedOp === undefined ? {} : { sqlOp: parsedOp }),
       ...(Node.isPropertyAccessExpression(receiver) ? { receiverProp: receiver.getName() } : {}),
@@ -1058,7 +1085,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       file: seen.file,
       line: seen.line,
       reason: 'db-layer-unread',
-      message: `${name} reads as a data layer, and nothing was read through it.`,
+      message:
+        seen.workspacePackage === undefined
+          ? `${name} reads as a data layer, and nothing was read through it.`
+          : `${name}, which the workspace package ${seen.workspacePackage} declares, reads as a data layer, and nothing was read through it.`,
       hint: named
         ? `${name} is already named under adapters.db.localBaseClasses, so the methods called on it are not among the operations of the local-base descriptor.`
         : `Add ${JSON.stringify(name)} to adapters.db.localBaseClasses in flowatlas.config.json, so calls through it are recorded as data access.`,

@@ -62,6 +62,7 @@ import {
 import { isIncremental, type ServiceSession } from '../build/session.js';
 import { spliceRepoGraph } from '../build/splice.js';
 import { EXIT } from '../exit.js';
+import { waysInByService, waysInTotal } from '../doctor/ways-in.js';
 import { BUILD_STAMP, VERSION } from '../version.js';
 import { ownBin } from '../own-path.js';
 
@@ -1065,23 +1066,21 @@ export const summariseBuild = (result: BuildResult): string[] => {
    * the first number is the whole surface and the second is a fraction of it: one
    * repository reported seventeen of seventeen where two of nine reached a body
    * that calls anything, and there was no line anywhere that could have said so
-   * (R94). A `handles` edge is the test because it is the graph's own answer to
-   * "what runs when this is called", whichever adapter read it.
+   * (R94). What counts as read is decided once, in `doctor/ways-in.ts`, because
+   * `doctor` decides on the same figure.
    */
   const handled = new Set(
     result.project.edges.filter((edge) => edge.type === 'handles').map((edge) => edge.from),
   );
-  const ways = result.project.nodes.filter((node) => node.type === 'entry');
-  // Two conditions, and the second is why the first is not enough: an adapter
-  // that named a handler it could not follow says so on the node, and the edge
-  // onto that handler is real — it points at the call the framework enters — so
-  // the edge alone would count a way in nobody read as read.
-  const read = ways.filter(
-    (node) => handled.has(node.id) && node.meta?.['handlerBodyRead'] !== false,
-  ).length;
-  if (ways.length > 0) {
+  const ways = waysInTotal(
+    waysInByService(
+      result.project.nodes.filter((node) => node.type === 'entry'),
+      (id) => handled.has(id),
+    ),
+  );
+  if (ways.found > 0) {
     lines.push(
-      `ways in: ${ways.length} found, ${read} with a handler that was read, ${ways.length - read} without` +
+      `ways in: ${ways.found} found, ${ways.read} with a handler that was read, ${ways.found - ways.read} without` +
         ' — only the second number is coverage of what happens after the request arrives',
     );
   }

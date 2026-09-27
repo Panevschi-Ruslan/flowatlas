@@ -465,6 +465,20 @@ of the project. 2 rather than 1 because the check could not be run, which is wha
 answers a question, and "healthy" is not an answer anybody asked of an unread
 graph. `--accept` refuses such a run for the same reason.
 
+A fourth is refused the same way: a service most of whose ways in have no
+handler that was read — the second of the two numbers `build` prints under
+`ways in`, compared service by service. Each of those is a
+`route-handler-unread` row, and a few of them are an ordinary, reportable limit:
+a handler a helper builds that the reader cannot follow. They stay rows, a
+baseline may accept them, and `doctor` prints the two numbers above them so the
+size of the gap is in front of whoever reads it. Past half, what changes is not
+how much is missing but what the check can see. The growth check sees a change
+only when it adds a row, and a change inside a body nobody read never does — so
+for that service the gate is blind rather than lax, and a baseline accepted over
+it would be accepting the blindness. Decided per service, so a service read end
+to end cannot carry a hollow one past the check by outnumbering it; `--service`
+narrows the question the way it narrows every other.
+
 Every unresolved row is read at one of three levels, and only the first two say
 the graph is missing something:
 
@@ -736,7 +750,7 @@ three words version 2 knew.
 |---|---|---|---|
 | `auto` | boolean | `true` | detect which adapters apply from each repository's manifest |
 | `force` | object | `{}` | use these adapters regardless of what was detected |
-| `db.localBaseClasses` | string[] | `[]` | classes of your own that behave like a repository, so calls through them are data access |
+| `db.localBaseClasses` | string[] | `[]` | classes of your own that behave like a repository, so calls through them are data access — including classes a workspace package of yours declares |
 | `frontend.localClientClasses` | string[] | `[]` | classes of your own that make HTTP requests, so `get`/`post`/… called on them are requests |
 | `broker.custom` | object[] | `[]` | an in-house message bus, described so its publishers and handlers are found |
 | `entry.registries` | object[] | `[]` | a table of handlers you keep yourself, described so each registration is a way in |
@@ -788,6 +802,47 @@ two of them ignore is worse than a documented limitation; when it is added it
 belongs where the readers are chosen, so that each of them is handed a
 configuration already narrowed to the service it is reading, rather than in
 three copies of the same merge.
+
+**A data layer of your own, in a package of your own.** A monorepo usually keeps
+its database behind a workspace package — `@acme/db` — and what that package
+hands on decides whether anything needs saying. A package that configures a
+library's client and re-exports it hands on the library's own types, so the
+library's descriptor is found and every query is read with no configuration at
+all (`fixtures/nest-prisma-wrapper`). A package that declares classes of its own
+around a driver — a `Database` with `findOrders`, an `OrdersRepository` — is a
+data layer nothing here describes, and every call through it is a row until it
+is named.
+
+The rows say which package. A workspace resolves its own packages through
+links, so the checker reaches the wrapper's source directly and reads its types
+as the project's; a row about one used to call it "declared in this repository"
+of a service that declares nothing of the kind. Now `db-receiver-name-only`
+names the workspace package the receiver's type is declared in, and
+`db-layer-unread` names the package beside the class. Naming the class there, or
+any class it extends, is the whole fix:
+
+```jsonc
+{
+  "adapters": {
+    "db": { "localBaseClasses": ["Database", "OrdersRepository"] }
+  }
+}
+```
+
+Each call through a named class becomes a `db_query` whose `package` is
+`local:<class>`, and its operation is read off the method name the way a
+repository base's is (`find*` reads, `save*` writes). The table is named where
+the class carries it as a type argument — `OrdersRepository extends
+Repo<Order>` — and is otherwise reported as a table the call does not name.
+
+Two things a wrapper can hide are not configuration, and no key reaches them.
+The library has to be among the service's dependencies — directly or along the
+workspace chain above — for its adapter to be detected at all; a service that
+depends on the wrapper and never on the library gets none, which `force` can
+override for the whole project. And a generated client has to have been
+generated: a repository installed without running its scripts has no Prisma
+client declaration anywhere, and every call on it is reported as a receiver
+whose type could not be resolved.
 
 **A client class of your own.** A class wrapping `fetch` behind `get` and `post`,
 exported as one instance every screen imports, is the ordinary way to write a

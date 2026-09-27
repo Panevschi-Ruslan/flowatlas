@@ -177,6 +177,25 @@ describe('classifying a call', () => {
     expect(result?.unresolved?.hint).not.toContain('localBaseClasses');
   });
 
+  /**
+   * A wrapper in a sibling package, which the checker reaches through a link and
+   * so reads as local. Local to the project, not to the service, and the row
+   * used to say "declared in this repository" of a class that is not (R97).
+   */
+  it('names the workspace package a wrapper is declared in, since naming it is the fix', () => {
+    const result = classifyDbCall({
+      method: 'findOrders',
+      origin: origin({ package: null, isLocal: true, typeName: 'Database', typeArgs: [] }),
+      receiverText: 'ordersRepo',
+      nameHints,
+      workspacePackage: '@acme/db',
+    });
+    expect(result?.unresolved?.reason).toBe('db-receiver-name-only');
+    expect(result?.unresolved?.hint).toContain('the workspace package @acme/db declares');
+    expect(result?.unresolved?.hint).toContain('adapters.db.localBaseClasses');
+    expect(result?.unresolved?.hint).not.toContain('declared in this repository');
+  });
+
   it('says so when the type came from the language itself', () => {
     const result = classifyDbCall({
       method: 'get',

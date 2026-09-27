@@ -132,6 +132,21 @@ export interface DbCallInput {
    * reader filtering on `static` is filtering on the checker having agreed.
    */
   originFromSource?: boolean;
+  /**
+   * The package of this project's own that declares the receiver's type, when
+   * that is not the package the call is written in.
+   *
+   * A workspace resolves its own packages through links, so the checker hands
+   * back a declaration with no `node_modules` in its path and the origin reads
+   * as local — which it is to the project and is not to the service. The
+   * difference decides the advice: a type this service declares is a class to
+   * name, and a type a sibling package declares is a wrapper, and naming the
+   * package is what tells a reader where to look (R97).
+   *
+   * Supplied by the caller, for the reason the flags above are: answering it
+   * means reading manifests, and the core is not given a file system.
+   */
+  workspacePackage?: string;
 }
 
 /**
@@ -228,18 +243,18 @@ const tableFromOverride = (
  * Where the receiver's type was declared, which is what decides which advice
  * can be acted on.
  *
- * Four places and not two. The advice used to be chosen on whether the origin
+ * Five places and not two. The advice used to be chosen on whether the origin
  * resolved at all, so every type that did resolve was described as one this
  * repository declares — including a type declared by a package nobody here
  * controls, whose base class cannot be named in this project's configuration
  * because this project does not own the declaration. A list whose whole value
  * is that every row in it can be acted on cannot afford a row that cannot.
  */
-type OriginPlace = 'unresolved' | 'local' | 'package' | 'library';
+type OriginPlace = 'unresolved' | 'local' | 'workspace' | 'package' | 'library';
 
-const placeOf = (origin: TypeOrigin | null): OriginPlace => {
+const placeOf = (origin: TypeOrigin | null, workspacePackage?: string): OriginPlace => {
   if (origin === null) return 'unresolved';
-  if (origin.isLocal) return 'local';
+  if (origin.isLocal) return workspacePackage === undefined ? 'local' : 'workspace';
   // Neither local nor from a package is the language's own declarations. A
   // receiver typed as a built-in collection can read as a store by name, and
   // there is nothing to describe when it does.
@@ -263,17 +278,23 @@ const RECEIVER_HINTS: Record<OriginPlace, (at: ReceiverOrigin) => string> = {
     `The type of ${receiver} could not be resolved. Install the repository's dependencies, or name its base class under adapters.db.localBaseClasses.`,
   local: ({ receiver, typeName }) =>
     `${receiver} is typed as ${typeName}, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.`,
+  workspace: ({ receiver, typeName, package: pkg }) =>
+    `${receiver} is typed as ${typeName}, which the workspace package ${pkg} declares: a wrapper of this project's own, not a library anything describes. If ${pkg} is the data layer, name ${typeName} — or the class it extends — under adapters.db.localBaseClasses, so calls through it are read as data access.`,
   package: ({ receiver, typeName, package: pkg }) =>
     `${receiver} is typed as ${typeName}, which the ${pkg} package declares rather than this repository. Add a descriptor for ${pkg} if it is a data layer; there is no local base class to name for it.`,
   library: ({ receiver, typeName }) =>
     `${receiver} is typed as ${typeName}, which comes from the language's own library rather than from this repository or any package. There is nothing here to describe as a data layer; the name is the only reason it was read as one.`,
 };
 
-const receiverNameHint = (receiver: string, origin: TypeOrigin | null): string =>
-  RECEIVER_HINTS[placeOf(origin)]({
+const receiverNameHint = (
+  receiver: string,
+  origin: TypeOrigin | null,
+  workspacePackage?: string,
+): string =>
+  RECEIVER_HINTS[placeOf(origin, workspacePackage)]({
     receiver,
     typeName: origin?.typeName ?? '',
-    package: origin?.package ?? '',
+    package: workspacePackage ?? origin?.package ?? '',
   });
 
 /**
@@ -421,7 +442,7 @@ export const classifyDbCall = (input: DbCallInput): DbClassification | null => {
       source: 'none',
       unresolved: {
         reason: 'db-receiver-name-only',
-        hint: receiverNameHint(receiver, origin),
+        hint: receiverNameHint(receiver, origin, input.workspacePackage),
       },
     };
   }

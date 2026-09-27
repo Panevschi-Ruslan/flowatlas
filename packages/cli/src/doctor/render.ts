@@ -110,13 +110,21 @@ const unresolvedSection = (
 ): string[] => {
   const { unresolved } = report;
   if (unresolved.status === 'skipped') return [];
-  if (unresolved.byReason.length === 0) return ['unresolved: none'];
+  // In the words the build summary uses, and only where it says something: a
+  // project whose every body was read has no gap to size.
+  const { found, read } = unresolved.waysIn;
+  const ways =
+    read === found
+      ? []
+      : [`  ways in: ${found} found, ${read} with a handler that was read, ${found - read} without`];
+  if (unresolved.byReason.length === 0) return ['unresolved: none', ...ways];
 
   const lines: string[] = [
     `unresolved: ${unresolved.total} to act on over ${unresolved.rows} row${unresolved.rows === 1 ? '' : 's'}` +
       (unresolved.info.rows === 0
         ? ''
         : `, and ${unresolved.info.sites} place${unresolved.info.sites === 1 ? '' : 's'} static reading cannot see, folded into ${unresolved.info.rows}`),
+    ...ways,
   ];
   // Said on a line of its own, in the words the build summary uses: these are
   // sites where nothing joins, not sites where something was missed.
