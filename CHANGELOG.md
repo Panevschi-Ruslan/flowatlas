@@ -101,6 +101,19 @@ either.
 
 ### Changed
 
+- **A word out of a configuration file no longer indexes a plain object.** The
+  tables that say which reader reads a repository of a given `type`, which one
+  reads a document of a given `kind`, and which arguments a marker gives as
+  names are `Map`s. A misspelled type or kind was answered with whatever the
+  language puts on every object — `constructor` had a reader — and is now
+  answered with nothing, which is what a misspelling deserves. `DOCUMENT_READERS`
+  is exported as a `ReadonlyMap` rather than an object.
+- **The control-character gate reads every file in the repository**, in any
+  language, rather than `.ts` and `.tsx` under one directory. The file that
+  carried two raw NUL bytes — and so went invisible to `grep` — was a script,
+  which the gate written for exactly that failure did not cover. What it covers
+  and what is exempt are two lists in `scripts/invariants.sh` with a reason
+  beside each.
 - The `doctor` reason for how old a declared service's document is, was
   `openapi-document-age` and is now **`document-age`**, with the kind of document
   named in the row. There are two kinds of document now and the reason named one

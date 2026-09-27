@@ -293,21 +293,35 @@ describe('building a project', () => {
     expect(walk.rows.map((row) => row.id)).toContain('table:orders#Order');
   }, 120_000);
 
+  /**
+   * The second service is typed with a word the language puts on every object.
+   * The table that says which reader reads which type is asked with the `type`
+   * out of a configuration file, and while it was an object literal it answered
+   * `constructor` with a function - so a typo would have been planned, cached and
+   * reported as a repository with a reader, and whatever that function returned
+   * would have been its extractor's name. It is a `Map` now and the answer is the
+   * same as for `svelte`: no reader, no nodes (R134).
+   */
   it('leaves a service no extractor can read out, without failing', async () => {
     const config = configFor('unknown-type', [
       service('orders', { baseUrlEnv: ['ORDERS_URL'] }),
       { name: 'landing', repo: join(FIXTURE, 'web'), type: 'svelte' },
+      { name: 'mistyped', repo: join(FIXTURE, 'web'), type: 'constructor' },
     ]);
     const result = await buildProject({ config, builtAt: FIXED });
 
     expect(result.failed).toBe(false);
-    expect(result.report.services.find((item) => item.name === 'landing')).toMatchObject({
-      skipped: 'no-extractor',
-      extractor: null,
-    });
-    expect(result.project.services.find((item) => item.name === 'landing')?.skipped).toBe(
-      'no-extractor',
-    );
+    for (const name of ['landing', 'mistyped']) {
+      expect(result.report.services.find((item) => item.name === name), name).toMatchObject({
+        skipped: 'no-extractor',
+        extractor: null,
+        nodes: 0,
+      });
+      expect(result.project.services.find((item) => item.name === name)?.skipped, name).toBe(
+        'no-extractor',
+      );
+    }
+    expect(result.project.nodes.filter((node) => node.repo === 'mistyped')).toEqual([]);
   }, 120_000);
 
   it('leaves the browsers out when asked, and says that is why', async () => {

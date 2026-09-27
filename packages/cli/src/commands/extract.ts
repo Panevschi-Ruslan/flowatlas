@@ -64,10 +64,13 @@ import { NESTJS_EXTRACTOR } from '../readers.js';
  * likelier to be a service, and the server reader is also the one that reads a
  * repository which is both halves.
  */
-export const BROWSER_READERS: Record<string, (options: ExtractRepoOptions) => Promise<RepoGraph>> = {
-  angular: extractAngularRepo,
-  react: extractReactRepo,
-};
+export const BROWSER_READERS: ReadonlyMap<
+  string,
+  (options: ExtractRepoOptions) => Promise<RepoGraph>
+> = new Map([
+  ['angular', extractAngularRepo],
+  ['react', extractReactRepo],
+]);
 
 /**
  * The browser reader for a repository nothing in a configuration described.
@@ -97,7 +100,7 @@ const detectBrowserReader = (
   const detected = registry.detect(pkg, {});
   if (detected.entry.length > 0) return undefined;
   for (const adapter of detected.frontend) {
-    const reader = BROWSER_READERS[adapter.name];
+    const reader = BROWSER_READERS.get(adapter.name);
     if (reader !== undefined) return reader;
   }
   return undefined;
@@ -247,7 +250,7 @@ export const runExtract = async (
   const readBrowser =
     service === undefined
       ? detectBrowserReader(registry, readResolvedPackageJson(rootDir) ?? {})
-      : BROWSER_READERS[service.type];
+      : BROWSER_READERS.get(service.type);
 
   // A server repository is opened here rather than inside the extractor, so the
   // parsed project can also answer what the build cache needs to know: which

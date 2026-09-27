@@ -22,8 +22,13 @@ import { halfOf, READERS } from '../readers.js';
  * a repository whose routes are registered by calling an application is read by
  * exactly the same passes as a NestJS one, and which reader reads which framework
  * is a row of `readers.ts` rather than a list here (R118).
+ *
+ * A `Map`, because the key is the `type` out of somebody's configuration file
+ * and a plain object hands `constructor` back a function: a misspelled type
+ * would be planned, cached and reported as a repository with a reader rather
+ * than as one with none (R134).
  */
-export const EXTRACTORS: Record<string, string> = Object.fromEntries(
+export const EXTRACTORS: ReadonlyMap<string, string> = new Map(
   READERS.map(([type, , reader]) => [type, reader]),
 );
 
