@@ -121,6 +121,43 @@ export interface ChannelPrefix {
   optionKey: string;
   /** What goes between the prefix and the name the call writes. */
   separator: string;
+  /**
+   * How a value of the transport carries its endpoint, for code that states it
+   * on the value rather than on a class.
+   *
+   * A server with no gateway says its namespace once, as the value `of(…)`
+   * returns, and every handler registered on that value and every publish made
+   * through it is addressed within it; a browser says it as the address its
+   * socket was opened on. Both are the same fact — this value is on that
+   * endpoint — and both ends of a channel have to arrive at it the same way or
+   * they land on two nodes with one end each (R102).
+   */
+  carriedBy?: EndpointCarrier;
+}
+
+/**
+ * The calls that give a transport's value its endpoint, and the one event that
+ * hands a connection over on it.
+ *
+ * Only a call or a property the transport itself declares is read: `to(room)`
+ * keeps the endpoint of whatever it was called on, and `sockets.get(id)` on a
+ * map says nothing about any endpoint, which is why the packages are part of the
+ * description rather than an afterthought.
+ */
+export interface EndpointCarrier {
+  /** Packages whose declarations are the transport's own. */
+  readonly packages: readonly string[];
+  /**
+   * Functions and methods that open or select an endpoint, by the name they
+   * are declared with. The first argument is the address; none is the root.
+   * Every other call or property of the transport keeps its receiver's.
+   */
+  readonly opens: readonly string[];
+  /**
+   * Events whose listener is handed a connection on the endpoint of the value
+   * the listener was registered on.
+   */
+  readonly connection: readonly string[];
 }
 
 export interface BrokerSpec extends BrokerAdapter {

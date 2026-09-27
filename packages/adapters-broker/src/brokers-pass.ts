@@ -34,14 +34,8 @@ import { Node } from 'ts-morph';
 import { brokerAdapters, createCustomBrokerAdapter, type BrokerSpec, type ConsumerPattern } from './adapters/index.js';
 import { hasAcknowledgement, methodMatches, receiverIsFrom, targetOfHandler } from './call-site.js';
 import { payloadParameter, typeAtPath } from './payload.js';
-import {
-  isResolved,
-  resolveChannelName,
-  shapeChannelNames,
-  trimEndpoint,
-  type ChannelResolution,
-  type ChannelShaping,
-} from './channel-name.js';
+import { isResolved, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
+import { endpointShapingAt, isUnreadable, unreadableEndpointRow, type EndpointShaping } from './endpoint.js';
 import { pairKey, readBrokerMarkers } from './markers.js';
 
 const lineColOf = (node: TsNode): { line: number; column: number } =>
@@ -90,48 +84,6 @@ const channelAt = (
     resolutions.find(isResolved) ??
     resolutions[0] ?? { unresolved: 'channel-dynamic', text: fallback }
   );
-};
-
-/**
- * What the class a call sits in says about the names written in it.
- *
- * Either the transport's rules applied to this class, or the one case where
- * the class declares an endpoint and that endpoint cannot be read. The second
- * is not a detail to shrug at: falling back to the default endpoint would put
- * every channel of a namespaced gateway on the node the unnamespaced ones use,
- * and quietly join services that never speak.
- */
-type ClassShaping = ChannelShaping | { readonly unreadable: string };
-
-const isUnreadable = (shaping: ClassShaping): shaping is { readonly unreadable: string } =>
-  'unreadable' in shaping;
-
-/**
- * `owner` is absent for a publish written outside any class — a module-level
- * function, or a handler written in the registration. Only the endpoint half of
- * the shaping is a class's to declare, so what is left is the transport's own
- * reserved names, which apply wherever the call is written.
- */
-const shapingOf = (owner: ClassDeclaration | undefined, spec: BrokerSpec): ClassShaping => {
-  const reserved = spec.reservedChannels;
-  const base: ChannelShaping = reserved === undefined ? {} : { reserved };
-  const shape = spec.channelPrefix;
-  if (shape === undefined || owner === undefined) return base;
-  const decorator = getDecorator(owner, shape.classDecorator);
-  if (decorator === undefined) return base;
-  for (const argument of decorator.getArguments()) {
-    if (!Node.isObjectLiteralExpression(argument)) continue;
-    const property = argument.getProperty(shape.optionKey);
-    if (property === undefined || !Node.isPropertyAssignment(property)) continue;
-    const initializer = property.getInitializer();
-    if (initializer === undefined) return { unreadable: property.getText() };
-    const value = evaluateExpression(initializer);
-    if (!value.resolved || typeof value.value !== 'string') {
-      return { unreadable: initializer.getText() };
-    }
-    return { ...base, prefix: trimEndpoint(value.value), separator: shape.separator };
-  }
-  return base;
 };
 
 /** Every adapter that applies: the detected ones plus any described in configuration. */
@@ -195,27 +147,20 @@ export const extractBrokers = (ctx: PassContext): void => {
   };
 
   /**
-   * The class declares the endpoint its channels sit under, and it cannot be read.
+   * The endpoint the channels sit under is stated, and it cannot be read.
    *
    * Reported once per call site rather than once per class, because a call site
    * is where a reader can do something about it, and because the row has to say
    * which publish or which handler lost its channel.
    */
   const reportEndpoint = (
-    shaping: { readonly unreadable: string },
+    shaping: EndpointShaping,
     spec: BrokerSpec,
     file: string,
     line: number,
     symbol: string,
   ): void => {
-    const option = spec.channelPrefix?.optionKey ?? 'endpoint';
-    ctx.report({
-      file,
-      line,
-      reason: 'channel-dynamic',
-      hint: `The ${option} this class declares cannot be read, so neither can any channel name under it. Write it as a literal or a constant.`,
-      symbol: `${symbol} -> ${shaping.unreadable.slice(0, 60)}`,
-    });
+    if (isUnreadable(shaping)) ctx.report(unreadableEndpointRow(shaping, spec, file, line, symbol));
   };
 
   /**
@@ -324,7 +269,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     // The transport has the last word on the name the call wrote: an endpoint
     // the class declares is part of it, and a name the transport keeps for its
     // own signalling is not a channel at all.
-    const shaping = shapingOf(owner, spec);
+    const shaping = endpointShapingAt(spec, owner, receiver);
     const names = isResolved(resolution) && !isUnreadable(shaping)
       ? shapeChannelNames(resolution.names, shaping)
       : [];
@@ -489,7 +434,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     if (methodId === undefined) return;
     const { line } = lineColOf(method);
     const { resolution, jobName } = consumerChannel(pattern, method, owner);
-    const shaping = shapingOf(owner, spec);
+    const shaping = endpointShapingAt(spec, owner);
     const names = isResolved(resolution) && !isUnreadable(shaping)
       ? shapeChannelNames(resolution.names, shaping)
       : [];
@@ -703,7 +648,7 @@ export const extractBrokers = (ctx: PassContext): void => {
             call.getText().slice(0, 60),
           );
           const { line } = lineColOf(call);
-          const shaping = shapingOf(owner, spec);
+          const shaping = endpointShapingAt(spec, owner, callee.getExpression());
           const names = isResolved(resolution) && !isUnreadable(shaping)
             ? shapeChannelNames(resolution.names, shaping)
             : [];

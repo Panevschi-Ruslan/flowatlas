@@ -1,5 +1,4 @@
 import {
-  evaluateExpression,
   forEachCall,
   makeChannelId,
   makeLeafId,
@@ -9,16 +8,19 @@ import {
   type GraphNode,
 } from '@flowatlas/core';
 import {
+  endpointShapingAt,
   hasAcknowledgement,
   isResolved,
+  isUnreadable,
   methodMatches,
   receiverIsFrom,
   resolveChannelName,
   shapeChannelNames,
   socketio,
   targetOfHandler,
-  trimEndpoint,
+  unreadableEndpointRow,
   type ChannelResolution,
+  type EndpointShaping,
 } from '@flowatlas/adapters-broker';
 import type { CallExpression, ClassDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -49,114 +51,6 @@ import { definePass } from './types.js';
 
 /** The transport's own description, read from the side that has no decorators. */
 const SPEC = socketio;
-
-/** A hole in a template, written as something no URL may contain. */
-const HOLE = '\u0000';
-
-/**
- * Where the path starts: after a scheme and host, or after a hole standing for one.
- *
- * The second half is the case that matters. Almost every browser writes the
- * origin as a settings key and the namespace beside it, so the address reads as
- * a hole followed by a path, and the path is written out even though the whole
- * string is not. A hole only counts as the origin when a slash follows it in the
- * source — `${base}/orders` says where the path begins, while `${base}` alone
- * could be an origin or an origin and a namespace, and guessing which is exactly
- * what must not happen here.
- */
-const ORIGIN = /^(?:[a-z][a-z0-9+.-]*:\/\/[^/]*|\u0000[^/]*(?=\/))/i;
-
-/**
- * The path part of an address, with the origin, the query and the slashes gone.
- *
- * A socket's namespace is the path it was opened on, so `http://host:3000/orders`,
- * `/orders` and `orders` all name the namespace a gateway declares as `orders`.
- */
-const namespaceIn = (address: string): string => {
-  const withoutOrigin = address.replace(ORIGIN, '');
-  const query = withoutOrigin.search(/[?#]/);
-  return trimEndpoint(query === -1 ? withoutOrigin : withoutOrigin.slice(0, query));
-};
-
-/** A template with its holes marked, so a reader can see whether a hole is in the path. */
-const skeletonOf = (template: TsNode): string => {
-  if (!Node.isTemplateExpression(template)) return HOLE;
-  return (
-    template.getHead().getLiteralText() +
-    template
-      .getTemplateSpans()
-      .map((span) => HOLE + span.getLiteral().getLiteralText())
-      .join('')
-  );
-};
-
-/** The namespace an address names, or the text of the address that hid it. */
-type Namespace = { readonly namespace: string } | { readonly unreadable: string };
-
-/**
- * Which namespace a socket was opened on.
- *
- * The address is usually a settings key and a path written beside it —
- * `` io(`${environment.apiUrl}/orders`) `` — so the whole string rarely reads as
- * a constant while the part that matters always does. What is asked, then, is
- * narrower than "what is this address": it is whether the *path* is written out.
- * A hole anywhere in the path means the namespace is not stated, and defaulting
- * to the root namespace there would put a namespaced browser's events on the
- * nodes the unnamespaced ones use — a join between two ends that never meet.
- */
-const namespaceOf = (address: TsNode | undefined): Namespace => {
-  // `io()` with no address is the root namespace, said by saying nothing.
-  if (address === undefined) return { namespace: '' };
-  const value = evaluateExpression(address);
-  if (value.resolved && typeof value.value === 'string') {
-    return { namespace: namespaceIn(value.value) };
-  }
-  const path = namespaceIn(skeletonOf(address));
-  if (path.includes(HOLE)) return { unreadable: address.getText().slice(0, 60) };
-  return { namespace: path };
-};
-
-/**
- * The call that produced a socket.
- *
- * Not "the call to `io`": what makes a value a socket is its type, which the
- * pattern has already checked, so whatever call the value was initialised from
- * is the call that opened it whatever the client library happens to call its
- * factory. A field assigned in a constructor is looked for too, since a socket
- * kept as a field and opened later is as ordinary as one opened in place.
- */
-const openedBy = (receiver: TsNode, owner: ClassDeclaration): CallExpression | undefined => {
-  if (Node.isCallExpression(receiver)) return receiver;
-
-  const asCall = (node: TsNode | undefined): CallExpression | undefined =>
-    node !== undefined && Node.isCallExpression(node) ? node : undefined;
-
-  const memberName =
-    Node.isPropertyAccessExpression(receiver) && Node.isThisExpression(receiver.getExpression())
-      ? receiver.getName()
-      : undefined;
-  if (memberName !== undefined) {
-    const property = owner.getProperty(memberName);
-    const initialised = asCall(property?.getInitializer());
-    if (initialised !== undefined) return initialised;
-    let assigned: CallExpression | undefined;
-    owner.forEachDescendant((node) => {
-      if (assigned !== undefined) return;
-      if (!Node.isBinaryExpression(node)) return;
-      if (node.getOperatorToken().getText() !== '=') return;
-      const left = node.getLeft();
-      if (!Node.isPropertyAccessExpression(left)) return;
-      if (!Node.isThisExpression(left.getExpression()) || left.getName() !== memberName) return;
-      assigned = asCall(node.getRight());
-    });
-    return assigned;
-  }
-
-  if (!Node.isIdentifier(receiver)) return undefined;
-  const declaration = receiver.getSymbol()?.getDeclarations()[0];
-  if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return undefined;
-  return asCall(declaration.getInitializer());
-};
 
 export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) => {
   // The browser only ever holds a socket if the repository installed a client
@@ -200,36 +94,29 @@ export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) =>
     });
   };
 
-  const reportNamespace = (
-    unreadable: string,
+  /**
+   * The channels one call reaches: the names it writes, under the endpoint the
+   * socket is on, minus anything the library keeps for itself.
+   *
+   * Which endpoint that is gets asked of the same function the service half
+   * asks, so an event written at both ends lands on one node whether the other
+   * end is a gateway declaring its namespace or a server holding `io.of(…)`.
+   */
+  const channelsOf = (resolution: ChannelResolution, shaping: EndpointShaping): string[] =>
+    isResolved(resolution) && !isUnreadable(shaping)
+      ? shapeChannelNames(resolution.names, shaping)
+      : [];
+
+  const reportUnjoined = (
+    resolution: ChannelResolution,
+    shaping: EndpointShaping,
     file: string,
     line: number,
     symbol: string,
   ): void => {
-    ctx.report({
-      file,
-      line,
-      reason: 'channel-dynamic',
-      hint: 'The address this socket was opened on cannot be read, so neither can the namespace its events belong to. Write the path beside the settings key rather than inside it.',
-      symbol: `${symbol} -> ${unreadable}`,
-    });
+    if (isUnreadable(shaping)) ctx.report(unreadableEndpointRow(shaping, SPEC, file, line, symbol));
+    else reportChannel(resolution, file, line, symbol);
   };
-
-  /**
-   * The channels one call reaches: the names it writes, under the namespace the
-   * socket was opened on, minus anything the library keeps for itself.
-   */
-  const channelsOf = (
-    resolution: ChannelResolution,
-    namespace: Namespace,
-  ): string[] =>
-    isResolved(resolution) && 'namespace' in namespace
-      ? shapeChannelNames(resolution.names, {
-          prefix: namespace.namespace,
-          separator: SPEC.channelPrefix?.separator ?? '/',
-          ...(SPEC.reservedChannels === undefined ? {} : { reserved: SPEC.reservedChannels }),
-        })
-      : [];
 
   const lineColOf = (node: TsNode): { line: number; column: number } =>
     node.getSourceFile().getLineAndColumnAtPos(node.getStart());
@@ -251,10 +138,10 @@ export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) =>
       channelArg === undefined
         ? { unresolved: 'channel-dynamic', text: call.getText().slice(0, 60) }
         : resolveChannelName(channelArg, ctx.config);
-    const namespace = namespaceOf(openedBy(receiver, owner)?.getArguments()[0]);
-    const names = channelsOf(resolution, namespace);
+    const shaping = endpointShapingAt(SPEC, owner, receiver);
+    const names = channelsOf(resolution, shaping);
     // Everything this call names belongs to the library, not the application.
-    if (isResolved(resolution) && 'namespace' in namespace && names.length === 0) return;
+    if (isResolved(resolution) && !isUnreadable(shaping) && names.length === 0) return;
 
     // A publish that hands over a callback is a request waiting for a reply, and
     // the graph should not call the two the same thing. The reply itself needs
@@ -298,8 +185,7 @@ export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) =>
     });
 
     if (names.length === 0) {
-      if ('unreadable' in namespace) reportNamespace(namespace.unreadable, file, line, symbol);
-      else reportChannel(resolution, file, line, symbol);
+      reportUnjoined(resolution, shaping, file, line, symbol);
       return;
     }
     for (const name of names) {
@@ -334,10 +220,10 @@ export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) =>
       channelArg === undefined
         ? { unresolved: 'channel-dynamic', text: call.getText().slice(0, 60) }
         : resolveChannelName(channelArg, ctx.config);
-    const namespace = namespaceOf(openedBy(receiver, owner)?.getArguments()[0]);
-    const names = channelsOf(resolution, namespace);
+    const shaping = endpointShapingAt(SPEC, owner, receiver);
+    const names = channelsOf(resolution, shaping);
     // `socket.on('connect', …)` listens to the library, not to a service.
-    if (isResolved(resolution) && 'namespace' in namespace && names.length === 0) return;
+    if (isResolved(resolution) && !isUnreadable(shaping) && names.length === 0) return;
 
     const handler = pattern.handlerArg === undefined ? undefined : args[pattern.handlerArg];
     const target = handler === undefined ? undefined : targetOfHandler(handler, owner);
@@ -377,8 +263,7 @@ export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) =>
     });
 
     if (names.length === 0) {
-      if ('unreadable' in namespace) reportNamespace(namespace.unreadable, file, line, symbol);
-      else reportChannel(resolution, file, line, symbol);
+      reportUnjoined(resolution, shaping, file, line, symbol);
       return;
     }
     for (const name of names) {
