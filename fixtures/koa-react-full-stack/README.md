@@ -13,7 +13,8 @@ Type-checked, never executed:
 
 ## What it is for
 
-R88. `guessType` used to answer with the first row of `TYPE_SIGNATURES` whose
+R88. `guessType` used to answer with the first row of the reader table (`READERS`
+in `packages/cli/src/readers.ts`, once `TYPE_SIGNATURES` in `stacks.ts`) whose
 dependency a manifest declared, and `react` sat above `koa` for a reason that had
 nothing to do with either of them. So a repository shaped like this one — which
 is the shape of outline, and of most repositories that ship a browser with the

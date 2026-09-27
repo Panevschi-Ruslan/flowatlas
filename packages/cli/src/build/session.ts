@@ -9,7 +9,8 @@ import {
   repoFiles,
   type WarmRepo,
 } from '@flowatlas/extractor-nestjs';
-import { createRegistry, EXTRA_PASSES, SERVER_TYPES } from './extractor.js';
+import { createRegistry, EXTRA_PASSES } from './extractor.js';
+import { NESTJS_EXTRACTOR, typesReadBy } from '../readers.js';
 import type { IncrementalExtractor, PartialExtract } from './incremental.js';
 
 export interface OpenOptions {
@@ -83,10 +84,15 @@ const sessionOf = <Ctx>(extractor: WarmExtractor<Ctx>, options: OpenOptions): Se
  *
  * Every type the TypeScript server reader handles, because what is held open is
  * the parsed project and that is the same whichever framework declares the
- * routes in it.
+ * routes in it. Asked of that reader by name rather than of the half it reads:
+ * this is a fact about one reader's session, and a browser reader that learned to
+ * hold a project open would be a row of its own here.
  */
 const OPENERS: Record<string, (options: OpenOptions) => ServiceSession> = Object.fromEntries(
-  SERVER_TYPES.map((type) => [type, (options: OpenOptions) => sessionOf(nestjs, options)]),
+  typesReadBy(NESTJS_EXTRACTOR).map((type) => [
+    type,
+    (options: OpenOptions) => sessionOf(nestjs, options),
+  ]),
 );
 
 export const isIncremental = (type: string): boolean => OPENERS[type] !== undefined;

@@ -1,12 +1,14 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { BROWSER_TYPES, isFrontend, SERVER_TYPES } from './build/extractor.js';
+import { EXTRACTORS, isFrontend } from './build/extractor.js';
+import { BROWSER_READERS } from './commands/extract.js';
+import { halfOf, READERS, typesReadBy } from './readers.js';
 import {
   guessType,
   guessUnread,
   guessWorkspaceType,
   looksLikeApplication,
   noReaderNote,
-  TYPE_SIGNATURES,
   UNKNOWN_TYPE,
 } from './stacks.js';
 
@@ -98,25 +100,14 @@ describe('the stack a repository is built on', () => {
     expect(guessType({ dependencies: { koa: '2.15.0' } })).toBe('koa');
   });
 
-  /**
-   * The same fact written down twice, in two currencies, held to itself.
-   *
-   * `build/extractor.ts` says which types each reader handles and this table says
-   * which half each type's reader reads; the rule above is only as good as those
-   * two agreeing. A type that moves from one reader to the other — which is what
-   * happened to the file-system router — fails here until this column follows it.
-   */
-  it('agrees with the readers about which type belongs to which half', () => {
-    for (const [type, , half] of TYPE_SIGNATURES) {
-      expect({ type, server: half === 'server' }).toEqual({
+  it('sends every type to the reader its row names', () => {
+    for (const [type, , reader] of READERS) {
+      expect({ type, reader: EXTRACTORS[type] }).toEqual({ type, reader });
+      expect({ type, browser: isFrontend(type) }).toEqual({
         type,
-        server: SERVER_TYPES.includes(type),
+        browser: halfOf(type) === 'browser',
       });
-      expect({ type, browser: half === 'browser' }).toEqual({ type, browser: isFrontend(type) });
     }
-    // Nothing a reader handles is missing from the table, in either direction.
-    const named = TYPE_SIGNATURES.map(([type]) => type);
-    for (const type of [...SERVER_TYPES, ...BROWSER_TYPES]) expect(named).toContain(type);
   });
 
   it('says nothing about a manifest that gave nothing away', () => {
@@ -183,5 +174,63 @@ describe('the stack one member of a workspace is built on', () => {
     const bare = { name: 'orders', dependencies: { express: '4.19.0' } };
     expect(guessWorkspaceType(bare, undefined)).toBe(guessType(bare));
     expect(guessWorkspaceType({ name: 'nothing' }, undefined)).toBe(UNKNOWN_TYPE);
+  });
+});
+
+/**
+ * What the agreement test became.
+ *
+ * There used to be a test here holding two declarations of one fact to each
+ * other: the half in `stacks.ts` and `SERVER_TYPES` / `BROWSER_TYPES` /
+ * `isFrontend` in `build/extractor.ts`. It had earned its place — a later branch
+ * added a framework to both lists, and this is what would have caught a mismatch —
+ * but there is one table for both to read now (R118), so holding it to itself
+ * would assert nothing.
+ *
+ * The assertion worth keeping is the other direction, which the old test could
+ * only half make: every reader this tool ships has a row, and every row names a
+ * reader it ships. That is the drift still possible, because a reader is a
+ * package, a dependency and a dispatch entry, none of which a table of strings can
+ * derive. A reader added to `packages/` and to this command's manifest with no row
+ * would read nothing and say nothing about it; a row naming a package nobody
+ * depends on is a type that is configured, offered by `init` and unreadable.
+ */
+describe('the readers this tool ships', () => {
+  // Read from this command's own manifest, and from nothing derived from the
+  // table, because a reader is shipped by being depended on. `READER_PACKAGES`
+  // would be the shorter spelling and it is the wrong one: it is the union of the
+  // manifest and the table, so the table would be held to itself again.
+  const manifest = JSON.parse(
+    readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+  ) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
+  const shipped = Object.keys({ ...manifest.dependencies, ...manifest.devDependencies }).filter(
+    (name) => name.startsWith('@flowatlas/extractor-'),
+  );
+
+  it('has a row for every reader package this command depends on', () => {
+    expect(shipped.length).toBeGreaterThan(0);
+    for (const reader of shipped) {
+      expect({ reader, reads: typesReadBy(reader) }).not.toEqual({ reader, reads: [] });
+    }
+  });
+
+  it('names a reader it ships in every row', () => {
+    for (const [type, , reader] of READERS) {
+      expect({ type, reader, shipped: shipped.includes(reader) }).toEqual({
+        type,
+        reader,
+        shipped: true,
+      });
+    }
+  });
+
+  // The one place a reader is actually called for a repository that is only a
+  // browser. A table of functions cannot be derived from a table of strings, so
+  // the two are held to each other here instead.
+  it('can call a browser reader for exactly the types whose reader reads a browser', () => {
+    const browsers = [...new Set(READERS.map(([type]) => type))].filter(
+      (type) => halfOf(type) === 'browser',
+    );
+    expect(browsers.sort()).toEqual(Object.keys(BROWSER_READERS).sort());
   });
 });

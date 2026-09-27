@@ -18,9 +18,9 @@ import {
   guessUnread,
   guessWorkspaceType,
   looksLikeApplication,
-  TYPE_SIGNATURES,
   UNKNOWN_TYPE,
 } from '../stacks.js';
+import { READABLE_TYPES } from '../readers.js';
 import { installMcp } from './mcp.js';
 
 /** Directories that are never a service of their own. */
@@ -261,10 +261,9 @@ const refine = async (candidates: readonly Candidate[]): Promise<Candidate[]> =>
   const refined: Candidate[] = [];
   for (const candidate of chosen) {
     const name = await input({ message: `Service name for ${candidate.repo}`, default: candidate.name });
-    const known = TYPE_SIGNATURES.map(([type]) => type);
     const picked = await select({
       message: `Type of ${name}`,
-      choices: [...known, UNKNOWN_TYPE].map((type) => ({ name: type, value: type })),
+      choices: [...READABLE_TYPES, UNKNOWN_TYPE].map((type) => ({ name: type, value: type })),
       default: candidate.type,
     });
     // Picking a type by hand answers the question `unread` was asking. Keeping
@@ -331,7 +330,7 @@ export const runInit = async (options: InitOptions = {}): Promise<InitResult> =>
     const named = unread.map((service) => `${service.name} (${service.unread ?? ''})`).join(', ');
     print(`No reader yet for: ${named}.`);
     print(
-      `flowatlas reads repositories of type ${TYPE_SIGNATURES.map(([type]) => type).join(' and ')} today.`,
+      `flowatlas reads repositories of type ${READABLE_TYPES.join(' and ')} today.`,
     );
     print('Those repositories stay in the configuration and contribute nothing to the graph.');
   }

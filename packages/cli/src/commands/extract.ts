@@ -41,7 +41,8 @@ import {
   type BuildCache,
 } from '../build/cache.js';
 import { hashGraphFile } from '../build/incremental.js';
-import { adapterNames, createRegistry, EXTRA_PASSES, NESTJS_EXTRACTOR } from '../build/extractor.js';
+import { adapterNames, createRegistry, EXTRA_PASSES } from '../build/extractor.js';
+import { NESTJS_EXTRACTOR } from '../readers.js';
 
 /**
  * The browser readers, by the name of the half each one reads.
@@ -52,12 +53,17 @@ import { adapterNames, createRegistry, EXTRA_PASSES, NESTJS_EXTRACTOR } from '..
  * fact — so this table answers whether a configuration named a browser and
  * whether detection found one, without either question being asked twice.
  *
+ * It is a function per type, so it cannot be derived from `readers.ts`; what it
+ * can be is held to it, and `stacks.test.ts` asserts that the types read by a
+ * browser reader there are exactly the rows here. A reader this tool ships with
+ * no row, or a row whose reader it does not ship, fails there (R118).
+ *
  * Everything not named here is read by the server reader, which is the default
  * for the same reason it always was: a repository nobody described is far
  * likelier to be a service, and the server reader is also the one that reads a
  * repository which is both halves.
  */
-const BROWSER_READERS: Record<string, (options: ExtractRepoOptions) => Promise<RepoGraph>> = {
+export const BROWSER_READERS: Record<string, (options: ExtractRepoOptions) => Promise<RepoGraph>> = {
   angular: extractAngularRepo,
   react: extractReactRepo,
 };
