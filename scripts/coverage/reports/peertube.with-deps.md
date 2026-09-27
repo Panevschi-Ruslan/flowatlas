@@ -2,13 +2,6 @@
 
 Angular and Express in one repository.
 
-> **Not measured on this branch, and not to be quoted.** Every figure below was
-> produced on one branch carrying one fix, and the sixteen reports' merge was
-> resolved file by file, so no number here is true of this tree (R113, fifth
-> row). The fresh-clone report beside this one has been re-measured; this one
-> needs a dependency install on the whole repository, which nobody has paid for
-> yet. Regenerate it with `pnpm coverage:deps --target <name>`, which overwrites
-> this notice along with the figures.
 
 |  |  |
 |---|---|
@@ -17,6 +10,7 @@ Angular and Express in one repository.
 | read | `server`, `client` |
 | read by | peertube-client (`angular`), peertube-server (`express`) |
 | source files counted | 2136 |
+| extent counted over | `server` alone (a member of `.`, declaring no package of it); `client` alone (a member of `.`, declaring no package of it) |
 | flowatlas | 0.4.1 |
 
 ## Outcome
@@ -33,67 +27,119 @@ build **exit 0**, doctor exit 0, link exit 0
 
 | kind | entry points |
 |---|---|
-| none | 0 |
+| event | 2 |
+| http | 358 |
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
 handlers, which is what the counting rule counts, because two declarations may
-land on one address.
+land on one address. An address is an address within one application: a service
+that creates two of them has two address spaces, and the third row counts the
+addresses that exist only because the id says which application serves them —
+every one of which used to be overwritten by the first claim on it. It counts for
+every reader now: a file-system router used to put the application in the *path*
+instead, which kept its ids apart at the price of an address no framework serves,
+and R125 made it answer the same way as everything else. That is why a repository
+addressed that way reads zero here before R125 and its true number after.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| addresses placed | 0 |  |
-| declarations with a body attached | 0 | 0 of 343 |
-| …whose body reaches anything | 0 | 0 of 343 |
-| …behind middleware or a guard | 0 | 0 of 343 |
+| addresses placed | 358 |  |
+| addresses claimed by more than one declaration | 0 | two handlers of one application; one of them is dead code |
+| addresses told apart only by their application | 0 | each was overwritten before R119, silently and with no total moving |
+| declarations with a body attached | 42 | 42 of 343 |
+| …whose body reaches anything | 16 | 16 of 343 |
+| …behind middleware or a guard | 42 | 42 of 343 |
+
+Where those addresses are. One row per leading segment, which is enough of an
+address for a dropped global prefix to show and little enough that a new route
+is not a diff.
+
+| first segment | addresses |
+|---|---|
+| `/accounts?` | 7 |
+| `/api` | 294 |
+| `/plugins` | 5 |
+| `/video-channels` | 8 |
+| `/videos` | 14 |
+
+30 more at 16 segment(s) of fewer than five addresses each, folded together so that a repository serving two hundred addresses at the top level does not write two hundred rows.
 
 ## What joined
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 252 | 0 |
+| requests from a browser | 253 | 235 |
 | requests between services | 0 | 0 |
-| channels | 7 | 0 with both ends |
+| channels | 10 | 0 with both ends |
 
 ## Storage and screens
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 1961 | no denominator: the rule has no probe for it |
-| …that name a table | 1901 | 1901 of 1961 |
-| tables | 2 | 2 of 85 |
+| query sites read | 494 | no denominator: the rule has no probe for it |
+| …that name a table | 491 | 491 of 494 |
+| tables | 74 | 74 of 85 |
 | components | 330 | 330 of 330 |
 | clicks | 307 | 307 of 307 |
 | every other binding a template makes | 1006 | not counted by the rule |
 
 ## What it could not read
 
-3873 places somebody could act on, 1431 the tool
-reports as a limit of static reading, and 234 where there
+1359 places somebody could act on, 1749 the tool
+reports as a limit of static reading, and 269 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| api-path-dynamic | action | 238 |  |
-| call-dynamic-receiver | info | 1168 |  |
-| channel-dynamic | action | 11 |  |
+| api-path-dynamic | action | 5 |  |
+| call-dynamic-receiver | info | 1189 |  |
+| channel-const-unresolved | action | 1 |  |
+| channel-dynamic | action | 7 |  |
 | consumer-handler-unresolved | action | 4 |  |
-| db-layer-unread | action | 1 |  |
-| db-receiver-name-only | action | 9 |  |
+| db-layer-unread | action | 2 |  |
 | dynamic-cache-key | action | 20 |  |
 | dynamic-config-key | action | 1 |  |
-| dynamic-table-name | action | 51 |  |
-| handler-not-a-method | nothing | 234 |  |
-| handler-not-found | action | 35 |  |
+| dynamic-table-name | action | 3 |  |
+| handler-not-a-method | nothing | 269 |  |
 | inject-token-unresolved | info | 15 |  |
 | payload-type-unknown | action | 2 |  |
+| route-handler-anonymous | info | 305 |  |
 | route-link-dynamic | info | 35 |  |
-| route-path-dynamic | action | 349 |  |
-| route-screen-unread | info | 18 |  |
-| route-target-unresolved | action | 117 |  |
+| route-path-dynamic | action | 3 |  |
+| route-screen-unread | info | 10 |  |
+| route-target-unresolved | action | 31 |  |
+| target-route-not-found | action | 10 |  |
 | type-depth-exceeded | info | 56 |  |
 | type-generic-uninstantiated | info | 139 |  |
-| type-unresolved | action | 1134 |  |
-| unknown-db-package | action | 1901 |  |
+| type-unresolved | action | 1270 |  |
+
+## Files with sites and no output
+
+None beyond what is baselined. Every other file the counting rule found a
+declaration site in yielded a node of that family, or a row naming the file.
+
+### What this gate cannot see
+
+Whatever the result above says, 4 kinds of failure get through this
+assertion, and each was established by breaking something on purpose rather than
+by argument. The list is `BLIND` in `read-gate.mjs`; this section renders it,
+so that neither half of the result can travel without the other.
+
+**R117 - A family this target writes in a style the counting rule has no probe for.**
+
+A query count fell from 77 to 0 on one target and this gate could not have caught it: the rule has no probe for that repository’s query style, so the denominator was 0 and the per-file assertion had nothing to assert over. A vacuous check passes by saying nothing and reads exactly like a check that looked. The instrument for that is the report’s own wording - "no denominator: the rule has no probe for it" rather than "nothing of this kind here" - and not this gate.
+
+**R119 - Two applications colliding, where the file that loses is named by an edge.**
+
+A graph was broken on purpose - two applications collided and one controller’s file contributed nothing - and the gate answered `read gate ok`. The mechanism is structural rather than a tuning problem: the surviving entry takes a `handles` edge to *each* controller’s method, an edge recorded at a site counts as the reader having read that line, so `spokenFor` contains the losing file and the gate skips it. Strength 2 asks whether anything was said about a file; a collision is two files having the same thing said about them. R119 needed a snapshot fixture for exactly this reason.
+
+**R110 - A wrong value.**
+
+A mount read at the wrong address produces a node, in the right file, for the right family, and every count matches. Only a reader that can read the mount can know the address is wrong, so this is a fix and not a gate.
+
+**R111 - A file where one of three verbs was dropped (strength 3, deliberately not done).**
+
+Strength 3 would compare sites found against nodes plus rows per file. It needs a probe-to-adapter mapping, and the counting rule’s whole authority rests on having no per-target judgement in it; that mapping is new judgement in exactly that file, and somewhere a future change could be tuned to pass rather than fixed. Recorded as not done rather than left to be rediscovered.
 
 ## The denominators
 
@@ -119,6 +165,12 @@ applied identically to all eight targets and knows nothing about any of them.
 | things a person can click | 307 |
 | places the code reaches storage | 0 |
 | tables or models declared (an upper bound) | 85 |
+
+Counted over the extent named at the top of this report - the read directory and
+the workspace packages it declares - because that is what the tool reads. A
+denominator counted over the read directory alone put more found than there was
+to find, and `extent.mjs` says why the rule works the extent out from the
+repository's manifests instead of asking the tool for it.
 
 ## Cost
 

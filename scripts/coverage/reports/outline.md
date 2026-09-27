@@ -33,9 +33,11 @@ handlers, which is what the counting rule counts, because two declarations may
 land on one address. An address is an address within one application: a service
 that creates two of them has two address spaces, and the third row counts the
 addresses that exist only because the id says which application serves them —
-every one of which used to be overwritten by the first claim on it. It counts
-nothing for a repository whose applications are told apart by where they sit in
-the tree instead, which is how the file-system routers address theirs.
+every one of which used to be overwritten by the first claim on it. It counts for
+every reader now: a file-system router used to put the application in the *path*
+instead, which kept its ids apart at the price of an address no framework serves,
+and R125 made it answer the same way as everything else. That is why a repository
+addressed that way reads zero here before R125 and its true number after.
 
 |  | count | of what the counting rule found |
 |---|---|---|
@@ -163,7 +165,7 @@ repository's manifests instead of asking the tool for it.
 
 ## Cost
 
-Wall clock 15 to 60 s, peak resident memory 0.5 to 1 GB.
+Wall clock 5 to 15 s, peak resident memory 1 to 2 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.
