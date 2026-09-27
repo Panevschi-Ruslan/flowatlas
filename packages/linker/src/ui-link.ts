@@ -1,7 +1,13 @@
 import { wasRead, type GraphNode } from '@flowatlas/core';
 import type { Finding } from './http-link.js';
 import { cmp } from './order.js';
-import { isMatch, matchRoute, pathAnswers, type RouteResult } from './route-match.js';
+import {
+  callingApplication,
+  isMatch,
+  matchRoute,
+  pathAnswers,
+  type RouteResult,
+} from './route-match.js';
 
 /**
  * What the linker can be asked while resolving one request made in a browser.
@@ -187,21 +193,21 @@ interface Ask {
 }
 
 /** A settings entry naming the service this frontend's key stands for. */
-const byApiTarget = ({ call, method, path, env, index }: Ask): UiOutcome | undefined => {
+const byApiTarget = (ask: Ask): UiOutcome | undefined => {
+  const { call, env, index } = ask;
   const named = env === undefined ? undefined : index.targetOf(call.repo, env);
   // Terminal once a target is named, wrong answer included: somebody wrote down
   // which service that key means, and a search behind their back would only
   // hide the fact that the route they named is gone.
-  return named === undefined ? undefined : within(named, 'api-target', method, path, index);
+  return named === undefined ? undefined : within(ask, named, 'api-target');
 };
 
 /** Exactly one service declaring the same settings key as its own base. */
-const byBaseUrlEnv = ({ method, path, env, index }: Ask): UiOutcome | undefined => {
+const byBaseUrlEnv = (ask: Ask): UiOutcome | undefined => {
+  const { env, index } = ask;
   if (env === undefined) return undefined;
   const claiming = index.claimantsOf(env);
-  return claiming.length === 1
-    ? within(claiming[0] as string, 'base-url-env', method, path, index)
-    : undefined;
+  return claiming.length === 1 ? within(ask, claiming[0] as string, 'base-url-env') : undefined;
 };
 
 /**
@@ -218,8 +224,8 @@ const byBaseUrlEnv = ({ method, path, env, index }: Ask): UiOutcome | undefined 
  * serves routes may still be calling somebody else's: the caller's own service
  * not serving an address is no reason to stop looking for one that does.
  */
-const bySameService = ({ call, method, path, index }: Ask): UiOutcome | undefined => {
-  const own = within(call.repo, 'same-service', method, path, index);
+const bySameService = (ask: Ask): UiOutcome | undefined => {
+  const own = within(ask, ask.call.repo, 'same-service');
   return own.kind === 'noRoute' ? undefined : own;
 };
 
@@ -244,19 +250,21 @@ const answers = (result: RouteResult): boolean =>
  * services for entirely different callers, so one candidate is a usable guess
  * and several is a question only the configuration can settle.
  */
-const byUniqueRoute = ({ method, path, index }: Ask): UiOutcome | undefined => {
+const byUniqueRoute = (ask: Ask): UiOutcome | undefined => {
+  const { method, path, index } = ask;
   const answering = index
     .services()
     .filter((service) => {
       const routes = index.routesOf(service) ?? [];
-      if (answers(matchRoute(method, path, routes))) return true;
+      const from = callerApplicationIn(ask, service);
+      if (answers(matchRoute(method, path, routes, from))) return true;
       const prefixed = withGlobalPrefix(path, routes);
-      return prefixed !== undefined && answers(matchRoute(method, prefixed, routes));
+      return prefixed !== undefined && answers(matchRoute(method, prefixed, routes, from));
     })
     .sort(cmp);
 
   if (answering.length === 1) {
-    return within(answering[0] as string, 'unique-route', method, path, index);
+    return within(ask, answering[0] as string, 'unique-route');
   }
   return answering.length > 1 ? { kind: 'ambiguous', method, path, candidates: answering } : undefined;
 };
@@ -343,19 +351,27 @@ const withGlobalPrefix = (path: string, routes: readonly GraphNode[]): string | 
   return typeof prefix === 'string' ? `/${prefix}/${path}`.replace(/\/+/g, '/') : undefined;
 };
 
+/**
+ * The application the caller is written in, where that says anything about the
+ * service being asked.
+ *
+ * Only where the service asked is the caller's own. An application is named by
+ * where it sits in a repository, so `examples/blog` names an address space of
+ * this service and nothing at all of another one; handing the name across a
+ * service boundary would match a route by a coincidence of directory names.
+ */
+const callerApplicationIn = (ask: Ask, service: string): string | undefined =>
+  service === ask.call.repo ? callingApplication(ask.call) : undefined;
+
 /** The route one named service answers with, or why it does not. */
-const within = (
-  targetService: string,
-  via: UiVia,
-  method: string,
-  path: string,
-  index: UiIndex,
-): UiOutcome => {
+const within = (ask: Ask, targetService: string, via: UiVia): UiOutcome => {
+  const { method, path, index } = ask;
   const routes = index.routesOf(targetService) ?? [];
-  let found = matchRoute(method, path, routes);
+  const from = callerApplicationIn(ask, targetService);
+  let found = matchRoute(method, path, routes, from);
   if (!isMatch(found) && found.reason === 'not-found') {
     const prefixed = withGlobalPrefix(path, routes);
-    if (prefixed !== undefined) found = matchRoute(method, prefixed, routes);
+    if (prefixed !== undefined) found = matchRoute(method, prefixed, routes, from);
   }
   if (isMatch(found)) {
     return {

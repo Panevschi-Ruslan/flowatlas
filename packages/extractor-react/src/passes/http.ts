@@ -1,4 +1,5 @@
 import {
+  applicationOfFile,
   evaluateExpression,
   forEachCall,
   makeExternalApiId,
@@ -213,6 +214,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
 
     const verb = verbOf(network, shape);
     const body = bodyOf(network, client, shape);
+    const application = applicationOfFile(ctx.meta, site.file);
 
     ctx.builder.addNode({
       id,
@@ -233,6 +235,13 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         ...(body.keys === undefined ? {} : { bodyKeys: body.keys }),
         package: client.package,
         client: client.name,
+        // Which application this request is written in, where the service holds
+        // more than one. The other half of an address: an entry records the
+        // application that serves it, and until a call site recorded its own a
+        // tie between two applications could not be resolved even for a caller
+        // sitting inside one of them (R132). Asked of the file, through the one
+        // function that decides whether an id carries an application at all.
+        ...(application === undefined ? {} : { application }),
         // Where the opening of the address came from, said only when it is not
         // the client's own: an address that differs from every other one this
         // client writes is a fact a reader should not have to go and work out.

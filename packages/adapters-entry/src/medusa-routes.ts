@@ -5,6 +5,7 @@ import {
   reachMeta,
   makeHttpEntryKey,
   normalizeFilePath,
+  type ApplicationMap,
   type EntryAdapter,
   type EntryNode,
   type ExtractContext,
@@ -13,6 +14,7 @@ import type { Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import {
   fsAddressSpace,
+  fsApplicationMap,
   pathPatternTest,
   readVerbFile,
   reportNotServed,
@@ -210,9 +212,17 @@ const readMethods = (element: TsNode): readonly string[] | undefined => {
  * four hundred and eighty-eight — a number that looked like a clean repository
  * rather than like a convention nobody had described.
  */
+/** Which applications this repository holds; see the Next.js reader's own. */
+const applicationsOf = (ctx: ExtractContext): ApplicationMap =>
+  fsApplicationMap(
+    [...repoSources(ctx)].map((source) => normalizeFilePath(source.getFilePath(), ctx.repoDir)),
+    [MEDUSA_API],
+  );
+
 export const medusaRoutesAdapter: EntryAdapter = {
   name: ADAPTER,
   detect: (pkg) => hasAnyDependency(pkg, PACKAGES),
+  applications: (ctx) => applicationsOf(ctx),
 
   extractEntries(ctx: ExtractContext): EntryNode[] {
     const entries: EntryNode[] = [];
@@ -289,10 +299,7 @@ export const medusaRoutesAdapter: EntryAdapter = {
     // qualified by. Read for the whole service before any of it is emitted,
     // because whether an id names an application depends on how many there
     // are, which is the one thing a single file cannot say (R125).
-    const space = fsAddressSpace(
-      [...repoSources(ctx)].map((source) => normalizeFilePath(source.getFilePath(), ctx.repoDir)),
-      [MEDUSA_API],
-    );
+    const space = fsAddressSpace(applicationsOf(ctx));
 
     for (const sourceFile of repoSources(ctx)) {
       const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);

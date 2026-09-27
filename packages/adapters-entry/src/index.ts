@@ -75,6 +75,7 @@ export { ACTION_BUILDERS, NEXT_SAFE_ACTION, ZSA } from './action-builders.js';
 export { APP_PAGES, APP_ROUTER, PAGES_API } from './nextjs-paths.js';
 export {
   fsAddressSpace,
+  fsApplicationMap,
   pathPatternTest,
   readVerbFile,
   routePathOfFile,

@@ -1,6 +1,6 @@
 import type { GraphNode } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
-import { isMatch, matchRoute, pathAnswers } from './route-match.js';
+import { answeredOnlyByWildcard, isMatch, matchRoute, pathAnswers } from './route-match.js';
 
 const route = (method: string, path: string, controller = 'C'): GraphNode => ({
   id: `entry:orders:http:${method}:${path}`,
@@ -169,6 +169,66 @@ describe('matchRoute', () => {
       expect(!isMatch(found) && found.applications).toBeUndefined();
     });
 
+    /**
+     * The caller's own application, which is the input R119 did without and
+     * R132 supplied.
+     *
+     * A relative address asks the origin the page came from, and that origin is
+     * the application the file is written in. So a request from inside one of
+     * them is not the deployment question the paragraph above refuses to guess
+     * at — it is answered by the caller's own application and by nothing else.
+     */
+    describe('a caller inside one of them', () => {
+      it('answers with the caller own application, and reports nothing', () => {
+        const both = [
+          inApplication('/api/orders', '.'),
+          inApplication('/api/orders', 'examples/blog'),
+        ];
+        const found = matchRoute('GET', '/api/orders', both, 'examples/blog');
+        expect(isMatch(found) && found.entry.id).toBe(
+          'entry:orders@examples/blog:http:GET:/api/orders',
+        );
+      });
+
+      // Before specificity and not after it. The other application spelling the
+      // address out more fully says nothing about where this request goes, and
+      // preferring it is how 35 of 36 joins on payload named the wrong program.
+      it('prefers its own catch-all to another application spelled-out route', () => {
+        const mixed = [
+          inApplication('/api/posts', '.'),
+          { ...inApplication('/api/*', 'examples/blog'), meta: { method: 'GET', path: '/api/*', application: 'examples/blog' } },
+        ];
+        const found = matchRoute('GET', '/api/posts', mixed, 'examples/blog');
+        expect(isMatch(found) && found.entry.id).toBe('entry:orders@examples/blog:http:GET:/api/*');
+      });
+
+      // Specificity still decides inside the application it chose: preferring an
+      // application is not preferring any route in it.
+      it('still lets specificity decide within that application', () => {
+        const inside = [
+          { ...inApplication('/api/*', 'examples/blog'), meta: { method: 'GET', path: '/api/*', application: 'examples/blog' } },
+          inApplication('/api/orders', 'examples/blog'),
+        ];
+        const found = matchRoute('GET', '/api/orders', inside, 'examples/blog');
+        expect(isMatch(found) && found.entry.id).toBe(
+          'entry:orders@examples/blog:http:GET:/api/orders',
+        );
+      });
+
+      // A caller in an application that answers nothing is outside this address
+      // as surely as a caller in another service, so the refusal stands.
+      it('leaves the refusal alone where the caller application answers nothing', () => {
+        const both = [inApplication('/health', 'ApiModule'), inApplication('/health', 'WorkerModule')];
+        const found = matchRoute('GET', '/health', both, 'examples/blog');
+        expect(!isMatch(found) && found.applications).toEqual(['ApiModule', 'WorkerModule']);
+      });
+
+      it('leaves the refusal alone where the caller is outside every application', () => {
+        const both = [inApplication('/health', 'ApiModule'), inApplication('/health', 'WorkerModule')];
+        expect(!isMatch(matchRoute('GET', '/health', both))).toBe(true);
+      });
+    });
+
     // One application's route is still beaten by the other's more specific one:
     // the applications differ, but only one of them can answer, so there is no
     // ambiguity of any kind to report.
@@ -213,5 +273,43 @@ describe('matchRoute', () => {
       meta: { method: 'GET', path: '/orders/42' },
     };
     expect(isMatch(matchRoute('GET', '/orders/42', [consumer]))).toBe(false);
+  });
+});
+
+/**
+ * Whether the catch-all that answered is all there is, asked of one address
+ * space.
+ *
+ * The row this decides says a renamed route may be hiding behind the catch-all,
+ * and that is a statement about the program behind it. A service with several
+ * applications has several, and routes another one spells out are no evidence
+ * about this one (R132).
+ */
+describe('answeredOnlyByWildcard', () => {
+  const at = (path: string, application?: string): GraphNode => ({
+    id: `entry:orders${application === undefined ? '' : `@${application}`}:http:GET:${path}`,
+    type: 'entry',
+    kind: 'http',
+    label: `GET ${path}`,
+    repo: 'orders',
+    meta: { method: 'GET', path, ...(application === undefined ? {} : { application }) },
+  });
+
+  it('says so where the same application spells other routes out', () => {
+    const routes = [at('/api/*', 'blog'), at('/api/orders', 'blog')];
+    expect(answeredOnlyByWildcard(at('/api/*', 'blog'), routes)).toBe(true);
+  });
+
+  it('says nothing where only another application spells them out', () => {
+    const routes = [at('/api/*', 'template'), at('/api/orders', '.')];
+    expect(answeredOnlyByWildcard(at('/api/*', 'template'), routes)).toBe(false);
+  });
+
+  it('compares against every route where the service has one application', () => {
+    expect(answeredOnlyByWildcard(at('/api/*'), [at('/api/*'), at('/api/orders')])).toBe(true);
+  });
+
+  it('says nothing about a route that is not a catch-all', () => {
+    expect(answeredOnlyByWildcard(at('/api/orders'), [at('/api/orders')])).toBe(false);
   });
 });

@@ -9,6 +9,7 @@ import {
   reachHere,
   reachMeta,
   reachOf,
+  type ApplicationMap,
   type EntryAdapter,
   type EntryHandler,
   type EntryNode,
@@ -23,6 +24,7 @@ import type { ActionBuilder } from './action-builders.js';
 import { ACTION_BUILDERS } from './action-builders.js';
 import {
   fsAddressSpace,
+  fsApplicationMap,
   pathPatternTest,
   readVerbFile,
   reportUnreadHandler,
@@ -152,9 +154,24 @@ interface HttpEntryOptions {
  * turns the import into a request, and there is no string anywhere to join on —
  * so the edge is the import, and this only has to say that the boundary exists.
  */
+/**
+ * Which applications this repository holds, read from where its route files are.
+ *
+ * One function and two callers, because two readings of the same directories
+ * would be two opinions about what an application is: the ids minted below, and
+ * whoever asks which application a file that declares no route belongs to —
+ * a component making a request (R132).
+ */
+const applicationsOf = (ctx: ExtractContext): ApplicationMap =>
+  fsApplicationMap(
+    [...repoSources(ctx)].map((source) => normalizeFilePath(source.getFilePath(), ctx.repoDir)),
+    [APP_ROUTER, PAGES_API],
+  );
+
 export const nextjsRoutesAdapter: EntryAdapter = {
   name: 'nextjs-routes',
   detect: (pkg) => hasDependency(pkg, PACKAGE),
+  applications: (ctx) => applicationsOf(ctx),
 
   extractEntries(ctx: ExtractContext): EntryNode[] {
     const entries: EntryNode[] = [];
@@ -256,10 +273,7 @@ export const nextjsRoutesAdapter: EntryAdapter = {
     // qualified by. Read for the whole service before any of it is emitted,
     // because whether an id names an application depends on how many
     // applications there are — the one thing a single file cannot say (R125).
-    const space = fsAddressSpace(
-      [...repoSources(ctx)].map((source) => normalizeFilePath(source.getFilePath(), ctx.repoDir)),
-      [APP_ROUTER, PAGES_API],
-    );
+    const space = fsAddressSpace(applicationsOf(ctx));
 
     for (const sourceFile of repoSources(ctx)) {
       const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);

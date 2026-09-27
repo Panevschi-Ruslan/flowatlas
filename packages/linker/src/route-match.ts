@@ -75,8 +75,26 @@ const pathAnswers = (routePath: string, requestPath: string): boolean => {
   return route.length === request.length;
 };
 
-/** The application an entry belongs to, or the empty string where it has none. */
-const applicationOf = (entry: GraphNode): string => String(entry.meta?.['application'] ?? '');
+/** The application a node belongs to, or the empty string where it has none. */
+const applicationOf = (node: GraphNode): string => String(node.meta?.['application'] ?? '');
+
+/**
+ * The application a call site is written in, when the graph recorded one.
+ *
+ * The same key an entry carries, read off the caller: since R132 a request node
+ * records which application it belongs to, by the same reading and the same
+ * judgement that put the application into the entry's identity. Empty means the
+ * service has one address space, or the caller is not in any application read —
+ * either way there is nothing to prefer, which is what `undefined` says here.
+ *
+ * Only ever meaningful within one service, since an application is named by
+ * where it sits in a repository. Callers pass it only where the routes being
+ * matched are the caller's own service's; see {@link matchRoute}.
+ */
+export const callingApplication = (call: GraphNode): string | undefined => {
+  const application = applicationOf(call);
+  return application === '' ? undefined : application;
+};
 
 const methodAnswers = (routeMethod: string, requestMethod: string): boolean => {
   // Both sides, not one. The extractors record a verb in upper case, but a
@@ -155,26 +173,46 @@ const moreSpecific = (a: readonly number[], b: readonly number[]): number => {
  * honest answer and it is a useful one — it tells a reader that their request
  * lands in one of two named places.
  *
- * A caller *inside* one of those applications is the easier case and would want
- * its own application preferred, and that is not done here for want of the
- * input: no node in the graph records which application a call site belongs to,
- * and every call the linker resolves through a settings key comes from another
- * service, where there is no such thing to record. Accepting the calling
- * application as an argument nothing can supply would be a parameter that only
- * ever arrives absent.
+ * A caller *inside* one of those applications is the easier case, and since
+ * R132 it is answered: `from` is the application the call site is written in,
+ * and where any entry belongs to it the rest of the service is not a candidate.
+ * A component in `examples/blog` asking for `/api/orders` means its own
+ * application's `/api/orders` and nothing else, and no deployment decides that
+ * — it is what the framework does with a relative address.
+ *
+ * `from` is absent for every caller outside, which is most of them: a request
+ * from another service has no application of this service to be in, and a
+ * service with one address space records none. Absent leaves the paragraphs
+ * above exactly as they were, which is the point — the refusal is right for a
+ * request from outside and is not being walked back.
+ *
+ * It is the caller's job to pass `from` only where the entries are the caller's
+ * own service's. An application is named by where it sits in a repository, so
+ * `examples/blog` in one service names nothing in another.
  */
 export const matchRoute = (
   method: string,
   path: string,
   entries: readonly GraphNode[],
+  from?: string,
 ): RouteResult => {
   const wanted = method.toUpperCase();
-  const matching = entries.filter((entry) => {
+  const answering = entries.filter((entry) => {
     if (entry.type !== 'entry' || entry.kind !== 'http') return false;
     const routeMethod = String(entry.meta?.['method'] ?? '');
     const routePath = String(entry.meta?.['path'] ?? '');
     return methodAnswers(routeMethod, wanted) && pathAnswers(routePath, path);
   });
+
+  // A request written inside an application means that application's address,
+  // and the rest of the service is not a candidate for it at all. Applied
+  // before specificity rather than as a tie-break, because it is not one: a
+  // caller's own `/api/orders` is what it asked for even where another
+  // application spells the address out more fully, and on the repository this
+  // was measured against the answer chosen for 35 of 36 such requests was
+  // another application's `/api/*` (R132).
+  const own = from === undefined ? [] : answering.filter((entry) => applicationOf(entry) === from);
+  const matching = own.length === 0 ? answering : own;
 
   if (matching.length === 1) return { entry: matching[0] as GraphNode };
   if (matching.length === 0) return { reason: 'not-found', candidates: [] };
@@ -211,10 +249,19 @@ export const matchRoute = (
 export const answeredOnlyByWildcard = (entry: GraphNode, routes: readonly GraphNode[]): boolean => {
   const path = String(entry.meta?.['path'] ?? '');
   if (!segmentsOf(path).includes('*')) return false;
+  // Within the catch-all's own application, because that is the application
+  // behind it. A service with two applications has two address spaces, and
+  // routes another one spells out say nothing about what this one serves:
+  // counting them made a request that landed on its own application's catch-all
+  // report that no route of the service spells it out, which is a sentence
+  // about the wrong program (R132). A service with one application compares
+  // against all of its routes, as it always did.
+  const application = applicationOf(entry);
   return routes.some(
     (route) =>
       route.type === 'entry' &&
       route.kind === 'http' &&
+      applicationOf(route) === application &&
       !segmentsOf(String(route.meta?.['path'] ?? '')).includes('*'),
   );
 };
