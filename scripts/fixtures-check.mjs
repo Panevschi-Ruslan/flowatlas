@@ -114,7 +114,32 @@ const problems = [];
  * valid graph is a problem in its own right, whether or not anything ran.
  */
 const check = (dir, label, expectedPath, actualPath, parse) => {
-  if (!isFile(expectedPath)) return;
+  if (!isFile(expectedPath)) {
+    // The other half of the question R120 asked. A snapshot that exists but is
+    // never compared was already an error; a run that writes an output nobody
+    // holds a snapshot of was silently fine, so a fixture added before a kind of
+    // output existed - or a new kind of output landing on fixtures that predate
+    // it - went ungated with nothing said. Two fixtures were in that state the
+    // day the contracts step arrived. `--update` now creates the snapshot, and
+    // outside an update the gap is a failure, so it cannot be missed twice.
+    if (!isFile(actualPath)) return;
+    // Only an output this fixture's own steps say they write. Anything else in
+    // the output directory is a leftover of some other run, and the layout table
+    // is the one answer to which files a fixture of this kind produces.
+    const declared = layoutOf(dir).steps.flatMap((step) => step.writes);
+    if (!declared.includes(basename(actualPath))) return;
+    if (UNHELD.get(basename(dir))?.includes(basename(expectedPath))) return;
+    if (update) {
+      accept(expectedPath, actualPath);
+      console.log(`created ${label}`);
+      return;
+    }
+    problems.push(
+      `${label}: a run wrote ${relative(root, actualPath)} and no snapshot holds it, so nothing compares it. ` +
+        'Run with --update, read the new file, and commit it.',
+    );
+    return;
+  }
 
   const snapshot = { label, fixture: basename(dir), compared: false };
   let expected;
@@ -190,6 +215,30 @@ const asReport = (value) => {
 };
 
 /** What a snapshot is compared against, one row per file the tool writes. */
+/**
+ * Outputs a fixture's own steps write that it has never held a snapshot of.
+ *
+ * Found the day the rule above arrived: nine project fixtures are held by their
+ * repository graph alone, from before a project graph and a link report were
+ * compared, so eighteen outputs have never been checked. Named here rather than
+ * snapshotted in bulk, because taking eighteen files nobody has read as the
+ * expectation is how a bug gets written into a gate (R138 owns reading them).
+ * An entry that stops being needed is not reported yet; R138 removes the list.
+ */
+const UNHELD = new Map(
+  [
+    'angular-basic',
+    'angular-client-wrapper',
+    'bot-registry',
+    'ground-truth',
+    'multi-repo-analytics',
+    'multi-repo-contracts',
+    'nest-broker-markers',
+    'nest-kafka',
+    'nest-types',
+  ].map((name) => [name, ['expected.project-graph.json', 'expected.link-report.json']]),
+);
+
 const SNAPSHOTS = [
   ['expected.graph.json', 'graph.json', parseRepoGraph],
   ['expected.project-graph.json', 'project-graph.json', parseProjectGraph],
