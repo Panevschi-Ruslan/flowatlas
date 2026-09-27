@@ -50,10 +50,15 @@ export const uncheckedNote = (
         message: `${subject} declares no type for what it expects`,
         hint: missing(direction, 'receiver'),
       };
+    // Said without a direction of travel on purpose: the end that holds the wire
+    // form is sometimes the one that serialised before sending and sometimes the
+    // one that parses after receiving, and `subject` already names which end it
+    // is. A sentence that guessed would tell half of them they send something
+    // they receive.
     case 'body-already-serialised':
       return {
-        message: `${subject} sends its body as ${detail ?? 'text'}, which is how it travels rather than what is in it`,
-        hint: 'Type the value before it is serialised and pass that, or annotate the call, so there is a shape to compare.',
+        message: `${subject} has ${detail ?? 'text'} where a shape should be, which is how a body travels rather than what is in it`,
+        hint: 'Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare.',
       };
     case 'type-missing':
       return {

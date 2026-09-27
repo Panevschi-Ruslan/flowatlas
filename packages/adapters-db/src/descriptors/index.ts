@@ -388,33 +388,46 @@ const knexDescriptor: DbDescriptor = {
  * *column* in the call the chain started from. Asking the root first reported
  * `id` as a table on most of a real repository's queries, so the `from` is
  * asked first and the root is the fallback.
+ *
+ * A `Map`, like `descriptorAliases` below and for its reason: both are keyed by a
+ * package name, and a bare object indexed by a name out of somebody else's source
+ * answers for `constructor` and `toString` as readily as for `knex` (R130).
  */
-export const tableReadings: Record<string, TableReading> = {
-  'drizzle-orm': {
-    locators: [
-      { kind: 'argument', index: 0 },
-      { kind: 'chain-call', method: 'from', index: 0 },
-    ],
-    entityInTypeArgs: true,
-  },
-  mongoose: { locators: [{ kind: 'receiver' }], entityInTypeArgs: true },
-  sequelize: {
-    // The receiver first, because a model named outright is the clearest
-    // statement of which table is meant; its declared type second, for an
-    // instance, where the expression is a variable and the class behind it is
-    // the only thing that states a table.
-    locators: [{ kind: 'receiver' }, { kind: 'receiver-type' }],
-    entityInTypeArgs: true,
-  },
-  knex: {
-    locators: [
-      { kind: 'chain-call', method: 'from', index: 0 },
-      { kind: 'chain-root-argument', index: 0 },
-    ],
-    entityInTypeArgs: true,
-  },
-  kysely: { locators: [{ kind: 'argument', index: 0 }], entityInTypeArgs: false },
-};
+export const tableReadings: ReadonlyMap<string, TableReading> = new Map([
+  [
+    'drizzle-orm',
+    {
+      locators: [
+        { kind: 'argument', index: 0 },
+        { kind: 'chain-call', method: 'from', index: 0 },
+      ],
+      entityInTypeArgs: true,
+    },
+  ],
+  ['mongoose', { locators: [{ kind: 'receiver' }], entityInTypeArgs: true }],
+  [
+    'sequelize',
+    {
+      // The receiver first, because a model named outright is the clearest
+      // statement of which table is meant; its declared type second, for an
+      // instance, where the expression is a variable and the class behind it is
+      // the only thing that states a table.
+      locators: [{ kind: 'receiver' }, { kind: 'receiver-type' }],
+      entityInTypeArgs: true,
+    },
+  ],
+  [
+    'knex',
+    {
+      locators: [
+        { kind: 'chain-call', method: 'from', index: 0 },
+        { kind: 'chain-root-argument', index: 0 },
+      ],
+      entityInTypeArgs: true,
+    },
+  ],
+  ['kysely', { locators: [{ kind: 'argument', index: 0 }], entityInTypeArgs: false }],
+]);
 
 /**
  * Packages that hand out another library's data layer under their own name.
@@ -429,10 +442,14 @@ export const tableReadings: Record<string, TableReading> = {
  *
  * A record rather than a second descriptor, because the two packages are not two
  * libraries to describe; they are one library reached under two names.
+ *
+ * A `Map` because the key is a package name read out of an import in somebody
+ * else's repository, and a bare object indexed by a word from source text
+ * answers for `constructor` and `toString` too (R130).
  */
-export const descriptorAliases: Record<string, string> = {
-  'sequelize-typescript': 'sequelize',
-};
+export const descriptorAliases: ReadonlyMap<string, string> = new Map([
+  ['sequelize-typescript', 'sequelize'],
+]);
 
 export const dbAdapters: readonly DbAdapter[] = [
   {

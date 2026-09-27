@@ -152,3 +152,32 @@ describe('a chain that carries two operations', () => {
     expect(graph.unresolved.filter((row) => row.reason === 'db-package-unread')).toEqual([]);
   });
 });
+
+/**
+ * The tables are asked about words from the source, so they are asked about
+ * every word - including the four the language puts on every object whether a
+ * program wrote them or not. A lookup written as an object literal answers for
+ * those, and one did: `value.toString()` on a receiver of a described package
+ * found `Object.prototype.toString`, and two `db_query` nodes labelled
+ * `function toString() { [native code] }` went into novu's graph (R122).
+ *
+ * Asserted as "no node anywhere names this file" rather than as "no `db_query`
+ * for this call", because the failure is a node minted from a value nobody read
+ * and there is no reason to assume the next one will have the type the last one
+ * had. Both fixture files hold module-level functions only, so a body there
+ * earns a node exactly when a leaf is found in it and nothing else can make the
+ * file appear.
+ */
+describe('a method every object has', () => {
+  const NAMED_BY_NOBODY = [
+    ['fn-data-layer', 'src/orders/prototype-names.ts'],
+    ['nest-leaves', 'src/orders/prototype-names.ts'],
+  ] as const;
+
+  for (const [fixture, file] of NAMED_BY_NOBODY) {
+    it(`produces no node anywhere in ${fixture}'s graph`, async () => {
+      const graph = await graphOf(fixture);
+      expect(graph.nodes.filter((node) => node.file === file)).toEqual([]);
+    });
+  }
+});

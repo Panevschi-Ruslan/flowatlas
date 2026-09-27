@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:26:21.641Z",
+  "builtAt": "2026-09-27T13:57:29.594Z",
   "services": [
     {
       "name": "api",
@@ -117,10 +117,11 @@
       "meta": {
         "channelKind": "channel",
         "adapters": [
-          "house-bus"
+          "house-bus",
+          "nestjs-kafka"
         ],
         "producers": 2,
-        "consumers": 1
+        "consumers": 2
       }
     },
     {
@@ -140,18 +141,33 @@
       }
     },
     {
+      "id": "consumer:worker#src/projections/declared-projections.service.ts:DeclaredProjections.onCreated",
+      "type": "consumer",
+      "label": "DeclaredProjections.onCreated",
+      "repo": "worker",
+      "file": "src/projections/declared-projections.service.ts",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:worker:event:orders:created"
+      }
+    },
+    {
       "id": "consumer:worker#src/projections/orders.service.ts:OrderProjections.onCancelled",
       "type": "consumer",
       "label": "OrderProjections.onCancelled",
       "repo": "worker",
       "file": "src/projections/orders.service.ts",
-      "line": 28,
+      "line": 24,
       "kind": "event",
       "meta": {
         "kind": "event",
         "adapter": "house-bus",
         "decorator": "subscribe",
-        "entryId": null
+        "entryId": "entry:worker:event:orders:cancelled"
       }
     },
     {
@@ -160,13 +176,13 @@
       "label": "OrderProjections.onCreated",
       "repo": "worker",
       "file": "src/projections/orders.service.ts",
-      "line": 26,
+      "line": 22,
       "kind": "event",
       "meta": {
         "kind": "event",
         "adapter": "house-bus",
         "decorator": "subscribe",
-        "entryId": null
+        "entryId": "entry:worker:event:orders:created"
       }
     },
     {
@@ -175,13 +191,13 @@
       "label": "OrderProjections.onInvoiced",
       "repo": "worker",
       "file": "src/projections/orders.service.ts",
-      "line": 27,
+      "line": 23,
       "kind": "event",
       "meta": {
         "kind": "event",
         "adapter": "house-bus",
         "decorator": "subscribe",
-        "entryId": null
+        "entryId": "entry:worker:event:orders:invoiced"
       }
     },
     {
@@ -218,6 +234,45 @@
         "registration": "ordersRouter.post",
         "middlewareRead": true,
         "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:worker:event:orders:cancelled",
+      "type": "entry",
+      "label": "event orders:cancelled",
+      "repo": "worker",
+      "file": "src/projections/orders.service.ts",
+      "line": 24,
+      "kind": "event",
+      "meta": {
+        "pattern": "orders:cancelled",
+        "adapter": "house-bus"
+      }
+    },
+    {
+      "id": "entry:worker:event:orders:created",
+      "type": "entry",
+      "label": "event orders:created",
+      "repo": "worker",
+      "file": "src/projections/declared-projections.service.ts",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "pattern": "orders:created",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "entry:worker:event:orders:invoiced",
+      "type": "entry",
+      "label": "event orders:invoiced",
+      "repo": "worker",
+      "file": "src/projections/orders.service.ts",
+      "line": 23,
+      "kind": "event",
+      "meta": {
+        "pattern": "orders:invoiced",
+        "adapter": "house-bus"
       }
     },
     {
@@ -309,16 +364,17 @@
       "repo": "worker",
       "meta": {
         "stats": {
-          "files": 4,
-          "filesRead": 4,
+          "files": 6,
+          "filesRead": 6,
           "filesUnreadable": 0,
-          "classes": 3,
+          "classes": 4,
           "skippedExternalCalls": {}
         },
         "bootstrap": "src/main.ts",
         "adapters": {
           "entry": [
-            "nestjs-http"
+            "nestjs-http",
+            "nestjs-microservice"
           ]
         }
       }
@@ -329,13 +385,14 @@
       "label": "AppModule",
       "repo": "worker",
       "file": "src/app.module.ts",
-      "line": 6,
+      "line": 7,
       "kind": "static",
       "meta": {
         "controllers": [],
         "providers": [
           "EventBus",
-          "OrderProjections"
+          "OrderProjections",
+          "DeclaredProjections"
         ],
         "exports": []
       }
@@ -369,12 +426,32 @@
       "line": 17
     },
     {
+      "id": "worker#src/projections/declared-projections.service.ts:DeclaredProjections",
+      "type": "provider",
+      "label": "DeclaredProjections",
+      "repo": "worker",
+      "file": "src/projections/declared-projections.service.ts",
+      "line": 26,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "worker#src/projections/declared-projections.service.ts:DeclaredProjections.onCreated",
+      "type": "method",
+      "label": "DeclaredProjections.onCreated",
+      "repo": "worker",
+      "file": "src/projections/declared-projections.service.ts",
+      "line": 28
+    },
+    {
       "id": "worker#src/projections/orders.service.ts:OrderProjections",
       "type": "provider",
       "label": "OrderProjections",
       "repo": "worker",
       "file": "src/projections/orders.service.ts",
-      "line": 21,
+      "line": 17,
       "kind": "injectable",
       "meta": {
         "module": "AppModule"
@@ -386,7 +463,7 @@
       "label": "OrderProjections.onCancelled",
       "repo": "worker",
       "file": "src/projections/orders.service.ts",
-      "line": 39
+      "line": 35
     },
     {
       "id": "worker#src/projections/orders.service.ts:OrderProjections.onCreated",
@@ -394,7 +471,7 @@
       "label": "OrderProjections.onCreated",
       "repo": "worker",
       "file": "src/projections/orders.service.ts",
-      "line": 31
+      "line": 27
     },
     {
       "id": "worker#src/projections/orders.service.ts:OrderProjections.onInvoiced",
@@ -402,7 +479,7 @@
       "label": "OrderProjections.onInvoiced",
       "repo": "worker",
       "file": "src/projections/orders.service.ts",
-      "line": 35
+      "line": 31
     },
     {
       "id": "worker#src/projections/orders.service.ts:OrderProjections.onModuleInit",
@@ -410,7 +487,7 @@
       "label": "OrderProjections.onModuleInit",
       "repo": "worker",
       "file": "src/projections/orders.service.ts",
-      "line": 25
+      "line": 21
     }
   ],
   "edges": [
@@ -532,6 +609,14 @@
       "type": "consumes",
       "confidence": "static",
       "file": "src/projections/orders.service.ts",
+      "line": 24
+    },
+    {
+      "from": "channel:orders:created",
+      "to": "consumer:worker#src/projections/declared-projections.service.ts:DeclaredProjections.onCreated",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/projections/declared-projections.service.ts",
       "line": 28
     },
     {
@@ -540,7 +625,7 @@
       "type": "consumes",
       "confidence": "static",
       "file": "src/projections/orders.service.ts",
-      "line": 26
+      "line": 22
     },
     {
       "from": "channel:orders:invoiced",
@@ -548,7 +633,16 @@
       "type": "consumes",
       "confidence": "static",
       "file": "src/projections/orders.service.ts",
-      "line": 27
+      "line": 23
+    },
+    {
+      "from": "consumer:worker#src/projections/declared-projections.service.ts:DeclaredProjections.onCreated",
+      "to": "worker#src/projections/declared-projections.service.ts:DeclaredProjections.onCreated",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "void",
+      "file": "src/projections/declared-projections.service.ts",
+      "line": 28
     },
     {
       "from": "consumer:worker#src/projections/orders.service.ts:OrderProjections.onCancelled",
@@ -556,7 +650,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/projections/orders.service.ts",
-      "line": 28
+      "line": 24
     },
     {
       "from": "consumer:worker#src/projections/orders.service.ts:OrderProjections.onCreated",
@@ -564,7 +658,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/projections/orders.service.ts",
-      "line": 26
+      "line": 22
     },
     {
       "from": "consumer:worker#src/projections/orders.service.ts:OrderProjections.onInvoiced",
@@ -572,7 +666,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/projections/orders.service.ts",
-      "line": 27
+      "line": 23
     },
     {
       "from": "entry:api:http:POST:/orders",
@@ -617,6 +711,54 @@
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
       "line": 14
+    },
+    {
+      "from": "entry:worker:event:orders:cancelled",
+      "to": "worker#src/projections/orders.service.ts:OrderProjections.onCancelled",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:worker#OrderEvent"
+      ],
+      "returns": "void",
+      "file": "src/projections/orders.service.ts",
+      "line": 24
+    },
+    {
+      "from": "entry:worker:event:orders:created",
+      "to": "worker#src/projections/declared-projections.service.ts:DeclaredProjections.onCreated",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:worker#OrderEvent"
+      ],
+      "returns": "void",
+      "file": "src/projections/declared-projections.service.ts",
+      "line": 28
+    },
+    {
+      "from": "entry:worker:event:orders:created",
+      "to": "worker#src/projections/orders.service.ts:OrderProjections.onCreated",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:worker#OrderEvent"
+      ],
+      "returns": "void",
+      "file": "src/projections/orders.service.ts",
+      "line": 22
+    },
+    {
+      "from": "entry:worker:event:orders:invoiced",
+      "to": "worker#src/projections/orders.service.ts:OrderProjections.onInvoiced",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:worker#OrderEvent"
+      ],
+      "returns": "void",
+      "file": "src/projections/orders.service.ts",
+      "line": 23
     },
     {
       "from": "producer:api#src/orders/notify.ts:14:3",
@@ -668,7 +810,7 @@
       "type": "injects",
       "confidence": "static",
       "file": "src/projections/orders.service.ts",
-      "line": 23
+      "line": 19
     },
     {
       "from": "worker#src/projections/orders.service.ts:OrderProjections.onModuleInit",
@@ -681,7 +823,7 @@
       ],
       "returns": "void",
       "file": "src/projections/orders.service.ts",
-      "line": 26
+      "line": 22
     },
     {
       "from": "worker#src/projections/orders.service.ts:OrderProjections.onModuleInit",
@@ -693,7 +835,7 @@
       ],
       "returns": "void",
       "file": "src/projections/orders.service.ts",
-      "line": 28
+      "line": 24
     },
     {
       "from": "worker#src/projections/orders.service.ts:OrderProjections.onModuleInit",
@@ -705,7 +847,7 @@
       ],
       "returns": "void",
       "file": "src/projections/orders.service.ts",
-      "line": 26
+      "line": 22
     },
     {
       "from": "worker#src/projections/orders.service.ts:OrderProjections.onModuleInit",
@@ -717,7 +859,7 @@
       ],
       "returns": "void",
       "file": "src/projections/orders.service.ts",
-      "line": 27
+      "line": 23
     }
   ],
   "types": {
@@ -746,7 +888,7 @@
     "type:worker#OrderEvent": {
       "name": "OrderEvent",
       "kind": "object",
-      "declaredIn": "worker#src/projections/orders.service.ts",
+      "declaredIn": "worker#src/projections/order-event.ts",
       "structuralHash": "eb2a458e49f8b530",
       "fields": [
         {
@@ -762,7 +904,7 @@
       ],
       "meta": {
         "declKind": "interface",
-        "exported": false
+        "exported": true
       }
     }
   },

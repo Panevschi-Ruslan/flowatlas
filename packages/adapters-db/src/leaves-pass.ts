@@ -1,6 +1,7 @@
 import {
   classifyDbCall,
   declaredParameterType,
+  isUniversalMethod,
   narrowUnionByLiteral,
   writtenBodyOutward,
   writtenKeysOf,
@@ -56,43 +57,56 @@ import { sqlOperation, sqlTables } from './sql.js';
 /** Cache libraries, and what each of their methods does to a key. */
 const CACHE_PACKAGES = ['ioredis', 'cache-manager', '@nestjs/cache-manager', 'redis'];
 
-const CACHE_OPS: Record<string, 'get' | 'set' | 'del' | 'other'> = {
-  get: 'get',
-  mget: 'get',
-  getdel: 'get',
-  hget: 'get',
-  hgetall: 'get',
-  exists: 'get',
-  ttl: 'get',
-  set: 'set',
-  mset: 'set',
-  setex: 'set',
-  psetex: 'set',
-  setnx: 'set',
-  hset: 'set',
-  expire: 'set',
-  wrap: 'set',
-  del: 'del',
-  unlink: 'del',
-  hdel: 'del',
-  reset: 'del',
-  flushall: 'del',
-};
+/**
+ * A `Map` rather than an object literal, and so is every table below keyed by a
+ * name read out of source text.
+ *
+ * `descriptor.operations[method]` was an object, and `value.toString()` on a
+ * receiver of a described package found `Object.prototype.toString` - a
+ * `db_query` node labelled `function toString() { [native code] }`, two of them
+ * in novu's graph, a node minted from a value nobody wrote (R122). The house
+ * style is object lookup for dispatch and it is the right one; the cost of it is
+ * this single hazard, and a `Map` has no prototype chain to fall through. Every
+ * word a program contains can be asked of these, so none of them may answer for
+ * a word only the language put there (R130).
+ */
+const CACHE_OPS: ReadonlyMap<string, 'get' | 'set' | 'del' | 'other'> = new Map([
+  ['get', 'get'],
+  ['mget', 'get'],
+  ['getdel', 'get'],
+  ['hget', 'get'],
+  ['hgetall', 'get'],
+  ['exists', 'get'],
+  ['ttl', 'get'],
+  ['set', 'set'],
+  ['mset', 'set'],
+  ['setex', 'set'],
+  ['psetex', 'set'],
+  ['setnx', 'set'],
+  ['hset', 'set'],
+  ['expire', 'set'],
+  ['wrap', 'set'],
+  ['del', 'del'],
+  ['unlink', 'del'],
+  ['hdel', 'del'],
+  ['reset', 'del'],
+  ['flushall', 'del'],
+]);
 
 const HTTP_PACKAGES = ['axios', '@nestjs/axios'];
 
-const HTTP_METHODS: Record<string, string> = {
-  get: 'GET',
-  post: 'POST',
-  put: 'PUT',
-  patch: 'PATCH',
-  delete: 'DELETE',
-  head: 'HEAD',
-  options: 'OPTIONS',
-  request: 'ALL',
-  axios: 'ALL',
-  fetch: 'GET',
-};
+const HTTP_METHODS: ReadonlyMap<string, string> = new Map([
+  ['get', 'GET'],
+  ['post', 'POST'],
+  ['put', 'PUT'],
+  ['patch', 'PATCH'],
+  ['delete', 'DELETE'],
+  ['head', 'HEAD'],
+  ['options', 'OPTIONS'],
+  ['request', 'ALL'],
+  ['axios', 'ALL'],
+  ['fetch', 'GET'],
+]);
 
 /** A local binding that holds the platform's fetch, alone or as a fallback. */
 const isFetchAlias = (callee: TsNode): boolean => {
@@ -127,7 +141,7 @@ const returnsResponse = (node: TsNode): boolean =>
     .some((signature) => /^(Promise<Response>|Response)$/.test(signature.getReturnType().getText()));
 
 /** Verbs a request can carry, for reading one out of an argument. */
-const KNOWN_VERBS = new Set(Object.values(HTTP_METHODS));
+const KNOWN_VERBS = new Set(HTTP_METHODS.values());
 
 
 interface Site {
@@ -178,7 +192,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // The package that declares the receiver's type is not always the package
     // the descriptor was written for; one library reached under two names is an
     // alias rather than a second description of it.
-    const described = descriptorAliases[origin.package] ?? origin.package;
+    const described = descriptorAliases.get(origin.package) ?? origin.package;
     return byPackage.get(described);
   };
 
@@ -199,7 +213,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // parameterised by the whole schema has nothing to fall back to, and
     // falling back put the name of a schema type on 407 of immich's nodes as
     // though it were a table.
-    if (tableReadings[name]?.entityInTypeArgs !== true) continue;
+    if (tableReadings.get(name)?.entityInTypeArgs !== true) continue;
     const { tableOverride: _dropped, ...rest } = descriptor;
     withoutOverride.set(name, rest);
   }
@@ -394,7 +408,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // locators say where to look; what comes back is either the name or the
     // fact that it was decided at run time, which is reported below rather than
     // guessed at.
-    const reading = descriptor === undefined ? undefined : tableReadings[descriptor.package];
+    const reading = descriptor === undefined ? undefined : tableReadings.get(descriptor.package);
     const located =
       reading === undefined || descriptor === undefined
         ? null
@@ -578,7 +592,14 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (origin?.package == null || !CACHE_PACKAGES.includes(origin.package)) return false;
 
     const method = callee.getName();
-    const op = CACHE_OPS[method.toLowerCase()] ?? 'other';
+    // The receiver says the call reaches the library; it does not say the method
+    // does. `cache.hasOwnProperty('status')` was recorded as a cache operation on
+    // the key `status`, because an unrecognised method is ordinary here - a client
+    // declares hundreds of commands and `other` is the honest answer for the ones
+    // no table names. A name the language gives every value is the one case where
+    // it is not (R130).
+    if (isUniversalMethod(method)) return false;
+    const op = CACHE_OPS.get(method.toLowerCase()) ?? 'other';
     const [keyArg] = call.getArguments();
     const key = keyArg === undefined ? undefined : evaluateExpression(keyArg);
 
@@ -709,7 +730,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (Node.isPropertyAccessExpression(callee)) {
       const origin = resolveTypeOrigin(callee.getExpression());
       if (origin?.package == null || !HTTP_PACKAGES.includes(origin.package)) return null;
-      const method = HTTP_METHODS[callee.getName().toLowerCase()];
+      const method = HTTP_METHODS.get(callee.getName().toLowerCase());
       return method === undefined ? null : { method, urlIndex: 0 };
     }
     // `this.getFetcher()(url, init)` — a client that picks its own transport at
@@ -726,7 +747,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (!Node.isCallExpression(site)) return undefined;
     const callee = site.getExpression();
     if (!Node.isPropertyAccessExpression(callee)) return undefined;
-    return HTTP_METHODS[callee.getName().toLowerCase()];
+    return HTTP_METHODS.get(callee.getName().toLowerCase());
   };
 
   /** The method node a call sits inside, when it sits inside one this repo owns. */

@@ -80,11 +80,11 @@ const isKnexOperation = (method: string): boolean => knexDescriptor.operations[m
 const table = (source: string, method: string, locators: readonly TableLocator[]): string | null =>
   locateTable(callTo(parse(source), method), locators, { isOperation: isKnexOperation });
 
-const DRIZZLE = tableReadings['drizzle-orm']!.locators;
-const KNEX = tableReadings['knex']!.locators;
-const MONGOOSE = tableReadings['mongoose']!.locators;
-const SEQUELIZE = tableReadings['sequelize']!.locators;
-const KYSELY = tableReadings['kysely']!.locators;
+const DRIZZLE = tableReadings.get('drizzle-orm')!.locators;
+const KNEX = tableReadings.get('knex')!.locators;
+const MONGOOSE = tableReadings.get('mongoose')!.locators;
+const SEQUELIZE = tableReadings.get('sequelize')!.locators;
+const KYSELY = tableReadings.get('kysely')!.locators;
 
 describe('finding the table a drizzle call touches', () => {
   const schema = `const orders = pgTable('orders', {});\n`;

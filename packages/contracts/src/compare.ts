@@ -1052,4 +1052,11 @@ export const compareTypes = (
   receiverEntry: TypeEntry,
   registry: TypeRegistry,
   options: CompareOptions = {},
-): FieldDiff[] => diffTypes(senderEntry, receiverEntry, (id) => registry[id], options).diffs;
+): FieldDiff[] =>
+  diffTypes(
+    senderEntry,
+    receiverEntry,
+    // Own keys only, for the same reason `lookup.type` reads that way (R130).
+    (id) => (Object.hasOwn(registry, id) ? registry[id] : undefined),
+    options,
+  ).diffs;

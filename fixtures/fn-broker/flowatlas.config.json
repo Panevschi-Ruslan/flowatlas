@@ -26,6 +26,13 @@
               "handlerArg": 1,
               "kind": "event"
             }
+          ],
+          "consumers": [
+            {
+              "decorator": "EventPattern",
+              "channel": [{ "kind": "argument", "index": 0 }],
+              "kind": "event"
+            }
           ]
         }
       ]

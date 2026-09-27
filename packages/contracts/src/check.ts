@@ -63,6 +63,13 @@ const idOf = (ref: string): string | undefined => {
  * as a form or a stream, records that as its type. Comparing it against the
  * shape the handler declares would report every one of them as a mismatch,
  * when what actually happened is that the shape was lost a line earlier.
+ *
+ * On a channel it is the receiving end that can be the one that lost it, because
+ * nothing between a publish and a handler parses anything: `receive(message:
+ * string)` with a `JSON.parse` on the next line. Until a subscription had an
+ * entry that half was invisible, because nothing had read the handler's parameter
+ * at all (R126), and reading it and then calling it a mismatch would have traded
+ * one wrong answer for a louder one.
  */
 const TRANSPORT_BODIES = new Set([
   'string',
@@ -159,12 +166,42 @@ const judge = (lookup: GraphLookup, exchange: Exchange, options: CheckOptions): 
       blocked: { reason: 'no-type-on-receiver', subject: exchange.receiver.symbol },
     };
   }
-  if (exchange.direction === 'request' && sentRef !== wantRef && isTransportBody(sentRef)) {
-    return {
-      status: 'unchecked',
-      ...nothing,
-      blocked: { reason: 'body-already-serialised', subject: exchange.sender.symbol, detail: sentRef },
-    };
+  // The end that holds the wire form, where nothing turned it back into a shape
+  // on the way. Which end that can be is not the same on the two kinds of
+  // boundary, and the difference is who deserialises.
+  //
+  // On a request it is the sender's: the caller serialised before the call, while
+  // the handler's declared type is a claim about what the framework handed it
+  // already parsed. A handler that declares `string` for a JSON body is making a
+  // mistake, and that mismatch is worth reporting rather than excusing.
+  //
+  // On a channel nothing parses in between. A handler is handed the published
+  // value, so one declaring `string` is not disagreeing about a shape - it is the
+  // place the shape was lost, usually with a `JSON.parse` on the next line. That
+  // only became reachable once a subscription had an entry and its parameter was
+  // read at all (R126), and calling it a mismatch would have traded a row that
+  // said too little for one that says something false.
+  //
+  // Neither on a response, and neither when the two agree: two ends that both say
+  // `string` have the same contract and it is text.
+  if (sentRef !== wantRef) {
+    const lost =
+      exchange.direction === 'request' && isTransportBody(sentRef)
+        ? { party: exchange.sender, ref: sentRef }
+        : exchange.direction === 'payload' && isTransportBody(wantRef)
+          ? { party: exchange.receiver, ref: wantRef }
+          : undefined;
+    if (lost !== undefined) {
+      return {
+        status: 'unchecked',
+        ...nothing,
+        blocked: {
+          reason: 'body-already-serialised',
+          subject: lost.party.symbol,
+          detail: lost.ref,
+        },
+      };
+    }
   }
 
   const sentId = idOf(sentRef);

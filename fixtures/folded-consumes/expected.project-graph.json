@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:26:23.975Z",
+  "builtAt": "2026-09-27T13:55:44.806Z",
   "services": [
     {
       "name": "worker",
@@ -70,7 +70,46 @@
         "kind": "event",
         "adapter": "house-bus",
         "decorator": "pSubscribe",
-        "entryId": null
+        "entryId": "entry:worker:event:order:closed"
+      }
+    },
+    {
+      "id": "entry:worker:event:order:closed",
+      "type": "entry",
+      "label": "event order:closed",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38,
+      "kind": "event",
+      "meta": {
+        "pattern": "order:closed",
+        "adapter": "house-bus"
+      }
+    },
+    {
+      "id": "entry:worker:event:order:on-hold",
+      "type": "entry",
+      "label": "event order:on-hold",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38,
+      "kind": "event",
+      "meta": {
+        "pattern": "order:on-hold",
+        "adapter": "house-bus"
+      }
+    },
+    {
+      "id": "entry:worker:event:order:opened",
+      "type": "entry",
+      "label": "event order:opened",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38,
+      "kind": "event",
+      "meta": {
+        "pattern": "order:opened",
+        "adapter": "house-bus"
       }
     },
     {
@@ -228,6 +267,42 @@
       "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onLifecycle",
       "type": "handles",
       "confidence": "static",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38
+    },
+    {
+      "from": "entry:worker:event:order:closed",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onLifecycle",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38
+    },
+    {
+      "from": "entry:worker:event:order:on-hold",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onLifecycle",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 38
+    },
+    {
+      "from": "entry:worker:event:order:opened",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onLifecycle",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
       "file": "src/projections/lifecycle.service.ts",
       "line": 38
     },

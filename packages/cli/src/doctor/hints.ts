@@ -46,6 +46,72 @@ const named = (row: Unresolved): string => row.symbol ?? 'the call';
 const ANONYMOUS = { reason: '', file: '', line: 0 } as unknown as Unresolved;
 
 /**
+ * Reasons that have been renamed, spelled both ways.
+ *
+ * A `reason` in this tool is not an internal string. It is user-visible
+ * configuration surface: a project writes it in `doctor.ignoreReasons` to
+ * silence a row, and a committed baseline can carry it. So renaming one is a
+ * breaking change wearing the clothes of a rename, and this is what keeps it
+ * from being one - the old spelling goes on working wherever somebody has
+ * already written it, and nobody edits a configuration to keep an answer they
+ * already chose.
+ *
+ * Forward only, deliberately. The question this answers is "somebody wrote the
+ * old name, what did they mean", and it is asked of files a project committed
+ * before the rename. Nothing asks the reverse, because no file older than the
+ * rename can contain the new name.
+ *
+ * `openapi-document-age` is the first entry. It was the reason for the age of a
+ * declared service's document, named when an OpenAPI document was the only kind
+ * there was; there are two kinds now, so the kind goes in the message and the
+ * reason names the question (R127).
+ */
+const RENAMED: ReadonlyMap<string, string> = new Map([
+  ['openapi-document-age', 'document-age'],
+]);
+
+/** What a reason is called now, given whatever spelling somebody wrote. */
+export const canonicalReason = (reason: string): string => RENAMED.get(reason) ?? reason;
+
+/**
+ * Every spelling of every reason a project asked for, for a list it wrote itself.
+ *
+ * Used where `doctor.ignoreReasons` enters the command, so that one list of
+ * silenced reasons covers rows carrying either spelling and neither the snapshot
+ * nor the grouping has to know a rename happened.
+ */
+export const expandReasons = (reasons: readonly string[]): string[] => {
+  const out = new Set<string>();
+  for (const reason of reasons) {
+    out.add(reason);
+    out.add(canonicalReason(reason));
+  }
+  return [...out];
+};
+
+/**
+ * One catalogue asked about one reason, and the only way any of them is asked.
+ *
+ * Every table in this file is keyed by a `reason`, and a reason arrives from a
+ * graph or a baseline rather than from a list written here - which means these
+ * tables can be asked about any word at all. An object literal answers
+ * `constructor`, `toString` and `valueOf` with the language's own, so
+ * `HINTS['constructor']` handed back `Object` and `template(row, context)` then
+ * printed a row object where a sentence should be. Nothing produces those words
+ * today; that is exactly when to close it, and R122 closed the same hole after a
+ * lookup of this shape minted two `db_query` nodes labelled
+ * `function toString() { [native code] }` (R130).
+ *
+ * Own keys only, in one place, rather than a `Map` per table: these catalogues
+ * are long literals with a paragraph beside half their entries, and the reading
+ * is what was unsafe, not the writing.
+ */
+const entryOf = <T>(catalogue: Readonly<Record<string, T>>, reason: string): T | undefined => {
+  const key = canonicalReason(reason);
+  return Object.hasOwn(catalogue, key) ? catalogue[key] : undefined;
+};
+
+/**
  * The annotation that would answer this, spelled out as far as it can be.
  *
  * A row saying the address is built at run time tells a reader to annotate the
@@ -301,7 +367,7 @@ export const answeredByMarker = (
   nodeId: string | undefined,
   graph: MarkerGraph,
 ): boolean => {
-  const test = MARKER_ANSWERS[reason];
+  const test = entryOf(MARKER_ANSWERS, reason);
   if (test === undefined || nodeId === undefined) return false;
   return test(nodeId, graph);
 };
@@ -528,8 +594,11 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'duplicate-node-id': () =>
     'Two repositories declared the same id. One of them was kept; rename the other, or split the shared file out into a package.',
 
-  // An end that was declared rather than read (doctor/age.ts)
-  'openapi-document-age': () =>
+  // An end that was declared rather than read (doctor/age.ts). Named after the
+  // document and not after one format of it: there are two, and a reader with an
+  // AsyncAPI document was being told something about OpenAPI. `RENAMED` above is
+  // what keeps the old spelling working in a configuration that silenced it.
+  'document-age': () =>
     'Nothing here can check a document against the running service, so how recently the document was updated is the only evidence there is that it is still true. Fetch the current one from whoever owns the service if it is behind.',
 
   // Boundaries nothing could be compared on (contracts)
@@ -574,9 +643,9 @@ export const KIND_HINTS: Readonly<Record<string, string>> = Object.freeze({
  * is handed, that template is the kind's sentence already and is used as it is.
  */
 export const kindHint = (reason: string): string | undefined => {
-  const written = KIND_HINTS[reason];
+  const written = entryOf(KIND_HINTS, reason);
   if (written !== undefined) return written;
-  const template = HINTS[reason];
+  const template = entryOf(HINTS, reason);
   if (template === undefined) return undefined;
   return template(ANONYMOUS, {});
 };
@@ -597,13 +666,12 @@ export const genericHint = (reason: string): string =>
  * row is ever without advice (§4).
  */
 export const hintFor = (row: Unresolved, context: HintContext = {}): string => {
-  const sharper = SHARPENERS[row.reason]?.(row, context);
+  const sharper = entryOf(SHARPENERS, row.reason)?.(row, context);
   if (sharper !== undefined) return sharper;
   if (row.hint !== undefined && row.hint !== '') return row.hint;
-  const template = HINTS[row.reason];
+  const template = entryOf(HINTS, row.reason);
   return template === undefined ? genericHint(row.reason) : template(row, context);
 };
 
 /** Whether the catalogue knows this reason at all. */
-export const isKnownReason = (reason: string): boolean =>
-  Object.prototype.hasOwnProperty.call(HINTS, reason);
+export const isKnownReason = (reason: string): boolean => entryOf(HINTS, reason) !== undefined;

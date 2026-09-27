@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:27:03.179Z",
+  "builtAt": "2026-09-27T13:56:26.574Z",
   "services": [
     {
       "name": "api",
@@ -227,7 +227,20 @@
         "kind": "event",
         "adapter": "house-bus",
         "decorator": "pSubscribe",
-        "entryId": null
+        "entryId": "entry:api:event:depot:*:events"
+      }
+    },
+    {
+      "id": "entry:api:event:depot:*:events",
+      "type": "entry",
+      "label": "event depot:*:events",
+      "repo": "api",
+      "file": "src/events/event-bus.service.ts",
+      "line": 30,
+      "kind": "event",
+      "meta": {
+        "pattern": "depot:*:events",
+        "adapter": "house-bus"
       }
     },
     {
@@ -896,6 +909,18 @@
       "to": "api#src/events/event-bus.service.ts:EventBus.receive",
       "type": "handles",
       "confidence": "static",
+      "file": "src/events/event-bus.service.ts",
+      "line": 30
+    },
+    {
+      "from": "entry:api:event:depot:*:events",
+      "to": "api#src/events/event-bus.service.ts:EventBus.receive",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "src/events/event-bus.service.ts",
       "line": 30
     },
