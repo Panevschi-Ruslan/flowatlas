@@ -49,19 +49,33 @@ and they should: a `pages/api` file whose default export is a call really does
 have no readable handler. What changed is that the row is no longer the only thing
 said about a quarter of the API.
 
-## The client half, which is not joined yet
+## The unread branch
 
-`src/client/orders-panel.ts` writes `client.orders.list.query(...)`. `orders.list`
-is there letter for letter, and it is also the key of the entry point the server
-half produces — the same string on both sides, which is what a join needs and
-what a URL could never be here, because one tree is served at many URLs and the
-client's link decides which.
+`root.ts` hangs `billing` on a tree imported from `@acme/billing-api`, a package
+this repository does not have. The name is followed to nothing — neither a way
+in nor a tree — so everything under `billing` is missing, and one
+`procedure-branch-unread` row says which branch. Before this member the row was
+emitted by the reader and exercised by nothing, so a regression in it would have
+passed the gate.
 
-Nothing joins them today and the snapshot says so: that file produces no node. A
-caller reaching a way in that has no address is drawn by a pass that has the
-reference graph — the way a server action's callers are — and there is no such
-pass for this shape. The fixture carries the call site so that whoever writes it
-has the two halves in front of them.
+## The client half
+
+`src/client/orders-panel.ts` writes `client.orders.list.query(...)` and
+`client.orders.create.mutate(...)`. `orders.list` is there letter for letter, and
+it is also the key of the entry point the server half produces — the same string
+on both sides, which is what a join needs and what a URL could never be here,
+because one tree is served at many URLs and the client's link decides which.
+
+Each call is a `ui_api_call` of kind `rpc` carrying `procedure`, the path, and
+`call`, what the server has to have declared it as: `query` for `.query`,
+`mutation` for `.mutate`. The proxy is recognised because `createTRPCClient` made
+it, which the client description in the React reader names.
+
+The edge from the request to the entry is not in this snapshot, and should not
+be: a repository read alone has no linker. The join is the linker's, because a
+procedure path may be answered by the repository it is written in or by another
+the configuration names, and only the linker sees both; it is compared in
+`fixtures/trpc-join`, which has one of each.
 
 ## The stubs
 

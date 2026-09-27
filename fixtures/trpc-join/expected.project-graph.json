@@ -1,0 +1,604 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T17:41:34.475Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "admin#src/server/root.ts:archiveOrder",
+      "type": "function",
+      "label": "archiveOrder",
+      "repo": "admin",
+      "file": "src/server/root.ts",
+      "line": 5
+    },
+    {
+      "id": "api#src/pages/orders.tsx:OrdersPage",
+      "type": "ui_component",
+      "label": "OrdersPage",
+      "repo": "api",
+      "file": "src/pages/orders.tsx",
+      "line": 8,
+      "kind": "function"
+    },
+    {
+      "id": "api#src/server/root.ts:createOrder",
+      "type": "function",
+      "label": "createOrder",
+      "repo": "api",
+      "file": "src/server/root.ts",
+      "line": 11
+    },
+    {
+      "id": "api#src/server/root.ts:dailyTotals",
+      "type": "function",
+      "label": "dailyTotals",
+      "repo": "api",
+      "file": "src/server/root.ts",
+      "line": 16
+    },
+    {
+      "id": "api#src/server/root.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "api",
+      "file": "src/server/root.ts",
+      "line": 6
+    },
+    {
+      "id": "entry:admin:rpc:orders.archive",
+      "type": "entry",
+      "label": "rpc orders.archive",
+      "repo": "admin",
+      "file": "src/server/root.ts",
+      "line": 14,
+      "kind": "rpc",
+      "meta": {
+        "key": "orders.archive",
+        "adapter": "trpc-procedures",
+        "call": "mutation",
+        "registration": "router({ … })",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:api:http:ALL:/api/trpc/:param",
+      "type": "entry",
+      "label": "ALL /api/trpc/:param",
+      "repo": "api",
+      "file": "src/pages/api/trpc/[trpc].ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/trpc/:param",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "unread",
+        "handlerBodyRead": false
+      }
+    },
+    {
+      "id": "entry:api:rpc:orders.create",
+      "type": "entry",
+      "label": "rpc orders.create",
+      "repo": "api",
+      "file": "src/server/root.ts",
+      "line": 21,
+      "kind": "rpc",
+      "meta": {
+        "key": "orders.create",
+        "adapter": "trpc-procedures",
+        "call": "mutation",
+        "registration": "router({ … })",
+        "input": "OrderBody",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "served": [
+          "src/pages/api/trpc/[trpc].ts"
+        ]
+      }
+    },
+    {
+      "id": "entry:api:rpc:orders.list",
+      "type": "entry",
+      "label": "rpc orders.list",
+      "repo": "api",
+      "file": "src/server/root.ts",
+      "line": 20,
+      "kind": "rpc",
+      "meta": {
+        "key": "orders.list",
+        "adapter": "trpc-procedures",
+        "call": "query",
+        "registration": "router({ … })",
+        "input": "OrderQuery",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "served": [
+          "src/pages/api/trpc/[trpc].ts"
+        ]
+      }
+    },
+    {
+      "id": "entry:api:rpc:reports.daily",
+      "type": "entry",
+      "label": "rpc reports.daily",
+      "repo": "api",
+      "file": "src/server/root.ts",
+      "line": 24,
+      "kind": "rpc",
+      "meta": {
+        "key": "reports.daily",
+        "adapter": "trpc-procedures",
+        "call": "query",
+        "registration": "router({ … })",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "served": [
+          "src/pages/api/trpc/[trpc].ts"
+        ]
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@trpc/server": 3
+          },
+          "functions": 2,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes",
+            "trpc-procedures"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@trpc/server": 5,
+            "@trpc/react-query": 1
+          },
+          "functions": 6,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes",
+            "trpc-procedures"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "functions": 6,
+          "components": 3,
+          "hooks": 1,
+          "skippedExternalCalls": {
+            "@trpc/react-query": 1,
+            "@trpc/tanstack-react-query": 2
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_action:web#src/Orders.tsx:20:7",
+      "type": "ui_action",
+      "label": "onClick={() => { create.mutate({ sku: 'sku-1', quantity: 1 }); refresh.mutate({ customerI}",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => { create.mutate({ sku: 'sku-1', quantity: 1 }); refresh.mutate({ customerI",
+        "component": "web#src/Orders.tsx:Orders",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:api#src/pages/orders.tsx:9:18",
+      "type": "ui_api_call",
+      "label": "rpc orders.list",
+      "repo": "api",
+      "file": "src/pages/orders.tsx",
+      "line": 9,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.list",
+        "call": "query",
+        "operation": "useQuery",
+        "client": "trpc-client",
+        "inputKeys": [
+          "customerId"
+        ],
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Daily.tsx:6:19",
+      "type": "ui_api_call",
+      "label": "rpc reports.daily",
+      "repo": "web",
+      "file": "src/Daily.tsx",
+      "line": 6,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "reports.daily",
+        "call": "query",
+        "operation": "queryOptions",
+        "client": "trpc-client",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Orders.tsx:14:18",
+      "type": "ui_api_call",
+      "label": "rpc orders.list",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 14,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.list",
+        "call": "query",
+        "operation": "useQuery",
+        "client": "trpc-client",
+        "inputKeys": [
+          "customerId"
+        ],
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Orders.tsx:15:18",
+      "type": "ui_api_call",
+      "label": "rpc orders.create",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 15,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.create",
+        "call": "mutation",
+        "operation": "useMutation",
+        "client": "trpc-client",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Orders.tsx:16:19",
+      "type": "ui_api_call",
+      "label": "rpc orders.list",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 16,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.list",
+        "call": "mutation",
+        "operation": "useMutation",
+        "client": "trpc-client",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Orders.tsx:17:19",
+      "type": "ui_api_call",
+      "label": "rpc orders.archive",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 17,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.archive",
+        "call": "mutation",
+        "operation": "useMutation",
+        "client": "trpc-client"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Orders.tsx:33:18",
+      "type": "ui_api_call",
+      "label": "rpc [section].list",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 33,
+      "kind": "rpc",
+      "meta": {
+        "procedure": null,
+        "call": "query",
+        "operation": "useQuery",
+        "client": "trpc-client"
+      }
+    },
+    {
+      "id": "web#src/Daily.tsx:Daily",
+      "type": "ui_component",
+      "label": "Daily",
+      "repo": "web",
+      "file": "src/Daily.tsx",
+      "line": 4,
+      "kind": "function"
+    },
+    {
+      "id": "web#src/Orders.tsx:Orders",
+      "type": "ui_component",
+      "label": "Orders",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 13,
+      "kind": "function"
+    },
+    {
+      "id": "web#src/Orders.tsx:Section",
+      "type": "ui_component",
+      "label": "Section",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 32,
+      "kind": "function"
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/pages/orders.tsx:OrdersPage",
+      "to": "ui_api_call:api#src/pages/orders.tsx:9:18",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/orders.tsx",
+      "line": 9
+    },
+    {
+      "from": "entry:admin:rpc:orders.archive",
+      "to": "admin#src/server/root.ts:archiveOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/root.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:api:rpc:orders.create",
+      "to": "api#src/server/root.ts:createOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/root.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:api:rpc:orders.list",
+      "to": "api#src/server/root.ts:listOrders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/root.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:api:rpc:reports.daily",
+      "to": "api#src/server/root.ts:dailyTotals",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/root.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_action:web#src/Orders.tsx:20:7",
+      "to": "web#src/Orders.tsx:Orders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 20
+    },
+    {
+      "from": "ui_api_call:api#src/pages/orders.tsx:9:18",
+      "to": "entry:api:rpc:orders.list",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages/orders.tsx",
+      "line": 9,
+      "meta": {
+        "via": "same-service",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Daily.tsx:6:19",
+      "to": "entry:api:rpc:reports.daily",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Daily.tsx",
+      "line": 6,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Orders.tsx:14:18",
+      "to": "entry:api:rpc:orders.list",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 14,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Orders.tsx:15:18",
+      "to": "entry:api:rpc:orders.create",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 15,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Orders.tsx:16:19",
+      "to": "entry:api:rpc:orders.list",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 16,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "web#src/Daily.tsx:Daily",
+      "to": "ui_api_call:web#src/Daily.tsx:6:19",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Daily.tsx",
+      "line": 6
+    },
+    {
+      "from": "web#src/Orders.tsx:Orders",
+      "to": "ui_api_call:web#src/Orders.tsx:14:18",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 14
+    },
+    {
+      "from": "web#src/Orders.tsx:Orders",
+      "to": "ui_api_call:web#src/Orders.tsx:15:18",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 15
+    },
+    {
+      "from": "web#src/Orders.tsx:Orders",
+      "to": "ui_api_call:web#src/Orders.tsx:16:19",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 16
+    },
+    {
+      "from": "web#src/Orders.tsx:Orders",
+      "to": "ui_api_call:web#src/Orders.tsx:17:19",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 17
+    },
+    {
+      "from": "web#src/Orders.tsx:Section",
+      "to": "ui_api_call:web#src/Orders.tsx:33:18",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/Orders.tsx",
+      "line": 33
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/pages/api/trpc/[trpc].ts",
+      "line": 4,
+      "reason": "route-handler-unread",
+      "message": "ALL /api/trpc/:param is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/trpc/:param.",
+      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
+      "symbol": "ALL /api/trpc/:param",
+      "adapter": "nextjs-routes",
+      "service": "api"
+    },
+    {
+      "service": "web",
+      "file": "src/Orders.tsx",
+      "line": 16,
+      "reason": "procedure-call-mismatch",
+      "message": "orders.list is asked for as a mutation and declared as a query",
+      "hint": "The two are sent differently and the server refuses the one it did not declare. Call it as a query, or declare it as a mutation.",
+      "symbol": "ui_api_call:web#src/Orders.tsx:16:19"
+    },
+    {
+      "service": "web",
+      "file": "src/Orders.tsx",
+      "line": 17,
+      "reason": "procedure-not-found",
+      "message": "no procedure orders.archive in web or api",
+      "hint": "admin declares it, and nothing says web calls it. If it does, name it in services[].apiTarget of web.",
+      "symbol": "ui_api_call:web#src/Orders.tsx:17:19"
+    },
+    {
+      "file": "src/Orders.tsx",
+      "line": 33,
+      "reason": "procedure-path-dynamic",
+      "hint": "A step of the path is computed, so the procedure it reaches cannot be named. Write each step as a name.",
+      "symbol": "trpc[section].list.useQuery()",
+      "service": "web"
+    }
+  ]
+}

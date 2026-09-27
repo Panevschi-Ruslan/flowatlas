@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "trpc-router",
-  "generatedAt": "2026-09-27T11:36:16.971Z",
+  "generatedAt": "2026-09-27T17:41:35.132Z",
   "nodes": [
     {
       "id": "entry:trpc-router:http:ALL:/api/trpc/:param",
@@ -138,6 +138,22 @@
       }
     },
     {
+      "id": "trpc-router#src/client/orders-panel.ts:createOrderOf",
+      "type": "function",
+      "label": "createOrderOf",
+      "repo": "trpc-router",
+      "file": "src/client/orders-panel.ts",
+      "line": 22
+    },
+    {
+      "id": "trpc-router#src/client/orders-panel.ts:listOrdersFor",
+      "type": "function",
+      "label": "listOrdersFor",
+      "repo": "trpc-router",
+      "file": "src/client/orders-panel.ts",
+      "line": 19
+    },
+    {
       "id": "trpc-router#src/server/orders-store.ts:listOrders",
       "type": "function",
       "label": "listOrders",
@@ -168,6 +184,43 @@
       "repo": "trpc-router",
       "file": "src/server/reports.ts",
       "line": 4
+    },
+    {
+      "id": "ui_api_call:trpc-router#src/client/orders-panel.ts:20:3",
+      "type": "ui_api_call",
+      "label": "rpc orders.list",
+      "repo": "trpc-router",
+      "file": "src/client/orders-panel.ts",
+      "line": 20,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.list",
+        "call": "query",
+        "operation": "query",
+        "client": "trpc-client",
+        "inputKeys": [
+          "customerId"
+        ]
+      }
+    },
+    {
+      "id": "ui_api_call:trpc-router#src/client/orders-panel.ts:23:3",
+      "type": "ui_api_call",
+      "label": "rpc orders.create",
+      "repo": "trpc-router",
+      "file": "src/client/orders-panel.ts",
+      "line": 23,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.create",
+        "call": "mutation",
+        "operation": "mutate",
+        "client": "trpc-client",
+        "inputKeys": [
+          "quantity",
+          "sku"
+        ]
+      }
     }
   ],
   "edges": [
@@ -194,6 +247,22 @@
       "confidence": "static",
       "file": "src/server/reports.ts",
       "line": 4
+    },
+    {
+      "from": "trpc-router#src/client/orders-panel.ts:createOrderOf",
+      "to": "ui_api_call:trpc-router#src/client/orders-panel.ts:23:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/client/orders-panel.ts",
+      "line": 23
+    },
+    {
+      "from": "trpc-router#src/client/orders-panel.ts:listOrdersFor",
+      "to": "ui_api_call:trpc-router#src/client/orders-panel.ts:20:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/client/orders-panel.ts",
+      "line": 20
     },
     {
       "from": "trpc-router#src/server/orders.ts:ordersRouter",
@@ -239,6 +308,15 @@
       "reason": "procedure-key-dynamic",
       "hint": "Write the key as a name or a string, so the way in under it can be named and joined to a caller.",
       "symbol": "router({ … }).publicProcedure.query(() => [{ scope }])",
+      "adapter": "trpc-procedures"
+    },
+    {
+      "file": "src/server/root.ts",
+      "line": 18,
+      "reason": "procedure-branch-unread",
+      "message": "billing is billingRouter, a name this could follow to neither a way in nor a tree, so nothing under it was read.",
+      "hint": "Import the tree from a file inside this service, or add the package it comes from to sharedPackages, so the ways in it serves can be read.",
+      "symbol": "billing",
       "adapter": "trpc-procedures"
     }
   ]

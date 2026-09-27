@@ -822,3 +822,56 @@ describe('what a nested path is compared against', () => {
     expect(stripImpact({ any: false, documents: [] }, 'course', typeOf)).toBe('none');
   });
 });
+
+describe('a procedure asked for by its path', () => {
+  /**
+   * Typed on both sides on purpose. The handler's parameter is the envelope a
+   * procedure body is handed — a context and the input — and the caller's type
+   * is the input alone, so comparing the two would report a missing field on
+   * every procedure ever written, and comparing anything the client inferred
+   * from the server's own tree would agree with itself.
+   */
+  const report = checkContracts(
+    graphOf({
+      nodes: [
+        node('web#Orders', 'ui_component', 'web'),
+        node('ui_api_call:web#src/Orders.tsx:4:5', 'ui_api_call', 'web', {
+          kind: 'rpc',
+          meta: { procedure: 'orders.list', call: 'query' },
+        }),
+        node('entry:api:rpc:orders.list', 'entry', 'api', {
+          kind: 'rpc',
+          meta: { key: 'orders.list', call: 'query', input: 'OrderQuery' },
+        }),
+        node('api#listOrders', 'function', 'api'),
+      ],
+      edges: [
+        edge('web#Orders', 'calls', 'ui_api_call:web#src/Orders.tsx:4:5'),
+        edge('ui_api_call:web#src/Orders.tsx:4:5', 'hits', 'entry:api:rpc:orders.list', {
+          params: ['type:caller#Body'],
+          returns: 'type:api#Answer',
+        }),
+        edge('entry:api:rpc:orders.list', 'handles', 'api#listOrders', {
+          params: ['type:api#Body'],
+          returns: 'type:api#Answer',
+        }),
+      ],
+      types: registry,
+    }),
+    { generatedAt: FIXED },
+  );
+
+  it('compares neither direction and says why for each', () => {
+    expect(report.summary).toMatchObject({ edges: 0, unchecked: 2, identical: 0, errors: 0 });
+    expect(report.findings).toEqual([]);
+    expect(report.unchecked.map((row) => [row.direction, row.reason])).toEqual([
+      ['request', 'procedure-input-by-name'],
+      ['response', 'procedure-output-inferred'],
+    ]);
+  });
+
+  it('names the input the server declared, as the server wrote it', () => {
+    const request = report.unchecked.find((row) => row.direction === 'request');
+    expect(request?.message).toContain('takes OrderQuery');
+  });
+});

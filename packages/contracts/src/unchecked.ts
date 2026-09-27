@@ -80,6 +80,30 @@ export const uncheckedNote = (
         message: `${subject} is published to and nothing handles it`,
         hint: 'See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable.',
       };
+    // A procedure's input is recorded by the server half as the text of the
+    // argument it was handed — `OrderQuery`, `ZCreateOrder` — and not as a shape
+    // in the registry. Nearly always it is a validation schema, whose shape as a
+    // type is the library's inference over it and resolves only where that
+    // library is installed; in a clone nobody installed it is `any`, and a
+    // comparison against `any` agrees with everything. So nothing is compared
+    // and the sentence says why, rather than a verdict that compared nothing.
+    case 'procedure-input-by-name':
+      return {
+        message:
+          detail === undefined
+            ? `${subject} declares no input the procedure reader could name, so what the caller sends is not compared with anything`
+            : `${subject} takes ${detail}, which the graph holds by name rather than as a shape, so what the caller sends is not compared with it`,
+        hint: 'Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library\'s inference only yields where its package is installed.',
+      };
+    // The answer a client of a procedure gets is typed by inference from the
+    // server's own tree, so both ends of it are one declaration. Comparing a
+    // declaration with itself always agrees, which is the one verdict worse
+    // than none.
+    case 'procedure-output-inferred':
+      return {
+        message: `what ${subject} answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration`,
+        hint: 'Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls.',
+      };
     case 'channel-without-producer':
       return {
         message: `${subject} is handled and nothing publishes to it`,

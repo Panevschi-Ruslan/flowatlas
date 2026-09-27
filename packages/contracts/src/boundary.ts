@@ -117,6 +117,31 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
     symbols: [caller, handler],
   });
 
+  // A procedure asked for by its path. Neither direction has two shapes to
+  // compare: the input is on the entry by name only, and the answer is typed on
+  // the client by inference from the server's tree. Said per direction, so the
+  // report names what is missing on each rather than putting the handler's
+  // parameters — a context and an envelope — against what the caller sends.
+  if (typeof lookup.node(edge.from)?.meta?.['procedure'] === 'string') {
+    const input = lookup.node(edge.to)?.meta?.['input'];
+    const callerParty = party(lookup, callerService, undefined, caller);
+    const handlerParty = party(lookup, handlerService, undefined, handler);
+    return [
+      {
+        ...both('request', callerParty, handlerParty),
+        blocked: {
+          reason: 'procedure-input-by-name' as const,
+          subject: edge.to,
+          ...(typeof input === 'string' ? { detail: input } : {}),
+        },
+      },
+      {
+        ...both('response', handlerParty, callerParty),
+        blocked: { reason: 'procedure-output-inferred' as const, subject: edge.to },
+      },
+    ];
+  }
+
   if (handles.length > 1) {
     const blocked = {
       reason: 'ambiguous-handler' as const,
