@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T15:28:19.152Z",
+  "builtAt": "2026-09-27T19:38:36.447Z",
   "services": [
     {
       "name": "api",
@@ -1230,7 +1230,7 @@
     {
       "file": "src/app/orders-socket.service.ts",
       "line": 51,
-      "reason": "channel-const-unresolved",
+      "reason": "channel-dynamic",
       "hint": "The event name cannot be read here, so this end of the channel cannot be joined to the service that writes the other end. Annotate OrdersSocketService.audit with the channel it uses.",
       "symbol": "OrdersSocketService.audit -> event",
       "service": "web"

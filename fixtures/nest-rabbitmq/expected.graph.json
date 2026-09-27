@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "nest-rabbitmq",
-  "generatedAt": "2026-09-27T15:28:02.079Z",
+  "generatedAt": "2026-09-27T19:38:18.540Z",
   "nodes": [
     {
       "id": "channel:order.cancelled",
@@ -650,7 +650,7 @@
     {
       "file": "src/orders/orders.service.ts",
       "line": 48,
-      "reason": "channel-const-unresolved",
+      "reason": "channel-dynamic",
       "hint": "The channel name cannot be read here. Annotate OrdersService.publishTo with the channel it uses.",
       "symbol": "OrdersService.publishTo -> routingKey"
     }

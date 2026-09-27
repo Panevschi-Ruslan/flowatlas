@@ -100,7 +100,7 @@ every call site in it is reported.
 | `socket.on('order:opened' \| 'order:closed', …)` | `:32`, `:33` | the two folded names | `event` | — |
 | `socket.on('connect', …)` | `orders-socket.service.ts:35` | none | — | nothing at all |
 | `socket.emit('order:summary', id, cb)` | `orders-socket.service.ts:46` | `orders/order:summary` | `rpc` | — |
-| `socket.emit(event, …)` | `orders-socket.service.ts:51` | none | `event` | `channel-const-unresolved` |
+| `socket.emit(event, …)` | `orders-socket.service.ts:51` | none | `event` | `channel-dynamic` |
 | `socket.on('order:updated', …)` | `live-feed.service.ts:22` | none | — | `channel-dynamic` |
 
 Line 35 is the second precision case. `connect` is the library signalling to
@@ -138,11 +138,14 @@ hole, so the listener is recorded and the channel is not.
 
 `AUDIT_EVENT` on the service and the `event` parameter in the browser are the
 same problem seen from both sides, and both are reported with the symbol to
-annotate:
+annotate. They are reported with different reasons, because they are different
+things: the first is a constant whose value could not be followed, the second a
+parameter whose value each caller decides, and moving a constant somewhere it can
+be read — the first row's advice — would do nothing for it (R140):
 
 ```
 api  channel-const-unresolved  src/orders/audit.gateway.ts:29        AuditGateway.audit -> AUDIT_EVENT
-web  channel-const-unresolved  src/app/orders-socket.service.ts:51   OrdersSocketService.audit -> event
+web  channel-dynamic           src/app/orders-socket.service.ts:51   OrdersSocketService.audit -> event
 ```
 
 Neither produces a channel node. A guessed name would join two services that

@@ -1,10 +1,11 @@
 import {
   applicationOfFile,
-  evaluateExpression,
   forEachCall,
   makeExternalApiId,
+  isPlatformProvided,
   makeLeafId,
-  originOfValue,
+  requestBodyOf,
+  requestVerbOf,
   resolveTypeOrigin,
   siteOf,
   wasRead,
@@ -58,18 +59,6 @@ const valueOf = (object: ObjectLiteralExpression | undefined, key: string): TsNo
     : undefined;
 };
 
-/**
- * Whether a bare name stands for something the browser provides.
- *
- * The same reasoning the other front-end reader applies to `EventSource`, and
- * it matters more here: `fetch` is the most commonly shadowed name in a React
- * repository, because a repository that wraps it names the wrapper after it. A
- * function declared here is that wrapper and is followed as ordinary code; a
- * name the checker will not resolve at all is the ambient global in a
- * repository whose compiler settings leave the browser's library out.
- */
-const isProvided = (expression: TsNode): boolean => originOfValue(expression).kind !== 'local';
-
 /** Whether a receiver's type is one of the ones a client is spelled on. */
 const isClientValue = (origin: TypeOrigin | null, client: RequestClient): boolean =>
   origin !== null &&
@@ -90,27 +79,13 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
   const apiBaseEnv = ctx.service.apiBaseEnv ?? [];
 
   /**
-   * The verb one call sends.
-   *
-   * Null means it was not read, which is a different thing from absent: a call
-   * with no options at all is the protocol's own default and is `GET` for
-   * certain, while a call handed an options object assembled elsewhere could
-   * be anything and saying `GET` about it would be an invention.
+   * The verb one call sends: the one its spelling always means, or, where the
+   * spelling leaves it to the call, the one the platform's description reads out
+   * of the options — including null where they were assembled elsewhere, which
+   * is a row rather than a guess at `GET` (R140).
    */
-  const verbOf = (call: CallExpression, shape: CallShape): string | null => {
-    if (shape.method !== null) return shape.method;
-    if (shape.optionsAt === undefined) return null;
-    const written = call.getArguments()[shape.optionsAt];
-    if (written === undefined) return 'GET';
-    const object = objectAt(call, shape.optionsAt);
-    if (object === undefined) return null;
-    const value = valueOf(object, 'method');
-    if (value === undefined) return 'GET';
-    const evaluated = evaluateExpression(value);
-    return evaluated.resolved === true && typeof evaluated.value === 'string'
-      ? evaluated.value.toUpperCase()
-      : null;
-  };
+  const verbOf = (call: CallExpression, shape: CallShape): string | null =>
+    shape.method !== null ? shape.method : requestVerbOf(call);
 
   const typeOfResponse = (call: CallExpression): string | null => {
     const [written] = call.getTypeArguments();
@@ -135,23 +110,13 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
   ): { type: string | null; keys?: readonly string[] } => {
     if (shape.bodyAt === undefined) return { type: null };
     const written =
-      client.callee === undefined
-        ? call.getArguments()[shape.bodyAt]
-        : serialised(valueOf(objectAt(call, shape.bodyAt), 'body'));
+      client.callee === undefined ? call.getArguments()[shape.bodyAt] : requestBodyOf(call);
     if (written === undefined) return { type: null };
     const keys = writtenKeysOf([written]);
     return {
       type: ctx.types.collectType(written.getType(), written),
       ...(keys === undefined ? {} : { keys }),
     };
-  };
-
-  /** `JSON.stringify(order)` is the order; anything else is itself. */
-  const serialised = (written: TsNode | undefined): TsNode | undefined => {
-    if (written === undefined || !Node.isCallExpression(written)) return written;
-    const callee = written.getExpression();
-    if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'stringify') return written;
-    return written.getArguments()[0] ?? written;
   };
 
   /**
@@ -341,7 +306,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         for (const client of REQUEST_CLIENTS) {
           const shape = client.callee;
           if (shape === undefined || !shape.names.includes(name)) continue;
-          if (!isProvided(callee)) continue;
+          if (!isPlatformProvided(callee)) continue;
           found.push({ call: node, client, shape });
           return;
         }

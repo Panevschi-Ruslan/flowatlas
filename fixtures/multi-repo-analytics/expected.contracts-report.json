@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 4,
   "schemaVersion": 5,
-  "generatedAt": "2026-09-27T17:30:53.939Z",
+  "generatedAt": "2026-09-27T19:37:52.537Z",
   "edges": [
     {
       "edge": {
@@ -279,6 +279,32 @@
       },
       "findings": [],
       "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:11:12",
+        "to": "entry:gateway:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:11:12|hits|entry:gateway:http:POST:/orders",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "web",
+        "typeId": "{customerId:string}",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+        "writes": [
+          "customerId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "{customerId:string}",
+        "symbol": "gateway#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "findings": [],
+      "rulesApplied": []
     }
   ],
   "findings": [
@@ -516,14 +542,26 @@
       "reason": "no-type-on-sender",
       "message": "gateway#src/accounts/accounts.controller.ts:AccountsController.findOne declares no type for what it sends",
       "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:11:12",
+        "to": "entry:gateway:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:11:12|hits|entry:gateway:http:POST:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "gateway#src/orders/orders.controller.ts:OrdersController.create declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
     }
   ],
   "summary": {
-    "edges": 7,
+    "edges": 8,
     "shared": 0,
-    "identical": 5,
+    "identical": 6,
     "hash_differs": 2,
-    "unchecked": 11,
+    "unchecked": 12,
     "errors": 1,
     "warnings": 0,
     "infos": 2,

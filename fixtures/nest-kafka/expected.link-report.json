@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T19:38:09.911Z",
+  "configHash": "7360f535f4dc",
+  "services": [
+    {
+      "name": "nest-kafka",
+      "repo": ".",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 74,
+      "edges": 52,
+      "types": 7,
+      "unresolved": 8,
+      "durationMs": 984
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 11,
+    "linked": 4,
+    "noConsumers": [
+      "channel:order.archived",
+      "channel:order.computed",
+      "channel:order.legacy",
+      "channel:order.shipped"
+    ],
+    "noProducers": [
+      "channel:order.audit",
+      "channel:order.checksum",
+      "channel:{\"cmd\":\"order.sync\"}"
+    ]
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 7,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 74,
+    "edges": 52,
+    "types": 7,
+    "unresolved": 8
+  }
+}

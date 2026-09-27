@@ -76,16 +76,20 @@ describe('cycles on the analytics fixture', () => {
 });
 
 describe('dead on the analytics fixture', () => {
-  it('reports the route nobody calls, both one-ended channels and the unused provider', async () => {
+  it('reports the route nobody calls, both one-ended channels and the unused providers', async () => {
     const { result } = await runDead({ db });
+    // `POST /orders` is not here: `web` posts to it with `fetch`, which the
+    // Angular reader now reads, so the route has a caller (R140).
     expect(result.entries?.map((row) => row.id)).toEqual([
       'entry:billing:event:orphan.in',
       'entry:gateway:http:GET:/internal/legacy',
-      'entry:gateway:http:POST:/orders',
     ]);
     expect(result.channels?.map((row) => row.id)).toEqual(['channel:audit.log', 'channel:orphan.in']);
+    // The service making that request is itself used by nothing in `web`, which
+    // holds that one file and no component; it is said, as any such class is.
     expect(result.providers?.map((row) => row.id)).toEqual([
       'orders#src/orders/unused.service.ts:UnusedService',
+      'web#src/app/orders-api.service.ts:OrdersApiService',
     ]);
   });
 

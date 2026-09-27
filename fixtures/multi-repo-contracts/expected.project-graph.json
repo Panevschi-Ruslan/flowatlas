@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T18:35:33.763Z",
+  "builtAt": "2026-09-27T19:37:54.109Z",
   "services": [
     {
       "name": "gateway",
@@ -3887,6 +3887,14 @@
       "service": "gateway"
     },
     {
+      "file": "src/clients/wire.dto.ts",
+      "line": 32,
+      "reason": "decorator-arg-dynamic",
+      "hint": "A function rewrites this field, so what it carries on the wire is not read. The field is compared as its declared type.",
+      "symbol": "WireDto.coupon",
+      "service": "gateway"
+    },
+    {
       "service": "orders",
       "file": "src/orders/orders.controller.ts",
       "line": 83,
@@ -3919,6 +3927,14 @@
       "reason": "di-token-unknown",
       "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
       "symbol": "OrdersService.constructor[0]",
+      "service": "orders"
+    },
+    {
+      "file": "src/wire/wire.dto.ts",
+      "line": 40,
+      "reason": "decorator-arg-dynamic",
+      "hint": "A function rewrites this field, so what it carries on the wire is not read. The field is compared as its declared type.",
+      "symbol": "WireDto.score",
       "service": "orders"
     }
   ]

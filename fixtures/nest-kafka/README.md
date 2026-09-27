@@ -38,7 +38,7 @@ tie-breaker.
 | `client.emit(SharedTopics.OrderArchived, dto)` | 72 | `order.archived` | `event` | static | — |
 | `client.emit(COMPUTED_TOPIC, dto)` | 78 | `order.computed` | `event` | static | — |
 | `client.emit(REGION_TOPIC, dto)` | 85 | none | `event` | — | `channel-const-unresolved` |
-| `client.emit(LEGACY_TOPIC, dto)` | 91 | none | `event` | — | `channel-const-unresolved` |
+| `client.emit(LEGACY_TOPIC, dto)` | 91 | `order.legacy` | `event` | static | — |
 | `client.emit({ name: 'order.checksum', data: {} }, dto)` | 104 | none | `event` | heuristic | `channel-dynamic` |
 | `client.emit(this.config.get('ORDER_TOPIC'), dto)` | 112 | none | `event` | heuristic | `channel-from-config` |
 | `client.emit(topic, dto)` | 117 | none | `event` | heuristic | `channel-dynamic` |
@@ -48,7 +48,24 @@ tie-breaker.
 | `telemetry.emit('order.created', …)` | 143 | — | — | — | — |
 
 `meta.channelVia` per row: `literal` (35, 42, 51), `enum` (59), `shared-package`
-(66, 72), `const` (78), `config` (112), `dynamic` (85, 91, 104, 117, 123).
+(66, 72, 91), `const` (78), and `unresolved` (85, 104, 112, 117, 123), where the
+row's `reason` says which of the three it was. Under `extract`, which reads the
+repository with no configuration and so lists no shared package, 66, 72 and 91
+are `const` and the channel is the same.
+
+Line 91 is the judgement worth writing down, because this README used to say the
+opposite (R140). `LEGACY_TOPIC` is annotated `: string`, which widens its *type*
+and changes nothing about its *value*: it is a `const`, assigned once, in the
+source the build reads, so every call naming it sends `order.legacy` and nothing
+else. The annotation tells other code what it may assume about the name — that
+a later version of the package might hold another string — and a channel is not
+what code may assume, it is what the program sends. Refusing it would drop an
+edge the running service really has, and would make a channel name disagree with
+a route path or mount written with the same constant, which the core reads
+through the same `evaluateExpression`. What cannot be read is a constant whose
+value is not in the source: `export declare const LEGACY_TOPIC: string` in a
+package's `.d.ts`, with no initializer. That is `channel-const-unresolved`, and
+`REGION_TOPIC` below is the case this fixture keeps for it.
 
 Line 104 is the one that must produce a row and nothing else. The argument is a
 readable record, and a readable record is still not a name: the address is one
@@ -102,10 +119,9 @@ end plus a row saying which publish lost it is the honest shape of that.
 | Construct | Where | Reason it must produce |
 |---|---|---|
 | `REGION_TOPIC` — a template literal whose hole is a call | `src/orders/topics.ts:26` | `channel-const-unresolved` |
-| `LEGACY_TOPIC: string` in `@fixture/events` | `shared/events/src/index.ts` | `channel-const-unresolved` |
 | `{ name, data }` — a job, not an address | `orders.service.ts:104` | `channel-dynamic`, and no channel node |
 | `this.config.get('ORDER_TOPIC')` | `orders.service.ts:112` | `channel-from-config`, hint `add @Emits('<topic>') on OrdersService.emitConfigured` |
-| `topic` parameter | `orders.service.ts:117` | `channel-dynamic`, same hint |
+| `topic` parameter | `orders.service.ts:117` | `channel-dynamic`, same hint: a parameter is not a constant nobody could follow, and its row must not say it is (R140) |
 | `emit(...args)` spread | `orders.service.ts:123` | `channel-dynamic`; the point is that it must not crash |
 | `@EventPattern()` with no argument | `orders.controller.ts:47` | `channel-dynamic`; must not crash |
 | `client.send` with no type argument | `orders.service.ts:136` | `rpc-return-type-unknown` |
@@ -117,5 +133,13 @@ initializer row that **does** resolve ("resolve nested consts one level"). If
 both come out unresolved, the resolver is not following consts at all; if both
 come out resolved, it is guessing.
 
-`expected.graph.json` is deliberately absent: it is generated once the P04 passes
-exist and reviewed as a diff.
+`expected.graph.json` holds what `extract` writes, and `expected.project-graph.json`
+and `expected.link-report.json` what `build` writes. `channel:order.legacy` is in
+the link report's `noConsumers`, which is right: nothing in this repository
+handles it.
+
+Two rows above are not written yet, and the snapshots say so rather than hiding
+it: nothing in the tool emits `rpc-return-type-unknown` (lines 136 and 70 produce
+no row; the handler's `returns` is `any`), and the handler at
+`orders.controller.ts:47` carries a `decorator-arg-dynamic` row beside its
+`channel-dynamic` one. Both are recorded against R140 as found, not decided here.

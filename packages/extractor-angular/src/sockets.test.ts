@@ -171,7 +171,8 @@ describe("the browser's half of a socket", () => {
   }
 `);
     expect(nodesOf(graph, 'channel')).toEqual([]);
-    expect(graph.unresolved.map((row) => row.reason)).toEqual(['channel-const-unresolved']);
+    // A parameter, so decided at run time: not a constant nobody could follow (R140).
+    expect(graph.unresolved.map((row) => row.reason)).toEqual(['channel-dynamic']);
   });
 
   // The event name here is a plain literal; it is the endpoint under it that is

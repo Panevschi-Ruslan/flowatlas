@@ -6,10 +6,10 @@
 // into the declaration below and come out as the literal `order.shipped`, with
 // `meta.channelVia: "shared-package"`.
 //
-// That only works while the literal survives the declaration, which is why the
-// object carries `as const` and the second form is a string enum. `LEGACY_TOPIC`
-// is the counter-example the troubleshooting table names (§13): a value widened
-// to `string` has no literal left to read.
+// Read from a package's `.d.ts` only the type is left, which is why the object
+// carries `as const` and the second form is a string enum. `LEGACY_TOPIC` is the
+// case §13 worried about, and read from source it resolves: `: string` widens
+// the type, not the value, and a `const` holds only what it was written (R140).
 
 /** `as const` keeps every value a string literal type rather than `string`. */
 export const EVENTS = {
@@ -23,8 +23,8 @@ export enum SharedTopics {
 }
 
 /**
- * Deliberately annotated `: string`, which throws the literal away. A repo that
- * emits on this constant cannot have its channel resolved.
- * Expected: unresolved `channel-const-unresolved`.
+ * Deliberately annotated `: string`, which widens the type and not the value:
+ * the binding is a `const`, so every emit on it sends `order.legacy`.
+ * Expected: `channel:order.legacy` (R140; this used to say the opposite).
  */
 export const LEGACY_TOPIC: string = 'order.legacy';

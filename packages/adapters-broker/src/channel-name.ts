@@ -1,6 +1,8 @@
 import {
+  declarationOf,
   evaluateExpression,
   foldedChoices,
+  isRunTimeValue,
   MOST_CHOICES,
   packageNameOf,
   stableKey,
@@ -49,13 +51,6 @@ const isConfigRead = (node: TsNode): boolean => {
   if (!CONFIG_METHODS.has(callee.getName())) return false;
   const receiver = callee.getExpression().getText().split('.').pop() ?? '';
   return /config(service)?$/i.test(receiver) || /env$/i.test(receiver);
-};
-
-const declarationOf = (node: TsNode): TsNode | undefined => {
-  if (!Node.isIdentifier(node) && !Node.isPropertyAccessExpression(node)) return undefined;
-  const symbol = node.getSymbol();
-  if (symbol === undefined) return undefined;
-  return (symbol.getAliasedSymbol() ?? symbol).getDeclarations()[0];
 };
 
 /** Which shared package a declaration came from, when it came from one. */
@@ -251,9 +246,12 @@ export const resolveChannelName = (
     }
   }
 
-  // An identifier that names something the checker could not follow is worth
-  // telling apart from an expression that was never going to be constant.
-  if (Node.isIdentifier(expr) || Node.isPropertyAccessExpression(expr)) {
+  // A name of a constant the checker could not follow is worth telling apart
+  // from a value decided at run time. A parameter or a `let` is a name too, and
+  // reporting one as an unreadable constant sent the reader off to move a
+  // constant that does not exist (R140); which names hold a run-time value is
+  // the core's answer, not this reader's.
+  if ((Node.isIdentifier(expr) || Node.isPropertyAccessExpression(expr)) && !isRunTimeValue(value)) {
     return { unresolved: 'channel-const-unresolved', text };
   }
   return { unresolved: 'channel-dynamic', text };

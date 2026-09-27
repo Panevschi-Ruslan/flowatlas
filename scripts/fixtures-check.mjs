@@ -220,35 +220,23 @@ const asReport = (value) => {
  *
  * The rule above found nine project fixtures held by their repository graph
  * alone. Each was read against its README before its outputs became an
- * expectation (R138), and the ones left here are the ones that read wrong: a
- * snapshot taken now would write the disagreement into the gate as the right
- * answer. Each entry names what is wrong, so the entry is a debt with a reason
+ * expectation (R138), and the ones that read wrong were named here: a snapshot
+ * taken then would have written the disagreement into the gate as the right
+ * answer. Each entry named what was wrong, so the entry was a debt with a reason
  * rather than a hole.
+ *
+ * Empty since R140, which settled the last three - `multi-repo-analytics`,
+ * `nest-kafka` and `nest-types` - each by deciding whether the reader or the
+ * README was right, and not by taking the output. The mechanism stays, because
+ * the next fixture whose output contradicts its README needs somewhere to wait
+ * that is not a snapshot.
  *
  * The same shape as `VALIDATE_ONLY`, and for its reason: an exception that no
  * longer applies is reported too. An entry whose fixture now holds either
  * snapshot fails the gate - somebody resolved it and has to remove the name, or
  * somebody snapshotted a disagreement and has to look again.
  */
-const UNHELD = {
-  'multi-repo-analytics':
-    'The README says `web` is skipped with `no-extractor` and that the gateway route it posts ' +
-    'to stays uncalled until P08 draws the `hits` edge. P08 has landed: the build reads `web` ' +
-    'with the Angular extractor, which reads the `fetch` POST in `orders-api.service.ts` as ' +
-    'nothing - no `ui_api_call`, no unresolved row - so `POST /orders` is uncalled in silence. ' +
-    'Either the request should be read or reported, or the fixture should say why not.',
-  'nest-kafka':
-    'Two rows contradict the README and the comments in the source. `LEGACY_TOPIC: string` is ' +
-    'written as the constant whose channel cannot be resolved, and the build resolves it to ' +
-    '`channel:order.legacy` via `shared-package`, so the link report counts a channel the ' +
-    'fixture says must not exist. And the `topic` parameter at orders.service.ts:117 is ' +
-    'reported `channel-const-unresolved`, where the README says `channel-dynamic`: a parameter ' +
-    'is not a constant nobody could follow.',
-  'nest-types':
-    'The README says `@Transform(({ value }) => ...)` on `CreateOrderDto` produces ' +
-    '`decorator-arg-dynamic` (P02 section 10 says the same). No such row is written: the ' +
-    'graph has three unresolved rows where the README lists four.',
-};
+const UNHELD = {};
 
 /** The outputs an `UNHELD` entry holds back: everything a build writes. */
 const HELD_BACK = ['expected.project-graph.json', 'expected.link-report.json'];

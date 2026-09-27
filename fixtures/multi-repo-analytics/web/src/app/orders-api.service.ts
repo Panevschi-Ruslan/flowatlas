@@ -1,10 +1,10 @@
 /**
- * The front end, which no extractor reads yet.
+ * The front end, read by the Angular extractor.
  *
- * It is in the configuration so that every analysis has to cope with a service
- * that contributes nothing: `config` reports no keys under `web`, and the
- * gateway route this posts to is reported as uncalled until P08 draws the
- * `hits` edge.
+ * The request is the platform's `fetch`, not `HttpClient`: an Angular service is
+ * free to use either, and this one is read through the same description of
+ * `fetch` the React reader uses (R140). It is the one caller of the gateway's
+ * `POST /orders`, and nothing in `web` uses this class.
  */
 export class OrdersApiService {
   create(customerId: string): Promise<unknown> {

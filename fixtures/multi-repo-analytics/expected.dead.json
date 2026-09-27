@@ -19,15 +19,6 @@
       "file": "src/orders/legacy.controller.ts",
       "line": 12,
       "reason": "no http_calls/hits from any repo (may be a public API)"
-    },
-    {
-      "id": "entry:gateway:http:POST:/orders",
-      "service": "gateway",
-      "kind": "http",
-      "key": "POST:/orders",
-      "file": "src/orders/orders.controller.ts",
-      "line": 12,
-      "reason": "no http_calls/hits from any repo (may be a public API)"
     }
   ],
   "channels": [
@@ -55,6 +46,13 @@
       "file": "src/orders/unused.service.ts",
       "line": 9,
       "reason": "nothing injects it and nothing reaches its methods; orders has 2 unresolved injects — verify"
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "service": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 9,
+      "reason": "nothing injects it and nothing reaches its methods; no module registers it either — check the bootstrap file"
     }
   ],
   "fields": [
