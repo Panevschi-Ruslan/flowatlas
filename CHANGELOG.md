@@ -162,6 +162,27 @@ either.
 
 ### Fixed
 
+- A reader that runs out of memory says so, and is given a heap it can finish in.
+  `payloadcms/payload` with its dependencies installed exhausted the default heap
+  on a 36 GB machine and the build reported `skipped (extract-failed: 104:
+  0x10495a0b0 node::NodeMainInstance::Run() …)` — three addresses inside a dynamic
+  library, because the words "JavaScript heap out of memory" are forty frames above
+  the tail that was quoted. A repository read now gets a share of the machine,
+  divided by how many repositories are read at once and never less than the runtime
+  would have given, and `--heap` or an existing `NODE_OPTIONS` limit wins over that.
+  payload builds: exit 2 after 59 s and nothing read, to exit 0 with 8,074 nodes,
+  10,260 edges and 288 routes, peaking at 9.2 GB. A read that still does not fit
+  names the repository, the limit that did not hold and the flag that raises it, and
+  leaves exit code 2 — the code this command line uses for a check it could not run.
+- Installing dependencies invalidates the build cache. The plan keyed on source
+  hashes, the configuration and the tool's own version, so clone, build, install,
+  build printed `cached (0 files changed)` and served the graph read without any
+  types resolved — on novu that is 415 entries where 420 are there and 8 outgoing
+  calls where 71 are. What is installed for a service, over the same extent the
+  reading uses, is now part of what the plan compares, so the second build re-reads
+  and says `dependencies installed in .` for why. The lockfile is hashed and the
+  modification time of `node_modules` is deliberately not read: a clock inside
+  something the plan compares is a defect this project has closed once already.
 - A type reference whose object key is not a name round-trips. The writer emitted
   keys as they were written and the reader refused them, so a dependency
   declaring JsonLogic operators — `{ '<=': number }` — stopped every command that

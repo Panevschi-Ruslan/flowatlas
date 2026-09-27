@@ -40,6 +40,9 @@ import {
   type RepoCache,
 } from '../build/cache.js';
 import { isDeclared, readDeclaredService } from '../build/declared.js';
+import { surveyDependencies } from '../build/dependencies.js';
+import { readFailure } from '../build/failure.js';
+import { heapArgs, heapForReaders } from '../build/heap.js';
 import {
   adapterNames,
   createRegistry,
@@ -94,6 +97,15 @@ export interface BuildOptions {
   /** Names given to `--service`; every other repository comes from the cache. */
   service?: string[];
   timing?: boolean;
+  /**
+   * Heap limit for each repository read, in megabytes.
+   *
+   * Given to `--heap`, and it wins over anything this build would have worked out
+   * for itself. A repository is read in a process of its own and the whole of it
+   * is held in memory while it is read; the largest repository this tool is
+   * measured against needs three times the limit the runtime picks by default.
+   */
+  heap?: string | number;
   /** Repositories already parsed, when a watch is driving the build. */
   sessions?: ReadonlyMap<string, ServiceSession>;
 }
@@ -264,6 +276,7 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
         : adapterNames(createRegistry(), readResolvedPackageJson(repoDir) ?? {}, config),
     tsconfigHash: tsconfig === undefined ? hashText('') : hashFile(tsconfig),
     packageJsonHash: hashFile(join(repoDir, 'package.json')),
+    dependencies: surveyDependencies(repoDir),
     globalFiles: session?.globalFiles() ?? [],
     files: stampFiles(repoDir, files, previous?.files, {
       ...(options.trustTimestamps === undefined ? {} : { trustTimestamps: options.trustTimestamps }),
@@ -408,6 +421,7 @@ const normalise = (graph: RepoGraph): RepoGraph =>
 const extractApart = async (
   repoDir: string,
   configPath: string,
+  heapMb: number | undefined,
   signal?: AbortSignal,
 ): Promise<RepoGraph> => {
   const out = join(repoDir, DEFAULT_OUTPUT);
@@ -416,29 +430,15 @@ const extractApart = async (
   // a graph for an answer nobody will receive. It writes by renaming a
   // temporary into place, so it is either killed before that or has finished;
   // there is no half-written graph to find.
-  await run(process.execPath, [binPath(), 'extract', repoDir, '--config', configPath, '--out', out], {
+  // The heap limit goes on the runtime's own command line rather than into its
+  // environment, so that it is visible in the process list beside the read it
+  // belongs to and nothing a child of this one starts inherits it by accident.
+  const argv = [...heapArgs(heapMb), binPath(), 'extract', repoDir, '--config', configPath, '--out', out];
+  await run(process.execPath, argv, {
     maxBuffer: 64 * 1024 * 1024,
     ...(signal === undefined ? {} : { signal }),
   });
   return readGraph(serviceGraphPath(repoDir));
-};
-
-/**
- * Why a repository could not be read, in words rather than in a command line.
- *
- * A child process that fails rejects with `Command failed: node … extract …`,
- * which names what was run and nothing about what went wrong. What went wrong
- * is on its stderr, and that is the only part worth reporting.
- */
-const reasonOf = (error: unknown): string => {
-  const message = error instanceof Error ? error.message : String(error);
-  const { stderr, code, signal } = error as { stderr?: unknown; code?: unknown; signal?: unknown };
-  const said = typeof stderr === 'string' ? stderr.trim() : '';
-  // Killed rather than failed: nothing was said because nothing got the chance.
-  // The signal is then the only fact there is, and it is the one worth having.
-  const how = typeof signal === 'string' && signal !== '' ? `killed by ${signal}` : `exit ${String(code ?? '?')}`;
-  if (said === '') return `${how}: ${message}`;
-  return `${how}\n${said.split('\n').filter((line) => line.trim() !== '').slice(-6).join('\n')}`;
 };
 
 /** The single entry a lone `flowatlas extract` leaves behind for the build. */
@@ -464,6 +464,8 @@ interface ExtractOneOptions {
   rootDir: string;
   /** Fixed timestamp, for reproducible output. */
   builtAt?: string;
+  /** Heap limit for the process this read happens in, when one is being asked for. */
+  heapMb?: number | undefined;
   /** Aborted when the build this read belongs to has already failed. */
   signal?: AbortSignal;
 }
@@ -576,7 +578,7 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
   try {
     const graph =
       session === undefined
-        ? await extractApart(repoDir, options.configPath, options.signal)
+        ? await extractApart(repoDir, options.configPath, options.heapMb, options.signal)
         : normalise(await extractWarm(session, plan, repoDir));
     // An open repository is read in this process and cannot be interrupted
     // part-way, so a warm read finishes even when the build around it has
@@ -597,13 +599,20 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
     };
   } catch (error) {
     if (error instanceof BuildInputError) throw error;
-    const text = reasonOf(error);
+    // What the failure was, in this tool's words, rather than the tail of
+    // whatever the dead process happened to print last.
+    const failure = readFailure(error, {
+      repo: service.repo,
+      // A warm read happens in this process, which was never given a limit of
+      // its own; saying one would name a number that had nothing to do with it.
+      ...(session === undefined ? { heapMb: options.heapMb } : {}),
+    });
     return {
       service,
       report: {
         ...base,
         skipped: 'extract-failed',
-        error: text.split('\n').slice(-3).join(' ').slice(0, 300),
+        error: failure.error,
         durationMs: Date.now() - started,
       },
     };
@@ -769,6 +778,19 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
       ? Math.max(cpus().length - 1, 1)
       : Math.max(Number(options.concurrency), 1);
 
+  /**
+   * How much heap each reader gets.
+   *
+   * Worked out once, from how many readers will actually run rather than from
+   * `--concurrency`: the pool takes the smaller of the limit and the number of
+   * repositories, and dividing a machine by eleven when one repository is being
+   * read is how a build that would have finished runs out of memory instead.
+   */
+  const heapMb = heapForReaders(
+    Math.min(limit, Math.max(loaded.config.services.length, 1)),
+    options.heap === undefined ? undefined : Math.max(Number(options.heap), 1),
+  );
+
   const extracted = await inPools(loaded.config.services, limit, (service, signal) => {
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
@@ -779,6 +801,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
       configPath: loaded.configPath,
       rootDir: loaded.rootDir,
       ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
+      heapMb,
       plan: plan[service.name] ?? { mode: 'full', reason: 'not planned' },
       ...(options.skipFrontend === undefined ? {} : { skipFrontend: options.skipFrontend }),
       ...(session === undefined ? {} : { session }),
@@ -891,6 +914,7 @@ const nextCache = (
       adapters: survey.adapters,
       tsconfigHash: survey.tsconfigHash,
       packageJsonHash: survey.packageJsonHash,
+      dependencies: survey.dependencies,
       globalFiles: carried?.globalFiles ?? survey.globalFiles,
       files: carried?.files ?? survey.files,
       graphPath: survey.graphPath,
@@ -1092,6 +1116,7 @@ export const registerBuild = (program: Command): void => {
     .option('--no-cache', 'ignore the recorded file hashes and read everything')
     .option('--watch', 'keep reading, rebuilding after every change')
     .option('--timing', 'print how long each phase took, as JSON')
+    .option('--heap <megabytes>', 'heap limit for each repository read (default: a share of the machine)')
     .option('--skip-frontend', 'leave out the services a frontend extractor reads')
     .option('--json', 'print the report as JSON')
     .action(async (dir: string | undefined, options: BuildOptions & { watch?: boolean }) => {
@@ -1126,7 +1151,9 @@ export const registerBuild = (program: Command): void => {
       if (options.timing === true) {
         process.stderr.write(`${JSON.stringify(result.timing)}\n`);
       }
-      if (result.failed) process.exitCode = 2;
+      // A repository that could not be read is a check that could not be run,
+      // which is the one thing exit 2 means everywhere in this command line.
+      if (result.failed) process.exitCode = EXIT.cannotRun;
     });
 };
 

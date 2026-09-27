@@ -1,11 +1,13 @@
+import { execFile } from 'node:child_process';
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { promisify } from 'node:util';
 import type { Unresolved } from '@flowatlas/core';
 import { openGraphDb } from '@flowatlas/linker';
 import { afterAll, describe, expect, it } from 'vitest';
 import { resolveNodeId } from '../../../../scripts/fixture-nodes.mjs';
-import { loadBuildCache } from '../build/cache.js';
+import { CACHE_VERSION, loadBuildCache } from '../build/cache.js';
 import { buildProject, inPools, summariseBuild, summariseRebuild, unresolvedLine } from './build.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
@@ -472,7 +474,7 @@ describe('building a project a second time', () => {
     const result = await buildProject({ config, builtAt: FIXED, cache: false });
 
     expect(result.plan['orders']).toEqual({ mode: 'full', reason: 'cache ignored' });
-    expect(loadBuildCache(result.cachePath)).toHaveProperty('cache.cacheVersion', 1);
+    expect(loadBuildCache(result.cachePath)).toHaveProperty('cache.cacheVersion', CACHE_VERSION);
   }, 240_000);
 
   it('reads everything again, saying so, when the cache is not a cache any more', async () => {
@@ -484,7 +486,7 @@ describe('building a project a second time', () => {
     expect(result.cacheProblem).toBe('corrupt');
     expect(result.plan['orders']?.mode).toBe('full');
     expect(summariseBuild(result)[0]).toBe('cache-invalid:corrupt');
-    expect(loadBuildCache(result.cachePath)).toHaveProperty('cache.cacheVersion', 1);
+    expect(loadBuildCache(result.cachePath)).toHaveProperty('cache.cacheVersion', CACHE_VERSION);
   }, 240_000);
 
   it('reads everything again when the tool that wrote the cache was another one', async () => {
@@ -594,6 +596,68 @@ describe('building only some of the repositories', () => {
       /no service named "nope"/,
     );
   }, 60_000);
+});
+
+/**
+ * What a build says when a reader runs out of memory, and what it costs.
+ *
+ * Both halves of R98. The first is a sentence: heap exhaustion happens inside
+ * the process reading one repository, it ends in a stack trace rather than a
+ * complaint, and what used to reach the summary was three addresses inside a
+ * dynamic library. The second is a number: the largest fixture builds under a
+ * heap small enough that doubling what the tool uses would redden this.
+ */
+describe('a repository that does not fit in memory', () => {
+  const runCli = promisify(execFile);
+  const CLI = join(ROOT, 'packages', 'cli', 'bin', 'flowatlas.js');
+
+  it('says so in its own words, naming the repository and the way out', async () => {
+    const config = configFor('tiny-heap', [serviceIn(DOOMED_FIXTURE, 'orders')]);
+    // Small enough that reading four files does not fit, and large enough that
+    // the runtime still starts: 64 MB was measured to fail on this fixture and
+    // 160 MB to pass.
+    const result = await buildProject({ config, builtAt: FIXED, heap: 64, cache: false });
+
+    expect(result.failed).toBe(true);
+    const [orders] = result.report.services;
+    expect(orders?.skipped).toBe('extract-failed');
+    expect(orders?.error).toContain('ran out of memory reading');
+    expect(orders?.error).toContain('orders');
+    expect(orders?.error).toContain('under a limit of 64 MB');
+    expect(orders?.error).toContain('--heap 128');
+    // The words that used to arrive instead of any of that.
+    expect(orders?.error).not.toMatch(/libnode|dyld|0x[0-9a-f]{6}/);
+    expect(summariseBuild(result).join('\n')).toContain('ran out of memory reading');
+  }, 240_000);
+
+  /**
+   * The number to regress against.
+   *
+   * Measured on 2026-09-27: the four repositories of `multi-repo`, the largest
+   * fixture here, build to completion with an old-space limit of 128 MB and peak
+   * at 0.31 GB of resident memory for the whole process tree. The limit asserted
+   * is twice what was needed, so this is quiet about ordinary drift and loud
+   * about the kind of change that took the tool from 1.4 GB on one real
+   * repository to more than 10 on another.
+   *
+   * A limit rather than a measurement on purpose: peak resident memory depends
+   * on what else the machine is doing, and a test that reads it would be a test
+   * that reddens for reasons nobody can act on.
+   */
+  it('builds the largest fixture under a heap of 256 MB', async () => {
+    const tree = copyOfMultiRepo();
+    try {
+      // On the environment, so the reader processes inherit it: the flag this
+      // build would otherwise choose for itself stands aside for one that was
+      // asked for, and this asserts the whole tree fits and not just the parent.
+      await runCli(process.execPath, [CLI, 'build', tree, '--out', join(tree, '..', 'out')], {
+        env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=256' },
+        maxBuffer: 64 * 1024 * 1024,
+      });
+    } finally {
+      rmSync(resolve(tree, '..'), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+    }
+  }, 240_000);
 });
 
 describe('the line a rebuild prints', () => {

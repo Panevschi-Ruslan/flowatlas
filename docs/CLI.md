@@ -142,11 +142,24 @@ graph as SQLite and is what every query reads.
 | `--watch` | off | keep running, rebuilding after every change |
 | `--timing` | off | print how long each phase took, as JSON |
 | `--skip-frontend` | off | leave out the services a frontend extractor reads |
+| `--heap <megabytes>` | a share of the machine | heap limit for each repository read |
 | `--json` | off | print the report as JSON instead of a summary |
 
 A hash is recorded per source file, so a second build of unchanged sources reads
-nothing and still writes every output. Under `--watch` each repository's parsed
+nothing and still writes every output. Whether each repository's dependencies are
+installed is recorded too, because a repository read without them is a different
+answer rather than the same answer read faster: the ordinary sequence of clone,
+build, install, build re-reads on the second build and says
+`dependencies installed in .` for why. Under `--watch` each repository's parsed
 program is held open, which is where most of the saving comes from.
+
+Each repository is read in a process of its own, and the whole of it is held in
+memory while it is read, so a large monorepo with its dependencies installed can
+want several times the heap the runtime picks by default. A share of the machine
+is asked for, divided by how many repositories are read at once and never less
+than the runtime would have given; `--heap`, or a limit already on `NODE_OPTIONS`,
+wins over that. A read that does not fit says so, names the repository and the
+limit that did not hold, and leaves exit code `2`.
 
 Exit code is `2` when a repository could not be read; the others are still built
 and joined.
