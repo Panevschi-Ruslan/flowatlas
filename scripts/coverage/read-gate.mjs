@@ -140,7 +140,7 @@ export const EXEMPT = [
       'The package integration tests start a server with. Its one route is a ' +
       '`/health` on an application `bootstrapApp` builds for a test runner, which ' +
       'no deployment of this service starts: the service’s own `/health` is ' +
-      'declared in `packages/medusa/src/commands/start.ts` (see `BASELINE`). It ' +
+      'declared in `packages/medusa/src/commands/start.ts`. It ' +
       'is in the extent because modules the service declares, `@medusajs/order` among ' +
       'them, name `@medusajs/test-utils` as a dev dependency, ' +
       'and a reader that placed its address would be reporting a second health ' +
@@ -286,69 +286,17 @@ export const BLIND = [
  * nobody has seen.
  */
 export const BASELINE = [
-  {
-    where: 'outline',
-    state: 'fresh',
-    family: 'routes',
-    path: 'plugins/**',
-    files: 11,
-    ticket: 'R121',
-    why:
-      'Every plugin mounts a router of its own and hangs handlers off it, and that ' +
-      'convention has no reader. Eleven files of it. The gate is right to say so; ' +
-      'what it must not do is say so in the same breath as a regression somewhere ' +
-      'else. This goes the day the convention gets a reader, and the gate will then ' +
-      'insist on it.',
-  },
-  {
-    where: 'outline',
-    state: 'fresh',
-    family: 'routes',
-    path: 'server/routes/**',
-    files: 34,
-    ticket: 'R121',
-    why:
-      'The same convention in the service itself: thirty-four files declaring ' +
-      'handlers on a router assembled by a helper, none of which yields an entry ' +
-      'point. Together with the eleven above this is outline’s entire route surface, ' +
-      'which is why the target has never once passed this gate - and why a second, ' +
-      'unrelated loss here has had somewhere to hide for as long as the gate has ' +
-      'existed.',
-  },
-  // Medusa's known red (R137): two files unread on a fresh clone for one reason.
-  // Neither is a file that serves nothing - those are in `EXEMPT` - and both are
-  // recorded here so that a third file going unread beside them is new red rather
-  // than more of the same. A third entry, the inventory module's repository, was
-  // a gap in how a project was built and went when R141 closed it: each declared
-  // package's own `paths` now resolve that package's own imports.
-  {
-    where: 'medusa',
-    state: 'fresh',
-    family: 'routes',
-    path: 'packages/medusa/src/commands/start.ts',
-    files: 1,
-    ticket: 'R137',
-    why:
-      'The service’s own `GET /health`, declared on `const app = express()`. With ' +
-      'dependencies installed it is read and the with-deps report holds its entry; ' +
-      'on a fresh clone `express` has no types, so `app` is `any` and the Express ' +
-      'reader, which knows an application by its type and by nothing else, cannot ' +
-      'tell it from any other object with a `get`. The same cause leaves ' +
-      'PeerTube’s fresh clone with no addresses at all.',
-  },
-  {
-    where: 'medusa',
-    state: 'fresh',
-    family: 'routes',
-    path: 'packages/admin/admin-bundler/src/commands/serve.ts',
-    files: 1,
-    ticket: 'R137',
-    why:
-      'The admin dashboard’s two catch-all `GET`s, declared on `Router()` from ' +
-      '`express`. Read with dependencies installed, and unread fresh for the reason ' +
-      'the entry above gives: the router’s type is in a package a fresh clone does ' +
-      'not have.',
-  },
+  // outline's forty-five known unread files on a fresh clone - eleven under
+  // `plugins/**` and thirty-four under `server/routes/**`, its whole route surface
+  // - were here until R142. They were never a convention without a reader, as the
+  // entries claimed: the Koa reader knew an application only by its type, which a
+  // fresh clone does not have, and now reads one from what the source states.
+  // outline's fresh read equals its installed read, so nothing is baselined.
+  // Medusa once had three known-red files here (R137), and each went when its
+  // cause did: the service's `start.ts` and the admin bundler's `serve.ts` when
+  // R142 read an Express application from what the source states, and the
+  // inventory module's repository when R141 let a declared package's own `paths`
+  // resolve its own imports. Nothing of Medusa's is baselined now.
 ];
 
 const exemptionKey = (entry) => `${entry.where} ${entry.path} ${entry.family}`;
