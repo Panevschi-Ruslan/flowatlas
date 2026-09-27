@@ -272,6 +272,20 @@ export const resolveUiCall = (call: GraphNode, index: UiIndex): UiOutcome => {
  * A browser is given a base address that already ends in the prefix, so the
  * path it writes is the path without it. The same retry the service-to-service
  * linker makes, for the same reason.
+ *
+ * There is deliberately no mirror of this — no retry for a prefix the *route* is
+ * missing and the request carries. It was the cheaper of the two answers to
+ * R114 and it is the wrong one. This retry is gated on the routes themselves
+ * declaring the prefix, so it forgives a caller for something the service wrote
+ * down; the mirror has nothing to be gated on, because a route missing a segment
+ * says nothing about the segment it is missing. It would have joined
+ * `/api/passkeys.list` to `/passkeys.list` on the measured repository — which is
+ * right there, and wrong for the reason that matters: those routes are mounted by
+ * a registry this tool does not follow, so their recorded address is genuinely
+ * incomplete, and forgiving it here would hide a reader's gap behind a join and
+ * make the same string match routes in services that have no such prefix at all.
+ * The answer taken instead was to record the client's own base in the address, so
+ * both ends carry the segment and this only ever has one string to compare.
  */
 const withGlobalPrefix = (path: string, routes: readonly GraphNode[]): string | undefined => {
   const prefix = routes

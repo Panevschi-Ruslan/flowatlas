@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 4,
+  "builtAt": "2026-09-27T09:33:14.603Z",
+  "configHash": "215085ceb5c6",
+  "services": [
+    {
+      "name": "app",
+      "repo": ".",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 21,
+      "edges": 15,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 678
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 1
+  },
+  "ui": {
+    "total": 3,
+    "resolved": 2,
+    "unresolved": 1,
+    "byReason": {
+      "target-route-not-found": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 2,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "app",
+      "file": "src/app/documents.ts",
+      "line": 18,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /events",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /events */.",
+      "symbol": "ui_api_call:app#src/app/documents.ts:18:3"
+    }
+  ],
+  "totals": {
+    "nodes": 21,
+    "edges": 17,
+    "types": 0,
+    "unresolved": 2
+  }
+}

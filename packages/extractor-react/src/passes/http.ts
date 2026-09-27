@@ -17,7 +17,7 @@ import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { requestsOf, type ReadRequest, type RequestSite } from '../util/forward.js';
 import { localClientOf, type LocalClientReading } from '../util/local-client.js';
-import { analyzeApiUrl } from '../util/url.js';
+import { analyzeApiUrl, analyzeClientBase, underBase } from '../util/url.js';
 import { definePass } from './types.js';
 
 /** One request found in the source, before its address has been worked out. */
@@ -149,7 +149,13 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
 
   const record = (found: FoundCall, request: ReadRequest): void => {
     const { call: network, client, shape } = found;
-    const { site, address } = request;
+    const { site } = request;
+    // The path at the call site is written under whatever base its client holds,
+    // so the address is the two of them together. Recorded that way rather than
+    // forgiven later: `impact`, `dead` and `contracts` all read what is written
+    // here, and a recorded address missing a segment is wrong in the graph
+    // whether or not the linker happens to forgive it (R114).
+    const address = underBase(client.base, request.address);
     const at = siteOf(site.call);
     const leaf = makeLeafId('ui_api_call', ctx.repo, site.file, at.line, at.column);
     // One caller may reach a wrapper that writes several requests, so where the
@@ -299,6 +305,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     const reading = localClientOf(cls, {
       reaches: (body) => describedCallsIn(body).length > 0,
       declared: ctx.config.adapters.frontend.localClientClasses,
+      address: (node) => analyzeClientBase(node, { sharedPackages: ctx.config.sharedPackages }),
     });
     readings.set(cls, reading);
     return reading;

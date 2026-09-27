@@ -199,3 +199,125 @@ describe('a client class the repository wrote itself', () => {
     });
   });
 });
+
+/**
+ * The same client, holding the base every address it writes sits under.
+ *
+ * The shape the measured case is written in: the base is a field, set in the
+ * constructor with a default beside it, and no call site mentions it. Every one
+ * of them writes the tail alone.
+ */
+const WRAPPING_FETCH_UNDER_API = `
+  type Options = { baseUrl?: string };
+  class ApiClient {
+    baseUrl: string;
+    constructor(options: Options = {}) {
+      this.baseUrl = options.baseUrl || '/api';
+    }
+    private send = (path: string, method: string, body?: object) =>
+      fetch(this.baseUrl + path, { method, body: JSON.stringify(body) });
+    get = (path: string) => this.send(path, 'GET');
+    post = (path: string, body?: object) => this.send(path, 'POST', body);
+  }
+  export const api = new ApiClient();
+`;
+
+describe('the base a client of one own holds', () => {
+  it('is part of every address written through it', () => {
+    const graph = read({
+      '/src/api.ts': WRAPPING_FETCH_UNDER_API,
+      '/src/Panel.tsx': `
+        import { api } from './api';
+        export const Panel = () => {
+          const load = () => api.get('/documents.info');
+          const save = () => api.post('/documents.update', { id: 'a' });
+          return <button onClick={load} onDoubleClick={save} />;
+        };
+      `,
+    });
+    // Without the base the two addresses are missing their first segment, and a
+    // route that carries it answers neither of them (R114).
+    expect(labels(graph)).toEqual(['GET /api/documents.info', 'POST /api/documents.update']);
+    expect(requests(graph)[0]?.meta).toMatchObject({
+      client: 'ApiClient',
+      localClient: 'recognised',
+      path: '/api/documents.info',
+      url: '/api/documents.info',
+    });
+  });
+
+  it('keeps the settings key it is rooted at', () => {
+    const graph = read({
+      '/src/api.ts': `
+        class ApiClient {
+          private baseUrl = process.env.API_URL + '/api';
+          private send = (path: string, method: string) =>
+            fetch(this.baseUrl + path, { method });
+          get = (path: string) => this.send(path, 'GET');
+        }
+        export const api = new ApiClient();
+      `,
+      '/src/Panel.tsx': `
+        import { api } from './api';
+        export const Panel = () => <button onClick={() => api.get('/documents.info')} />;
+      `,
+    });
+    expect(requests(graph)[0]?.meta).toMatchObject({
+      baseUrlEnv: 'API_URL',
+      path: '/api/documents.info',
+    });
+  });
+
+  it('keeps a settings key that is the whole of it', () => {
+    const graph = read({
+      '/src/api.ts': `
+        import env from './env';
+        class ApiClient {
+          private base = env.API_URL;
+          private send = (path: string, method: string) => fetch(this.base + path, { method });
+          get = (path: string) => this.send(path, 'GET');
+        }
+        export const api = new ApiClient();
+      `,
+      '/src/env.ts': `export default { API_URL: '' };`,
+      '/src/Panel.tsx': `
+        import { api } from './api';
+        export const Panel = () => <button onClick={() => api.get('/documents.info')} />;
+      `,
+    });
+    // Nothing is in front of the path, so the address is unchanged — but the key
+    // the base is rooted at is now on the node, which is what lets the
+    // configuration say which service answers it.
+    expect(requests(graph)[0]?.meta).toMatchObject({
+      baseUrlEnv: 'API_URL',
+      path: '/documents.info',
+    });
+  });
+
+  it('is not put in front of an address the call site rooted itself', () => {
+    const graph = read({
+      '/src/api.ts': WRAPPING_FETCH_UNDER_API,
+      '/src/Panel.tsx': `
+        import { api } from './api';
+        export const Panel = () => (
+          <button onClick={() => api.post('https://telemetry.example.com/events', {})} />
+        );
+      `,
+    });
+    // A path written under a host of its own is not relative to anything the
+    // client holds, and `/api` in front of it would be an address nobody writes.
+    expect(labels(graph)).toEqual(['POST /events']);
+    expect(requests(graph)[0]?.meta).toMatchObject({ host: 'telemetry.example.com' });
+  });
+
+  it('leaves an address alone where the class holds no base', () => {
+    const graph = read({
+      '/src/api.ts': WRAPPING_FETCH,
+      '/src/Panel.tsx': `
+        import { api } from './api';
+        export const Panel = () => <button onClick={() => api.get('/api/orders')} />;
+      `,
+    });
+    expect(labels(graph)).toEqual(['GET /api/orders']);
+  });
+});

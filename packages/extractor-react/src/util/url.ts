@@ -265,3 +265,79 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
     guessed,
   };
 };
+
+/**
+ * The address a client of this repository's own puts in front of every path.
+ *
+ * `this.baseUrl = options.baseUrl || '/api'` and `private base = env.API_URL` are
+ * the same fact written two ways: the opening of every address the client writes,
+ * kept in a field because it is written once and read everywhere. It is read here
+ * with the readers that settle any other address — the settings trace first,
+ * because a base rooted at a settings key is an address and has to keep its key,
+ * and the constant behind the field second, because a base that is only a path is
+ * rooted at nothing and the settings trace has nothing to say about it.
+ *
+ * A host is allowed, unlike everywhere else a field is read as a piece of a path:
+ * a client's base is the one place a host legitimately lives. So is a settings key
+ * with nothing after it: {@link analyzeApiUrl} answers with nothing for that,
+ * because a *request* whose whole address is a settings key has no path and is not
+ * an address, while a base that is exactly the key is the ordinary way a client is
+ * pointed at another deployment.
+ */
+export const analyzeClientBase = (node: TsNode, options: ReadAddressOptions = {}): ApiUrl => {
+  const rooted = analyzeApiUrl(node, options);
+  if (rooted.path !== null || rooted.baseUrlEnv !== null || rooted.host !== null) return rooted;
+  const behind = rootSettingAddress(node, { readSetting: settingKeyOf });
+  if (behind !== null) {
+    const prefix = behind.prefix ?? '';
+    return {
+      url: `\${${behind.key}}${prefix}`,
+      path: routePathOf(prefix),
+      baseUrlEnv: behind.key,
+      host: null,
+      via: 'template-env',
+      guessed: behind.guessed === true,
+    };
+  }
+  const literal = constantPropertyValue(node, { allowHost: true });
+  if (literal === null) return EMPTY;
+  const absolute = ABSOLUTE.exec(literal);
+  return {
+    url: literal,
+    path: routePathOf(absolute === null ? literal : (absolute[3] ?? '')),
+    baseUrlEnv: null,
+    host: absolute === null ? null : (absolute[2] ?? '').toLowerCase(),
+    via: 'const',
+    guessed: false,
+  };
+};
+
+/**
+ * The whole address a request reaches, once the client's own base is in front.
+ *
+ * An address and a base are one fact read at two ends, and this is the one place
+ * the two ends are put together — so what the graph records is the address the
+ * request actually reaches, and everything that reads it afterwards, the linker
+ * included, is looking at the same string the route side is (R114).
+ *
+ * The base does not apply to an address the call site rooted itself. A path
+ * written with a host of its own, or rooted at a settings key of its own, is not
+ * relative to anything the client holds, and putting the two together would
+ * invent an address nobody writes.
+ */
+export const underBase = (base: ApiUrl | undefined, address: ApiUrl): ApiUrl => {
+  if (base === undefined || address.path === null) return address;
+  if (address.host !== null || address.baseUrlEnv !== null) return address;
+  const opening = base.path === null ? '' : base.path.replace(/\/+$/, '');
+  if (opening === '' && base.baseUrlEnv === null && base.host === null) return address;
+  return {
+    url: `${(base.url ?? '').replace(/\/+$/, '')}${address.url ?? address.path}`,
+    path: routePathOf(`${opening}${address.path}`),
+    baseUrlEnv: base.baseUrlEnv,
+    host: base.host,
+    // How the *address* was arrived at, and an address rooted at a settings key
+    // is that whichever end of it the key came from.
+    via: base.baseUrlEnv === null ? address.via : 'template-env',
+    guessed: address.guessed || base.guessed,
+  };
+};

@@ -1,7 +1,8 @@
 import { forEachCall } from '@flowatlas/core';
 import type { ClassDeclaration, Node as TsNode } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
 import { localClient, VERB_CALLS, type RequestClient } from '../clients.js';
+import type { ApiUrl } from './url.js';
 
 /**
  * Whether a class this repository declares is one of its HTTP clients.
@@ -37,7 +38,41 @@ export interface ClassReading {
   reaches(body: TsNode): boolean;
   /** Class names a project declared as its own clients, and their subclasses. */
   declared: readonly string[];
+  /**
+   * The address a value of this class stands for, read as any address is.
+   *
+   * Handed in rather than reached for, so this file stays a question about one
+   * class declaration and the reader that settles an address stays the same one
+   * the request pass uses. Two readers of an address cannot be kept in step, and
+   * a base read by a second reader is how the two ends of a join come to disagree
+   * about the same segment (R114).
+   */
+  address(node: TsNode): ApiUrl;
 }
+
+/**
+ * Fields a client of one's own keeps its base address in.
+ *
+ * A description, not a guess at names, and it carries no weight on its own: it is
+ * asked only of a class already proved or declared to be an HTTP client, and only
+ * a field holding an address something can be read out of answers. A cache with a
+ * `base` field is not a client and never reaches here; a client with a `baseUrl`
+ * field holding `/api` is holding the first segment of every address it writes.
+ *
+ * Ordered, because a class may declare more than one and the first is the one
+ * meant: `baseUrl` beside a `basePath` is the address, and the other is a piece
+ * of it.
+ */
+const BASE_FIELDS: readonly string[] = [
+  'baseUrl',
+  'baseURL',
+  'baseURI',
+  'basePath',
+  'apiBase',
+  'apiUrl',
+  'base',
+  'prefix',
+];
 
 /** What reading a local class made of it. */
 export type LocalClientReading =
@@ -129,6 +164,46 @@ const reachesNetwork = (
   return found;
 };
 
+/** Whether an address says anything a path written under it would not. */
+const isSomewhere = (address: ApiUrl): boolean =>
+  address.baseUrlEnv !== null ||
+  address.host !== null ||
+  (address.path !== null && address.path !== '/');
+
+/**
+ * The base every address this class writes sits under, when it holds one.
+ *
+ * Asked of the class rather than of a call site, because that is where the fact
+ * is: one field, set once, in front of every path every screen writes. A field is
+ * a candidate by name and an answer by what can be read out of it — so the order
+ * of {@link BASE_FIELDS} decides which field is asked first, and the reader
+ * decides whether the answer is an address at all.
+ *
+ * It is read at a `this.<field>` written in the class, because that is what the
+ * readers take: a field is read through an access to it, and an access is also
+ * the evidence that the class does something with what it holds.
+ */
+const baseOf = (chain: readonly ClassDeclaration[], reading: ClassReading): ApiUrl | undefined => {
+  // One walk for all of the names: the class carrying every request of an
+  // application is the largest declaration in the repository, and it is walked
+  // once per candidate name otherwise.
+  const found = new Map<string, TsNode>();
+  for (const cls of chain) {
+    for (const access of cls.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)) {
+      const name = access.getName();
+      if (found.has(name) || !BASE_FIELDS.includes(name)) continue;
+      if (Node.isThisExpression(access.getExpression())) found.set(name, access);
+    }
+  }
+  for (const name of BASE_FIELDS) {
+    const access = found.get(name);
+    if (access === undefined) continue;
+    const address = reading.address(access);
+    if (isSomewhere(address)) return address;
+  }
+  return undefined;
+};
+
 /** Every class in an extends chain, the one written first. */
 const chainOf = (cls: ClassDeclaration): ClassDeclaration[] => {
   const chain: ClassDeclaration[] = [];
@@ -184,7 +259,11 @@ export const localClientOf = (
     // the configuration a line that changed nothing; every verb is the honest
     // reading of "this class is the client".
     const answered = verbs.size > 0 ? [...verbs.keys()] : Object.keys(VERB_CALLS);
-    return { kind: 'client', client: localClient(typeName, answered), via: 'declared' };
+    return {
+      kind: 'client',
+      client: localClient(typeName, answered, baseOf(chain, reading)),
+      via: 'declared',
+    };
   }
 
   if (verbs.size === 0) return undefined;
@@ -198,7 +277,11 @@ export const localClientOf = (
     .filter(([name, body]) => reachesNetwork(body, members, reading, new Set([name]), 0))
     .map(([name]) => name);
   if (proved.length > 0) {
-    return { kind: 'client', client: localClient(typeName, proved), via: 'recognised' };
+    return {
+      kind: 'client',
+      client: localClient(typeName, proved, baseOf(chain, reading)),
+      via: 'recognised',
+    };
   }
 
   // A class declaring the verbs of a client, whose verbs this reader could not
