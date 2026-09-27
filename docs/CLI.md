@@ -772,7 +772,7 @@ A custom broker entry:
       "kind": "event"
     }
   ],
-  "consumers": [],                          // decorator names that mark a handler
+  "consumers": ["OnEvent"],                 // decorator names that mark a handler
   "subscribers": [
     {
       "receiverType": ["Broadcaster"],      // the class receiving is asked of
@@ -784,6 +784,73 @@ A custom broker entry:
   ]
 }
 ```
+
+### Where the channel name is written
+
+`channelArg` says "argument 0", and most buses are written that way. Two common
+house styles are not, and for those a producer, a subscriber or a consumer takes
+`channel` instead: a list of **locators**, tried in order, first that yields a
+readable name wins. `channel` replaces `channelArg` where both are given.
+
+| Locator | Reads |
+|---|---|
+| `{ "kind": "argument", "index": 0 }` | argument 0, which is what `channelArg: 0` means |
+| `{ "kind": "argument-property", "index": 0, "key": "name" }` | the `name` property of argument 0, written out or as a shorthand |
+| `{ "kind": "base-constructor-argument", "index": 0 }` | argument 0 of the `super(...)` in the class the receiver was declared as |
+| `{ "kind": "receiver" }` | the expression the call was made on |
+| `{ "kind": "receiver-type" }` | the declaration of the receiver's declared type |
+| `{ "kind": "provider-decorator", "decorator": "InjectQueue", "index": 0 }` | argument 0 of that decorator on the constructor parameter that provided the receiver |
+| `{ "kind": "chain-call", "method": "from", "index": 0 }` | argument 0 of `from(...)` anywhere in the same chain |
+| `{ "kind": "chain-root-argument", "index": 0 }` | argument 0 of the call the chain started from |
+
+A bus that addresses jobs as an options object and wraps each queue in a class of
+its own is described like this — and note that the handler needs describing the
+same way, because a channel with one end joins nothing:
+
+```jsonc
+{
+  "name": "house-jobs",
+  "channelKind": "queue",
+  "producers": [
+    {
+      "receiverType": ["JobBus"],
+      "method": "queue",                    // jobs.queue({ name, data })
+      "channel": [{ "kind": "argument-property", "index": 0, "key": "name" }],
+      "payloadArg": 0,
+      "kind": "job"
+    },
+    {
+      "receiverType": ["MailQueue", "DigestQueue"],
+      "method": "push",                     // this.mail.push(payload)
+      "channel": [{ "kind": "base-constructor-argument", "index": 0 }],
+      "payloadArg": 0,
+      "kind": "job"
+    }
+  ],
+  "consumers": [
+    {
+      "decorator": "OnJob",                 // @OnJob({ name, queue })
+      "channel": [{ "kind": "argument-property", "index": 0, "key": "name" }],
+      "kind": "job"
+    }
+  ]
+}
+```
+
+**The order matters.** A flat record is itself a legal channel address — a
+framework's own transport matches `send({ cmd: 'sum' })` against a handler
+written the same way — so a plain `argument` locator does not fail on an options
+object, it succeeds with a name nothing at the other end can ever write. List the
+narrower locator first.
+
+A `consumers` entry may be a bare decorator name, which means what it always
+meant: the channel is that decorator's first argument. Written out it takes
+`decorator`, an optional `classDecorator` for a worker class that states its
+channel above the class rather than on each method, `channel`, and `kind`.
+
+A name no locator can read produces a publisher or a handler with no channel and
+a row saying which call to look at. It never produces a channel node: a guessed
+name would silently join two services that never speak.
 
 **`consumers` and `subscribers` are the two ways a bus says who listens.** A bus
 with a decorator per handler is described by `consumers`; one where receiving is

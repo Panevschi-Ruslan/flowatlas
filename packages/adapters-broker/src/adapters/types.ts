@@ -1,18 +1,25 @@
-import type { BrokerAdapter } from '@flowatlas/core';
-
-/** Where the channel a handler receives from is written. */
-export type ConsumerChannelSource = 'argument' | 'option' | 'class-decorator';
+import type { BrokerAdapter, NameLocator } from '@flowatlas/core';
 
 export interface ConsumerPattern {
   /** Decorator that marks the method as receiving. */
   decorator: string;
-  channelFrom: ConsumerChannelSource;
-  /** Argument holding the channel, for `argument`. */
-  argIndex?: number;
-  /** Property of the options object holding the channel, for `option`. */
-  optionKey?: string;
-  /** Decorator on the class that names the channel, for `class-decorator`. */
+  /**
+   * Decorator on the class the channel is read from instead of the method's own.
+   *
+   * A worker class is bound to one channel and its methods handle units of work
+   * within it, so the channel is stated once, above the class.
+   */
   classDecorator?: string;
+  /**
+   * Where that decorator writes the channel, tried in order.
+   *
+   * The same vocabulary a publishing call is described with, because a decorator
+   * is a call written with an `@` and a name in its options object is in the same
+   * place whichever of the two wrote it. It is what replaced three fields that
+   * each named one place — an argument, a key of an argument, the class's
+   * decorator — with one list that can name all three and say which to try first.
+   */
+  channel: readonly NameLocator[];
   /** Argument naming one unit of work, when the transport has them. */
   nameArgIndex?: number;
   kind: string;
@@ -32,8 +39,10 @@ export interface ConsumerPattern {
 export interface SubscriberPattern {
   /** Method that begins listening. */
   method: string;
-  /** Argument naming the channel. */
+  /** Shorthand for `channel: [{ kind: 'argument', index }]`, as on a publish. */
   channelArg: number;
+  /** Where the channel is written, when it is not one plain argument. */
+  channel?: readonly NameLocator[];
   /** Argument holding the handler, when the same call takes one. */
   handlerArg?: number;
   /** Method that registers a handler separately, e.g. an event listener. */

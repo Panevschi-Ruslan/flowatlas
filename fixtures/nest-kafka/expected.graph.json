@@ -1,7 +1,7 @@
 {
   "schemaVersion": 4,
   "repo": "nest-kafka",
-  "generatedAt": "2026-09-26T20:16:54.392Z",
+  "generatedAt": "2026-09-27T09:28:47.537Z",
   "nodes": [
     {
       "id": "channel:get.order",
@@ -1560,7 +1560,7 @@
       "line": 47,
       "reason": "channel-dynamic",
       "hint": "The channel name cannot be read here. Annotate OrdersController.onAnything with the channel it uses.",
-      "symbol": "OrdersController.onAnything -> EventPattern"
+      "symbol": "OrdersController.onAnything -> @EventPattern()"
     },
     {
       "file": "src/orders/orders.controller.ts",

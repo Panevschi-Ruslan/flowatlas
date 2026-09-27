@@ -118,6 +118,39 @@ export const serviceConfigSchema = serviceEntrySchema
 const adapterNamesSchema = z.array(z.string().min(1));
 
 /**
+ * Where a name is written, described in configuration.
+ *
+ * The same vocabulary the descriptions shipped with the tool are written in, and
+ * the same type they use, so a project describing its own bus can say everything
+ * a built-in description can say. An index alone could only reach a name written
+ * as one plain argument, which is the one shape a large application does not
+ * write: the name is a property of an options object, or the receiver is the
+ * channel and the name was stated once on the class behind it.
+ */
+const nameLocatorSchema = z.discriminatedUnion('kind', [
+  z.strictObject({ kind: z.literal('argument'), index: z.number().int().min(0) }),
+  z.strictObject({
+    kind: z.literal('argument-property'),
+    index: z.number().int().min(0),
+    key: z.string().min(1),
+  }),
+  z.strictObject({
+    kind: z.literal('chain-call'),
+    method: z.string().min(1),
+    index: z.number().int().min(0),
+  }),
+  z.strictObject({ kind: z.literal('chain-root-argument'), index: z.number().int().min(0) }),
+  z.strictObject({ kind: z.literal('receiver') }),
+  z.strictObject({ kind: z.literal('receiver-type') }),
+  z.strictObject({ kind: z.literal('base-constructor-argument'), index: z.number().int().min(0) }),
+  z.strictObject({
+    kind: z.literal('provider-decorator'),
+    decorator: z.string().min(1),
+    index: z.number().int().min(0),
+  }),
+]);
+
+/**
  * A call shape that publishes to a channel, described in configuration.
  *
  * A project with its own message bus has no library for an adapter to detect,
@@ -132,7 +165,10 @@ export const customProducerSchema = z.strictObject({
    */
   receiverType: z.union([z.string().min(1), z.array(z.string().min(1))]),
   method: z.string().min(1),
+  /** Shorthand for a channel written as one plain argument. */
   channelArg: z.number().int().min(0).default(0),
+  /** Where the channel is written, tried in order. Overrides `channelArg`. */
+  channel: z.array(nameLocatorSchema).min(1).optional(),
   payloadArg: z.number().int().min(0).optional(),
   kind: z.string().min(1).default('event'),
 });
@@ -149,8 +185,27 @@ export const customSubscriberSchema = z.strictObject({
   receiverType: z.union([z.string().min(1), z.array(z.string().min(1))]),
   method: z.string().min(1),
   channelArg: z.number().int().min(0).default(0),
+  /** Where the channel is written, tried in order. Overrides `channelArg`. */
+  channel: z.array(nameLocatorSchema).min(1).optional(),
   /** Argument holding what runs when a message arrives, when the call takes one. */
   handlerArg: z.number().int().min(0).optional(),
+  kind: z.string().min(1).default('event'),
+});
+
+/**
+ * A decorator that marks a handler, described in configuration.
+ *
+ * A bare decorator name is the shorthand and means what it always meant: the
+ * channel is the decorator's first argument. The long form exists because the
+ * shorthand could not describe the shape a large application writes -
+ * `@OnJob({ name: JobName.Thumbnail, queue: QueueName.Thumbnails })` - and a
+ * handler whose channel cannot be named is a handler that meets no publisher.
+ */
+export const customConsumerSchema = z.strictObject({
+  decorator: z.string().min(1),
+  /** Class decorator the channel is read from instead, for a worker class. */
+  classDecorator: z.string().min(1).optional(),
+  channel: z.array(nameLocatorSchema).min(1).default([{ kind: 'argument', index: 0 }]),
   kind: z.string().min(1).default('event'),
 });
 
@@ -158,8 +213,8 @@ export const customBrokerSchema = z.strictObject({
   name: z.string().min(1),
   channelKind: z.enum(['topic', 'queue', 'exchange', 'channel']).default('channel'),
   producers: z.array(customProducerSchema).default([]),
-  /** Decorator names that mark a method as receiving from a channel. */
-  consumers: z.array(z.string().min(1)).default([]),
+  /** Decorators that mark a method as receiving, as a name or as a description. */
+  consumers: z.array(z.union([z.string().min(1), customConsumerSchema])).default([]),
   /** Calls that start receiving, for a bus that has no decorator to mark one. */
   subscribers: z.array(customSubscriberSchema).default([]),
 });
@@ -533,6 +588,7 @@ export type EntryHttpConfig = z.infer<typeof entryHttpSchema>;
  */
 export type EntryHttpDescription = z.input<typeof entryHttpSchema>;
 export type EntryRegistryConfig = z.infer<typeof entryRegistrySchema>;
+export type CustomConsumerConfig = z.infer<typeof customConsumerSchema>;
 export type CustomProducerConfig = z.infer<typeof customProducerSchema>;
 export type CustomSubscriberConfig = z.infer<typeof customSubscriberSchema>;
 export type ServiceConfig = z.infer<typeof serviceConfigSchema>;

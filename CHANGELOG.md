@@ -35,6 +35,15 @@ either.
   a server action is a boundary with no address at all, crossed by an import.
   A repository that is a browser and a server at once is read once, by both
   halves, into one node.
+- **Where a channel's name is written**, said as a list of locators rather than
+  as an argument index. A description can now name a channel that is a property
+  of an options object (`jobs.queue({ name, data })`, `@OnJob({ name })`) or that
+  is the receiver itself, stated once in the `super(...)` of the class behind it.
+  The vocabulary is the one the data layer already used to find a table name, and
+  it is now literally the same type in the core rather than a second list that
+  agreed with it. `channel` is available on a `producers`, `subscribers` or
+  `consumers` entry of `adapters.broker.custom`, documented in `docs/CLI.md`;
+  `channelArg` remains as the shorthand for argument 0.
 - **socket.io, read from both ends.** `@SubscribeMessage` in a gateway and
   `socket.emit` in a browser are two ends of one channel, under the namespace
   the gateway declares. A stream is still not a channel: a browser holding one
