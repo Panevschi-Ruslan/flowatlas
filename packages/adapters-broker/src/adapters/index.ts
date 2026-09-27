@@ -249,7 +249,20 @@ const socketio: BrokerSpec = {
     { method: 'once', channelArg: 0, handlerArg: 1, receiverPackages: SOCKET_PACKAGES, kind: 'event' },
   ],
   acknowledgedKind: 'rpc',
-  channelPrefix: { classDecorator: 'WebSocketGateway', optionKey: 'namespace', separator: '/' },
+  channelPrefix: {
+    classDecorator: 'WebSocketGateway',
+    optionKey: 'namespace',
+    separator: '/',
+    // The same endpoint, stated on the value instead of the class: a server's
+    // `io.of('/orders')`, a browser's `io(`${base}/orders`)`, and the socket a
+    // `connection` listener is handed on either. The emitter the client's
+    // socket inherits `on` from is its own package, so it is named too.
+    carriedBy: {
+      packages: [...SOCKET_PACKAGES, '@socket.io/component-emitter'],
+      opens: ['io', 'lookup', 'of', 'socket'],
+      connection: ['connection', 'connect'],
+    },
+  },
   reservedChannels: [
     'connect',
     'connect_error',
@@ -325,4 +338,4 @@ export const createCustomBrokerAdapter = (config: CustomBrokerConfig): BrokerSpe
 });
 
 export { bullmq, kafka, rabbitmq, redisPubSub, socketio };
-export type { BrokerSpec, ChannelPrefix, ConsumerPattern, SubscriberPattern } from './types.js';
+export type { BrokerSpec, ChannelPrefix, ConsumerPattern, EndpointCarrier, SubscriberPattern } from './types.js';
