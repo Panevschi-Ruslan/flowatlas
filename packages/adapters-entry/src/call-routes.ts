@@ -12,7 +12,6 @@ import {
   makeEntryId,
   makeHttpEntryKey,
   normalizePath,
-  originOfValue,
   packageOfPath,
   resolveTypeOrigin,
 } from '@flowatlas/core';
@@ -21,6 +20,7 @@ import { Node, SyntaxKind } from 'ts-morph';
 import type { MountShape, RouteDialect } from './route-dialects.js';
 import { EXPRESS, FASTIFY, HONO, KOA, MOUNT_HELPERS } from './route-dialects.js';
 import { Registries, registryOf } from './route-registries.js';
+import { appDeclaration, statedApp, statedBase } from './stated-apps.js';
 import {
   enclosingClass,
   fileOfNode,
@@ -129,6 +129,12 @@ const propertyOf = (argument: TsNode | undefined, key: string): TsNode | undefin
 };
 
 /**
+ * How an application was recognised: by the type the checker resolved, or by
+ * what the source states where the checker resolved none (R142).
+ */
+type Recognised = 'type' | 'source';
+
+/**
  * Whether a type is one the framework declares routes on.
  *
  * The base classes are walked as well as the type itself, because wrapping a
@@ -136,25 +142,41 @@ const propertyOf = (argument: TsNode | undefined, key: string): TsNode | undefin
  * `class SwaggerRouter extends Router`, and a repository using it declares its
  * routes on a type from a package this has never heard of. What makes those
  * calls routes is still the router underneath.
+ *
+ * Where the checker commits to no type at all — a fresh clone, where `express`
+ * has none — the source is asked instead, and only then: `import express from
+ * 'express'` and `const app = express()` state what `app` is whether or not
+ * anything is installed. A type that resolved to something else is an answer,
+ * and the source is never asked to overrule it. The one judgement, made here,
+ * so every question the reader asks of an application gets the same answer.
  */
-const isApp = (expr: TsNode, dialect: RouteDialect): boolean => {
+const recognised = (expr: TsNode, dialect: RouteDialect): Recognised | undefined => {
   const origin = resolveTypeOrigin(expr);
-  if (origin === null) return false;
+  if (origin === null) return statedApp(expr, dialect) === undefined ? undefined : 'source';
   const named = (pkg: string | null, typeName: string | undefined): boolean =>
     pkg !== null &&
     typeName !== undefined &&
     dialect.appTypes.some((app) => app.package === pkg && app.typeName === typeName);
-  if (named(origin.package, origin.typeName)) return true;
+  if (named(origin.package, origin.typeName)) return 'type';
 
-  let current = Node.isClassDeclaration(origin.declaration)
-    ? origin.declaration.getBaseClass()
-    : undefined;
+  let current = Node.isClassDeclaration(origin.declaration) ? origin.declaration : undefined;
   for (let depth = 0; current !== undefined && depth < 8; depth += 1) {
-    if (named(packageOfPath(current.getSourceFile().getFilePath()), current.getName())) return true;
-    current = current.getBaseClass();
+    const base = current.getBaseClass();
+    // A base the checker could not resolve, written from a package nobody
+    // installed: the one step of the walk where the type is unknown.
+    if (base === undefined) {
+      return current.getExtends() !== undefined && statedBase(current, dialect) !== undefined
+        ? 'source'
+        : undefined;
+    }
+    if (named(packageOfPath(base.getSourceFile().getFilePath()), base.getName())) return 'type';
+    current = base;
   }
-  return false;
+  return undefined;
 };
+
+const isApp = (expr: TsNode, dialect: RouteDialect): boolean =>
+  recognised(expr, dialect) !== undefined;
 
 /** A call of the shape `<app>.<method>(…)`, which is all this reads. */
 interface AppCall {
@@ -164,6 +186,11 @@ interface AppCall {
   args: TsNode[];
   /** Where in the repository it is written, for putting installs in order. */
   site: Site;
+  /**
+   * Whether the receiver was recognised from what the source states rather than
+   * from a resolved type. Every route read off it is then `heuristic`.
+   */
+  stated?: true;
   /**
    * How the call is written, when that is not `<receiver>.<method>`.
    *
@@ -204,7 +231,7 @@ const siteOf = (node: TsNode, ctx: ExtractContext): Site => ({
 const chainedRoute = (
   receiver: TsNode,
   dialect: RouteDialect,
-): { app: TsNode; path: TsNode; written: string } | undefined => {
+): { app: TsNode; path: TsNode; written: string; by: Recognised } | undefined => {
   if (dialect.pathMethod === undefined) return undefined;
   let at = unwrap(receiver);
   for (let depth = 0; depth < 16; depth += 1) {
@@ -215,8 +242,9 @@ const chainedRoute = (
     const inner = callee.getExpression();
     if (method === dialect.pathMethod) {
       const path = at.getArguments()[0];
-      if (path === undefined || !isApp(inner, dialect)) return undefined;
-      return { app: inner, path, written: `${label(inner)}.${method}(${label(path)})` };
+      const by = path === undefined ? undefined : recognised(inner, dialect);
+      if (path === undefined || by === undefined) return undefined;
+      return { app: inner, path, written: `${label(inner)}.${method}(${label(path)})`, by };
     }
     // Anything but a verb means this is not a route object: `app.use(…)` hands
     // back the application itself, which the ordinary path already reads.
@@ -245,39 +273,22 @@ const appCallsIn = function* (
         method,
         args: [chained.path, ...call.getArguments()],
         site,
+        ...(chained.by === 'source' ? { stated: true as const } : {}),
         as: `${chained.written}.${method}`,
       };
       continue;
     }
-    if (!isApp(receiver, dialect)) continue;
-    yield { call, receiver, method, args: call.getArguments(), site };
+    const by = recognised(receiver, dialect);
+    if (by === undefined) continue;
+    yield {
+      call,
+      receiver,
+      method,
+      args: call.getArguments(),
+      site,
+      ...(by === 'source' ? { stated: true as const } : {}),
+    };
   }
-};
-
-/**
- * The declaration an application value stands for.
- *
- * `originOfValue` stops at a default export, and a router is almost always
- * `const router = express.Router()` followed by `export default router` and
- * imported under a name of the importer's choosing. Stopping there would key
- * the mount on the export statement and the routes on the variable, and the
- * two would never meet — thirty-three mounted routers read as thirty-three
- * applications nothing mounts.
- */
-const appDeclaration = (expr: TsNode | undefined): TsNode | undefined => {
-  if (expr === undefined) return undefined;
-  const origin = originOfValue(unwrap(expr));
-  if (origin.kind !== 'local') return undefined;
-  const declaration = origin.declaration;
-  if (Node.isExportAssignment(declaration)) return appDeclaration(declaration.getExpression());
-  // `export { protectedRouter }` written apart from the declaration: the symbol
-  // an importer sees is the specifier, and the routes are declared on what it
-  // names. Both spellings of an export have to arrive at the same node or a
-  // router and the mount that places it never meet.
-  if (Node.isExportSpecifier(declaration)) {
-    return declaration.getLocalTargetDeclarations()[0];
-  }
-  return declaration;
 };
 
 /**
@@ -1587,6 +1598,10 @@ export const callRoutesAdapter = (
                 // Said plainly, because a walk from this entry is only as narrow
                 // as the answer to "which code does the handler run".
                 handlerVia: route.answer.via,
+                // An application recognised from the source rather than from a
+                // resolved type: what the author meant, not what a compiler
+                // checked, and never more than `heuristic` (R142, as R122).
+                ...(site.stated === true ? { confidence: 'heuristic' } : {}),
               },
             });
           }

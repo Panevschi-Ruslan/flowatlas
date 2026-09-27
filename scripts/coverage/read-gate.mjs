@@ -154,7 +154,7 @@ export const EXEMPT = [
       'The package integration tests start a server with. Its one route is a ' +
       '`/health` on an application `bootstrapApp` builds for a test runner, which ' +
       'no deployment of this service starts: the service’s own `/health` is ' +
-      'declared in `packages/medusa/src/commands/start.ts` (see `BASELINE`). It ' +
+      'declared in `packages/medusa/src/commands/start.ts`. It ' +
       'is in the extent because modules the service declares, `@medusajs/order` among ' +
       'them, name `@medusajs/test-utils` as a dev dependency, ' +
       'and a reader that placed its address would be reporting a second health ' +
@@ -329,37 +329,11 @@ export const BASELINE = [
       'unrelated loss here has had somewhere to hide for as long as the gate has ' +
       'existed.',
   },
-  // Medusa's two kinds of known red (R137). Neither is a file that serves
-  // nothing - those are in `EXEMPT` - and both are recorded here so that a third
-  // file going unread beside them is new red rather than more of the same.
-  {
-    where: 'medusa',
-    state: 'fresh',
-    family: 'routes',
-    path: 'packages/medusa/src/commands/start.ts',
-    files: 1,
-    ticket: 'R137',
-    why:
-      'The service’s own `GET /health`, declared on `const app = express()`. With ' +
-      'dependencies installed it is read and the with-deps report holds its entry; ' +
-      'on a fresh clone `express` has no types, so `app` is `any` and the Express ' +
-      'reader, which knows an application by its type and by nothing else, cannot ' +
-      'tell it from any other object with a `get`. The same cause leaves ' +
-      'PeerTube’s fresh clone with no addresses at all.',
-  },
-  {
-    where: 'medusa',
-    state: 'fresh',
-    family: 'routes',
-    path: 'packages/admin/admin-bundler/src/commands/serve.ts',
-    files: 1,
-    ticket: 'R137',
-    why:
-      'The admin dashboard’s two catch-all `GET`s, declared on `Router()` from ' +
-      '`express`. Read with dependencies installed, and unread fresh for the reason ' +
-      'the entry above gives: the router’s type is in a package a fresh clone does ' +
-      'not have.',
-  },
+  // Medusa's known red (R137). Not a file that serves nothing - those are in
+  // `EXEMPT` - and recorded here so that a second file going unread beside it is
+  // new red rather than more of the same. Its two Express-served files, the
+  // service's `start.ts` and the admin bundler's `serve.ts`, were here for the
+  // fresh state until R142 read an application from what the source states.
   ...['fresh', 'with-deps'].map((state) => ({
     where: 'medusa',
     state,

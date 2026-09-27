@@ -122,7 +122,50 @@ export interface RouteObjectShape {
   readonly handlerKey: string;
 }
 
-export interface RouteDialect {
+/**
+ * An export that makes an application, where its name is not the type's.
+ *
+ * `import express from 'express'; const app = express()` states that `app` is an
+ * Express application whether or not the types are installed, and the one thing
+ * the line does not state is that the default export of `express` makes an
+ * `Express`. That is a fact about a published package, so it is written here,
+ * once, and the reader that recognises an application with nothing installed
+ * asks this rather than knowing four frameworks' default exports itself (R142).
+ *
+ * An export named after one of the dialect's own `appTypes` needs no row -
+ * `new Hono()` and `Router()` already say what they make - so the rows are the
+ * renamed ones, which in practice is a default export.
+ */
+export interface AppMaker {
+  readonly package: string;
+  /** The name the package exports it under; `default` for its default export. */
+  readonly export: string;
+  /** The application type in `appTypes` a call of it, or `new`, makes. */
+  readonly typeName: string;
+}
+
+/**
+ * What a dialect says about recognising an application from the source alone.
+ *
+ * Two fields and neither is about reading a route, which is why they are kept
+ * apart from the rest: they are read only where the checker could not resolve a
+ * type at all, and a repository with its dependencies installed never asks them.
+ */
+export interface StatedApps {
+  /** Exports that make an application under a name that is not its type's. */
+  readonly makers: readonly AppMaker[];
+  /**
+   * Methods, beyond the ones the description already names, that hand back the
+   * application they are called on. `express().disable('x-powered-by')` is how
+   * PeerTube declares its application; with types installed the checker says
+   * `disable` answers with the application, and with none only this can.
+   */
+  readonly chainable: readonly string[];
+}
+
+const NOTHING_STATED: StatedApps = { makers: [], chainable: [] };
+
+export interface RouteDialect extends StatedApps {
   /** The adapter's name, as it appears in `meta.adapter` and in every row. */
   readonly name: string;
   /** Dependencies any one of which means this framework is in use. */
@@ -217,7 +260,11 @@ const middlewareOf = (
  * because that is what the reader has always called them. Translating once,
  * here, is cheaper than either half changing its vocabulary.
  */
-export const dialectOf = (config: EntryHttpConfig): RouteDialect => ({
+export const dialectOf = (
+  config: EntryHttpConfig,
+  stated: StatedApps = NOTHING_STATED,
+): RouteDialect => ({
+  ...stated,
   name: config.name,
   packages: config.packages,
   appTypes: config.appTypes.flatMap((group) =>
@@ -246,9 +293,15 @@ export const dialectOf = (config: EntryHttpConfig): RouteDialect => ({
  * that skipped validation could quietly use a field spelled a way the schema
  * rejects, and the first person to copy it into their own configuration would
  * be told their file was invalid while the same words worked inside the tool.
+ *
+ * `stated` is the one part that does not go through the schema, and it is the
+ * `MOUNT_HELPERS` situation again: a field the schema does not have yet belongs
+ * to a change in core that registers it, and until then a description written
+ * in configuration recognises an application from the source by its annotation
+ * and by an export named after one of its types, and by nothing renamed.
  */
-const described = (description: EntryHttpDescription): RouteDialect =>
-  dialectOf(entryHttpSchema.parse(description));
+const described = (description: EntryHttpDescription, stated?: StatedApps): RouteDialect =>
+  dialectOf(entryHttpSchema.parse(description), stated);
 
 /**
  * Express, and the shape the description was written to fit.
@@ -289,6 +342,12 @@ export const EXPRESS: RouteDialect = described({
   // argument is an application. Nothing but the type can say.
   mount: { method: 'use', appArg: -1, pathArg: 0 },
   middleware: { method: 'use', scoped: true },
+}, {
+  // `express()` makes the application; `Router()` and `express.Router()` need
+  // no row, because `Router` is already one of the types above.
+  makers: [{ package: 'express', export: 'default', typeName: 'Express' }],
+  // The settings methods, each of which answers with the application.
+  chainable: ['disable', 'enable', 'set', 'engine', 'param'],
 });
 
 /**
@@ -317,6 +376,13 @@ export const FASTIFY: RouteDialect = described({
     optionKeys: ['preHandler', 'onRequest', 'preValidation', 'preParsing'],
   },
   routeObject: { method: 'route', verbKey: 'method', pathKey: 'url', handlerKey: 'handler' },
+}, {
+  // `Fastify()` from the default export, and `fastify()` from the named one.
+  makers: [
+    { package: 'fastify', export: 'default', typeName: 'FastifyInstance' },
+    { package: 'fastify', export: 'fastify', typeName: 'FastifyInstance' },
+  ],
+  chainable: [],
 });
 
 /**
@@ -349,6 +415,14 @@ export const KOA: RouteDialect = described({
   prefixOption: 'prefix',
   mount: { method: 'use', appArg: -1, pathArg: 0, through: ['routes', 'allowedMethods'] },
   middleware: { method: 'use', scoped: true },
+}, {
+  // `new Koa()` and `new Router()`, each a default export named by the importer.
+  makers: [
+    { package: 'koa', export: 'default', typeName: 'Application' },
+    { package: 'koa-router', export: 'default', typeName: 'Router' },
+    { package: '@koa/router', export: 'default', typeName: 'Router' },
+  ],
+  chainable: [],
 });
 
 /**
