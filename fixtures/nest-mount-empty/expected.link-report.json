@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T19:40:17.642Z",
+  "configHash": "5058ec93d4d4",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 4109
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 7,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 3269
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 3,
+    "resolved": 2,
+    "unresolved": 1,
+    "byReason": {
+      "target-route-not-found": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 2,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/orders.ts",
+      "line": 8,
+      "reason": "route-mount-assumed-empty",
+      "level": "info",
+      "message": "GET /v1/orders is joined to api GET /${…}v1/orders by taking the part of its address read from API_CONTEXT_PATH as empty, as every committed environment file of api leaves it",
+      "hint": "The part is where a deployment mounts the service. One that sets API_CONTEXT_PATH serves every route behind it, and this join is then wrong, so it is weaker than a join read in full.",
+      "symbol": "ui_api_call:web#src/orders.ts:8:52"
+    },
+    {
+      "service": "web",
+      "file": "src/orders.ts",
+      "line": 10,
+      "reason": "route-mount-assumed-empty",
+      "level": "info",
+      "message": "GET /v1/orders/:param is joined to api GET /${…}v1/orders/:param by taking the part of its address read from API_CONTEXT_PATH as empty, as every committed environment file of api leaves it",
+      "hint": "The part is where a deployment mounts the service. One that sets API_CONTEXT_PATH serves every route behind it, and this join is then wrong, so it is weaker than a join read in full.",
+      "symbol": "ui_api_call:web#src/orders.ts:10:61"
+    },
+    {
+      "service": "web",
+      "file": "src/orders.ts",
+      "line": 12,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /v1/invoices",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /v1/invoices */.",
+      "symbol": "ui_api_call:web#src/orders.ts:12:54"
+    }
+  ],
+  "totals": {
+    "nodes": 14,
+    "edges": 7,
+    "types": 0,
+    "unresolved": 4
+  }
+}

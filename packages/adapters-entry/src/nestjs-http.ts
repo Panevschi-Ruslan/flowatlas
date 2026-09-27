@@ -11,6 +11,7 @@ import {
   makeSymbolId,
   normalizePath,
   stringListArg,
+  UNREAD_SPAN,
 } from '@flowatlas/core';
 import { Node, type Decorator, type MethodDeclaration, type Node as TsNode } from 'ts-morph';
 import {
@@ -154,6 +155,22 @@ const versioningIn = (meta: Record<string, unknown> | undefined): Versioning | u
 };
 
 /**
+ * The part in front of every address, where the reading of the application
+ * found it is read from settings (R144).
+ *
+ * Carried onto each route whose address opens with the hole it stands for, as
+ * the facts and nothing more: whether a request may be joined across it is the
+ * linker's decision, made in one place there.
+ */
+const mountIn = (meta: Record<string, unknown> | undefined): Record<string, unknown> | undefined => {
+  const value = meta?.['mount'];
+  if (typeof value !== 'object' || value === null) return undefined;
+  const { settings, setIn, envFiles, at } = value as Record<string, unknown>;
+  if (!Array.isArray(settings) || !Array.isArray(setIn) || typeof envFiles !== 'number') return undefined;
+  return { settings, setIn, envFiles, ...(typeof at === 'string' ? { at } : {}) };
+};
+
+/**
  * Reads a version written as an option or as an argument.
  *
  * `VERSION_NEUTRAL` is matched by the name in the source rather than by its
@@ -277,6 +294,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
         ? (ctx.meta['globalPrefix'] as string)
         : undefined;
     const versioning = versioningIn(ctx.meta);
+    const mount = mountIn(ctx.meta);
     // Which applications this service creates, and which of them mounts each
     // controller. An address is only an address within an application: two
     // applications in one service both serving `/health` write one id between
@@ -433,6 +451,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
                       rawPath,
                       ...(globalPrefix === undefined ? {} : { globalPrefix }),
                       ...(served.version === undefined ? {} : { version: served.version }),
+                      ...(mount !== undefined && path.startsWith(`/${UNREAD_SPAN}`) ? { mount } : {}),
                       controller: controllerName,
                       // Only where there is more than one, which is where it
                       // says something: it is what tells a tie between two

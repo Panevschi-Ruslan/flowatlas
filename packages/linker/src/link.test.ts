@@ -560,3 +560,44 @@ describe('annotations that name where a call goes', () => {
     expect(project.unresolved.some((item) => item.reason === 'marker-route-not-found')).toBe(false);
   });
 });
+
+/**
+ * A call between services to a route whose address opens with a mount read from
+ * settings (R144). novu's shape: every route is recorded as `/${…}v1/…`.
+ */
+describe('a call to a route behind a mount read from settings', () => {
+  const mountedGraph = (setIn: string[]) => {
+    const entry = route('orders', 'GET', '/${…}v1/orders/:param');
+    entry.meta = { ...entry.meta, mount: { settings: ['API_CONTEXT_PATH'], setIn, envFiles: 2 } };
+    return graph('orders', { nodes: [entry] });
+  };
+  const asking = () => callerGraph({ meta: { path: '/v1/orders/:param' } });
+
+  it('joins where every environment file leaves the setting empty, weaker, with a row naming it', () => {
+    const { project, report } = link([asking(), mountedGraph([])]);
+    const joined = project.edges.filter((item) => item.type === 'http_calls');
+
+    expect(joined).toHaveLength(1);
+    expect(joined[0]?.confidence).toBe('heuristic');
+    expect(joined[0]?.meta).toMatchObject({ mountAssumedEmpty: ['API_CONTEXT_PATH'] });
+    expect(report.httpOut.linked).toBe(1);
+    const row = report.unresolved.find((item) => item.reason === 'route-mount-assumed-empty');
+    expect(row?.level).toBe('info');
+    expect(row?.message).toBe(
+      'GET /v1/orders/:param is joined to orders GET /${…}v1/orders/:param by taking the part of its ' +
+        'address read from API_CONTEXT_PATH as empty, as every committed environment file of orders leaves it',
+    );
+  });
+
+  it('does not join where an environment file sets it, and names the route rather than denying it', () => {
+    const { project, report } = link([asking(), mountedGraph(['src/.env.production'])]);
+
+    expect(project.edges.filter((item) => item.type === 'http_calls')).toHaveLength(0);
+    expect(report.httpOut.noRoute).toBe(1);
+    expect(report.unresolved[0]?.reason).toBe('target-route-not-found');
+    expect(report.unresolved[0]?.message).toBe(
+      'target service orders has no route GET /v1/orders/:param at an address read in full, though ' +
+        'orders GET /${…}v1/orders/:param answers it if the part of its address nobody read is left open',
+    );
+  });
+});

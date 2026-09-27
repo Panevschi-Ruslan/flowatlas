@@ -23,6 +23,11 @@ What the snapshot holds:
   say which route answers it once the unread part is left open.
 - **One plain row.** `/v1/invoices` is served by nothing whatever the hole holds,
   and keeps the sentence it always had.
+- **Still no edge after R144.** Each route carries the facts R144 reads — the
+  mount is read from `API_CONTEXT_PATH` — but this service commits no environment
+  file at all, and no file to consult is not every file agreeing. The two
+  fixtures beside this one, `nest-mount-empty` and `nest-mount-set`, are the same
+  service with environment files that do say something.
 
 Built from the repository root:
 

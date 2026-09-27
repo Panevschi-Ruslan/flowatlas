@@ -1,11 +1,12 @@
-import { UNREAD_SPAN, wasRead, type GraphNode } from '@flowatlas/core';
-import type { Finding } from './http-link.js';
+import { wasRead, type GraphNode } from '@flowatlas/core';
+import { unreadRouteFinding, type Finding } from './http-link.js';
 import { cmp } from './order.js';
 import {
+  behindUnread,
   callingApplication,
   isMatch,
   matchRoute,
-  pathAnswers,
+  verbsAnswering,
   type RouteResult,
 } from './route-match.js';
 
@@ -45,6 +46,8 @@ interface Details {
     entry: GraphNode;
     targetService: string;
     runnersUp: readonly string[];
+    /** The settings whose part of the route's address was taken as empty (R144). */
+    mountAssumed?: readonly string[];
   };
   /** The address or the verb is only known at run time; the extractor said so. */
   dynamic: { reason: string };
@@ -95,38 +98,6 @@ const missingRoute = ({ targetService, method, path, verbs }: Details['noRoute']
       : `Route renamed? Check ${targetService}'s controllers, or annotate the method with /** @flowatlas-calls ${method} ${path} */.`),
 });
 
-/** How many of the routes behind an unread part a row names before it counts the rest. */
-const UNREAD_NAMED = 3;
-
-/**
- * A request that no route read in full answers, beside a route that may be it.
- *
- * Not the sentence above, because that one would be false. On novu every one of
- * its 456 addresses begins with a mount the deployment sets, `${CONTEXT_PATH}v`,
- * so each was recorded as `/${…}v1/…`; the command-line client writes `/v1/agents`
- * under a base that already carries the mount, and for forty-two such requests
- * the report said no configured service serves an address the graph holds with a
- * hole in front of it. The reason is unchanged, because the request still reaches
- * no route; what changes is that the row names the route and the part of it that
- * was not read, which is where the fix is.
- */
-const unreadRoute = ({ targetService, method, path, unread }: Details['noRoute']): Finding => {
-  const named = unread.slice(0, UNREAD_NAMED).join(', ');
-  const more = unread.length > UNREAD_NAMED ? ` and ${unread.length - UNREAD_NAMED} more` : '';
-  const one = unread.length === 1;
-  return {
-    reason: 'target-route-not-found',
-    message:
-      `${targetService === null ? 'no configured service serves' : `target service ${targetService} has no route`} ` +
-      `${method} ${path} at an address read in full, though ${named}${more} ${one ? 'answers' : 'answer'} it ` +
-      `if the part of ${one ? 'its' : 'their'} address nobody read is left open`,
-    hint:
-      'This is not evidence that the route is missing. Part of the route’s address could not be read — ' +
-      'a prefix or a version assembled from a setting, usually, with a row of its own where it is built — ' +
-      'and until that part is read no request can be joined to it.',
-  };
-};
-
 /**
  * What each outcome means to whoever reads the report.
  *
@@ -136,7 +107,7 @@ const unreadRoute = ({ targetService, method, path, unread }: Details['noRoute']
 const FINDINGS: { [K in UiOutcomeKind]: ((detail: Details[K]) => Finding) | null } = {
   linked: null,
   dynamic: null,
-  noRoute: (detail) => (detail.unread.length === 0 ? missingRoute(detail) : unreadRoute(detail)),
+  noRoute: (detail) => (detail.unread.length === 0 ? missingRoute(detail) : unreadRouteFinding(detail)),
   ambiguous: (detail) => AMBIGUITY[detail.applications === undefined ? 'target' : 'application'](detail),
 };
 
@@ -176,16 +147,6 @@ export const uiFindingFor = (outcome: UiOutcome): Finding | undefined => {
 /** The reason a request counts under, whether or not it produced a row. */
 export const uiReasonOf = (outcome: UiOutcome): string | undefined =>
   outcome.kind === 'dynamic' ? outcome.reason : uiFindingFor(outcome)?.reason;
-
-/** Which verbs a path does answer, for when only the verb was wrong. */
-const verbsAnswering = (path: string, routes: readonly GraphNode[]): string[] =>
-  [
-    ...new Set(
-      routes
-        .filter((route) => pathAnswers(String(route.meta?.['path'] ?? ''), path))
-        .map((route) => String(route.meta?.['method'] ?? '')),
-    ),
-  ].sort(cmp);
 
 /**
  * The same call, once per value a closed segment of its address can take.
@@ -366,60 +327,6 @@ export const resolveUiCall = (call: GraphNode, index: UiIndex): UiOutcome => {
 };
 
 /**
- * A route's address as a pattern that leaves the part nobody read open.
- *
- * Each `${…}` may stand for any text, separators included, because that is what
- * the marker means; a declared `:param` stands for one segment, as it does in a
- * match. Case is ignored for the reason `pathAnswers` gives.
- */
-const openShapeOf = (routePath: string): RegExp => {
-  const read = routePath.split(UNREAD_SPAN).map((piece) =>
-    piece
-      .split('/')
-      .map((segment) => (segment === ':param' ? '[^/]+' : segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
-      .join('/'),
-  );
-  return new RegExp(`^${read.join('.*')}$`, 'i');
-};
-
-/** Whether what was read of an address says anything: one literal segment, at least. */
-const saysSomething = (routePath: string): boolean =>
-  routePath
-    .split(UNREAD_SPAN)
-    .join('/')
-    .split('/')
-    .some((segment) => segment !== '' && segment !== ':param');
-
-/**
- * Routes that would answer this request if the part of their address nobody
- * read were left open.
- *
- * Used for a sentence and never for an edge. Joining here is the prefix-tolerant
- * retry R114 declined (see {@link withGlobalPrefix}): a hole may stand for
- * anything, so a match through one is a possibility and not a fact, and an edge
- * claims a fact. What it does settle is that "nothing serves this" is not known
- * either, and a row saying so is the most confident false thing the report can
- * print. A route of which nothing but the hole was read is left out, because it
- * would be named beside every request there is.
- */
-const behindUnread = (method: string, path: string, routes: readonly GraphNode[]): string[] => {
-  const wanted = method.toUpperCase();
-  return routes
-    .filter((route) => {
-      const routePath = String(route.meta?.['path'] ?? '');
-      const declared = String(route.meta?.['method'] ?? '').toUpperCase();
-      return (
-        !wasRead(routePath) &&
-        saysSomething(routePath) &&
-        (declared === 'ALL' || declared === wanted) &&
-        openShapeOf(routePath).test(path)
-      );
-    })
-    .map((route) => `${route.repo} ${String(route.meta?.['method'] ?? '')} ${String(route.meta?.['path'])}`)
-    .sort(cmp);
-};
-
-/**
  * A caller may leave out a prefix the service adds to all of its routes.
  *
  * A browser is given a base address that already ends in the prefix, so the
@@ -476,6 +383,7 @@ const within = (ask: Ask, targetService: string, via: UiVia): UiOutcome => {
       entry: found.entry,
       targetService,
       runnersUp: found.runnersUp ?? [],
+      ...(found.mountAssumed === undefined ? {} : { mountAssumed: found.mountAssumed }),
     };
   }
   if (found.reason === 'ambiguous') {
