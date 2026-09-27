@@ -255,4 +255,32 @@ export class KitchenScreen {
     expect(streamsOf(graph)).toEqual([]);
     expect(graph.unresolved).toEqual([]);
   });
+
+  // The third reader that emits this row, and until now the one nothing held:
+  // `http.test.ts` covers the request client, `extractor-react` the fetch reader.
+  it('asks for the settings key a stream is rooted at when the frontend declares others', () => {
+    const graph = extract(
+      `  open(): void { new EventSource(\`\${environment.apiUrl}/events\`); }`,
+      { apiBaseEnv: ['streamUrl'] },
+    );
+    expect(only(graph).meta?.['baseUrlEnv']).toBe('apiUrl');
+    expect(graph.unresolved).toEqual([
+      {
+        file: 'live.service.ts',
+        line: 6,
+        reason: 'api-base-unknown',
+        hint: 'Add apiUrl to services[].apiBaseEnv, and services[].apiTarget to say which service answers it.',
+        symbol: 'new EventSource(`${environment.apiUrl}/events`)',
+      },
+    ]);
+  });
+
+  it('says nothing about a settings key the frontend declares', () => {
+    const graph = extract(
+      `  open(): void { new EventSource(\`\${environment.apiUrl}/events\`); }`,
+      { apiBaseEnv: ['apiUrl'] },
+    );
+    expect(only(graph).meta?.['baseUrlEnv']).toBe('apiUrl');
+    expect(graph.unresolved).toEqual([]);
+  });
 });

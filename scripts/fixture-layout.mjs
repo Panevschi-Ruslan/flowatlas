@@ -41,8 +41,21 @@ export const OUTPUT = '.flowatlas';
  * detection: a configuration means a project of several repositories, read by
  * `build`; a manifest alone means one repository, read by `extract`. A fixture
  * that has both is a project, which is why this is an ordered list and not an
- * object. `command` is the argument vector, so that the two scripts cannot drift
- * on how a fixture is run either.
+ * object.
+ *
+ * `steps` are the commands, in order, so that the two scripts cannot drift on
+ * how a fixture is run either. Each names the argument vector (`args`) and the
+ * files it leaves in the output directory (`writes`). The runner removes those
+ * files before the step runs: `pnpm clean` empties `dist` and nothing else, so a
+ * step that stopped producing its file would otherwise leave last week's copy
+ * behind, and the checker would compare the snapshot against that and pass.
+ *
+ * A step that `mayDecline` is allowed to exit with the tool's "cannot run" code
+ * and write nothing. `contracts` is one: it refuses a graph that holds no types,
+ * which a third of the project fixtures are, and says so rather than answering
+ * "nothing is broken". Declining is only harmless where nobody holds a snapshot
+ * of the answer - a fixture that does gets a snapshot validated and compared
+ * never, which the checker refuses.
  *
  * `neutral` is a configuration with nothing in it: `extract` searches upward for
  * one and would otherwise find this repository's own.
@@ -51,17 +64,38 @@ const KINDS = [
   {
     kind: 'project',
     marker: 'flowatlas.config.json',
-    command: (dir) => ['build', '--config', join(dir, 'flowatlas.config.json')],
+    steps: [
+      {
+        args: (dir) => ['build', '--config', join(dir, 'flowatlas.config.json')],
+        writes: ['project-graph.json', 'link-report.json'],
+      },
+      {
+        // What R126 and R133 reported per fixture - which boundaries were
+        // compared, which were left unchecked and why - reproduced only when
+        // somebody ran this by hand until it was a step of the run.
+        args: (dir) => ['contracts', '--config', join(dir, 'flowatlas.config.json')],
+        writes: ['contracts.json'],
+        mayDecline: true,
+      },
+    ],
   },
   {
     kind: 'repo',
     marker: 'package.json',
-    command: (dir, { neutral }) => ['extract', relative(root, dir), '--config', neutral],
+    steps: [
+      {
+        args: (dir, { neutral }) => ['extract', relative(root, dir), '--config', neutral],
+        writes: ['graph.json'],
+      },
+    ],
   },
 ];
 
+/** The exit code of a command that could not answer, as opposed to one that failed. */
+export const CANNOT_RUN = 2;
+
 /** Nothing to run: a hand-written sample of the schema, or a bare directory. */
-const NOT_RUN = { kind: 'none', command: null };
+const NOT_RUN = { kind: 'none', steps: [] };
 
 /**
  * How this fixture is produced. `kind` is `'project'`, `'repo'` or `'none'`.

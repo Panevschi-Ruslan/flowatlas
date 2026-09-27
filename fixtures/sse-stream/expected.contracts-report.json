@@ -1,0 +1,153 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 5,
+  "generatedAt": "2026-09-27T17:31:26.399Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:api#src/orders/orders.service.ts:16:11",
+        "to": "consumer:api#src/events/event-bus.service.ts:EventBus.receive",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/orders/orders.service.ts:16:11|emits|consumer:api#src/events/event-bus.service.ts:EventBus.receive",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "api#src/events/event-bus.service.ts:EventBus.receive has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/live-events.service.ts:29:20",
+        "to": "entry:api:http:GET:/depots/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/live-events.service.ts:29:20|hits|entry:api:http:GET:/depots/:param/events",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/live-events.service.ts:LiveEventsService.open declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/live-events.service.ts:29:20",
+        "to": "entry:api:http:GET:/depots/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/live-events.service.ts:29:20|hits|entry:api:http:GET:/depots/:param/events",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/live-events.service.ts:LiveEventsService.open declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/live-events.service.ts:46:20",
+        "to": "entry:api:http:GET:/depots/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/live-events.service.ts:46:20|hits|entry:api:http:GET:/depots/:param/events",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/live-events.service.ts:LiveEventsService.openWithToken declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/live-events.service.ts:46:20",
+        "to": "entry:api:http:GET:/depots/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/live-events.service.ts:46:20|hits|entry:api:http:GET:/depots/:param/events",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/live-events.service.ts:LiveEventsService.openWithToken declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:12:12",
+        "to": "entry:api:http:POST:/depots/:param/orders/:param/cancel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:12:12|hits|entry:api:http:POST:/depots/:param/orders/:param/cancel",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.cancel declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:12:12",
+        "to": "entry:api:http:POST:/depots/:param/orders/:param/cancel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:12:12|hits|entry:api:http:POST:/depots/:param/orders/:param/cancel",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "api#src/orders/orders.controller.ts:OrdersController.cancel declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/remembered-stream.service.ts:63:5@36:20",
+        "to": "entry:api:http:GET:/depots/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/remembered-stream.service.ts:63:5@36:20|hits|entry:api:http:GET:/depots/:param/events",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/remembered-stream.service.ts:OrderTrackStreamService.track declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/remembered-stream.service.ts:63:5@36:20",
+        "to": "entry:api:http:GET:/depots/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/remembered-stream.service.ts:63:5@36:20|hits|entry:api:http:GET:/depots/:param/events",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/remembered-stream.service.ts:OrderTrackStreamService.track declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/stream-wrapper.service.ts:45:5@30:19",
+        "to": "entry:api:http:GET:/depots/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/stream-wrapper.service.ts:45:5@30:19|hits|entry:api:http:GET:/depots/:param/events",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/stream-wrapper.service.ts:WatchService.watch declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/stream-wrapper.service.ts:45:5@30:19",
+        "to": "entry:api:http:GET:/depots/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/stream-wrapper.service.ts:45:5@30:19|hits|entry:api:http:GET:/depots/:param/events",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/stream-wrapper.service.ts:WatchService.watch declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 11,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

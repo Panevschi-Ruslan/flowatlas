@@ -8,7 +8,9 @@
  * Two kinds of fixture. A single repository holds `expected.graph.json` and is
  * compared against `<fixture>/.flowatlas/graph.json` from `flowatlas extract`. A
  * project holds `expected.project-graph.json` and `expected.link-report.json`
- * and is compared against what `flowatlas build` wrote beside them.
+ * and is compared against what `flowatlas build` wrote beside them, and may hold
+ * `expected.contracts-report.json`, compared against the `contracts.json` that
+ * `flowatlas contracts` writes after the build.
  *
  * Timestamps and durations are ignored on both sides, since they change on every
  * run.
@@ -24,6 +26,7 @@
 import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join, relative } from 'node:path';
 import { parseProjectGraph, parseRepoGraph } from '@flowatlas/core';
+import { parseContractReport } from '../packages/contracts/dist/index.js';
 import { fixtureDirs, layoutOf, outputDir, root } from './fixture-layout.mjs';
 
 const args = process.argv.slice(2);
@@ -191,6 +194,12 @@ const SNAPSHOTS = [
   ['expected.graph.json', 'graph.json', parseRepoGraph],
   ['expected.project-graph.json', 'project-graph.json', parseProjectGraph],
   ['expected.link-report.json', 'link-report.json', asReport],
+  // Not `expected.contracts.json`: in multi-repo-contracts that name already
+  // holds what `contracts --format json` prints, which `cli-snapshots.mjs`
+  // records, and the printed report is ordered for a reader while the file is
+  // in the order the check produced it. Same findings, different bytes, so
+  // the two cannot share a name.
+  ['expected.contracts-report.json', 'contracts.json', parseContractReport],
 ];
 
 const visited = new Set();
