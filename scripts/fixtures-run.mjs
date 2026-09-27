@@ -9,13 +9,15 @@
  * compare it, and a snapshot nobody compares is not a gate. This produces the
  * output for all of them: `extract` for a single repository, `build` for a
  * project with a configuration.
+ *
+ * Which of the two a fixture is, and the arguments for it, are
+ * `fixture-layout.mjs` - shared with the checker, so that the two cannot disagree
+ * about whether a fixture was run.
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { basename, join } from 'node:path';
+import { fixtureDirs, layoutOf, root } from './fixture-layout.mjs';
 
-const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const bin = join(root, 'packages', 'cli', 'bin', 'flowatlas.js');
 
 /**
@@ -33,24 +35,17 @@ const NEUTRAL = join(root, 'scripts', 'fixture.config.json');
 const run = (args) =>
   execFileSync(process.execPath, [bin, ...args], { cwd: root, stdio: 'pipe' });
 
-let repos = 0;
-let projects = 0;
+const done = { repo: 0, project: 0, none: 0 };
 const failures = [];
 
-for (const entry of readdirSync(join(root, 'fixtures'), { withFileTypes: true })) {
-  if (!entry.isDirectory() || entry.name === 'node_modules') continue;
-  const dir = join(root, 'fixtures', entry.name);
-  const config = join(dir, 'flowatlas.config.json');
+for (const dir of fixtureDirs()) {
+  const { kind, command } = layoutOf(dir);
+  done[kind] += 1;
+  if (command === null) continue;
   try {
-    if (existsSync(config)) {
-      run(['build', '--config', config]);
-      projects += 1;
-    } else if (existsSync(join(dir, 'package.json'))) {
-      run(['extract', join('fixtures', entry.name), '--config', NEUTRAL]);
-      repos += 1;
-    }
+    run(command(dir, { neutral: NEUTRAL }));
   } catch (cause) {
-    failures.push(`${entry.name}: ${String(cause.stderr ?? cause.message).trim().slice(0, 300)}`);
+    failures.push(`${basename(dir)}: ${String(cause.stderr ?? cause.message).trim().slice(0, 300)}`);
   }
 }
 
@@ -58,4 +53,4 @@ if (failures.length > 0) {
   for (const failure of failures) console.error(failure);
   process.exit(1);
 }
-console.log(`fixtures run: ${repos} repositories, ${projects} projects`);
+console.log(`fixtures run: ${done.repo} repositories, ${done.project} projects`);

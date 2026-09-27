@@ -10,15 +10,22 @@
  * project holds `expected.project-graph.json` and `expected.link-report.json`
  * and is compared against what `flowatlas build` wrote beside them.
  *
- * A fixture that has not been run is validated but not compared. Timestamps and
- * durations are ignored on both sides, since they change on every run.
+ * Timestamps and durations are ignored on both sides, since they change on every
+ * run.
+ *
+ * A snapshot that is validated and not compared is a snapshot that is not a
+ * gate, so the two counts this prints have to agree - or the fixture has to be
+ * named in `VALIDATE_ONLY` below with a reason, and the gate says so out loud on
+ * every run. Which fixtures can be run at all, and how, is `fixture-layout.mjs`,
+ * shared with `fixtures-run.mjs`: a fixture checked against a run that never
+ * happened is R120, and it happened because those two scripts each had an
+ * opinion about where a fixture keeps its sources.
  */
-import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFileSync, statSync, writeFileSync } from 'node:fs';
+import { basename, join, relative } from 'node:path';
 import { parseProjectGraph, parseRepoGraph } from '@flowatlas/core';
+import { fixtureDirs, layoutOf, outputDir, root } from './fixture-layout.mjs';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 const update = args.includes('--update');
 const selected = args.filter((arg) => !arg.startsWith('--'));
@@ -28,17 +35,6 @@ const isFile = (path) => {
     return statSync(path).isFile();
   } catch {
     return false;
-  }
-};
-
-const fixtureDirs = () => {
-  if (selected.length > 0) return selected.map((path) => join(root, path));
-  try {
-    return readdirSync(join(root, 'fixtures'), { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => join(root, 'fixtures', entry.name));
-  } catch {
-    return [];
   }
 };
 
@@ -85,8 +81,27 @@ const diffLines = (before, after) => {
   return out;
 };
 
+/**
+ * Fixtures whose snapshot is deliberately compared never, and why.
+ *
+ * The shape the read gate and I12 use, and for their reasons: an exception is a
+ * named debt rather than a silent difference between two numbers, and an
+ * exception that no longer applies is reported too, because one nobody has
+ * removed is one nobody has re-read. Anything not in here that comes out
+ * validated and uncompared fails the gate.
+ */
+const VALIDATE_ONLY = {
+  'schema-smoke':
+    'A hand-written sample of the schema itself rather than a repository: no manifest, ' +
+    'no configuration, no sources, nothing for the tool to be run over. It exists so ' +
+    'that a version bump has one snapshot a person wrote, and it is held to the schema ' +
+    'and to nothing else.',
+};
+
 let validated = 0;
 let compared = 0;
+/** One entry per validated snapshot, so a gap can be named rather than counted. */
+const snapshots = [];
 const problems = [];
 
 /**
@@ -95,14 +110,16 @@ const problems = [];
  * `parse` is the schema the snapshot must satisfy: a snapshot that is not a
  * valid graph is a problem in its own right, whether or not anything ran.
  */
-const check = (label, expectedPath, actualPath, parse) => {
+const check = (dir, label, expectedPath, actualPath, parse) => {
   if (!isFile(expectedPath)) return;
 
+  const snapshot = { label, fixture: basename(dir), compared: false };
   let expected;
   let stale;
   try {
     expected = parse(JSON.parse(readFileSync(expectedPath, 'utf8')));
     validated += 1;
+    snapshots.push(snapshot);
   } catch (cause) {
     // A snapshot the schema no longer accepts is what `--update` is for: after
     // a version bump every one of them fails here, and refusing to rewrite them
@@ -133,6 +150,7 @@ const check = (label, expectedPath, actualPath, parse) => {
     return;
   }
   compared += 1;
+  snapshot.compared = true;
 
   const before = JSON.stringify(stable(expected), null, 2).split('\n');
   const after = JSON.stringify(stable(actual), null, 2).split('\n');
@@ -168,38 +186,67 @@ const asReport = (value) => {
   return value;
 };
 
-const hasSources = (dir) => {
-  try {
-    return statSync(join(dir, 'src')).isDirectory();
-  } catch {
-    return false;
-  }
-};
+/** What a snapshot is compared against, one row per file the tool writes. */
+const SNAPSHOTS = [
+  ['expected.graph.json', 'graph.json', parseRepoGraph],
+  ['expected.project-graph.json', 'project-graph.json', parseProjectGraph],
+  ['expected.link-report.json', 'link-report.json', asReport],
+];
 
-for (const dir of fixtureDirs()) {
+const visited = new Set();
+
+for (const dir of fixtureDirs(selected)) {
   const label = relative(root, dir);
-  // A fixture with no sources cannot be produced by running the tool. The one
-  // that exists is a hand-written sample of the schema itself, so it is checked
-  // against the schema and never against an extraction.
-  const flowatlas = hasSources(dir) || isFile(join(dir, 'flowatlas.config.json')) ? join(dir, '.flowatlas') : join(dir, '.none');
-  check(
-    `${label}/expected.graph.json`,
-    join(dir, 'expected.graph.json'),
-    join(flowatlas, 'graph.json'),
-    parseRepoGraph,
-  );
-  check(
-    `${label}/expected.project-graph.json`,
-    join(dir, 'expected.project-graph.json'),
-    join(flowatlas, 'project-graph.json'),
-    parseProjectGraph,
-  );
-  check(
-    `${label}/expected.link-report.json`,
-    join(dir, 'expected.link-report.json'),
-    join(flowatlas, 'link-report.json'),
-    asReport,
-  );
+  visited.add(basename(dir));
+  // Where a run over this fixture writes, whatever its layout. A fixture of no
+  // kind has no such directory, so its snapshot comes out uncompared and the
+  // reconciliation below insists on a reason for it.
+  const out = outputDir(dir);
+  for (const [expected, actual, parse] of SNAPSHOTS) {
+    check(dir, `${label}/${expected}`, join(dir, expected), join(out, actual), parse);
+  }
+}
+
+/**
+ * The gap between the two counts, named.
+ *
+ * Under `--update` every uncompared snapshot is one a run has not been done for
+ * yet, which is the state `--update` exists to leave, so this only runs when the
+ * gate is being asked for a verdict.
+ */
+const validateOnly = [];
+if (!update) {
+  const gaps = new Map();
+  for (const snapshot of snapshots) {
+    if (snapshot.compared) continue;
+    const found = gaps.get(snapshot.fixture) ?? [];
+    found.push(snapshot.label);
+    gaps.set(snapshot.fixture, found);
+  }
+  for (const [fixture, labels] of gaps) {
+    const why = VALIDATE_ONLY[fixture];
+    if (why !== undefined) {
+      validateOnly.push(`  validate-only ${fixture}: ${why}`);
+      continue;
+    }
+    // Two ways to get here, and they need different sentences: a fixture the
+    // tool cannot be run over at all, and one that simply has not been run.
+    const remedy =
+      layoutOf(join(root, 'fixtures', fixture)).kind === 'none'
+        ? `nothing in fixtures/${fixture} declares how it is produced - give it a manifest or a configuration`
+        : 'run `pnpm fixtures:run` first';
+    problems.push(
+      `${labels.join('\n    ')}\n    validated but compared never: ${remedy}, ` +
+        'or name the fixture in VALIDATE_ONLY with the reason.',
+    );
+  }
+  for (const fixture of Object.keys(VALIDATE_ONLY)) {
+    if (visited.has(fixture) && !gaps.has(fixture)) {
+      problems.push(
+        `fixtures/${fixture}: named in VALIDATE_ONLY, but every snapshot of it was compared. Remove the entry.`,
+      );
+    }
+  }
 }
 
 if (problems.length > 0) {
@@ -209,3 +256,4 @@ if (problems.length > 0) {
 }
 
 console.log(`fixtures ok: ${compared} compared, ${validated} validated`);
+for (const line of validateOnly) console.log(line);
