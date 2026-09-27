@@ -100,9 +100,9 @@ export const hasAnyDependency = (pkg: PackageJson, names: readonly string[]): bo
  * in would make every service in a large repository look like every framework
  * anybody in it uses.
  */
-const manifestChain = (dir: string): readonly PackageJson[] => {
+const manifestChain = (dir: string, sideways: boolean): readonly PackageJson[] => {
   const above = [...workspaceRootsAbove(dir)].reverse();
-  return [...above, ...workspaceMemberDirs(dir), ...serviceSourceDirs(dir)]
+  return [...above, ...workspaceMemberDirs(dir), ...(sideways ? serviceSourceDirs(dir) : [])]
     .map(readPackageJson)
     .filter((pkg): pkg is PackageJson => pkg !== undefined);
 };
@@ -118,11 +118,24 @@ const manifestChain = (dir: string): readonly PackageJson[] => {
  * A directory with no manifest of its own still returns nothing, rather than the
  * workspace's dependencies under no name: callers use that to mean there is no
  * package here, which is a different question and still has the same answer.
+ *
+ * `sideways: false` leaves out the members the service reaches, and answers
+ * what the workspace above and below the directory declares and nothing more.
+ * Detection never asks that: it is how `build` tells which adapters were found
+ * only through a sibling, so it can say so (R123). On the eight measured
+ * targets that difference is where both the gains and the misreadings of the
+ * sideways rule are - a service's procedures found in the package that declares
+ * them, but also a browser framework switched on for a server because a library
+ * it depends on renders e-mail with it - and it is the one list that tells a
+ * reader which of a service's frameworks are its own.
  */
-export const readResolvedPackageJson = (dir: string): PackageJson | undefined => {
+export const readResolvedPackageJson = (
+  dir: string,
+  { sideways = true }: { sideways?: boolean } = {},
+): PackageJson | undefined => {
   const own = readPackageJson(dir);
   if (own === undefined) return undefined;
-  const chain = manifestChain(dir);
+  const chain = manifestChain(dir, sideways);
   if (chain.length === 0) return own;
   const widened: Partial<Record<DependencySection, Record<string, string>>> = {};
   for (const section of DEPENDENCY_SECTIONS) {
