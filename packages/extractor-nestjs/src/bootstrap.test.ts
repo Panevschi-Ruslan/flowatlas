@@ -35,6 +35,27 @@ const ENTRY_WITH_HELPER = `
 `;
 
 /**
+ * The readers are looked up by whatever method name the entry file calls, and an
+ * object literal answered `valueOf` with the language's own, called unbound:
+ * `Cannot convert undefined or null to object`, and the service read as nothing
+ * (R130). The helper file is read too, since it names `setGlobalPrefix`.
+ */
+describe('a method every object has, called in the files the reader walks', () => {
+  it.each(['toString', 'valueOf', 'constructor', 'hasOwnProperty', '__proto__', '__defineGetter__'])(
+    '`%s` is not a reader, and the prefix is still read',
+    (method) => {
+      const info = read({
+        'src/main.ts': `const app = x; process.env.${method}('PORT'); app.setGlobalPrefix('api');`,
+        'src/setup.ts': `export function configure(app) { app.${method}('api'); app.setGlobalPrefix('v2'); }`,
+      });
+      expect(info.globalPrefix).toBe('api');
+      expect(info.globals).toEqual([]);
+      expect(addressingFindings(info)).toEqual([]);
+    },
+  );
+});
+
+/**
  * Where a service's addresses are decided, which is routinely not the file this
  * reader has always opened (R89).
  */

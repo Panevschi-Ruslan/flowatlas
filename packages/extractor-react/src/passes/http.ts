@@ -352,7 +352,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       const method = callee.getName().toLowerCase();
       const origin = resolveTypeOrigin(callee.getExpression());
       for (const client of REQUEST_CLIENTS) {
-        const shape = client.receiver?.verbs[method];
+        const shape = Object.hasOwn(client.receiver?.verbs ?? {}, method) ? client.receiver?.verbs[method] : undefined;
         if (shape === undefined || !isClientValue(origin, client)) continue;
         found.push({ call: node, client, shape });
         return;
@@ -430,7 +430,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    * optional whichever way the other half is decided.
    */
   const localCallAt = (node: CallExpression, callee: TsNode, verb: string): FoundCall | undefined => {
-    if (!(verb in VERB_CALLS)) return undefined;
+    if (!Object.hasOwn(VERB_CALLS, verb)) return undefined;
     const cls = localClassOf(callee);
     if (cls === undefined) return undefined;
     const reading = readingOf(cls);
@@ -450,7 +450,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       });
       return undefined;
     }
-    const shape = reading.client.receiver?.verbs[verb];
+    const shape = Object.hasOwn(reading.client.receiver?.verbs ?? {}, verb) ? reading.client.receiver?.verbs[verb] : undefined;
     return shape === undefined
       ? undefined
       : { call: node, client: reading.client, shape, local: reading.via };

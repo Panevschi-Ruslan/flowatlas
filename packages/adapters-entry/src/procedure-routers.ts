@@ -228,7 +228,7 @@ const endingOf = (value: TsNode, dialect: ProcedureDialect): Ending | undefined 
   const callee = node.getExpression();
   if (!Node.isPropertyAccessExpression(callee)) return undefined;
   const method = callee.getName();
-  const kind = dialect.terminators[method];
+  const kind = dialect.terminators.get(method);
   if (kind === undefined) return undefined;
   const args = node.getArguments();
   if (args.length !== 1 || !isFunctionArg(args[0])) return undefined;
@@ -774,7 +774,7 @@ const reportSilence = (
   actionable: boolean,
 ): void => {
   const assemblers = dialect.assembledBy.join(', ');
-  const endings = Object.keys(dialect.terminators).join(', ');
+  const endings = [...dialect.terminators.keys()].join(', ');
   const named = actionable ? `${dialect.name} description` : `${dialect.name} reader`;
   ctx.builder.addUnresolved({
     file: 'package.json',

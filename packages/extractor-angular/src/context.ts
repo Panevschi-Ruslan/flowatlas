@@ -218,7 +218,7 @@ export const createAngularContext = (options: CreateContextOptions): AngularExtr
     },
 
     countExternalCall: (pkg) => {
-      stats.skippedExternalCalls[pkg] = (stats.skippedExternalCalls[pkg] ?? 0) + 1;
+      stats.skippedExternalCalls[pkg] = (Object.hasOwn(stats.skippedExternalCalls, pkg) ? (stats.skippedExternalCalls[pkg] ?? 0) : 0) + 1;
     },
   };
 };

@@ -49,8 +49,14 @@ export interface ProcedureDialect {
   readonly packages: readonly string[];
   /** Functions that assemble a tree out of one object literal. */
   readonly assembledBy: readonly string[];
-  /** The last link of a chain, and the kind of way in it opens. */
-  readonly terminators: Readonly<Record<string, EntryKind>>;
+  /**
+   * The last link of a chain, and the kind of way in it opens.
+   *
+   * A `Map`, because it is asked about the last method of every value in a
+   * tree, and an object answers `toString` with the language's own function
+   * where a kind belongs (R130).
+   */
+  readonly terminators: ReadonlyMap<string, EntryKind>;
   /** How the keys down the tree are joined into one address. */
   readonly separator: string;
   /** The chain link carrying the shape of what a caller sends. */
@@ -81,7 +87,7 @@ export const procedureDialectOf = (config: EntryProcedureConfig): ProcedureDiale
   name: config.name,
   packages: config.packages,
   assembledBy: config.assembledBy,
-  terminators: config.terminators,
+  terminators: new Map(Object.entries(config.terminators)),
   separator: config.separator,
   ...(config.inputMethod === undefined ? {} : { inputMethod: config.inputMethod }),
   ...(config.guardMethod === undefined ? {} : { guardMethod: config.guardMethod }),

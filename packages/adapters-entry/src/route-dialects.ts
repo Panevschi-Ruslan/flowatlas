@@ -127,8 +127,14 @@ export interface RouteDialect {
   readonly packages: readonly string[];
   /** Types whose values declare routes, or carry middleware for ones that do. */
   readonly appTypes: readonly AppType[];
-  /** Method name to the verb it answers. */
-  readonly verbs: Readonly<Record<string, string>>;
+  /**
+   * Method name to the verb it answers.
+   *
+   * A `Map`, because it is asked about every method called on an application,
+   * and an object answered `app.__defineGetter__('/x', f)` with the language's
+   * own function: a route with no method, and the id threw (R130).
+   */
+  readonly verbs: ReadonlyMap<string, string>;
   /** A method taking the verb as its first argument. Hono's `on`, and nobody else's. */
   readonly verbArgument?: string;
   /** A method returning the same application with a prefix in front of it. */
@@ -217,7 +223,7 @@ export const dialectOf = (config: EntryHttpConfig): RouteDialect => ({
       group.typeNames.map((typeName) => ({ package: pkg, typeName })),
     ),
   ),
-  verbs: config.verbs ?? COMMON_VERBS,
+  verbs: new Map(Object.entries(config.verbs ?? COMMON_VERBS)),
   ...(config.verbArgument === undefined ? {} : { verbArgument: config.verbArgument }),
   ...(config.prefixMethod === undefined ? {} : { prefixMethod: config.prefixMethod }),
   ...(config.prefixMutates ? { prefixMutates: true } : {}),

@@ -220,7 +220,7 @@ const chainedRoute = (
     }
     // Anything but a verb means this is not a route object: `app.use(…)` hands
     // back the application itself, which the ordinary path already reads.
-    if (dialect.verbs[method] === undefined) return undefined;
+    if (!dialect.verbs.has(method)) return undefined;
     at = unwrap(inner);
   }
   return undefined;
@@ -237,7 +237,7 @@ const appCallsIn = function* (
     const receiver = callee.getExpression();
     const method = callee.getName();
     const site = siteOf(call, ctx);
-    const chained = dialect.verbs[method] === undefined ? undefined : chainedRoute(receiver, dialect);
+    const chained = dialect.verbs.has(method) ? chainedRoute(receiver, dialect) : undefined;
     if (chained !== undefined) {
       yield {
         call,
@@ -560,7 +560,7 @@ const passesThrough = (method: string, dialect: RouteDialect): boolean =>
   method === dialect.mount?.method ||
   method === dialect.middleware?.install ||
   method === dialect.verbArgument ||
-  dialect.verbs[method] !== undefined;
+  dialect.verbs.has(method);
 
 /**
  * Whether a call answers with an application of the kind the row names.
@@ -1225,7 +1225,7 @@ const routeOf = (site: AppCall, dialect: RouteDialect, ctx: ExtractContext): Rou
   if (asObject !== undefined) return asObject;
 
   const byArgument = dialect.verbArgument !== undefined && site.method === dialect.verbArgument;
-  const verb = dialect.verbs[site.method];
+  const verb = dialect.verbs.get(site.method);
   if (verb === undefined && !byArgument) return undefined;
   const pathAt = pathIndex(site, dialect);
   // One argument is a path with nothing to answer it, which the framework
@@ -1626,7 +1626,7 @@ const READINGS: Readonly<Record<Exclude<Reading, 'whole'>, (said: Said) => void>
   },
 
   'routes-unmatched': ({ ctx, dialect, counts, actionable, named, pkg }) => {
-    const verbs = Object.keys(dialect.verbs).join(', ');
+    const verbs = [...dialect.verbs.keys()].join(', ');
     const { onTypes } = counts;
     ctx.builder.addUnresolved({
       file: 'package.json',
@@ -1721,7 +1721,7 @@ const reportUnreadable = (ctx: ExtractContext, site: AppCall, dialect: RouteDial
     site.method === dialect.routeObject.method &&
     site.args[0] !== undefined &&
     Node.isObjectLiteralExpression(unwrap(site.args[0] as TsNode));
-  if (dialect.verbs[site.method] === undefined && !byArgument && !asObject) return;
+  if (!dialect.verbs.has(site.method) && !byArgument && !asObject) return;
   const pathAt = pathIndex(site, dialect);
   if (!asObject && site.args.length < pathAt + 2) return;
   const written = asObject

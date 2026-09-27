@@ -103,7 +103,7 @@ const foldStats = (existing: unknown, mine: NestStats): Record<string, unknown> 
   const prior = existing as Record<string, unknown>;
   const skippedExternalCalls = { ...((prior['skippedExternalCalls'] ?? {}) as Record<string, number>) };
   for (const [pkg, count] of Object.entries(mine.skippedExternalCalls)) {
-    skippedExternalCalls[pkg] = (skippedExternalCalls[pkg] ?? 0) + count;
+    skippedExternalCalls[pkg] = (Object.hasOwn(skippedExternalCalls, pkg) ? (skippedExternalCalls[pkg] ?? 0) : 0) + count;
   }
   return { ...mine, ...prior, skippedExternalCalls };
 };

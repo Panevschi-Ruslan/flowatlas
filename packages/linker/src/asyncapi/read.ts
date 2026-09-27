@@ -179,10 +179,10 @@ const operationsBesideChannels = (document: AsyncapiDocument): DeclaredEnd[] =>
     .sort(([a], [b]) => (a < b ? -1 : 1))
     .flatMap(([name, raw]) => {
       const operation = operationSchema.parse(raw);
-      const end = CHANNEL_ENDS[operation.action ?? ''];
+      const end = Object.hasOwn(CHANNEL_ENDS, operation.action ?? '') ? CHANNEL_ENDS[operation.action ?? ''] : undefined;
       const key = channelKeyOf(operation.channel?.$ref);
       if (end === undefined || key === undefined) return [];
-      const found = (document.channels as Record<string, unknown>)[key];
+      const found = Object.hasOwn(document.channels, key) ? (document.channels as Record<string, unknown>)[key] : undefined;
       if (found === undefined) return [];
       const channel = channelSchema.parse(found);
       const messages =
@@ -213,7 +213,7 @@ const operationsInsideChannels = (document: AsyncapiDocument): DeclaredEnd[] =>
     .sort(([a], [b]) => (a < b ? -1 : 1))
     .flatMap(([address, item]) =>
       Object.entries(item as Record<string, unknown>).flatMap(([word, raw]) => {
-        const end = CHANNEL_ENDS[word];
+        const end = Object.hasOwn(CHANNEL_ENDS, word) ? CHANNEL_ENDS[word] : undefined;
         if (end === undefined || raw === null || typeof raw !== 'object') return [];
         const operation = channelOperationSchema.parse(raw);
         return [

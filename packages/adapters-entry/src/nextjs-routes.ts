@@ -505,7 +505,7 @@ const builtAction = (
     if (!Node.isPropertyAccessExpression(callee)) return undefined;
     const method = callee.getName();
     for (const builder of builders) {
-      const position = builder.methods[method];
+      const position = builder.methods.get(method);
       if (position === undefined) continue;
       const argument = node.getArguments()[position];
       if (argument === undefined) continue;

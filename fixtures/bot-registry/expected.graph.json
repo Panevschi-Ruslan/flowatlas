@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "bot-registry",
-  "generatedAt": "2026-09-27T09:26:17.080Z",
+  "generatedAt": "2026-09-27T17:28:37.260Z",
   "nodes": [
     {
       "id": "bot-registry#src/actions/cancel-order.action.ts:callbacks:keep_order@19",
@@ -277,8 +277,8 @@
       "repo": "bot-registry",
       "meta": {
         "stats": {
-          "files": 10,
-          "filesRead": 10,
+          "files": 11,
+          "filesRead": 11,
           "filesUnreadable": 0,
           "classes": 3,
           "skippedExternalCalls": {

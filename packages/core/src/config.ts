@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { z } from 'zod';
+import { isUniversalMethod } from './adapters/db.js';
 import { ConfigInvalidError, ConfigNotFoundError } from './errors.js';
 import { ENTRY_KINDS } from './model/nodes.js';
 
@@ -725,6 +726,16 @@ export const flowatlasConfigSchema = z
         });
       }
       seen.add(service.name);
+      // A service's name keys every per-service table from the cache to the
+      // diff, and the language keeps these for itself: a graph stored under
+      // `__proto__` is silently not stored at all (R130).
+      if (isUniversalMethod(service.name)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['services', index, 'name'],
+          message: `${JSON.stringify(service.name)} is a name every object already has; call the service something else.`,
+        });
+      }
     });
 
     // A target naming a service that does not exist is a typo that would
