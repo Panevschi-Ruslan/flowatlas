@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 4,
-  "builtAt": "2026-09-25T14:33:39.883Z",
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T09:30:31.284Z",
   "services": [
     {
       "name": "api",
@@ -187,6 +187,24 @@
       "line": 73
     },
     {
+      "id": "api#src/worker.ts:requestLogger",
+      "type": "middleware",
+      "label": "requestLogger",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 20,
+      "kind": "function"
+    },
+    {
+      "id": "api#src/worker.ts:withNest",
+      "type": "middleware",
+      "label": "withNest",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 34,
+      "kind": "function"
+    },
+    {
       "id": "entry:api:http:ALL:/api/*",
       "type": "entry",
       "label": "ALL /api/*",
@@ -201,9 +219,6 @@
         "adapter": "hono-routes",
         "registration": "app.all",
         "middlewareRead": true,
-        "middleware": [
-          "requestLogger"
-        ],
         "handlerVia": "call"
       }
     },
@@ -222,9 +237,6 @@
         "adapter": "hono-routes",
         "registration": "app.on",
         "middlewareRead": true,
-        "middleware": [
-          "requestLogger"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -243,9 +255,6 @@
         "adapter": "hono-routes",
         "registration": "adminRoutes.get",
         "middlewareRead": true,
-        "middleware": [
-          "requestLogger"
-        ],
         "handlerVia": "function"
       }
     },
@@ -264,9 +273,6 @@
         "adapter": "hono-routes",
         "registration": "adminRoutes.get",
         "middlewareRead": true,
-        "middleware": [
-          "requestLogger"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -302,9 +308,6 @@
         "adapter": "hono-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "middleware": [
-          "requestLogger"
-        ],
         "handlerVia": "function"
       }
     },
@@ -323,9 +326,6 @@
         "adapter": "hono-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "middleware": [
-          "requestLogger"
-        ],
         "handlerVia": "function"
       }
     },
@@ -344,9 +344,6 @@
         "adapter": "hono-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "middleware": [
-          "requestLogger"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -382,10 +379,6 @@
         "adapter": "hono-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "middleware": [
-          "requestLogger",
-          "withNest"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -404,9 +397,6 @@
         "adapter": "hono-routes",
         "registration": "internal.post",
         "middlewareRead": true,
-        "middleware": [
-          "requestLogger"
-        ],
         "handlerVia": "call"
       }
     },
@@ -726,12 +716,40 @@
       "line": 73
     },
     {
+      "from": "entry:api:http:ALL:/api/*",
+      "to": "api#src/worker.ts:requestLogger",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 20,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
       "from": "entry:api:http:DELETE:/api/depots/:param/cache",
       "to": "api#src/worker.ts:DELETE /api/depots/:depotId/cache@42",
       "type": "handles",
       "confidence": "static",
       "file": "src/worker.ts",
       "line": 42
+    },
+    {
+      "from": "entry:api:http:DELETE:/api/depots/:param/cache",
+      "to": "api#src/worker.ts:requestLogger",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 20,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
     },
     {
       "from": "entry:api:http:GET:/api/admin/events",
@@ -742,12 +760,40 @@
       "line": 24
     },
     {
+      "from": "entry:api:http:GET:/api/admin/events",
+      "to": "api#src/worker.ts:requestLogger",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 20,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
       "from": "entry:api:http:GET:/api/admin/orders/:param",
       "to": "api#src/admin/admin.routes.ts:GET /orders/:orderId@15",
       "type": "handles",
       "confidence": "static",
       "file": "src/admin/admin.routes.ts",
       "line": 15
+    },
+    {
+      "from": "entry:api:http:GET:/api/admin/orders/:param",
+      "to": "api#src/worker.ts:requestLogger",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 20,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
     },
     {
       "from": "entry:api:http:GET:/api/depots/:param/orders",
@@ -787,6 +833,20 @@
       "line": 18
     },
     {
+      "from": "entry:api:http:GET:/api/depots/:param/stock-stream",
+      "to": "api#src/worker.ts:requestLogger",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 20,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
       "from": "entry:api:http:GET:/api/depots/:param/stream",
       "to": "api#src/stream/sse.ts:orderStream",
       "type": "handles",
@@ -795,12 +855,40 @@
       "line": 11
     },
     {
+      "from": "entry:api:http:GET:/api/depots/:param/stream",
+      "to": "api#src/worker.ts:requestLogger",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 20,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
       "from": "entry:api:http:GET:/health",
       "to": "api#src/worker.ts:GET /health@23",
       "type": "handles",
       "confidence": "static",
       "file": "src/worker.ts",
       "line": 23
+    },
+    {
+      "from": "entry:api:http:GET:/health",
+      "to": "api#src/worker.ts:requestLogger",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 20,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
     },
     {
       "from": "entry:api:http:POST:/api/depots/:param/orders/:param/cancel",
@@ -841,12 +929,54 @@
       "line": 34
     },
     {
+      "from": "entry:api:http:POST:/api/messenger/webhook",
+      "to": "api#src/worker.ts:requestLogger",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 20,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/api/messenger/webhook",
+      "to": "api#src/worker.ts:withNest",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 34,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "app.post"
+      }
+    },
+    {
       "from": "entry:api:http:POST:/internal/reload",
       "to": "api#src/worker.ts:acceptUpdate",
       "type": "handles",
       "confidence": "static",
       "file": "src/worker.ts",
       "line": 67
+    },
+    {
+      "from": "entry:api:http:POST:/internal/reload",
+      "to": "api#src/worker.ts:requestLogger",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 20,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
     },
     {
       "from": "ui_action:web#src/app/orders.component.ts:10:13",

@@ -10,6 +10,7 @@ import {
   type EntryAdapter,
   type EntryHandler,
   type EntryNode,
+  type EntryWrapping,
   type ExtractContext,
   type NamedFunction,
 } from '@flowatlas/core';
@@ -348,13 +349,29 @@ export const nextjsRoutesAdapter: EntryAdapter = {
      */
     const middlewareRead = middleware === undefined || middleware.unread.length === 0;
 
-    /** What a route says about the guard in front of it. */
-    const gateOf = (path: string): Record<string, unknown> => {
-      if (middleware === undefined) return { middlewareRead };
-      if (middleware.covers === undefined) return { middlewareRead, middleware: [middleware.file] };
-      return middleware.covers(path)
-        ? { middlewareRead, middleware: [middleware.file] }
-        : { middlewareRead };
+    /**
+     * What stands in front of a route, described for the extractor to draw.
+     *
+     * The file is what there is to point at — one module guards the whole
+     * repository and the framework gives it no name of its own — and it is
+     * drawn as the same `guarded_by` edge a guard class gets, so that a route
+     * this file covers does not read as an unguarded route to everything that
+     * walks the graph (R109).
+     */
+    const gateOf = (path: string): readonly EntryWrapping[] => {
+      if (middleware === undefined) return [];
+      if (middleware.covers !== undefined && !middleware.covers(path)) return [];
+      return [
+        {
+          label: middleware.file,
+          layer: 'middleware',
+          scope: 'global',
+          source: 'middleware file',
+          file: middleware.file,
+          line: 1,
+          kind: 'file',
+        },
+      ];
     };
 
     const httpEntry = (options: HttpEntryOptions): void => {
@@ -362,6 +379,7 @@ export const nextjsRoutesAdapter: EntryAdapter = {
       const id = makeEntryId(ctx.repo, 'http', key);
       if (seen.has(id)) return;
       seen.add(id);
+      const gate = gateOf(options.path);
       entries.push({
         id,
         kind: 'http',
@@ -372,12 +390,13 @@ export const nextjsRoutesAdapter: EntryAdapter = {
           : { handler: handlerOfFunction(options.handler, ctx) }),
         file: options.file,
         line: options.line,
+        ...(gate.length > 0 ? { wrapping: gate } : {}),
         meta: {
           method: options.method,
           path: options.path,
           adapter: 'nextjs-routes',
           registration: options.via,
-          ...gateOf(options.path),
+          middlewareRead,
           handlerVia: options.handler === undefined ? 'unread' : 'function',
           // Two different facts, and the second is the one a summary must not
           // read off the first. `handlerVia` says whether a function was named;

@@ -103,7 +103,7 @@ describe('a framework described rather than shipped', () => {
     // The guard is installed on the parent above the mount, so it stands in
     // front of every route the mounted server declares, in a file it never
     // appears in.
-    expect(found.entries[0]?.meta?.['middleware']).toEqual(['authenticate']);
+    expect(found.entries[0]?.wrapping?.map((one) => one.label)).toEqual(['authenticate']);
   });
 
   it('says which description read each route, so a project may have several', () => {

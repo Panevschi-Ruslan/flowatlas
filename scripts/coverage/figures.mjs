@@ -12,16 +12,15 @@
  * which makes every report in the directory a diff and none of them a signal.
  */
 
-/** Node and edge indexes one pass over the graph, shared by every figure. */
+/** Outgoing edge counts by type, one pass over the graph, shared by every figure. */
 const indexOf = (graph) => {
-  const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
   const out = new Map();
   for (const edge of graph.edges) {
     const byType = out.get(edge.from) ?? new Map();
     byType.set(edge.type, (byType.get(edge.type) ?? 0) + 1);
     out.set(edge.from, byType);
   }
-  return { nodes, out };
+  return { out };
 };
 
 const outCount = (index, id, type) => index.out.get(id)?.get(type) ?? 0;
@@ -55,16 +54,13 @@ const routes = (graph, index) => {
   const reaching = handled.filter((edge) =>
     DOES_SOMETHING.some((type) => outCount(index, edge.to, type) > 0),
   );
-  // Two spellings of the same fact, and both count. A NestJS guard is a node
-  // the route points at; middleware in front of a Koa or Express route is a
-  // list on the route itself, because it is usually an inline function with no
-  // declaration to point at. Reading only the edge reported outline as having
-  // nothing in front of any of its two hundred and fifty-seven routes, when it
-  // has something in front of two hundred and fifty-five of them.
-  const stands = (id) =>
-    outCount(index, id, 'guarded_by') > 0 ||
-    (index.nodes.get(id)?.meta?.middleware ?? []).length > 0;
-  const guarded = handled.filter((edge) => stands(edge.from));
+  // One spelling, and this reads that one. A guard declared by a decorator and
+  // a middleware chain installed by a call are both `guarded_by` edges, so the
+  // obvious question gets the true answer — which it did not before R109, when
+  // middleware was a list on the route and this figure reported outline as
+  // having nothing in front of any of its two hundred and fifty-seven routes
+  // while it has something in front of two hundred and fifty-five of them.
+  const guarded = handled.filter((edge) => outCount(index, edge.from, 'guarded_by') > 0);
   const byKind = {};
   for (const node of entries) {
     byKind[node.kind ?? 'unknown'] = (byKind[node.kind ?? 'unknown'] ?? 0) + 1;

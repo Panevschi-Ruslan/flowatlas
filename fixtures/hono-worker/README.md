@@ -48,7 +48,7 @@ application that declare no route at all.
 | `app.get('/health', (c) => …)` | 23 | `GET /health` | `inline` |
 | `app.get('/api/depots/:depotId/stream', orderStream)` | 27 | `GET /api/depots/:param/stream` | `function` |
 | `app.get('/api/depots/:depotId/stock-stream', stockStream)` | 28 | `GET /api/depots/:param/stock-stream` | `function` |
-| `app.post('/api/messenger/webhook', withNest, …)` | 34 | `POST /api/messenger/webhook` | `inline`, `meta.middleware: ["requestLogger", "withNest"]` |
+| `app.post('/api/messenger/webhook', withNest, …)` | 34 | `POST /api/messenger/webhook` | `inline`, `guarded_by` → `requestLogger` (order 0), `withNest` (order 1) |
 | `app.on('DELETE', '…/cache', …)` | 42 | `DELETE /api/depots/:param/cache` | `inline` |
 | `app.get(pathFor('stats'), …)` | 45 | none | `route-path-dynamic` |
 | `app.route('/api/admin', adminRoutes)` | 48 | two, declared in another file | — |
@@ -65,11 +65,16 @@ application: `c.get('orders')` in `src/stream/sse.ts` is written on a receiver
 from the same package and declares nothing. `app.use` and `app.route` are on the
 application and are not routes either.
 
-Every route here carries `requestLogger` in `meta.middleware`, the install above
-them all, and `POST /internal/reload` carries it too although it is written on
-what `basePath` handed back: that is a new application only as far as the
-address goes. `meta.middlewareRead` is `true` on all of them, which is how the
-route audit knows not to say the middleware in front of them went unread.
+Every route here points at `requestLogger` with a `guarded_by` edge, the install
+above them all, and `POST /internal/reload` does too although it is written on
+what `basePath` handed back: that is a new application only as far as the address
+goes. The edge carries `layer: "middleware"`, `scope: "global"` — `use('*', …)`
+is the whole application written with a wildcard — and `order`, which is the
+position in the chain and the only thing that says which runs first. That is the
+same shape a NestJS guard gets, and it is an edge rather than a list on the route
+so that anything reading the graph as a graph can see it (R109).
+`meta.middlewareRead` is `true` on all of them, which is how the route audit
+knows not to say the middleware in front of them went unread.
 
 `GET /health` carries no `/api`, and that is not an oversight — the real worker's
 probe route does not either. A prefix a route does not declare is not added.
@@ -118,4 +123,6 @@ ways and comparing.
 `main.ts` also installs `ApiKeyGuard` with `app.useGlobalGuards`. Both
 controller routes carry it as a `guarded_by` edge; no worker route does, because
 the worker answers them before the application is asked anything, and a guard
-drawn there would call a route protected by a check that never runs.
+drawn there would call a route protected by a check that never runs. What a
+worker route does carry is its own middleware, as the same kind of edge — which
+is what makes this fixture the one place the two spellings can be compared.

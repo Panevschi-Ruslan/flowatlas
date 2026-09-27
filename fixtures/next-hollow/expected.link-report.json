@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 4,
-  "builtAt": "2026-09-26T20:15:02.523Z",
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T09:26:55.799Z",
   "configHash": "fd4b9f76ed53",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 0
+      "durationMs": 581
     },
     {
       "name": "widget",
@@ -23,7 +23,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 510
     }
   ],
   "httpOut": {

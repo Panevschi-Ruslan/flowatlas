@@ -134,6 +134,14 @@ export {
 } from './adapters/manifest.js';
 export type { PackageJson } from './adapters/manifest.js';
 
+export { addEntryWrapping, addWrappingEdges, WRAPPING_LAYERS, WRAPPING_SCOPES } from './adapters/wrapping.js';
+export type {
+  AppliedWrapping,
+  EntryWrapping,
+  WrappingLayer,
+  WrappingScope,
+} from './adapters/wrapping.js';
+
 export { isFunctionHandler, isInlineHandler } from './adapters/entry.js';
 export type {
   EntryAdapter,

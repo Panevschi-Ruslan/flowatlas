@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 4,
-  "builtAt": "2026-09-25T14:34:07.557Z",
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T09:26:59.199Z",
   "services": [
     {
       "name": "shop",
@@ -106,9 +106,6 @@
         "adapter": "nextjs-routes",
         "registration": "pages/api",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
         "handlerVia": "function"
       }
     },
@@ -126,9 +123,6 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
         "handlerVia": "function"
       }
     },
@@ -146,9 +140,6 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
         "handlerVia": "function"
       }
     },
@@ -166,9 +157,6 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
         "handlerVia": "function"
       }
     },
@@ -186,9 +174,6 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
         "handlerVia": "function"
       }
     },
@@ -206,9 +191,6 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
         "handlerVia": "function"
       }
     },
@@ -226,9 +208,6 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
         "handlerVia": "function"
       }
     },
@@ -246,9 +225,6 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
         "handlerVia": "function"
       }
     },
@@ -266,9 +242,6 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
         "handlerVia": "function"
       }
     },
@@ -286,9 +259,6 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
         "handlerVia": "function"
       }
     },
@@ -306,9 +276,6 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
         "handlerVia": "function"
       }
     },
@@ -542,6 +509,15 @@
       "repo": "shop",
       "file": "lib/with-admin.ts",
       "line": 11
+    },
+    {
+      "id": "shop#middleware.ts:middleware.ts",
+      "type": "middleware",
+      "label": "middleware.ts",
+      "repo": "shop",
+      "file": "middleware.ts",
+      "line": 1,
+      "kind": "file"
     },
     {
       "id": "shop#pages/api/legacy-orders.ts:handler",
@@ -827,6 +803,20 @@
     },
     {
       "from": "entry:shop:http:ALL:/api/legacy-orders",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
+    },
+    {
+      "from": "entry:shop:http:ALL:/api/legacy-orders",
       "to": "shop#pages/api/legacy-orders.ts:handler",
       "type": "handles",
       "confidence": "static",
@@ -842,12 +832,40 @@
       "line": 18
     },
     {
+      "from": "entry:shop:http:GET:/api/invoices",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
+    },
+    {
       "from": "entry:shop:http:GET:/api/orders",
       "to": "shop#app/api/orders/route.ts:GET",
       "type": "handles",
       "confidence": "static",
       "file": "app/api/orders/route.ts",
       "line": 4
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
     },
     {
       "from": "entry:shop:http:GET:/api/orders/:param",
@@ -858,12 +876,40 @@
       "line": 4
     },
     {
+      "from": "entry:shop:http:GET:/api/orders/:param",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
+    },
+    {
       "from": "entry:shop:http:GET:/api/reports",
       "to": "shop#app/api/reports/route.ts:handler",
       "type": "handles",
       "confidence": "static",
       "file": "app/api/reports/route.ts",
       "line": 14
+    },
+    {
+      "from": "entry:shop:http:GET:/api/reports",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
     },
     {
       "from": "entry:shop:http:PATCH:/api/orders/:param",
@@ -874,12 +920,40 @@
       "line": 10
     },
     {
+      "from": "entry:shop:http:PATCH:/api/orders/:param",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
+    },
+    {
       "from": "entry:shop:http:POST:/api/invoices",
       "to": "shop#app/api/(admin)/invoices/route.ts:GET",
       "type": "handles",
       "confidence": "static",
       "file": "app/api/(admin)/invoices/route.ts",
       "line": 18
+    },
+    {
+      "from": "entry:shop:http:POST:/api/invoices",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
     },
     {
       "from": "entry:shop:http:POST:/api/jobs",
@@ -890,12 +964,40 @@
       "line": 14
     },
     {
+      "from": "entry:shop:http:POST:/api/jobs",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
+    },
+    {
       "from": "entry:shop:http:POST:/api/orders",
       "to": "shop#app/api/orders/route.ts:POST",
       "type": "handles",
       "confidence": "static",
       "file": "app/api/orders/route.ts",
       "line": 9
+    },
+    {
+      "from": "entry:shop:http:POST:/api/orders",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
     },
     {
       "from": "entry:shop:http:POST:/api/reports",
@@ -906,12 +1008,40 @@
       "line": 14
     },
     {
+      "from": "entry:shop:http:POST:/api/reports",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
+    },
+    {
       "from": "entry:shop:http:PUT:/api/orders/:param",
       "to": "shop#app/api/orders/[id]/route.ts:PATCH",
       "type": "handles",
       "confidence": "static",
       "file": "app/api/orders/[id]/route.ts",
       "line": 10
+    },
+    {
+      "from": "entry:shop:http:PUT:/api/orders/:param",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
     },
     {
       "from": "entry:shop:rpc:action:app/actions/orders.ts#archiveOrder",

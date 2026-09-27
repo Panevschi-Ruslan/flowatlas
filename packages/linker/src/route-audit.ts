@@ -22,6 +22,12 @@ export interface RouteAuditOptions {
 /** Wrapping that can refuse a request: a guard, or middleware that may be one. */
 const GATES = new Set(['guard', 'middleware']);
 
+/** Where in the chain an edge sits, for a message that reads it back in order. */
+const orderOf = (edge: GraphEdge): number => {
+  const order = edge.meta?.['order'];
+  return typeof order === 'number' ? order : Number.MAX_SAFE_INTEGER;
+};
+
 const text = (value: unknown): string => (typeof value === 'string' ? value : '');
 
 /** A wrapper node's label names a class plainly, or with the arguments it was built with. */
@@ -143,7 +149,20 @@ export const auditRoutes = (
       }
       return true;
     });
-    const middleware = Array.isArray(entry.meta?.['middleware']) ? (entry.meta['middleware'] as unknown[]) : [];
+    /**
+     * The middleware in front of this route, in the order it runs.
+     *
+     * Read off the edges, like everything else here. It used to be read off
+     * `entry.meta.middleware`, and that is the whole of R109: the audit was the
+     * only reader that knew middleware existed, because it was the only one
+     * that had been told where to look, and every other consumer of the graph
+     * saw a route with nothing in front of it. One question, asked once, of the
+     * shape a guard has always had.
+     */
+    const middleware = wrapping
+      .filter((edge) => text(edge.meta?.['layer']) === 'middleware')
+      .sort((a, b) => orderOf(a) - orderOf(b))
+      .map((edge) => nodes.get(edge.to)?.label ?? edge.to);
 
     // ---- a worker route in front of an application route -------------------
     const handlers = from(entry.id, 'handles');
@@ -165,7 +184,7 @@ export const auditRoutes = (
         message:
           `${method} ${path} is answered by ${names(worker)} before ${names(application)} is reached; ` +
           `the application route's guards (${guards.length === 0 ? 'none' : guards.join(', ')}) never run, ` +
-          `and the worker route has ${middleware.length === 0 ? 'no middleware' : `middleware ${middleware.map(String).join(', ')}`}.`,
+          `and the worker route has ${middleware.length === 0 ? 'no middleware' : `middleware ${middleware.join(', ')}`}.`,
         hint: 'Remove one of the two, or make the worker route apply the same checks the application route declares.',
         // Named as a route rather than by node id: this is a finding about the
         // route, not a place the map could not read, so a walk through the
@@ -175,7 +194,9 @@ export const auditRoutes = (
     }
 
     // ---- a route nothing guards that reaches stored data --------------------
-    if (gates.length > 0 || middleware.length > 0) continue;
+    // Middleware is in `gates` already, because it is a `guarded_by` edge with
+    // `layer: middleware` whoever read it, which is the point of R109.
+    if (gates.length > 0) continue;
     if (decorators.some((name) => options.publicDecorators.includes(name))) continue;
     if (options.publicRoutes.some((pattern) => matchesRoutePattern(pattern, method, path))) continue;
     const found = dataReached(entry.id);

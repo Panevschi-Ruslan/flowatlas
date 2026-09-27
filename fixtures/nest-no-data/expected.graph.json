@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "repo": "nest-no-data",
-  "generatedAt": "2026-09-25T14:33:59.548Z",
+  "generatedAt": "2026-09-27T09:26:44.833Z",
   "nodes": [
     {
       "id": "entry:nest-no-data:http:DELETE:/notifications/:param",

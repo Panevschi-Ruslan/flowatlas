@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "repo": "express-fs-router",
-  "generatedAt": "2026-09-26T20:21:28.760Z",
+  "generatedAt": "2026-09-27T09:26:18.849Z",
   "nodes": [
     {
       "id": "repo:express-fs-router",

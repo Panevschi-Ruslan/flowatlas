@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "repo": "fn-data-layer",
-  "generatedAt": "2026-09-25T14:33:35.118Z",
+  "generatedAt": "2026-09-27T09:26:22.114Z",
   "nodes": [
     {
       "id": "db_query:fn-data-layer#src/orders/orders.class.ts:17:12",

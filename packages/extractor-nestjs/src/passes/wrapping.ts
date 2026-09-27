@@ -1,8 +1,10 @@
 import {
+  addWrappingEdges,
   hasAnyDependency,
   makeSymbolId,
   packageOfFile,
   stableKey,
+  type AppliedWrapping,
   type GraphNode,
 } from '@flowatlas/core';
 import { Node } from 'ts-morph';
@@ -179,40 +181,26 @@ export const wrappingEdgesPass = definePass('wrapping-edges', (ctx: NestExtractC
       }
     }
 
-    // The same wrapper can be attached more than once, for instance globally
-    // and again on one handler, and it really does run twice. An edge is
-    // identified by its endpoints, so every application it stands for is listed
-    // on it rather than lost.
-    const perTarget = new Map<string, { application: WrapperApplication; orders: Array<{ order: number; scope: string; source: string }> }>();
-
-    applications.forEach((application, order) => {
+    // What a wrapper application becomes in the graph is decided in one place,
+    // for every reader: the order, the repeated application, and the shape of
+    // the edge itself (R109).
+    const applied: Array<AppliedWrapping | undefined> = [];
+    for (const application of applications) {
       const node = wrapperNode(ctx, application);
-      if (node === undefined) return;
-      const seen = perTarget.get(node.id);
-      const applied = { order, scope: application.scope, source: application.source };
-      if (seen === undefined) perTarget.set(node.id, { application, orders: [applied] });
-      else seen.orders.push(applied);
-    });
-
-    for (const [nodeId, { application, orders }] of perTarget) {
-      const first = orders[0];
-      if (first === undefined) continue;
-      ctx.builder.addEdge({
-        from: entry.node.id,
-        to: nodeId,
-        type: 'guarded_by',
-        confidence: 'static',
+      if (node === undefined) {
+        applied.push(undefined);
+        continue;
+      }
+      applied.push({
+        nodeId: node.id,
+        layer: application.layer,
+        scope: application.scope,
+        source: application.source,
         file: application.file,
-        line: application.wrapper.line,
-        meta: {
-          order: first.order,
-          scope: first.scope,
-          layer: application.layer,
-          source: first.source,
-          ...(orders.length > 1 ? { applications: orders } : {}),
-        },
+        ...(application.wrapper.line === undefined ? {} : { line: application.wrapper.line }),
       });
     }
+    addWrappingEdges(ctx.builder, entry.node.id, applied);
   }
 });
 

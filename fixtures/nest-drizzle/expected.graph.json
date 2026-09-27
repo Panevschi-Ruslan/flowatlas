@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "repo": "nest-drizzle",
-  "generatedAt": "2026-09-25T14:33:52.549Z",
+  "generatedAt": "2026-09-27T09:26:38.024Z",
   "nodes": [
     {
       "id": "db_query:nest-drizzle#src/orders/orders.service.ts:14:12",

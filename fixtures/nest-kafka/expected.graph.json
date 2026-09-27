@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "repo": "nest-kafka",
-  "generatedAt": "2026-09-26T20:16:54.392Z",
+  "generatedAt": "2026-09-27T09:26:41.485Z",
   "nodes": [
     {
       "id": "channel:get.order",
