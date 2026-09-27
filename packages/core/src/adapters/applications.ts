@@ -87,7 +87,7 @@ export const applicationsServing = (
   key: string,
 ): ReadonlyArray<string | undefined> => {
   if (map === undefined || map.names.length < 2) return [undefined];
-  const mounted = map.of[key];
+  const mounted = Object.hasOwn(map.of, key) ? map.of[key] : undefined;
   return mounted === undefined || mounted.length === 0 ? [undefined] : mounted;
 };
 

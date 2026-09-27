@@ -124,6 +124,16 @@ describe('parseConfig', () => {
     ).toThrow(ConfigInvalidError);
   });
 
+  // The name keys every per-service table, and these the language keeps (R130).
+  it.each(['__proto__', 'constructor', 'toString', 'hasOwnProperty', 'valueOf'])(
+    'rejects a service named %s',
+    (name) => {
+      expect(() => parseConfig({ services: [{ name, repo: '../a', type: 'backend' }] })).toThrow(
+        /a name every object already has/,
+      );
+    },
+  );
+
   it('rejects an unknown key', () => {
     expect(() => parseConfig({ servces: [] })).toThrow(ConfigInvalidError);
     expect(() => parseConfig({ services: [{ name: 'a', repo: '../a', type: 'backend', extra: 1 }] })).toThrow(

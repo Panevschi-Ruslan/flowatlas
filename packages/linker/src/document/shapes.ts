@@ -159,7 +159,7 @@ const bareRefOf = (schema: JsonSchemaNode, context: ShapeContext, name: string):
     );
   }
 
-  const primitive = kind === undefined ? undefined : PRIMITIVE_OF[kind];
+  const primitive = kind === undefined || !Object.hasOwn(PRIMITIVE_OF, kind) ? undefined : PRIMITIVE_OF[kind];
   return primitive ?? UNREADABLE;
 };
 

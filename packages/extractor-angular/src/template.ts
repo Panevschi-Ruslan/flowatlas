@@ -95,21 +95,25 @@ export interface ParseTemplateOptions {
   onError?(message: string, line: number): void;
 }
 
-const KIND_BY_EVENT: Record<string, TemplateEventKind> = {
-  click: 'click',
-  submit: 'submit',
-  ngsubmit: 'submit',
-  change: 'change',
-  ngmodelchange: 'change',
-  input: 'input',
-};
+/**
+ * A `Map`, because the event name is whatever the template binds, and an object
+ * literal answers `(constructor)` with the language's own function (R130).
+ */
+const KIND_BY_EVENT: ReadonlyMap<string, TemplateEventKind> = new Map([
+  ['click', 'click'],
+  ['submit', 'submit'],
+  ['ngsubmit', 'submit'],
+  ['change', 'change'],
+  ['ngmodelchange', 'change'],
+  ['input', 'input'],
+]);
 
 const DEFAULT_PLACEHOLDER = ':param';
 
 const kindOf = (name: string): TemplateEventKind => {
   const lowered = name.toLowerCase();
   if (lowered.startsWith('keyup') || lowered.startsWith('keydown')) return 'keyup';
-  return KIND_BY_EVENT[lowered] ?? 'custom';
+  return KIND_BY_EVENT.get(lowered) ?? 'custom';
 };
 
 /**

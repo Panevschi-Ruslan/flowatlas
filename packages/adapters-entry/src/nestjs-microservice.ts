@@ -10,11 +10,17 @@ import { fileOfNode, handlerOf, repoClasses } from './shared.js';
 
 const NEST_MICROSERVICES = ['@nestjs/microservices'] as const;
 
-/** Decorator to entry kind. An event is fire and forget; a message expects a reply. */
-const PATTERN_DECORATORS: Record<string, EntryKind> = {
-  EventPattern: 'event',
-  MessagePattern: 'rpc',
-};
+/**
+ * Decorator to entry kind. An event is fire and forget; a message expects a reply.
+ *
+ * A `Map` so that the lookup is safe by construction rather than by the filter
+ * in front of it: a name read from source is never asked of an object literal,
+ * which answers `toString` with the language's own function (R130).
+ */
+const PATTERN_DECORATORS: ReadonlyMap<string, EntryKind> = new Map([
+  ['EventPattern', 'event'],
+  ['MessagePattern', 'rpc'],
+]);
 
 /**
  * Handlers bound to a message pattern.
@@ -32,10 +38,10 @@ export const nestjsMicroserviceAdapter: EntryAdapter = {
       const file = fileOfNode(declaration, ctx);
       for (const method of declaration.getMethods()) {
         for (const decorator of findDecorators(method, {
-          names: Object.keys(PATTERN_DECORATORS),
+          names: [...PATTERN_DECORATORS.keys()],
           fromModules: NEST_MICROSERVICES,
         })) {
-          const kind = PATTERN_DECORATORS[decorator.getName()];
+          const kind = PATTERN_DECORATORS.get(decorator.getName());
           if (kind === undefined) continue;
           const [patternArg, transportArg] = decoratorArgs(decorator);
 

@@ -25,19 +25,24 @@ import { noteIfUnreferenced, requestIdOf, requestsOf, wrapperOf, type RequestSit
 import type { ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
 
-/** What each method of the client sends, and where it writes the address. */
-const VERBS: Record<string, { method: string; urlIndex: number; bodyIndex: number | null }> = {
-  get: { method: 'GET', urlIndex: 0, bodyIndex: null },
-  post: { method: 'POST', urlIndex: 0, bodyIndex: 1 },
-  put: { method: 'PUT', urlIndex: 0, bodyIndex: 1 },
-  patch: { method: 'PATCH', urlIndex: 0, bodyIndex: 1 },
-  delete: { method: 'DELETE', urlIndex: 0, bodyIndex: null },
-  head: { method: 'HEAD', urlIndex: 0, bodyIndex: null },
-  options: { method: 'OPTIONS', urlIndex: 0, bodyIndex: null },
-  jsonp: { method: 'GET', urlIndex: 0, bodyIndex: null },
+/**
+ * What each method of the client sends, and where it writes the address.
+ *
+ * A `Map`, because it is asked about every method called on the client and an
+ * object literal answers `toString` with the language's own function (R130).
+ */
+const VERBS: ReadonlyMap<string, { method: string; urlIndex: number; bodyIndex: number | null }> = new Map([
+  ['get', { method: 'GET', urlIndex: 0, bodyIndex: null }],
+  ['post', { method: 'POST', urlIndex: 0, bodyIndex: 1 }],
+  ['put', { method: 'PUT', urlIndex: 0, bodyIndex: 1 }],
+  ['patch', { method: 'PATCH', urlIndex: 0, bodyIndex: 1 }],
+  ['delete', { method: 'DELETE', urlIndex: 0, bodyIndex: null }],
+  ['head', { method: 'HEAD', urlIndex: 0, bodyIndex: null }],
+  ['options', { method: 'OPTIONS', urlIndex: 0, bodyIndex: null }],
+  ['jsonp', { method: 'GET', urlIndex: 0, bodyIndex: null }],
   // The verb of a generic request is its first argument, not its name.
-  request: { method: '', urlIndex: 1, bodyIndex: null },
-};
+  ['request', { method: '', urlIndex: 1, bodyIndex: null }],
+]);
 
 /**
  * Whether a call is made on the framework's HTTP client.
@@ -61,7 +66,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
   const apiBaseEnv = ctx.service.apiBaseEnv ?? [];
 
   const verbOf = (call: CallExpression, name: string): string | null => {
-    const shape = VERBS[name];
+    const shape = VERBS.get(name);
     if (shape === undefined) return null;
     if (shape.method !== '') return shape.method;
     const [written] = call.getArguments();
@@ -175,7 +180,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     choice?: string,
     pathChoices?: readonly string[],
   ): void => {
-    const shape = VERBS[name];
+    const shape = VERBS.get(name);
     if (shape === undefined) return;
     const { call, methodId, file } = site;
 
@@ -310,7 +315,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     site: RequestSite,
     siblings: number,
   ): void => {
-    const shape = VERBS[name];
+    const shape = VERBS.get(name);
     const urlArg = shape === undefined ? undefined : network.getArguments()[shape.urlIndex];
     if (shape === undefined || urlArg === undefined) return;
     for (const request of requestsOf(ctx, urlArg, method, site, siblings)) {
@@ -339,7 +344,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         const callee = site.getExpression();
         if (!Node.isPropertyAccessExpression(callee)) return;
         const name = callee.getName().toLowerCase();
-        if (!Object.hasOwn(VERBS, name)) return;
+        if (!VERBS.has(name)) return;
         if (!isHttpClient(resolveTypeOrigin(callee.getExpression()))) return;
         found.push({ site, name });
       });

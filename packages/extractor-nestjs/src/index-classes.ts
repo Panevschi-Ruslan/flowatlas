@@ -25,14 +25,19 @@ export type ClassRole =
 
 export const NEST_COMMON = ['@nestjs/common'] as const;
 
-/** Interface a class implements, and the role that implies. */
-const ROLE_BY_INTERFACE: Record<string, ClassRole> = {
-  CanActivate: 'guard',
-  NestInterceptor: 'interceptor',
-  PipeTransform: 'pipe',
-  NestMiddleware: 'middleware',
-  ExceptionFilter: 'plain',
-};
+/**
+ * Interface a class implements, and the role that implies.
+ *
+ * A `Map`, because the name is whatever the class says it implements, and an
+ * object literal answers `implements toString` with a function for a role (R130).
+ */
+const ROLE_BY_INTERFACE: ReadonlyMap<string, ClassRole> = new Map([
+  ['CanActivate', 'guard'],
+  ['NestInterceptor', 'interceptor'],
+  ['PipeTransform', 'pipe'],
+  ['NestMiddleware', 'middleware'],
+  ['ExceptionFilter', 'plain'],
+]);
 
 /** The class index and its rows, fixed to the roles this extractor knows. */
 export type NestClassIndex = ClassIndex<ClassRole>;
@@ -42,7 +47,7 @@ const roleOf = (declaration: ClassDeclaration): ClassRole => {
   if (hasDecorator(declaration, 'Module', NEST_COMMON)) return 'module';
   if (hasDecorator(declaration, 'Controller', NEST_COMMON)) return 'controller';
   for (const implemented of declaration.getImplements()) {
-    const role = ROLE_BY_INTERFACE[implemented.getExpression().getText()];
+    const role = ROLE_BY_INTERFACE.get(implemented.getExpression().getText());
     if (role !== undefined && role !== 'plain') return role;
   }
   if (hasDecorator(declaration, 'Injectable', NEST_COMMON)) return 'injectable';

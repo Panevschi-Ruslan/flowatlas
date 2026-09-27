@@ -85,20 +85,26 @@ const reportForeign = (
   }
 };
 
-/** Decorator name to HTTP method. `All` stands for every method at once. */
-const ROUTE_DECORATORS: Record<string, string> = {
-  Get: 'GET',
-  Post: 'POST',
-  Put: 'PUT',
-  Patch: 'PATCH',
-  Delete: 'DELETE',
-  Options: 'OPTIONS',
-  Head: 'HEAD',
-  All: 'ALL',
-};
+/**
+ * Decorator name to HTTP method. `All` stands for every method at once.
+ *
+ * A `Map`, because it is asked about both spellings of a decorator and the
+ * local one is whatever the import aliased it to: an object literal answers an
+ * alias of `toString` with the language's own function (R130).
+ */
+const ROUTE_DECORATORS: ReadonlyMap<string, string> = new Map([
+  ['Get', 'GET'],
+  ['Post', 'POST'],
+  ['Put', 'PUT'],
+  ['Patch', 'PATCH'],
+  ['Delete', 'DELETE'],
+  ['Options', 'OPTIONS'],
+  ['Head', 'HEAD'],
+  ['All', 'ALL'],
+]);
 
 const FRAMEWORK_DECORATORS = new Set([
-  ...Object.keys(ROUTE_DECORATORS),
+  ...ROUTE_DECORATORS.keys(),
   'Controller',
   'UseGuards',
   'UseInterceptors',
@@ -325,7 +331,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
       }
 
       for (const method of declaration.getMethods()) {
-        const routes = nestDecorators(method, Object.keys(ROUTE_DECORATORS));
+        const routes = nestDecorators(method, [...ROUTE_DECORATORS.keys()]);
         reportForeign(ctx, routes.foreign, {
           file,
           line: method.getStartLineNumber(),
@@ -338,7 +344,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
           // today; it gets a row rather than a `continue`, because the one thing
           // this reader may not do is drop a route it recognised (R84).
           const httpMethod = decoratorNames(decorator)
-            .map((name) => ROUTE_DECORATORS[name])
+            .map((name) => ROUTE_DECORATORS.get(name))
             .find((verb) => verb !== undefined);
           if (httpMethod === undefined) {
             ctx.builder.addUnresolved({

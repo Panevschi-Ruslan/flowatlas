@@ -218,12 +218,12 @@ const readGlobalPrefix = (call: CallExpression, info: BootstrapInfo, file: strin
  * and evaluating it would answer `0`. The name is in the source either way, and
  * it is the same name in every repository because it is the framework's.
  */
-const VERSIONING_TYPES: Record<string, Versioning['type']> = {
-  URI: 'uri',
-  HEADER: 'header',
-  MEDIA_TYPE: 'media-type',
-  CUSTOM: 'custom',
-};
+const VERSIONING_TYPES: ReadonlyMap<string, Versioning['type']> = new Map([
+  ['URI', 'uri'],
+  ['HEADER', 'header'],
+  ['MEDIA_TYPE', 'media-type'],
+  ['CUSTOM', 'custom'],
+]);
 
 /** The framework's own default, used whenever URI versioning names no prefix. */
 const DEFAULT_VERSION_PREFIX = 'v';
@@ -258,7 +258,7 @@ const readVersioning = (call: CallExpression, info: BootstrapInfo, file: string)
   // string is not filed as a kind nobody knows.
   const named = typeNode === undefined ? undefined : /(\w+)\W*$/.exec(typeNode.getText())?.[1];
   const type =
-    (named === undefined ? undefined : VERSIONING_TYPES[named.toUpperCase()]) ?? 'unknown';
+    (named === undefined ? undefined : VERSIONING_TYPES.get(named.toUpperCase())) ?? 'unknown';
 
   const prefixNode = propertyIn(optionsArg, 'prefix');
   // A prefix that is only half readable stays half readable. The unread half
@@ -319,22 +319,26 @@ const readGlobals =
  * created, and an address belongs to the whole service however far from the
  * entry file the line that sets it happens to sit.
  */
-const ADDRESS_READERS: Record<string, CallReader> = {
-  setGlobalPrefix: readGlobalPrefix,
-  enableVersioning: readVersioning,
-};
+const ADDRESS_READERS: ReadonlyMap<string, CallReader> = new Map([
+  ['setGlobalPrefix', readGlobalPrefix],
+  ['enableVersioning', readVersioning],
+]);
 
-const ENTRY_READERS: Record<string, CallReader> = {
+/**
+ * `Map`s, because they are asked about every method called in the file. As
+ * object literals they answered `x.valueOf()` with the language's own
+ * `valueOf`, called it unbound, and the throw made the whole service
+ * unreadable (R130).
+ */
+const ENTRY_READERS: ReadonlyMap<string, CallReader> = new Map([
   ...ADDRESS_READERS,
-  ...Object.fromEntries(
-    Object.entries(GLOBAL_METHODS).map(([name, layer]) => [name, readGlobals(layer)]),
-  ),
-};
+  ...Object.entries(GLOBAL_METHODS).map(([name, layer]) => [name, readGlobals(layer)] as const),
+]);
 
 /** Walks one file, handing each call it knows to the reader for it. */
 const readCallsIn = (
   sourceFile: SourceFile,
-  readers: Record<string, CallReader>,
+  readers: ReadonlyMap<string, CallReader>,
   info: BootstrapInfo,
   file: string,
 ): void => {
@@ -342,7 +346,7 @@ const readCallsIn = (
     if (!Node.isCallExpression(node)) return;
     const callee = node.getExpression();
     if (!Node.isPropertyAccessExpression(callee)) return;
-    const reader = readers[callee.getName()];
+    const reader = readers.get(callee.getName());
     if (reader !== undefined) reader(node, info, file);
   });
 };
@@ -395,7 +399,7 @@ const readAddressingElsewhere = (
   rootDir: string,
   entry: string | undefined,
 ): BootstrapInfo[] => {
-  const names = Object.keys(ADDRESS_READERS);
+  const names = [...ADDRESS_READERS.keys()];
   const found: BootstrapInfo[] = [];
   // The entry file is left out because it has already been read. Reading it
   // twice would say everything it says twice, including its rows.

@@ -217,7 +217,7 @@ describe('the shipped frameworks are written in that same description', () => {
       expect(dialect.pathAt).toBe(0);
       expect(dialect.handlerAt).toBe(-1);
       expect(dialect.middlewareBetween).toBe(true);
-      expect(Object.keys(dialect.verbs)).toContain('get');
+      expect([...dialect.verbs.keys()]).toContain('get');
     }
   });
 

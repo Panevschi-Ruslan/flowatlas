@@ -68,7 +68,7 @@ export const resolveNode = (graph, selector) => {
     throw new TypeError(`a selector names a node type; got ${JSON.stringify(type)}`);
   }
   const keys = Object.keys(rest);
-  const unknown = keys.filter((key) => !(key in RELATIONS));
+  const unknown = keys.filter((key) => !Object.hasOwn(RELATIONS, key));
   if (unknown.length > 0) {
     throw new TypeError(
       `a selector knows no relation named ${unknown.join(', ')}; ` +

@@ -751,11 +751,11 @@ const parseArgs = (argv) => {
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg in flag) {
+    if (Object.hasOwn(flag, arg)) {
       flag[arg]();
       continue;
     }
-    if (arg in take) {
+    if (Object.hasOwn(take, arg)) {
       const value = argv[(index += 1)];
       if (value === undefined || value.startsWith('--')) {
         throw new UsageError(`${arg} wants a value after it, and there is none`);
@@ -763,7 +763,7 @@ const parseArgs = (argv) => {
       take[arg](value);
       continue;
     }
-    const meant = MEANT[arg];
+    const meant = Object.hasOwn(MEANT, arg) ? MEANT[arg] : undefined;
     throw new UsageError(
       `unknown argument: ${arg}${meant === undefined ? '' : `. The flag that exists is ${meant}`}`,
     );

@@ -252,7 +252,7 @@ describe('the description, which is data rather than code', () => {
   it('ships a row that went in through the schema', () => {
     expect(TRPC.name).toBe('trpc-procedures');
     expect(TRPC.separator).toBe('.');
-    expect(TRPC.terminators['query']).toBe('rpc');
+    expect(TRPC.terminators.get('query')).toBe('rpc');
     expect(TRPC.mounts.map((mount) => mount.call)).toContain('createNextApiHandler');
   });
 

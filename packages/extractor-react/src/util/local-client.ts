@@ -199,7 +199,7 @@ const verbMembersOf = (chain: readonly ClassDeclaration[]): Map<string, TsNode> 
   for (const cls of chain) {
     for (const [name, body] of memberBodiesOf(cls)) {
       const verb = name.toLowerCase();
-      if (verb in VERB_CALLS && !verbs.has(verb)) verbs.set(verb, body);
+      if (Object.hasOwn(VERB_CALLS, verb) && !verbs.has(verb)) verbs.set(verb, body);
     }
   }
   return verbs;

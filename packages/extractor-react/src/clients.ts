@@ -217,7 +217,7 @@ export const localClient = (
     types: [{ package: null, typeName }],
     verbs: Object.fromEntries(
       verbs.flatMap((verb) => {
-        const shape = VERB_CALLS[verb];
+        const shape = Object.hasOwn(VERB_CALLS, verb) ? VERB_CALLS[verb] : undefined;
         return shape === undefined ? [] : [[verb, shape] as const];
       }),
     ),
