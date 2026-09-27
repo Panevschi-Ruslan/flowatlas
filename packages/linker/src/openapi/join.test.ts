@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { loadConfig, parseRepoGraph, type GraphEdge, type RepoGraph } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import { linkGraphs } from '../link.js';
-import { DECLARED_BY, readOpenapiDocument } from './read.js';
+import { DECLARED_BY } from '../document/declared.js';
+import { readOpenapiDocument } from './read.js';
 
 /**
  * The join itself, run over the fixture, rather than over a graph written here.

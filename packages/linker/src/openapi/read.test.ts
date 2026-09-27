@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { OpenapiDocumentError, readOpenapiDocument } from './read.js';
+import { readOpenapiDocument } from './read.js';
+import { DocumentError } from '../document/declared.js';
 
 /**
  * A document, read as a graph.
@@ -67,7 +68,7 @@ describe('a route taken from a document', () => {
   });
 
   it('counts the routes it read', () => {
-    expect(read(minimal).routes).toBe(1);
+    expect(read(minimal).declared).toBe(1);
   });
 });
 
@@ -262,16 +263,16 @@ describe('a document that cannot be used', () => {
   it('refuses Swagger 2 by name rather than reading nothing out of it', () => {
     // It has `paths` and it parses, so reading it produces a service with no
     // routes — which is indistinguishable from a service that has none.
-    expect(() => read({ swagger: '2.0', paths: {} })).toThrow(OpenapiDocumentError);
+    expect(() => read({ swagger: '2.0', paths: {} })).toThrow(DocumentError);
   });
 
   it('refuses something that is not an object at all', () => {
-    expect(() => read('billing')).toThrow(OpenapiDocumentError);
+    expect(() => read('billing')).toThrow(DocumentError);
   });
 
   it('reads a document with no paths as a service with no routes', () => {
-    const { graph, routes } = read({ openapi: '3.0.3', paths: {} });
-    expect(routes).toBe(0);
+    const { graph, declared } = read({ openapi: '3.0.3', paths: {} });
+    expect(declared).toBe(0);
     expect(graph.nodes).toEqual([]);
   });
 });

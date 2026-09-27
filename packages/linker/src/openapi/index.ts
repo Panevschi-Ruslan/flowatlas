@@ -7,6 +7,5 @@
  * have produced, so that the join two files over has two ends to work with.
  */
 export { OPERATION_VERBS, openapiDocumentSchema } from './document.js';
-export type { JsonSchemaNode, OpenapiDocument, Operation } from './document.js';
-export { DECLARED_BY, OpenapiDocumentError, readOpenapiDocument } from './read.js';
-export type { ReadDocumentOptions, ReadDocumentResult } from './read.js';
+export type { OpenapiDocument, Operation } from './document.js';
+export { readOpenapiDocument } from './read.js';

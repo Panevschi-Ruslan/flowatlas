@@ -15,7 +15,7 @@ export const DEFAULT_TYPE_MAX_DEPTH = 3;
  * built on, because that is all anybody here knows about it: nothing was read,
  * so there is no framework to name. Module-local on purpose — it is a value
  * this schema fills in and reports print, never something to branch on. What a
- * reader downstream actually wants to know is whether `openapi` is set, which
+ * reader downstream actually wants to know is whether `document` is set, which
  * is the fact rather than a word chosen to stand for it.
  */
 const DECLARED_SERVICE_TYPE = 'declared';
@@ -27,11 +27,11 @@ const DECLARED_SERVICE_TYPE = 'declared';
  * frameworks it can be pointed at. The command line and the extractors own the
  * list of values they understand.
  *
- * `openapi` is the one exception to that, and it is a document format rather
- * than a framework. A service named this way has no source anybody here can
- * read — a payment provider, another team's repository, something written in
- * another language — and the document is the only statement of its routes and
- * its shapes there is.
+ * `document` is the one exception to that, and its `kind` is a document format
+ * rather than a framework. A service named this way has no source anybody here
+ * can read — a payment provider, another team's repository, something written in
+ * another language — and the document is the only statement of its routes, its
+ * channels and its shapes there is.
  *
  * This project deleted `@flowatlas-hole`, an annotation whose purpose was to
  * accept a claim nothing could check, and the argument for deleting it was that
@@ -60,7 +60,32 @@ const serviceEntrySchema = z.strictObject({
    * a document that lives somewhere is a truer answer than none.
    */
   repo: z.string().min(1).optional(),
-  /** Path to an OpenAPI document, relative to the configuration file. */
+  /**
+   * The document that declares this service, and which format it is written in.
+   *
+   * Two fields rather than one key per format, because "which format is this"
+   * is a question with exactly one right number of answers. A second scalar
+   * beside `openapi` would have it answered here, again wherever a build asks
+   * whether a service is declared, and a third time wherever a reader is
+   * chosen — three places to keep in step, and the format is not even the part
+   * that differs most between two documents.
+   *
+   * `kind` is an open string for the same reason `type` is: the core must not
+   * hold the list of things it can be pointed at. The kinds that exist are the
+   * keys of the reader lookup, which is where a document is actually read, and
+   * an unknown one is refused there by name.
+   */
+  document: z.strictObject({ kind: z.string().min(1), path: z.string().min(1) }).optional(),
+  /**
+   * The older spelling of a document, which is `document.kind: 'openapi'`.
+   *
+   * Kept working because configurations in the wild are written by hand and a
+   * key that silently stops being read is the worst kind of breaking change:
+   * the build succeeds and the service quietly has no routes. Normalised into
+   * `document` below, so nothing downstream ever asks this question twice. It
+   * survives on the parsed service for one purpose only — naming the key the
+   * file actually used when a path turns out not to be a file.
+   */
   openapi: z.string().min(1).optional(),
   type: z.string().min(1).optional(),
   /** Environment variables that hold this service's own base URL. */
@@ -96,22 +121,43 @@ const directoryOf = (path: string): string => {
  * for no gain. A declared service lives in the directory its document is in,
  * and is of the type that says nothing was read.
  */
+/**
+ * The document a service was declared by, whichever key said so.
+ *
+ * The one place the two spellings meet, so that everything downstream asks one
+ * question and gets one answer.
+ */
+const documentOf = (service: {
+  document?: { kind: string; path: string };
+  openapi?: string;
+}): { kind: string; path: string } | undefined =>
+  service.document ?? (service.openapi === undefined ? undefined : { kind: 'openapi', path: service.openapi });
+
 export const serviceConfigSchema = serviceEntrySchema
   .superRefine((service, ctx) => {
-    const sources = [service.repo, service.openapi].filter((each) => each !== undefined);
+    if (service.document !== undefined && service.openapi !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['document'],
+        message: 'a service is declared by one document: write document, not openapi as well.',
+      });
+      return;
+    }
+    const sources = [service.repo, documentOf(service)].filter((each) => each !== undefined);
     if (sources.length === 1) return;
     ctx.addIssue({
       code: 'custom',
       path: ['repo'],
       message:
         sources.length === 0
-          ? 'a service needs either a repo to read or an openapi document to take the word of.'
-          : 'a service has either a repo or an openapi document, not both: source that can be read is read.',
+          ? 'a service needs either a repo to read or a document to take the word of.'
+          : 'a service has either a repo or a document, not both: source that can be read is read.',
     });
   })
   .transform((service) => ({
     ...service,
-    repo: service.repo ?? directoryOf(service.openapi as string),
+    ...(documentOf(service) === undefined ? {} : { document: documentOf(service) }),
+    repo: service.repo ?? directoryOf((documentOf(service) as { path: string }).path),
     type: service.type ?? DECLARED_SERVICE_TYPE,
   }));
 
@@ -804,11 +850,13 @@ export const loadConfig = (
     // instead would pass whenever the folder existed and the document did not —
     // and the failure would arrive much later, as a service with no routes.
     const missing = config.services.flatMap((service) => {
-      if (service.openapi !== undefined) {
-        const path = isAbsolute(service.openapi)
-          ? service.openapi
-          : resolve(rootDir, service.openapi);
-        return isFile(path) ? [] : [`services.${service.name}.openapi: ${service.openapi} is not a file`];
+      if (service.document !== undefined) {
+        const written = service.document.path;
+        const path = isAbsolute(written) ? written : resolve(rootDir, written);
+        // Named by the key the file actually used, because a message pointing at
+        // a key the reader did not write is a message they cannot act on.
+        const key = service.openapi === undefined ? 'document.path' : 'openapi';
+        return isFile(path) ? [] : [`services.${service.name}.${key}: ${written} is not a file`];
       }
       return isDirectory(repoDirOf(service))
         ? []

@@ -14,7 +14,7 @@
  * the TypeScript type somebody would have written; the wire form is the fact.
  */
 import { structuralHash, type TypeEntry, type TypeField, type TypeRegistry } from '@flowatlas/core';
-import type { JsonSchemaNode } from './document.js';
+import type { JsonSchemaNode } from './schema.js';
 
 /**
  * What each JSON Schema scalar is called in a type reference.

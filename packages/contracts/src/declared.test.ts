@@ -1,3 +1,4 @@
+import { DECLARED_CONFIDENCE } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import { checkContracts } from './check.js';
 import { edge, field, graphOf, node, object } from './test-graph.js';
@@ -21,9 +22,24 @@ import { edge, field, graphOf, node, object } from './test-graph.js';
 /**
  * The graph below is built here, which bounds what this file can be trusted to
  * say. It asserts what the check does with an edge into a declared route; that
- * the linker actually draws such an edge, and draws it `marker` rather than
- * `static`, is asserted in `packages/linker/src/openapi/join.test.ts` over the
- * real fixture — because for one commit it did not, and nothing here noticed.
+ * the linker actually draws such an edge, and draws it `DECLARED_CONFIDENCE`
+ * rather than `static`, is asserted in `packages/linker/src/openapi/join.test.ts`
+ * over the real fixture — because for one commit it did not, and nothing here
+ * noticed.
+ *
+ * The confidence is taken from the constant the readers emit rather than written
+ * out, and that is the point rather than a tidiness. This file said `marker` for
+ * as long as it took somebody to read it: the readers moved to `declared` (R77),
+ * the graph modelled here stopped being a graph the linker produces, and every
+ * assertion went on passing, because `checkContracts` never looks at a
+ * confidence at all (R116). Nothing could have caught that except not writing
+ * the word twice.
+ *
+ * The word itself is still asserted, and deliberately not here: `join.test.ts`
+ * spells it out over the real join, and the fixture snapshot holds it byte for
+ * byte. Those are the places that would notice a reader changing its mind. This
+ * file's job is to model what the linker produces, and it can only do that by
+ * asking.
  */
 const DOCUMENT = 'contracts/billing.json';
 
@@ -59,7 +75,7 @@ const report = (declared: boolean) =>
           params: ['type:api#CreateInvoiceDto'],
         }),
         edge('entry:billing:http:POST:/invoices', 'handles', 'billing#createInvoice', {
-          confidence: declared ? 'marker' : 'static',
+          confidence: declared ? DECLARED_CONFIDENCE : 'static',
           meta: { body: 'type:billing#CreateInvoice' },
         }),
       ],
@@ -127,7 +143,7 @@ describe('what says which half was believed', () => {
             params: ['type:api#CreateInvoiceDto'],
           }),
           edge('entry:a:http:POST:/x', 'handles', 'a#handler', {
-            confidence: 'marker',
+            confidence: DECLARED_CONFIDENCE,
             meta: { body: 'type:billing#CreateInvoice' },
           }),
         ],

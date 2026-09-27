@@ -554,7 +554,8 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `baseUrlEnv` | string[] | `[]` | settings keys other services use to address this one |
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |
-| `openapi` | string | none | an OpenAPI document that *declares* this service, for an end nothing here can read; path relative to this file |
+| `document` | object | none | a document that *declares* this service, for an end nothing here can read: `{ "kind": "openapi" \| "asyncapi", "path": … }`, path relative to this file |
+| `openapi` | string | none | the older spelling of `{ "kind": "openapi", "path": … }`, still read |
 | `tsconfig` | string | found in the repository | which TypeScript configuration to parse with |
 | `bootstrap` | string | `src/main.ts` | the application entry file, when it is elsewhere |
 
@@ -572,16 +573,32 @@ serves routes of its own and calls somebody else's is unaffected: where its own
 service answers nothing, the search goes on exactly as before, and where nothing
 anywhere answers, the row says so and names the verbs that path does answer.
 
-**`openapi` is for the ends of a project nobody here can read.** A payment
+**`document` is for the ends of a project nobody here can read.** A payment
 provider, another team's service, something written in another language: there
 is no repository to open and no extractor to choose, so the document is read
-instead and its routes and shapes land in the graph exactly as a repository's
-would. `repo` still says where the document lives; `type` is ignored, since no
-extractor runs.
+instead and its routes, its channels and its shapes land in the graph exactly as
+a repository's would. `repo` still says where the document lives; `type` is
+ignored, since no extractor runs.
 
 ```json
-{ "name": "billing", "repo": "./contracts", "type": "declared", "openapi": "contracts/billing.json" }
+{ "name": "billing", "document": { "kind": "openapi", "path": "contracts/billing.json" } }
+{ "name": "billing", "document": { "kind": "asyncapi", "path": "contracts/billing.asyncapi.json" } }
 ```
+
+`kind` names the reader, and it is the only place the format is decided: an
+unknown kind is refused by name, with the kinds there are. `openapi:
+"contracts/billing.json"` still works and means exactly
+`{ "kind": "openapi", "path": "contracts/billing.json" }`; write one or the
+other, not both.
+
+**An `asyncapi` document declares channels rather than routes.** Each operation
+it sends on becomes a publisher and each one it receives becomes a handler, on the
+same channel node a repository that was read lands on — so a publish in your
+source and a consumer that only a document declares meet with nothing joining
+them, and the contract check compares the payload as it compares any other.
+Versions 2 and 3 are both read, including the fact that version 2's `publish`
+means the service *receives*. `fixtures/multi-repo-asyncapi` is the worked
+example.
 
 Every node, every edge and every join into a declared service carries
 `declared` confidence rather than `static`, because a declaration is somebody's
@@ -593,7 +610,7 @@ reports how recently the document changed — against the newest commit among th
 repositories that *were* read — under `openapi-document-age`. That age is
 worked out when `doctor` runs rather than recorded when the graph is built,
 because it is a question about today. `fixtures/multi-repo-declared` is the
-worked example.
+worked example of a document that declares routes.
 
 ### Top level
 

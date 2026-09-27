@@ -178,6 +178,61 @@ describe('parseConfig', () => {
   });
 });
 
+/**
+ * The two spellings of a declared service, which must be one fact.
+ *
+ * `openapi: <path>` was the only way to declare a service and is still written in
+ * configurations nobody is going to edit. It is normalised into `document` here,
+ * so that "which format is this" and "where is the document" each have one place
+ * to be answered rather than three (R79). A key that silently stopped being read
+ * would be the worst kind of breaking change: the build succeeds and the service
+ * quietly has no routes.
+ */
+describe('a service declared by a document', () => {
+  const documentOf = (service: Record<string, unknown>) =>
+    parseConfig({ services: [{ name: 'billing', ...service }] }).services[0];
+
+  it('reads the older openapi key as an openapi document', () => {
+    expect(documentOf({ openapi: './contracts/billing.json' })?.document).toEqual({
+      kind: 'openapi',
+      path: './contracts/billing.json',
+    });
+  });
+
+  it('reads a document of any kind the same way', () => {
+    expect(
+      documentOf({ document: { kind: 'asyncapi', path: './contracts/billing.asyncapi.json' } })
+        ?.document,
+    ).toEqual({ kind: 'asyncapi', path: './contracts/billing.asyncapi.json' });
+  });
+
+  it('gives both spellings the same directory to live in, and the same type', () => {
+    const older = documentOf({ openapi: './contracts/billing.json' });
+    const newer = documentOf({ document: { kind: 'openapi', path: './contracts/billing.json' } });
+    expect([older?.repo, older?.type]).toEqual([newer?.repo, newer?.type]);
+    expect(older?.repo).toBe('./contracts');
+  });
+
+  it('refuses a service that writes both, rather than picking one', () => {
+    expect(() =>
+      documentOf({
+        openapi: './contracts/billing.json',
+        document: { kind: 'asyncapi', path: './contracts/billing.asyncapi.json' },
+      }),
+    ).toThrow(ConfigInvalidError);
+  });
+
+  it('refuses a service with neither a repo nor a document', () => {
+    expect(() => documentOf({})).toThrow(ConfigInvalidError);
+  });
+
+  it('refuses a service with both a repo and a document', () => {
+    expect(() =>
+      documentOf({ repo: './billing', document: { kind: 'openapi', path: './b.json' } }),
+    ).toThrow(ConfigInvalidError);
+  });
+});
+
 describe('findConfig', () => {
   it('finds the file in the directory itself', () => {
     const root = makeRoot();
