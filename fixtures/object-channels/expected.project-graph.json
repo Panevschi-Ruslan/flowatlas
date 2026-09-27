@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T11:36:14.201Z",
+  "builtAt": "2026-09-27T15:28:14.113Z",
   "services": [
     {
       "name": "api",
@@ -42,7 +42,7 @@
       "label": "JobBus",
       "repo": "api",
       "file": "src/jobs/job-bus.service.ts",
-      "line": 20,
+      "line": 46,
       "kind": "injectable",
       "meta": {
         "module": "AppModule"
@@ -54,7 +54,7 @@
       "label": "JobBus.queue",
       "repo": "api",
       "file": "src/jobs/job-bus.service.ts",
-      "line": 22
+      "line": 48
     },
     {
       "id": "api#src/jobs/job-bus.service.ts:JobBus.queueAll",
@@ -62,7 +62,7 @@
       "label": "JobBus.queueAll",
       "repo": "api",
       "file": "src/jobs/job-bus.service.ts",
-      "line": 26
+      "line": 52
     },
     {
       "id": "api#src/jobs/queues.ts:DigestQueue",
@@ -268,7 +268,7 @@
         "kind": "job",
         "adapter": "house-jobs",
         "decorator": "OnJob",
-        "entryId": null
+        "entryId": "entry:worker:event:mail.send"
       }
     },
     {
@@ -283,7 +283,33 @@
         "kind": "job",
         "adapter": "house-jobs",
         "decorator": "OnJob",
-        "entryId": null
+        "entryId": "entry:worker:event:thumbnail.generate"
+      }
+    },
+    {
+      "id": "entry:worker:event:mail.send",
+      "type": "entry",
+      "label": "event mail.send",
+      "repo": "worker",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 31,
+      "kind": "event",
+      "meta": {
+        "pattern": "mail.send",
+        "adapter": "house-jobs"
+      }
+    },
+    {
+      "id": "entry:worker:event:thumbnail.generate",
+      "type": "entry",
+      "label": "event thumbnail.generate",
+      "repo": "worker",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "pattern": "thumbnail.generate",
+        "adapter": "house-jobs"
       }
     },
     {
@@ -668,12 +694,42 @@
       "line": 26
     },
     {
+      "from": "entry:worker:event:mail.send",
+      "to": "worker#src/jobs/jobs.service.ts:JobsService.handleMail",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:worker#MailJob"
+      ],
+      "returns": "void",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 31,
+      "meta": {
+        "body": "type:worker#MailJob"
+      }
+    },
+    {
+      "from": "entry:worker:event:thumbnail.generate",
+      "to": "worker#src/jobs/jobs.service.ts:JobsService.handleThumbnail",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:worker#ThumbnailJob"
+      ],
+      "returns": "void",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 26,
+      "meta": {
+        "body": "type:worker#ThumbnailJob"
+      }
+    },
+    {
       "from": "producer:api#src/orders/orders.service.ts:23:5",
       "to": "channel:thumbnail.generate",
       "type": "emits",
       "confidence": "static",
       "params": [
-        "type:api#JobItem"
+        "type:api#ThumbnailJobData"
       ],
       "file": "src/orders/orders.service.ts",
       "line": 23
@@ -684,7 +740,7 @@
       "type": "emits",
       "confidence": "static",
       "params": [
-        "type:api#JobItem"
+        "type:api#MailJobData"
       ],
       "file": "src/orders/orders.service.ts",
       "line": 31
@@ -695,7 +751,7 @@
       "type": "emits",
       "confidence": "static",
       "params": [
-        "type:api#JobItem"
+        "type:api#RebuildJobData"
       ],
       "file": "src/orders/orders.service.ts",
       "line": 37
@@ -726,18 +782,28 @@
   "types": {
     "type:api#JobItem": {
       "name": "JobItem",
+      "kind": "union",
+      "declaredIn": "api#src/jobs/job-bus.service.ts",
+      "structuralHash": "eec40d26dea28029",
+      "members": [
+        "{name:'thumbnail.generate';data:type:api#ThumbnailJobData}",
+        "{name:'mail.send';data:type:api#MailJobData}",
+        "{name:'index.rebuild';data:type:api#RebuildJobData}"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
+    "type:api#MailJobData": {
+      "name": "MailJobData",
       "kind": "object",
       "declaredIn": "api#src/jobs/job-bus.service.ts",
-      "structuralHash": "ea9c9b578b435a0f",
+      "structuralHash": "821f0bf2c4755576",
       "fields": [
         {
-          "name": "name",
-          "type": "type:api#JobName",
-          "optional": false
-        },
-        {
-          "name": "data",
-          "type": "object",
+          "name": "orderId",
+          "type": "string",
           "optional": false
         }
       ],
@@ -746,18 +812,40 @@
         "exported": true
       }
     },
-    "type:api#JobName": {
-      "name": "JobName",
-      "kind": "union",
+    "type:api#RebuildJobData": {
+      "name": "RebuildJobData",
+      "kind": "object",
       "declaredIn": "api#src/jobs/job-bus.service.ts",
-      "structuralHash": "65afc72aa3aaea16",
-      "members": [
-        "'thumbnail.generate'",
-        "'mail.send'",
-        "'index.rebuild'"
+      "structuralHash": "7a3e9353615290c5",
+      "fields": [
+        {
+          "name": "since",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
       ],
       "meta": {
-        "declKind": "alias",
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#ThumbnailJobData": {
+      "name": "ThumbnailJobData",
+      "kind": "object",
+      "declaredIn": "api#src/jobs/job-bus.service.ts",
+      "structuralHash": "821f0bf2c4755576",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
         "exported": true
       }
     },

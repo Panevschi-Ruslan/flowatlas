@@ -110,6 +110,57 @@ describe('a bus described in configuration', () => {
     expect(bus.consumerPatterns[0]?.kind).toBe('job');
   });
 
+  // A bus of one's own is reached through more than one client often enough:
+  // the description says which names mean the same call (R135).
+  it('reads every spelling a subscribing call is written with', () => {
+    const bus = busFrom({
+      name: 'house-bus',
+      subscribers: [{ receiverType: 'Broadcaster', method: ['psubscribe', 'pSubscribe'] }],
+    });
+    expect(bus.subscriberPatterns?.[0]?.method).toEqual(['psubscribe', 'pSubscribe']);
+  });
+
+  // Where the message sits, at each end, said by the description rather than
+  // guessed by whichever reader gets there first (R133).
+  it('carries the payload path through to both ends', () => {
+    const bus = busFrom({
+      name: 'house-jobs',
+      producers: [
+        {
+          receiverType: 'JobBus',
+          method: 'queue',
+          channel: [{ kind: 'argument-property', index: 0, key: 'name' }],
+          payloadArg: 0,
+          payloadPath: ['data'],
+        },
+      ],
+      consumers: [
+        {
+          decorator: 'OnJob',
+          channel: [{ kind: 'argument-property', index: 0, key: 'name' }],
+          payloadArg: 1,
+          payloadPath: ['body'],
+        },
+      ],
+    });
+    expect(bus.producerPatterns[0]?.payloadPath).toEqual(['data']);
+    expect(bus.consumerPatterns[0]?.payloadArg).toBe(1);
+    expect(bus.consumerPatterns[0]?.payloadPath).toEqual(['body']);
+  });
+
+  // The default is the whole value, and it is an absence rather than an empty
+  // list: a description that says nothing about where the message sits has not
+  // said the message is nowhere.
+  it('says nothing about a payload path where the description said nothing', () => {
+    const bus = busFrom({
+      name: 'house-bus',
+      producers: [{ receiverType: 'EventBus', method: 'publish', payloadArg: 1 }],
+      consumers: ['OnEvent'],
+    });
+    expect(bus.producerPatterns[0]).not.toHaveProperty('payloadPath');
+    expect(bus.consumerPatterns[0]).not.toHaveProperty('payloadPath');
+  });
+
   it('refuses a locator kind nobody implements', () => {
     expect(() =>
       busFrom({

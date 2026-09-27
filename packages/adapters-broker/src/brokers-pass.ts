@@ -32,7 +32,8 @@ import { scopesOf, type Holder, type PassContext, type Scope } from '@flowatlas/
 import type { CallExpression, ClassDeclaration, MethodDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { brokerAdapters, createCustomBrokerAdapter, type BrokerSpec, type ConsumerPattern } from './adapters/index.js';
-import { hasAcknowledgement, receiverIsFrom, targetOfHandler } from './call-site.js';
+import { hasAcknowledgement, methodMatches, receiverIsFrom, targetOfHandler } from './call-site.js';
+import { payloadParameter, typeAtPath } from './payload.js';
 import {
   isResolved,
   resolveChannelName,
@@ -302,12 +303,23 @@ export const extractBrokers = (ctx: PassContext): void => {
       declaredWide !== undefined && payloadArg !== undefined
         ? narrowUnionByLiteral(declaredWide, payloadArg)
         : declaredWide;
-    const payloadType =
+    // Whichever of the two was read, the description says where in it the
+    // message sits: the same value is a message on one transport and a record
+    // carrying one on the next, and only the description knows which.
+    const carried =
       declared !== undefined
-        ? ctx.types.collectType(declared, call)
+        ? { type: declared, site: call as TsNode }
         : payloadArg === undefined
           ? undefined
-          : ctx.types.collectType(payloadArg.getType(), payloadArg);
+          : { type: payloadArg.getType(), site: payloadArg };
+    const carriedPayload =
+      carried === undefined
+        ? undefined
+        : typeAtPath(carried.type, pattern.payloadPath ?? [], carried.site);
+    const payloadType =
+      carried === undefined || carriedPayload === undefined
+        ? undefined
+        : ctx.types.collectType(carriedPayload, carried.site);
 
     // The transport has the last word on the name the call wrote: an endpoint
     // the class declares is part of it, and a name the transport keeps for its
@@ -447,6 +459,24 @@ export const extractBrokers = (ctx: PassContext): void => {
     };
   };
 
+  /**
+   * The message a decorated handler is given, as the description locates it.
+   *
+   * Nothing at all where the description says nothing and the parameters say
+   * nothing either, which is the honest answer and the one the comparison
+   * already knows how to hold: a handler whose message cannot be found is
+   * unchecked, not wrong.
+   */
+  const receivedPayload = (
+    pattern: ConsumerPattern,
+    method: MethodDeclaration,
+  ): string | undefined => {
+    const parameter = payloadParameter(method.getParameters(), pattern);
+    if (parameter === undefined) return undefined;
+    const carried = typeAtPath(parameter.getType(), pattern.payloadPath ?? [], parameter);
+    return carried === undefined ? undefined : ctx.types.collectType(carried, parameter);
+  };
+
   const emitConsumer = (
     method: MethodDeclaration,
     owner: ClassDeclaration,
@@ -468,22 +498,27 @@ export const extractBrokers = (ctx: PassContext): void => {
     if (isResolved(resolution) && !isUnreadable(shaping) && names.length === 0) return;
     const consumerId = `consumer:${makeSymbolId(ctx.repo, file, className, method.getName())}`;
 
-    // The framework's own transports already produced an entry for this handler;
-    // pointing at it keeps the two views of the same handler joined.
+    // The framework's own transports already produced an entry for this
+    // handler; pointing at it keeps the two views of the same handler joined.
+    // Where no entry reader knows the decorator - a worker's `@Process`, a
+    // described bus's `@OnJob` - the way in is drawn here instead, in the same
+    // shape and from the same helper the subscription side uses, so that both
+    // spellings of one address land on one entry with an edge each.
     //
-    // Deliberately not filled in where no entry reader knows the decorator - a
-    // worker's `@Process`, a described bus's `@OnJob`. Measured, and it makes
-    // the tool say something untrue: a queue handler is handed the library's
-    // own envelope (`Job<SendEmailJob>`, `{ name, data }`), while the publish
-    // the description points at is the payload or the envelope depending on the
-    // description, and nothing says which. Comparing the two turned
-    // `no-type-on-receiver` into `receiver requires orderId; sender does not
-    // send it` on `fixtures/object-channels` - a limit of static reading
-    // reported as somebody's mistake, which is the swap R126 exists to undo
-    // rather than to make in the other direction. A description would have to
-    // say where in the published value the payload sits before this end is
-    // comparable.
-    const entryId = ctx.entries.find((entry) => entry.handlerMethod === method)?.node.id ?? null;
+    // This is what R126 declined and what R133 made safe. Drawn as it stood
+    // then, the entry turned `no-type-on-receiver` into `receiver requires
+    // orderId; sender does not send it` on `fixtures/object-channels`: a queue
+    // hands its handler the library's envelope while the publishing call may
+    // have been described as taking the message itself, and nothing said which
+    // of the two either end named. Now the description says where in each of
+    // them the message sits, so the envelope is read as an envelope and the
+    // message as the message.
+    const known = ctx.entries.find((entry) => entry.handlerMethod === method)?.node.id ?? null;
+    const entryId =
+      known ??
+      (names.length === 0
+        ? null
+        : entryOfHandler(names, pattern.kind, method, methodId, spec, file, line, receivedPayload(pattern, method)));
     const returns = ctx.types.collectSignature(method).returns;
 
     ctx.builder.addNode({
@@ -558,7 +593,7 @@ export const extractBrokers = (ctx: PassContext): void => {
   };
 
   /**
-   * The way in a subscription is, so that what it receives can be read.
+   * The way in a handler has, so that what it receives can be read.
    *
    * A handler declared by a decorator the framework's own entry reader knows
    * already has one: that reader makes an `entry` node for the pattern and
@@ -569,6 +604,11 @@ export const extractBrokers = (ctx: PassContext): void => {
    * cannot be read at all, given for a shape written plainly in the source. The
    * parameter of the function handed to the call is the shape; what was missing
    * was a place to put it.
+   *
+   * A handler marked with a decorator **no** entry reader knows - a worker's
+   * `@Process`, a described bus's `@OnJob` - was in exactly the same position,
+   * and gets its way in from here too. The gap was never call versus decorator;
+   * it was whether any reader knew the spelling (R133).
    *
    * So the same two facts are drawn here, in the same shape the entry side
    * uses: `entry:<service>:<kind>:<address>` and one `handles` edge carrying
@@ -589,7 +629,7 @@ export const extractBrokers = (ctx: PassContext): void => {
    * way in, and `event` otherwise: a redis `message` and a socket `event` are
    * the same one-way arrival, and only the core says which kinds exist.
    */
-  const entryOfSubscription = (
+  const entryOfHandler = (
     names: readonly string[],
     kind: string,
     handlerMethod: ClassMethod,
@@ -597,6 +637,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     spec: BrokerSpec,
     file: string,
     line: number,
+    body?: string,
   ): string | null => {
     const entryKind: EntryKind = isEntryKind(kind) ? kind : 'event';
     const signature = signatureOf(handlerMethod);
@@ -621,6 +662,11 @@ export const extractBrokers = (ctx: PassContext): void => {
         file,
         line,
         ...(signature === undefined ? {} : signature),
+        // Where the handler's parameters are not the message itself, the
+        // message is named here: the same key a route's body is named with, so
+        // that everything downstream asking what a receiver is given keeps
+        // asking one question (R133).
+        ...(body === undefined ? {} : { meta: { body } }),
       });
       first ??= id;
     }
@@ -644,7 +690,8 @@ export const extractBrokers = (ctx: PassContext): void => {
         for (const call of calls) {
           const callee = call.getExpression();
           if (!Node.isPropertyAccessExpression(callee)) continue;
-          if (callee.getName() !== pattern.method) continue;
+          const spelling = callee.getName();
+          if (!methodMatches(spelling, pattern.method)) continue;
           if (!receiverIsFrom(callee.getExpression(), pattern)) continue;
 
           const args = call.getArguments();
@@ -703,7 +750,7 @@ export const extractBrokers = (ctx: PassContext): void => {
           ctx.ensureMethodNode(handlerMethod);
           // Drawn before the consumer, because the consumer records which entry
           // it answers and a `null` there is exactly what this used to say.
-          const entryId = entryOfSubscription(
+          const entryId = entryOfHandler(
             names,
             pattern.kind,
             handlerMethod,
@@ -721,7 +768,9 @@ export const extractBrokers = (ctx: PassContext): void => {
             file,
             line,
             kind: pattern.kind,
-            meta: { kind: pattern.kind, adapter: spec.name, decorator: pattern.method, entryId },
+            // The spelling written at the call site, not the first the
+            // description happens to list: what a reader opening the file sees.
+            meta: { kind: pattern.kind, adapter: spec.name, decorator: spelling, entryId },
           });
           ctx.builder.addEdge({
             from: consumerId,
@@ -759,7 +808,7 @@ export const extractBrokers = (ctx: PassContext): void => {
   };
 
   const matches = (pattern: CallPattern, receiver: TsNode, method: string): boolean =>
-    pattern.method === method && receiverIsFrom(receiver, pattern);
+    methodMatches(method, pattern.method) && receiverIsFrom(receiver, pattern);
 
   /**
    * Receiving, for a body that is a method of an indexed class.

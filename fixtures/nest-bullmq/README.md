@@ -64,8 +64,18 @@ The bullmq shape yields **one** consumer for the whole class, on `process`, with
 method**. Both land on `channel:mail`, which therefore has one node, one
 producer set and three consumers.
 
-None of these is a P01 entry, so every consumer here carries
-`meta.entryId: null`.
+None of these decorators is one a P01 reader knows, so the way in is drawn by
+the channel reader instead: each consumer points at
+`entry:nest-bullmq:event:<queue>`, one node per queue with a `handles` edge per
+handler (R133).
+
+Each of those edges carries `meta.body`, and that is the whole of R133. The
+`params` of the edge are what the handler declares — `Job<SendEmailJob>`, the
+library's own record of the job — while `meta.body` is
+`type:nest-bullmq#SendEmailJob`, the message one property in, because the
+description says the message sits at `data`. Drawn without that, the entry made
+the tool report a correct handler as requiring every field of a message nobody
+sends.
 
 `ReportsProcessor` is the one class here that no module lists, no constructor
 asks for and nothing calls. It is the R60 case: receiving used to be skipped

@@ -30,6 +30,24 @@ export interface CallPattern {
   /** Index of the argument holding the payload, when there is one. */
   payloadArg?: number;
   /**
+   * Where the payload sits inside that argument, when the argument is a wrapper
+   * around it. Empty - the default - is the whole of it.
+   *
+   * A transport is often handed a record that carries the message rather than
+   * the message itself: a name, a set of options and the payload one property
+   * in. Which of the two `payloadArg` points at differs per transport, and
+   * until a description could say which, it said neither: one end of a channel
+   * was compared as though the wrapper were the message, and the handler that
+   * declares the message was told it required fields nobody sends. A row that
+   * said too little became a row that said something false about somebody's
+   * code, which is worse (R133).
+   *
+   * Properties, in order, from the argument inwards. A path that does not fit
+   * the value leaves the payload unknown rather than falling back to the
+   * wrapper, because the wrapper is the answer this exists to stop giving.
+   */
+  payloadPath?: readonly string[];
+  /**
    * Index of the argument naming the group a channel belongs to, for transports
    * that address a channel in two parts.
    */

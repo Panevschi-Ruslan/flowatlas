@@ -1,5 +1,5 @@
 import { hasAnyDependency, type CustomBrokerConfig, type NameLocator } from '@flowatlas/core';
-import type { BrokerSpec, ConsumerPattern } from './types.js';
+import type { BrokerSpec, ConsumerPattern, SubscriberPattern } from './types.js';
 
 /**
  * The transports this package knows.
@@ -40,6 +40,18 @@ const QUEUE_OF_RECEIVER: readonly NameLocator[] = [
  * ever write. Asking the narrower locator first is the same lesson the table
  * locators learned from a real repository's query builder.
  */
+/**
+ * Where the message sits in what a worker's handler is handed.
+ *
+ * This transport does not hand a handler the job it was sent: it hands it the
+ * library's own record of that job - the name, the attempt count, the options -
+ * with the message one property in. The publishing call takes the message
+ * plainly, so the two ends name two different values, and until the
+ * descriptions could say so, comparing them accused a correct handler of
+ * requiring every field of a message nobody had sent it (R133).
+ */
+const JOB_ENVELOPE: readonly string[] = ['data'];
+
 const QUEUE_OF_CLASS: readonly NameLocator[] = [
   { kind: 'argument-property', index: 0, key: 'name' },
   { kind: 'argument', index: 0 },
@@ -124,6 +136,7 @@ const bullmq: BrokerSpec = {
       classDecorator: 'Processor',
       channel: QUEUE_OF_CLASS,
       nameArgIndex: 0,
+      payloadPath: JOB_ENVELOPE,
       kind: 'job',
     },
     // A worker class handles its queue through one method.
@@ -131,42 +144,56 @@ const bullmq: BrokerSpec = {
       decorator: 'Processor',
       classDecorator: 'Processor',
       channel: QUEUE_OF_CLASS,
+      payloadPath: JOB_ENVELOPE,
       kind: 'job',
     },
   ],
   channelKind: 'queue',
 };
 
+/** The two clients of this transport, named once for all three descriptions. */
+const REDIS_PACKAGES = ['ioredis', 'redis'];
+
+/**
+ * One subscription verb of this transport, in every spelling it is written in.
+ *
+ * There are three verbs — the plain one, the pattern one, the sharded one — and
+ * each is spelled two ways: one client keeps the wire's own lower case,
+ * `psubscribe`, and the current major version of the other camel-cases the
+ * prefix, `pSubscribe`. Written out by hand that is six strings and a seventh
+ * whenever a client adds a verb, and the description held two of the six, so
+ * the pattern subscriptions of the most widely installed client for this
+ * transport were read by nothing (R135).
+ *
+ * Both facts follow from the prefix: the spellings are the prefix on the verb,
+ * and the event carrying what arrives is the prefix on `message`. So a fourth
+ * verb is one more entry in the list below, and a spelling nobody writes yet is
+ * one line here rather than one line per verb.
+ */
+const subscribeVerb = (prefix: string): SubscriberPattern => ({
+  method: prefix === '' ? 'subscribe' : [`${prefix}subscribe`, `${prefix}Subscribe`],
+  channelArg: 0,
+  // One client hands the listener to the subscribe call itself, the other
+  // registers it separately on the same connection. Both are described, and a
+  // call site uses one of them.
+  handlerArg: 1,
+  listenerMethod: 'on',
+  listenerEvent: `${prefix}message`,
+  receiverPackages: REDIS_PACKAGES,
+  kind: 'message',
+});
+
 const redisPubSub: BrokerSpec = {
   name: 'redis-pubsub',
-  detect: (pkg) => hasAnyDependency(pkg, ['ioredis', 'redis']),
+  detect: (pkg) => hasAnyDependency(pkg, REDIS_PACKAGES),
   producerPatterns: [
-    { method: 'publish', channelArg: 0, payloadArg: 1, kind: 'message', receiverPackages: ['ioredis', 'redis'] },
+    { method: 'publish', channelArg: 0, payloadArg: 1, kind: 'message', receiverPackages: REDIS_PACKAGES },
   ],
   consumerDecorators: [],
   consumerPatterns: [],
   // Receiving here is a call, not a decorator: one call names the channel and
-  // another registers what runs when a message arrives.
-  subscriberPatterns: [
-    {
-      method: 'subscribe',
-      channelArg: 0,
-      handlerArg: 1,
-      listenerMethod: 'on',
-      listenerEvent: 'message',
-      receiverPackages: ['ioredis', 'redis'],
-      kind: 'message',
-    },
-    {
-      method: 'psubscribe',
-      channelArg: 0,
-      handlerArg: 1,
-      listenerMethod: 'on',
-      listenerEvent: 'pmessage',
-      receiverPackages: ['ioredis', 'redis'],
-      kind: 'message',
-    },
-  ],
+  // either that call or another registers what runs when a message arrives.
+  subscriberPatterns: ['', 'p', 's'].map(subscribeVerb),
   channelKind: 'channel',
 };
 
@@ -206,7 +233,15 @@ const socketio: BrokerSpec = {
   ],
   consumerDecorators: ['SubscribeMessage'],
   consumerPatterns: [
-    { decorator: 'SubscribeMessage', channel: FIRST_ARGUMENT, kind: 'event' },
+    // The connection comes first and the message second, unless the handler
+    // marked the message, in which case where it was written says nothing.
+    {
+      decorator: 'SubscribeMessage',
+      channel: FIRST_ARGUMENT,
+      payloadArg: 1,
+      payloadDecorator: 'MessageBody',
+      kind: 'event',
+    },
   ],
   // Receiving in a browser is a call, and the same call registers what runs.
   subscriberPatterns: [
@@ -250,6 +285,8 @@ const consumerOf = (described: CustomBrokerConfig['consumers'][number]): Consume
           ? {}
           : { classDecorator: described.classDecorator }),
         channel: described.channel,
+        ...(described.payloadArg === undefined ? {} : { payloadArg: described.payloadArg }),
+        ...(described.payloadPath === undefined ? {} : { payloadPath: described.payloadPath }),
         kind: described.kind,
       };
 
@@ -267,6 +304,7 @@ export const createCustomBrokerAdapter = (config: CustomBrokerConfig): BrokerSpe
     channelArg: producer.channelArg,
     ...(producer.channel === undefined ? {} : { channel: producer.channel }),
     ...(producer.payloadArg === undefined ? {} : { payloadArg: producer.payloadArg }),
+    ...(producer.payloadPath === undefined ? {} : { payloadPath: producer.payloadPath }),
     receiverType: producer.receiverType,
     kind: producer.kind,
   })),

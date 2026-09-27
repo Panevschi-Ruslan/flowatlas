@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "nest-rabbitmq",
-  "generatedAt": "2026-09-27T09:26:47.642Z",
+  "generatedAt": "2026-09-27T15:28:02.079Z",
   "nodes": [
     {
       "id": "channel:order.cancelled",
@@ -58,7 +58,7 @@
         "kind": "message",
         "adapter": "nestjs-rabbitmq",
         "decorator": "RabbitSubscribe",
-        "entryId": null
+        "entryId": "entry:nest-rabbitmq:event:order.created"
       }
     },
     {
@@ -73,7 +73,7 @@
         "kind": "message",
         "adapter": "nestjs-rabbitmq",
         "decorator": "RabbitSubscribe",
-        "entryId": null
+        "entryId": "entry:nest-rabbitmq:event:order.refunded"
       }
     },
     {
@@ -102,6 +102,32 @@
       "meta": {
         "pattern": "order.cancelled",
         "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "entry:nest-rabbitmq:event:order.created",
+      "type": "entry",
+      "label": "event order.created",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "pattern": "order.created",
+        "adapter": "nestjs-rabbitmq"
+      }
+    },
+    {
+      "id": "entry:nest-rabbitmq:event:order.refunded",
+      "type": "entry",
+      "label": "event order.refunded",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 33,
+      "kind": "event",
+      "meta": {
+        "pattern": "order.refunded",
+        "adapter": "nestjs-rabbitmq"
       }
     },
     {
@@ -402,6 +428,37 @@
         "type:nest-rabbitmq#OrderCancelledEvent"
       ],
       "returns": "void"
+    },
+    {
+      "from": "entry:nest-rabbitmq:event:order.created",
+      "to": "nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderCreated",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 21,
+      "params": [
+        "type:nest-rabbitmq#OrderCreatedEvent",
+        "type:amqplib#ConsumeMessage"
+      ],
+      "returns": "void",
+      "meta": {
+        "body": "type:nest-rabbitmq#OrderCreatedEvent"
+      }
+    },
+    {
+      "from": "entry:nest-rabbitmq:event:order.refunded",
+      "to": "nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderRefunded",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 33,
+      "params": [
+        "type:nest-rabbitmq#OrderRefundedEvent"
+      ],
+      "returns": "void",
+      "meta": {
+        "body": "type:nest-rabbitmq#OrderRefundedEvent"
+      }
     },
     {
       "from": "nest-rabbitmq#src/app.module.ts:AppModule",
