@@ -120,16 +120,25 @@ i2_files() {
 # expands each pattern against the working directory before the `case` ever sees
 # it, so `*/.DS_Store` arrives as the name of a file that happens to exist and
 # matches nothing. The older entries only looked correct because nothing in the
-# root matches `*.gif`. Local to this function, so nothing else changes.
+# root matches `*.gif`.
+#
+# The option is saved and put back by hand rather than with `local -`, because
+# `local -` is bash 4.4 and the bash macOS ships is 3.2: there it prints
+# "not a valid identifier" once per file - two and a half thousand lines a run -
+# and leaves `set -f` on for the rest of the script, which is the opposite of
+# what the line beside it claimed.
 i2_exempt() {
   local pattern
-  local -
+  local was_off=1
+  case $- in *f*) was_off=0 ;; esac
   set -f
+  local found=1
   for pattern in $I2_EXEMPT; do
     # shellcheck disable=SC2254 — the list is a list of globs, on purpose.
-    case "$1" in $pattern) return 0 ;; esac
+    case "$1" in $pattern) found=0; break ;; esac
   done
-  return 1
+  [ "$was_off" = 1 ] && set +f
+  return "$found"
 }
 
 check_I2() {
