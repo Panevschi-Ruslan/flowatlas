@@ -15,7 +15,11 @@ Two flags appear almost everywhere and mean the same thing every time:
 | `--db <path>` | the database to read. Defaults to `<output>/graph.db` from the configuration |
 
 Exit codes are the same across every command: `0` answered, `1` the answer is no
-or which-one-did-you-mean, `2` could not run at all.
+or which-one-did-you-mean, `2` could not run at all. "Could not run" includes a
+question asked of a graph nobody could report on: `doctor` answers 2 over a
+graph a failed build wrote, an empty one, one a service contributed nothing to,
+and one where most of a service's ways in were read no further than their
+addresses. [`doctor`](#flowatlas-doctor) says why for each.
 
 ---
 
@@ -55,7 +59,23 @@ from each one's `.mcp.json`, leaving any other servers alone.
 ### `flowatlas init`
 
 The zero-argument alternative to `link`: looks for repositories beside where the
-configuration will go and asks which belong to the project.
+configuration will go and asks which belong to the project. It looks one level
+down from `--dir`, at each directory with a `package.json`.
+
+**A workspace is several services, and `init` proposes each.** A repository that
+declares one, through `workspaces` in its manifest or a `pnpm-workspace.yaml`, is
+read as the services it holds: one per member that looks like an application,
+and none for the packages those applications import, because a package is read
+as part of whichever service declares it. A member whose own manifest declares
+nothing takes the workspace root's manifest for the question of what it is, which
+is the ordinary shape of a server whose dependencies are kept at the root. A
+repository that declares no workspace, and a workspace with no application in it,
+are one service. `fixtures/next-monorepo` is a workspace with one application in
+`apps/web` and its handler bodies in `packages/`, and `init` pointed at the
+directory holding it proposes `web` and nothing else. Point `--dir` at the
+directory the repository sits in, not at the workspace root itself: `init` looks
+one level below `--dir`, so from inside a root whose members are two levels down,
+as `apps/web` is, it finds nothing.
 
 | Flag | Default | Does |
 |---|---|---|
@@ -66,14 +86,19 @@ configuration will go and asks which belong to the project.
 | `--no-mcp` | off | skip registering the graph server |
 
 The type of a repository is read from its manifest: `@nestjs/core` makes it
-`nestjs`, `@angular/core` makes it `angular`, `next` makes it `nextjs`, `react`
-makes it `react`, `express`, `fastify` and `koa` make it each of those, and
-anything else is written as `unknown`. Where the manifest names a framework there
-is no reader for — Nuxt, Remix, Vue or Svelte — `init` says so by name, and
-`build` repeats it on that repository's line:
+`nestjs`, `@medusajs/framework` or `@medusajs/medusa` makes it `medusa`, `next`
+makes it `nextjs`, `express`, `fastify` and `koa` make it each of those,
+`@angular/core` makes it `angular`, `react` makes it `react`, and anything else is
+written as `unknown`. Those eight are every type there is. Hono and Telegraf have
+no type of their own: they are frameworks the server reader finds inside a
+repository whichever server type it is given, so a repository whose only
+framework is Hono is
+given any of the server types — `express` will do — and its routes are read. Where
+the manifest names a framework there is no reader for — Nuxt, Remix, Vue or
+Svelte — `init` says so by name, and `build` repeats it on that repository's line:
 
 ```
-web            skipped (no-extractor: Next.js, no reader yet)
+web            skipped (no-extractor: Nuxt, no reader yet)
 ```
 
 Where the manifest declares a framework it *can* read, the line says which type
@@ -109,15 +134,57 @@ web            skipped (no-extractor: looks like koa; set its type to "koa"
                (it declares react as well, and the koa reader reads both halves))
 ```
 
-For `express`, `fastify` and `koa` what is read is the route as the code
-registers it — the verb, the path, the handler, the router it is declared on and
-the prefix that router is mounted under, however many mounts deep — together
-with the middleware in front of it, including middleware installed on an
-application above the mount and inherited through it. That is what makes the
-route audit answer on these repositories rather than defer to a person. A path
-assembled at run time is reported rather than placed at a guessed address, and a
-file-system router — `@fastify/autoload` as much as Next.js — is refused, since
-the address lives in a directory name rather than in the call.
+For `express`, `fastify` and `koa`, and for Hono inside any server repository,
+what is read is the route as the code registers it — the verb, the path, the
+handler, the router it is declared on and the prefix that router is mounted
+under, however many mounts deep — together with the middleware in front of it,
+including middleware installed on an application above the mount and inherited
+through it. That is what makes the route audit answer on these repositories
+rather than defer to a person. The shapes that registration is really written in
+are read too, each held by a fixture:
+
+- an application declared by a chain, `express().disable('x-powered-by')`, which
+  is still that application (`fixtures/express-chained-app`);
+- a list of paths, `get(['/items/:id', '/i/:id'], handler)`, which is one way in
+  per path, written in place or named elsewhere (`fixtures/express-path-array`);
+- a mount through a published helper, `app.use(mount('/api', api))` from
+  `koa-mount`, with or without the prefix (`fixtures/koa-mount-helper`). A helper
+  the repository wrote itself cannot be described, so a route under one is a row
+  naming the call the path is inside;
+- one mount over a collection of applications that plugins add themselves to,
+  followed back to the calls that fill the collection
+  (`fixtures/koa-plugin-registry`). A collection a package publishes cannot be
+  enumerated, and is one row naming the collection and the mount;
+- a named handler handed to a wrapper the repository declares,
+  `asyncMiddleware(getVideo)`, whose handler is `getVideo`, and a factory called
+  with values, `rateFactory('like')`, whose handler is what the factory builds
+  (`fixtures/express-wrapped-handler`). A factory handed a function, or a wrapper
+  handed a list, keeps no handler and says so, because it cannot be told from one
+  more wrapper;
+- an application in a repository whose dependencies are not installed, where the
+  framework's types resolve to nothing. The source still says what the value is —
+  `import express from 'express'` and `const app = express()` — so the
+  application is recognised from that, and every route read off it carries
+  `heuristic` confidence, because it rests on what the author wrote rather than
+  on what a compiler checked (`fixtures/express-not-installed`).
+
+A path assembled at run time is reported rather than placed at a guessed
+address. A route under a mount whose path could not be read has a row of its own,
+`route-mount-unread`, and a reading that placed some routes and not the rest says
+how many in `entry-http-routes-unplaced`, so a partial read never looks like a
+repository with fewer routes.
+
+**A file-system router is four values.** Where the address is the path of a file
+rather than an argument of a call, what differs between one router and another
+is the root directory, which file names declare a route, the prefix in front,
+and which segment spellings are honoured. Next.js (the app router, the pages
+router and its API routes) and Medusa are rows of that description, read by one
+walk, so the two cannot drift on what counts as a verb read or a file served at
+no address (`fixtures/react-next`, `fixtures/medusa-fs-router`). A file-system
+router nobody has described — `@fastify/autoload`, or a convention of the
+repository's own — is not guessed at: the reader says, at `info`, that it cannot
+tell such a repository from a library that merely depends on the framework
+(`fixtures/express-fs-router`).
 
 ### `flowatlas mcp`
 
@@ -180,7 +247,63 @@ wins over that. A read that does not fit says so, names the repository and the
 limit that did not hold, and leaves exit code `2`.
 
 Exit code is `2` when a repository could not be read; the others are still built
-and joined.
+and joined. A build that fails leaves the graph the last good build wrote, rather
+than writing the project minus whatever failed over the top of it. Where there
+is no earlier graph to keep, the partial one is written with the failure recorded
+against the service, and `doctor` refuses it.
+
+**What the summary says.** Beside the counts of calls, browser requests,
+channels and routes, these lines are there to stop a partial reading passing for
+a whole one:
+
+```
+ways in: 6 found, 1 with a handler that was read, 5 without — only the second number is coverage of what happens after the request arrives
+widget contributed no node: read by @flowatlas/extractor-react, and no frontend adapter recognises it, …
+web found at arm's length: nestjs-http (through @sibling-types/platform-types)
+imports the checker could not resolve: gateway (12) — check their tsconfig paths; what a missing type was going to say is missing from this graph
+```
+
+- **`ways in`** counts entry points found apart from entry points whose handler
+  was read, because only the second is coverage of what happens after a request
+  arrives. It is the same count `doctor` refuses a service on
+  (`fixtures/next-hollow`).
+- **`contributed no node`** names a service a reader opened and put nothing into
+  the graph from, with why. It looks like success otherwise.
+- **`found at arm's length`** names a framework a service has only through a
+  workspace package it declares. That is right when the package's code runs in
+  the service, and wrong when the package merely imports the framework's types,
+  and the rule cannot tell the two apart, so it says which package it came
+  through and leaves the judgement to you (`fixtures/next-sibling-nest-types`).
+- **`imports the checker could not resolve`** names the repositories where types
+  went unresolved, and how many. Where one of them has no `node_modules` at all,
+  the advice about `tsconfig` paths gives way to one sentence saying the read was
+  partial, printed once in `extract` and `build` and at the head of `doctor`:
+
+  ```
+  billing’s dependencies are not installed, and 12 types could not be resolved: this is a partial read. …
+  ```
+
+  Most of a repository still reads without its dependencies — what its own
+  source states, including the table a model class names and the application
+  `express()` makes (`fixtures/db-not-installed`,
+  `fixtures/express-not-installed`) — so the sentence promises only what an
+  install recovers: what a package declares, never what a package generates.
+  It is never printed for a repository that has had an install.
+
+**What a service is.** A service is an application together with the workspace
+packages it declares, read from `workspaces` or `pnpm-workspace.yaml` and written
+down nowhere. The application's directory stays its identity and the directory
+every path is measured from, and a file of a package it reads is named as one:
+`../../packages/orders-lib/src/index.ts`. So a Next.js application in `apps/web`
+whose handler bodies are in `packages/` is one service and one walk from route
+to what the handler reaches (`fixtures/next-monorepo`). Which packages count is the line the package
+manager draws: the service's own manifest in all four dependency sections,
+because its devDependencies are its own build and tests, and a member's in
+`dependencies`, `peerDependencies` and `optionalDependencies` only, because a
+member's devDependencies are never installed for whoever depends on it
+(`fixtures/nest-dev-sibling`). Each package is compiled with its own `paths`, so
+an alias only that package's `tsconfig.json` defines resolves inside it
+(`fixtures/workspace-package-paths`).
 
 ### `flowatlas extract <repo>`
 
@@ -245,6 +368,20 @@ flowatlas flow "bot:order_confirm"        # a bot command or button
 
 A name matching two services comes back as a choice rather than a guess. A name
 matching nothing comes back with the nearest few.
+
+Two kinds of way in are named by their full id. A procedure has no verb and no
+path, only the dotted path its callers write, so it is
+`entry:<service>:rpc:orders.list`; `flow "orders.list"` answers with that id as
+the suggestion. And a service that creates more than one application puts the
+application in the id, because an address is an address within one application:
+
+```
+entry:api@ApiModule:http:GET:/health
+entry:api@WorkerModule:http:GET:/health
+entry:shop@examples/blog:http:GET:/api/orders
+```
+
+`flow "GET /health"` there comes back as that choice, naming both.
 
 ### `flowatlas impact <symbol>`
 
@@ -419,7 +556,7 @@ Writes the whole graph as one self-contained page. Also spelled `visualize`.
 
 | Flag | Default | Does |
 |---|---|---|
-| `--out <file>` | `graph.html` | where to write it |
+| `--out <file>` | `graph.html` beside the graph | where to write it |
 | `--title <name>` | the folder holding the configuration | what to call the project on the page |
 
 No server and nothing to install. Two typefaces come from Google Fonts, with a
@@ -515,6 +652,59 @@ once. A member's own sentence sits under that member, marked `↳`. Groups are
 keyed by reason *and* level, so a group's level is every member's rather than
 its loudest member's.
 
+Where a repository was read without its dependencies, the report opens with the
+one sentence that says so, described under [`build`](#flowatlas-build-dir),
+rather than leaving the reader to infer it from a pile of `type-unresolved` rows.
+
+#### The reasons a row can carry
+
+Every row names what could not be read, where, and why. The reason is the word
+to search for, and the word `doctor.ignoreReasons` takes, so it is configuration
+surface: a renamed reason keeps its old spelling working there. `document-age`
+was `openapi-document-age`, and both are recognised. `pnpm invariants` fails if
+any reader writes a reason `doctor` does not know. By what they are about:
+
+| About | Reasons |
+|---|---|
+| A graph or a service that could not be read | `service-read-nothing`, `file-not-parsed`, `duplicate-node-id` |
+| Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic` |
+| Injection and calls | `di-token-unknown`, `di-token-ambiguous`, `inject-token-unresolved`, `call-dynamic-receiver`, `call-module-ref`, `call-through-token`, `global-wrapper-dynamic` |
+| NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-import-dynamic`, `middleware-route-dynamic` |
+| Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
+| A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
+| Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch` |
+| Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
+| The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-shadowed` |
+| Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
+| The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key` |
+| Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `consumer-handler-unresolved`, `payload-type-unknown` |
+| Settings | `dynamic-config-key` |
+| Bots and handler tables | `bot-handlers-not-found`, `dynamic-bot-trigger`, `entry-registry-unconfigured`, `registry-key-dynamic`, `registry-handler-anonymous`, `orphan-scene-decorator`, `orphan-update-decorator`, `wizard-step-conflict` |
+| Annotations | `marker-route-not-found`, `marker-service-unknown`, `marker-unknown-arg`, `marker-arg-not-a-name`, `marker-names-nothing` |
+| Declared services | `document-age` |
+
+Three of these are worth knowing before they are met, because each is the
+tool declining to guess:
+
+- **`route-mount-unread`** is a route whose own path was read and whose
+  application is mounted somewhere this could not read. `route-path-dynamic`
+  means only that the route's own path is computed. A configuration that silenced
+  the first under the second's name shows it again, on purpose: they are
+  different facts.
+- **`ambiguous-route-application`** is two applications in one service serving
+  the same address. Which one a request from outside reaches is decided by how
+  they are deployed, so both are named and neither is chosen. A request written
+  *inside* one of them asks its own application, and is joined there.
+- **`route-mount-assumed-empty`** is the one join made on an assumption, and it
+  says so. A route whose address begins with a part read from settings is never
+  joined, because a hole may stand for anything — unless every environment file
+  the service commits leaves those settings empty. Then the part is taken as
+  empty, the join is drawn at `heuristic` with `mountAssumedEmpty` on the edge,
+  and this row, at `info`, names the settings. One committed file that sets them
+  is enough to refuse it, and so is a service that commits no environment file at
+  all (`fixtures/nest-mount-empty`, `fixtures/nest-mount-set`,
+  `fixtures/nest-context-path`).
+
 ### `flowatlas diff <base-ref> [head-ref]`
 
 Builds the graph at two revisions and reports what moved: which nodes changed,
@@ -563,8 +753,8 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | Key | Type | Default | Means |
 |---|---|---|---|
 | `name` | string | required | what this service is called everywhere else |
-| `repo` | string | required | path to the repository, relative to this file or absolute |
-| `type` | string | required | which extractor reads it: `nestjs`, `angular`, `express`, `fastify`, `koa`, `hono`, or anything else to skip it |
+| `repo` | string | required unless `document` is given | path to the repository, relative to this file or absolute. A service has a `repo` or a `document`, never both |
+| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `express`, `fastify` or `koa` for anything with a server in it, `angular` or `react` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
 | `baseUrlEnv` | string[] | `[]` | settings keys other services use to address this one |
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |
@@ -591,8 +781,10 @@ anywhere answers, the row says so and names the verbs that path does answer.
 provider, another team's service, something written in another language: there
 is no repository to open and no extractor to choose, so the document is read
 instead and its routes, its channels and its shapes land in the graph exactly as
-a repository's would. `repo` still says where the document lives; `type` is
-ignored, since no extractor runs.
+a repository's would. Such a service has no `repo`, and the configuration is
+refused if it has both, because source that can be read is read: the service
+lives in the directory its document is in. `type` is left out, since no reader
+runs.
 
 ```json
 { "name": "billing", "document": { "kind": "openapi", "path": "contracts/billing.json" } }
@@ -639,6 +831,9 @@ worked example of a document that declares routes.
 | `contracts.depth` | number | `3` | how far into nested shapes `flowatlas contracts` compares |
 | `contracts.rules.disable` | string[] | `[]` | rules about the JSON wire this project's wire does not follow |
 | `contracts.ignoreEdges` | string[] | `[]` | boundaries whose drift is deliberate, as `from\|type\|to`, for code you cannot annotate |
+| `doctor.baseline` | string | `flowatlas.baseline.json` beside this file | where the accepted numbers live, relative to this file |
+| `doctor.ignoreReasons` | string[] | `[]` | reasons left out of the growth check. Their rows are still printed; only the number `--strict` compares is quieter. A renamed reason's old spelling is still recognised |
+| `doctor.markers.warnAsError` | boolean | `false` | fail a strict run on a redundant annotation as well as a false one |
 | `doctor.publicDecorators` | string[] | `["Public", "IsPublic", "AllowAnonymous", "SkipAuth"]` | decorators that mark a handler public on purpose, so `route-unguarded` leaves it out |
 | `doctor.publicRoutes` | string[] | `[]` | routes public by decision, as `METHOD /path` with `*` for any run of characters (`* /api/health`, `GET /api/public/*`) |
 | `doctor.nonGateWrappers` | string[] | `["ThrottlerGuard"]` | guards that refuse nobody for who they are, so a route behind only these is still `route-unguarded` |
@@ -739,10 +934,22 @@ the wire and stays one. Where there is no such object, the declared type is all
 there is, and the sentence says "permits" rather than "sends". The party in
 `contracts.json` carries `writes` when the keys were read.
 
-`contracts.json` is at format version 3: a party may carry `writes`, a finding
+`contracts.json` is at format version 4: a party may carry `writes`, a finding
 may carry `impact`, a request-direction message distinguishes what a call sends
-from what its type permits, and an `impact` may read `unread` as well as the
-three words version 2 knew.
+from what its type permits, an `impact` may read `unread` as well as the three
+words version 2 knew, and a party may carry `declaredBy`, naming the document an
+end nobody here could read was taken from.
+
+**What is not compared, and says so.** A boundary nothing can compare is listed
+under `unchecked` with the reason, never counted as agreeing. A procedure is one:
+its input is recorded on the entry by the name it was written under, and a real
+input is nearly always a validation schema whose type is the library's inference,
+so the request half is unchecked as `procedure-input-by-name`, and the answer,
+which the client infers from the server's own tree, as
+`procedure-output-inferred`. A handler that takes
+a `string` and parses it on the next line is another, `body-already-serialised`,
+because that is where the shape was lost rather than an end that disagrees about
+it.
 
 ### `adapters`
 
@@ -774,12 +981,23 @@ The chain also takes in the members the service itself declares, transitively,
 because those are the directories whose sources are read as part of it. A monorepo
 where the application declares a library and the library declares the framework is
 the ordinary shape, and reading it any other way switches an adapter off while the
-code it would have read is in the graph: cal.com's `apps/web` depends on
-`@calcom/trpc`, which is where `@trpc/server` is declared, and 171 of its 227
-boundaries live in that package. Only what the service reaches is taken in — a
+code it would have read is in the graph: an application that depends on its own
+`@acme/trpc` package, which is where `@trpc/server` is declared, has every one of
+its procedures in that package. Only what the service reaches is taken in — a
 workspace has hundreds of members and a service declares a dozen, and folding in
 the rest would make every service look like every framework anybody in the
-repository uses.
+repository uses. A member is followed through its runtime dependency sections
+only, never its devDependencies, for the reason given under
+[`build`](#flowatlas-build-dir).
+
+An adapter switched on this way, through a member rather than by the service's
+own manifest, is named on `build`'s `found at arm's length` line with the member
+it came through. That is usually right — the member's code is read as part of the
+service — and is sometimes a package that only imports a framework's types, which
+this rule cannot tell apart, so the line is there for you to judge. What a
+service *is* is still asked of its own manifest: a Next.js application that
+imports a package of Nest DTOs is not told to set a Nest bootstrap
+(`fixtures/next-sibling-nest-types`).
 
 The type of a service is a narrower question and is answered narrowly: `link`
 guesses it from the repository's own manifest, and only falls back to the
@@ -811,7 +1029,7 @@ library's descriptor is found and every query is read with no configuration at
 all (`fixtures/nest-prisma-wrapper`). A package that declares classes of its own
 around a driver — a `Database` with `findOrders`, an `OrdersRepository` — is a
 data layer nothing here describes, and every call through it is a row until it
-is named.
+is named (`fixtures/nest-workspace-wrapper`).
 
 The rows say which package. A workspace resolves its own packages through
 links, so the checker reaches the wrapper's source directly and reads its types
@@ -843,6 +1061,18 @@ override for the whole project. And a generated client has to have been
 generated: a repository installed without running its scripts has no Prisma
 client declaration anywhere, and every call on it is reported as a receiver
 whose type could not be resolved.
+
+**A data layer whose library is not installed.** Without `node_modules` the
+checker cannot say what a receiver is, and the data layer used to vanish with it.
+The source still says most of it: an annotation names the type and the import
+beside it names the package — `db: Kysely<DB>` with `Kysely` from `kysely` — and
+a model class of the repository names its base, `Document extends Model` with
+`Model` from `sequelize-typescript`, and its table, in `@Table({ tableName })`.
+Those are read where a resolved type produced nothing, for a library something
+here describes, and every query read that way is `heuristic` rather than
+`static`, because it rests on what the author wrote rather than on what a
+compiler checked (`fixtures/db-not-installed`). The same repository installed
+reads the same tables through the checker at `static`.
 
 **A client class of your own.** A class wrapping `fetch` behind `get` and `post`,
 exported as one instance every screen imports, is the ordinary way to write a
@@ -1125,9 +1355,9 @@ could be placed at an address.
 
 **A partial read does not buy silence.** That last row is the one the other three
 were missing, and it matters more than any of them: the question used to be
-whether the count was zero, so a service where three routes were placed and three
-hundred and thirty-seven were not looked exactly like a service with three routes
-(R121). Each of the unplaced ones has a row of its own naming the application
+whether the count was zero, so a service where three routes were placed and
+hundreds were not looked exactly like a service with three routes. Each of the
+unplaced ones has a row of its own naming the application
 whose base could not be read; this row is the sentence that says the addresses
 recorded are a part of what the service serves rather than the whole of it, which
 is the difference between a gap and a lie.
@@ -1136,9 +1366,9 @@ The same rows are written for a framework shipped with the tool, at `info`
 rather than as something to act on. A repository that depends on Express and
 declares no route on it is ordinary — a library, a worker, a service whose routes
 live elsewhere — and it reads exactly like a repository whose routes are declared
-in a way no reader here knows, which is what Medusa v2's file-system router is.
+in a way no reader here knows, such as a file-system router nobody has described.
 The reader cannot tell those two apart; what it can do is say which two it cannot
-tell apart, rather than counting the repository as clean (R84).
+tell apart, rather than counting the repository as clean.
 
 ### Where a NestJS route's address comes from
 
@@ -1186,11 +1416,76 @@ A route is a route whoever declared it, so a worker's `app.get(path, handler)`
 becomes an ordinary `http` entry point with the path exactly as declared —
 including a prefix written into the path, since nothing adds one to a route
 declared outside the framework that has a global prefix. Middleware arguments
-between the path and the handler are recorded on the entry and are not mistaken
-for it. Where the same address is declared on both sides, it is one entry point
-with two handlers, and `flowatlas build` lists it under `routes.duplicated`:
-which of the two answers depends on how they are wired together, and that
-cannot be read from either.
+between the path and the handler are not mistaken for it. Where the same address
+is declared on both sides, it is one entry point with two handlers, and
+`flowatlas build` lists it under `routes.duplicated`: which of the two answers
+depends on how they are wired together, and that cannot be read from either.
+
+### What stands in front of a way in
+
+A guard, an interceptor, a pipe and a piece of middleware are all the same fact
+to the graph: a node of that kind (`guard`, `interceptor`, `pipe`,
+`middleware`) joined to the entry by a `guarded_by` edge whose `meta.order` is
+its position in the chain, in the order they run. NestJS's whole wrapping layer,
+middleware installed with `use` on Express, Fastify, Koa and Hono (including on
+an application above a mount), a tRPC procedure's `.use(...)` inherited through
+the procedure it was built from, and the entries of Medusa's declarative
+middleware list, ordered the way that framework runs them, are all drawn this
+way, so the route audit, `impact`, `flow` and the settings walk see every one of
+them (`fixtures/nest-guards`, `fixtures/express-service`,
+`fixtures/trpc-router`, `fixtures/medusa-fs-router`). An entry also carries
+`meta.middlewareRead`, whether its reader read everything that could stand in
+front of it. Medusa's is `false`, because the framework's own authentication of
+`/admin` and `/store` is not read, so the audit asks a person to look at such a
+route rather than calling it unguarded. Middleware installed in a different file
+from the routes it covers is left out rather than guessed at, because the order
+it runs in is the order modules are evaluated in, and nothing here reads that.
+
+### More than one application in one service
+
+An address is only an address within one application. A NestJS repository that
+creates an API and a worker with `NestFactory` in two entry files, or a
+repository holding a second Next.js application under `examples/`, serves the
+same path twice without anything being wrong. So the application is part of an
+entry's identity — `entry:api@WorkerModule:http:GET:/health`,
+`entry:shop@examples/blog:http:GET:/api/orders` — whenever a service has more
+than one, and absent otherwise, so an ordinary service's ids do not change.
+NestJS applications are found by walking the repository for `NestFactory`
+rather than by following calls out of `src/main.ts`, since a worker's entry file
+is one nothing imports; a controller belongs to the application whose root
+module reaches the module declaring it (`fixtures/nest-two-applications`). A
+file-system router's application is the directory in front of its router root,
+and the one at the service root is `.` (`fixtures/next-nested-apps`).
+
+A request records the application its file is written in, so a relative
+`fetch('/api/orders')` written inside `examples/blog` reaches that
+application's route and nothing else (`fixtures/next-caller-application`). A
+request from outside every application — another service, rooted at a settings
+key — is answered by whatever is deployed behind that key, which no source says,
+so where two applications serve the address it is an
+`ambiguous-route-application` row naming both.
+
+### Procedures
+
+A tRPC server's ways in are not routes: each procedure is a key in a tree of
+object literals, and its address is every key from the root down to it —
+`orders.list`, the same string its callers write. Each is an entry of kind `rpc`,
+with its body, its guards and the mount file that serves the tree
+(`fixtures/trpc-router`). A tree that is the value a call produced, a member
+under a computed key, and a branch imported from a package this repository does
+not have are each a row rather than an invented way in.
+
+A caller writes the same path as property accesses on a client proxy —
+`trpc.orders.list.useQuery(input)`, `client.orders.create.mutate(order)` — and
+each call is a request of kind `rpc` carrying the path and what it does on the
+server's side, `query` or `mutation`. The linker joins it by the path in exactly
+two places: the caller's own service, then the services its `apiTarget` names.
+It never joins on the string alone, because a procedure path is short and common,
+and an edge made on a coincidence would be two services that never speak. A call
+made as a mutation to a procedure declared a query joins and says so in a
+`procedure-call-mismatch` row (`fixtures/trpc-join`). `adapters.entry.procedures`
+exposes the description the shipped reader is written as, for another framework
+of the same family.
 
 ---
 
