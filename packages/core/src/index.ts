@@ -266,6 +266,7 @@ export type { BuildClassIndexOptions, IndexedClass } from './class-index.js';
 export {
   declarationOf,
   evaluateExpression,
+  isRunTimeValue,
   literalUnionOf,
   resolvedValue,
   stableKey,
@@ -323,7 +324,7 @@ export type {
 export { isLibFile, TypeCollector } from './types/collector.js';
 export type { TypeCollectorOptions } from './types/collector.js';
 export { mergeFieldMeta } from './types/field-meta.js';
-export type { FieldDeclaration, FieldMetaReader, FieldMetaResult } from './types/field-meta.js';
+export type { FieldDeclaration, FieldMetaReader, FieldMetaResult, UnreadAnnotation } from './types/field-meta.js';
 export { DEFAULT_HASH_DEPTH, normalizeStructure, structuralHash } from './types/structural-hash.js';
 export type { StructuralHashOptions } from './types/structural-hash.js';
 export {
@@ -367,3 +368,12 @@ export type {
   SettingAddress,
   SplitAddress,
 } from './trace.js';
+
+export {
+  isPlatformProvided,
+  isPlatformRequest,
+  PLATFORM_FETCH,
+  requestBodyOf,
+  requestVerbOf,
+} from './platform-fetch.js';
+export type { OptionsRequestShape } from './platform-fetch.js';

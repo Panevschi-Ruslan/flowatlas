@@ -3,11 +3,15 @@ import {
   declaredParameterType,
   evaluateExpression,
   forEachCall,
+  isPlatformRequest,
   makeExternalApiId,
   makeLeafId,
   methodBodies,
   narrowUnionByLiteral,
   parametersOf,
+  PLATFORM_FETCH,
+  requestBodyOf,
+  requestVerbOf,
   resolveTypeOrigin,
   siteOf,
   writtenBodyOutward,
@@ -54,6 +58,33 @@ const isHttpClient = (origin: TypeOrigin | null): boolean =>
   origin?.typeName === 'HttpClient' &&
   (origin.package === '@angular/common' || origin.package === ANGULAR_HTTP);
 
+/** A body shape, where it was read from, and the keys it actually writes. */
+interface BodyShape {
+  type: string | null;
+  from: BodyRead;
+  keys?: readonly string[];
+}
+
+/**
+ * How one request is read, whichever client it was written with.
+ *
+ * Two clients, and a request reads the same way through either once it is
+ * known where its parts sit: the framework's, whose verb is the method's name,
+ * and the platform's `fetch`, whose verb and body sit in an options object. The
+ * second is described in the core, once, for this reader and the React one
+ * alike (R140).
+ */
+interface Spelling {
+  readonly urlIndex: number;
+  readonly verb: (network: CallExpression) => string | null;
+  /** The body, where the call is `network` and `frames` are the callers it was followed out to. */
+  readonly body: (network: CallExpression, frames: readonly CallFrame[]) => BodyShape;
+  /** Whether the call states what answers it: `fetch` answers with a `Response`, whatever the route sends. */
+  readonly typedAnswer: boolean;
+  /** What the node records about the client, beside the request itself. */
+  readonly client: Readonly<Record<string, unknown>>;
+}
+
 /**
  * Requests the browser makes.
  *
@@ -76,6 +107,37 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
       : null;
   };
 
+  /** The framework's client, called by one of its verb methods. */
+  const httpClient = (name: string): Spelling | undefined => {
+    const shape = VERBS.get(name);
+    if (shape === undefined) return undefined;
+    return {
+      urlIndex: shape.urlIndex,
+      verb: (network) => verbOf(network, name),
+      body: (network, frames) =>
+        frames.length === 0
+          ? typeOfBody(network, shape.bodyIndex)
+          : bodyThrough(network, shape.bodyIndex, frames),
+      typedAnswer: true,
+      client: { package: ANGULAR_HTTP },
+    };
+  };
+
+  /** The platform's client, read through the one description of it. */
+  const platformFetch: Spelling = {
+    urlIndex: PLATFORM_FETCH.urlAt,
+    verb: (network) => requestVerbOf(network),
+    // Written inside the options rather than beside them, and followed out to
+    // whoever wrote it the same way a framework request's body is.
+    body: (network) => {
+      const written = requestBodyOf(network);
+      if (written === undefined) return NO_BODY;
+      return { type: ctx.types.collectType(written.getType(), written), ...bodyKeysOf(written) };
+    },
+    typedAnswer: false,
+    client: { package: null, client: PLATFORM_FETCH.name },
+  };
+
   const typeOfResponse = (call: CallExpression): string | null => {
     const [written] = call.getTypeArguments();
     if (written !== undefined) return ctx.types.collectType(written.getType(), call);
@@ -92,13 +154,6 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
    * what is permitted rather than what is sent — which is a weaker claim, and
    * one the finding then has to phrase as the weaker claim it is (R34).
    */
-  /** A body shape, where it was read from, and the keys it actually writes. */
-  interface BodyShape {
-    type: string | null;
-    from: BodyRead;
-    keys?: readonly string[];
-  }
-
   const NO_BODY: BodyShape = { type: null, from: 'type' };
 
   /**
@@ -173,28 +228,23 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
 
   const record = (
     network: CallExpression,
-    name: string,
+    spelling: Spelling,
     site: RequestSite,
     address: ApiUrl,
     frames: readonly CallFrame[],
     choice?: string,
     pathChoices?: readonly string[],
   ): void => {
-    const shape = VERBS.get(name);
-    if (shape === undefined) return;
     const { call, methodId, file } = site;
 
-    const verb = verbOf(network, name);
+    const verb = spelling.verb(network);
     const at = siteOf(call);
     const leaf = makeLeafId('ui_api_call', ctx.repo, file, at.line, at.column);
     // One call reaching one of several segments a table spells out is one
     // request per segment, and each needs a node of its own.
     const id = requestIdOf(leaf, network, { frames, ...(choice === undefined ? {} : { choice }) });
-    const responseType = Node.isCallExpression(call) ? typeOfResponse(call) : null;
-    const body =
-      frames.length === 0
-        ? typeOfBody(network, shape.bodyIndex)
-        : bodyThrough(network, shape.bodyIndex, frames);
+    const responseType = spelling.typedAnswer && Node.isCallExpression(call) ? typeOfResponse(call) : null;
+    const body = spelling.body(network, frames);
     const bodyType = body.type;
     const application = applicationOfFile(ctx.meta, file);
 
@@ -220,7 +270,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         // source says. A declared type says what is permitted; this says what
         // is sent, and the checker compares only these (R34).
         ...(body.keys === undefined ? {} : { bodyKeys: body.keys }),
-        package: ANGULAR_HTTP,
+        ...spelling.client,
         // Which application this request is written in, where the service holds
         // more than one; the other half of what an entry records about its own
         // address (R132).
@@ -310,19 +360,18 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
    */
   const emit = (
     network: CallExpression,
-    name: string,
+    spelling: Spelling,
     method: ClassMethod,
     site: RequestSite,
     siblings: number,
   ): void => {
-    const shape = VERBS.get(name);
-    const urlArg = shape === undefined ? undefined : network.getArguments()[shape.urlIndex];
-    if (shape === undefined || urlArg === undefined) return;
+    const urlArg = network.getArguments()[spelling.urlIndex];
+    if (urlArg === undefined) return;
     for (const request of requestsOf(ctx, urlArg, method, site, siblings)) {
       noteIfUnreferenced(ctx, request.site);
       record(
         network,
-        name,
+        spelling,
         request.site,
         request.address,
         request.frames,
@@ -338,19 +387,23 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
       const methodId = ctx.methodIdOf(method);
       if (methodId === undefined) continue;
 
-      const found: Array<{ site: CallExpression; name: string }> = [];
+      const found: Array<{ site: CallExpression; spelling: Spelling }> = [];
       forEachCall(body, (site: TsNode) => {
         if (!Node.isCallExpression(site)) return;
+        if (isPlatformRequest(site)) {
+          found.push({ site, spelling: platformFetch });
+          return;
+        }
         const callee = site.getExpression();
         if (!Node.isPropertyAccessExpression(callee)) return;
-        const name = callee.getName().toLowerCase();
-        if (!VERBS.has(name)) return;
+        const spelling = httpClient(callee.getName().toLowerCase());
+        if (spelling === undefined) return;
         if (!isHttpClient(resolveTypeOrigin(callee.getExpression()))) return;
-        found.push({ site, name });
+        found.push({ site, spelling });
       });
-      for (const { site, name } of found) {
+      for (const { site, spelling } of found) {
         ctx.ensureMethodNode(method);
-        emit(site, name, method, { call: site, methodId, file: indexed.file }, found.length);
+        emit(site, spelling, method, { call: site, methodId, file: indexed.file }, found.length);
       }
     }
   }

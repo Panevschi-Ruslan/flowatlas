@@ -572,6 +572,9 @@ export class TypeCollector {
       const fromReaders = mergeFieldMeta(
         declared === undefined ? [] : this.#readers.map((reader) => reader.read(declared)),
       );
+      for (const { at, reason, hint, symbol } of fromReaders.unread) {
+        this.#report({ file: this.#fileOf(at), line: at.getStartLineNumber(), reason, hint, symbol });
+      }
 
       const optional = questionToken || mapped || undefinedUnion || fromReaders.optional === true;
       const optionalBy = questionToken

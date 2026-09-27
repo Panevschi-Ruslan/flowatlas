@@ -179,6 +179,41 @@ describe('TypeCollector', () => {
     expect(reported.map((row) => row.reason)).toContain('type-depth-exceeded');
     expect(reported.find((row) => row.reason === 'type-depth-exceeded')?.level).toBe('info');
   });
+
+  /**
+   * A reader that finds an annotation it cannot read has to be able to say so.
+   *
+   * `@Transform(fn)` rewrites a field with a function, and a reader could record
+   * that it was there and nothing else: the row P02 promises for it had nowhere
+   * to go, so the field was compared as its declared type in silence (R140).
+   */
+  it('writes the row a field reader hands back, at the annotation it names', () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const file = project.createSourceFile(
+      'dto.ts',
+      'export class Dto {\n  coupon!: string;\n}\nexport class Api { take(): Dto { return null as never } }',
+    );
+    const rows: Unresolved[] = [];
+    const reading = new TypeCollector({
+      builder: new GraphBuilder({ repo: 'orders' }),
+      repo: 'orders',
+      repoDir: '/',
+      fieldMetaReaders: [
+        {
+          name: 'test',
+          read: (property) => ({
+            unread: [{ at: property, reason: 'decorator-arg-dynamic', hint: 'unread', symbol: 'Dto.coupon' }],
+          }),
+        },
+      ],
+      report: (row) => rows.push(row),
+    });
+    const take = file.getClassOrThrow('Api').getMethodOrThrow('take');
+    reading.collectType(take.getReturnType(), take);
+    expect(rows).toEqual([
+      { file: 'dto.ts', line: 2, reason: 'decorator-arg-dynamic', hint: 'unread', symbol: 'Dto.coupon' },
+    ]);
+  });
 });
 
 describe('two declarations of one name', () => {

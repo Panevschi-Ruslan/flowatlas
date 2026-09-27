@@ -1,9 +1,9 @@
 import {
   applicationOfFile,
+  isPlatformProvided,
   makeExternalApiId,
   makeLeafId,
   methodBodies,
-  originOfValue,
   siteOf,
   type CallFrame,
   type ClassMethod,
@@ -31,7 +31,7 @@ const CLIENT = 'EventSource';
  */
 const isBrowserClient = (expression: TsNode): boolean => {
   if (!Node.isIdentifier(expression) || expression.getText() !== CLIENT) return false;
-  return originOfValue(expression).kind !== 'local';
+  return isPlatformProvided(expression);
 };
 
 /**

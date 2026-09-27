@@ -85,8 +85,8 @@ export class OrdersService {
     this.client.emit(REGION_TOPIC, dto);
   }
 
-  // A shared-package const annotated `: string`, so the declaration carries no
-  // literal either. Expected: unresolved `channel-const-unresolved`.
+  // A shared-package const annotated `: string`: the type is widened, the value
+  // is not. Expected: `channel:order.legacy`, via `shared-package` (R140).
   emitLegacy(dto: OrderCreatedEvent): void {
     this.client.emit(LEGACY_TOPIC, dto);
   }

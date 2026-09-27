@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T18:35:33.763Z",
+  "builtAt": "2026-09-27T19:37:54.109Z",
   "configHash": "b09bbca5b4ca",
   "services": [
     {
@@ -22,7 +22,7 @@
       "nodes": 41,
       "edges": 38,
       "types": 23,
-      "unresolved": 2,
+      "unresolved": 3,
       "durationMs": 0
     },
     {
@@ -33,7 +33,7 @@
       "nodes": 59,
       "edges": 42,
       "types": 17,
-      "unresolved": 1,
+      "unresolved": 2,
       "durationMs": 0
     },
     {
@@ -113,6 +113,6 @@
     "nodes": 118,
     "edges": 109,
     "types": 43,
-    "unresolved": 7
+    "unresolved": 9
   }
 }

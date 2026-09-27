@@ -15,6 +15,7 @@
  * proved against the others.
  */
 
+import { PLATFORM_FETCH } from '@flowatlas/core';
 import type { ApiUrl } from './util/url.js';
 
 /** A type whose values make requests, and the package that declares it. */
@@ -117,16 +118,23 @@ export interface RequestClient {
 /**
  * The browser's own client, and the one every generated client is built on.
  *
- * The verb lives in an options object rather than in the name, and an options
- * object that is a name rather than something written in place settles nothing
- * — which is a row saying the verb was not read, not a guess at `GET`. A call
- * with no second argument at all is different: the protocol's own default
- * applies and `GET` is what the request is.
+ * Not described here: `fetch` belongs to the platform rather than to React, and
+ * an Angular service calls it too. The description is the core's, shared with
+ * the other front-end reader, so that where the verb, the address and the body
+ * sit — and what a call with no options sends — is said once (R140). This row
+ * only places it among the clients this reader knows; `method: null` is how a
+ * call shape says its verb is read out of the options by that description.
  */
 export const FETCH: RequestClient = {
-  name: 'fetch',
+  name: PLATFORM_FETCH.name,
   package: null,
-  callee: { names: ['fetch'], method: null, urlAt: 0, optionsAt: 1, bodyAt: 1 },
+  callee: {
+    names: PLATFORM_FETCH.names,
+    method: null,
+    urlAt: PLATFORM_FETCH.urlAt,
+    optionsAt: PLATFORM_FETCH.optionsAt,
+    bodyAt: PLATFORM_FETCH.optionsAt,
+  },
 };
 
 /**

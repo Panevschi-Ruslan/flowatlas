@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T13:56:26.574Z",
+  "builtAt": "2026-09-27T19:38:38.565Z",
   "services": [
     {
       "name": "api",
@@ -1227,7 +1227,7 @@
     {
       "file": "src/events/event-bus.service.ts",
       "line": 41,
-      "reason": "channel-const-unresolved",
+      "reason": "channel-dynamic",
       "hint": "The channel name cannot be read here. Annotate EventBus.listenTo with the channel it uses.",
       "symbol": "EventBus.listenTo -> pattern",
       "service": "api"

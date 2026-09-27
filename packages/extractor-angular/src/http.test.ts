@@ -191,9 +191,54 @@ describe('requests the browser makes', () => {
     expect(reasons(graph)).toEqual([]);
   });
 
-  it('leaves a call on anything but the framework client alone', () => {
-    const graph = extract(`  a(): Promise<unknown> { return fetch('/a').then((r) => r.json()); }`);
+  it('leaves a call on anything but a client alone', () => {
+    const graph = extract(
+      `  a(): Promise<unknown> { return fetch('/a'); }`,
+      {},
+      // A function of the repository's own that shadows the platform's name is
+      // that function, and is followed as code rather than read as a request.
+      `declare function fetch(path: string): Promise<unknown>;`,
+    );
     expect(callsOf(graph)).toEqual([]);
+  });
+});
+
+/**
+ * The platform's own client, in a framework that offers another.
+ *
+ * An Angular service is free to call `fetch`, and one that does makes a request
+ * like any other. This reader read `HttpClient` and nothing else, so a POST
+ * written that way produced no node and no row, and the route it reaches was
+ * reported uncalled in silence (R140). The description of `fetch` is the one
+ * the React reader uses, from the core, so the two read it the same way.
+ */
+describe('a request made with the platform client (R140)', () => {
+  it('reads the verb and the address from a call with options written in place', () => {
+    const graph = extract(`
+  create(customerId: string): Promise<unknown> {
+    return fetch('/orders', { method: 'POST', body: JSON.stringify({ customerId }) });
+  }
+`);
+    expect(only(graph).meta).toMatchObject({
+      method: 'POST',
+      path: '/orders',
+      client: 'fetch',
+      package: null,
+      bodyKeys: ['customerId'],
+      responseType: null,
+    });
+    expect(reasons(graph)).toEqual([]);
+  });
+
+  it('takes the protocol default where the call writes no options at all', () => {
+    const graph = extract(`  a(): Promise<unknown> { return fetch('/a').then((r) => r.json()); }`);
+    expect(only(graph).meta).toMatchObject({ method: 'GET', path: '/a' });
+  });
+
+  it('says so, rather than guessing, when the options were assembled elsewhere', () => {
+    const graph = extract(`  a(init: RequestInit): Promise<unknown> { return fetch('/a', init); }`);
+    expect(only(graph).meta?.['method']).toBeNull();
+    expect(reasons(graph)).toEqual(['api-method-dynamic']);
   });
 });
 

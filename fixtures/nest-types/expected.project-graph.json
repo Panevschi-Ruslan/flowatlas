@@ -1,7 +1,14 @@
 {
   "schemaVersion": 5,
-  "repo": "nest-types",
-  "generatedAt": "2026-09-27T19:31:50.818Z",
+  "builtAt": "2026-09-27T19:38:25.631Z",
+  "services": [
+    {
+      "name": "nest-types",
+      "repo": ".",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
   "nodes": [
     {
       "id": "entry:nest-types:http:GET:/catalog/categories",
@@ -523,52 +530,52 @@
       "to": "nest-types#src/catalog/catalog.controller.ts:CatalogController.categories",
       "type": "handles",
       "confidence": "static",
-      "file": "src/catalog/catalog.controller.ts",
-      "line": 14,
       "params": [],
-      "returns": "type:nest-types#Category[]"
+      "returns": "type:nest-types#Category[]",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 14
     },
     {
       "from": "entry:nest-types:http:GET:/catalog/cycle",
       "to": "nest-types#src/catalog/catalog.controller.ts:CatalogController.cycle",
       "type": "handles",
       "confidence": "static",
-      "file": "src/catalog/catalog.controller.ts",
-      "line": 19,
       "params": [],
-      "returns": "type:nest-types#A"
+      "returns": "type:nest-types#A",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 19
     },
     {
       "from": "entry:nest-types:http:GET:/catalog/deep",
       "to": "nest-types#src/catalog/catalog.controller.ts:CatalogController.deep",
       "type": "handles",
       "confidence": "static",
-      "file": "src/catalog/catalog.controller.ts",
-      "line": 29,
       "params": [],
-      "returns": "type:nest-types#L0"
+      "returns": "type:nest-types#L0",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 29
     },
     {
       "from": "entry:nest-types:http:GET:/catalog/shapes",
       "to": "nest-types#src/catalog/catalog.controller.ts:CatalogController.shapes",
       "type": "handles",
       "confidence": "static",
-      "file": "src/catalog/catalog.controller.ts",
-      "line": 24,
       "params": [],
-      "returns": "type:nest-types#Shape2"
+      "returns": "type:nest-types#Shape2",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 24
     },
     {
       "from": "entry:nest-types:http:GET:/catalog/status",
       "to": "nest-types#src/catalog/catalog.controller.ts:CatalogController.classify",
       "type": "handles",
       "confidence": "static",
-      "file": "src/catalog/catalog.controller.ts",
-      "line": 35,
       "params": [
         "type:nest-types#Kind"
       ],
       "returns": "type:nest-types#Status",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 35,
       "meta": {
         "query": "{kind:type:nest-types#Kind}"
       }
@@ -578,12 +585,12 @@
       "to": "nest-types#src/orders/orders.controller.ts:OrdersController.list",
       "type": "handles",
       "confidence": "static",
-      "file": "src/orders/orders.controller.ts",
-      "line": 15,
       "params": [
         "type:nest-types#ListQuery"
       ],
       "returns": "type:nest-types#Paginated<type:nest-types#Order>",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
       "meta": {
         "query": "type:nest-types#ListQuery"
       }
@@ -593,12 +600,12 @@
       "to": "nest-types#src/orders/orders.controller.ts:OrdersController.findOne",
       "type": "handles",
       "confidence": "static",
-      "file": "src/orders/orders.controller.ts",
-      "line": 27,
       "params": [
         "string"
       ],
       "returns": "type:nest-types#Order",
+      "file": "src/orders/orders.controller.ts",
+      "line": 27,
       "meta": {
         "params": "{id:string}"
       }
@@ -608,22 +615,22 @@
       "to": "nest-types#src/orders/orders.controller.ts:OrdersController.stream",
       "type": "handles",
       "confidence": "static",
-      "file": "src/orders/orders.controller.ts",
-      "line": 21,
       "params": [],
-      "returns": "type:nest-types#Order[]"
+      "returns": "type:nest-types#Order[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 21
     },
     {
       "from": "entry:nest-types:http:POST:/orders",
       "to": "nest-types#src/orders/orders.controller.ts:OrdersController.create",
       "type": "handles",
       "confidence": "static",
-      "file": "src/orders/orders.controller.ts",
-      "line": 33,
       "params": [
         "type:nest-types#CreateOrderDto"
       ],
       "returns": "type:nest-types#Order",
+      "file": "src/orders/orders.controller.ts",
+      "line": 33,
       "meta": {
         "body": "type:nest-types#CreateOrderDto"
       }
@@ -633,13 +640,13 @@
       "to": "nest-types#src/orders/orders.controller.ts:OrdersController.cancel",
       "type": "handles",
       "confidence": "static",
-      "file": "src/orders/orders.controller.ts",
-      "line": 45,
       "params": [
         "string",
         "string"
       ],
       "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 45,
       "meta": {
         "params": "{id:string}",
         "body": "{reason:string}"
@@ -650,13 +657,13 @@
       "to": "nest-types#src/orders/orders.controller.ts:OrdersController.update",
       "type": "handles",
       "confidence": "static",
-      "file": "src/orders/orders.controller.ts",
-      "line": 39,
       "params": [
         "string",
         "{customerId?:string;status?:type:nest-types#Status;kind?:type:nest-types#Kind;lines?:type:nest-types#OrderLine[];note?:string;id?:string;createdAt?:Date}"
       ],
       "returns": "type:nest-types#Order",
+      "file": "src/orders/orders.controller.ts",
+      "line": 39,
       "meta": {
         "params": "{id:string}",
         "body": "{customerId?:string;status?:type:nest-types#Status;kind?:type:nest-types#Kind;lines?:type:nest-types#OrderLine[];note?:string;id?:string;createdAt?:Date}"
@@ -691,54 +698,54 @@
       "to": "nest-types#src/catalog/catalog.service.ts:CatalogService.categories",
       "type": "calls",
       "confidence": "static",
-      "file": "src/catalog/catalog.controller.ts",
-      "line": 16,
       "params": [],
-      "returns": "type:nest-types#Category[]"
+      "returns": "type:nest-types#Category[]",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 16
     },
     {
       "from": "nest-types#src/catalog/catalog.controller.ts:CatalogController.classify",
       "to": "nest-types#src/catalog/catalog.service.ts:CatalogService.classify",
       "type": "calls",
       "confidence": "static",
-      "file": "src/catalog/catalog.controller.ts",
-      "line": 37,
       "params": [
         "type:nest-types#Kind"
       ],
-      "returns": "type:nest-types#Status"
+      "returns": "type:nest-types#Status",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 37
     },
     {
       "from": "nest-types#src/catalog/catalog.controller.ts:CatalogController.cycle",
       "to": "nest-types#src/catalog/catalog.service.ts:CatalogService.cycle",
       "type": "calls",
       "confidence": "static",
-      "file": "src/catalog/catalog.controller.ts",
-      "line": 21,
       "params": [],
-      "returns": "type:nest-types#A"
+      "returns": "type:nest-types#A",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 21
     },
     {
       "from": "nest-types#src/catalog/catalog.controller.ts:CatalogController.deep",
       "to": "nest-types#src/catalog/catalog.service.ts:CatalogService.deep",
       "type": "calls",
       "confidence": "static",
-      "file": "src/catalog/catalog.controller.ts",
-      "line": 31,
       "params": [],
-      "returns": "type:nest-types#L0"
+      "returns": "type:nest-types#L0",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 31
     },
     {
       "from": "nest-types#src/catalog/catalog.controller.ts:CatalogController.shapes",
       "to": "nest-types#src/catalog/catalog.service.ts:CatalogService.shapes",
       "type": "calls",
       "confidence": "static",
-      "file": "src/catalog/catalog.controller.ts",
-      "line": 26,
       "params": [
         "type:nest-types#Shape1"
       ],
-      "returns": "type:nest-types#Shape2"
+      "returns": "type:nest-types#Shape2",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 26
     },
     {
       "from": "nest-types#src/orders/orders.controller.ts:OrdersController",
@@ -753,145 +760,145 @@
       "to": "nest-types#src/orders/orders.service.ts:OrdersService.cancel",
       "type": "calls",
       "confidence": "static",
-      "file": "src/orders/orders.controller.ts",
-      "line": 47,
       "params": [
         "string",
         "string"
       ],
-      "returns": "void"
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 47
     },
     {
       "from": "nest-types#src/orders/orders.controller.ts:OrdersController.create",
       "to": "nest-types#src/orders/orders.service.ts:OrdersService.create",
       "type": "calls",
       "confidence": "static",
-      "file": "src/orders/orders.controller.ts",
-      "line": 35,
       "params": [
         "type:nest-types#CreateOrderDto"
       ],
-      "returns": "type:nest-types#Order"
+      "returns": "type:nest-types#Order",
+      "file": "src/orders/orders.controller.ts",
+      "line": 35
     },
     {
       "from": "nest-types#src/orders/orders.controller.ts:OrdersController.findOne",
       "to": "nest-types#src/orders/orders.service.ts:OrdersService.findOne",
       "type": "calls",
       "confidence": "static",
-      "file": "src/orders/orders.controller.ts",
-      "line": 29,
       "params": [
         "string"
       ],
-      "returns": "type:nest-types#Order"
+      "returns": "type:nest-types#Order",
+      "file": "src/orders/orders.controller.ts",
+      "line": 29
     },
     {
       "from": "nest-types#src/orders/orders.controller.ts:OrdersController.list",
       "to": "nest-types#src/orders/orders.service.ts:OrdersService.list",
       "type": "calls",
       "confidence": "static",
-      "file": "src/orders/orders.controller.ts",
-      "line": 17,
       "params": [
         "type:nest-types#ListQuery"
       ],
-      "returns": "type:nest-types#Paginated<type:nest-types#Order>"
+      "returns": "type:nest-types#Paginated<type:nest-types#Order>",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17
     },
     {
       "from": "nest-types#src/orders/orders.controller.ts:OrdersController.stream",
       "to": "nest-types#src/orders/orders.service.ts:OrdersService.stream",
       "type": "calls",
       "confidence": "static",
-      "file": "src/orders/orders.controller.ts",
-      "line": 23,
       "params": [],
-      "returns": "type:nest-types#Order[]"
+      "returns": "type:nest-types#Order[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 23
     },
     {
       "from": "nest-types#src/orders/orders.controller.ts:OrdersController.update",
       "to": "nest-types#src/orders/orders.service.ts:OrdersService.update",
       "type": "calls",
       "confidence": "static",
-      "file": "src/orders/orders.controller.ts",
-      "line": 41,
       "params": [
         "string",
         "{customerId?:string;status?:type:nest-types#Status;kind?:type:nest-types#Kind;lines?:type:nest-types#OrderLine[];note?:string;id?:string;createdAt?:Date}"
       ],
-      "returns": "type:nest-types#Order"
+      "returns": "type:nest-types#Order",
+      "file": "src/orders/orders.controller.ts",
+      "line": 41
     },
     {
       "from": "nest-types#src/orders/orders.service.ts:OrdersService.cancel",
       "to": "nest-types#src/orders/orders.service.ts:OrdersService.findOne",
       "type": "calls",
       "confidence": "static",
-      "file": "src/orders/orders.service.ts",
-      "line": 43,
       "params": [
         "string"
       ],
-      "returns": "type:nest-types#Order"
+      "returns": "type:nest-types#Order",
+      "file": "src/orders/orders.service.ts",
+      "line": 43
     },
     {
       "from": "nest-types#src/orders/orders.service.ts:OrdersService.cancel",
       "to": "nest-types#src/orders/orders.service.ts:OrdersService.logTo",
       "type": "calls",
       "confidence": "static",
-      "file": "src/orders/orders.service.ts",
-      "line": 43,
       "params": [
         "type:@nestjs/common#Logger",
         "type:nest-types#Order"
       ],
-      "returns": "void"
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 43
     },
     {
       "from": "nest-types#src/orders/orders.service.ts:OrdersService.create",
       "to": "nest-types#src/orders/orders.service.ts:OrdersService.stub",
       "type": "calls",
       "confidence": "static",
-      "file": "src/orders/orders.service.ts",
-      "line": 33,
       "params": [
         "string"
       ],
-      "returns": "type:nest-types#Order"
+      "returns": "type:nest-types#Order",
+      "file": "src/orders/orders.service.ts",
+      "line": 33
     },
     {
       "from": "nest-types#src/orders/orders.service.ts:OrdersService.findOne",
       "to": "nest-types#src/orders/orders.service.ts:OrdersService.stub",
       "type": "calls",
       "confidence": "static",
-      "file": "src/orders/orders.service.ts",
-      "line": 29,
       "params": [
         "string"
       ],
-      "returns": "type:nest-types#Order"
+      "returns": "type:nest-types#Order",
+      "file": "src/orders/orders.service.ts",
+      "line": 29
     },
     {
       "from": "nest-types#src/orders/orders.service.ts:OrdersService.fromLegacy",
       "to": "nest-types#src/orders/orders.service.ts:OrdersService.stub",
       "type": "calls",
       "confidence": "static",
-      "file": "src/orders/orders.service.ts",
-      "line": 59,
       "params": [
         "string"
       ],
-      "returns": "type:nest-types#Order"
+      "returns": "type:nest-types#Order",
+      "file": "src/orders/orders.service.ts",
+      "line": 59
     },
     {
       "from": "nest-types#src/orders/orders.service.ts:OrdersService.update",
       "to": "nest-types#src/orders/orders.service.ts:OrdersService.stub",
       "type": "calls",
       "confidence": "static",
-      "file": "src/orders/orders.service.ts",
-      "line": 38,
       "params": [
         "string"
       ],
-      "returns": "type:nest-types#Order"
+      "returns": "type:nest-types#Order",
+      "file": "src/orders/orders.service.ts",
+      "line": 38
     }
   ],
   "types": {
@@ -914,7 +921,8 @@
       ],
       "meta": {
         "declKind": "interface",
-        "exported": true
+        "exported": true,
+        "sharedPackage": "@fixture/contracts"
       }
     },
     "type:@fixture/contracts#SharedOrderEvent": {
@@ -951,7 +959,8 @@
       ],
       "meta": {
         "declKind": "interface",
-        "exported": true
+        "exported": true,
+        "sharedPackage": "@fixture/contracts"
       }
     },
     "type:@fixture/contracts#SharedOrderStatus": {
@@ -966,7 +975,8 @@
       ],
       "meta": {
         "declKind": "alias",
-        "exported": true
+        "exported": true,
+        "sharedPackage": "@fixture/contracts"
       }
     },
     "type:@nestjs/common#Logger": {
@@ -1406,13 +1416,13 @@
           "optional": false
         }
       ],
+      "typeParams": [
+        "T"
+      ],
       "meta": {
         "declKind": "interface",
         "exported": true
-      },
-      "typeParams": [
-        "T"
-      ]
+      }
     },
     "type:nest-types#Paginated<T>": {
       "name": "Paginated",
@@ -1549,32 +1559,36 @@
       "file": "src/catalog/catalog.service.ts",
       "line": 45,
       "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "sites": 2,
       "hint": "The type argument is not known here, so the reference names the parameter.",
       "symbol": "T",
-      "level": "info",
-      "sites": 2
+      "service": "nest-types"
     },
     {
       "file": "src/orders/dto/create-order.dto.ts",
       "line": 43,
       "reason": "decorator-arg-dynamic",
       "hint": "A function rewrites this field, so what it carries on the wire is not read. The field is compared as its declared type.",
-      "symbol": "CreateOrderDto.couponCode"
+      "symbol": "CreateOrderDto.couponCode",
+      "service": "nest-types"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 58,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
-      "symbol": "LegacyOrder"
+      "symbol": "LegacyOrder",
+      "service": "nest-types"
     },
     {
       "file": "src/types/deep.ts",
       "line": 28,
       "reason": "type-depth-exceeded",
+      "level": "info",
       "hint": "Nesting is written out to 3 levels. Raise types.maxDepth to see further.",
       "symbol": "{ c: string; }",
-      "level": "info"
+      "service": "nest-types"
     }
   ]
 }
