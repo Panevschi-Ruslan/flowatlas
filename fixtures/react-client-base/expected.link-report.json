@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T11:36:14.504Z",
+  "builtAt": "2026-09-27T13:52:15.408Z",
   "configHash": "215085ceb5c6",
   "services": [
     {
@@ -8,29 +8,29 @@
       "repo": ".",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 22,
-      "edges": 17,
+      "nodes": 31,
+      "edges": 26,
       "types": 0,
-      "unresolved": 1,
-      "durationMs": 0
+      "unresolved": 3,
+      "durationMs": 690
     }
   ],
   "httpOut": {
-    "total": 1,
+    "total": 2,
     "linked": 0,
     "byMarker": 0,
     "unknownEnv": 0,
     "noRoute": 0,
     "ambiguous": 0,
     "external": 0,
-    "dynamic": 1
+    "dynamic": 2
   },
   "ui": {
-    "total": 3,
-    "resolved": 2,
-    "unresolved": 1,
+    "total": 5,
+    "resolved": 3,
+    "unresolved": 2,
     "byReason": {
-      "target-route-not-found": 1
+      "target-route-not-found": 2
     }
   },
   "channels": {
@@ -40,8 +40,8 @@
     "noProducers": []
   },
   "routes": {
-    "total": 2,
-    "called": 2,
+    "total": 3,
+    "called": 3,
     "uncalled": [],
     "duplicated": []
   },
@@ -58,12 +58,21 @@
       "message": "no configured service serves POST /events",
       "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /events */.",
       "symbol": "ui_api_call:app#src/app/documents.ts:18:3"
+    },
+    {
+      "service": "app",
+      "file": "src/app/documents.ts",
+      "line": 34,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /passkeys.verify",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /passkeys.verify */.",
+      "symbol": "ui_api_call:app#src/app/documents.ts:34:3"
     }
   ],
   "totals": {
-    "nodes": 22,
-    "edges": 19,
+    "nodes": 31,
+    "edges": 29,
     "types": 0,
-    "unresolved": 2
+    "unresolved": 5
   }
 }

@@ -313,7 +313,23 @@ export const analyzeClientBase = (node: TsNode, options: ReadAddressOptions = {}
 };
 
 /**
- * The whole address a request reaches, once the client's own base is in front.
+ * Whether an address says anything a path written under it would not.
+ *
+ * The test for "is this actually a base": a field or an option holding nothing,
+ * or holding `/`, adds no segment to any address written under it, and treating
+ * it as a base would make `underBase` a rewrite that changes nothing while
+ * looking like a reading that succeeded. Asked in both places a base is written
+ * — the class's own field and a call's own option — because a base is one fact
+ * and two answers to what counts as one is how the two ends of a join come to
+ * disagree (R114, R128).
+ */
+export const isSomewhere = (address: ApiUrl): boolean =>
+  address.baseUrlEnv !== null ||
+  address.host !== null ||
+  (address.path !== null && address.path !== '/');
+
+/**
+ * The whole address a request reaches, once the base in front of it is known.
  *
  * An address and a base are one fact read at two ends, and this is the one place
  * the two ends are put together — so what the graph records is the address the
@@ -324,6 +340,9 @@ export const analyzeClientBase = (node: TsNode, options: ReadAddressOptions = {}
  * written with a host of its own, or rooted at a settings key of its own, is not
  * relative to anything the client holds, and putting the two together would
  * invent an address nobody writes.
+ *
+ * *Which* base stands in front is settled before this: the call's own option
+ * where the call spells one, and the class's field where it does not (R128).
  */
 export const underBase = (base: ApiUrl | undefined, address: ApiUrl): ApiUrl => {
   if (base === undefined || address.path === null) return address;

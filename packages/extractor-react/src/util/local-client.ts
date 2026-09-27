@@ -1,8 +1,8 @@
 import { forEachCall } from '@flowatlas/core';
 import type { ClassDeclaration, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
-import { localClient, VERB_CALLS, type RequestClient } from '../clients.js';
-import type { ApiUrl } from './url.js';
+import { BASE_FIELDS, localClient, VERB_CALLS, type RequestClient } from '../clients.js';
+import { isSomewhere, type ApiUrl } from './url.js';
 
 /**
  * Whether a class this repository declares is one of its HTTP clients.
@@ -49,30 +49,6 @@ export interface ClassReading {
    */
   address(node: TsNode): ApiUrl;
 }
-
-/**
- * Fields a client of one's own keeps its base address in.
- *
- * A description, not a guess at names, and it carries no weight on its own: it is
- * asked only of a class already proved or declared to be an HTTP client, and only
- * a field holding an address something can be read out of answers. A cache with a
- * `base` field is not a client and never reaches here; a client with a `baseUrl`
- * field holding `/api` is holding the first segment of every address it writes.
- *
- * Ordered, because a class may declare more than one and the first is the one
- * meant: `baseUrl` beside a `basePath` is the address, and the other is a piece
- * of it.
- */
-const BASE_FIELDS: readonly string[] = [
-  'baseUrl',
-  'baseURL',
-  'baseURI',
-  'basePath',
-  'apiBase',
-  'apiUrl',
-  'base',
-  'prefix',
-];
 
 /** What reading a local class made of it. */
 export type LocalClientReading =
@@ -164,17 +140,15 @@ const reachesNetwork = (
   return found;
 };
 
-/** Whether an address says anything a path written under it would not. */
-const isSomewhere = (address: ApiUrl): boolean =>
-  address.baseUrlEnv !== null ||
-  address.host !== null ||
-  (address.path !== null && address.path !== '/');
-
 /**
  * The base every address this class writes sits under, when it holds one.
  *
  * Asked of the class rather than of a call site, because that is where the fact
- * is: one field, set once, in front of every path every screen writes. A field is
+ * is written: one field, set once, in front of every path every screen writes.
+ * A call that spells a base of its own is the same fact written in a second
+ * place, and it is read at the call by the request pass, which is where that one
+ * is written — the two are not two readings of a base, they are one base read
+ * wherever it was put (R128). A field is
  * a candidate by name and an answer by what can be read out of it — so the order
  * of {@link BASE_FIELDS} decides which field is asked first, and the reader
  * decides whether the answer is an address at all.

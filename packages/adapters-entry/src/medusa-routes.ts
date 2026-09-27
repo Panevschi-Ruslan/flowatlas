@@ -12,10 +12,10 @@ import {
 import type { Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import {
+  fsAddressSpace,
   pathPatternTest,
   readVerbFile,
   reportNotServed,
-  routePathOfFile,
   unservedRouteFile,
   type FsRouter,
   type FsRouteVerb,
@@ -245,15 +245,18 @@ export const medusaRoutesAdapter: EntryAdapter = {
       return { middlewareRead: false, ...(named.length > 0 ? { middleware: named } : {}) };
     };
 
-    const httpEntry = (verb: FsRouteVerb): void => {
+    const httpEntry = (verb: FsRouteVerb, application: string | undefined): void => {
       const key = makeHttpEntryKey(verb.method, verb.path);
-      const id = makeEntryId(ctx.repo, 'http', key);
+      const id = makeEntryId(ctx.repo, 'http', key, application);
       if (seen.has(id)) return;
       seen.add(id);
       entries.push({
         id,
         kind: 'http',
-        label: `${verb.method} ${verb.path}`,
+        label:
+          application === undefined
+            ? `${verb.method} ${verb.path}`
+            : `${verb.method} ${verb.path} (${application})`,
         key,
         ...(verb.handler === undefined ? {} : { handler: handlerOfFunction(verb.handler, ctx) }),
         // The route file is what the node points at, because the address is read
@@ -266,6 +269,10 @@ export const medusaRoutesAdapter: EntryAdapter = {
           path: verb.path,
           adapter: ADAPTER,
           registration: 'api/route',
+          // Only where the service holds more than one, which is where it says
+          // something: it is what tells a tie between two applications from a
+          // tie between two routes of one (R119, R125).
+          ...(application === undefined ? {} : { application }),
           ...gateOf(verb.method, verb.path),
           handlerVia: verb.handler === undefined ? 'unread' : 'function',
           // Two different facts, and the second is the one a summary must not
@@ -277,10 +284,20 @@ export const medusaRoutesAdapter: EntryAdapter = {
       });
     };
 
+    // Which applications this repository holds — a plugin under `plugins/` is a
+    // whole one, with an address space of its own — and what each address is
+    // qualified by. Read for the whole service before any of it is emitted,
+    // because whether an id names an application depends on how many there
+    // are, which is the one thing a single file cannot say (R125).
+    const space = fsAddressSpace(
+      [...repoSources(ctx)].map((source) => normalizeFilePath(source.getFilePath(), ctx.repoDir)),
+      [MEDUSA_API],
+    );
+
     for (const sourceFile of repoSources(ctx)) {
       const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);
-      const path = routePathOfFile(file, MEDUSA_API);
-      if (path === null) {
+      const address = space.addressOf(file, MEDUSA_API);
+      if (address === null) {
         // A file the convention takes out of service, which is not the same as a
         // file this router never had anything to do with. Only the first is worth
         // a row, and only when it exports something that would have been a route.
@@ -290,7 +307,12 @@ export const medusaRoutesAdapter: EntryAdapter = {
         }
         continue;
       }
-      readVerbFile(ctx, sourceFile, { file, path, adapter: ADAPTER, emit: httpEntry });
+      readVerbFile(ctx, sourceFile, {
+        file,
+        path: address.path,
+        adapter: ADAPTER,
+        emit: (verb) => httpEntry(verb, address.application),
+      });
     }
 
     if (list !== undefined && list.unread.length > 0) {

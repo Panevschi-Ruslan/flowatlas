@@ -16,3 +16,19 @@ export const renameDocument = (id: string, title: string): Promise<unknown> =>
 /** Somebody else's service, named outright. The client's base is not its base. */
 export const reportOpened = (id: string): Promise<unknown> =>
   client.post('https://telemetry.example.com/events', { id });
+
+/**
+ * A call that spells its own base, and one that spells one nobody can read.
+ *
+ * The first is outline's shape exactly: the route this means is mounted
+ * somewhere else, the call says which base it wants, and recording it under the
+ * client's `/api` put it at an address nothing serves (R128). The second writes
+ * the same option with a value nothing static settles — so the address keeps the
+ * path that was read, the client's default is *not* used behind it, and a row
+ * names the line.
+ */
+export const registerPasskey = (id: string): Promise<unknown> =>
+  client.post('/passkeys.generateRegistrationOptions', { id }, { baseUrl: '/auth' });
+
+export const verifyPasskey = (id: string, where: string): Promise<unknown> =>
+  client.post('/passkeys.verify', { id }, { baseUrl: where });

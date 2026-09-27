@@ -73,8 +73,21 @@ export { dialectOf, EXPRESS, FASTIFY, HONO, KOA, ROUTE_DIALECTS } from './route-
 export type { ActionBuilder } from './action-builders.js';
 export { ACTION_BUILDERS, NEXT_SAFE_ACTION, ZSA } from './action-builders.js';
 export { APP_PAGES, APP_ROUTER, PAGES_API } from './nextjs-paths.js';
-export { pathPatternTest, readVerbFile, routePathOfFile, verbReading } from './fs-routes.js';
-export type { FsRouter, FsRouteVerb, SegmentConvention, VerbReading } from './fs-routes.js';
+export {
+  fsAddressSpace,
+  pathPatternTest,
+  readVerbFile,
+  routePathOfFile,
+  verbReading,
+} from './fs-routes.js';
+export type {
+  FsAddress,
+  FsAddressSpace,
+  FsRouter,
+  FsRouteVerb,
+  SegmentConvention,
+  VerbReading,
+} from './fs-routes.js';
 export { MEDUSA_API } from './medusa-routes.js';
 export {
   entryRegistriesAdapter,

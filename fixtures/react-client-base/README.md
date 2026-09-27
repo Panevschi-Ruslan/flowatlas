@@ -33,3 +33,28 @@ The verbs are read exactly as `react-local-client` proves them; what is new here
 is only that the class carries a base, and that the base is set the way this
 shape is nearly always written — in the constructor, with a default beside it,
 where a caller who passes nothing gets `/api`.
+
+## A base the call overrides (R128)
+
+The base is written on the class, and a call may write it again. `registerPasskey`
+spells `{ baseUrl: '/auth' }` beside its body, and the route it means is mounted
+at `/auth` by `app.ts` — so the call's own word is the true one, and the address
+recorded is `POST /auth/passkeys.generateRegistrationOptions`, which joins. Under
+the client's default it was `POST /api/passkeys.generateRegistrationOptions`, an
+address nothing in this repository serves and nothing said so. That is outline's
+last three unjoined browser requests exactly: the route side had already been
+placed at `/auth/…` and the two halves disagreed by precisely the base the call
+overrides.
+
+`verifyPasskey` writes the same option with a value nothing static settles. The
+address keeps what was read — `POST /passkeys.verify`, the path alone — because
+the one base now known to be wrong is the client's default: the call said it was
+not that. A row names the line, and a second row says no service serves the
+address, which is true and is the honest pair.
+
+The transport takes the base as an argument now, so the address inside it is
+assembled from two things that are both unreadable there. That is why the
+dynamic-address row is written against `get` and `post` rather than against the
+`fetch` call: the reader forwards a request whose address is a parameter out to
+the members that pass it. Nothing about it is new behaviour; it is the same
+forwarding this fixture always exercised, one hop further out.

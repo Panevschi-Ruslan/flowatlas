@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { routePathOfFile } from './fs-routes.js';
+import { fsAddressSpace, routePathOfFile } from './fs-routes.js';
 import { APP_PAGES, APP_ROUTER, PAGES_API } from './nextjs-paths.js';
 
 describe('routePathOfFile', () => {
@@ -28,17 +28,52 @@ describe('routePathOfFile', () => {
     expect(routePathOfFile('app/orders/page.tsx', APP_PAGES)).toBe('/orders');
   });
 
-  it('addresses a second application from where that application is', () => {
-    // Two applications, each declaring the same route. Without the prefix both
-    // claimed `/api/*` and the graph kept one of them; payload has thirty-nine
-    // such applications and two hundred and seventy-one such declarations.
+  it('serves a second application at the addresses the framework serves it at', () => {
+    // Two applications, each declaring the same route, and each declaring it at
+    // the address the framework answers on. What tells them apart is the
+    // identity, not the path (R125) — nothing serves `/test/fields/api/*`.
     expect(routePathOfFile('app/api/[...slug]/route.ts', APP_ROUTER)).toBe('/api/*');
-    expect(routePathOfFile('test/fields/app/api/[...slug]/route.ts', APP_ROUTER)).toBe(
-      '/test/fields/api/*',
-    );
+    expect(routePathOfFile('test/fields/app/api/[...slug]/route.ts', APP_ROUTER)).toBe('/api/*');
     expect(
       routePathOfFile('examples/auth/src/app/(payload)/api/graphql/route.ts', APP_ROUTER),
-    ).toBe('/examples/auth/api/graphql');
+    ).toBe('/api/graphql');
+  });
+
+  it('names the application an address belongs to, and only where there are two', () => {
+    // The whole of the difference between the two mechanisms, in one place: the
+    // segments in front of the router root are the application, and they decide
+    // the id rather than the path. The judgement about whether an id carries one
+    // at all is `applicationsServing`'s, which is why a service with a single
+    // application is spelled exactly as it was before this change.
+    const one = fsAddressSpace(['app/api/orders/route.ts'], [APP_ROUTER]);
+    expect(one.addressOf('app/api/orders/route.ts', APP_ROUTER)).toEqual({ path: '/api/orders' });
+
+    const two = fsAddressSpace(
+      ['app/api/orders/route.ts', 'examples/blog/src/app/api/orders/route.ts'],
+      [APP_ROUTER],
+    );
+    expect(two.addressOf('app/api/orders/route.ts', APP_ROUTER)).toEqual({
+      path: '/api/orders',
+      application: '.',
+    });
+    expect(two.addressOf('examples/blog/src/app/api/orders/route.ts', APP_ROUTER)).toEqual({
+      path: '/api/orders',
+      application: 'examples/blog',
+    });
+    // Nothing there is not an address at all, whichever way the service is read.
+    expect(two.addressOf('lib/orders.ts', APP_ROUTER)).toBeNull();
+  });
+
+  it('reads one application whichever of its two routers a file is under', () => {
+    // `app/` and `pages/api/` in one application are one address space, so the
+    // two routers must not read as two applications — an id that named one of
+    // them would be an id nothing else in the repository agrees with.
+    const space = fsAddressSpace(['app/api/orders/route.ts', 'pages/api/legacy.ts'], [
+      APP_ROUTER,
+      PAGES_API,
+    ]);
+    expect(space.addressOf('app/api/orders/route.ts', APP_ROUTER)).toEqual({ path: '/api/orders' });
+    expect(space.addressOf('pages/api/legacy.ts', PAGES_API)).toEqual({ path: '/api/legacy' });
   });
 
   it('keeps an inner directory called app as the segment it is', () => {

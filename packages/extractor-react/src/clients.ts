@@ -39,14 +39,48 @@ export interface CallShape {
   /** The argument holding the body, when the spelling has one. */
   readonly bodyAt?: number;
   /**
-   * An options object whose `method` key names the verb.
+   * The call's own options object, and where it sits.
    *
-   * `fetch(url, { method: 'POST' })` is the only place in any of this where
-   * the verb is a value rather than part of the spelling, which is why it is a
-   * field and not the rule.
+   * Two things are read out of it, and both are facts the call may write in
+   * place of the ones the client would otherwise decide.
+   *
+   * The verb: `fetch(url, { method: 'POST' })` is the only place in any of this
+   * where the verb is a value rather than part of the spelling, which is why it
+   * is a field and not the rule.
+   *
+   * The base: every one of these spellings accepts a base of its own here —
+   * `axios.post(url, body, { baseURL })` is the library's own documented option
+   * and `client.post(path, body, { baseUrl: '/auth' })` is the same option on a
+   * class somebody wrote. A base written at the call is the same fact as the one
+   * on the class, written in a second place, and the call's own word wins where
+   * it says one (R114, R128).
    */
   readonly optionsAt?: number;
 }
+
+/**
+ * The names a base is written under, wherever it is written.
+ *
+ * One list for both places a base can appear — a field on a client class, and an
+ * option at a call — because "where is the base" is one question, and two lists
+ * would answer it differently the first time either was touched. It carries no
+ * weight on its own: it is asked only of something already established to be a
+ * client, and only a name holding an address something can be read out of
+ * answers. A cache with a `base` field is not a client and is never asked.
+ *
+ * Ordered, because more than one may be written and the first is the one meant:
+ * `baseUrl` beside a `basePath` is the address, and the other is a piece of it.
+ */
+export const BASE_FIELDS: readonly string[] = [
+  'baseUrl',
+  'baseURL',
+  'baseURI',
+  'basePath',
+  'apiBase',
+  'apiUrl',
+  'base',
+  'prefix',
+];
 
 export interface RequestClient {
   /** How the client is named in `meta.client` and in every row. */
@@ -108,15 +142,22 @@ export const FETCH: RequestClient = {
  * The four verbs with no `bodyAt` are the ones whose second argument is not a
  * body — `get(url, params)` puts it in the query string — and recording a body
  * type for them would describe a request nobody makes.
+ *
+ * `optionsAt` is the argument after the body, or after the address where there
+ * is no body, and it holds the request's own options for the same reason the
+ * rest of the shape is shared: there is nowhere else for them to go. Nothing is
+ * read out of it unless the call writes an object there in place: the verb is in
+ * the name for every one of these, and only a base written in place is taken
+ * (R128).
  */
 export const VERB_CALLS: Readonly<Record<string, CallShape>> = {
-  get: { method: 'GET', urlAt: 0 },
-  delete: { method: 'DELETE', urlAt: 0 },
-  head: { method: 'HEAD', urlAt: 0 },
-  options: { method: 'OPTIONS', urlAt: 0 },
-  post: { method: 'POST', urlAt: 0, bodyAt: 1 },
-  put: { method: 'PUT', urlAt: 0, bodyAt: 1 },
-  patch: { method: 'PATCH', urlAt: 0, bodyAt: 1 },
+  get: { method: 'GET', urlAt: 0, optionsAt: 1 },
+  delete: { method: 'DELETE', urlAt: 0, optionsAt: 1 },
+  head: { method: 'HEAD', urlAt: 0, optionsAt: 1 },
+  options: { method: 'OPTIONS', urlAt: 0, optionsAt: 1 },
+  post: { method: 'POST', urlAt: 0, bodyAt: 1, optionsAt: 2 },
+  put: { method: 'PUT', urlAt: 0, bodyAt: 1, optionsAt: 2 },
+  patch: { method: 'PATCH', urlAt: 0, bodyAt: 1, optionsAt: 2 },
 };
 
 /**
