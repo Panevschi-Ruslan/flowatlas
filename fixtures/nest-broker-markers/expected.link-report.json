@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T18:35:36.856Z",
+  "configHash": "66238374aa03",
+  "services": [
+    {
+      "name": "nest-broker-markers",
+      "repo": ".",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 55,
+      "edges": 58,
+      "types": 4,
+      "unresolved": 8,
+      "durationMs": 0
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 12,
+    "linked": 2,
+    "noConsumers": [
+      "channel:order.archived",
+      "channel:order.dispatched",
+      "channel:order.exported",
+      "channel:order.held",
+      "channel:order.merged",
+      "channel:order.packed",
+      "channel:order.refunded",
+      "channel:order.released",
+      "channel:order.reopened",
+      "channel:order.split"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 0,
+    "uncalled": [
+      "entry:nest-broker-markers:http:POST:/orders"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 55,
+    "edges": 58,
+    "types": 4,
+    "unresolved": 8
+  }
+}

@@ -128,7 +128,7 @@ const check = (dir, label, expectedPath, actualPath, parse) => {
     // is the one answer to which files a fixture of this kind produces.
     const declared = layoutOf(dir).steps.flatMap((step) => step.writes);
     if (!declared.includes(basename(actualPath))) return;
-    if (UNHELD.get(basename(dir))?.includes(basename(expectedPath))) return;
+    if (UNHELD[basename(dir)] !== undefined && HELD_BACK.includes(basename(expectedPath))) return;
     if (update) {
       accept(expectedPath, actualPath);
       console.log(`created ${label}`);
@@ -214,31 +214,46 @@ const asReport = (value) => {
   return value;
 };
 
-/** What a snapshot is compared against, one row per file the tool writes. */
 /**
- * Outputs a fixture's own steps write that it has never held a snapshot of.
+ * Project fixtures whose project graph and link report are deliberately held by
+ * no snapshot yet, and why.
  *
- * Found the day the rule above arrived: nine project fixtures are held by their
- * repository graph alone, from before a project graph and a link report were
- * compared, so eighteen outputs have never been checked. Named here rather than
- * snapshotted in bulk, because taking eighteen files nobody has read as the
- * expectation is how a bug gets written into a gate (R138 owns reading them).
- * An entry that stops being needed is not reported yet; R138 removes the list.
+ * The rule above found nine project fixtures held by their repository graph
+ * alone. Each was read against its README before its outputs became an
+ * expectation (R138), and the ones left here are the ones that read wrong: a
+ * snapshot taken now would write the disagreement into the gate as the right
+ * answer. Each entry names what is wrong, so the entry is a debt with a reason
+ * rather than a hole.
+ *
+ * The same shape as `VALIDATE_ONLY`, and for its reason: an exception that no
+ * longer applies is reported too. An entry whose fixture now holds either
+ * snapshot fails the gate - somebody resolved it and has to remove the name, or
+ * somebody snapshotted a disagreement and has to look again.
  */
-const UNHELD = new Map(
-  [
-    'angular-basic',
-    'angular-client-wrapper',
-    'bot-registry',
-    'ground-truth',
-    'multi-repo-analytics',
-    'multi-repo-contracts',
-    'nest-broker-markers',
-    'nest-kafka',
-    'nest-types',
-  ].map((name) => [name, ['expected.project-graph.json', 'expected.link-report.json']]),
-);
+const UNHELD = {
+  'multi-repo-analytics':
+    'The README says `web` is skipped with `no-extractor` and that the gateway route it posts ' +
+    'to stays uncalled until P08 draws the `hits` edge. P08 has landed: the build reads `web` ' +
+    'with the Angular extractor, which reads the `fetch` POST in `orders-api.service.ts` as ' +
+    'nothing - no `ui_api_call`, no unresolved row - so `POST /orders` is uncalled in silence. ' +
+    'Either the request should be read or reported, or the fixture should say why not.',
+  'nest-kafka':
+    'Two rows contradict the README and the comments in the source. `LEGACY_TOPIC: string` is ' +
+    'written as the constant whose channel cannot be resolved, and the build resolves it to ' +
+    '`channel:order.legacy` via `shared-package`, so the link report counts a channel the ' +
+    'fixture says must not exist. And the `topic` parameter at orders.service.ts:117 is ' +
+    'reported `channel-const-unresolved`, where the README says `channel-dynamic`: a parameter ' +
+    'is not a constant nobody could follow.',
+  'nest-types':
+    'The README says `@Transform(({ value }) => ...)` on `CreateOrderDto` produces ' +
+    '`decorator-arg-dynamic` (P02 section 10 says the same). No such row is written: the ' +
+    'graph has three unresolved rows where the README lists four.',
+};
 
+/** The outputs an `UNHELD` entry holds back: everything a build writes. */
+const HELD_BACK = ['expected.project-graph.json', 'expected.link-report.json'];
+
+/** What a snapshot is compared against, one row per file the tool writes. */
 const SNAPSHOTS = [
   ['expected.graph.json', 'graph.json', parseRepoGraph],
   ['expected.project-graph.json', 'project-graph.json', parseProjectGraph],
@@ -307,6 +322,34 @@ if (!update) {
   }
 }
 
+/**
+ * `UNHELD`, reconciled the way `VALIDATE_ONLY` is: every entry is said out loud,
+ * and one that no longer holds anything back is a failure rather than a
+ * leftover. Not only under a verdict: `--update` never creates a held-back
+ * snapshot, so one that exists was put there by hand, and that is the moment to
+ * be told.
+ */
+const unheld = [];
+for (const [fixture, why] of Object.entries(UNHELD)) {
+  if (!visited.has(fixture)) {
+    // Checking one fixture says nothing about another; checking all of them
+    // and not finding this one means the entry names nothing.
+    if (selected.length === 0) {
+      problems.push(`fixtures/${fixture}: named in UNHELD, but there is no such fixture. Remove the entry.`);
+    }
+    continue;
+  }
+  const held = HELD_BACK.filter((name) => isFile(join(root, 'fixtures', fixture, name)));
+  if (held.length > 0) {
+    problems.push(
+      `fixtures/${fixture}: named in UNHELD, but ${held.join(' and ')} now exist${held.length === 1 ? 's' : ''}. ` +
+        'If what it held back is resolved, remove the entry; if not, the snapshot has taken the wrong answer as the expectation.',
+    );
+    continue;
+  }
+  unheld.push(`  unheld ${fixture}: ${why}`);
+}
+
 if (problems.length > 0) {
   for (const problem of problems) console.error(problem);
   console.error('Re-run with --update once the difference has been reviewed.');
@@ -315,3 +358,4 @@ if (problems.length > 0) {
 
 console.log(`fixtures ok: ${compared} compared, ${validated} validated`);
 for (const line of validateOnly) console.log(line);
+for (const line of unheld) console.log(line);

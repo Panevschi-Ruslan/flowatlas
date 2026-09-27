@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T18:35:33.763Z",
+  "configHash": "b09bbca5b4ca",
+  "services": [
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 6,
+      "types": 3,
+      "unresolved": 1,
+      "durationMs": 0
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 41,
+      "edges": 38,
+      "types": 23,
+      "unresolved": 2,
+      "durationMs": 0
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 59,
+      "edges": 42,
+      "types": 17,
+      "unresolved": 1,
+      "durationMs": 0
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 8,
+      "edges": 5,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0
+    }
+  ],
+  "httpOut": {
+    "total": 17,
+    "linked": 17,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 1,
+    "resolved": 1,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 15,
+    "called": 15,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 43,
+    "sharedPackage": 1
+  },
+  "unresolved": [
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 83,
+      "reason": "route-unguarded",
+      "message": "POST /orders/drafts/store has no guard in front of it and reaches Draft.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "POST /orders/drafts/store"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 89,
+      "reason": "route-unguarded",
+      "message": "POST /orders/drafts/tag has no guard in front of it and reaches Draft.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "POST /orders/drafts/tag"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 109,
+      "reason": "route-unguarded",
+      "message": "POST /orders/drafts/batch has no guard in front of it and reaches Draft.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "POST /orders/drafts/batch"
+    }
+  ],
+  "totals": {
+    "nodes": 118,
+    "edges": 109,
+    "types": 43,
+    "unresolved": 7
+  }
+}
