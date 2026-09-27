@@ -181,7 +181,17 @@ either.
 
 ### Fixed
 
-- **Detection reads what the service actually reads.** A service's extent is its
+- **A fixture snapshot nobody compares now fails the gate.** The snapshot check
+  decided a fixture had sources by looking for a `src/` directory and pointed the
+  comparison at a path that does not exist when it found none, so a Next.js
+  fixture laid out with `app/` was validated for shape on every run and compared
+  never — while the gate printed `89 compared, 91 validated` and nobody had to
+  explain the two. A fixture is now found by what it declares, in one table
+  shared with the script that runs them, and every snapshot in the gap between
+  those counts must be a fixture named with the reason it is validate-only, which
+  the gate prints. One is; an entry that no longer applies fails too. The
+  newly compared fixture is `next-nested-apps`, and its recorded graph was
+  already right. A service's extent is its
   own directory plus every workspace member it declares, transitively, and the
   sources of those members are walked exactly like its own — but the manifest an
   adapter is offered was widened only upwards and downwards, never sideways. So a

@@ -675,9 +675,18 @@ pnpm fixtures:check   # extraction, server and terminal snapshots
 ```
 
 `fixtures:check` compares against recorded output, so the fixtures have to be run
-first; a fixture that has not been run is validated and then skipped, and a
-snapshot nobody compares is not a gate. `pnpm check` does all of it in order, and
-passes from a clone with no build output at all.
+first, and a snapshot nobody compares is not a gate. It therefore prints two
+counts — `90 compared, 91 validated` — and every snapshot in the gap between them
+has to be accounted for: either the fixture has not been run, which fails and says
+so, or the fixture is named in `VALIDATE_ONLY` in `scripts/fixtures-check.mjs`
+with the reason, which the gate then prints on every run. One fixture is,
+`schema-smoke`, because it is a hand-written sample of the schema and there is
+nothing to run over it; an entry that no longer applies fails too. Whether a
+fixture can be run at all, and with what, is `scripts/fixture-layout.mjs` and is
+read from what the fixture declares — a `flowatlas.config.json` means a project
+read by `build`, a `package.json` alone means one repository read by `extract` —
+shared with `fixtures:run` so the two cannot disagree about it. `pnpm check` does
+all of it in order, and passes from a clone with no build output at all.
 
 Fixtures are small repositories under `fixtures/`, each committed with its type
 stubs where a package had to be stood in for; the rest resolve through the
