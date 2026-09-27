@@ -10,9 +10,11 @@ One map of a project that lives in several repositories.
 **A command-line tool that reads several TypeScript repositories with the
 compiler's own checker, without running them, and joins them into one graph you
 can query — from a terminal or from a coding agent over the Model Context
-Protocol.** It knows NestJS and Angular, React and Next.js, Express, Fastify and
-Koa, Telegraf and Hono, TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Kysely,
-Knex, Mongo, node-postgres, Redis, Kafka, RabbitMQ, BullMQ and socket.io.
+Protocol.** It knows NestJS and Angular, React and Next.js, Express, Fastify,
+Koa and Hono, Medusa, tRPC and Telegraf; TypeORM, Prisma, Drizzle, Mongoose,
+Sequelize, Kysely, Knex, MongoDB and node-postgres; Redis, Kafka, RabbitMQ,
+BullMQ and socket.io; and OpenAPI and AsyncAPI documents for the services whose
+source you do not have.
 
 Each repository is read on its own, then the readings are joined: a request made
 in one service is matched to the route that answers it in another, a message
@@ -208,7 +210,9 @@ markdown is [docs/getting-started.md](docs/getting-started.md).
 
 `init` writes `flowatlas.config.json`, works out each repository's name and kind
 from its manifest, and registers the graph server in every one of them so an
-agent in any repository can query the whole project.
+agent in any repository can query the whole project. A repository that declares
+a workspace is proposed as the applications in it, one service each, with the
+packages they import read as part of whichever service declares them.
 
 `flowatlas link ../admin-api ../bot ../web` is the same thing with the
 repositories named rather than discovered, for when they are not all in one
@@ -291,6 +295,13 @@ flowatlas doctor --accept              # write today's numbers as the baseline
 With a baseline, `--strict` fails only on growth, which is what makes it usable
 on a project that starts with findings.
 
+Some graphs are not worth a verdict, and `doctor` refuses them with exit 2
+whatever flags it was given: a graph a failed build wrote, a graph with nothing
+in it, one a service was read into and contributed nothing to, and one where most
+of a service's ways in were read as far as their addresses and no further. In
+each of those, every check would answer "nothing wrong" about code nobody read,
+and a baseline accepted over them would accept the blindness.
+
 Four of `doctor`'s findings are about the gate in front of a route rather than
 the route itself: `route-unguarded`, a route with no guard or middleware in
 front of it that reaches stored data; `route-shadowed`, a route a worker
@@ -314,6 +325,11 @@ flowatlas flow "POST /orders/:param"
 flowatlas flow "entry:orders:http:POST:/orders/:param"
 ```
 
+A procedure is named by its id, `entry:api:rpc:orders.list`, and a service with
+two applications serving one path puts the application in the id,
+`entry:api@WorkerModule:http:GET:/health`; a shorter name that matches either
+comes back with the ids to choose from.
+
 `flow`, `impact` and `channel` take `--detail 0..3` and
 `--format tree|json|mermaid`, so the same
 walk is read in a terminal, parsed by a script, or pasted into a document as a
@@ -335,7 +351,7 @@ at a pull request.
 ### Seeing it
 
 ```sh
-flowatlas visualise                     # writes graph.html
+flowatlas visualise                     # writes graph.html beside the graph
 flowatlas visualise --out map.html --title "Ledger"
 ```
 
@@ -364,7 +380,7 @@ shows `flowatlas`, and a session has ten tools:
 
 | Tool | Answers |
 |---|---|
-| `list_entries` | every way in, filtered by service, kind or path |
+| `list_entries` | every way in — routes, procedures, bot triggers, jobs, message handlers — filtered by service, kind or path |
 | `get_flow` | one entry followed through every service it reaches |
 | `who_calls` | what reaches a symbol, across repositories |
 | `impact` | every entry point that can reach a symbol, and whose |
@@ -464,8 +480,16 @@ because the model knows nothing about either.
 The kind picks the reader, not the frameworks. A repository may hold as many as
 it likes — a Nest application with a worker declaring routes in front of it, a
 bot library beside the container — and each is recognised by an adapter detected
-from that repository's own manifest. A route declared by a worker is an entry
-point on the same terms as one declared by a controller.
+from that repository's manifest and from the manifests of the workspace packages
+it declares. A route declared by a worker is an entry point on the same terms as
+one declared by a controller, and so is a procedure in a tRPC tree, a file under
+a Next.js or Medusa router, and a message handler.
+
+A repository whose dependencies are not installed is still read. The checker
+resolves nothing outside it, but the source still says what it means: an import
+names the package, `express()` makes an application, an annotation names a
+client's type and a model class names its table. What is read that way is marked
+`heuristic`, and the run says once, plainly, that the read was partial.
 
 **2. Find the leaves.** A chain of calls ends somewhere: a database, a cache, an
 outgoing request, a settings key, a message published. Which one it is comes from
@@ -484,9 +508,13 @@ declares it, then to the route that answers it. Matching is exact on normalised
 segments: a literal fills a hole, a hole never fills a literal, and where two
 routes both answer, the one that spells out a segment wins — and a catch-all,
 which opens the whole of the rest of the address, loses to both. A genuine tie is
-refused rather than guessed. Publishers meet handlers on the channel between
-them. Where a service is found but its route is not, that is recorded as drift,
-because it is drift.
+refused rather than guessed. An address is an address within one application,
+so where one service holds two applications serving the same path, a request
+written inside one of them reaches its own, and a request from outside names both
+and chooses neither. A procedure call is joined by its dotted path, in the
+caller's own service or one its configuration names, and nowhere else.
+Publishers meet handlers on the channel between them. Where a service is found
+but its route is not, that is recorded as drift, because it is drift.
 
 **4. Answer questions.** The joined graph is written as JSON and as SQLite. Every
 query, from the terminal or from an agent, reads the database and bounds its own
@@ -502,10 +530,23 @@ recorded with a reason and a location rather than guessed at or dropped:
 | `target-route-not-found` | the service is known, the route is not: real drift |
 | `unknown-base-url-env` | a settings key no service claims |
 | `ambiguous-route` | two routes answer equally; registration order decides |
+| `ambiguous-route-application` | two applications in one service serve it; deployment decides |
 | `dynamic-http-url` | the address is built at run time and cannot be read |
+| `route-handler-unread` | a way in was found and the code behind it was not |
+| `route-mount-unread` | the route was read, the prefix it is mounted under was not |
+| `db-layer-unread` | a class of the project's own looks like a data layer nobody named |
 | `marker-route-not-found` | an annotation points at a route that is gone |
 
-`flowatlas stats` counts them and `flowatlas dead` explains them.
+Those are a handful of about a hundred; the whole list, grouped by what each is
+about, is in [the command reference](docs/CLI.md#the-reasons-a-row-can-carry).
+`flowatlas doctor` groups them with what to do, `flowatlas stats` counts them
+and `flowatlas dead` explains the routes nothing calls.
+
+A reader that could read nothing says so as well. A file the parser gave up on
+is a `file-not-parsed` row; a service a reader opened and put nothing in the
+graph from is named by `build` and refused by `doctor`; a reading that placed
+some routes and not the rest says how many. The one failure this tool is built
+not to have is silence that reads as a clean result.
 
 An edge is never drawn on a guess *silently*. Some are drawn on a guess and say
 so: on the project measured above, 19,406 edges were read from the code and 397
@@ -529,126 +570,196 @@ async submit(order: Order) {
 }
 ```
 
-Every edge carries how much to trust it: `static` was read from the code,
-`marker` was asserted by an annotation in the code, `declared` was asserted by
-a document about code that is not here, `heuristic` was inferred.
+Every edge carries how much to trust it, strongest first: `static` was read from
+the code, `marker` was asserted by an annotation in the code, `declared` was
+asserted by a document about code that is not here, `heuristic` was inferred —
+from a name, from what the source states where the types were not installed, or
+from an assumption the edge names. A fifth word, `runtime`, is reserved for an
+edge observed while the code runs, and nothing here produces it yet.
+
+A join is no stronger than the weaker of its two ends. A request read in full
+that reaches a route a document declared is `declared`; one that reaches a route
+read off an application recognised only from its source is `heuristic`; and one
+joined by taking a mount every committed environment file leaves empty as empty
+is `heuristic` and carries the settings it assumed.
 
 ---
 
 ## Where it stands
 
-Working and verified against a real five-repository project:
+Working, verified against the five-repository project measured above, and held
+to a fixture for every shape below. Each fixture's README says what it exists to
+prove, and the path is given so you can run it.
 
-- **Reading** NestJS and Angular, with modules, injection, guards, routes,
-  components and templates; Express, Fastify, Koa and Hono, where a route is
-  registered by a call rather than declared by a decorator, with the routers it
-  is mounted through and the middleware in front of it.
-- **Leaves** for TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Kysely, Knex,
-  node-postgres, MongoDB and a repository base named in the configuration; Redis
-  and cache-manager; outgoing requests; settings keys. Where the table is named
-  in the call rather than in a type — `from(users)`, `knex('orders')`,
-  `selectFrom('asset')`, `Model.init(..., { tableName })`,
-  `@Table({ tableName })` — it is read from the expression or the declaration,
-  and a table assembled at run time is reported rather than guessed at.
-- **Channels** for Kafka, RabbitMQ, BullMQ, Redis pub/sub, socket.io and an
-  in-house bus described in the configuration. A socket is read from both ends:
-  `@SubscribeMessage` in a gateway and `socket.emit` in a browser are two ends
-  of one channel, under the namespace the gateway declares.
-- **Bot entries** for Telegraf, both the decorator style and the imperative one,
-  so a flow starts at the command someone typed.
-- **Joining** requests to routes, browsers to routes, publishers to handlers, and
-  types across a shared package.
+- **Routes declared by a decorator.** NestJS controllers, with modules,
+  injection and the whole wrapping layer, and the address the framework prints
+  at start-up: the global prefix and URI versioning, read wherever the
+  repository sets them rather than only in the entry file
+  (`fixtures/nest-addressing`); a decorator imported from a subpath of the
+  package, or under an alias (`fixtures/nest-subpath-imports`).
+- **Routes registered by a call.** Express, Fastify, Koa and Hono, with the
+  routers each route is mounted through and the middleware in front of it
+  (`fixtures/express-service`, `fixtures/fastify-service`,
+  `fixtures/koa-service`, `fixtures/hono-worker`); an application declared by a
+  chain (`fixtures/express-chained-app`); a list of paths
+  (`fixtures/express-path-array`); a mount through a published helper
+  (`fixtures/koa-mount-helper`); one mount over a registry of applications that
+  plugins fill (`fixtures/koa-plugin-registry`); a named handler handed to a
+  wrapper the repository wrote (`fixtures/express-wrapped-handler`); and an
+  application recognised from what the source states when the framework's types
+  are not installed, marked `heuristic` (`fixtures/express-not-installed`). A
+  framework nobody here has heard of can be described in configuration, in the
+  same schema the four shipped ones are written in (`fixtures/custom-http`).
+- **Routes declared by where a file is.** A file-system router is four values —
+  its root, which file names declare a route, the prefix in front and which
+  segment spellings it honours — so Next.js (app router, pages router, API
+  routes) and Medusa are rows of one reading (`fixtures/react-next`,
+  `fixtures/medusa-fs-router`). A verb a helper built, aliased or re-exported is
+  read as the handler it names (`fixtures/next-reexport`,
+  `fixtures/next-hollow`), and a server action built by `next-safe-action` or
+  `zsa` is a boundary with its callers (`fixtures/next-actions`).
+- **Procedures.** A tRPC tree is read on the server as one way in per procedure,
+  addressed by the dotted path its callers write, with the guards inherited
+  through the procedure it was built from (`fixtures/trpc-router`), and the
+  client's `trpc.orders.list.useQuery(…)` is a request joined to it
+  (`fixtures/trpc-join`).
+- **Applications.** Two applications in one service — a NestJS API and a worker,
+  or a second Next.js application under `examples/` — serving the same path are
+  two entries, and a request written inside one reaches its own
+  (`fixtures/nest-two-applications`, `fixtures/next-nested-apps`,
+  `fixtures/next-caller-application`).
+- **Monorepos.** A service is an application together with the workspace
+  packages it declares at run time — not a member's devDependencies — and each
+  package is compiled with its own path aliases (`fixtures/next-monorepo`,
+  `fixtures/nest-dev-sibling`, `fixtures/workspace-package-paths`). Detection
+  reads the workspace, not the leaf manifest (`fixtures/workspace-leaf`), and a
+  framework a service has only through a member is named on `build`'s
+  `at arm's length` line (`fixtures/next-sibling-nest-types`). `init` proposes
+  one service per application in a workspace.
+- **Data layers** for TypeORM, Prisma, Drizzle, Mongoose, Sequelize (including
+  models declared with decorators), Kysely, Knex, node-postgres and MongoDB, and
+  a repository base named in the configuration (`fixtures/nest-typeorm`,
+  `fixtures/nest-prisma`, `fixtures/nest-drizzle`, `fixtures/nest-mongoose`,
+  `fixtures/nest-sequelize`, `fixtures/nest-sequelize-typescript`,
+  `fixtures/nest-kysely`, `fixtures/nest-knex`, `fixtures/nest-pg`). Where the
+  table is named in the call — `from(users)`, `knex('orders')`,
+  `selectFrom('asset')`, `@Table({ tableName })` — it is read from there, and a
+  table assembled at run time is reported rather than guessed at. A query in a
+  module of exported functions is read like one in a class
+  (`fixtures/fn-data-layer`). Without `node_modules` the data layer is read from
+  what the source states, at `heuristic` (`fixtures/db-not-installed`). A
+  workspace package that re-exports a library's client needs nothing
+  (`fixtures/nest-prisma-wrapper`); one that wraps it in classes of its own is
+  named in the rows it produces until you name it in the configuration
+  (`fixtures/nest-workspace-wrapper`). Redis and cache-manager, outgoing
+  requests and settings keys are leaves too.
+- **Channels** for Kafka, RabbitMQ, BullMQ and Redis pub/sub — both clients, and
+  every spelling of a subscribe verb, `pSubscribe` and `sSubscribe` among them
+  (`fixtures/nest-kafka`, `fixtures/nest-rabbitmq`, `fixtures/nest-bullmq`,
+  `fixtures/nest-redis-pubsub`, `fixtures/nest-redis-v4`). socket.io is read
+  from both ends under the namespace each end is on, whether a gateway declares
+  it or the server opens it with `io.of('/live')` (`fixtures/socket-channels`,
+  `fixtures/socket-namespaces`). An in-house bus is described in configuration,
+  with locators for a name written as an option or stated once on a class, and a
+  payload path for a message inside an envelope (`fixtures/object-channels`,
+  `fixtures/fn-broker`). A publish is read wherever it is written, and a channel
+  template whose varying part is a closed set of strings is folded into the
+  channels it reaches (`fixtures/folded-channels`).
+- **Browsers.** Angular templates, services and the router, lazy routes
+  included (`fixtures/angular-basic`, `fixtures/angular-lazy-routes`); React
+  components and hooks; requests made through the platform's `fetch`, `axios`,
+  a pass-through wrapper, a base whose resource a subclass decides, or a client
+  class the project wrote itself, recognised by following its verbs to the
+  network or named in the configuration (`fixtures/angular-client-wrapper`,
+  `fixtures/react-local-client`, `fixtures/react-client-base`). A browser
+  holding a stream open is a request like any other (`fixtures/sse-stream`).
+- **Bots.** Telegraf, both the decorator style and the imperative one, and a
+  table of handlers the project keeps itself (`fixtures/nest-telegraf`,
+  `fixtures/bot-registry`).
+- **Documents.** A service whose source you do not have is declared by an
+  OpenAPI or AsyncAPI document, and joins and compares like any other end at
+  `declared` confidence (`fixtures/multi-repo-declared`,
+  `fixtures/multi-repo-asyncapi`).
+- **Guards.** Everything in front of a way in is a node and an ordered
+  `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
+  middleware, a procedure's `.use(…)`, a file-system router's declarative list —
+  and four checks report a route whose gate is missing, bypassed, a catch-all,
+  or silently stripping a field (`fixtures/nest-guards`).
 - **Comparing** what each side of a boundary declares, field by field, with the
-  rules of the JSON wire applied so a date meeting a string is not a finding.
+  rules of the JSON wire applied so a date meeting a string is not a finding
+  (`fixtures/multi-repo-contracts`).
+- **Honesty about itself.** A graph nobody could report on — a failed build, an
+  empty graph, a service that contributed nothing, a service whose ways in were
+  mostly read no further than their addresses — makes `doctor` exit 2. A read
+  without dependencies says so once. A file the parser gave up on, a
+  description that matched nothing and a reading that placed only some routes
+  are each a row rather than a smaller graph (`fixtures/unreadable-file`,
+  `fixtures/next-hollow`).
 - **Serving** the graph to an agent, to a terminal in three formats, and to a
-  browser as one generated page.
-- **Rebuilding** only what changed, with a watch mode.
-- **Reporting** every finding as one list with a baseline, so a build can fail on
-  growth rather than on a number nobody chose.
-- **Comparing revisions**, so a branch reports which entry points in which other
-  repositories would notice it.
-- **Wrappers**: a request made through a pass-through client, a base service
-  whose resource a subclass decides, a finite table of paths or a `fetch`
-  variant is followed to where its address was decided — including a wrapper
-  that remembers what it was given in a field and opens the request later,
-  which is how a stream that has to survive being backgrounded is written. An inline handler —
-  Hono, Telegraf, a callback registry — is a function the flow continues into.
-- **Guards**: composite decorators built from `applyDecorators(UseGuards(...))`
-  are read, and four checks report a route whose gate is missing, bypassed,
-  a catch-all, or silently stripping a field.
-- **Counting**: a place where nothing joins is listed apart from a place it
-  could not read, so no figure claims the second while counting the first, and a
-  route nothing calls says which kind of route it is.
+  browser as one generated page; **rebuilding** only what changed, with a watch
+  mode, and noticing when dependencies were installed since; **reporting** every
+  finding as one list with a baseline; and **comparing revisions**, so a branch
+  reports which entry points in which other repositories would notice it.
 
 Known gaps in what it can read:
 
-- A repository built on anything but NestJS, Angular, React, Next.js, Express,
-  Fastify or Koa. Nuxt, Remix, Vue and Svelte are recognised by name and read by
-  nothing: `init` and `build` both say which repository and which framework, and
-  the graph is smaller than the project by exactly that much.
-- In a React repository, a request written any way other than the browser's own
-  client or the common client library. What decides that a function is a
-  component or a hook is its name and whether markup comes back, because that is
-  all the framework itself goes on; a component whose name is not capitalised is
-  not one here either, and neither is it at run time.
-- In a Next.js repository, a server action built by a call rather than declared
-  as a function — `export const save = client.schema(…).action(…)`, which is
-  what the validation helpers produce. The boundary is real and nothing here can
-  name the code behind it, so it is counted and reported: on the repository this
-  was measured against, 11 of 134 actions were read and one row named the other
-  123. Also unread there: a layout, which decides what surrounds a screen rather
-  than what crosses a boundary, and a `middleware.ts` whose matcher is a regular
-  expression, which is reported rather than treated as coverage nobody checked.
-- A Next.js repository's layouts, as above. Everything else the server side of
-  such a repository has is read: it is one repository read once, by the reader
-  that opens both `.ts` and `.tsx`, and the browser half is read through the
-  same project by the frontend adapter. So dependency injection, the wrapping
-  chain, the data layer, the brokers, the contract types and the incremental
-  session all apply to it, and a query in a module of exported functions —
-  which is how such a repository usually writes its data layer — is a node like
-  any other.
-- On Express, Fastify and Koa, what is read is the route — verb, path and
-  handler — the router it is declared on, the prefix it is mounted under, and
-  the middleware in front of it, including middleware installed on an
-  application above the mount and inherited through it. Two things are not: a
-  file-system router, which `@fastify/autoload` is as much as Next.js is, and
-  middleware installed in a different file from the routes it covers, because
-  the order it runs in is the order the modules are evaluated in and nothing
-  here reads that. Both are reported rather than guessed at. Most Express
-  handlers declare no shape for the request body; where a route declares one it
-  is in the graph as a type, and where it does not, the route has no declared
-  input, which is true.
+- A repository built on anything but the frameworks above. Nuxt, Remix, Vue and
+  Svelte are recognised by name and read by nothing: `init` and `build` both say
+  which repository and which framework, and the graph is smaller than the
+  project by exactly that much.
+- A file-system router nobody has described — `@fastify/autoload`, or a
+  convention of the repository's own. The reader says it cannot tell such a
+  repository from a library that merely depends on the framework, rather than
+  calling it clean.
+- Middleware installed in a different file from the routes it covers, because
+  the order it runs in is the order modules are evaluated in, and nothing here
+  reads that. A mount through a helper the repository wrote itself, whose prefix
+  no description can place: the route is a row naming the call.
+- A handler built at run time: a factory handed a function, a wrapper handed a
+  list, a verb a package's helper assembles. The way in is found; the code
+  behind it is a `route-handler-unread` or `route-handler-anonymous` row, and
+  past half of a service's ways in `doctor` refuses the graph.
+- In a Next.js repository, a layout, which decides what surrounds a screen
+  rather than what crosses a boundary, and a `middleware.ts` whose matcher is a
+  regular expression, which is reported rather than treated as coverage nobody
+  checked. A server action built by a helper no description names is counted in
+  one row.
+- What a procedure's caller sends, compared with what the procedure takes. A
+  real input is nearly always a validation schema whose type is the library's
+  inference, so every procedure boundary is listed as unchecked with that reason
+  rather than as agreeing.
+- A socket read back out of a collection the program keeps itself. Which
+  namespace it was opened on is somebody's bookkeeping, not a value the
+  transport carries, so the publish stays on the root.
 - A query written at the top level of a module, which runs when the module is
-  imported and belongs to no function anybody can name. It is reported rather
-  than absent. A query in a module-level *function* is read, which is the usual
-  shape outside NestJS.
-- The table behind a Drizzle query, on a real repository. The queries are found;
-  the table is not, because a modern driver's handle is typed as an
-  intersection and a type's origin is not read through one. So those rows say
-  the receiver was recognised by name alone, which is what they mean.
+  imported and belongs to no function anybody can name. It is a
+  `db-call-at-module-level` row rather than absent.
 - A generated client that was never generated. Prisma's client is code its own
-  build step writes, and a repository cloned without running that step has no
-  `PrismaClient` declaration anywhere — so every query through it is a receiver
-  whose type could not be resolved, and says so. On cal.com, whose persistence
-  goes through a workspace package that re-exports the client, that is all 80 of
-  its query sites. A wrapper package is not itself the obstacle: where the
-  client's types exist, a query through a re-export is read under the library's
-  own name, because the type of what the wrapper hands on is still the library's.
+  build step writes, and a repository cloned or installed without running that
+  step has no `PrismaClient` declaration anywhere, so every query through it is
+  a receiver whose type could not be resolved, and says so. A wrapper package is
+  not itself the obstacle: where the client's types exist, a query through a
+  re-export is read under the library's own name.
 - A data layer this repository declares and does not name. Where a query goes
   through a repository class of the project's own, the class is what says which
   table is meant, and `adapters.db.localBaseClasses` is where a reader names it.
-  Until it is named, those calls are rows saying so — 1,141 of them on immich and
-  69 on cal.com — rather than queries nobody checked.
-- An address built entirely at run time, where no part of it is written down.
-  Each one is reported rather than guessed at.
+  Until it is named, those calls are rows saying so, naming the workspace package
+  the class comes from where it comes from one, rather than queries nobody
+  checked.
+- An address built entirely at run time, where no part of it is written down,
+  and a route whose address begins with a part read from a setting that some
+  committed environment file sets, or that no committed environment file
+  mentions. Each is reported rather than guessed at.
+- Which of two applications serving one address a request from another service
+  reaches. That is decided by deployment and written in no source, so both are
+  named and neither is chosen.
 - A helper whose tail depends on whether an argument is empty, where the caller
   passed something nobody can read. Both branches are real, so the path is
   reported as far as they agree and no further.
 - A path accumulated into a reassignable variable across `if` statements is
   deliberately not followed, because reading the wrong branch would invent an
   edge.
-- A channel whose name only exists as run-time data on both sides: a browser
-  holding a stream open is subscribed to a URL, not to a name.
+- A channel whose name only exists as run-time data on both sides.
 
 What it does on the five-repository project it was built against is
 [measured at the top of this file](#measured-on-a-real-project). Every figure
@@ -669,19 +780,27 @@ Or one at a time:
 pnpm -r build
 pnpm -r typecheck
 pnpm fixtures:run     # run the tool over every fixture
-pnpm -r test          # 1,371 tests
+pnpm -r test          # 2,313 tests
 pnpm invariants       # rules no test can express
-pnpm fixtures:check   # extraction, server and terminal snapshots
+pnpm fixtures:check   # extraction, server and terminal snapshots, and the read gate
 ```
 
 `fixtures:check` compares against recorded output, so the fixtures have to be run
 first, and a snapshot nobody compares is not a gate. It therefore prints two
-counts — `90 compared, 91 validated` — and every snapshot in the gap between them
-has to be accounted for: either the fixture has not been run, which fails and says
-so, or the fixture is named in `VALIDATE_ONLY` in `scripts/fixtures-check.mjs`
+counts — `161 compared, 162 validated` — and every snapshot in the gap between
+them has to be accounted for: either the fixture has not been run, which fails and
+says so, or the fixture is named in `VALIDATE_ONLY` in `scripts/fixtures-check.mjs`
 with the reason, which the gate then prints on every run. One fixture is,
 `schema-smoke`, because it is a hand-written sample of the schema and there is
-nothing to run over it; an entry that no longer applies fails too. Whether a
+nothing to run over it; an entry that no longer applies fails too. The other
+direction is held as well: an output a fixture's run writes that no snapshot
+holds is a failure, not a silence. A project fixture's snapshots are its graph,
+its link report and its contracts report, and a fixture whose build is not yet
+trusted as an expectation is named in `UNHELD` with the disagreement, printed on
+every run the same way; that list is empty today. The last step is the read gate
+from [the coverage harness](docs/coverage.md#the-read-gate), run over every
+fixture's committed graph: a file with a route, a screen, a click or a query in
+it must yield a node or a row naming the file. Whether a
 fixture can be run at all, and with what, is `scripts/fixture-layout.mjs` and is
 read from what the fixture declares — a `flowatlas.config.json` means a project
 read by `build`, a `package.json` alone means one repository read by `extract` —
@@ -758,15 +877,20 @@ not changed; only something written from the source proves it is right.
 `scripts/demo/page.mjs` writes the same thing as `docs/index.html`, which is what
 GitHub Pages serves at <https://panevschi-ruslan.github.io/flowatlas/>.
 `docs/CLI.md` is the complete reference: every command, every flag, every
-configuration key. `docs/ci.md` is how to run it in a build. `docs/coverage.md`
-is how this tool is measured against eight repositories nobody here wrote, with
-the reports committed so an improvement arrives as a diff. `PUBLISHING.md` is
+configuration key. `docs/mcp.md` is the graph server. `docs/ci.md` is how to run
+it in a build. `docs/coverage.md` is how this tool is measured against
+repositories nobody here wrote, by one counting rule, with the reports committed
+so an improvement arrives as a diff. `PUBLISHING.md` is
 the release runbook. `scripts/demo/record.sh` remakes every recording in the
 walkthrough from `fixtures/multi-repo`.
 
 ### The rules the code is held to
 
-Twelve invariants, four of which `pnpm invariants` enforces on every run:
+Twelve invariants. `pnpm invariants` enforces three of them on every run — the
+first, the eleventh and the twelfth — together with three gates of its own: no
+file in the tree carries a raw control character, every reason a row carries is
+a reason `doctor` knows, and the coverage harness and the tool agree about what a
+service is. Each gate was watched failing before it was trusted.
 
 1. The core names no technology. Anything that knows what TypeORM is lives
    behind an adapter.
