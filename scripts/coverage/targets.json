@@ -26,7 +26,6 @@
       "read": [
         "."
       ],
-      "types": { ".": "koa" },
       "why": "Koa + React + socket.io + Sequelize in one repository"
     },
     {

@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { BROWSER_TYPES, isFrontend, SERVER_TYPES } from './build/extractor.js';
 import {
   guessType,
   guessUnread,
   guessWorkspaceType,
   looksLikeApplication,
   noReaderNote,
+  TYPE_SIGNATURES,
   UNKNOWN_TYPE,
 } from './stacks.js';
 
@@ -59,12 +61,62 @@ describe('the stack a repository is built on', () => {
   });
 
   // Every application built on the file-system router declares React too, and
-  // both are read, so the order decides which reader a repository gets. The
-  // one that also finds the routes it answers goes first.
+  // both are read. It is a server type, so it wins by the rule rather than by
+  // sitting above `react` in the table.
   it('prefers the file-system router over the framework it is built on', () => {
     const pkg = { dependencies: { next: '15.0.0', react: '19.0.0' } };
     expect(guessType(pkg)).toBe('nextjs');
     expect(guessUnread(pkg)).toBeUndefined();
+  });
+
+  /**
+   * R88: outline is Koa and React in one directory, and which reader it got was
+   * decided by which of the two rows somebody had typed first. The server type
+   * is the answer for every pairing of the two halves, because its reader reads
+   * both halves and the browser reader reads one.
+   */
+  it('gives a repository that is both halves the reader that reads both', () => {
+    for (const server of ['koa', 'express', 'fastify']) {
+      for (const browser of ['react', '@angular/core']) {
+        const pkg = { dependencies: { [server]: '1.0.0', [browser]: '1.0.0' } };
+        expect(guessType(pkg)).toBe(server);
+      }
+    }
+    expect(guessType({ dependencies: { '@nestjs/core': '10.0.0', react: '19.0.0' } })).toBe('nestjs');
+  });
+
+  it('says which half of a repository is declared beside the type it chose', () => {
+    expect(noReaderNote({ dependencies: { koa: '2.15.0', react: '19.0.0' } })).toBe(
+      'looks like koa; set its type to "koa"' +
+        ' (it declares react as well, and the koa reader reads both halves)',
+    );
+  });
+
+  it('still reads a repository that is only one half as that half', () => {
+    expect(guessType({ dependencies: { react: '19.0.0', 'react-dom': '19.0.0' } })).toBe('react');
+    expect(guessType({ dependencies: { '@angular/core': '17.0.0' } })).toBe('angular');
+    expect(guessType({ dependencies: { koa: '2.15.0' } })).toBe('koa');
+  });
+
+  /**
+   * The same fact written down twice, in two currencies, held to itself.
+   *
+   * `build/extractor.ts` says which types each reader handles and this table says
+   * which half each type's reader reads; the rule above is only as good as those
+   * two agreeing. A type that moves from one reader to the other — which is what
+   * happened to the file-system router — fails here until this column follows it.
+   */
+  it('agrees with the readers about which type belongs to which half', () => {
+    for (const [type, , half] of TYPE_SIGNATURES) {
+      expect({ type, server: half === 'server' }).toEqual({
+        type,
+        server: SERVER_TYPES.includes(type),
+      });
+      expect({ type, browser: half === 'browser' }).toEqual({ type, browser: isFrontend(type) });
+    }
+    // Nothing a reader handles is missing from the table, in either direction.
+    const named = TYPE_SIGNATURES.map(([type]) => type);
+    for (const type of [...SERVER_TYPES, ...BROWSER_TYPES]) expect(named).toContain(type);
   });
 
   it('says nothing about a manifest that gave nothing away', () => {
