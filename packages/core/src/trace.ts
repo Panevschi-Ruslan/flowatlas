@@ -19,7 +19,12 @@ import {
 } from './di/member-call.js';
 import { holeIn, UNREAD_SPAN } from './ids.js';
 import { writtenObjectLiteral } from './origin.js';
-import { declarationOf, evaluateExpression, literalUnionOf } from './static-value.js';
+import {
+  declarationOf,
+  evaluateExpression,
+  literalUnionOf,
+  type StaticValue,
+} from './static-value.js';
 
 /** How far back a value is followed before the answer stops being trustworthy. */
 const BUDGET = 8;
@@ -512,6 +517,26 @@ const readString = (value: TsNode, scope: Scope, budget: number): string | null 
 const ABSOLUTE = /^[a-z][a-z0-9+.-]*:\/\//i;
 
 /**
+ * What an expression is worth when nothing overrides it.
+ *
+ * `options.baseUrl || '/api'` is a value with a default written beside it, and
+ * the default is what every caller who passed nothing gets. Read the left where
+ * it can be read — a truthy left is the whole answer — and the right where it
+ * cannot, which is exactly the order {@link addressOf} takes those two operators
+ * in. Anything else is itself.
+ */
+const defaulted = (node: TsNode): StaticValue => {
+  const direct = evaluateExpression(node);
+  if (direct.resolved) return direct;
+  if (!Node.isBinaryExpression(node)) return direct;
+  const operator = node.getOperatorToken().getKind();
+  if (operator !== SyntaxKind.BarBarToken && operator !== SyntaxKind.QuestionQuestionToken) {
+    return direct;
+  }
+  return defaulted(node.getRight());
+};
+
+/**
  * The constant a property always holds, when it always holds the same.
  *
  * `private uploadPath = '/admin/upload'` is a piece of every address the service
@@ -522,6 +547,12 @@ const ABSOLUTE = /^[a-z][a-z0-9+.-]*:\/\//i;
  *
  * A value naming a host is refused. That is a base address rather than a piece
  * of a path, and where it came from is a question for the settings trace.
+ *
+ * `this.baseUrl = options.baseUrl || '/api'` is read as `/api`. That is the same
+ * fold {@link addressOf} already makes over `??` and `||` — the left where it can
+ * be read, the right where it cannot — and the two disagreeing about the same
+ * expression was the whole of the difference between a field holding a path and a
+ * field holding a hole (R114).
  */
 export const constantPropertyValue = (
   node: TsNode,
@@ -533,7 +564,7 @@ export const constantPropertyValue = (
   if (owner === undefined) return null;
   const values = new Set<string>();
   for (const assigned of assignmentsTo(access.getName(), owner)) {
-    const value = evaluateExpression(assigned);
+    const value = defaulted(assigned);
     if (!value.resolved || typeof value.value !== 'string') return null;
     // A caller reading the opening of an address may ask for the host too:
     // where there is no setting behind it, the host written down is the answer.

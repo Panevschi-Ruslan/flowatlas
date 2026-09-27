@@ -15,6 +15,8 @@
  * proved against the others.
  */
 
+import type { ApiUrl } from './util/url.js';
+
 /** A type whose values make requests, and the package that declares it. */
 export interface ClientType {
   /**
@@ -61,6 +63,16 @@ export interface RequestClient {
   readonly packages?: readonly string[];
   /** The client called by its own name: `fetch(url, init)`. */
   readonly callee?: { readonly names: readonly string[] } & CallShape;
+  /**
+   * The address the client puts in front of every path written through it.
+   *
+   * Absent for the two installed clients, and not because they have no such
+   * thing: `axios.create({ baseURL })` is exactly this, and where it is set is a
+   * question about one call in one file rather than about a class this repository
+   * declares. A client of a project's own keeps its base in a field, and that
+   * field is read where the class is (R114).
+   */
+  readonly base?: ApiUrl;
   /** Verb methods on a value of one of these types: `api.post(url, body)`. */
   readonly receiver?: {
     readonly types: readonly ClientType[];
@@ -146,10 +158,20 @@ export const REQUEST_CLIENTS: readonly RequestClient[] = [FETCH, AXIOS];
  * declare is a name that means something else wherever it does appear.
  * Everything after that — the shape of the call, the body, the address, the row
  * when the address cannot be read — is the code already proved against the two.
+ *
+ * The base is the third difference and it arrived later, with the defect that
+ * made it worth having: a client holding `/api` and writing `/documents.info` at
+ * every call site is an address that matches a route only for as long as the
+ * route is missing the same segment (R114).
  */
-export const localClient = (typeName: string, verbs: readonly string[]): RequestClient => ({
+export const localClient = (
+  typeName: string,
+  verbs: readonly string[],
+  base?: ApiUrl,
+): RequestClient => ({
   name: typeName,
   package: null,
+  ...(base === undefined ? {} : { base }),
   receiver: {
     types: [{ package: null, typeName }],
     verbs: Object.fromEntries(
