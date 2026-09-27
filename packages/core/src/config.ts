@@ -347,6 +347,102 @@ export const entryHttpSchema = z.strictObject({
   routeObject: entryHttpRouteObjectSchema.optional(),
 });
 
+/**
+ * Where a tree of named ways in is hung so that requests reach it.
+ *
+ * The tree itself is a value in one file and is served from another, and the
+ * serving file is usually three lines long: a call to something that turns the
+ * tree into a handler. That call is worth describing for one reason — it is the
+ * only place a reader can stand and say *this file serves a tree I could not
+ * read*, which is the sentence a repository whose ways in are all of this shape
+ * needs most.
+ *
+ * The tree is either the argument itself or a key of an options object written
+ * there. Both are allowed on one row rather than two, because it is one call
+ * with two accepted spellings and the reader tries the object first.
+ */
+export const entryProcedureMountSchema = z.strictObject({
+  /** The function that turns a tree into something requests arrive at. */
+  call: z.string().min(1),
+  /** Which argument carries the tree, when it is the argument itself. */
+  treeArg: z.number().int().min(0).default(0),
+  /** The key of an options argument that carries the tree, when it is one. */
+  treeKey: z.string().min(1).optional(),
+});
+
+/**
+ * A tree of named ways in, assembled from object literals.
+ *
+ * The second family of call-registered boundary this tool reads, and it differs
+ * from the first in exactly one structural fact, which is why it is a
+ * description of its own rather than a field on the other one: the name of a way
+ * in is a *key* of an object literal rather than a string argument at a
+ * position, and its full address is every key above it. `entryHttpSchema` and
+ * `entryRegistrySchema` both say where a name sits among a call's arguments —
+ * `pathArg`, `keyArg` — and neither can say "the key this value is written
+ * under", nor "and every key of every literal that encloses it". Nothing but a
+ * walk of the tree produces the address, so the walk is code and this says what
+ * the code should look for.
+ *
+ * `terminators` is the other half, and the half that makes the reading safe: a
+ * value is a way in when it is a chain of calls whose last link is one of these
+ * and whose argument is a function. That is a shape a repository does not write
+ * by accident, and it is why this description needs no types to be sure of
+ * itself — which matters, because a repository nobody has installed resolves
+ * almost nothing and is the state most readers are pointed at.
+ *
+ * Every field says where something is or what something is called. None of them
+ * says how to walk the tree.
+ */
+export const entryProcedureSchema = z.strictObject({
+  /** How this is named in reports and on the entries it produces. */
+  name: z.string().min(1),
+  /**
+   * Dependencies any one of which means this is in use.
+   *
+   * One configuration covers every repository of a project. An empty list means
+   * the description is tried everywhere.
+   */
+  packages: z.array(z.string().min(1)).default([]),
+  /**
+   * Functions that assemble a tree out of one object literal.
+   *
+   * Names rather than types, and that is the one place this description is
+   * looser than its HTTP counterpart. The builder is nearly always re-exported
+   * through a file of the project's own — the value the library hands back is
+   * taken apart and its pieces published under the project's own names — so the
+   * type on the receiver is the project's, not the library's, and a row naming
+   * the library's types would match nothing. What makes the looseness safe is
+   * that a name alone is never enough: a call is only a tree once one of the
+   * literal's values turns out to be a way in by the rule above.
+   */
+  assembledBy: z.array(z.string().min(1)).min(1),
+  /**
+   * The last link of a chain, and the kind of way in it opens.
+   *
+   * A lookup rather than a list, because the reader asks exactly one question of
+   * it — what does this method mean — and the answer differs per spelling: one
+   * of them reads and one of them writes, and a third may be a stream that is
+   * not a request at all.
+   */
+  terminators: z.record(z.string().min(1), z.enum(ENTRY_KINDS)),
+  /** How the keys down the tree are joined into one address. */
+  separator: z.string().min(1).default('.'),
+  /** The chain link carrying the shape of what a caller sends. */
+  inputMethod: z.string().min(1).optional(),
+  /**
+   * The chain link that installs something in front of a way in.
+   *
+   * It is read on the chain and on whatever the chain starts from, because the
+   * ordinary way to write this is to name the guarded starting point once and
+   * then use it everywhere — which means the guard is nowhere near the way in it
+   * protects.
+   */
+  guardMethod: z.string().min(1).optional(),
+  /** Where a tree is hung so that requests reach it. */
+  mounts: z.array(entryProcedureMountSchema).default([]),
+});
+
 export const adapterForceSchema = z.strictObject({
   entry: adapterNamesSchema.optional(),
   db: adapterNamesSchema.optional(),
@@ -368,8 +464,10 @@ export const flowatlasConfigSchema = z
             registries: z.array(entryRegistrySchema).default([]),
             /** Frameworks that register an HTTP route by calling an application. */
             http: z.array(entryHttpSchema).default([]),
+            /** Frameworks whose ways in are the keys of a tree of object literals. */
+            procedures: z.array(entryProcedureSchema).default([]),
           })
-          .default({ registries: [], http: [] }),
+          .default({ registries: [], http: [], procedures: [] }),
         broker: z
           .strictObject({
             custom: z.array(customBrokerSchema).default([]),
@@ -409,7 +507,7 @@ export const flowatlasConfigSchema = z
       .default({
         auto: true,
         force: {},
-        entry: { registries: [], http: [] },
+        entry: { registries: [], http: [], procedures: [] },
         broker: { custom: [] },
         db: { localBaseClasses: [] },
         frontend: { localClientClasses: [] },
@@ -533,6 +631,15 @@ export type EntryHttpConfig = z.infer<typeof entryHttpSchema>;
  */
 export type EntryHttpDescription = z.input<typeof entryHttpSchema>;
 export type EntryRegistryConfig = z.infer<typeof entryRegistrySchema>;
+export type EntryProcedureConfig = z.infer<typeof entryProcedureSchema>;
+/**
+ * A description as it is written, before the schema fills in what it leaves out.
+ *
+ * Exported for the same reason its HTTP counterpart is: what ships with the tool
+ * is written in the shape a person writes in configuration and goes in through
+ * the same schema, so a field only configuration had ever tested cannot exist.
+ */
+export type EntryProcedureDescription = z.input<typeof entryProcedureSchema>;
 export type CustomProducerConfig = z.infer<typeof customProducerSchema>;
 export type CustomSubscriberConfig = z.infer<typeof customSubscriberSchema>;
 export type ServiceConfig = z.infer<typeof serviceConfigSchema>;

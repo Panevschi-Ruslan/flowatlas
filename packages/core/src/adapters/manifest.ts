@@ -1,4 +1,4 @@
-import { workspaceMemberDirs, workspaceRootsAbove } from '../workspace.js';
+import { serviceSourceDirs, workspaceMemberDirs, workspaceRootsAbove } from '../workspace.js';
 import { readPackageJson, type PackageJson } from '../package-json.js';
 
 /**
@@ -81,10 +81,28 @@ export const hasAnyDependency = (pkg: PackageJson, names: readonly string[]): bo
  * part of it. What they declare is therefore part of what this read depends on -
  * a monorepo root whose own manifest carries nothing but tooling is otherwise
  * read as a repository with no framework in it at all.
+ *
+ * And sideways, which is the same sentence and was the missing third of it. A
+ * service's extent is no longer its own directory: since R96 it is its own
+ * directory plus every workspace member it declares, transitively, and the
+ * source files of those members are read and walked exactly like its own. So a
+ * library declared by one of them is a library whose calls are in this graph,
+ * and an adapter that gated on the narrow manifest was switched off while its
+ * own framework's code was being read - which is how three quarters of one real
+ * repository's ways in came to be served by a package the detection could not
+ * see. `serviceSourceDirs` is the one answer to "what is read as part of this",
+ * and this asks it rather than compiling a second set of globs: that seam is the
+ * one R115 closed, and reopening it here would be reopening it.
+ *
+ * It is narrower than taking the whole workspace, and deliberately: a monorepo
+ * has hundreds of members and a service declares a dozen. What a member nobody
+ * here depends on installs is not something this code can import, and folding it
+ * in would make every service in a large repository look like every framework
+ * anybody in it uses.
  */
 const manifestChain = (dir: string): readonly PackageJson[] => {
   const above = [...workspaceRootsAbove(dir)].reverse();
-  return [...above, ...workspaceMemberDirs(dir)]
+  return [...above, ...workspaceMemberDirs(dir), ...serviceSourceDirs(dir)]
     .map(readPackageJson)
     .filter((pkg): pkg is PackageJson => pkg !== undefined);
 };

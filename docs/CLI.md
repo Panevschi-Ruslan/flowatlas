@@ -690,6 +690,7 @@ three words version 2 knew.
 | `broker.custom` | object[] | `[]` | an in-house message bus, described so its publishers and handlers are found |
 | `entry.registries` | object[] | `[]` | a table of handlers you keep yourself, described so each registration is a way in |
 | `entry.http` | object[] | `[]` | an HTTP framework nothing here ships an adapter for, described so its routes are read |
+| `entry.procedures` | object[] | `[]` | a framework whose ways in are the keys of a tree of object literals, described so each one is read |
 
 **Detection reads the workspace, not only the leaf manifest.** A service that is
 a package inside a workspace is asked what it can import, and the answer is
@@ -703,6 +704,17 @@ being followed. Without it, a leaf manifest that is a name, a version and an
 exports map — the normal shape of a workspace member — switched every adapter
 off, and the repository came back with no routes, no channels and no data layer,
 which reads exactly like a repository that has none.
+
+The chain also takes in the members the service itself declares, transitively,
+because those are the directories whose sources are read as part of it. A monorepo
+where the application declares a library and the library declares the framework is
+the ordinary shape, and reading it any other way switches an adapter off while the
+code it would have read is in the graph: cal.com's `apps/web` depends on
+`@calcom/trpc`, which is where `@trpc/server` is declared, and 171 of its 227
+boundaries live in that package. Only what the service reaches is taken in — a
+workspace has hundreds of members and a service declares a dozen, and folding in
+the rest would make every service look like every framework anybody in the
+repository uses.
 
 The type of a service is a narrower question and is answered narrowly: `link`
 guesses it from the repository's own manifest, and only falls back to the

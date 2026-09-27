@@ -401,6 +401,20 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'entry-http-routes-unmatched': () =>
     'Its types match and its routes do not. Check verbs, verbArgument, pathArg and handlerArg on that description.',
 
+  // Trees of procedures (adapters-entry/procedure-routers)
+  'procedure-router-unread': () =>
+    'This file serves a whole tree of ways in and the tree is assembled somewhere that was not read, so none of them is in the graph. Import the tree from inside this service, or add the package it comes from to sharedPackages.',
+  'procedure-branch-unread': () =>
+    'A member of a tree is neither a way in nor a tree that could be followed, so everything under that name is missing. It is usually a tree imported from outside what was read.',
+  'procedure-key-dynamic': () =>
+    'The key a way in is written under is computed, so it has no address a caller could be joined to. Write it as a name or a string.',
+  'procedure-trees-unmatched': () =>
+    'Nothing here is assembled by any of the names that reader looks for. Ordinary in a repository that only calls procedures; check assembledBy if this is the one that declares them.',
+  'procedure-members-unmatched': () =>
+    'Calls to the assembling name were found and no member of any of them ended a chain the way a way in does, so none of them was read as a tree. Check terminators on that description.',
+  'entry-procedures-description-inactive': () =>
+    'Ordinary in a project of several repositories. If this is the one it was written for, check the spelling of its packages.',
+
   // Bots (adapters-entry/nestjs-telegraf, telegraf-calls)
   'dynamic-bot-trigger': () =>
     "Use a string literal, a const from a shared package, or add @FlowEntry('<name>') to the handler.",
