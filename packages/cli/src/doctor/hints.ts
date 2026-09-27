@@ -388,6 +388,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Name the table under adapters.entry.registries in flowatlas.config.json so each registration becomes an entry point.',
   'server-action-unread': () =>
     'Describe the builder that made it, or declare the action as an exported function, so the way in and its callers are visible.',
+  'route-file-not-served': () =>
+    'A file exporting a route verb sits under a directory the framework does not serve, so it answers at no address. Informational: it is the framework behaving as documented, and the row exists so that a file with a verb in it and no route to show for it is never silence.',
   'route-verb-unread': () =>
     'The file is served at a path but exports no verb this could read. Export GET, POST and the rest by name; a verb assembled at run time cannot be joined to anything that asks for it.',
   'route-handler-unread': () =>

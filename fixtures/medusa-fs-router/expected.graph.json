@@ -1,7 +1,7 @@
 {
   "schemaVersion": 4,
   "repo": "medusa-fs-router",
-  "generatedAt": "2026-09-27T09:31:15.439Z",
+  "generatedAt": "2026-09-27T11:29:04.852Z",
   "nodes": [
     {
       "id": "entry:medusa-fs-router:http:GET:/admin/orders",
@@ -345,6 +345,16 @@
       "message": "1 matcher in the middleware list is not a path pattern, so which routes it covers was not read.",
       "hint": "Routes those entries cover are reported with nothing named in front of them. Write the matcher as a path pattern, or name the routes under doctor.publicRoutes.",
       "symbol": "/^\\/hooks\\/.*$/",
+      "adapter": "medusa-routes"
+    },
+    {
+      "file": "src/api/store/_helpers/route.ts",
+      "line": 1,
+      "reason": "route-file-not-served",
+      "level": "info",
+      "message": "src/api/store/_helpers/route.ts exports a verb and is served at no address, because a segment of its path begins with an underscore and this router does not serve those.",
+      "hint": "Nothing to do if that is deliberate; move the file out from under the underscored directory if it was meant to answer requests.",
+      "symbol": "src/api/store/_helpers/route.ts",
       "adapter": "medusa-routes"
     }
   ]

@@ -202,40 +202,93 @@ const applicationPrefix = (before: readonly string[]): string => {
  * addresses, and taking the last would both lose it and mistake it for a second
  * application.
  */
-export const routePathOfFile = (file: string, router: FsRouter): string | null => {
-  if (file.startsWith('../')) return null;
+/**
+ * What one file is, to one file-system router.
+ *
+ * Three answers and not two, because `null` was doing the work of two different
+ * facts: a file the router has nothing to do with, and a file it has decided not
+ * to serve. Only the second is worth a word to anybody, and telling them apart
+ * here rather than at each caller is what keeps one decomposition of a path
+ * (R91, R111).
+ */
+type FsFileReading =
+  | { readonly kind: 'route'; readonly path: string }
+  | { readonly kind: 'not-served'; readonly why: 'private' }
+  | { readonly kind: 'elsewhere' };
+
+const ELSEWHERE: FsFileReading = { kind: 'elsewhere' };
+
+const readFsFile = (file: string, router: FsRouter): FsFileReading => {
+  if (file.startsWith('../')) return ELSEWHERE;
   const parts = file.split('/');
   const rootParts = router.root.split('/');
   let at = -1;
   for (let index = 0; index + rootParts.length <= parts.length && at < 0; index += 1) {
     if (rootParts.every((part, offset) => parts[index + offset] === part)) at = index;
   }
-  if (at < 0) return null;
+  if (at < 0) return ELSEWHERE;
 
   const prefix = applicationPrefix(parts.slice(0, at));
   const after = parts.slice(at + rootParts.length);
   const name = (after.pop() ?? '').replace(FILE_EXTENSION, '');
-  if (name === '') return null;
+  if (name === '') return ELSEWHERE;
 
   if (router.routeFiles !== undefined) {
-    if (!router.routeFiles.includes(name)) return null;
+    if (!router.routeFiles.includes(name)) return ELSEWHERE;
   } else {
     // The older router: the file name is the last segment, and a private file
     // is not a route at all.
-    if (optsOut(name, router)) return null;
+    if (optsOut(name, router)) return { kind: 'not-served', why: 'private' };
     if (name !== 'index') after.push(name);
   }
 
   // A directory the underscore opts out of routing serves nothing at all, so a
   // file under one is not a route with a segment missing — it is not a route.
-  if (after.some((segment) => optsOut(segment, router))) return null;
+  if (after.some((segment) => optsOut(segment, router))) return { kind: 'not-served', why: 'private' };
 
   // A grouped or slot directory drops out; nothing else may, because a segment
   // that could not be read would make the address a different one.
   const kept = after
     .map((segment) => segmentOf(segment, router))
     .filter((segment): segment is string => segment !== null);
-  return normalizePath(`${prefix}${router.prefix ?? ''}/${kept.join('/')}`);
+  return { kind: 'route', path: normalizePath(`${prefix}${router.prefix ?? ''}/${kept.join('/')}`) };
+};
+
+/** The address one file is served at, or nothing when it is not served there. */
+export const routePathOfFile = (file: string, router: FsRouter): string | null => {
+  const reading = readFsFile(file, router);
+  return reading.kind === 'route' ? reading.path : null;
+};
+
+/**
+ * Why a file this router would otherwise serve is not served, or nothing when
+ * the file was never its business.
+ *
+ * A file called `route.ts` that exports a verb and answers at no address is
+ * exactly the shape this project refuses to pass over in silence: correct
+ * behaviour that reads identically to a reader that gave up (R84). The caller
+ * turns it into one informational row.
+ */
+export const unservedRouteFile = (file: string, router: FsRouter): 'private' | null => {
+  const reading = readFsFile(file, router);
+  return reading.kind === 'not-served' ? reading.why : null;
+};
+
+/** The row for a route file the framework's own convention takes out of service. */
+export const reportNotServed = (
+  ctx: ExtractContext,
+  options: { file: string; why: 'private'; adapter: string },
+): void => {
+  ctx.builder.addUnresolved({
+    file: options.file,
+    line: 1,
+    reason: 'route-file-not-served',
+    level: 'info',
+    message: `${options.file} exports a verb and is served at no address, because a segment of its path begins with an underscore and this router does not serve those.`,
+    hint: 'Nothing to do if that is deliberate; move the file out from under the underscored directory if it was meant to answer requests.',
+    symbol: options.file,
+    adapter: options.adapter,
+  });
 };
 
 /**

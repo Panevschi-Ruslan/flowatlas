@@ -1,5 +1,6 @@
 import {
   hasAnyDependency,
+  HTTP_METHODS,
   makeEntryId,
   reachMeta,
   makeHttpEntryKey,
@@ -14,7 +15,9 @@ import { Node, SyntaxKind } from 'ts-morph';
 import {
   pathPatternTest,
   readVerbFile,
+  reportNotServed,
   routePathOfFile,
+  unservedRouteFile,
   type FsRouter,
   type FsRouteVerb,
 } from './fs-routes.js';
@@ -324,7 +327,16 @@ export const medusaRoutesAdapter: EntryAdapter = {
     for (const sourceFile of repoSources(ctx)) {
       const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);
       const path = routePathOfFile(file, MEDUSA_API);
-      if (path === null) continue;
+      if (path === null) {
+        // A file the convention takes out of service, which is not the same as a
+        // file this router never had anything to do with. Only the first is worth
+        // a row, and only when it exports something that would have been a route.
+        const why = unservedRouteFile(file, MEDUSA_API);
+        if (why !== null && HTTP_METHODS.some((verb) => sourceFile.getExportedDeclarations().has(verb))) {
+          reportNotServed(ctx, { file, why, adapter: ADAPTER });
+        }
+        continue;
+      }
       readVerbFile(ctx, sourceFile, { file, path, adapter: ADAPTER, emit: httpEntry });
     }
 
