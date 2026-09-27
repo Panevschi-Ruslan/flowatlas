@@ -45,8 +45,8 @@ addressed that way reads zero here before R125 and its true number after.
 | addresses placed | 84 |  |
 | addresses claimed by more than one declaration | 0 | two handlers of one application; one of them is dead code |
 | addresses told apart only by their application | 0 | each was overwritten before R119, silently and with no total moving |
-| declarations with a body attached | 50 | 50 of 82 |
-| …whose body reaches anything | 41 | 41 of 82 |
+| declarations with a body attached | 48 | 48 of 82 |
+| …whose body reaches anything | 39 | 39 of 82 |
 | …behind middleware or a guard | 0 | 0 of 82 |
 
 Where those addresses are. One row per leading segment, which is enough of an

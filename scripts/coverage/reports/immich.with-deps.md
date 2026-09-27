@@ -165,7 +165,7 @@ repository's manifests instead of asking the tool for it.
 
 ## Cost
 
-Wall clock 15 to 60 s, peak resident memory 1 to 2 GB.
+Wall clock 5 to 15 s, peak resident memory 1 to 2 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

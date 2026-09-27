@@ -46,8 +46,8 @@ addressed that way reads zero here before R125 and its true number after.
 | addresses placed | 288 |  |
 | addresses claimed by more than one declaration | 0 | two handlers of one application; one of them is dead code |
 | addresses told apart only by their application | 271 | each was overwritten before R119, silently and with no total moving |
-| declarations with a body attached | 288 | 288 against 128: **more found than the rule can see, so this is not a fraction** |
-| …whose body reaches anything | 68 | 68 of 128 |
+| declarations with a body attached | 29 | 29 of 128 |
+| …whose body reaches anything | 7 | 7 of 128 |
 | …behind middleware or a guard | 0 | 0 of 128 |
 
 Where those addresses are. One row per leading segment, which is enough of an
