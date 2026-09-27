@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:30:31.284Z",
+  "builtAt": "2026-09-27T12:41:52.403Z",
   "services": [
     {
       "name": "api",
@@ -1105,6 +1105,17 @@
     }
   },
   "unresolved": [
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-routes-unplaced",
+      "level": "info",
+      "message": "9 of 10 routes the hono-routes reader read could be placed at an address; the other 1 could not, so the ways in recorded here are a part of what this service serves rather than the whole of it.",
+      "hint": "Each of the 1 has a row of its own above, naming the application whose base could not be read. Until those are answered, a question this graph answers about which ways in exist is answered short.",
+      "symbol": "hono-routes",
+      "adapter": "hono-routes",
+      "service": "api"
+    },
     {
       "file": "src/admin/reports.routes.ts",
       "line": 12,

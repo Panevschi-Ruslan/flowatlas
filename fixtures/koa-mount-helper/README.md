@@ -99,3 +99,13 @@ What changed for it is the row's hint. It used to ask the reader to mount the
 application at a literal path, which is what outline had done all along; it now
 names the call the path is inside, because that is the one fact that makes the
 row something to act on.
+
+## And one row for the reading as a whole
+
+Four of the five routes here are placed and one is not, so the reader also writes
+a row saying exactly that: `entry-http-routes-unplaced`, four of five. Until R121
+it wrote nothing — the row it had asked whether the count was zero, so a reading
+that placed some of the routes and none of the rest looked like a reading of a
+repository that had only the ones it placed (R91). One unplaceable route out of
+five is a fixture; three hundred and thirty-seven out of three hundred and forty
+is a real repository, and the sentence has to be the same one.

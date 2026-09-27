@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "koa-mount-helper",
-  "generatedAt": "2026-09-27T09:26:26.872Z",
+  "generatedAt": "2026-09-27T12:41:53.096Z",
   "nodes": [
     {
       "id": "entry:koa-mount-helper:http:GET:/health",
@@ -164,6 +164,16 @@
   ],
   "types": {},
   "unresolved": [
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-routes-unplaced",
+      "level": "info",
+      "message": "4 of 5 routes the koa-routes reader read could be placed at an address; the other 1 could not, so the ways in recorded here are a part of what this service serves rather than the whole of it.",
+      "hint": "Each of the 1 has a row of its own above, naming the application whose base could not be read. Until those are answered, a question this graph answers about which ways in exist is answered short.",
+      "symbol": "koa-routes",
+      "adapter": "koa-routes"
+    },
     {
       "file": "src/admin/admin.routes.ts",
       "line": 14,
