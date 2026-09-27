@@ -26,7 +26,7 @@ build **exit 0**, doctor exit 0, link exit 0
 
 | kind | entry points |
 |---|---|
-| none | 0 |
+| http | 261 |
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
 handlers, which is what the counting rule counts, because two declarations may
@@ -41,24 +41,30 @@ addressed that way reads zero here before R125 and its true number after.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| addresses placed | 0 |  |
+| addresses placed | 261 |  |
 | addresses claimed by more than one declaration | 0 | two handlers of one application; one of them is dead code |
 | addresses told apart only by their application | 0 | each was overwritten before R119, silently and with no total moving |
-| declarations with a body attached | 0 | 0 of 266 |
-| …whose body reaches anything | 0 | 0 of 266 |
-| …behind middleware or a guard | 0 | 0 of 266 |
+| declarations with a body attached | 258 | 258 of 266 |
+| …whose body reaches anything | 241 | 241 of 266 |
+| …behind middleware or a guard | 258 | 258 of 266 |
 
 Where those addresses are. One row per leading segment, which is enough of an
 address for a dropped global prefix to show and little enough that a new route
 is not a diff.
 
-No addresses.
+| first segment | addresses |
+|---|---|
+| `/api` | 216 |
+| `/auth` | 13 |
+| `/oauth` | 7 |
+
+25 more at 14 segment(s) of fewer than five addresses each, folded together so that a repository serving two hundred addresses at the top level does not write two hundred rows.
 
 ## What joined
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 30 | 0 |
+| requests from a browser | 30 | 26 |
 | requests between services | 32 | 0 |
 | channels | 0 | 0 with both ends |
 
@@ -66,48 +72,41 @@ No addresses.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 427 | no denominator: the rule has no probe for it |
-| …that name a table | 425 | 425 of 427 |
-| tables | 33 | 33 of 103 |
+| query sites read | 724 | no denominator: the rule has no probe for it |
+| …that name a table | 722 | 722 of 724 |
+| tables | 34 | 34 of 103 |
 | components | 644 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
 | every other binding a template makes | 777 | not counted by the rule |
 
 ## What it could not read
 
-806 places somebody could act on, 3457 the tool
+812 places somebody could act on, 4717 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
 | api-path-dynamic | action | 4 |  |
-| call-dynamic-receiver | info | 2716 |  |
+| call-dynamic-receiver | info | 3969 |  |
 | db-layer-unread | action | 6 |  |
 | db-receiver-name-only | action | 11 |  |
 | dynamic-config-key | action | 2 |  |
 | dynamic-http-url | action | 24 |  |
 | dynamic-table-name | action | 2 |  |
-| entry-http-types-unmatched | info | 1 |  |
-| target-route-not-found | action | 26 |  |
-| type-depth-exceeded | info | 571 |  |
-| type-generic-uninstantiated | info | 169 |  |
-| type-unresolved | action | 730 |  |
+| entry-http-routes-unplaced | info | 1 |  |
+| route-handler-anonymous | info | 3 |  |
+| route-mount-unread | action | 1 |  |
+| route-path-dynamic | action | 4 |  |
+| type-depth-exceeded | info | 573 |  |
+| type-generic-uninstantiated | info | 171 |  |
+| type-unresolved | action | 757 |  |
 | unknown-base-url-env | action | 1 |  |
 
 ## Files with sites and no output
 
 None beyond what is baselined. Every other file the counting rule found a
 declaration site in yielded a node of that family, or a row naming the file.
-
-45 file(s) did go unread, and every one of them is red this gate
-already knew about, enumerated in `BASELINE` in `read-gate.mjs` with the ticket
-it belongs to. They are counted rather than silenced: one file more than this, or
-one fewer, fails the run.
-
-| family | files | ticket |
-|---|---|---|
-| routes | 45 | R121 |
 
 ### What this gate cannot see
 

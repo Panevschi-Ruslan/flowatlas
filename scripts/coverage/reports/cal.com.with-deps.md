@@ -62,7 +62,7 @@ is not a diff.
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 139 | 29 |
+| requests from a browser | 367 | 256 |
 | requests between services | 197 | 0 |
 | channels | 0 | 0 with both ends |
 
@@ -87,13 +87,13 @@ was never an edge to draw. The three are never added together.
 |---|---|---|---|
 | api-method-dynamic | action | 2 |  |
 | api-path-dynamic | action | 28 |  |
-| bootstrap-not-found | action | 1 |  |
 | call-dynamic-receiver | info | 1273 |  |
 | db-layer-unread | action | 44 |  |
 | db-receiver-name-only | action | 420 |  |
 | dynamic-config-key | action | 2 |  |
 | dynamic-http-url | action | 40 |  |
 | entry-http-types-unmatched | info | 1 |  |
+| procedure-not-found | action | 1 |  |
 | route-handler-unread | action | 31 |  |
 | route-wildcard-only | action | 16 |  |
 | server-action-unread | action | 2 |  |
@@ -185,7 +185,7 @@ repository's manifests instead of asking the tool for it.
 
 ## Cost
 
-Wall clock 15 to 60 s, peak resident memory 2 to 3 GB.
+Wall clock 15 to 60 s, peak resident memory 3 to 4 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

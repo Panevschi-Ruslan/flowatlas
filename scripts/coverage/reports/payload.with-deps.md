@@ -15,7 +15,7 @@ Next.js, nested application roots, a heap the default limit does not hold.
 
 ## Outcome
 
-build **exit 0**, doctor exit 0, link exit 0
+build **exit 0**, doctor exit 2, link exit 0
 
 ## Dependencies
 

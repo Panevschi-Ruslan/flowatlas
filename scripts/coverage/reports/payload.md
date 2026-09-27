@@ -20,7 +20,7 @@ package *generates*, which `--ignore-scripts` leaves out of both states here.
 
 ## Outcome
 
-build **exit 0**, doctor exit 0, link exit 0
+build **exit 0**, doctor exit 2, link exit 0
 
 ## Ways in
 

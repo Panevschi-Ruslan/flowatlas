@@ -68,7 +68,7 @@ is not a diff.
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 253 | 235 |
+| requests from a browser | 269 | 236 |
 | requests between services | 0 | 0 |
 | channels | 9 | 5 with both ends |
 
@@ -85,13 +85,14 @@ is not a diff.
 
 ## What it could not read
 
-1425 places somebody could act on, 2131 the tool
+1444 places somebody could act on, 2131 the tool
 reports as a limit of static reading, and 269 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| api-path-dynamic | action | 5 |  |
+| api-method-dynamic | action | 1 |  |
+| api-path-dynamic | action | 20 |  |
 | call-dynamic-receiver | info | 1866 |  |
 | channel-const-unresolved | action | 1 |  |
 | channel-dynamic | action | 3 |  |
@@ -111,7 +112,7 @@ was never an edge to draw. The three are never added together.
 | target-route-not-found | action | 10 |  |
 | type-depth-exceeded | info | 56 |  |
 | type-generic-uninstantiated | info | 141 |  |
-| type-unresolved | action | 1340 |  |
+| type-unresolved | action | 1343 |  |
 
 ## Files with sites and no output
 
@@ -174,7 +175,7 @@ repository's manifests instead of asking the tool for it.
 
 ## Cost
 
-Wall clock 5 to 15 s, peak resident memory 1 to 2 GB.
+Wall clock 5 to 15 s, peak resident memory 0.5 to 1 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

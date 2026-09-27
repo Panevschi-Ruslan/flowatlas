@@ -46,9 +46,9 @@ addressed that way reads zero here before R125 and its true number after.
 | addresses placed | 261 |  |
 | addresses claimed by more than one declaration | 0 | two handlers of one application; one of them is dead code |
 | addresses told apart only by their application | 0 | each was overwritten before R119, silently and with no total moving |
-| declarations with a body attached | 257 | 257 of 266 |
-| …whose body reaches anything | 249 | 249 of 266 |
-| …behind middleware or a guard | 257 | 257 of 266 |
+| declarations with a body attached | 258 | 258 of 266 |
+| …whose body reaches anything | 250 | 250 of 266 |
+| …behind middleware or a guard | 258 | 258 of 266 |
 
 Where those addresses are. One row per leading segment, which is enough of an
 address for a dropped global prefix to show and little enough that a new route
@@ -83,14 +83,14 @@ is not a diff.
 
 ## What it could not read
 
-153 places somebody could act on, 2001 the tool
+153 places somebody could act on, 2003 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
 | api-path-dynamic | action | 4 |  |
-| call-dynamic-receiver | info | 344 |  |
+| call-dynamic-receiver | info | 347 |  |
 | channel-const-unresolved | action | 12 |  |
 | channel-dynamic | action | 9 |  |
 | consumer-handler-unresolved | action | 2 |  |
@@ -101,8 +101,9 @@ was never an edge to draw. The three are never added together.
 | dynamic-http-url | action | 24 |  |
 | dynamic-table-name | action | 32 |  |
 | entry-http-routes-unplaced | info | 1 |  |
-| route-handler-anonymous | info | 4 |  |
-| route-path-dynamic | action | 5 |  |
+| route-handler-anonymous | info | 3 |  |
+| route-mount-unread | action | 1 |  |
+| route-path-dynamic | action | 4 |  |
 | type-depth-exceeded | info | 1209 |  |
 | type-generic-uninstantiated | info | 443 |  |
 | type-unresolved | action | 5 |  |
