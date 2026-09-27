@@ -271,6 +271,29 @@ either.
   `unknown` without having been compared.
 - A hint no longer says a type was declared in this repository when the same row
   says it came from a package.
+- **An Angular route configuration is recognised by its shape, and a lazy one is
+  opened.** A route array was taken only from a declaration annotated `Routes` or
+  from an argument to `forRoot`, `forChild` or `provideRouter`, and `loadChildren`
+  was deliberately not followed. PeerTube writes 21 of its 31 route files as a
+  bare `export default [ … ]` and mounts them all through `loadChildren`, so 10
+  of the 31 were read, every one of them at the wrong prefix, and **0 of its 164
+  `routerLink`s reached a screen** — a `flow` from a click could not cross a
+  screen boundary anywhere in a real Angular application. An array is now
+  identified by what is in it, `loadChildren` is followed to the module's default
+  export or to the `forChild` in the `NgModule` it names, a `path` arriving
+  through an object spread is read, and an array spread into a list of children
+  is spliced in where it stands. All 31 files are read, 89 of the 164 links reach
+  a screen and the rows saying none could fall from 117 to 31 — what is left is
+  almost entirely a link written relative to the route the component is mounted
+  at, which is a different question and is still reported.
+- **A template local is no longer reported as a method the component forgot to
+  declare.** `<ng-template let-hide="close">` binds `hide`, and looking for it on
+  the component found nothing and said so: all 35 of PeerTube's
+  `handler-not-found` rows were this, a reason whose false-positive rate on a
+  real application was 100%. Every name the template itself binds — a `let-`
+  context field, a `#ref`, a `@for` item, an `@if` alias, an `@let` — is now read
+  as a local, and a binding on one is the nothing-to-point-at case it is, naming
+  the local. A binding that genuinely names a missing method is still a row.
 
 ## [0.4.1][] - 2026-09-22
 

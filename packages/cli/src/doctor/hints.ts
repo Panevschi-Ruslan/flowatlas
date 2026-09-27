@@ -475,6 +475,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     `No configured route answers ${named(row)}. Check the route table, or the prefix the router mounts it under.`,
   'route-loader-unread': () =>
     "Write the loader as () => import('./x').then((m) => m.X); a specifier built at run time is not followed.",
+  'route-config-unread': () =>
+    'A piece of the route configuration was not read, so nothing behind it answers a link. Write the spread, the children or the loadChildren as a name that leads to an array or an object in this repository.',
 
   // Joining the repositories (linker)
   'unknown-base-url-env': () =>
