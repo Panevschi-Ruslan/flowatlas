@@ -195,7 +195,12 @@ ${table(
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
 handlers, which is what the counting rule counts, because two declarations may
-land on one address.
+land on one address. An address is an address within one application: a service
+that creates two of them has two address spaces, and the third row counts the
+addresses that exist only because the id says which application serves them —
+every one of which used to be overwritten by the first claim on it. It counts
+nothing for a repository whose applications are told apart by where they sit in
+the tree instead, which is how the file-system routers address theirs.
 
 ${table(
   ['', 'count', 'of what the counting rule found'],
@@ -204,7 +209,12 @@ ${table(
     [
       'addresses claimed by more than one declaration',
       String(figures.routes.duplicated),
-      'a collision, or one service holding two applications',
+      'two handlers of one application; one of them is dead code',
+    ],
+    [
+      'addresses told apart only by their application',
+      String(figures.routes.collided ?? 0),
+      'each was overwritten before R119, silently and with no total moving',
     ],
     ['declarations with a body attached', String(figures.routes.withBody), of(figures.routes.withBody, expected)],
     ['…whose body reaches anything', String(figures.routes.reaching), of(figures.routes.reaching, expected)],

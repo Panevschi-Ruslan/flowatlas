@@ -10,6 +10,14 @@ export interface RouteMiss {
   reason: 'not-found' | 'ambiguous';
   /** Ids of the routes that could have answered, when more than one could. */
   candidates: string[];
+  /**
+   * The applications the candidates belong to, when they are not all in one.
+   *
+   * Present only where it changes what the ambiguity *is* — see
+   * {@link matchRoute} — so a caller that ignores it reads the same answer it
+   * read before, and one that does not can say the truer sentence.
+   */
+  applications?: string[];
 }
 
 export type RouteResult = RouteMatch | RouteMiss;
@@ -67,6 +75,9 @@ const pathAnswers = (routePath: string, requestPath: string): boolean => {
   return route.length === request.length;
 };
 
+/** The application an entry belongs to, or the empty string where it has none. */
+const applicationOf = (entry: GraphNode): string => String(entry.meta?.['application'] ?? '');
+
 const methodAnswers = (routeMethod: string, requestMethod: string): boolean => {
   // Both sides, not one. The extractors record a verb in upper case, but a
   // route that arrived any other way answered nothing at all rather than
@@ -117,6 +128,40 @@ const moreSpecific = (a: readonly number[], b: readonly number[]): number => {
  * A route beaten by a catch-all's own margin is not a runner-up. The note a
  * runner-up produces warns that the framework, not this, decided which of two
  * routes answers; no framework hesitates between a route and a wildcard.
+ *
+ * ## Two routes of one application, and two applications
+ *
+ * Since R119 gave an address room for the application that serves it, two
+ * entries can answer one request without either of them being a mistake: a
+ * worker and an API that both serve `/health` are two programs, each answering
+ * on its own port, and neither shadows the other. That arrives here looking
+ * exactly like the old tie — two matching entries of equal specificity — and the
+ * two facts must not be spelled the same way, because what a reader should do
+ * about them is opposite. A tie inside one application is a defect in that
+ * application: one of the two handlers is dead code that still type-checks, and
+ * somebody should delete a route. A tie across applications is a defect in
+ * nothing, and the only thing to fix is the tool's own belief that it knows
+ * where the request went.
+ *
+ * So the result still says `ambiguous` — it is still a request this cannot place
+ * — and it names the applications when they differ, which is what lets the row
+ * written about it carry a different reason and a different sentence.
+ *
+ * **It is not resolved, deliberately.** Which application answers a request
+ * arriving from outside the service is a deployment question: the two listen on
+ * different ports, behind whatever routes to them, and none of that is in any
+ * source this reads. Choosing one would be inventing the answer, and the edge
+ * would claim a caller reaches a program it may never touch. Naming both is the
+ * honest answer and it is a useful one — it tells a reader that their request
+ * lands in one of two named places.
+ *
+ * A caller *inside* one of those applications is the easier case and would want
+ * its own application preferred, and that is not done here for want of the
+ * input: no node in the graph records which application a call site belongs to,
+ * and every call the linker resolves through a settings key comes from another
+ * service, where there is no such thing to record. Accepting the calling
+ * application as an argument nothing can supply would be a parameter that only
+ * ever arrives absent.
  */
 export const matchRoute = (
   method: string,
@@ -138,7 +183,12 @@ export const matchRoute = (
   const winning = ranked.reduce((best, rank) => (moreSpecific(rank, best) < 0 ? rank : best));
   const best = matching.filter((_, index) => moreSpecific(ranked[index] as number[], winning) === 0);
   if (best.length > 1) {
-    return { reason: 'ambiguous', candidates: matching.map((entry) => entry.id).sort() };
+    const applications = [...new Set(best.map(applicationOf))].sort();
+    return {
+      reason: 'ambiguous',
+      candidates: matching.map((entry) => entry.id).sort(),
+      ...(applications.length > 1 ? { applications } : {}),
+    };
   }
   return {
     entry: best[0] as GraphNode,

@@ -1,11 +1,14 @@
 import type { EntryAdapter, EntryNode, ExtractContext } from '@flowatlas/core';
 import {
+  applicationsIn,
+  applicationsServing,
   decoratorArgs,
   decoratorName,
   evaluateExpression,
   hasAnyDependency,
   makeEntryId,
   makeHttpEntryKey,
+  makeSymbolId,
   normalizePath,
   stringListArg,
 } from '@flowatlas/core';
@@ -268,6 +271,14 @@ export const nestjsHttpAdapter: EntryAdapter = {
         ? (ctx.meta['globalPrefix'] as string)
         : undefined;
     const versioning = versioningIn(ctx.meta);
+    // Which applications this service creates, and which of them mounts each
+    // controller. An address is only an address within an application: two
+    // applications in one service both serving `/health` write one id between
+    // them, the builder keeps the node it already has, and the losing file
+    // yields no node and no row at all (R119). The cheap fix was a row naming
+    // both files; this is the other one, where the identity carries the
+    // application and both files contribute a node.
+    const applications = applicationsIn(ctx.meta);
     // A route that names no version of its own is served at the default one, and
     // that is not a detail: on novu it is 356 of 415 routes, every one of which
     // was recorded at an address the framework never answers on.
@@ -291,6 +302,15 @@ export const nestjsHttpAdapter: EntryAdapter = {
         continue;
       }
       const prefix = readControllerPrefix(controller);
+      // One entry per application that mounts this controller, which is one
+      // entry and no qualifier at all for the ordinary service that creates a
+      // single application. The judgement about when an id carries an
+      // application is made in one place, so that no two adapters can spell it
+      // differently.
+      const mountedIn = applicationsServing(
+        applications,
+        makeSymbolId(ctx.repo, file, controllerName),
+      );
 
       if (prefix.dynamic) {
         ctx.builder.addUnresolved({
@@ -388,25 +408,35 @@ export const nestjsHttpAdapter: EntryAdapter = {
               for (const routePath of paths) {
                 const rawPath = joinPath(globalPrefix, served.segment, controllerPath, routePath);
                 const path = normalizePath(rawPath);
-                entries.push({
-                  id: makeEntryId(ctx.repo, 'http', makeHttpEntryKey(httpMethod, path)),
-                  kind: 'http',
-                  label: `${httpMethod} ${path}`,
-                  key: makeHttpEntryKey(httpMethod, path),
-                  handler,
-                  file,
-                  line: method.getStartLineNumber(),
-                  meta: {
-                    method: httpMethod,
-                    path,
-                    rawPath,
-                    ...(globalPrefix === undefined ? {} : { globalPrefix }),
-                    ...(served.version === undefined ? {} : { version: served.version }),
-                    controller: controllerName,
-                    ...(otherDecorators.length > 0 ? { decorators: otherDecorators } : {}),
-                    ...(authNote === undefined ? {} : { authNote }),
-                  },
-                });
+                const key = makeHttpEntryKey(httpMethod, path);
+                for (const application of mountedIn) {
+                  entries.push({
+                    id: makeEntryId(ctx.repo, 'http', key, application),
+                    kind: 'http',
+                    label:
+                      application === undefined
+                        ? `${httpMethod} ${path}`
+                        : `${httpMethod} ${path} (${application})`,
+                    key,
+                    handler,
+                    file,
+                    line: method.getStartLineNumber(),
+                    meta: {
+                      method: httpMethod,
+                      path,
+                      rawPath,
+                      ...(globalPrefix === undefined ? {} : { globalPrefix }),
+                      ...(served.version === undefined ? {} : { version: served.version }),
+                      controller: controllerName,
+                      // Only where there is more than one, which is where it
+                      // says something: it is what tells a tie between two
+                      // applications from a tie between two routes of one.
+                      ...(application === undefined ? {} : { application }),
+                      ...(otherDecorators.length > 0 ? { decorators: otherDecorators } : {}),
+                      ...(authNote === undefined ? {} : { authNote }),
+                    },
+                  });
+                }
               }
             }
           }

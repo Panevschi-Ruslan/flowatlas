@@ -1,4 +1,4 @@
-import type { Expression, ObjectLiteralExpression } from 'ts-morph';
+import type { ClassDeclaration, Expression, ObjectLiteralExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
 import type { ModuleInfo, ModuleKind, ProviderRegistration } from '../modules-index.js';
@@ -99,9 +99,31 @@ export const modulesPass = definePass('modules', (ctx) => {
 
   for (const indexed of ctx.classes.withRole('module')) {
     const options = moduleOptions(indexed.declaration);
-    const controllers = arrayProperty(options, 'controllers')
-      .map((expr) => resolveClassExpression(expr))
-      .flatMap((ref) => (ref.kind === 'local' ? [ref.declaration] : []));
+    // Read one element at a time, and said out loud where an element could not
+    // be read. `controllers: [...controllers]` — immich's, a spread of an array
+    // assembled in another file — resolved to nothing and was dropped in
+    // silence, which cost little while membership was only metadata on a node.
+    // Since R119 it decides which application an address belongs to, so a module
+    // whose controller list nobody could read is a module whose addresses cannot
+    // be told from another application's, and that is worth a row.
+    const controllers: ClassDeclaration[] = [];
+    for (const expr of arrayProperty(options, 'controllers')) {
+      const ref = resolveClassExpression(expr);
+      if (ref.kind === 'local') {
+        controllers.push(ref.declaration);
+        continue;
+      }
+      // A controller from an installed package declares addresses this
+      // repository does not hold the source of; there is nothing here to mount.
+      if (ref.kind === 'external') continue;
+      ctx.report({
+        file: ctx.fileOf(expr),
+        line: lineOf(expr),
+        reason: 'module-controllers-unread',
+        hint: 'List the controller classes, or a name that leads to an array of them in this repository. Which application serves an address is read from the module that declares its controller.',
+        symbol: `${indexed.name} controllers ${ref.text}`,
+      });
+    }
 
     const providers = arrayProperty(options, 'providers')
       .map((expr) => readProvider(expr, ctx))

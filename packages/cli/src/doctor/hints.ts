@@ -369,11 +369,15 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   // Modules and globals (extractor-nestjs)
   'module-import-dynamic': () =>
     'Import a module class, or X.forRoot(...); a computed import cannot be followed.',
+  'module-controllers-unread': () =>
+    'List the controller classes in the module, or a name that leads to an array of them in this repository. A spread of an array built elsewhere reads as no controllers at all, and which application serves an address is read from the module that declares its controller.',
   'global-wrapper-dynamic': (row) =>
     `${named(row)} is not registered with a class from this repository, so what it wraps cannot be read.`,
   'middleware-route-dynamic': () => 'Use a literal path or a controller class in forRoutes.',
   'bootstrap-not-found': () =>
     'Set services[].bootstrap in flowatlas.config.json, or pass --bootstrap, so globals can be read.',
+  'application-root-unread': () =>
+    'Hand the factory call the root module class itself. An address is only an address within one application, so an application nobody can name shares an address space with every other one in this service, and where two of them serve one path the file that loses it contributes no node at all.',
 
   // Routes (adapters-entry)
   'route-path-dynamic': () =>
@@ -501,6 +505,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     "The target service serves no such route. Check its controllers for a rename, or annotate the call with @CallsService.",
   'ambiguous-route': () =>
     'More than one route in the target service answers this. Make the path more specific, or annotate the call with @CallsService.',
+  'ambiguous-route-application': () =>
+    'Two applications inside one service serve this address, and each of them really does answer it. Nothing is wrong with the route: which one a request from outside reaches is decided by how they are deployed, and no source says. The row names both rather than guessing one.',
   'route-unguarded': () =>
     'Nothing in front of this route can refuse a request, and it reaches stored data. Add a guard, or mark it public with a decorator under doctor.publicDecorators or a pattern under doctor.publicRoutes.',
   'route-guard-skipped': () =>

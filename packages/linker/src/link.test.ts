@@ -257,6 +257,35 @@ describe('joining a call to a route', () => {
     expect(report.unresolved[0]?.reason).toBe('ambiguous-route');
   });
 
+  /**
+   * Two applications of one service both serving the address is not a route
+   * claimed twice (R119).
+   *
+   * The call still cannot be placed — which of them answers a request from
+   * outside is decided by how they are deployed and written in no source — but the
+   * row says a different thing, because a reader told to make the path more
+   * specific when nothing is wrong with the path spends the afternoon on it.
+   */
+  it('says which applications answer, rather than blaming the route', () => {
+    const inApplication = (application: string, path: string): GraphNode =>
+      node(`entry:orders@${application}:http:GET:${path}`, 'orders', {
+        type: 'entry',
+        kind: 'http',
+        label: `GET ${path} (${application})`,
+        meta: { method: 'GET', path, application },
+      });
+    const asking = callerGraph({ meta: { path: '/health' } });
+    const twoApplications = graph('orders', {
+      nodes: [inApplication('ApiModule', '/health'), inApplication('WorkerModule', '/health')],
+    });
+    const { project, report } = link([asking, twoApplications]);
+
+    expect(project.edges.filter((item) => item.type === 'http_calls')).toHaveLength(0);
+    expect(report.httpOut.ambiguous).toBe(1);
+    expect(report.unresolved[0]?.reason).toBe('ambiguous-route-application');
+    expect(report.unresolved[0]?.message).toContain('ApiModule, WorkerModule');
+  });
+
   it('takes the spelled-out route over the one with a hole, and says so', () => {
     const literal = callerGraph({ meta: { path: '/orders/latest' } });
     const both = graph('orders', {

@@ -20,16 +20,22 @@ build **exit 0**, doctor exit 0, link exit 0
 
 | kind | entry points |
 |---|---|
-| http | 292 |
+| http | 303 |
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
 handlers, which is what the counting rule counts, because two declarations may
-land on one address.
+land on one address. An address is an address within one application: a service
+that creates two of them has two address spaces, and the third row counts the
+addresses that exist only because the id says which application serves them —
+every one of which used to be overwritten by the first claim on it. It counts
+nothing for a repository whose applications are told apart by where they sit in
+the tree instead, which is how the file-system routers address theirs.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| addresses placed | 292 |  |
-| addresses claimed by more than one declaration | 11 | a collision, or one service holding two applications |
+| addresses placed | 303 |  |
+| addresses claimed by more than one declaration | 0 | two handlers of one application; one of them is dead code |
+| addresses told apart only by their application | 11 | each was overwritten before R119, silently and with no total moving |
 | declarations with a body attached | 303 | 303 of 303 |
 | …whose body reaches anything | 300 | 300 of 303 |
 | …behind middleware or a guard | 303 | 303 of 303 |
@@ -40,7 +46,7 @@ is not a diff.
 
 | first segment | addresses |
 |---|---|
-| `/api` | 292 |
+| `/api` | 303 |
 
 ## What joined
 
@@ -63,7 +69,7 @@ is not a diff.
 
 ## What it could not read
 
-2588 places somebody could act on, 4812 the tool
+2589 places somebody could act on, 4812 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -77,6 +83,7 @@ was never an edge to draw. The three are never added together.
 | dynamic-http-url | action | 6 |  |
 | entry-http-types-unmatched | info | 1 |  |
 | global-wrapper-dynamic | action | 2 |  |
+| module-controllers-unread | action | 1 |  |
 | module-import-dynamic | action | 8 |  |
 | type-depth-exceeded | info | 22 |  |
 | type-generic-uninstantiated | info | 38 |  |
@@ -127,7 +134,7 @@ repository's manifests instead of asking the tool for it.
 
 ## Cost
 
-Wall clock 5 to 15 s, peak resident memory 0.5 to 1 GB.
+Wall clock 15 to 60 s, peak resident memory 0.5 to 1 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

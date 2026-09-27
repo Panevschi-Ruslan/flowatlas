@@ -125,6 +125,60 @@ describe('matchRoute', () => {
     ]);
   });
 
+  /**
+   * Two applications answering, and two routes of one application answering, are
+   * not the same fact (R119).
+   *
+   * The first is a defect in nothing — a worker and an API each answer `/health`
+   * on their own port — and the only unknown is which of them a caller from
+   * outside reaches, which is decided by deployment and written in no source. The
+   * second is a defect in one application: whichever handler was registered first
+   * answers and the other is dead code. Both arrive here as a tie, so the result
+   * has to be able to tell them apart.
+   */
+  describe('two applications serving one address', () => {
+    const inApplication = (path: string, application: string): GraphNode => ({
+      id: `entry:orders@${application}:http:GET:${path}`,
+      type: 'entry',
+      kind: 'http',
+      label: `GET ${path} (${application})`,
+      repo: 'orders',
+      meta: { method: 'GET', path, application },
+    });
+
+    it('names the applications when the tie is between them', () => {
+      const both = [inApplication('/health', 'ApiModule'), inApplication('/health', 'WorkerModule')];
+      const found = matchRoute('GET', '/health', both);
+      expect(!isMatch(found) && found.reason).toBe('ambiguous');
+      expect(!isMatch(found) && found.applications).toEqual(['ApiModule', 'WorkerModule']);
+    });
+
+    it('names none when the tie is inside one application', () => {
+      const one = [
+        { ...route('GET', '/a/:param/x'), meta: { method: 'GET', path: '/a/:param/x', application: 'ApiModule' } },
+        { ...route('GET', '/a/x/:param'), meta: { method: 'GET', path: '/a/x/:param', application: 'ApiModule' } },
+      ];
+      const found = matchRoute('GET', '/a/x/x', one);
+      expect(!isMatch(found) && found.reason).toBe('ambiguous');
+      expect(!isMatch(found) && found.applications).toBeUndefined();
+    });
+
+    it('names none where no application was read at all', () => {
+      const overlapping = [route('GET', '/a/:param/x'), route('GET', '/a/x/:param')];
+      const found = matchRoute('GET', '/a/x/x', overlapping);
+      expect(!isMatch(found) && found.applications).toBeUndefined();
+    });
+
+    // One application's route is still beaten by the other's more specific one:
+    // the applications differ, but only one of them can answer, so there is no
+    // ambiguity of any kind to report.
+    it('still lets specificity decide across applications', () => {
+      const mixed = [inApplication('/orders/:param', 'ApiModule'), inApplication('/orders/latest', 'WorkerModule')];
+      const found = matchRoute('GET', '/orders/latest', mixed);
+      expect(isMatch(found) && found.entry.id).toBe('entry:orders@WorkerModule:http:GET:/orders/latest');
+    });
+  });
+
   it('prefers a route with a hole in it to a catch-all with as many', () => {
     // R15. A worker hands everything under `/api` to the application behind it,
     // so `ALL /api/*` answers every address that application serves. Counting
