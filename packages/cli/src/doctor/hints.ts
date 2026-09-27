@@ -451,7 +451,7 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'route-mount-unread': () =>
     'The route was read and the path its application is mounted under was not. Mount the application at a literal path, or declare its routes on the application that is served.',
   'route-handler-anonymous': () =>
-    'A handler written in place has no name to point at. Register a named function instead.',
+    'The route is answered by what a call into a package hands back, such as passport.authenticate(...), and that code is not read. Nothing needs fixing if that is intended; to give the route code to point at, register a function of this repository that hands over to the package.',
   'registry-key-dynamic': () =>
     'Register with a string literal so the way in can be named.',
   'registry-handler-anonymous': () =>
@@ -525,7 +525,7 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'unknown-db-package': () =>
     'Add a descriptor for the package to packages/adapters-db, so its methods are recorded as reads or writes.',
   'unknown-db-operation': () =>
-    'Add the method to the operations of its descriptor, to record whether it reads or writes.',
+    'The query names a table, but its text does not open with a verb that says whether it reads or writes (SELECT, WITH … SELECT, INSERT INTO, UPDATE, DELETE FROM or TRUNCATE, as the very first word): a leading comment hides the verb, and EXPLAIN is not one of them. Start the string with its verb, with any comment after it; a statement that neither reads nor writes, such as EXPLAIN, can be left as it is. The operation comes from that verb, not from the descriptor, so the descriptor needs no change.',
   'db-receiver-name-only': () =>
     'Name the base class under adapters.db.localBaseClasses in flowatlas.config.json if this is a data layer of your own.',
   'db-layer-unread': () =>

@@ -16,8 +16,9 @@ place only because it starts with a comment; the third is a verb the reader
 has no entry for. Both still reach the graph as a visit to the table, with the
 operation left open rather than guessed.
 
-The snapshot holds the row's hint as the tool writes it today, which asks for
-`query` to be added to the operations of the `pg` descriptor. That advice does
-not fit this path: the descriptor already lists `query`, and a query read out of
-its text takes its operation from the verb, never from that list. The snapshot
-records it so that the change which corrects it is a reviewed one.
+The snapshot holds the row's hint as the tool writes it. It once asked for
+`query` to be added to the operations of the `pg` descriptor, which did not fit
+this path: the descriptor already lists `query`, and a query read out of its text
+takes its operation from the verb, never from that list. The hint now names the
+case itself - a text that does not open with a verb the reader knows - and says
+the descriptor needs no change (R139).

@@ -70,6 +70,9 @@ export default passport;
 `,
 };
 
+const HINT =
+  "A call such as passport.authenticate(...) returns the package's own function. Nothing needs fixing if that is intended; to give the route code to point at, register a function of this repository that hands over to the package.";
+
 describe('routes answered by nothing the reader can point at', () => {
   it('counts them in one informational row, placed at the first of them', () => {
     const { entries, unresolved } = read(
@@ -103,9 +106,35 @@ describe('routes answered by nothing the reader can point at', () => {
         sites: 2,
         symbol: 'express',
         message:
-          '2 routes answer with a function written in the declaration, so nothing can be pointed at as the code behind them.',
-        hint:
-          'Give the handler a name and register that, or have the one written in place return what a single named function answers with.',
+          '2 routes are answered by what a call into a package hands back, so the code behind them is not read and nothing can be pointed at as their handler.',
+        hint: HINT,
+      },
+    ]);
+  });
+
+  it('speaks of one route in the singular', () => {
+    const { unresolved } = read(
+      `
+      import express from 'express';
+      import passport from 'passport';
+      const app = express();
+      app.get('/health', (req, res) => res.send('ok'));
+      app.get('/login', passport.authenticate('google'));
+    `,
+      PASSPORT,
+    );
+    expect(anonymous(unresolved)).toEqual([
+      {
+        adapter: 'express-routes',
+        file: 'src/main.ts',
+        line: 6,
+        reason: 'route-handler-anonymous',
+        level: 'info',
+        sites: 1,
+        symbol: 'express',
+        message:
+          '1 route is answered by what a call into a package hands back, so the code behind it is not read and nothing can be pointed at as its handler.',
+        hint: HINT,
       },
     ]);
   });

@@ -1762,8 +1762,11 @@ const reportAnonymous = (
     reason: 'route-handler-anonymous',
     level: 'info',
     sites: count,
-    message: `${count} route${count === 1 ? '' : 's'} answer with a function written in the declaration, so nothing can be pointed at as the code behind them.`,
-    hint: 'Give the handler a name and register that, or have the one written in place return what a single named function answers with.',
+    message:
+      count === 1
+        ? '1 route is answered by what a call into a package hands back, so the code behind it is not read and nothing can be pointed at as its handler.'
+        : `${count} routes are answered by what a call into a package hands back, so the code behind them is not read and nothing can be pointed at as their handler.`,
+    hint: 'A call such as passport.authenticate(...) returns the package\'s own function. Nothing needs fixing if that is intended; to give the route code to point at, register a function of this repository that hands over to the package.',
     symbol: dialect.packages[0] as string,
     adapter: dialect.name,
   });
