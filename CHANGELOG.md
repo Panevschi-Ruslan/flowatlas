@@ -72,6 +72,16 @@ either.
   framework nobody here has heard of can be read without a pull request. All
   four were rewritten as descriptions through that schema, which is what proves
   it rather than asserting it.
+- **A procedure is a boundary too.** A framework whose ways in are the *keys* of
+  a tree of object literals — tRPC, and the family around it — is read, and each
+  procedure is an entry point whose address is every key from the root of the
+  tree down to it, which is the same string its caller writes. Guards inherited
+  through a procedure definition in another file are read with it, and the file
+  that mounts a tree either says which ways in it serves or produces a row naming
+  itself. On cal.com's `apps/web` that is 97 ways in before and 274 after, of
+  which 171 are the procedures the graph used to read as 28 catch-all addresses
+  with no handler and nothing said about any of them. `adapters.entry.procedures`
+  exposes the same description the shipped reader is written as.
 - **A file the parser cannot read says so.** It used to produce no node, no
   edge, no row and no mention — the count of files read was the only place it
   appeared, and it argued the opposite of the truth.
@@ -162,6 +172,14 @@ either.
 
 ### Fixed
 
+- **Detection reads what the service actually reads.** A service's extent is its
+  own directory plus every workspace member it declares, transitively, and the
+  sources of those members are walked exactly like its own — but the manifest an
+  adapter is offered was widened only upwards and downwards, never sideways. So a
+  monorepo where the application declares a library and the library declares the
+  framework switched the adapter off while the framework's code was in the graph.
+  The chain now asks the same question the extent does, which is the seam R115
+  closed and which reopening here would have reopened.
 - A type reference whose object key is not a name round-trips. The writer emitted
   keys as they were written and the reader refused them, so a dependency
   declaring JsonLogic operators — `{ '<=': number }` — stopped every command that

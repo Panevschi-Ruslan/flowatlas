@@ -1,4 +1,5 @@
 import type { AdapterRegistry, EntryAdapter } from '@flowatlas/core';
+import { configuredProceduresAdapter } from './configured-procedures.js';
 import { configuredRoutesAdapter } from './configured-routes.js';
 import { entryRegistriesAdapter } from './entry-registries.js';
 import {
@@ -9,6 +10,7 @@ import {
 } from './call-routes.js';
 import { nestjsHttpAdapter } from './nestjs-http.js';
 import { nextjsRoutesAdapter } from './nextjs-routes.js';
+import { trpcProceduresAdapter } from './procedure-routers.js';
 import { nestjsMicroserviceAdapter } from './nestjs-microservice.js';
 import { nestjsScheduleAdapter } from './nestjs-schedule.js';
 import { nestjsTelegrafAdapter } from './nestjs-telegraf/index.js';
@@ -33,14 +35,24 @@ export const entryAdapters: readonly EntryAdapter[] = [
   nestjsScheduleAdapter,
   nestjsTelegrafAdapter,
   telegrafCallsAdapter,
+  trpcProceduresAdapter,
   entryRegistriesAdapter,
   configuredRoutesAdapter,
+  configuredProceduresAdapter,
 ];
 
 export const registerEntryAdapters = (registry: AdapterRegistry): AdapterRegistry =>
   registry.registerAll('entry', entryAdapters);
 
 export { CONFIGURED_ROUTES, configuredRoutesAdapter } from './configured-routes.js';
+export {
+  CONFIGURED_PROCEDURES,
+  configuredProceduresAdapter,
+} from './configured-procedures.js';
+export type { ProcedureDialect, ProcedureMount } from './procedure-dialects.js';
+export { PROCEDURE_DIALECTS, TRPC, procedureDialectOf } from './procedure-dialects.js';
+export type { ProcedureRoutersOptions } from './procedure-routers.js';
+export { procedureRoutersAdapter, trpcProceduresAdapter } from './procedure-routers.js';
 export {
   callRoutesAdapter,
   expressRoutesAdapter,
