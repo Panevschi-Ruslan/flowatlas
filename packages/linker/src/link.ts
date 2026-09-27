@@ -251,10 +251,22 @@ const procedureEdge = (
  * `heuristic` whoever answers it, and a route somebody declared does not make a
  * guess any better than it was.
  */
-const boundedByRoute = (confidence: Confidence, entry: GraphNode): Confidence =>
-  entry.meta?.['declaredBy'] === undefined || CONFIDENCE_RANK[confidence] <= CONFIDENCE_RANK.declared
-    ? confidence
-    : 'declared';
+const boundedByRoute = (confidence: Confidence, entry: GraphNode): Confidence => {
+  // Two ways a route can be weaker than the join that finds it, and the join
+  // takes the weaker of what it found and what the route is. A route a document
+  // declared is `declared`; a route read from an application recognised only by
+  // what the source states, because its type was not installed, carries its own
+  // `meta.confidence` (R142). Read through `Object.hasOwn` because the value
+  // came out of a graph and the ladder is a plain object (R130).
+  const own = entry.meta?.['confidence'];
+  const ceilings: Confidence[] = [];
+  if (typeof own === 'string' && Object.hasOwn(CONFIDENCE_RANK, own)) ceilings.push(own as Confidence);
+  if (entry.meta?.['declaredBy'] !== undefined) ceilings.push('declared');
+  return ceilings.reduce(
+    (bound, ceiling) => (CONFIDENCE_RANK[ceiling] < CONFIDENCE_RANK[bound] ? ceiling : bound),
+    confidence,
+  );
+};
 
 /**
  * A join across a mount taken as empty is no stronger than a guess (R144).

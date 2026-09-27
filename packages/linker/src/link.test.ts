@@ -204,6 +204,27 @@ describe('joining a call to a route', () => {
     expect(report.httpOut.linked).toBe(1);
   });
 
+  it('is no stronger than a route read from an application its type did not prove', () => {
+    // R142 reads a route off an application recognised from what the source
+    // states when its type is not installed, and marks the route `heuristic`.
+    // A join that finds that route by a settings key it read in full is still
+    // only as strong as the route it lands on.
+    const guessed = route('orders', 'GET', '/orders/:param');
+    guessed.meta = { ...guessed.meta, confidence: 'heuristic' };
+    const { project } = link([callerGraph(), graph('orders', { nodes: [guessed] })]);
+    const joined = project.edges.filter((item) => item.type === 'http_calls');
+
+    expect(joined).toHaveLength(1);
+    expect(joined[0]?.confidence).toBe('heuristic');
+  });
+
+  it('ignores a confidence a route claims that is not on the ladder', () => {
+    const odd = route('orders', 'GET', '/orders/:param');
+    odd.meta = { ...odd.meta, confidence: 'toString' };
+    const { project } = link([callerGraph(), graph('orders', { nodes: [odd] })]);
+    expect(project.edges.find((item) => item.type === 'http_calls')?.confidence).toBe('static');
+  });
+
   it('says which service was meant when the route is gone', () => {
     const gone = callerGraph({ meta: { method: 'POST', path: '/orders/:param/cancel' } });
     const { project, report } = link([gone, ordersGraph()]);
