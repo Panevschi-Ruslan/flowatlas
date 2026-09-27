@@ -23,6 +23,7 @@ import { callsPass } from './passes/calls.js';
 import { entriesPass } from './passes/entries.js';
 import { functionsPass } from './passes/functions.js';
 import { httpPass } from './passes/http.js';
+import { proceduresPass } from './passes/procedures.js';
 import { routesPass } from './passes/routes.js';
 import type { ReactExtractorPass } from './passes/types.js';
 import { createReactProject } from './project.js';
@@ -53,8 +54,10 @@ export interface ExtractRepoOptions {
  * routes have something to write their address on; the routes settle which
  * components are screens before any other pass reads that fact; the calls are
  * drawn before the requests, so that a request attributed to a caller lands on
- * a node the walk has already created; and the ways in are read last, because
- * the edge from a component to a server action needs the component to exist.
+ * a node the walk has already created; a procedure asked for by its path is a
+ * request of the same standing and goes beside them; and the ways in are read
+ * last, because the edge from a component to a server action needs the
+ * component to exist.
  */
 export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   functionsPass,
@@ -62,6 +65,7 @@ export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   callsPass,
   actionsPass,
   httpPass,
+  proceduresPass,
   entriesPass,
 ];
 

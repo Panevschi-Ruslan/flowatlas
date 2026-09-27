@@ -490,6 +490,9 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Nothing here is assembled by any of the names that reader looks for. Ordinary in a repository that only calls procedures; check assembledBy if this is the one that declares them.',
   'procedure-members-unmatched': () =>
     'Calls to the assembling name were found and no member of any of them ended a chain the way a way in does, so none of them was read as a tree. Check terminators on that description.',
+  // Callers of procedures (extractor-react/passes/procedures)
+  'procedure-path-dynamic': () =>
+    'A step of the path a procedure is asked for by is computed, so the procedure it reaches cannot be named and the call is joined to nothing. Write each step as a name.',
   'entry-procedures-description-inactive': () =>
     'Ordinary in a project of several repositories. If this is the one it was written for, check the spelling of its packages.',
 
@@ -595,6 +598,12 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     '@CallsService names a service that is not configured. Add it to services[] in flowatlas.config.json, or correct the annotation.',
   'marker-route-not-found': () =>
     '@CallsService points at a route the named service does not serve. Check its controllers, or correct the annotation.',
+  'procedure-not-found': () =>
+    'No procedure of that path is declared by the caller\'s own service or by any service its apiTarget names. Check the tree for a rename; if another service declares it, name that service in apiTarget.',
+  'procedure-ambiguous': () =>
+    'More than one service the caller is configured to call declares this procedure. Leave only the one it talks to in its apiTarget.',
+  'procedure-call-mismatch': () =>
+    'The procedure is asked for as one kind of call and declared as another, and the server refuses a call of the kind it did not declare. Call it as declared.',
   'duplicate-node-id': () =>
     'Two repositories declared the same id. One of them was kept; rename the other, or split the shared file out into a package.',
 

@@ -24,6 +24,14 @@ import {
   type RouteIndex,
 } from './http-link.js';
 import { mergeGraphs } from './merge.js';
+import {
+  isProcedureEntry,
+  procedureFindingFor,
+  procedureReasonOf,
+  resolveProcedureCall,
+  type ProcedureIndex,
+  type ProcedureOutcome,
+} from './procedure-link.js';
 import { auditRoutes } from './route-audit.js';
 import { answeredOnlyByWildcard } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
@@ -170,6 +178,58 @@ const buildUiIndex = (
     services: () => serving,
   };
 };
+
+/**
+ * The lookups a request for a procedure needs.
+ *
+ * Kept apart from the route index because the two are keyed by different
+ * things: a route by a verb and a path pattern, a procedure by one exact string.
+ * Folding them together is how a procedure path would come to be matched as a
+ * URL, which it is not.
+ */
+const buildProcedureIndex = (
+  nodes: ReadonlyMap<string, GraphNode>,
+  config: FlowatlasConfig,
+): ProcedureIndex => {
+  const byService = new Map<string, Map<string, GraphNode>>();
+  for (const node of nodes.values()) {
+    if (!isProcedureEntry(node)) continue;
+    const declared = byService.get(node.repo) ?? new Map<string, GraphNode>();
+    declared.set(String(node.meta?.['key']), node);
+    byService.set(node.repo, declared);
+  }
+  const targets = new Map<string, string[]>();
+  for (const service of config.services) {
+    targets.set(service.name, [...new Set(Object.values(service.apiTarget ?? {}))].sort(cmp));
+  }
+  const declaring = [...byService.keys()].sort(cmp);
+  const none = new Map<string, GraphNode>();
+  return {
+    proceduresOf: (service) => byService.get(service) ?? none,
+    targetsOf: (service) => targets.get(service) ?? [],
+    services: () => declaring,
+  };
+};
+
+/**
+ * The edge a request for a procedure becomes.
+ *
+ * `static` whichever of the two ways found it: the path was read in full at the
+ * call and matched letter for letter, and the service was either the caller's
+ * own or one the configuration named. Nothing about it was guessed.
+ */
+const procedureEdge = (
+  call: GraphNode,
+  outcome: Extract<ProcedureOutcome, { kind: 'linked' }>,
+): GraphEdge => ({
+  from: call.id,
+  to: outcome.entry.id,
+  type: 'hits',
+  confidence: boundedByRoute('static', outcome.entry),
+  ...(call.file === undefined ? {} : { file: call.file }),
+  ...(call.line === undefined ? {} : { line: call.line }),
+  meta: { via: outcome.via, targetService: outcome.targetService },
+});
 
 /**
  * A join edge may not claim more than the weakest of the two ends it rests on.
@@ -331,6 +391,7 @@ export const linkGraphs = (
   const servicesByEnv = servicesByEnvOf(config);
   const index = buildRouteIndex(nodes, edges.values(), config, routesByService, servicesByEnv);
   const uiIndex = buildUiIndex(config, routesByService, servicesByEnv);
+  const procedureIndex = buildProcedureIndex(nodes, config);
 
   /** Where a finding happened; the finding itself says what and what to do. */
   const record = (call: GraphNode, finding: Finding): void => {
@@ -377,6 +438,25 @@ export const linkGraphs = (
   for (const call of nodes.values()) {
     if (call.type !== 'ui_api_call') continue;
     ui.total += 1;
+
+    // A procedure asked for by its path, which has no verb and no URL to match
+    // a route with and is joined on the path alone.
+    if (call.kind === 'rpc') {
+      const outcome = resolveProcedureCall(call, procedureIndex);
+      const finding = procedureFindingFor(outcome, call);
+      if (outcome.kind === 'linked') {
+        const edge = procedureEdge(call, outcome);
+        edges.set(edgeKey(edge), edge);
+        call.meta = { ...call.meta, targetService: outcome.targetService };
+        ui.resolved += 1;
+      } else {
+        ui.unresolved += 1;
+        const reason = procedureReasonOf(outcome, call);
+        if (reason !== undefined) ui.byReason[reason] = (ui.byReason[reason] ?? 0) + 1;
+      }
+      if (finding !== undefined) record(call, finding);
+      continue;
+    }
 
     /** True when matching the address as written settled nothing worth keeping. */
     const onlyCatchAll = (found: UiOutcome): boolean =>

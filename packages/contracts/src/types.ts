@@ -220,6 +220,8 @@ export const UNCHECKED_REASONS = [
   'ambiguous-handler',
   'channel-without-producer',
   'channel-without-consumer',
+  'procedure-input-by-name',
+  'procedure-output-inferred',
 ] as const;
 
 export type UncheckedReason = (typeof UNCHECKED_REASONS)[number];
