@@ -1,6 +1,6 @@
 {
   "schemaVersion": 4,
-  "builtAt": "2026-09-26T20:15:02.523Z",
+  "builtAt": "2026-09-27T09:27:26.501Z",
   "services": [
     {
       "name": "shop",
@@ -22,7 +22,7 @@
       "label": "ALL /api/legacy",
       "repo": "shop",
       "file": "pages/api/legacy.ts",
-      "line": 1,
+      "line": 10,
       "kind": "http",
       "meta": {
         "method": "ALL",
@@ -30,6 +30,8 @@
         "adapter": "nextjs-routes",
         "registration": "pages/api",
         "middlewareRead": true,
+        "declaredIn": "lib/rest.ts",
+        "declaredLine": 29,
         "handlerVia": "unread",
         "handlerBodyRead": false
       }
@@ -276,7 +278,7 @@
     },
     {
       "file": "pages/api/legacy.ts",
-      "line": 1,
+      "line": 10,
       "reason": "route-handler-unread",
       "message": "ALL /api/legacy is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/legacy.",
       "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
