@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T12:41:52.403Z",
+  "builtAt": "2026-09-27T17:37:35.453Z",
   "services": [
     {
       "name": "api",
@@ -1119,7 +1119,7 @@
     {
       "file": "src/admin/reports.routes.ts",
       "line": 12,
-      "reason": "route-path-dynamic",
+      "reason": "route-mount-unread",
       "message": "app is mounted somewhere this cannot read, so /daily is not the path it is served at.",
       "hint": "Mount the application at a literal path, or declare its routes on the application that is served.",
       "symbol": "GET /daily",
@@ -1139,7 +1139,7 @@
       "file": "src/worker.ts",
       "line": 45,
       "reason": "route-path-dynamic",
-      "hint": "Give the route a string literal or a const string; a computed path cannot be matched against callers.",
+      "hint": "Write the path as a literal, a const, or a + or template of them, and every path of a list the same way; a path that needs a call or a run-time value to compute is not recorded as a route at all, so no caller can reach it.",
       "symbol": "app.get(pathFor('stats'))",
       "adapter": "hono-routes",
       "service": "api"

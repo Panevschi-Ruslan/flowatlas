@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "koa-mount-helper",
-  "generatedAt": "2026-09-27T12:41:53.096Z",
+  "generatedAt": "2026-09-27T17:32:41.638Z",
   "nodes": [
     {
       "id": "entry:koa-mount-helper:http:GET:/health",
@@ -177,7 +177,7 @@
     {
       "file": "src/admin/admin.routes.ts",
       "line": 14,
-      "reason": "route-path-dynamic",
+      "reason": "route-mount-unread",
       "message": "adminRouter is mounted somewhere this cannot read, so /users.list is not the path it is served at.",
       "hint": "The path is an argument of underFlag(admin), a mount helper this tool has no record of. Mount the application with the framework's own method and a literal path, or have that helper described.",
       "symbol": "GET /users.list",

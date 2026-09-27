@@ -8,6 +8,7 @@ import {
   type ApplicationMap,
   type EntryAdapter,
   type EntryNode,
+  type EntryWrapping,
   type ExtractContext,
 } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
@@ -22,7 +23,7 @@ import {
   type FsRouter,
   type FsRouteVerb,
 } from './fs-routes.js';
-import { arrayElements, handlerOfFunction, repoSources, unwrapValue } from './shared.js';
+import { arrayElements, fileOfNode, handlerOfFunction, repoSources, unwrapValue } from './shared.js';
 
 const ADAPTER = 'medusa-routes';
 
@@ -66,10 +67,12 @@ const DEFINE_MIDDLEWARES = 'defineMiddlewares';
 interface MiddlewareEntry {
   /** Which addresses it covers, or `undefined` when the pattern was not read. */
   covers?: (path: string) => boolean;
+  /** The pattern as written, which is what the framework orders the list by. */
+  pattern: string;
   /** Which verbs, or `undefined` for every verb. */
   methods?: readonly string[];
-  /** The names of the functions it installs. */
-  installs: readonly string[];
+  /** The functions it installs, in the order written, where each is written. */
+  installs: readonly EntryWrapping[];
 }
 
 /** The whole list, and what of it could not be read. */
@@ -159,24 +162,106 @@ const readMiddlewareList = (ctx: ExtractContext): MiddlewareList | undefined => 
       // stands in front of a route. It is left out rather than recorded empty:
       // a route with an entry that names no function is a route with nothing
       // named in front of it, and the two must read the same.
-      const installs =
+      const installs: EntryWrapping[] =
         installed !== undefined && Node.isArrayLiteralExpression(installed)
-          ? arrayElements(installed.getElements()).map(nameOf)
+          ? arrayElements(installed.getElements()).map((value) => ({
+              label: nameOf(value),
+              layer: 'middleware',
+              // A path pattern, and what it covers is every address under it.
+              scope: 'prefix',
+              source: DEFINE_MIDDLEWARES,
+              file: fileOfNode(value, ctx),
+              line: value.getStartLineNumber(),
+              kind: 'function',
+            }))
           : [];
       if (installs.length === 0) continue;
 
       const pattern = literalString(matcher);
       const covers = pattern === undefined ? undefined : pathPatternTest(pattern);
-      if (covers === undefined) {
+      if (pattern === undefined || covers === undefined) {
         unread.push(pattern ?? (matcher?.getText() ?? 'an unread matcher'));
         continue;
       }
       const methods = readMethods(element);
-      entries.push({ covers, ...(methods === undefined ? {} : { methods }), installs });
+      entries.push({
+        covers,
+        pattern,
+        ...(methods === undefined ? {} : { methods }),
+        installs,
+      });
     }
-    return { file, entries, unread };
+    return { file, entries: inFrameworkOrder(entries), unread };
   }
   return undefined;
+};
+
+/** The framework's buckets for one segment, in the order it runs them. */
+const BUCKETS = ['global', 'wildcard', 'regex', 'static', 'params'] as const;
+
+type Bucket = (typeof BUCKETS)[number];
+
+type Branch = Record<Bucket, { entries: MiddlewareEntry[]; children: Map<string, Branch> }>;
+
+const newBranch = (): Branch => ({
+  global: { entries: [], children: new Map() },
+  wildcard: { entries: [], children: new Map() },
+  regex: { entries: [], children: new Map() },
+  static: { entries: [], children: new Map() },
+  params: { entries: [], children: new Map() },
+});
+
+/** Which bucket one segment of a pattern falls in, as the framework decides it. */
+const bucketOf = (segment: string, entry: MiddlewareEntry): Bucket => {
+  if (entry.methods === undefined) return 'global';
+  if (segment.startsWith('*')) return 'wildcard';
+  if (segment.startsWith(':')) return 'params';
+  if (/[(+*[\]!)]/.test(segment)) return 'regex';
+  return 'static';
+};
+
+/**
+ * The list in the order the framework runs it, which is not the order written.
+ *
+ * The framework does not install the list as it is written: it files every
+ * pattern into a tree by segment and walks the tree, putting an entry that names
+ * no verb before one that does, a wildcard before a literal and a literal before
+ * a parameter, and a pattern before the patterns below it. The position in the
+ * chain is the one thing a `guarded_by` edge is asked (R109), so the walk is
+ * reproduced here rather than the written order taken for it. Ported from the
+ * framework's `RoutesSorter`; only patterns this reads as a path reach it, so the
+ * framework's branch for a regular expression is not needed.
+ */
+const inFrameworkOrder = (entries: readonly MiddlewareEntry[]): MiddlewareEntry[] => {
+  const root = newBranch();
+  for (const entry of entries) {
+    const segments = entry.pattern.split('/').filter((segment) => segment.length > 0);
+    if (segments.length === 0) {
+      root[entry.methods === undefined ? 'global' : 'static'].entries.push(entry);
+      continue;
+    }
+    let branch = root;
+    segments.forEach((segment, index) => {
+      const bucket = branch[bucketOf(segment, entry)];
+      if (index === segments.length - 1) {
+        bucket.entries.push(entry);
+        return;
+      }
+      const child = bucket.children.get(segment) ?? newBranch();
+      bucket.children.set(segment, child);
+      branch = child;
+    });
+  }
+  const walk = (branches: Iterable<Branch>): MiddlewareEntry[] => {
+    const out = new Map<Bucket, MiddlewareEntry[]>(BUCKETS.map((bucket) => [bucket, []]));
+    for (const branch of branches) {
+      for (const bucket of BUCKETS) {
+        out.get(bucket)?.push(...branch[bucket].entries, ...walk(branch[bucket].children.values()));
+      }
+    }
+    return BUCKETS.flatMap((bucket) => out.get(bucket) ?? []);
+  };
+  return walk([root]);
 };
 
 /** The verbs one entry names, or `undefined` when it names none and covers all. */
@@ -230,11 +315,15 @@ export const medusaRoutesAdapter: EntryAdapter = {
     const list = readMiddlewareList(ctx);
 
     /**
-     * What one route says about the middleware in front of it.
+     * What of the list stands in front of one route, in the order it runs.
      *
-     * `middlewareRead` is deliberately `false` on every route, and it is false
-     * for a reason that is not the list. Three things stand in front of a route
-     * here: the entries of the declarative list, which are read below; the
+     * Described, not listed on the entry: each becomes a node and a
+     * `guarded_by` edge, which is how every other reader says it (R109).
+     *
+     * It is not the whole chain, which is why `middlewareRead` is deliberately
+     * `false` on every route, and it is false for a reason that is not the
+     * list. Three things stand in front of a route here: the entries of the
+     * declarative list, which are read here; the
      * framework's own authentication of its `/admin` and `/store` namespaces,
      * which is installed by the framework's own code and not by anything in this
      * repository; and an `AUTHENTICATE` export in the route file that switches
@@ -243,23 +332,21 @@ export const medusaRoutesAdapter: EntryAdapter = {
      * by hand rather than as a route with a hole in front of it. Claiming a guard
      * nobody saw is the worst thing this tool could say, and so is denying one.
      */
-    const gateOf = (method: string, path: string): Record<string, unknown> => {
-      const installed = (list?.entries ?? [])
+    const gateOf = (method: string, path: string): readonly EntryWrapping[] =>
+      (list?.entries ?? [])
         .filter(
           (entry) =>
             entry.covers?.(path) === true &&
             (entry.methods === undefined || entry.methods.includes(method)),
         )
         .flatMap((entry) => entry.installs);
-      const named = [...new Set(installed)].sort();
-      return { middlewareRead: false, ...(named.length > 0 ? { middleware: named } : {}) };
-    };
 
     const httpEntry = (verb: FsRouteVerb, application: string | undefined): void => {
       const key = makeHttpEntryKey(verb.method, verb.path);
       const id = makeEntryId(ctx.repo, 'http', key, application);
       if (seen.has(id)) return;
       seen.add(id);
+      const gate = gateOf(verb.method, verb.path);
       entries.push({
         id,
         kind: 'http',
@@ -274,6 +361,7 @@ export const medusaRoutesAdapter: EntryAdapter = {
         // it rather than folded into it (R99).
         file: verb.at.reached.file,
         line: verb.at.reached.line,
+        ...(gate.length > 0 ? { wrapping: gate } : {}),
         meta: {
           method: verb.method,
           path: verb.path,
@@ -283,7 +371,7 @@ export const medusaRoutesAdapter: EntryAdapter = {
           // something: it is what tells a tie between two applications from a
           // tie between two routes of one (R119, R125).
           ...(application === undefined ? {} : { application }),
-          ...gateOf(verb.method, verb.path),
+          middlewareRead: false,
           handlerVia: verb.handler === undefined ? 'unread' : 'function',
           // Two different facts, and the second is the one a summary must not
           // read off the first. `handlerVia` says whether a function was named;

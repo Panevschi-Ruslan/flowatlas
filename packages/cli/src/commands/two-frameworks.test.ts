@@ -179,11 +179,15 @@ describe('a repository that serves routes from two frameworks', () => {
   });
 
   it('refuses a route whose address depends on a caller, and says which', () => {
-    const rows = project.unresolved.filter((row: Unresolved) => row.reason === 'route-path-dynamic');
-    expect(rows.map((row) => row.file).sort()).toEqual([
-      'src/admin/reports.routes.ts',
-      'src/worker.ts',
-    ]);
+    const files = (reason: string): string[] =>
+      project.unresolved
+        .filter((row: Unresolved) => row.reason === reason)
+        .map((row) => row.file)
+        .sort();
+    // Two facts, two reasons: the worker's own path is computed, and the
+    // reports application's route was read under a mount whose path was not.
+    expect(files('route-path-dynamic')).toEqual(['src/worker.ts']);
+    expect(files('route-mount-unread')).toEqual(['src/admin/reports.routes.ts']);
   });
 
   it('points each route answered by a function written in place at that function', () => {

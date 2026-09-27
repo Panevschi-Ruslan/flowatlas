@@ -447,7 +447,9 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
 
   // Routes (adapters-entry)
   'route-path-dynamic': () =>
-    'Give the route a string literal or a const string; a computed path cannot be matched against callers.',
+    'Write the path as a literal, a const, or a + or template of them, and every path of a list the same way; a path that needs a call or a run-time value to compute is not recorded as a route at all, so no caller can reach it.',
+  'route-mount-unread': () =>
+    'The route was read and the path its application is mounted under was not. Mount the application at a literal path, or declare its routes on the application that is served.',
   'route-handler-anonymous': () =>
     'A handler written in place has no name to point at. Register a named function instead.',
   'registry-key-dynamic': () =>

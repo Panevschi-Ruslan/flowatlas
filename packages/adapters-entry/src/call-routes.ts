@@ -33,8 +33,19 @@ import {
   repoSources,
 } from './shared.js';
 
+/**
+ * The sentence for a route whose own path could not be read.
+ *
+ * Rewritten after R101 made a list of paths and a chained `.route(path)` read:
+ * the old one asked for "a string literal or a const string", which a list of
+ * paths is not and does not need to be, and called the path "computed" when
+ * `'/api/' + VERSION` is computed and reads in full. What does not read is a
+ * piece that takes a call or a run-time value, one of them anywhere in a list
+ * drops the whole registration, and the route is then missing rather than
+ * merely unmatched.
+ */
 const DYNAMIC_PATH_HINT =
-  'Give the route a string literal or a const string; a computed path cannot be matched against callers.';
+  'Write the path as a literal, a const, or a + or template of them, and every path of a list the same way; a path that needs a call or a run-time value to compute is not recorded as a route at all, so no caller can reach it.';
 
 /**
  * What to do about a route on an application whose base could not be read.
@@ -1400,10 +1411,15 @@ export const callRoutesAdapter = (
         const contexts =
           applications.contextsOf(site.receiver) ?? (applications.shifts ? undefined : [ROOT]);
         if (contexts === undefined) {
+          // A reason of its own, because the route's own path was read: what
+          // could not be is the path its application was mounted under, which
+          // is fixed somewhere else and by someone else. `route-path-dynamic`
+          // is the route's own path being computed, and a person silencing one
+          // of the two has not said anything about the other (R110).
           ctx.builder.addUnresolved({
             file,
             line,
-            reason: 'route-path-dynamic',
+            reason: 'route-mount-unread',
             message: `${label(site.receiver)} is mounted somewhere this cannot read, so ${route.paths.join(', ')} is not the path it is served at.`,
             hint: unplacedHint(applications.helperAbove(own)),
             symbol: `${route.verbs.join(',')} ${route.paths.join(',')}`,

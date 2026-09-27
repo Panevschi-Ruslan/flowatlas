@@ -93,6 +93,8 @@ const read = (
 
 const keys = (found: Read): string[] => found.entries.map((entry) => entry.key).sort();
 const reasons = (found: Read): string[] => found.unresolved.map((row) => row.reason).sort();
+const chainOf = (found: Read, key: string): string[] | undefined =>
+  found.entries.find((entry) => entry.key === key)?.wrapping?.map((one) => one.label);
 const metaOf = (found: Read, key: string): Record<string, unknown> =>
   (found.entries.find((entry) => entry.key === key)?.meta ?? {}) as Record<string, unknown>;
 
@@ -155,9 +157,34 @@ describe('ways in that are the keys of a tree', () => {
         });
       `,
     });
-    expect(metaOf(found, 'mine')['middleware']).toEqual(['isSignedIn']);
+    expect(chainOf(found, 'mine')).toEqual(['isSignedIn']);
     // Both, in the order the framework applies them, through two definitions.
-    expect(metaOf(found, 'all')['middleware']).toEqual(['isSignedIn', 'isAdmin']);
+    expect(chainOf(found, 'all')).toEqual(['isSignedIn', 'isAdmin']);
+    // Described where each was installed, so one guard on a starting point is
+    // one node however many ways in begin from it — and never a list on the
+    // entry, which read as an unguarded way in to every reader of edges (R109).
+    const all = found.entries.find((entry) => entry.key === 'all');
+    expect(all?.wrapping?.map(({ file, source, scope }) => ({ file, source, scope }))).toEqual([
+      { file: 'server/procedures.ts', source: 'authedProcedure', scope: 'prefix' },
+      { file: 'server/procedures.ts', source: 'adminProcedure', scope: 'prefix' },
+    ]);
+    expect(metaOf(found, 'all')['middleware']).toBeUndefined();
+  });
+
+  it('describes a guard written on the way in itself as scoped to that one', () => {
+    const found = read({
+      '/server/root.ts': `
+        import { middleware, procedure, router } from './trpc';
+        const audit = middleware(({ next }) => next());
+        export const appRouter = router({
+          one: procedure.use(audit).query(() => []),
+        });
+      `,
+    });
+    const one = found.entries.find((entry) => entry.key === 'one');
+    expect(one?.wrapping?.map(({ label, scope, source }) => ({ label, scope, source }))).toEqual([
+      { label: 'audit', scope: 'route', source: '.use' },
+    ]);
   });
 
   it('records the shape a caller sends and which ending the chain had', () => {
