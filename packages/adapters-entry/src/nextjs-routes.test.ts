@@ -416,8 +416,8 @@ describe('ways in a Next.js repository declares by where its files are', () => {
     });
     const guarded = read.entries.find((entry) => entry.meta?.['path'] === '/api/orders');
     const open = read.entries.find((entry) => entry.meta?.['path'] === '/health');
-    expect(guarded?.meta?.['middleware']).toEqual(['middleware.ts']);
-    expect(open?.meta?.['middleware']).toBeUndefined();
+    expect(guarded?.wrapping?.map((one) => one.label)).toEqual(['middleware.ts']);
+    expect(open?.wrapping).toBeUndefined();
   });
 
   // A matcher written as a regular expression is the framework's own example,
@@ -431,7 +431,7 @@ describe('ways in a Next.js repository declares by where its files are', () => {
       `,
       '/app/api/orders/route.ts': `export async function GET() { return null; }`,
     });
-    expect(read.entries[0]?.meta?.['middleware']).toBeUndefined();
+    expect(read.entries[0]?.wrapping).toBeUndefined();
     expect(read.unresolved.map((row) => row.reason)).toContain('middleware-matcher-unread');
   });
 
@@ -440,6 +440,6 @@ describe('ways in a Next.js repository declares by where its files are', () => {
       '/middleware.ts': `export function middleware() { return undefined; }`,
       '/app/api/orders/route.ts': `export async function GET() { return null; }`,
     });
-    expect(read.entries[0]?.meta?.['middleware']).toEqual(['middleware.ts']);
+    expect(read.entries[0]?.wrapping?.map((one) => one.label)).toEqual(['middleware.ts']);
   });
 });

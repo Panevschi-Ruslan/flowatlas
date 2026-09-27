@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "repo": "nest-addressing",
-  "generatedAt": "2026-09-26T21:08:21.859Z",
+  "generatedAt": "2026-09-27T09:26:33.897Z",
   "nodes": [
     {
       "id": "entry:nest-addressing:http:GET:/api/.well-known/health",

@@ -1,6 +1,7 @@
 import type { FlowatlasConfig } from '../config.js';
 import type { EntryKind } from '../model/nodes.js';
 import type { ExtractContext } from './context.js';
+import type { EntryWrapping } from './wrapping.js';
 import type { PackageJson } from './manifest.js';
 
 /** A method of a class, which is where most handlers live. */
@@ -78,6 +79,16 @@ export interface EntryNode {
   /** Repo-relative POSIX path of the declaration site. */
   file: string;
   line?: number;
+  /**
+   * What runs in front of it, in the order it runs.
+   *
+   * Described rather than drawn, like the handler: the extractor turns it into
+   * the same nodes and the same `guarded_by` edges a decorator-driven reader
+   * produces, so that a route's protection is one shape in the graph however it
+   * was written. A list on the entry was the other option and is why nothing
+   * that read the graph as a graph could see a middleware chain at all (R109).
+   */
+  wrapping?: readonly EntryWrapping[];
   meta?: Record<string, unknown>;
 }
 

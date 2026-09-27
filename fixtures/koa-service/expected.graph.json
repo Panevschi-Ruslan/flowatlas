@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "repo": "koa-service",
-  "generatedAt": "2026-09-25T14:33:40.394Z",
+  "generatedAt": "2026-09-27T09:26:27.365Z",
   "nodes": [
     {
       "id": "db_query:koa-service#src/orders/orders.repository.ts:12:12",
@@ -75,10 +75,6 @@
         "adapter": "koa-routes",
         "registration": "ordersRouter.get",
         "middlewareRead": true,
-        "middleware": [
-          "authenticate",
-          "withTenant"
-        ],
         "handlerVia": "function"
       }
     },
@@ -97,10 +93,6 @@
         "adapter": "koa-routes",
         "registration": "ordersRouter.get",
         "middlewareRead": true,
-        "middleware": [
-          "authenticate",
-          "withTenant"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -155,11 +147,6 @@
         "adapter": "koa-routes",
         "registration": "ordersRouter.post",
         "middlewareRead": true,
-        "middleware": [
-          "authenticate",
-          "withTenant",
-          "requireAdmin"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -221,6 +208,24 @@
       "line": 32
     },
     {
+      "id": "koa-service#src/orders/orders.routes.ts:requireAdmin",
+      "type": "middleware",
+      "label": "requireAdmin",
+      "repo": "koa-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 32,
+      "kind": "function"
+    },
+    {
+      "id": "koa-service#src/orders/orders.routes.ts:withTenant",
+      "type": "middleware",
+      "label": "withTenant",
+      "repo": "koa-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 21,
+      "kind": "function"
+    },
+    {
       "id": "koa-service#src/public/public.routes.ts:GET /health@12",
       "type": "function",
       "label": "GET /health@12",
@@ -235,6 +240,15 @@
       "repo": "koa-service",
       "file": "src/public/public.routes.ts",
       "line": 16
+    },
+    {
+      "id": "koa-service#src/server.ts:authenticate",
+      "type": "middleware",
+      "label": "authenticate",
+      "repo": "koa-service",
+      "file": "src/server.ts",
+      "line": 18,
+      "kind": "function"
     },
     {
       "id": "repo:koa-service",
@@ -299,12 +313,68 @@
       "line": 5
     },
     {
+      "from": "entry:koa-service:http:GET:/orders",
+      "to": "koa-service#src/orders/orders.routes.ts:withTenant",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 21,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "ordersRouter.use"
+      }
+    },
+    {
+      "from": "entry:koa-service:http:GET:/orders",
+      "to": "koa-service#src/server.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
       "from": "entry:koa-service:http:GET:/orders/:param",
       "to": "koa-service#src/orders/orders.routes.ts:GET /:orderId@27",
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
       "line": 27
+    },
+    {
+      "from": "entry:koa-service:http:GET:/orders/:param",
+      "to": "koa-service#src/orders/orders.routes.ts:withTenant",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 21,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "ordersRouter.use"
+      }
+    },
+    {
+      "from": "entry:koa-service:http:GET:/orders/:param",
+      "to": "koa-service#src/server.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
     },
     {
       "from": "entry:koa-service:http:GET:/public/health",
@@ -329,6 +399,48 @@
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
       "line": 32
+    },
+    {
+      "from": "entry:koa-service:http:POST:/orders",
+      "to": "koa-service#src/orders/orders.routes.ts:requireAdmin",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 32,
+      "meta": {
+        "order": 2,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "ordersRouter.post"
+      }
+    },
+    {
+      "from": "entry:koa-service:http:POST:/orders",
+      "to": "koa-service#src/orders/orders.routes.ts:withTenant",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 21,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "ordersRouter.use"
+      }
+    },
+    {
+      "from": "entry:koa-service:http:POST:/orders",
+      "to": "koa-service#src/server.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
     },
     {
       "from": "koa-service#src/orders/orders.controller.ts:listOrders",

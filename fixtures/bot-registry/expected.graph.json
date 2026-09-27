@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "repo": "bot-registry",
-  "generatedAt": "2026-09-25T14:33:31.229Z",
+  "generatedAt": "2026-09-27T09:26:17.080Z",
   "nodes": [
     {
       "id": "bot-registry#src/actions/cancel-order.action.ts:callbacks:keep_order@19",

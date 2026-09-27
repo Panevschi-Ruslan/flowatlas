@@ -1,4 +1,10 @@
-import type { EntryAdapter, EntryHandler, EntryNode, ExtractContext } from '@flowatlas/core';
+import type {
+  EntryAdapter,
+  EntryHandler,
+  EntryNode,
+  EntryWrapping,
+  ExtractContext,
+} from '@flowatlas/core';
 import {
   evaluateExpression,
   hasAnyDependency,
@@ -585,6 +591,8 @@ interface Install {
   at?: string;
   /** The middleware, as it is spelled. */
   names: string[];
+  /** The call that installed it, as written, for the edge to say where it came from. */
+  source: string;
 }
 
 /** Where one application is reached, and what stands in front of it there. */
@@ -595,11 +603,28 @@ interface RouteContext {
 
 const ROOT: RouteContext = { prefix: '', guards: [] };
 
+/** The fixed part of a path an install is scoped to, with any wildcard tail cut. */
+const baseOf = (at: string): string => at.replace(/\/?\*+$/, '');
+
 /** Whether middleware scoped to a path covers a route served at another. */
 const covers = (at: string | undefined, path: string): boolean => {
   if (at === undefined) return true;
-  const base = at.replace(/\/?\*+$/, '');
+  const base = baseOf(at);
   return base === '' || base === '/' || path === base || path.startsWith(`${base}/`);
+};
+
+/**
+ * How wide an install is: the whole application, or one prefix of it.
+ *
+ * `use('*', …)` and `use(…)` are the same installation written two ways, and
+ * both are read as global, by the same reading of the path `covers` uses. A
+ * scope that said `prefix` for a wildcard would be a difference in the graph
+ * where there is none in the code.
+ */
+const scopeOf = (at: string | undefined): 'global' | 'prefix' => {
+  if (at === undefined) return 'global';
+  const base = baseOf(at);
+  return base === '' || base === '/' ? 'global' : 'prefix';
 };
 
 /**
@@ -756,6 +781,7 @@ class Applications {
       site: site.site,
       ...(at === undefined ? {} : { at }),
       names: rest.map(label),
+      source: `${label(site.receiver)}.${site.method}`,
     });
     this.#installs.set(declaration, found);
   }
@@ -1251,6 +1277,8 @@ export const callRoutesAdapter = (
         }
 
         const { file, line } = site.site;
+        /** How the route was registered, as a reader would find it in the file. */
+        const registration = site.as ?? `${label(site.receiver)}.${site.method}`;
         // Where nothing in the repository moves an application, every one of
         // them serves what it declares, so an application handed in as an
         // argument needs no caller to be found before its routes can be placed.
@@ -1287,13 +1315,37 @@ export const callRoutesAdapter = (
           // Order is what the framework applies: everything inherited from
           // above the mount, then what this application installed before this
           // line, then what this one line asks for.
-          const middleware = [
+          //
+          // Described, not listed: each one becomes a node and a `guarded_by`
+          // edge in the order it runs, which is the same shape a decorator-driven
+          // reader draws. A list on the entry read as an unguarded route to
+          // everything that reads the graph as a graph (R109).
+          const installed = [
             ...context.guards,
             ...applications.guardsOn(own, site.site, context.prefix),
-          ]
-            .filter((install) => covers(install.at, rawPath))
-            .flatMap((install) => install.names)
-            .concat(route.middleware);
+          ].filter((install) => covers(install.at, rawPath));
+          const wrapping: EntryWrapping[] = [
+            ...installed.flatMap((install) =>
+              install.names.map((name) => ({
+                label: name,
+                layer: 'middleware' as const,
+                scope: scopeOf(install.at),
+                source: install.source,
+                file: install.site.file,
+                line: install.site.line,
+                kind: 'function',
+              })),
+            ),
+            ...route.middleware.map((name) => ({
+              label: name,
+              layer: 'middleware' as const,
+              scope: 'route' as const,
+              source: registration,
+              file,
+              line,
+              kind: 'function',
+            })),
+          ];
 
           for (const method of route.verbs) {
             const key = makeHttpEntryKey(method, path);
@@ -1309,12 +1361,13 @@ export const callRoutesAdapter = (
               ...(route.answer.handler === undefined ? {} : { handler: route.answer.handler }),
               file,
               line,
+              ...(wrapping.length > 0 ? { wrapping } : {}),
               meta: {
                 method,
                 path,
                 rawPath,
                 adapter: dialect.name,
-                registration: site.as ?? `${label(site.receiver)}.${site.method}`,
+                registration,
                 // Whether the middleware list above is the whole of what stands
                 // in front of this route, or only what the declaration itself
                 // named. A dialect describing where installs are written has
@@ -1323,7 +1376,6 @@ export const callRoutesAdapter = (
                 // looked for — nor, once it does look, go on warning that it
                 // did not.
                 middlewareRead: dialect.middleware !== undefined,
-                ...(middleware.length > 0 ? { middleware } : {}),
                 ...(conditional ? { conditional: true } : {}),
                 // Said plainly, because a walk from this entry is only as narrow
                 // as the answer to "which code does the handler run".

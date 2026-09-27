@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 4,
-  "builtAt": "2026-09-25T14:33:32.896Z",
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T09:26:20.209Z",
   "services": [
     {
       "name": "api",
@@ -16,6 +16,24 @@
     }
   ],
   "nodes": [
+    {
+      "id": "api#src/app.ts:authenticate",
+      "type": "middleware",
+      "label": "authenticate",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 22,
+      "kind": "function"
+    },
+    {
+      "id": "api#src/app.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 21,
+      "kind": "function"
+    },
     {
       "id": "api#src/orders/orders.controller.ts:listOrders",
       "type": "function",
@@ -72,6 +90,24 @@
       "repo": "api",
       "file": "src/orders/orders.routes.ts",
       "line": 36
+    },
+    {
+      "id": "api#src/orders/orders.routes.ts:requireAdmin",
+      "type": "middleware",
+      "label": "requireAdmin",
+      "repo": "api",
+      "file": "src/orders/orders.routes.ts",
+      "line": 33,
+      "kind": "function"
+    },
+    {
+      "id": "api#src/orders/orders.routes.ts:withTenant",
+      "type": "middleware",
+      "label": "withTenant",
+      "repo": "api",
+      "file": "src/orders/orders.routes.ts",
+      "line": 18,
+      "kind": "function"
     },
     {
       "id": "api#src/public/public.routes.ts:GET /health@14",
@@ -161,11 +197,6 @@
         "adapter": "express-routes",
         "registration": "ordersRouter.get",
         "middlewareRead": true,
-        "middleware": [
-          "express.json()",
-          "authenticate",
-          "withTenant"
-        ],
         "handlerVia": "function"
       }
     },
@@ -184,11 +215,6 @@
         "adapter": "express-routes",
         "registration": "ordersRouter.get",
         "middlewareRead": true,
-        "middleware": [
-          "express.json()",
-          "authenticate",
-          "withTenant"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -243,12 +269,6 @@
         "adapter": "express-routes",
         "registration": "ordersRouter.post",
         "middlewareRead": true,
-        "middleware": [
-          "express.json()",
-          "authenticate",
-          "withTenant",
-          "requireAdmin"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -544,11 +564,81 @@
     },
     {
       "from": "entry:api:http:GET:/orders",
+      "to": "api#src/app.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 22,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/orders",
+      "to": "api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 21,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/orders",
       "to": "api#src/orders/orders.controller.ts:listOrders",
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
       "line": 10
+    },
+    {
+      "from": "entry:api:http:GET:/orders",
+      "to": "api#src/orders/orders.routes.ts:withTenant",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 18,
+      "meta": {
+        "order": 2,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "ordersRouter.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/orders/:param",
+      "to": "api#src/app.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 22,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/orders/:param",
+      "to": "api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 21,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
     },
     {
       "from": "entry:api:http:GET:/orders/:param",
@@ -557,6 +647,20 @@
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
       "line": 25
+    },
+    {
+      "from": "entry:api:http:GET:/orders/:param",
+      "to": "api#src/orders/orders.routes.ts:withTenant",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 18,
+      "meta": {
+        "order": 2,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "ordersRouter.use"
+      }
     },
     {
       "from": "entry:api:http:GET:/public/health",
@@ -576,11 +680,67 @@
     },
     {
       "from": "entry:api:http:POST:/orders",
+      "to": "api#src/app.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 22,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/orders",
+      "to": "api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 21,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/orders",
       "to": "api#src/orders/orders.routes.ts:POST /@36",
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
       "line": 36
+    },
+    {
+      "from": "entry:api:http:POST:/orders",
+      "to": "api#src/orders/orders.routes.ts:requireAdmin",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 33,
+      "meta": {
+        "order": 3,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "ordersRouter.post"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/orders",
+      "to": "api#src/orders/orders.routes.ts:withTenant",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 18,
+      "meta": {
+        "order": 2,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "ordersRouter.use"
+      }
     },
     {
       "from": "ui_action:web#src/app/orders.component.ts:10:13",

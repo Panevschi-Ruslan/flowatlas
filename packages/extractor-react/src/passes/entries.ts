@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import {
+  addEntryWrapping,
   functionAt,
   inlineFunction,
   isFunctionHandler,
@@ -120,6 +121,10 @@ export const entriesPass = definePass('entries', (ctx: ReactExtractContext) => {
         kind: entry.kind,
         ...(entry.meta === undefined ? {} : { meta: { ...entry.meta, adapter: adapter.name } }),
       });
+
+      if (entry.wrapping !== undefined) {
+        addEntryWrapping(ctx.builder, ctx.repo, entry.id, entry.wrapping);
+      }
 
       const handler = resolveHandler(ctx, entry.handler);
       if (handler !== undefined) {

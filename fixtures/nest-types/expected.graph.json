@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "repo": "nest-types",
-  "generatedAt": "2026-09-25T14:34:05.155Z",
+  "generatedAt": "2026-09-27T09:26:52.886Z",
   "nodes": [
     {
       "id": "entry:nest-types:http:GET:/catalog/categories",

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 4,
-  "builtAt": "2026-09-25T14:33:34.547Z",
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T09:26:21.641Z",
   "services": [
     {
       "name": "api",
@@ -16,6 +16,15 @@
     }
   ],
   "nodes": [
+    {
+      "id": "api#src/app.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 7,
+      "kind": "function"
+    },
     {
       "id": "api#src/bus/event-bus.ts:EventBus",
       "type": "provider",
@@ -190,9 +199,6 @@
         "adapter": "express-routes",
         "registration": "ordersRouter.post",
         "middlewareRead": true,
-        "middleware": [
-          "express.json()"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -211,9 +217,6 @@
         "adapter": "express-routes",
         "registration": "ordersRouter.post",
         "middlewareRead": true,
-        "middleware": [
-          "express.json()"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -573,11 +576,39 @@
     },
     {
       "from": "entry:api:http:POST:/orders",
+      "to": "api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 7,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/orders",
       "to": "api#src/orders/orders.routes.ts:POST /@19",
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
       "line": 19
+    },
+    {
+      "from": "entry:api:http:POST:/orders/:param/cancel",
+      "to": "api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 7,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
     },
     {
       "from": "entry:api:http:POST:/orders/:param/cancel",

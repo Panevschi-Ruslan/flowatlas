@@ -104,9 +104,41 @@ describe('a repository that serves routes from two frameworks', () => {
     expect(guarded('entry:api:http:GET:/api/depots/:param/orders')).toEqual([
       'api#src/auth/api-key.guard.ts:ApiKeyGuard',
     ]);
+    // The application's guard never runs for a route the worker answers, so it
+    // is not drawn on one. What the worker route does have in front of it is its
+    // own middleware, and that is the only thing there.
     for (const id of ['entry:api:http:GET:/health', 'entry:api:http:GET:/api/depots/:param/stream']) {
-      expect(guarded(id)).toEqual([]);
+      expect(guarded(id)).toEqual(['api#src/worker.ts:requestLogger']);
     }
+  });
+
+  /**
+   * One shape for "this runs in front of that", whichever reader found it.
+   *
+   * A guard the framework's decorator declares and a middleware chain a call
+   * installs are the same fact about a route, and until R109 only the first was
+   * an edge: the second was a list on the entry, which every consumer that read
+   * the graph as a graph — this project's own audit included — saw as a route
+   * with nothing in front of it. The two are compared here, in the one fixture
+   * that has both, because a single reader passing its own tests is exactly how
+   * that went unnoticed.
+   */
+  it('spells a decorated guard and an installed middleware chain the same way', () => {
+    const wrapping = (id: string): Array<Record<string, unknown>> =>
+      project.edges
+        .filter((row) => row.from === id && row.type === 'guarded_by')
+        .map((row) => ({
+          to: project.nodes.find((node) => node.id === row.to)?.type,
+          order: row.meta?.['order'],
+          layer: row.meta?.['layer'],
+          confidence: row.confidence,
+        }));
+    expect(wrapping('entry:api:http:GET:/api/depots/:param/orders')).toEqual([
+      { to: 'guard', order: 0, layer: 'guard', confidence: 'static' },
+    ]);
+    expect(wrapping('entry:api:http:GET:/health')).toEqual([
+      { to: 'middleware', order: 0, layer: 'middleware', confidence: 'static' },
+    ]);
   });
 
   it('carries a route declared in the worker through to the service it reaches', () => {
@@ -210,7 +242,9 @@ describe('the half that was already read', () => {
     const added = after.nodes.filter((node: GraphNode) => !known.has(node.id));
     for (const node of added) {
       const fromWorker = node.type === 'entry' && node.meta?.['adapter'] === 'hono-routes';
-      expect(fromWorker || node.type === 'function').toBe(true);
+      // `middleware` is here because what stands in front of a worker route is a
+      // node of its own now, which is what makes it visible to a walk (R109).
+      expect(fromWorker || node.type === 'function' || node.type === 'middleware').toBe(true);
     }
     expect(added.length).toBeGreaterThan(0);
   });

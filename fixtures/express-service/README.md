@@ -21,7 +21,7 @@ Type-checked, never executed:
 
 ## The routes
 
-| Site | Entry | `handlerVia` | `meta.middleware` |
+| Site | Entry | `handlerVia` | `guarded_by`, layer `middleware` |
 |---|---|---|---|
 | `router.get('/health', …)` | `GET /public/health` | `inline` | none |
 | `router.get('/summary', …)` | `GET /public/summary` | `inline` | none |
@@ -56,6 +56,12 @@ of the one reader that existed when the sentence was written, and untrue of this
 one, which reads the installs above the mount and says so in
 `meta.middlewareRead` (R50). A hole this fixture was built to show was being
 reported as a limitation of the tool.
+
+The audit asks one question to decide this: the `guarded_by` edges out of the
+route. Each middleware is a node of its own with an edge carrying `layer:
+"middleware"` and its position in the chain, which is the same shape a NestJS
+guard has — so the answer does not depend on the reader knowing that this
+framework spells its protection differently (R109).
 
 ## The prefix, and where it comes from
 

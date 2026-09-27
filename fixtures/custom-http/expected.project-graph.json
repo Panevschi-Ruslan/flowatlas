@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 4,
-  "builtAt": "2026-09-25T14:33:32.034Z",
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T09:26:17.886Z",
   "services": [
     {
       "name": "api",
@@ -17,6 +17,15 @@
       "repo": "api",
       "file": "src/app.ts",
       "line": 16
+    },
+    {
+      "id": "api#src/app.ts:authenticate",
+      "type": "middleware",
+      "label": "authenticate",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 14,
+      "kind": "function"
     },
     {
       "id": "api#src/orders/orders.controller.ts:cancelOrder",
@@ -57,9 +66,6 @@
         "adapter": "entry-http-custom",
         "registration": "app.get",
         "middlewareRead": true,
-        "middleware": [
-          "authenticate"
-        ],
         "handlerVia": "inline",
         "description": "minihttp-routes"
       }
@@ -79,9 +85,6 @@
         "adapter": "entry-http-custom",
         "registration": "ordersRouter.get",
         "middlewareRead": true,
-        "middleware": [
-          "authenticate"
-        ],
         "handlerVia": "function",
         "description": "minihttp-routes"
       }
@@ -101,9 +104,6 @@
         "adapter": "entry-http-custom",
         "registration": "ordersRouter.post",
         "middlewareRead": true,
-        "middleware": [
-          "authenticate"
-        ],
         "handlerVia": "function",
         "description": "minihttp-routes"
       }
@@ -123,9 +123,6 @@
         "adapter": "entry-http-custom",
         "registration": "ordersRouter.post",
         "middlewareRead": true,
-        "middleware": [
-          "authenticate"
-        ],
         "handlerVia": "function",
         "description": "minihttp-routes"
       }
@@ -163,6 +160,34 @@
       "line": 16
     },
     {
+      "from": "entry:api:http:GET:/health",
+      "to": "api#src/app.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/orders",
+      "to": "api#src/app.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
       "from": "entry:api:http:GET:/orders",
       "to": "api#src/orders/orders.controller.ts:listOrders",
       "type": "handles",
@@ -172,11 +197,39 @@
     },
     {
       "from": "entry:api:http:POST:/orders",
+      "to": "api#src/app.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/orders",
       "to": "api#src/orders/orders.controller.ts:createOrder",
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
       "line": 6
+    },
+    {
+      "from": "entry:api:http:POST:/orders/:param/cancel",
+      "to": "api#src/app.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
     },
     {
       "from": "entry:api:http:POST:/orders/:param/cancel",

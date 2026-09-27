@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "repo": "angular-lazy-routes",
-  "generatedAt": "2026-09-27T09:29:29.616Z",
+  "generatedAt": "2026-09-27T11:35:44.721Z",
   "nodes": [
     {
       "id": "angular-lazy-routes#src/app/admin/admin-shell.component.ts:AdminShellComponent",

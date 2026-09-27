@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 4,
-  "builtAt": "2026-09-27T09:33:14.603Z",
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T11:36:14.504Z",
   "services": [
     {
       "name": "app",
@@ -77,6 +77,15 @@
       "line": 17
     },
     {
+      "id": "app#src/server/app.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "app",
+      "file": "src/server/app.ts",
+      "line": 14,
+      "kind": "function"
+    },
+    {
       "id": "app#src/server/documents.routes.ts:POST /documents.info@12",
       "type": "function",
       "label": "POST /documents.info@12",
@@ -107,9 +116,6 @@
         "adapter": "express-routes",
         "registration": "documentsRouter.post",
         "middlewareRead": true,
-        "middleware": [
-          "express.json()"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -128,9 +134,6 @@
         "adapter": "express-routes",
         "registration": "documentsRouter.post",
         "middlewareRead": true,
-        "middleware": [
-          "express.json()"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -387,11 +390,39 @@
     },
     {
       "from": "entry:app:http:POST:/api/documents.info",
+      "to": "app#src/server/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/app.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:app:http:POST:/api/documents.info",
       "to": "app#src/server/documents.routes.ts:POST /documents.info@12",
       "type": "handles",
       "confidence": "static",
       "file": "src/server/documents.routes.ts",
       "line": 12
+    },
+    {
+      "from": "entry:app:http:POST:/api/documents.update",
+      "to": "app#src/server/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/app.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
     },
     {
       "from": "entry:app:http:POST:/api/documents.update",

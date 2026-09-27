@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "repo": "nest-redis-pubsub",
-  "generatedAt": "2026-09-25T14:34:02.177Z",
+  "generatedAt": "2026-09-27T09:26:48.294Z",
   "nodes": [
     {
       "id": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:19:12",

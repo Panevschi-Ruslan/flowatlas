@@ -30,7 +30,7 @@ moment it runs (`app.addHook('onRequest', authenticate)`).
 
 ## The routes
 
-| Site | Entry | `handlerVia` | `meta.middleware` |
+| Site | Entry | `handlerVia` | `guarded_by`, layer `middleware` |
 |---|---|---|---|
 | `app.get('/health', …)` | `GET /public/health` | `inline` | none |
 | `app.get('/summary', …)` | `GET /public/summary` | `inline` | none |

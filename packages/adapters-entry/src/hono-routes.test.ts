@@ -74,7 +74,9 @@ const extract = (worker: string, files: Record<string, string> = {}): Read => {
 const ids = (read: Read): string[] => read.entries.map((entry) => entry.id).sort();
 
 const middlewareOf = (read: Read, id: string): string[] =>
-  (read.entries.find((entry) => entry.id === id)?.meta?.['middleware'] as string[] | undefined) ?? [];
+  (read.entries.find((entry) => entry.id === id)?.wrapping ?? [])
+    .filter((one) => one.layer === 'middleware')
+    .map((one) => one.label);
 
 describe('routes declared by calling the application', () => {
   it('runs where the framework is a dependency', () => {
@@ -138,7 +140,7 @@ describe('routes declared by calling the application', () => {
     expect(handler !== undefined && isFunctionHandler(handler) && handler.functionName).toBe(
       'receive',
     );
-    expect(read.entries[0]?.meta?.['middleware']).toEqual(['withNest']);
+    expect(read.entries[0]?.wrapping?.map((one) => one.label)).toEqual(['withNest']);
   });
 
   it('keeps a route whose handler is written in place, and points at that function', () => {

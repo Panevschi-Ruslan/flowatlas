@@ -175,7 +175,9 @@ const koa = (main: string, files?: Record<string, string>): Read =>
 const ids = (read: Read): string[] => read.entries.map((entry) => entry.id).sort();
 
 const middlewareOf = (read: Read, id: string): string[] =>
-  (read.entries.find((entry) => entry.id === id)?.meta?.['middleware'] as string[] | undefined) ?? [];
+  (read.entries.find((entry) => entry.id === id)?.wrapping ?? [])
+    .filter((one) => one.layer === 'middleware')
+    .map((one) => one.label);
 
 const reasons = (read: Read): string[] => read.unresolved.map((row) => row.reason);
 
