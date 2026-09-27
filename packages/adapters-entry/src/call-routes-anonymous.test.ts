@@ -71,7 +71,7 @@ export default passport;
 };
 
 const HINT =
-  "A call such as passport.authenticate(...) returns the package's own function. Nothing needs fixing if that is intended; to give the route code to point at, register a function of this repository that hands over to the package.";
+  "The call is either into a package, such as passport.authenticate(...), which returns the package's own function, or to a function of this repository handed another function or a list, which builds the handler at run time. Nothing needs fixing if that is intended; to give the route code to point at, register a named function of this repository that does the work.";
 
 describe('routes answered by nothing the reader can point at', () => {
   it('counts them in one informational row, placed at the first of them', () => {
@@ -106,7 +106,7 @@ describe('routes answered by nothing the reader can point at', () => {
         sites: 2,
         symbol: 'express',
         message:
-          '2 routes are answered by what a call into a package hands back, so the code behind them is not read and nothing can be pointed at as their handler.',
+          '2 routes are answered by whatever a call hands back, so the code behind them is not read and nothing can be pointed at as their handler.',
         hint: HINT,
       },
     ]);
@@ -133,7 +133,7 @@ describe('routes answered by nothing the reader can point at', () => {
         sites: 1,
         symbol: 'express',
         message:
-          '1 route is answered by what a call into a package hands back, so the code behind it is not read and nothing can be pointed at as its handler.',
+          '1 route is answered by whatever a call hands back, so the code behind it is not read and nothing can be pointed at as its handler.',
         hint: HINT,
       },
     ]);

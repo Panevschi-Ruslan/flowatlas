@@ -451,7 +451,7 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'route-mount-unread': () =>
     'The route was read and the path its application is mounted under was not. Mount the application at a literal path, or declare its routes on the application that is served.',
   'route-handler-anonymous': () =>
-    'The route is answered by what a call into a package hands back, such as passport.authenticate(...), and that code is not read. Nothing needs fixing if that is intended; to give the route code to point at, register a function of this repository that hands over to the package.',
+    'The route is answered by whatever a call hands back - a package\'s own function, such as passport.authenticate(...), or a handler a function of this repository builds at run time from another function or a list - and that code is not read. Nothing needs fixing if that is intended; to give the route code to point at, register a named function of this repository that does the work.',
   'registry-key-dynamic': () =>
     'Register with a string literal so the way in can be named.',
   'registry-handler-anonymous': () =>

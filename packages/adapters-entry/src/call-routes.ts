@@ -1815,13 +1815,20 @@ const reportUnreadable = (ctx: ExtractContext, site: AppCall, dialect: RouteDial
 };
 
 /**
- * Routes whose handler is written in the call and hands over to nothing named.
+ * Routes answered by whatever a call hands back, where nothing named stands
+ * behind it.
  *
- * Informational, and counted rather than listed: a function written in the
- * registration is the ordinary way to write a route, so a row per site would be
- * the tool describing its own limits once for every route in the repository
- * (R07). The way in is real and keeps its node either way; what is missing is
- * only the edge to what answers it.
+ * Two shapes reach this, and the sentence has to be true of both. A call into a
+ * package returns the package's own function - `passport.authenticate(...)`.
+ * And a function of this repository handed another function, or a handler list,
+ * builds the handler at run time in a way that cannot be told from one more
+ * wrapper - `asyncMiddleware(listFactory(fn))`. A function written in place is
+ * no longer one of them: it gets a handler of its own (R139, R137).
+ *
+ * Informational, and counted rather than listed, so a repository that routes
+ * this way hears it once rather than once per route (R07). The way in is real
+ * and keeps its node either way; what is missing is only the edge to what
+ * answers it.
  */
 const reportAnonymous = (
   ctx: ExtractContext,
@@ -1840,9 +1847,9 @@ const reportAnonymous = (
     sites: count,
     message:
       count === 1
-        ? '1 route is answered by what a call into a package hands back, so the code behind it is not read and nothing can be pointed at as its handler.'
-        : `${count} routes are answered by what a call into a package hands back, so the code behind them is not read and nothing can be pointed at as their handler.`,
-    hint: 'A call such as passport.authenticate(...) returns the package\'s own function. Nothing needs fixing if that is intended; to give the route code to point at, register a function of this repository that hands over to the package.',
+        ? '1 route is answered by whatever a call hands back, so the code behind it is not read and nothing can be pointed at as its handler.'
+        : `${count} routes are answered by whatever a call hands back, so the code behind them is not read and nothing can be pointed at as their handler.`,
+    hint: 'The call is either into a package, such as passport.authenticate(...), which returns the package\'s own function, or to a function of this repository handed another function or a list, which builds the handler at run time. Nothing needs fixing if that is intended; to give the route code to point at, register a named function of this repository that does the work.',
     symbol: dialect.packages[0] as string,
     adapter: dialect.name,
   });
