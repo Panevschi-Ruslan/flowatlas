@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "fastify-service",
-  "generatedAt": "2026-09-27T09:26:20.697Z",
+  "generatedAt": "2026-09-27T17:37:27.803Z",
   "nodes": [
     {
       "id": "db_query:fastify-service#src/orders/orders.repository.ts:12:12",
@@ -580,7 +580,7 @@
       "file": "src/orders/orders.routes.ts",
       "line": 52,
       "reason": "route-path-dynamic",
-      "hint": "Give the route a string literal or a const string; a computed path cannot be matched against callers.",
+      "hint": "Write the path as a literal, a const, or a + or template of them, and every path of a list the same way; a path that needs a call or a run-time value to compute is not recorded as a route at all, so no caller can reach it.",
       "symbol": "app.get(archivePath('old'))",
       "adapter": "fastify-routes"
     }

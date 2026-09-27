@@ -1,4 +1,11 @@
-import type { EntryAdapter, EntryHandler, EntryKind, EntryNode, ExtractContext } from '@flowatlas/core';
+import type {
+  EntryAdapter,
+  EntryHandler,
+  EntryKind,
+  EntryNode,
+  EntryWrapping,
+  ExtractContext,
+} from '@flowatlas/core';
 import { hasAnyDependency, makeEntryId } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile, Symbol as TsSymbol } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
@@ -117,18 +124,49 @@ const guardsBefore = (
   expr: TsNode,
   dialect: ProcedureDialect,
   seen: ReadonlySet<string>,
-): string[] => {
+  ctx: ExtractContext,
+): EntryWrapping[] => {
   if (dialect.guardMethod === undefined || !Node.isIdentifier(expr)) return [];
   const name = expr.getText();
   if (seen.has(name)) return [];
   const value = declaredValue(expr);
   if (value === undefined) return [];
   const { links, base } = chainOf(value);
-  const here = links
-    .filter((link) => link.method === dialect.guardMethod)
-    .flatMap((link) => link.args.map((argument) => label(argument)));
-  return [...guardsBefore(base, dialect, new Set([...seen, name])), ...here];
+  // Installed on a starting point, which is a prefix of every chain begun from
+  // it: that is the scope, and the name it was installed on is how.
+  const here = guardsOn(links, dialect, 'prefix', name, ctx);
+  return [...guardsBefore(base, dialect, new Set([...seen, name]), ctx), ...here];
 };
+
+/**
+ * The guards one chain installs, described for the extractor to draw.
+ *
+ * Described rather than listed on the way in: each becomes a node and a
+ * `guarded_by` edge in the order it runs, the shape every other reader draws. A
+ * list on the entry read as an unguarded way in to everything that walks the
+ * graph as a graph (R109). The node is where the argument is written, so a
+ * guard installed once on a starting point is one node however many ways in
+ * begin from it.
+ */
+const guardsOn = (
+  links: readonly Link[],
+  dialect: ProcedureDialect,
+  scope: 'prefix' | 'route',
+  source: string,
+  ctx: ExtractContext,
+): EntryWrapping[] =>
+  links
+    .filter((link) => link.method === dialect.guardMethod)
+    .flatMap((link) =>
+      link.args.map((argument) => ({
+        label: label(argument),
+        layer: 'middleware' as const,
+        scope,
+        source,
+        ...siteOf(argument, ctx),
+        kind: 'function',
+      })),
+    );
 
 /** Whether an argument is a function, however it was written. */
 const isFunctionArg = (argument: TsNode | undefined): boolean => {
@@ -155,7 +193,7 @@ interface Procedure {
   /** The shape a caller sends, as it is spelled. */
   input?: string;
   /** Everything installed in front of it, in the order it applies. */
-  guards: string[];
+  guards: EntryWrapping[];
   site: Site;
 }
 
@@ -220,9 +258,7 @@ const procedureOf = (
   const onChain =
     dialect.guardMethod === undefined
       ? []
-      : links
-          .filter((link) => link.method === dialect.guardMethod)
-          .flatMap((link) => link.args.map((argument) => label(argument)));
+      : guardsOn(links, dialect, 'route', `.${dialect.guardMethod}`, ctx);
 
   const named = repoFunctionOf(handlerArg);
   const returned = named === undefined ? handlerReturned(handlerArg, enclosingClass(node), ctx) : undefined;
@@ -237,7 +273,7 @@ const procedureOf = (
     handlerVia: via,
     ...(via === 'inline' ? { inlineAt: handlerArg } : {}),
     ...(input === undefined ? {} : { input: label(input) }),
-    guards: [...guardsBefore(base, dialect, new Set()), ...onChain],
+    guards: [...guardsBefore(base, dialect, new Set(), ctx), ...onChain],
     site: siteOf(node, ctx),
   };
 };
@@ -576,6 +612,7 @@ export const procedureRoutersAdapter = (
         ...(handler === undefined ? {} : { handler }),
         file: procedure.site.file,
         line: procedure.site.line,
+        ...(procedure.guards.length > 0 ? { wrapping: procedure.guards } : {}),
         meta: {
           // How a person names this way in, and the one string a caller of it
           // writes too: `viewer.bookings.get`.
@@ -590,7 +627,6 @@ export const procedureRoutersAdapter = (
           // installed and the walk follows the name it was installed on, so an
           // audit that found none here really did look.
           middlewareRead: true,
-          ...(procedure.guards.length > 0 ? { middleware: procedure.guards } : {}),
           handlerVia: procedure.handlerVia,
           ...(served.length > 0 ? { served: [...new Set(served)].sort() } : {}),
         },

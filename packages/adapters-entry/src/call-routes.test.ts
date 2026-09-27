@@ -492,7 +492,7 @@ describe('express routes', () => {
     // `entry-http-routes-unplaced` and not `entry-http-routes-unmatched`: the one
     // route here did spell a verb and a path, and the older row said none of them
     // had, which was the reader misreporting its own reading (R121).
-    expect(reasons(read).sort()).toEqual(['entry-http-routes-unplaced', 'route-path-dynamic']);
+    expect(reasons(read).sort()).toEqual(['entry-http-routes-unplaced', 'route-mount-unread']);
   });
 
   it('says so when the path of a route is assembled at run time', () => {
@@ -686,9 +686,12 @@ describe('koa routes', () => {
     // helper's own meaning, and a wrong address joins to callers that do not
     // exist. So the route is reported instead (R84).
     expect(ids(read)).toEqual([]);
-    const row = read.unresolved.find((item) => item.reason === 'route-path-dynamic');
+    const row = read.unresolved.find((item) => item.reason === 'route-mount-unread');
     expect(row?.message).toContain('mounted somewhere this cannot read');
     expect(row?.symbol).toBe('POST /documents.info');
+    // Its own reason: the route's own path was read, and `route-path-dynamic`
+    // says it was not, which is a different fact a user may silence separately.
+    expect(read.unresolved.filter((item) => item.reason === 'route-path-dynamic')).toEqual([]);
     // And the hint names the call the path is inside. It used to ask for the
     // application to be mounted at a literal path, which is exactly what this
     // repository has done: the path is `'/api'`, one argument along (R110).
@@ -719,7 +722,7 @@ describe('koa routes', () => {
     // comes from a package `MOUNT_HELPERS` has a record of, so which argument is
     // the prefix is known and the address is read rather than reported.
     expect(ids(read)).toEqual(['entry:api:http:POST:/api/documents.info']);
-    expect(read.unresolved.filter((row) => row.reason === 'route-path-dynamic')).toEqual([]);
+    expect(read.unresolved.filter((row) => row.reason === 'route-mount-unread')).toEqual([]);
   });
 
   it('reads the application a parameter is given as its default', () => {

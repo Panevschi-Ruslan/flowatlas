@@ -120,6 +120,27 @@ either.
   of them. A reason is configuration surface — it is spelled by hand in
   `doctor.ignoreReasons` — so the old spelling goes on being recognised there and
   nothing has to be edited; write `document-age` in new configuration.
+- **A route under a mount whose path could not be read has a reason of its
+  own, `route-mount-unread`,** rather than `route-path-dynamic`. The route's own
+  path was read; what was not is the path its application is mounted under,
+  which is fixed somewhere else and usually by someone else. `route-path-dynamic`
+  now means only that the route's own path is computed. A row moves from one
+  reason to the other, so a configuration that silenced these rows with
+  `route-path-dynamic` in `doctor.ignoreReasons` shows them again: add
+  `route-mount-unread` to keep them silent. The old spelling is deliberately not
+  treated as covering the new one, because the two are different facts and
+  silencing one says nothing about the other. `route-path-dynamic`'s own hint is
+  rewritten for what the reader now folds — a `+` or template of constants, and
+  a list of paths — and says that such a route is missing, not merely unmatched.
+- **tRPC procedures and Medusa routes draw their middleware as edges**, a
+  `middleware` node and an ordered `guarded_by` edge, the shape every other
+  reader has used since middleware stopped being a list on the entry. Both
+  still wrote `meta.middleware`, so anything reading edges — the route audit,
+  `blast-radius`, the `flow` query — saw a guarded procedure or route as having
+  nothing in front of it. `meta.middleware` is gone from both; `middlewareRead`
+  stays, and stays `false` on Medusa routes, whose framework authenticates
+  `/admin` and `/store` in code this does not read. A Medusa chain is ordered
+  the way the framework's route sorter runs the list, not the way it is written.
 
 - **`doctor` refuses a graph nobody could report on, with exit 2 and without
   `--strict`.** Three graphs: one holding no node at all, one whose build

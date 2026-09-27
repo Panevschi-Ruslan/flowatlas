@@ -41,8 +41,9 @@ const extract = (files: Record<string, string>): Read => {
 
 const labels = (read: Read): string[] => read.entries.map((entry) => entry.label).sort();
 
-const middlewareOf = (read: Read, label: string): unknown =>
-  read.entries.find((entry) => entry.label === label)?.meta?.['middleware'];
+/** What stands in front of one route, in the order it runs. */
+const middlewareOf = (read: Read, label: string): string[] | undefined =>
+  read.entries.find((entry) => entry.label === label)?.wrapping?.map((one) => one.label);
 
 const GET = 'export const GET = async (req, res) => { res.json([]); };';
 
@@ -104,6 +105,35 @@ describe('the declarative middleware list', () => {
     });
     expect(middlewareOf(read, 'GET /admin/orders')).toEqual(['authenticate']);
     expect(middlewareOf(read, 'GET /store/products')).toBeUndefined();
+  });
+
+  it('orders the chain the way the framework runs it, not the way it is written', () => {
+    // The framework files the list into a tree by segment and walks it: an
+    // entry that names no verb before one that does, and a pattern before the
+    // patterns below it. Written the other way round here, on purpose.
+    const read = extract({
+      '/src/api/middlewares.ts': `
+        import { defineMiddlewares } from '@medusajs/framework';
+        export default defineMiddlewares([
+          { matcher: '/admin/orders', methods: ['GET'], middlewares: [validateQuery] },
+          { matcher: '/admin/orders', middlewares: [audit] },
+          { matcher: '/admin*', middlewares: [authenticate] },
+        ]);
+      `,
+      '/src/api/admin/orders/route.ts': GET,
+    });
+    expect(middlewareOf(read, 'GET /admin/orders')).toEqual(['authenticate', 'audit', 'validateQuery']);
+    const entry = read.entries.find((one) => one.label === 'GET /admin/orders');
+    expect(entry?.wrapping?.[0]).toMatchObject({
+      layer: 'middleware',
+      scope: 'prefix',
+      source: 'defineMiddlewares',
+      file: 'src/api/middlewares.ts',
+      line: 6,
+    });
+    // One way to say it: never a list on the entry beside the edges (R109).
+    expect(entry?.meta?.['middleware']).toBeUndefined();
+    expect(entry?.meta?.['middlewareRead']).toBe(false);
   });
 
   it('follows a list assembled out of lists declared in other files', () => {

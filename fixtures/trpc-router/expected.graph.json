@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "trpc-router",
-  "generatedAt": "2026-09-27T11:36:16.971Z",
+  "generatedAt": "2026-09-27T17:33:44.450Z",
   "nodes": [
     {
       "id": "entry:trpc-router:http:ALL:/api/trpc/:param",
@@ -54,9 +54,6 @@
         "registration": "router({ … })",
         "input": "OrderBody",
         "middlewareRead": true,
-        "middleware": [
-          "isSignedIn"
-        ],
         "handlerVia": "call",
         "served": [
           "src/pages/api/trpc/[trpc].ts"
@@ -98,10 +95,6 @@
         "call": "query",
         "registration": "router({ … })",
         "middlewareRead": true,
-        "middleware": [
-          "isSignedIn",
-          "isAdmin"
-        ],
         "handlerVia": "function",
         "served": [
           "src/pages/api/trpc/[trpc].ts"
@@ -162,6 +155,24 @@
       "line": 8
     },
     {
+      "id": "trpc-router#src/server/procedures.ts:isAdmin",
+      "type": "middleware",
+      "label": "isAdmin",
+      "repo": "trpc-router",
+      "file": "src/server/procedures.ts",
+      "line": 11,
+      "kind": "function"
+    },
+    {
+      "id": "trpc-router#src/server/procedures.ts:isSignedIn",
+      "type": "middleware",
+      "label": "isSignedIn",
+      "repo": "trpc-router",
+      "file": "src/server/procedures.ts",
+      "line": 9,
+      "kind": "function"
+    },
+    {
       "id": "trpc-router#src/server/reports.ts:dailyTotals",
       "type": "function",
       "label": "dailyTotals",
@@ -180,12 +191,54 @@
       "line": 8
     },
     {
+      "from": "entry:trpc-router:rpc:orders.create",
+      "to": "trpc-router#src/server/procedures.ts:isSignedIn",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/procedures.ts",
+      "line": 9,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "authedProcedure"
+      }
+    },
+    {
       "from": "entry:trpc-router:rpc:orders.list",
       "to": "trpc-router#src/server/orders-store.ts:listOrders",
       "type": "handles",
       "confidence": "static",
       "file": "src/server/orders-store.ts",
       "line": 3
+    },
+    {
+      "from": "entry:trpc-router:rpc:reportsRouter.daily",
+      "to": "trpc-router#src/server/procedures.ts:isAdmin",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/procedures.ts",
+      "line": 11,
+      "meta": {
+        "order": 1,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "adminProcedure"
+      }
+    },
+    {
+      "from": "entry:trpc-router:rpc:reportsRouter.daily",
+      "to": "trpc-router#src/server/procedures.ts:isSignedIn",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/procedures.ts",
+      "line": 9,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "authedProcedure"
+      }
     },
     {
       "from": "entry:trpc-router:rpc:reportsRouter.daily",

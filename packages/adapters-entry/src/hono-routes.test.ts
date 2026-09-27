@@ -354,7 +354,7 @@ describe('an application that is not served where it is declared', () => {
       },
     );
     expect(ids(read)).toEqual(['entry:api:http:POST:/internal/reload']);
-    expect(read.unresolved.map((row) => row.reason)).toContain('route-path-dynamic');
+    expect(read.unresolved.map((row) => row.reason)).toContain('route-mount-unread');
   });
 
   it('takes such a route as declared where nothing in the repository shifts a base', () => {

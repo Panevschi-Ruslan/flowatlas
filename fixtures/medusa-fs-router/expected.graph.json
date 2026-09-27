@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "medusa-fs-router",
-  "generatedAt": "2026-09-27T11:35:51.771Z",
+  "generatedAt": "2026-09-27T17:32:44.004Z",
   "nodes": [
     {
       "id": "entry:medusa-fs-router:http:GET:/admin/orders",
@@ -17,9 +17,6 @@
         "adapter": "medusa-routes",
         "registration": "api/route",
         "middlewareRead": false,
-        "middleware": [
-          "authenticate"
-        ],
         "handlerVia": "function"
       }
     },
@@ -37,9 +34,6 @@
         "adapter": "medusa-routes",
         "registration": "api/route",
         "middlewareRead": false,
-        "middleware": [
-          "authenticate"
-        ],
         "handlerVia": "function"
       }
     },
@@ -74,9 +68,6 @@
         "adapter": "medusa-routes",
         "registration": "api/route",
         "middlewareRead": false,
-        "middleware": [
-          "authenticate"
-        ],
         "handlerVia": "function"
       }
     },
@@ -94,9 +85,6 @@
         "adapter": "medusa-routes",
         "registration": "api/route",
         "middlewareRead": false,
-        "middleware": [
-          "authenticate"
-        ],
         "handlerVia": "function"
       }
     },
@@ -114,10 +102,6 @@
         "adapter": "medusa-routes",
         "registration": "api/route",
         "middlewareRead": false,
-        "middleware": [
-          "authenticate",
-          "validateBody"
-        ],
         "handlerVia": "function"
       }
     },
@@ -165,12 +149,39 @@
       "line": 5
     },
     {
+      "id": "medusa-fs-router#src/api/admin/orders/middlewares.ts:authenticate",
+      "type": "middleware",
+      "label": "authenticate",
+      "repo": "medusa-fs-router",
+      "file": "src/api/admin/orders/middlewares.ts",
+      "line": 14,
+      "kind": "function"
+    },
+    {
+      "id": "medusa-fs-router#src/api/admin/orders/middlewares.ts:validateBody",
+      "type": "middleware",
+      "label": "validateBody",
+      "repo": "medusa-fs-router",
+      "file": "src/api/admin/orders/middlewares.ts",
+      "line": 20,
+      "kind": "function"
+    },
+    {
       "id": "medusa-fs-router#src/api/admin/orders/route.ts:GET",
       "type": "function",
       "label": "GET",
       "repo": "medusa-fs-router",
       "file": "src/api/admin/orders/route.ts",
       "line": 12
+    },
+    {
+      "id": "medusa-fs-router#src/api/middlewares.ts:authenticate",
+      "type": "middleware",
+      "label": "authenticate",
+      "repo": "medusa-fs-router",
+      "file": "src/api/middlewares.ts",
+      "line": 19,
+      "kind": "function"
     },
     {
       "id": "medusa-fs-router#src/api/store/(group)/route.ts:GET",
@@ -246,6 +257,20 @@
   "edges": [
     {
       "from": "entry:medusa-fs-router:http:GET:/admin/orders",
+      "to": "medusa-fs-router#src/api/admin/orders/middlewares.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/api/admin/orders/middlewares.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "defineMiddlewares"
+      }
+    },
+    {
+      "from": "entry:medusa-fs-router:http:GET:/admin/orders",
       "to": "medusa-fs-router#src/api/admin/orders/route.ts:GET",
       "type": "handles",
       "confidence": "static",
@@ -261,12 +286,40 @@
       "line": 5
     },
     {
+      "from": "entry:medusa-fs-router:http:GET:/admin/orders/:param",
+      "to": "medusa-fs-router#src/api/admin/orders/middlewares.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/api/admin/orders/middlewares.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "defineMiddlewares"
+      }
+    },
+    {
       "from": "entry:medusa-fs-router:http:GET:/store/(group)",
       "to": "medusa-fs-router#src/api/store/(group)/route.ts:GET",
       "type": "handles",
       "confidence": "static",
       "file": "src/api/store/(group)/route.ts",
       "line": 16
+    },
+    {
+      "from": "entry:medusa-fs-router:http:GET:/store/products",
+      "to": "medusa-fs-router#src/api/middlewares.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/api/middlewares.ts",
+      "line": 19,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "defineMiddlewares"
+      }
     },
     {
       "from": "entry:medusa-fs-router:http:GET:/store/products",
@@ -283,6 +336,48 @@
       "confidence": "static",
       "file": "src/api/admin/orders/[id]/route.ts",
       "line": 5
+    },
+    {
+      "from": "entry:medusa-fs-router:http:HEAD:/admin/orders/:param",
+      "to": "medusa-fs-router#src/api/admin/orders/middlewares.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/api/admin/orders/middlewares.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "defineMiddlewares"
+      }
+    },
+    {
+      "from": "entry:medusa-fs-router:http:POST:/admin/orders",
+      "to": "medusa-fs-router#src/api/admin/orders/middlewares.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/api/admin/orders/middlewares.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "defineMiddlewares"
+      }
+    },
+    {
+      "from": "entry:medusa-fs-router:http:POST:/admin/orders",
+      "to": "medusa-fs-router#src/api/admin/orders/middlewares.ts:validateBody",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/api/admin/orders/middlewares.ts",
+      "line": 20,
+      "meta": {
+        "order": 1,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "defineMiddlewares"
+      }
     },
     {
       "from": "entry:medusa-fs-router:http:POST:/store/products",
