@@ -448,6 +448,73 @@ describe('express routes', () => {
     expect(entry?.handler).toBeDefined();
   });
 
+  // PeerTube's shape, 291 of its 346 registrations (R137).
+  it('reads a named function a wrapper is given as the handler', () => {
+    const read = express(`
+      import express from 'express';
+      import asyncHandler from './async.js';
+      const app = express();
+      app.get('/orders', asyncHandler(listOrders));
+      async function listOrders(req, res) { return res.send('ok'); }
+    `, {
+      '/src/async.ts':
+        "import type { RequestHandler } from 'express';\nexport default (fn: RequestHandler): RequestHandler => fn;",
+    });
+    const [entry] = read.entries;
+    expect(entry?.meta?.['handlerVia']).toBe('function');
+    expect(entry?.handler).toMatchObject({ functionName: 'listOrders' });
+    expect(reasons(read)).not.toContain('route-handler-anonymous');
+  });
+
+  it('reads a handler a factory of this repository built as that factory', () => {
+    const read = express(`
+      import express from 'express';
+      import asyncHandler from './async.js';
+      const app = express();
+      app.get('/likes', asyncHandler(rateFactory('like')));
+      function rateFactory(kind: string) { return async (req, res) => res.send(kind); }
+    `, {
+      '/src/async.ts':
+        "import type { RequestHandler } from 'express';\nexport default (fn: RequestHandler): RequestHandler => fn;",
+    });
+    const [entry] = read.entries;
+    expect(entry?.meta?.['handlerVia']).toBe('call');
+    expect(entry?.handler).toMatchObject({ functionName: 'rateFactory' });
+  });
+
+  it('does not take a function a factory inside the wrapper was handed as the handler', () => {
+    const read = express(`
+      import express from 'express';
+      import asyncHandler from './async.js';
+      const app = express();
+      app.get('/lists', asyncHandler(listFactory((req) => req.params.id)));
+      function listFactory(ownerOf: (req: any) => string) { return async (req, res) => res.send(ownerOf(req)); }
+    `, {
+      '/src/async.ts':
+        "import type { RequestHandler } from 'express';\nexport default (fn: RequestHandler): RequestHandler => fn;",
+    });
+    const [entry] = read.entries;
+    expect(entry?.handler).toBeUndefined();
+    expect(reasons(read)).toContain('route-handler-anonymous');
+  });
+
+  it('points at nothing when a wrapper is handed a list to run in turn', () => {
+    const read = express(`
+      import express from 'express';
+      import asyncHandler from './async.js';
+      const app = express();
+      app.post('/batch', asyncHandler([check, run]));
+      async function check(req, res, next) { next(); }
+      async function run(req, res) { return res.send('ok'); }
+    `, {
+      '/src/async.ts':
+        "import type { RequestHandler } from 'express';\nexport default (fn: RequestHandler | RequestHandler[]): RequestHandler => fn as RequestHandler;",
+    });
+    const [entry] = read.entries;
+    expect(entry?.handler).toBeUndefined();
+    expect(reasons(read)).toContain('route-handler-anonymous');
+  });
+
   it('follows a router built and handed back by a factory', () => {
     const read = express(
       `

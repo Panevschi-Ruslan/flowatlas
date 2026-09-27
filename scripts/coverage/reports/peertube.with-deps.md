@@ -46,9 +46,9 @@ addressed that way reads zero here before R125 and its true number after.
 | addresses placed | 358 |  |
 | addresses claimed by more than one declaration | 0 | two handlers of one application; one of them is dead code |
 | addresses told apart only by their application | 0 | each was overwritten before R119, silently and with no total moving |
-| declarations with a body attached | 42 | 42 of 343 |
-| …whose body reaches anything | 16 | 16 of 343 |
-| …behind middleware or a guard | 42 | 42 of 343 |
+| declarations with a body attached | 350 | 350 against 343: **more found than the rule can see, so this is not a fraction** |
+| …whose body reaches anything | 310 | 310 of 343 |
+| …behind middleware or a guard | 350 | 350 against 343: **more found than the rule can see, so this is not a fraction** |
 
 Where those addresses are. One row per leading segment, which is enough of an
 address for a dropped global prefix to show and little enough that a new route
@@ -70,7 +70,7 @@ is not a diff.
 |---|---|---|
 | requests from a browser | 253 | 235 |
 | requests between services | 0 | 0 |
-| channels | 10 | 0 with both ends |
+| channels | 9 | 5 with both ends |
 
 ## Storage and screens
 
@@ -85,16 +85,16 @@ is not a diff.
 
 ## What it could not read
 
-1359 places somebody could act on, 1749 the tool
+1425 places somebody could act on, 2131 the tool
 reports as a limit of static reading, and 269 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
 | api-path-dynamic | action | 5 |  |
-| call-dynamic-receiver | info | 1189 |  |
+| call-dynamic-receiver | info | 1866 |  |
 | channel-const-unresolved | action | 1 |  |
-| channel-dynamic | action | 7 |  |
+| channel-dynamic | action | 3 |  |
 | consumer-handler-unresolved | action | 4 |  |
 | db-layer-unread | action | 2 |  |
 | dynamic-cache-key | action | 20 |  |
@@ -103,15 +103,15 @@ was never an edge to draw. The three are never added together.
 | handler-not-a-method | nothing | 269 |  |
 | inject-token-unresolved | info | 15 |  |
 | payload-type-unknown | action | 2 |  |
-| route-handler-anonymous | info | 305 |  |
+| route-handler-anonymous | info | 8 |  |
 | route-link-dynamic | info | 35 |  |
 | route-path-dynamic | action | 3 |  |
 | route-screen-unread | info | 10 |  |
 | route-target-unresolved | action | 31 |  |
 | target-route-not-found | action | 10 |  |
 | type-depth-exceeded | info | 56 |  |
-| type-generic-uninstantiated | info | 139 |  |
-| type-unresolved | action | 1270 |  |
+| type-generic-uninstantiated | info | 141 |  |
+| type-unresolved | action | 1340 |  |
 
 ## Files with sites and no output
 
@@ -174,7 +174,7 @@ repository's manifests instead of asking the tool for it.
 
 ## Cost
 
-Wall clock 5 to 15 s, peak resident memory 0.5 to 1 GB.
+Wall clock 5 to 15 s, peak resident memory 1 to 2 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.
