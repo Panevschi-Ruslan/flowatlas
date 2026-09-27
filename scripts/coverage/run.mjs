@@ -29,6 +29,25 @@
  * that is therefore not there - the report says so rather than quietly counting
  * it as a limit of the tool.
  *
+ * ## It measures the tool in the tree, or it refuses
+ *
+ * A fix that looks like it did nothing is the one failure a coverage harness must
+ * never produce, and it produced it twice on the day it was first used in
+ * earnest. The cause is that this command runs a **bundle**: a reader edited and
+ * not rebuilt is not in it, and the measurement that follows is a correct
+ * measurement of yesterday's code. Nothing along the way is broken and nothing
+ * says so. So a run whose sources are newer than the build is refused rather than
+ * answered, and the state each measurement starts from - the workspace, and every
+ * `.flowatlas` a previous run left in the clone - is established rather than
+ * assumed.
+ *
+ * ## The gate over what was not read
+ *
+ * Every measurement is also an assertion: a file the counting rule found sites in
+ * must yield a node of that family, or a row naming it. A reader that gave up in
+ * silence fails the run. `read-gate.mjs` holds the assertion, its exemptions, and
+ * what it deliberately cannot see.
+ *
  * ## Failing is data
  *
  * A target whose build crashes or runs out of heap is recorded with its exit
@@ -39,11 +58,13 @@
  * harness.
  */
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { byFamily, countSites, isSourceFile } from './counting-rule.mjs';
+import { byFamily, isSourceFile, measureSites } from './counting-rule.mjs';
+import { extentOfTarget } from './extent.mjs';
 import { figuresFrom } from './figures.mjs';
+import { readGate } from './read-gate.mjs';
 import { renderReport } from './report.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -60,6 +81,17 @@ const REPORTS = join(ROOT, 'scripts', 'coverage', 'reports');
  * safe to delete at any time: everything in it is derived from `targets.json`.
  */
 const CACHE = join(ROOT, '.coverage-cache');
+
+/**
+ * The directory the tool writes into, spelled here rather than imported.
+ *
+ * One string is a smaller debt than a harness that cannot measure a tool it
+ * cannot import. Everything else in this directory is independent of the
+ * package it measures and this is the one fact it has to know; if it ever
+ * changes, every report in this directory becomes a report of a stale cache,
+ * which is the failure this constant exists to prevent.
+ */
+const OUTPUT = '.flowatlas';
 
 // ---------------------------------------------------------------- processes
 
@@ -335,7 +367,14 @@ const install = async (cloneDir, target, log) => {
 // -------------------------------------------------------------- ground truth
 
 /**
- * Ground truth for one target, by the one rule in `counting-rule.mjs`.
+ * Ground truth for one target, by the one rule in `counting-rule.mjs`, counted
+ * over the extent the rule works out in `extent.mjs`.
+ *
+ * The extent is the correction to a fraction that had stopped being one. A
+ * service is an application together with the workspace packages it declares, so
+ * the tool's figures reach into those packages; the rule counted the read
+ * directory alone and cal.com came out at `444 of 80`. A ratio above one is two
+ * questions divided by each other. Both halves now ask about the same files.
  *
  * The file list comes from git rather than from a directory walk, so an
  * installed `node_modules` and a build directory left over from an earlier
@@ -343,7 +382,8 @@ const install = async (cloneDir, target, log) => {
  * what makes the two reports comparable to each other as well as to the tool.
  */
 const groundTruth = async (cloneDir, readRoots) => {
-  const listed = await run(['git', 'ls-files', '-z', ...readRoots], { cwd: cloneDir });
+  const extent = extentOfTarget(cloneDir, readRoots);
+  const listed = await run(['git', 'ls-files', '-z', '--', ...extent.dirs], { cwd: cloneDir });
   const paths = listed.stdout.split('\0').filter((path) => path !== '' && isSourceFile(path));
   const files = [];
   for (const path of paths) {
@@ -354,8 +394,51 @@ const groundTruth = async (cloneDir, readRoots) => {
       // declaration site anybody can read either.
     }
   }
-  const sites = countSites(files);
-  return { files: paths.length, sites, families: byFamily(sites) };
+  const { byProbe, perFile } = measureSites(files);
+  return {
+    truth: {
+      files: paths.length,
+      sites: byProbe,
+      families: byFamily(byProbe),
+      extent: extent.perRoot.map(({ readRoot, root, dirs }) => ({
+        readRoot,
+        workspace: root,
+        declared: dirs.slice(1),
+      })),
+    },
+    perFile,
+  };
+};
+
+/**
+ * Everything a previous run of this target left where the tool will look.
+ *
+ * A service keeps its graph and its build cache in `.flowatlas` **inside the
+ * repository it read**, and the harness used to remove only its own workspace. On
+ * a fresh run the clean that establishes the fresh state took the rest away as a
+ * side effect; under `--install` there is no clean, so both survived from run to
+ * run.
+ *
+ * What this is *not* is the thing that made two "after" measurements come back
+ * byte-identical to the baseline. That was measured rather than assumed, because
+ * assuming it is how it got written down wrong the first time: with a whole stale
+ * `.flowatlas` deliberately left in the clone and a reader changed, the figure
+ * moved anyway - the cache records which extractors built it and throws itself
+ * away when one of them changes. The real mechanism was a stale **bundle**, and
+ * it is refused by `refuseIfStale` below.
+ *
+ * This is kept anyway, because a build is allowed to keep the graph it already
+ * has when an extraction fails, which is the one path that can serve an old
+ * answer for a real reason, and because a state established costs one `rm` while
+ * a state assumed costs a report nobody can trust. It clears the extent and not
+ * only the read root, since a declared package is somewhere a build may write.
+ */
+const forget = (cloneDir, readRoots, workspace) => {
+  rmSync(workspace, { recursive: true, force: true });
+  const { dirs } = extentOfTarget(cloneDir, readRoots);
+  for (const dir of ['.', ...dirs, ...readRoots]) {
+    rmSync(join(cloneDir, dir, OUTPUT), { recursive: true, force: true });
+  }
 };
 
 // ---------------------------------------------------------------- measuring
@@ -385,6 +468,10 @@ const configure = (config, target, cloneDir) => {
   writeFileSync(config, `${JSON.stringify({ ...parsed, services }, null, 2)}\n`, 'utf8');
   return parsed.services.map((service, index) => ({
     name: service.name,
+    // Clone-relative, because the gate has to turn a path the graph spells
+    // relative to a service into a path the counting rule spells relative to the
+    // clone, and the service is the only thing that knows the difference.
+    repo: relative(cloneDir, resolve(dirname(config), service.repo)).split('\\').join('/') || '.',
     guessed: service.type,
     type: services[index].type,
   }));
@@ -399,7 +486,7 @@ const configure = (config, target, cloneDir) => {
  */
 const measure = async (target, cloneDir, state, log, timeoutMs) => {
   const workspace = join(CACHE, 'work', `${target.name}.${state}`);
-  rmSync(workspace, { recursive: true, force: true });
+  forget(cloneDir, target.read, workspace);
   mkdirSync(workspace, { recursive: true });
   const config = join(workspace, 'flowatlas.config.json');
   const roots = target.read.map((readRoot) => join(cloneDir, readRoot));
@@ -425,7 +512,7 @@ const measure = async (target, cloneDir, state, log, timeoutMs) => {
   log(`doctor exit ${doctored.code}`);
 
   const artefact = (name) => {
-    const path = join(workspace, '.flowatlas', name);
+    const path = join(workspace, OUTPUT, name);
     return existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : undefined;
   };
   const graph = artefact('project-graph.json');
@@ -457,7 +544,33 @@ const measure = async (target, cloneDir, state, log, timeoutMs) => {
       graph === undefined || report === undefined
         ? undefined
         : figuresFrom({ graph, report, doctor }),
+    // Handed back rather than kept: the gate needs it and no report does, and a
+    // hundred megabytes of graph in `measured.json` would cost every re-render a
+    // parse of it.
+    graph,
   };
+};
+
+/**
+ * The gate over what was not read, applied to one measured target (R111).
+ *
+ * The translation between the two spellings of a path lives here because this is
+ * where both are in hand: the counting rule names a file relative to the clone
+ * and the graph names it relative to the service that read it, which for a
+ * declared package is `../../packages/lib/…`. A service that is not in the list
+ * is a service the harness did not configure, and a node of one is not evidence
+ * about a file the rule counted.
+ */
+const gate = (target, services, perFile, graph) => {
+  if (graph === undefined) return undefined;
+  const byService = new Map(services.map((service) => [service.name, service.repo]));
+  const toPath = (file, repo) => {
+    const base = repo === undefined ? undefined : byService.get(repo);
+    const from = base === undefined || base === '.' ? '' : base;
+    // Only the graph's own separator and `..` need normalising; `join` does both.
+    return join(from, file).split('\\').join('/');
+  };
+  return readGate({ where: target.name, perFile, graph, toPath });
 };
 
 // ------------------------------------------------------------------ command
@@ -492,22 +605,80 @@ const render = async (chosen) => {
       console.log(`[${target.name}] no clone in the cache; skipped`);
       continue;
     }
-    const truth = await groundTruth(cloneDir, target.read);
+    const { truth, perFile } = await groundTruth(cloneDir, target.read);
     for (const state of ['fresh', 'with-deps']) {
       const workspace = join(CACHE, 'work', `${target.name}.${state}`);
       const kept = join(workspace, 'measured.json');
       if (!existsSync(kept)) continue;
-      const result = { ...JSON.parse(readFileSync(kept, 'utf8')), truth };
+      const measured = JSON.parse(readFileSync(kept, 'utf8'));
+      const graphPath = join(workspace, OUTPUT, 'project-graph.json');
+      const graph = existsSync(graphPath) ? JSON.parse(readFileSync(graphPath, 'utf8')) : undefined;
+      const result = {
+        ...measured,
+        truth,
+        gate: gate(target, measured.services ?? [], perFile, graph),
+      };
       console.log(`[${target.name}] re-rendered ${relative(ROOT, publish(target, state, workspace, result))}`);
+      if (result.gate !== undefined && result.gate.missing.length > 0) {
+        console.error(`[${target.name}] read gate: ${result.gate.missing.length} file(s) with sites and no output`);
+        process.exitCode = 1;
+      }
     }
   }
 };
+
+/**
+ * What the harness takes, and what it refuses.
+ *
+ * An unknown argument has always ended the run - the throw was in the commit that
+ * created this file, and a ticket saying otherwise was written from a symptom by
+ * somebody who had not read the function. What it did not do was say what was
+ * meant: it threw a bare `Error`, so `--deps` produced thirty lines of stack
+ * trace with the word "unknown" in the middle of it and no mention of the flag
+ * that exists.
+ *
+ * So the refusal now names the vocabulary, and - where the mistake is one
+ * somebody has actually made - the flag that was wanted. `MEANT` is that second
+ * part, a lookup and not a spell checker, because guessing at what a stranger's
+ * typo meant is how a harness ends up answering the wrong question confidently.
+ * A missing value and a `--timeout` that is not a number are refused for the
+ * same reason: `--target` with nothing after it used to reach "no target
+ * matched", which is true and unhelpful.
+ */
+const USAGE = [
+  'usage: node scripts/coverage/run.mjs [options]',
+  '  --target NAME   measure one target; repeatable (default: all of them)',
+  '  --install       install dependencies first, and write the with-deps report',
+  '  --render        re-write reports from measurements already in the cache',
+  '  --pin           re-pin every target to the head of its default branch',
+  '  --timeout SECS  give up on one command after this long (default 1200)',
+].join('\n');
+
+/** Arguments somebody has written meaning one of the above. */
+const MEANT = {
+  '--deps': '--install',
+  '--with-deps': '--install',
+  '--dependencies': '--install',
+  '--install-deps': '--install',
+  '--targets': '--target',
+  '--repo': '--target',
+  '--only': '--target',
+  '--render-only': '--render',
+};
+
+class UsageError extends Error {}
 
 const parseArgs = (argv) => {
   const options = { targets: [], install: false, pin: false, render: false, timeoutMs: 20 * 60 * 1000 };
   const take = {
     '--target': (value) => options.targets.push(value),
-    '--timeout': (value) => (options.timeoutMs = Number(value) * 1000),
+    '--timeout': (value) => {
+      const seconds = Number(value);
+      if (!Number.isFinite(seconds) || seconds <= 0) {
+        throw new UsageError(`--timeout wants a number of seconds, and was given "${value}"`);
+      }
+      options.timeoutMs = seconds * 1000;
+    },
   };
   const flag = {
     '--install': () => (options.install = true),
@@ -516,9 +687,22 @@ const parseArgs = (argv) => {
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg in flag) flag[arg]();
-    else if (arg in take) take[arg](argv[(index += 1)]);
-    else throw new Error(`unknown argument: ${arg}`);
+    if (arg in flag) {
+      flag[arg]();
+      continue;
+    }
+    if (arg in take) {
+      const value = argv[(index += 1)];
+      if (value === undefined || value.startsWith('--')) {
+        throw new UsageError(`${arg} wants a value after it, and there is none`);
+      }
+      take[arg](value);
+      continue;
+    }
+    const meant = MEANT[arg];
+    throw new UsageError(
+      `unknown argument: ${arg}${meant === undefined ? '' : `. The flag that exists is ${meant}`}`,
+    );
   }
   return options;
 };
@@ -534,6 +718,77 @@ const pin = async (list) => {
   writeFileSync(TARGETS, `${JSON.stringify(list, null, 2)}\n`, 'utf8');
 };
 
+
+/**
+ * Refuse to measure a tool that is not the tool in the tree.
+ *
+ * The harness runs `packages/cli/bin/flowatlas.js`, which loads a **bundle**. A
+ * reader changed in `src` and not rebuilt is not in that bundle, so a
+ * measurement taken after the change is a measurement of the code before it -
+ * and it comes back byte-identical to the baseline, which reads as "the fix did
+ * nothing". Two agents were caught by this on the day the harness was first used
+ * in earnest, and the first diagnosis blamed a stale graph in the clone; the
+ * mechanism is simpler and worse than that, because no cache is involved and
+ * nothing anywhere is wrong except that nobody ran a build.
+ *
+ * So the newest source in the workspace is compared against the newest file the
+ * command loads, and a run is refused rather than answered. Modification times
+ * are the right instrument here despite being a weak one: the question is not
+ * "is this bundle correct" - a hash would answer that and would cost a bundle of
+ * its own to compute - but "did somebody edit a reader and forget", and an mtime
+ * answers exactly that.
+ */
+const newestUnder = (dir, extensions) => {
+  let newest = 0;
+  const visit = (at) => {
+    let entries;
+    try {
+      entries = readdirSync(at, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const path = join(at, entry.name);
+      if (entry.isDirectory()) {
+        if (!entry.name.startsWith('.') && entry.name !== 'node_modules') visit(path);
+        continue;
+      }
+      if (!extensions.some((extension) => entry.name.endsWith(extension))) continue;
+      try {
+        newest = Math.max(newest, statSync(path).mtimeMs);
+      } catch {
+        /* gone between the listing and the stat */
+      }
+    }
+  };
+  visit(dir);
+  return newest;
+};
+
+const refuseIfStale = () => {
+  const built = newestUnder(join(ROOT, 'packages', 'cli', 'dist'), ['.js']);
+  if (built === 0) {
+    throw new UsageError('there is no built command to measure. Run `pnpm -r build` first.');
+  }
+  let newest = 0;
+  let where = '';
+  for (const entry of readdirSync(join(ROOT, 'packages'), { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const at = newestUnder(join(ROOT, 'packages', entry.name, 'src'), ['.ts', '.tsx']);
+    if (at > newest) {
+      newest = at;
+      where = entry.name;
+    }
+  }
+  if (newest > built) {
+    throw new UsageError(
+      `packages/${where}/src has changed since the command was built, and the harness ` +
+        'measures the build. Run `pnpm -r build` first, or this run answers for the code ' +
+        'as it was.',
+    );
+  }
+};
+
 const main = async () => {
   const options = parseArgs(process.argv.slice(2));
   const list = JSON.parse(readFileSync(TARGETS, 'utf8'));
@@ -543,7 +798,11 @@ const main = async () => {
     options.targets.length === 0
       ? list.targets
       : list.targets.filter((target) => options.targets.includes(target.name));
-  if (chosen.length === 0) throw new Error('no target matched');
+  if (chosen.length === 0) {
+    throw new UsageError(
+      `no target matched. The targets are: ${list.targets.map((t) => t.name).join(', ')}`,
+    );
+  }
   const unpinned = chosen.filter((target) => target.commit === null);
   if (unpinned.length > 0) {
     throw new Error(
@@ -553,9 +812,11 @@ const main = async () => {
 
   mkdirSync(REPORTS, { recursive: true });
   if (options.render) return render(chosen);
+  refuseIfStale();
   const state = options.install ? 'with-deps' : 'fresh';
   const version = toolVersion();
   const failures = [];
+  const gateFailures = [];
 
   for (const target of chosen) {
     const log = (line) => console.log(`[${target.name}] ${line}`);
@@ -563,9 +824,20 @@ const main = async () => {
       const cloneDir = await clone(target, log);
       if (!options.install) await freshen(cloneDir);
       const installs = options.install ? await install(cloneDir, target, log) : [];
-      const truth = await groundTruth(cloneDir, target.read);
-      const { workspace, ...measured } = await measure(target, cloneDir, state, log, options.timeoutMs);
-      const result = { target, state, version, truth, installs, ...measured };
+      const { truth, perFile } = await groundTruth(cloneDir, target.read);
+      const { workspace, graph, ...measured } = await measure(
+        target,
+        cloneDir,
+        state,
+        log,
+        options.timeoutMs,
+      );
+      const checked = gate(target, measured.services, perFile, graph);
+      if (checked !== undefined && checked.missing.length > 0) {
+        log(`read gate: ${checked.missing.length} file(s) with sites and no output`);
+        gateFailures.push(`${target.name}: ${checked.missing.length} (see the report)`);
+      }
+      const result = { target, state, version, truth, installs, ...measured, gate: checked };
       log(`wrote ${relative(ROOT, publish(target, state, workspace, result))}`);
     } catch (cause) {
       // Only the harness's own failures land here: a crashed build is a
@@ -580,6 +852,22 @@ const main = async () => {
     for (const failure of failures) console.error(`  ${failure}`);
     process.exitCode = 1;
   }
+  // The gate fails the run rather than only writing a section, because a report
+  // nobody opens is how the silent-skip class stayed quiet for twenty-five
+  // defects. Each one is either a reader giving up without a row, or an
+  // exemption somebody owes a sentence for.
+  if (gateFailures.length > 0) {
+    console.error(`\n${gateFailures.length} target(s) failed the read gate:`);
+    for (const failure of gateFailures) console.error(`  ${failure}`);
+    process.exitCode = 1;
+  }
 };
 
-await main();
+// A usage mistake is not a crash and is not worth a stack trace: it is the
+// harness saying it does not know what was asked, which is the whole point of
+// refusing it. Anything else is a genuine fault and keeps its trace.
+await main().catch((cause) => {
+  if (!(cause instanceof UsageError)) throw cause;
+  console.error(`${cause.message}\n\n${USAGE}`);
+  process.exitCode = 2;
+});

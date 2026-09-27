@@ -9,11 +9,12 @@ a repository with no server.
 | read | `.` |
 | read by | excalidraw-monorepo (`nextjs`) |
 | source files counted | 519 |
+| extent counted over | `.` alone (not a member of any workspace here) |
 | flowatlas | 0.4.1 |
 
 ## Outcome
 
-build **exit 0**, doctor exit 2, link exit 0
+build **exit 0**, doctor exit 0, link exit 0
 
 ## Dependencies
 
@@ -34,9 +35,16 @@ land on one address.
 |  | count | of what the counting rule found |
 |---|---|---|
 | addresses placed | 0 |  |
+| addresses claimed by more than one declaration | 0 | a collision, or one service holding two applications |
 | declarations with a body attached | 0 | nothing of this kind here |
 | …whose body reaches anything | 0 | nothing of this kind here |
 | …behind middleware or a guard | 0 | nothing of this kind here |
+
+Where those addresses are. One row per leading segment, which is enough of an
+address for a dropped global prefix to show and little enough that a new route
+is not a diff.
+
+No addresses.
 
 ## What joined
 
@@ -50,8 +58,8 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 80 | no denominator: the rule has no probe for it |
-| …that name a table | 0 | 0 of 80 |
+| query sites read | 0 | nothing of this kind here |
+| …that name a table | 0 | nothing of this kind here |
 | tables | 0 | nothing of this kind here |
 | components | 396 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
@@ -59,22 +67,27 @@ land on one address.
 
 ## What it could not read
 
-102 places somebody could act on, 381 the tool
+27 places somebody could act on, 311 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
 | api-path-dynamic | action | 7 |  |
-| call-dynamic-receiver | info | 294 |  |
+| call-dynamic-receiver | info | 224 |  |
 | channel-dynamic | action | 1 |  |
 | consumer-handler-unresolved | action | 2 |  |
-| db-receiver-name-only | action | 80 |  |
+| db-layer-unread | action | 5 |  |
 | dynamic-http-url | action | 6 |  |
 | target-route-not-found | action | 3 |  |
 | type-depth-exceeded | info | 39 |  |
 | type-generic-uninstantiated | info | 48 |  |
 | unknown-base-url-env | action | 3 |  |
+
+## Files with sites and no output
+
+None. Every file the counting rule found a declaration site in yielded a node of
+that family, or a row naming the file.
 
 ## The denominators
 
@@ -101,9 +114,15 @@ applied identically to all eight targets and knows nothing about any of them.
 | places the code reaches storage | 0 |
 | tables or models declared (an upper bound) | 0 |
 
+Counted over the extent named at the top of this report - the read directory and
+the workspace packages it declares - because that is what the tool reads. A
+denominator counted over the read directory alone put more found than there was
+to find, and `extent.mjs` says why the rule works the extent out from the
+repository's manifests instead of asking the tool for it.
+
 ## Cost
 
-Wall clock 5 to 15 s, peak resident memory 1 to 2 GB.
+Wall clock 15 to 60 s, peak resident memory 1 to 2 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

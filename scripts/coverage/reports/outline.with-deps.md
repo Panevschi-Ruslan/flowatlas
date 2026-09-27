@@ -2,6 +2,14 @@
 
 Koa + React + socket.io + Sequelize in one repository.
 
+> **Not measured on this branch, and not to be quoted.** Every figure below was
+> produced on one branch carrying one fix, and the sixteen reports' merge was
+> resolved file by file, so no number here is true of this tree (R113, fifth
+> row). The fresh-clone report beside this one has been re-measured; this one
+> needs a dependency install on the whole repository, which nobody has paid for
+> yet. Regenerate it with `pnpm coverage:deps --target <name>`, which overwrites
+> this notice along with the figures.
+
 |  |  |
 |---|---|
 | repository | `outline/outline` |

@@ -64,8 +64,44 @@ const table = (head, rows) =>
  * saying "nothing to find" over a number would be plainly false.
  */
 const of = (found, expected) => {
+  // A ratio above one is never coverage. It means the two halves are counting
+  // over different files - which is what `444 of 80` was - or that the tool is
+  // recording something the probe is not looking at. Either way it is said in
+  // words here rather than left to a reader to notice, because the first time it
+  // happened it was printed in sixteen reports and read as a rounding problem.
+  if (found > expected && expected > 0) {
+    return `${found} against ${expected}: **more found than the rule can see, so this is not a fraction**`;
+  }
   if (expected > 0) return `${found} of ${expected}`;
   return found === 0 ? 'nothing of this kind here' : 'no denominator: the rule has no probe for it';
+};
+
+/**
+ * What the denominators were counted over, in one cell.
+ *
+ * A service is an application together with the workspace packages it declares,
+ * so the directory named in `targets.json` is not the answer to "what was
+ * counted". Printing the extent is what lets a reader see that the numerator and
+ * the denominator are asking about the same files, and it moves when the
+ * repository's own manifests move, which is news worth a line in a diff.
+ *
+ * The packages are named rather than counted. There are a handful of them, a
+ * disappearing one is exactly the regression this row exists to show, and a
+ * number alone would hide one package being swapped for another.
+ */
+const extent = (truth) => {
+  if (truth.extent === undefined) return 'the read directories';
+  return truth.extent
+    .map(({ readRoot, workspace, declared }) => {
+      const where = `\`${readRoot}\``;
+      if (declared.length === 0) {
+        return workspace === null
+          ? `${where} alone (not a member of any workspace here)`
+          : `${where} alone (a member of \`${workspace}\`, declaring no package of it)`;
+      }
+      return `${where} plus ${declared.length} declared package(s): ${declared.map((path) => `\`${path}\``).join(', ')}`;
+    })
+    .join('; ');
 };
 
 const STATES = {
@@ -96,6 +132,7 @@ ${table(
             .join(', '),
     ],
     ['source files counted', String(truth.files)],
+    ['extent counted over', extent(truth)],
     ['flowatlas', version],
   ],
 )}
@@ -164,11 +201,42 @@ ${table(
   ['', 'count', 'of what the counting rule found'],
   [
     ['addresses placed', String(figures.routes.addresses), ''],
+    [
+      'addresses claimed by more than one declaration',
+      String(figures.routes.duplicated),
+      'a collision, or one service holding two applications',
+    ],
     ['declarations with a body attached', String(figures.routes.withBody), of(figures.routes.withBody, expected)],
     ['…whose body reaches anything', String(figures.routes.reaching), of(figures.routes.reaching, expected)],
     ['…behind middleware or a guard', String(figures.routes.guarded), of(figures.routes.guarded, expected)],
   ],
 )}
+${addresses(figures.routes.shapes)}`;
+};
+
+/**
+ * Where the addresses are, by their first segment.
+ *
+ * The smallest thing that makes a lost prefix visible. Every one of immich's two
+ * hundred and ninety-two paths gained an `/api` and no figure in its report
+ * moved, because no report printed any part of an address; printing every path
+ * would swamp the diff and make each new route a changed file. A prefix
+ * appearing or disappearing moves every row of this table at once, which is the
+ * shape of that regression and of no other.
+ */
+const addresses = (shapes) => {
+  if (shapes === undefined) return '';
+  const rows = shapes.listed.map((row) => [`\`${row.segment}\``, String(row.addresses)]);
+  const folded =
+    shapes.folded.segments === 0
+      ? ''
+      : `\n\n${shapes.folded.addresses} more at ${shapes.folded.segments} segment(s) of fewer than five addresses each, folded together so that a repository serving two hundred addresses at the top level does not write two hundred rows.`;
+  return `
+Where those addresses are. One row per leading segment, which is enough of an
+address for a dropped global prefix to show and little enough that a new route
+is not a diff.
+
+${rows.length === 0 ? 'No addresses.' : table(['first segment', 'addresses'], rows)}${folded}
 `;
 };
 
@@ -221,6 +289,51 @@ ${rows.length === 0 ? 'Nothing.' : table(['reason', 'level', 'places', ''], rows
 `;
 };
 
+
+/**
+ * The gate over what was not read, as a section (R111).
+ *
+ * Printed whether or not it found anything, because "nothing" is the result
+ * worth seeing here and a section that appears only on failure is a section
+ * nobody knows to expect. The list is capped: a routing convention with no
+ * reader produces hundreds of identical lines, and the count plus the first
+ * dozen is what a reader needs to know which reader to go and look at.
+ */
+const SHOWN = 12;
+
+const readGateSection = ({ gate }) => {
+  if (gate === undefined) return '';
+  if (gate.missing.length === 0 && gate.stale.length === 0) {
+    return `
+## Files with sites and no output
+
+None. Every file the counting rule found a declaration site in yielded a node of
+that family, or a row naming the file.
+`;
+  }
+  const rows = gate.missing
+    .slice(0, SHOWN)
+    .map((row) => [`\`${row.path}\``, row.family, String(row.sites)]);
+  const rest =
+    gate.missing.length > SHOWN
+      ? `\n\nand ${gate.missing.length - SHOWN} more.`
+      : '';
+  const stale =
+    gate.stale.length === 0
+      ? ''
+      : `\n\n${gate.stale.length} exemption(s) in \`read-gate.mjs\` are no longer needed and should be deleted.`;
+  return `
+## Files with sites and no output
+
+**${gate.missing.length} file(s)** the counting rule found sites in yielded neither
+a node of that family nor any row naming them. That is a reader giving up in
+silence, which is the class this gate exists for; a limit somebody has decided to
+accept belongs in the exemption list with a sentence beside it.
+
+${rows.length === 0 ? '' : table(['file', 'family', 'sites'], rows)}${rest}${stale}
+`;
+};
+
 /**
  * The ground truth, probe by probe, so a suspicious figure can be checked.
  *
@@ -243,6 +356,12 @@ ${table(
   ['family', 'sites'],
   FAMILIES.map(([family, what]) => [what, String(truth.families[family])]),
 )}
+
+Counted over the extent named at the top of this report - the read directory and
+the workspace packages it declares - because that is what the tool reads. A
+denominator counted over the read directory alone put more found than there was
+to find, and \`extent.mjs\` says why the rule works the extent out from the
+repository's manifests instead of asking the tool for it.
 `;
 
 const cost = ({ steps }) => `
@@ -255,7 +374,18 @@ tool, and a line that moves then is a line nobody will read twice.
 `;
 
 /** Sections, in order. A section that has nothing to say returns an empty string. */
-const SECTIONS = [heading, outcome, install, ways, joins, storage, unresolved, groundTruth, cost];
+const SECTIONS = [
+  heading,
+  outcome,
+  install,
+  ways,
+  joins,
+  storage,
+  unresolved,
+  readGateSection,
+  groundTruth,
+  cost,
+];
 
 /** Sections that need a graph, and are therefore left out when there is none. */
 const NEEDS_GRAPH = new Set([ways, joins, storage, unresolved]);

@@ -14,7 +14,7 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "invariants": "bash scripts/invariants.sh",
-    "fixtures:check": "node scripts/fixtures-check.mjs && node scripts/mcp-snapshots.mjs && node scripts/cli-snapshots.mjs",
+    "fixtures:check": "node scripts/fixtures-check.mjs && node scripts/mcp-snapshots.mjs && node scripts/cli-snapshots.mjs && node scripts/coverage/read-gate.mjs",
     "flowatlas": "node packages/cli/bin/flowatlas.js",
     "mcp:snapshots": "node scripts/mcp-snapshots.mjs",
     "cli:snapshots": "node scripts/cli-snapshots.mjs",
@@ -23,6 +23,7 @@
     "coverage": "node scripts/coverage/run.mjs",
     "coverage:deps": "node scripts/coverage/run.mjs --install",
     "coverage:render": "node scripts/coverage/run.mjs --render",
+    "coverage:gate": "node scripts/coverage/read-gate.mjs",
     "coverage:pin": "node scripts/coverage/run.mjs --pin",
     "clean": "node scripts/clean.mjs"
   },

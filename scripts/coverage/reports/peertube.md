@@ -9,6 +9,7 @@ Angular and Express in one repository.
 | read | `server`, `client` |
 | read by | peertube-client (`angular`), peertube-server (`express`) |
 | source files counted | 2136 |
+| extent counted over | `server` alone (a member of `.`, declaring no package of it); `client` alone (a member of `.`, declaring no package of it) |
 | flowatlas | 0.4.1 |
 
 ## Outcome
@@ -28,9 +29,16 @@ land on one address.
 |  | count | of what the counting rule found |
 |---|---|---|
 | addresses placed | 0 |  |
+| addresses claimed by more than one declaration | 0 | a collision, or one service holding two applications |
 | declarations with a body attached | 0 | 0 of 343 |
 | …whose body reaches anything | 0 | 0 of 343 |
 | …behind middleware or a guard | 0 | 0 of 343 |
+
+Where those addresses are. One row per leading segment, which is enough of an
+address for a dropped global prefix to show and little enough that a new route
+is not a diff.
+
+No addresses.
 
 ## What joined
 
@@ -44,25 +52,25 @@ land on one address.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 12 | no denominator: the rule has no probe for it |
-| …that name a table | 3 | 3 of 12 |
-| tables | 1 | 1 of 85 |
+| query sites read | 0 | nothing of this kind here |
+| …that name a table | 0 | nothing of this kind here |
+| tables | 0 | 0 of 85 |
 | components | 330 | 330 of 330 |
 | clicks | 307 | 307 of 307 |
 | every other binding a template makes | 1006 | not counted by the rule |
 
 ## What it could not read
 
-1465 places somebody could act on, 2938 the tool
+1454 places somebody could act on, 2939 the tool
 reports as a limit of static reading, and 234 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
 | call-dynamic-receiver | info | 2417 |  |
-| db-layer-unread | action | 2 |  |
-| db-receiver-name-only | action | 9 |  |
+| db-layer-unread | action | 3 |  |
 | dynamic-config-key | action | 1 |  |
+| entry-http-types-unmatched | info | 1 |  |
 | handler-not-a-method | nothing | 234 |  |
 | handler-not-found | action | 35 |  |
 | inject-token-unresolved | info | 284 |  |
@@ -72,7 +80,30 @@ was never an edge to draw. The three are never added together.
 | type-depth-exceeded | info | 54 |  |
 | type-generic-uninstantiated | info | 130 |  |
 | type-unresolved | action | 1298 |  |
-| unknown-db-package | action | 3 |  |
+
+## Files with sites and no output
+
+**83 file(s)** the counting rule found sites in yielded neither
+a node of that family nor any row naming them. That is a reader giving up in
+silence, which is the class this gate exists for; a limit somebody has decided to
+accept belongs in the exemption list with a sentence beside it.
+
+| file | family | sites |
+|---|---|---|
+| `(anywhere)` | models | 85 |
+| `server/core/controllers/activitypub/client.ts` | routes | 27 |
+| `server/core/controllers/activitypub/inbox.ts` | routes | 3 |
+| `server/core/controllers/activitypub/outbox.ts` | routes | 2 |
+| `server/core/controllers/api/abuse.ts` | routes | 7 |
+| `server/core/controllers/api/accounts.ts` | routes | 8 |
+| `server/core/controllers/api/automatic-tags.ts` | routes | 6 |
+| `server/core/controllers/api/blocklist.ts` | routes | 1 |
+| `server/core/controllers/api/bulk.ts` | routes | 1 |
+| `server/core/controllers/api/client-config.ts` | routes | 1 |
+| `server/core/controllers/api/config.ts` | routes | 11 |
+| `server/core/controllers/api/custom-page.ts` | routes | 2 |
+
+and 71 more.
 
 ## The denominators
 
@@ -98,6 +129,12 @@ applied identically to all eight targets and knows nothing about any of them.
 | things a person can click | 307 |
 | places the code reaches storage | 0 |
 | tables or models declared (an upper bound) | 85 |
+
+Counted over the extent named at the top of this report - the read directory and
+the workspace packages it declares - because that is what the tool reads. A
+denominator counted over the read directory alone put more found than there was
+to find, and `extent.mjs` says why the rule works the extent out from the
+repository's manifests instead of asking the tool for it.
 
 ## Cost
 
