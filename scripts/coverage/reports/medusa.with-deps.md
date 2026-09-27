@@ -9,8 +9,8 @@ a file-system router with no reader.
 | commit | `62a520014886df3838aa9f31f2990afecae38333` |
 | read | `packages/medusa` |
 | read by | medusa (`medusa`) |
-| source files counted | 6683 |
-| extent counted over | `packages/medusa` plus 74 declared package(s): `packages/admin/admin-bundler`, `packages/admin/admin-sdk`, `packages/admin/admin-shared`, `packages/admin/admin-vite-plugin`, `packages/admin/dashboard`, `packages/cli/medusa-cli`, `packages/core/core-flows`, `packages/core/framework`, `packages/core/js-sdk`, `packages/core/modules-sdk`, `packages/core/orchestration`, `packages/core/query`, `packages/core/types`, `packages/core/utils`, `packages/core/workflows-sdk`, `packages/deps`, `packages/design-system/icons`, `packages/design-system/toolbox`, `packages/design-system/ui`, `packages/design-system/ui-preset`, `packages/medusa-telemetry`, `packages/medusa-test-utils`, `packages/modules/analytics`, `packages/modules/api-key`, `packages/modules/auth`, `packages/modules/cache-inmemory`, `packages/modules/cache-redis`, `packages/modules/caching`, `packages/modules/cart`, `packages/modules/currency`, `packages/modules/customer`, `packages/modules/event-bus-local`, `packages/modules/event-bus-redis`, `packages/modules/file`, `packages/modules/fulfillment`, `packages/modules/index`, `packages/modules/inventory`, `packages/modules/link-modules`, `packages/modules/locking`, `packages/modules/notification`, `packages/modules/order`, `packages/modules/payment`, `packages/modules/pricing`, `packages/modules/product`, `packages/modules/promotion`, `packages/modules/providers/analytics-local`, `packages/modules/providers/analytics-posthog`, `packages/modules/providers/auth-emailpass`, `packages/modules/providers/auth-github`, `packages/modules/providers/auth-google`, `packages/modules/providers/auth-oidc`, `packages/modules/providers/caching-redis`, `packages/modules/providers/file-local`, `packages/modules/providers/file-s3`, `packages/modules/providers/fulfillment-manual`, `packages/modules/providers/locking-postgres`, `packages/modules/providers/locking-redis`, `packages/modules/providers/notification-local`, `packages/modules/providers/notification-sendgrid`, `packages/modules/providers/payment-stripe`, `packages/modules/providers/search-postgres`, `packages/modules/rbac`, `packages/modules/region`, `packages/modules/sales-channel`, `packages/modules/search`, `packages/modules/settings`, `packages/modules/stock-location`, `packages/modules/store`, `packages/modules/tax`, `packages/modules/translation`, `packages/modules/user`, `packages/modules/workflow-engine-inmemory`, `packages/modules/workflow-engine-redis`, `packages/plugins/draft-order` |
+| source files counted | 6650 |
+| extent counted over | `packages/medusa` plus 72 declared package(s): `packages/admin/admin-bundler`, `packages/admin/admin-sdk`, `packages/admin/admin-shared`, `packages/admin/admin-vite-plugin`, `packages/admin/dashboard`, `packages/cli/medusa-cli`, `packages/core/core-flows`, `packages/core/framework`, `packages/core/js-sdk`, `packages/core/modules-sdk`, `packages/core/orchestration`, `packages/core/query`, `packages/core/types`, `packages/core/utils`, `packages/core/workflows-sdk`, `packages/deps`, `packages/design-system/icons`, `packages/design-system/ui`, `packages/medusa-telemetry`, `packages/medusa-test-utils`, `packages/modules/analytics`, `packages/modules/api-key`, `packages/modules/auth`, `packages/modules/cache-inmemory`, `packages/modules/cache-redis`, `packages/modules/caching`, `packages/modules/cart`, `packages/modules/currency`, `packages/modules/customer`, `packages/modules/event-bus-local`, `packages/modules/event-bus-redis`, `packages/modules/file`, `packages/modules/fulfillment`, `packages/modules/index`, `packages/modules/inventory`, `packages/modules/link-modules`, `packages/modules/locking`, `packages/modules/notification`, `packages/modules/order`, `packages/modules/payment`, `packages/modules/pricing`, `packages/modules/product`, `packages/modules/promotion`, `packages/modules/providers/analytics-local`, `packages/modules/providers/analytics-posthog`, `packages/modules/providers/auth-emailpass`, `packages/modules/providers/auth-github`, `packages/modules/providers/auth-google`, `packages/modules/providers/auth-oidc`, `packages/modules/providers/caching-redis`, `packages/modules/providers/file-local`, `packages/modules/providers/file-s3`, `packages/modules/providers/fulfillment-manual`, `packages/modules/providers/locking-postgres`, `packages/modules/providers/locking-redis`, `packages/modules/providers/notification-local`, `packages/modules/providers/notification-sendgrid`, `packages/modules/providers/payment-stripe`, `packages/modules/providers/search-postgres`, `packages/modules/rbac`, `packages/modules/region`, `packages/modules/sales-channel`, `packages/modules/search`, `packages/modules/settings`, `packages/modules/stock-location`, `packages/modules/store`, `packages/modules/tax`, `packages/modules/translation`, `packages/modules/user`, `packages/modules/workflow-engine-inmemory`, `packages/modules/workflow-engine-redis`, `packages/plugins/draft-order` |
 | flowatlas | 0.4.1 |
 
 ## Outcome
@@ -66,7 +66,7 @@ is not a diff.
 |  | found | joined |
 |---|---|---|
 | requests from a browser | 0 | 0 |
-| requests between services | 22 | 0 |
+| requests between services | 20 | 0 |
 | channels | 0 | 0 with both ends |
 
 ## Storage and screens
@@ -82,38 +82,29 @@ is not a diff.
 
 ## What it could not read
 
-3149 places somebody could act on, 6468 the tool
+3188 places somebody could act on, 6397 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| call-dynamic-receiver | info | 6361 |  |
+| call-dynamic-receiver | info | 6284 |  |
 | channel-const-unresolved | action | 1 |  |
 | channel-dynamic | action | 8 |  |
-| db-layer-unread | action | 2 |  |
+| db-layer-unread | action | 4 |  |
 | db-receiver-name-only | action | 50 |  |
 | dynamic-cache-key | action | 75 |  |
 | dynamic-config-key | action | 9 |  |
-| dynamic-http-url | action | 7 |  |
+| dynamic-http-url | action | 5 |  |
 | type-depth-exceeded | info | 27 |  |
-| type-generic-uninstantiated | info | 80 |  |
-| type-unresolved | action | 2895 |  |
+| type-generic-uninstantiated | info | 86 |  |
+| type-unresolved | action | 2934 |  |
 | unknown-db-package | action | 102 |  |
 
 ## Files with sites and no output
 
 None beyond what is baselined. Every other file the counting rule found a
 declaration site in yielded a node of that family, or a row naming the file.
-
-1 file(s) did go unread, and every one of them is red this gate
-already knew about, enumerated in `BASELINE` in `read-gate.mjs` with the ticket
-it belongs to. They are counted rather than silenced: one file more than this, or
-one fewer, fails the run.
-
-| family | files | ticket |
-|---|---|---|
-| data | 1 | R137 |
 
 ### What this gate cannot see
 

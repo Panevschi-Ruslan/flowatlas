@@ -14,8 +14,8 @@ package *generates*, which `--ignore-scripts` leaves out of both states here.
 | commit | `f8f4051a24fffa49accb96bd4f107f8b8d5915e9` |
 | read | `server` |
 | read by | immich (`nestjs`) |
-| source files counted | 464 |
-| extent counted over | `server` plus 2 declared package(s): `packages/plugin-sdk`, `packages/sdk` |
+| source files counted | 461 |
+| extent counted over | `server` plus 1 declared package(s): `packages/plugin-sdk` |
 | flowatlas | 0.4.1 |
 
 ## Outcome

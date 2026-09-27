@@ -61,7 +61,7 @@ is not a diff.
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 137 | 29 |
+| requests from a browser | 148 | 39 |
 | requests between services | 184 | 0 |
 | channels | 0 | 0 with both ends |
 
@@ -86,13 +86,13 @@ was never an edge to draw. The three are never added together.
 |---|---|---|---|
 | api-method-dynamic | action | 2 |  |
 | api-path-dynamic | action | 27 |  |
-| bootstrap-not-found | action | 1 |  |
 | call-dynamic-receiver | info | 2951 |  |
 | db-layer-unread | action | 16 |  |
 | db-receiver-name-only | action | 420 |  |
 | dynamic-config-key | action | 2 |  |
 | dynamic-http-url | action | 31 |  |
 | entry-http-types-unmatched | info | 1 |  |
+| procedure-not-found | action | 1 |  |
 | procedure-router-unread | action | 29 |  |
 | route-handler-unread | action | 36 |  |
 | route-wildcard-only | action | 16 |  |

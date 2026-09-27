@@ -14,8 +14,8 @@ package *generates*, which `--ignore-scripts` leaves out of both states here.
 | commit | `62a520014886df3838aa9f31f2990afecae38333` |
 | read | `packages/medusa` |
 | read by | medusa (`medusa`) |
-| source files counted | 6683 |
-| extent counted over | `packages/medusa` plus 74 declared package(s): `packages/admin/admin-bundler`, `packages/admin/admin-sdk`, `packages/admin/admin-shared`, `packages/admin/admin-vite-plugin`, `packages/admin/dashboard`, `packages/cli/medusa-cli`, `packages/core/core-flows`, `packages/core/framework`, `packages/core/js-sdk`, `packages/core/modules-sdk`, `packages/core/orchestration`, `packages/core/query`, `packages/core/types`, `packages/core/utils`, `packages/core/workflows-sdk`, `packages/deps`, `packages/design-system/icons`, `packages/design-system/toolbox`, `packages/design-system/ui`, `packages/design-system/ui-preset`, `packages/medusa-telemetry`, `packages/medusa-test-utils`, `packages/modules/analytics`, `packages/modules/api-key`, `packages/modules/auth`, `packages/modules/cache-inmemory`, `packages/modules/cache-redis`, `packages/modules/caching`, `packages/modules/cart`, `packages/modules/currency`, `packages/modules/customer`, `packages/modules/event-bus-local`, `packages/modules/event-bus-redis`, `packages/modules/file`, `packages/modules/fulfillment`, `packages/modules/index`, `packages/modules/inventory`, `packages/modules/link-modules`, `packages/modules/locking`, `packages/modules/notification`, `packages/modules/order`, `packages/modules/payment`, `packages/modules/pricing`, `packages/modules/product`, `packages/modules/promotion`, `packages/modules/providers/analytics-local`, `packages/modules/providers/analytics-posthog`, `packages/modules/providers/auth-emailpass`, `packages/modules/providers/auth-github`, `packages/modules/providers/auth-google`, `packages/modules/providers/auth-oidc`, `packages/modules/providers/caching-redis`, `packages/modules/providers/file-local`, `packages/modules/providers/file-s3`, `packages/modules/providers/fulfillment-manual`, `packages/modules/providers/locking-postgres`, `packages/modules/providers/locking-redis`, `packages/modules/providers/notification-local`, `packages/modules/providers/notification-sendgrid`, `packages/modules/providers/payment-stripe`, `packages/modules/providers/search-postgres`, `packages/modules/rbac`, `packages/modules/region`, `packages/modules/sales-channel`, `packages/modules/search`, `packages/modules/settings`, `packages/modules/stock-location`, `packages/modules/store`, `packages/modules/tax`, `packages/modules/translation`, `packages/modules/user`, `packages/modules/workflow-engine-inmemory`, `packages/modules/workflow-engine-redis`, `packages/plugins/draft-order` |
+| source files counted | 6650 |
+| extent counted over | `packages/medusa` plus 72 declared package(s): `packages/admin/admin-bundler`, `packages/admin/admin-sdk`, `packages/admin/admin-shared`, `packages/admin/admin-vite-plugin`, `packages/admin/dashboard`, `packages/cli/medusa-cli`, `packages/core/core-flows`, `packages/core/framework`, `packages/core/js-sdk`, `packages/core/modules-sdk`, `packages/core/orchestration`, `packages/core/query`, `packages/core/types`, `packages/core/utils`, `packages/core/workflows-sdk`, `packages/deps`, `packages/design-system/icons`, `packages/design-system/ui`, `packages/medusa-telemetry`, `packages/medusa-test-utils`, `packages/modules/analytics`, `packages/modules/api-key`, `packages/modules/auth`, `packages/modules/cache-inmemory`, `packages/modules/cache-redis`, `packages/modules/caching`, `packages/modules/cart`, `packages/modules/currency`, `packages/modules/customer`, `packages/modules/event-bus-local`, `packages/modules/event-bus-redis`, `packages/modules/file`, `packages/modules/fulfillment`, `packages/modules/index`, `packages/modules/inventory`, `packages/modules/link-modules`, `packages/modules/locking`, `packages/modules/notification`, `packages/modules/order`, `packages/modules/payment`, `packages/modules/pricing`, `packages/modules/product`, `packages/modules/promotion`, `packages/modules/providers/analytics-local`, `packages/modules/providers/analytics-posthog`, `packages/modules/providers/auth-emailpass`, `packages/modules/providers/auth-github`, `packages/modules/providers/auth-google`, `packages/modules/providers/auth-oidc`, `packages/modules/providers/caching-redis`, `packages/modules/providers/file-local`, `packages/modules/providers/file-s3`, `packages/modules/providers/fulfillment-manual`, `packages/modules/providers/locking-postgres`, `packages/modules/providers/locking-redis`, `packages/modules/providers/notification-local`, `packages/modules/providers/notification-sendgrid`, `packages/modules/providers/payment-stripe`, `packages/modules/providers/search-postgres`, `packages/modules/rbac`, `packages/modules/region`, `packages/modules/sales-channel`, `packages/modules/search`, `packages/modules/settings`, `packages/modules/stock-location`, `packages/modules/store`, `packages/modules/tax`, `packages/modules/translation`, `packages/modules/user`, `packages/modules/workflow-engine-inmemory`, `packages/modules/workflow-engine-redis`, `packages/plugins/draft-order` |
 | flowatlas | 0.4.1 |
 
 ## Outcome
@@ -26,7 +26,7 @@ build **exit 0**, doctor exit 0, link exit 0
 
 | kind | entry points |
 |---|---|
-| http | 487 |
+| http | 490 |
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
 handlers, which is what the counting rule counts, because two declarations may
@@ -41,10 +41,10 @@ addressed that way reads zero here before R125 and its true number after.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| addresses placed | 487 |  |
+| addresses placed | 490 |  |
 | addresses claimed by more than one declaration | 0 | two handlers of one application; one of them is dead code |
 | addresses told apart only by their application | 0 | each was overwritten before R119, silently and with no total moving |
-| declarations with a body attached | 487 | 487 of 491 |
+| declarations with a body attached | 488 | 488 of 491 |
 | …whose body reaches anything | 155 | 155 of 491 |
 | …behind middleware or a guard | 484 | 484 of 491 |
 
@@ -58,7 +58,7 @@ is not a diff.
 | `/auth` | 20 |
 | `/store` | 54 |
 
-3 more at 2 segment(s) of fewer than five addresses each, folded together so that a repository serving two hundred addresses at the top level does not write two hundred rows.
+6 more at 5 segment(s) of fewer than five addresses each, folded together so that a repository serving two hundred addresses at the top level does not write two hundred rows.
 
 ## What joined
 
@@ -81,36 +81,25 @@ is not a diff.
 
 ## What it could not read
 
-3035 places somebody could act on, 7031 the tool
+3074 places somebody could act on, 6959 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| call-dynamic-receiver | info | 6927 |  |
-| db-layer-unread | action | 2 |  |
+| call-dynamic-receiver | info | 6850 |  |
+| db-layer-unread | action | 4 |  |
 | db-receiver-name-only | action | 50 |  |
 | dynamic-config-key | action | 9 |  |
 | dynamic-http-url | action | 5 |  |
-| entry-http-types-unmatched | info | 1 |  |
 | type-depth-exceeded | info | 26 |  |
-| type-generic-uninstantiated | info | 77 |  |
-| type-unresolved | action | 2969 |  |
+| type-generic-uninstantiated | info | 83 |  |
+| type-unresolved | action | 3006 |  |
 
 ## Files with sites and no output
 
 None beyond what is baselined. Every other file the counting rule found a
 declaration site in yielded a node of that family, or a row naming the file.
-
-3 file(s) did go unread, and every one of them is red this gate
-already knew about, enumerated in `BASELINE` in `read-gate.mjs` with the ticket
-it belongs to. They are counted rather than silenced: one file more than this, or
-one fewer, fails the run.
-
-| family | files | ticket |
-|---|---|---|
-| data | 1 | R137 |
-| routes | 2 | R137 |
 
 ### What this gate cannot see
 

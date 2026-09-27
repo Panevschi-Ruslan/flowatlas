@@ -9,8 +9,8 @@ NestJS at scale, Kysely, an in-house bus.
 | commit | `f8f4051a24fffa49accb96bd4f107f8b8d5915e9` |
 | read | `server` |
 | read by | immich (`nestjs`) |
-| source files counted | 464 |
-| extent counted over | `server` plus 2 declared package(s): `packages/plugin-sdk`, `packages/sdk` |
+| source files counted | 461 |
+| extent counted over | `server` plus 1 declared package(s): `packages/plugin-sdk` |
 | flowatlas | 0.4.1 |
 
 ## Outcome
@@ -87,8 +87,8 @@ was never an edge to draw. The three are never added together.
 |---|---|---|---|
 | call-dynamic-receiver | info | 38 |  |
 | call-module-ref | action | 5 |  |
-| channel-const-unresolved | action | 5 |  |
-| channel-dynamic | action | 2 |  |
+| channel-const-unresolved | action | 1 |  |
+| channel-dynamic | action | 6 |  |
 | consumer-handler-unresolved | action | 3 |  |
 | db-layer-unread | action | 21 |  |
 | db-receiver-name-only | action | 1141 |  |
@@ -165,7 +165,7 @@ repository's manifests instead of asking the tool for it.
 
 ## Cost
 
-Wall clock 5 to 15 s, peak resident memory 1 to 2 GB.
+Wall clock 15 to 60 s, peak resident memory 1 to 2 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.

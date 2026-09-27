@@ -26,7 +26,7 @@ build **exit 0**, doctor exit 0, link exit 0
 
 | kind | entry points |
 |---|---|
-| none | 0 |
+| http | 358 |
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
 handlers, which is what the counting rule counts, because two declarations may
@@ -41,24 +41,32 @@ addressed that way reads zero here before R125 and its true number after.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| addresses placed | 0 |  |
+| addresses placed | 358 |  |
 | addresses claimed by more than one declaration | 0 | two handlers of one application; one of them is dead code |
 | addresses told apart only by their application | 0 | each was overwritten before R119, silently and with no total moving |
-| declarations with a body attached | 0 | 0 of 343 |
-| …whose body reaches anything | 0 | 0 of 343 |
-| …behind middleware or a guard | 0 | 0 of 343 |
+| declarations with a body attached | 350 | 350 against 343: **more found than the rule can see, so this is not a fraction** |
+| …whose body reaches anything | 308 | 308 of 343 |
+| …behind middleware or a guard | 350 | 350 against 343: **more found than the rule can see, so this is not a fraction** |
 
 Where those addresses are. One row per leading segment, which is enough of an
 address for a dropped global prefix to show and little enough that a new route
 is not a diff.
 
-No addresses.
+| first segment | addresses |
+|---|---|
+| `/accounts?` | 7 |
+| `/api` | 294 |
+| `/plugins` | 5 |
+| `/video-channels` | 8 |
+| `/videos` | 14 |
+
+30 more at 16 segment(s) of fewer than five addresses each, folded together so that a repository serving two hundred addresses at the top level does not write two hundred rows.
 
 ## What joined
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 0 | 0 |
+| requests from a browser | 16 | 1 |
 | requests between services | 0 | 0 |
 | channels | 0 | 0 with both ends |
 
@@ -75,50 +83,32 @@ No addresses.
 
 ## What it could not read
 
-1332 places somebody could act on, 2931 the tool
+1531 places somebody could act on, 4390 the tool
 reports as a limit of static reading, and 269 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| call-dynamic-receiver | info | 2417 |  |
+| api-method-dynamic | action | 1 |  |
+| api-path-dynamic | action | 15 |  |
+| call-dynamic-receiver | info | 3869 |  |
 | db-layer-unread | action | 2 |  |
 | dynamic-config-key | action | 1 |  |
-| entry-http-types-unmatched | info | 1 |  |
 | handler-not-a-method | nothing | 269 |  |
 | inject-token-unresolved | info | 284 |  |
+| route-handler-anonymous | info | 8 |  |
 | route-link-dynamic | info | 35 |  |
+| route-path-dynamic | action | 3 |  |
 | route-screen-unread | info | 10 |  |
 | route-target-unresolved | action | 31 |  |
 | type-depth-exceeded | info | 54 |  |
 | type-generic-uninstantiated | info | 130 |  |
-| type-unresolved | action | 1298 |  |
+| type-unresolved | action | 1478 |  |
 
 ## Files with sites and no output
 
-**82 file(s)** the counting rule found sites in yielded neither
-a node of that family nor any row naming them, and no baseline entry accounts for
-them. That is a reader giving up in silence, which is the class this gate exists
-for; a limit somebody has decided to accept belongs in the exemption list with a
-sentence beside it, and a limit somebody has decided to live with belongs in the
-baseline with a count and a ticket.
-
-| file | family | sites |
-|---|---|---|
-| `server/core/controllers/activitypub/client.ts` | routes | 27 |
-| `server/core/controllers/activitypub/inbox.ts` | routes | 3 |
-| `server/core/controllers/activitypub/outbox.ts` | routes | 2 |
-| `server/core/controllers/api/abuse.ts` | routes | 7 |
-| `server/core/controllers/api/accounts.ts` | routes | 8 |
-| `server/core/controllers/api/automatic-tags.ts` | routes | 6 |
-| `server/core/controllers/api/blocklist.ts` | routes | 1 |
-| `server/core/controllers/api/bulk.ts` | routes | 1 |
-| `server/core/controllers/api/client-config.ts` | routes | 1 |
-| `server/core/controllers/api/config.ts` | routes | 11 |
-| `server/core/controllers/api/custom-page.ts` | routes | 2 |
-| `server/core/controllers/api/jobs.ts` | routes | 4 |
-
-and 70 more.
+None beyond what is baselined. Every other file the counting rule found a
+declaration site in yielded a node of that family, or a row naming the file.
 
 ### What this gate cannot see
 
