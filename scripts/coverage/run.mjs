@@ -592,7 +592,7 @@ const measure = async (target, cloneDir, state, log, timeoutMs) => {
  * is a service the harness did not configure, and a node of one is not evidence
  * about a file the rule counted.
  */
-const gate = (target, services, perFile, graph) => {
+const gate = (target, state, services, perFile, graph) => {
   if (graph === undefined) return undefined;
   const byService = new Map(services.map((service) => [service.name, service.repo]));
   const toPath = (file, repo) => {
@@ -601,7 +601,39 @@ const gate = (target, services, perFile, graph) => {
     // Only the graph's own separator and `..` need normalising; `join` does both.
     return join(from, file).split('\\').join('/');
   };
-  return readGate({ where: target.name, perFile, graph, toPath });
+  // The state goes in because the baseline is keyed on it: outline is 45 files
+  // unread on a fresh clone and none with its dependencies installed, and one
+  // number covering both would be stale in whichever of the two it was not
+  // measured in (R124).
+  return readGate({ where: target.name, state, perFile, graph, toPath });
+};
+
+/**
+ * Why a gate result fails a run, in one clause, or nothing when it does not.
+ *
+ * One function rather than the same three conditions at both call sites, because
+ * `--render` and a fresh measurement disagreeing about what counts as a failure
+ * is precisely the kind of drift this harness exists to make visible in other
+ * people's code.
+ *
+ * Three failures, in the order a reader wants them. Files nobody has an excuse
+ * for first: that is the new red R124 is about. Then a baseline whose count no
+ * longer matches, in either direction. Then an exemption nobody has re-read. The
+ * known red is not here at all - it is written in the report, named with the
+ * ticket it belongs to, and it is the whole reason the first clause can be
+ * trusted.
+ */
+const whyGateFails = (result) => {
+  if (result === undefined) return undefined;
+  const said = [];
+  if (result.missing.length > 0) said.push(`${result.missing.length} file(s) with sites and no output`);
+  for (const row of result.drift) {
+    said.push(
+      `the baseline for ${row.path} (${row.family}) says ${row.files} and the run found ${row.found}`,
+    );
+  }
+  if (result.stale.length > 0) said.push(`${result.stale.length} exemption(s) no longer needed`);
+  return said.length === 0 ? undefined : said.join('; ');
 };
 
 // ------------------------------------------------------------------ command
@@ -647,11 +679,12 @@ const render = async (chosen) => {
       const result = {
         ...measured,
         truth,
-        gate: gate(target, measured.services ?? [], perFile, graph),
+        gate: gate(target, state, measured.services ?? [], perFile, graph),
       };
       console.log(`[${target.name}] re-rendered ${relative(ROOT, publish(target, state, workspace, result))}`);
-      if (result.gate !== undefined && result.gate.missing.length > 0) {
-        console.error(`[${target.name}] read gate: ${result.gate.missing.length} file(s) with sites and no output`);
+      const why = whyGateFails(result.gate);
+      if (why !== undefined) {
+        console.error(`[${target.name}] read gate: ${why}`);
         process.exitCode = 1;
       }
     }
@@ -863,10 +896,18 @@ const main = async () => {
         log,
         options.timeoutMs,
       );
-      const checked = gate(target, measured.services, perFile, graph);
-      if (checked !== undefined && checked.missing.length > 0) {
-        log(`read gate: ${checked.missing.length} file(s) with sites and no output`);
-        gateFailures.push(`${target.name}: ${checked.missing.length} (see the report)`);
+      const checked = gate(target, state, measured.services, perFile, graph);
+      const why = whyGateFails(checked);
+      if (why !== undefined) {
+        log(`read gate: ${why}`);
+        gateFailures.push(`${target.name} (${state}): ${why}`);
+      } else if (checked !== undefined && checked.known.length > 0) {
+        // A target passing *against its baseline* says so out loud, because the
+        // number it is passing with is not zero and a reader who saw only "ok"
+        // would be told less than the report holds.
+        log(
+          `read gate ok against its baseline: ${checked.known.length} known file(s) still unread, ${checked.blind} kind(s) of failure it cannot see`,
+        );
       }
       const result = { target, state, version, truth, installs, ...measured, gate: checked };
       log(`wrote ${relative(ROOT, publish(target, state, workspace, result))}`);

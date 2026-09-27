@@ -2,6 +2,12 @@
 
 Koa + React + socket.io + Sequelize in one repository.
 
+A fresh clone is a partial read by construction: nothing a package declares
+is resolved, so every figure below is a floor for this tool rather than a
+measurement of it. What it still reads is what the repository’s own source
+states. Installing would recover what a package *declares* - never what a
+package *generates*, which `--ignore-scripts` leaves out of both states here.
+
 |  |  |
 |---|---|
 | repository | `outline/outline` |
@@ -24,12 +30,18 @@ build **exit 0**, doctor exit 0, link exit 0
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
 handlers, which is what the counting rule counts, because two declarations may
-land on one address.
+land on one address. An address is an address within one application: a service
+that creates two of them has two address spaces, and the third row counts the
+addresses that exist only because the id says which application serves them —
+every one of which used to be overwritten by the first claim on it. It counts
+nothing for a repository whose applications are told apart by where they sit in
+the tree instead, which is how the file-system routers address theirs.
 
 |  | count | of what the counting rule found |
 |---|---|---|
 | addresses placed | 0 |  |
-| addresses claimed by more than one declaration | 0 | a collision, or one service holding two applications |
+| addresses claimed by more than one declaration | 0 | two handlers of one application; one of them is dead code |
+| addresses told apart only by their application | 0 | each was overwritten before R119, silently and with no total moving |
 | declarations with a body attached | 0 | 0 of 266 |
 | …whose body reaches anything | 0 | 0 of 266 |
 | …behind middleware or a guard | 0 | 0 of 266 |
@@ -52,16 +64,16 @@ No addresses.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 0 | nothing of this kind here |
-| …that name a table | 0 | nothing of this kind here |
-| tables | 0 | 0 of 103 |
+| query sites read | 427 | no denominator: the rule has no probe for it |
+| …that name a table | 425 | 425 of 427 |
+| tables | 33 | 33 of 103 |
 | components | 644 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
 | every other binding a template makes | 777 | not counted by the rule |
 
 ## What it could not read
 
-807 places somebody could act on, 3457 the tool
+806 places somebody could act on, 3457 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
@@ -69,10 +81,11 @@ was never an edge to draw. The three are never added together.
 |---|---|---|---|
 | api-path-dynamic | action | 4 |  |
 | call-dynamic-receiver | info | 2716 |  |
-| db-layer-unread | action | 7 |  |
-| db-receiver-name-only | action | 13 |  |
+| db-layer-unread | action | 6 |  |
+| db-receiver-name-only | action | 11 |  |
 | dynamic-config-key | action | 2 |  |
 | dynamic-http-url | action | 24 |  |
+| dynamic-table-name | action | 2 |  |
 | entry-http-types-unmatched | info | 1 |  |
 | target-route-not-found | action | 26 |  |
 | type-depth-exceeded | info | 571 |  |
@@ -82,27 +95,40 @@ was never an edge to draw. The three are never added together.
 
 ## Files with sites and no output
 
-**46 file(s)** the counting rule found sites in yielded neither
-a node of that family nor any row naming them. That is a reader giving up in
-silence, which is the class this gate exists for; a limit somebody has decided to
-accept belongs in the exemption list with a sentence beside it.
+None beyond what is baselined. Every other file the counting rule found a
+declaration site in yielded a node of that family, or a row naming the file.
 
-| file | family | sites |
+45 file(s) did go unread, and every one of them is red this gate
+already knew about, enumerated in `BASELINE` in `read-gate.mjs` with the ticket
+it belongs to. They are counted rather than silenced: one file more than this, or
+one fewer, fails the run.
+
+| family | files | ticket |
 |---|---|---|
-| `(anywhere)` | models | 103 |
-| `plugins/discord/server/auth/discord.ts` | routes | 2 |
-| `plugins/figma/server/api/figma.ts` | routes | 1 |
-| `plugins/github/server/api/github.ts` | routes | 2 |
-| `plugins/gitlab/server/api/gitlab.ts` | routes | 3 |
-| `plugins/google/server/auth/google.ts` | routes | 2 |
-| `plugins/linear/server/api/linear.ts` | routes | 1 |
-| `plugins/notion/server/api/notion.ts` | routes | 1 |
-| `plugins/passkeys/server/api/passkeys.ts` | routes | 3 |
-| `plugins/passkeys/server/auth/passkeys.ts` | routes | 5 |
-| `plugins/slack/server/auth/slack.ts` | routes | 3 |
-| `plugins/webhooks/server/api/webhookSubscriptions.ts` | routes | 4 |
+| routes | 45 | R121 |
 
-and 34 more.
+### What this gate cannot see
+
+Whatever the result above says, 4 kinds of failure get through this
+assertion, and each was established by breaking something on purpose rather than
+by argument. The list is `BLIND` in `read-gate.mjs`; this section renders it,
+so that neither half of the result can travel without the other.
+
+**R117 - A family this target writes in a style the counting rule has no probe for.**
+
+A query count fell from 77 to 0 on one target and this gate could not have caught it: the rule has no probe for that repository’s query style, so the denominator was 0 and the per-file assertion had nothing to assert over. A vacuous check passes by saying nothing and reads exactly like a check that looked. The instrument for that is the report’s own wording - "no denominator: the rule has no probe for it" rather than "nothing of this kind here" - and not this gate.
+
+**R119 - Two applications colliding, where the file that loses is named by an edge.**
+
+A graph was broken on purpose - two applications collided and one controller’s file contributed nothing - and the gate answered `read gate ok`. The mechanism is structural rather than a tuning problem: the surviving entry takes a `handles` edge to *each* controller’s method, an edge recorded at a site counts as the reader having read that line, so `spokenFor` contains the losing file and the gate skips it. Strength 2 asks whether anything was said about a file; a collision is two files having the same thing said about them. R119 needed a snapshot fixture for exactly this reason.
+
+**R110 - A wrong value.**
+
+A mount read at the wrong address produces a node, in the right file, for the right family, and every count matches. Only a reader that can read the mount can know the address is wrong, so this is a fix and not a gate.
+
+**R111 - A file where one of three verbs was dropped (strength 3, deliberately not done).**
+
+Strength 3 would compare sites found against nodes plus rows per file. It needs a probe-to-adapter mapping, and the counting rule’s whole authority rests on having no per-target judgement in it; that mapping is new judgement in exactly that file, and somewhere a future change could be tuned to pass rather than fixed. Recorded as not done rather than left to be rediscovered.
 
 ## The denominators
 
@@ -137,7 +163,7 @@ repository's manifests instead of asking the tool for it.
 
 ## Cost
 
-Wall clock 15 to 60 s, peak resident memory 1 to 2 GB.
+Wall clock 15 to 60 s, peak resident memory 0.5 to 1 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.
