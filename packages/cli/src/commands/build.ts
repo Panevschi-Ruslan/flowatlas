@@ -23,6 +23,7 @@ import {
 import { findTsconfig, listRepoSources } from '@flowatlas/extractor-nestjs';
 import { linkGraphs, writeGraphDb, type LinkResult, type ServiceReport } from '@flowatlas/linker';
 import type { Command } from 'commander';
+import { partialReadNotice } from '../partial-read.js';
 import {
   cachePathFor,
   emptyCache,
@@ -151,6 +152,15 @@ export interface BuildResult extends LinkResult {
   /** Services that were read and put nothing in the graph, with why. */
   readNothing: readonly ReadNothing[];
   plan: RebuildPlan;
+  /**
+   * Where each service's repository is, absolute.
+   *
+   * Carried because the summary has one question that only a path can answer -
+   * has anybody installed this repository (R129) - and because the alternative
+   * was to re-derive it from the output directory, which is a guess at an inverse
+   * the configuration never promised.
+   */
+  repoDirs: Readonly<Record<string, string>>;
   timing: BuildTiming;
   /** Why the cache was thrown away, when it was. */
   cacheProblem?: CacheProblem;
@@ -886,6 +896,9 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
     wrote: !keeping,
     readNothing: silent,
     plan,
+    repoDirs: Object.fromEntries(
+      loaded.config.services.map((service) => [service.name, loaded.repoDir(service)]),
+    ),
     timing: {
       hash: hashed - startedAt,
       extract: extractedAt - hashed,
@@ -992,11 +1005,32 @@ export const summariseBuild = (result: BuildResult): string[] => {
     const where = row.service ?? '';
     unread.set(where, (unread.get(where) ?? 0) + (row.sites ?? 1));
   }
+  /**
+   * The one sentence, once (R129).
+   *
+   * The line below names the repositories and counts their sites, which is the
+   * residue R122 made worth naming. What it used to do as well was give advice -
+   * "install the dependencies of those repositories" - to every reader, including
+   * the one whose dependencies *are* installed and whose types are unresolved
+   * because something generates them. The advice now lives in the notice, which
+   * is `undefined` unless some repository here has no `node_modules` at all, so a
+   * reader is only told to install what has not been installed.
+   *
+   * A row with no service on it is left out rather than guessed at: there is
+   * nowhere on disk to ask about, and the whole point of the notice is that the
+   * state was established.
+   */
+  const partial = partialReadNotice(
+    [...unread.keys()]
+      .filter((name) => result.repoDirs[name] !== undefined)
+      .map((name) => ({ name, dir: result.repoDirs[name] ?? '' })),
+    [...unread.values()].reduce((total, sites) => total + sites, 0),
+  );
   if (unread.size > 0) {
     const named = [...unread.entries()].map(([name, count]) => `${name} (${count})`).join(', ');
     lines.push(
       `imports the checker could not resolve: ${named}` +
-        ' — install the dependencies of those repositories, or fix their tsconfig paths;' +
+        (partial === undefined ? ' — check their tsconfig paths;' : ';') +
         ' what a missing type was going to say is missing from this graph',
     );
   }
@@ -1088,6 +1122,9 @@ export const summariseBuild = (result: BuildResult): string[] => {
   // Rows and places differ wherever a reason was folded, and both are worth
   // saying: one is how long the list is, the other is what it covers.
   lines.push(unresolvedLine(result.project.unresolved, report.totals.unresolved));
+  // Beside that count, last, and never per row: it is the one thing a thousand
+  // rows already imply, and it is the line the eye lands on when a build ends.
+  if (partial !== undefined) lines.push(partial);
   return lines;
 };
 

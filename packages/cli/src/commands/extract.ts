@@ -30,6 +30,7 @@ import {
   type ExtractRepoOptions,
 } from '@flowatlas/extractor-nestjs';
 import type { Command } from 'commander';
+import { partialReadNotice } from '../partial-read.js';
 import {
   emptyCache,
   hashConfig,
@@ -167,9 +168,26 @@ const asLines = (title: string, counts: Record<string, number>): string[] => {
   return [`${title}: ${entries.map(([name, n]) => `${name} ${n}`).join(', ')}`];
 };
 
-/** What was found, so a run is readable without opening the file. */
-export const summarise = (graph: RepoGraph, outPath: string): string[] => {
+/** Sites in one repository's graph whose type the checker could not resolve. */
+const unresolvedTypes = (graph: RepoGraph): number =>
+  graph.unresolved
+    .filter((row) => row.reason === 'type-unresolved')
+    .reduce((total, row) => total + (row.sites ?? 1), 0);
+
+/**
+ * What was found, so a run is readable without opening the file.
+ *
+ * `rootDir` is optional and is only ever used to answer one question: has
+ * anybody installed this repository's dependencies. Without it the summary is
+ * what it always was; with it, a read that was partial says so once, in a
+ * sentence, beside the count of rows that imply it (R129).
+ */
+export const summarise = (graph: RepoGraph, outPath: string, rootDir?: string): string[] => {
   const count = (type: string): number => graph.nodes.filter((node) => node.type === type).length;
+  const partial =
+    rootDir === undefined
+      ? undefined
+      : partialReadNotice([{ name: graph.repo, dir: rootDir }], unresolvedTypes(graph));
   return [
   `repo ${graph.repo}`,
   ...asLines('nodes', countBy(graph.nodes, (node) => node.type)),
@@ -187,6 +205,10 @@ export const summarise = (graph: RepoGraph, outPath: string): string[] => {
   // The rows that say something was not read, which is what `build` counts and
   // what the cache compares against. A place where nothing joins is neither.
   `unresolved: ${missed(graph)}${missed(graph) > 0 ? ` (see ${outPath}#unresolved)` : ''}`,
+  // Beside that count and never per row, because it is what the rows already
+  // imply and nobody reads a thousand of them to infer it. Last, so it is the
+  // line the eye lands on when the command finishes.
+  ...(partial === undefined ? [] : [partial]),
   ];
 };
 
@@ -336,7 +358,7 @@ export const registerExtract = (program: Command): void => {
         process.stdout.write(`${JSON.stringify({ out: outPath, ...counts(graph) }, null, 2)}\n`);
         return;
       }
-      process.stderr.write(`${summarise(graph, outPath).join('\n')}\n`);
+      process.stderr.write(`${summarise(graph, outPath, resolve(repoPath)).join('\n')}\n`);
       process.stdout.write(`${outPath}\n`);
     });
 };

@@ -6,7 +6,9 @@
  * "this annotation is a lie" is on the line the annotation is written. All
  * three are the same report; none of them decides anything.
  */
+import { resolve } from 'node:path';
 import type { ContractFinding } from '@flowatlas/contracts';
+import { partialReadNotice } from '../partial-read.js';
 import { moreRows, renderTable, section } from '../format/table.js';
 import type { MarkerIssue } from './markers.js';
 import type { DoctorReport } from './schema.js';
@@ -245,9 +247,47 @@ const baselineSection = (report: DoctorReport): string[] => {
   return lines;
 };
 
+/**
+ * Types this run could not resolve, from the folded report (R129).
+ *
+ * The group is the only place the count survives folding, and it is the count of
+ * *sites* rather than of rows, because a row here may stand for four hundred
+ * places and the number worth saying is how much of the source went unread.
+ */
+const unresolvedTypes = (report: DoctorReport): number =>
+  report.unresolved.status === 'skipped'
+    ? 0
+    : (report.unresolved.byReason.find((group) => group.reason === 'type-unresolved')?.sites ?? 0);
+
+/**
+ * The one sentence, at the head of the report (R129).
+ *
+ * At the head rather than beside the rows, and once rather than per row, because
+ * hundreds of `type-unresolved` rows already imply it and a reader either infers
+ * a partial read from them or does not. By the time somebody reaches the rows
+ * they have already read the summary line as a measurement.
+ *
+ * `rootDir` is what makes it possible to answer honestly: `repoDirs` is spelled
+ * relative to the project so a row can be printed as a path somebody can open,
+ * and resolving it is the difference between establishing that nothing is
+ * installed and assuming it. Without a root, nothing is claimed.
+ */
+const partialReadHead = (
+  report: DoctorReport,
+  repoDirs: ReadonlyMap<string, string>,
+  rootDir: string | undefined,
+): string[] => {
+  if (rootDir === undefined || repoDirs.size === 0) return [];
+  const notice = partialReadNotice(
+    [...repoDirs.entries()].map(([name, dir]) => ({ name, dir: resolve(rootDir, dir) })),
+    unresolvedTypes(report),
+  );
+  return notice === undefined ? [] : [notice, ''];
+};
+
 export const renderDoctorText = (
   report: DoctorReport,
-  options: { file?: string; repoDirs?: ReadonlyMap<string, string> } = {},
+  options: { file?: string; repoDirs?: ReadonlyMap<string, string>; rootDir?: string } = {},
 ): string => {
   const blocks = [
     unresolvedSection(report, options.repoDirs ?? NO_REPOS, options.file),
@@ -264,7 +304,13 @@ export const renderDoctorText = (
         : []
       : ['verdict:', ...report.verdict.reasons.map((reason) => `  ${reason}`)];
 
-  return `${[summaryLine(report), '', ...blocks.flatMap((block) => [...block, '']), ...verdict]
+  return `${[
+    ...partialReadHead(report, options.repoDirs ?? NO_REPOS, options.rootDir),
+    summaryLine(report),
+    '',
+    ...blocks.flatMap((block) => [...block, '']),
+    ...verdict,
+  ]
     .join('\n')
     .replace(/\n+$/, '')}\n`;
 };

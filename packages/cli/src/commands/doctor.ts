@@ -419,6 +419,9 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
           : renderDoctorText(report, {
               ...(file === undefined ? {} : { file }),
               repoDirs: settings.repoDirs,
+              // Only so the head of the report can establish, rather than
+              // assume, whether a repository has ever been installed (R129).
+              ...(settings.rootDir === undefined ? {} : { rootDir: settings.rootDir }),
             });
 
     io.out(text);
