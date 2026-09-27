@@ -148,10 +148,10 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
       // is no repository under it. Putting its directory in front would spell
       // `contracts/contracts/billing.json` and send a reader to a file that is
       // not there.
-      if (service.openapi !== undefined) {
+      if (service.document !== undefined) {
         declared.push({
           service: service.name,
-          documentPath: service.openapi.replace(/\\/g, '/').replace(/^\.\//, ''),
+          documentPath: service.document.path.replace(/\\/g, '/').replace(/^\.\//, ''),
         });
         continue;
       }

@@ -13,6 +13,7 @@
  * taken at its word, and the word is labelled everywhere it is repeated.
  */
 import {
+  DECLARED_CONFIDENCE,
   SCHEMA_VERSION,
   makeEntryId,
   makeHttpEntryKey,
@@ -23,63 +24,21 @@ import {
   type RepoGraph,
   type TypeRegistry,
 } from '@flowatlas/core';
+import {
+  DECLARED_BY,
+  DocumentError,
+  shapeName,
+  type ReadDocumentOptions,
+  type ReadDocumentResult,
+} from '../document/declared.js';
+import {
+  inlineName,
+  refOf,
+  registerComponents,
+  sealHashes,
+  type ShapeContext,
+} from '../document/shapes.js';
 import { OPERATION_VERBS, openapiDocumentSchema, operationSchema, type Operation } from './document.js';
-import { inlineName, refOf, registerComponents, sealHashes, type ShapeContext } from './shapes.js';
-
-/**
- * How an edge taken from a document is marked.
- *
- * `declared` is the confidence for a fact a third party asserted about code
- * nothing here can open, which is exactly what a document is. It ranks below
- * `static` wherever two contributions of one edge meet, which is the right way
- * round — if the service is ever added as a repository, what is read wins over
- * what was declared, without anybody having to remember to. It ranks below
- * `marker` too, because an annotation is at least written by somebody who can
- * see the code, and a document is not.
- *
- * It used to borrow `marker`, which was true as far as it went — both are
- * assertions rather than proofs — and wrong in the way that matters: a reader
- * filtering on `marker` to find annotations to delete was handed a service.
- * The confidence alone still does not name the document, so every node and edge
- * produced here also carries `declaredBy`, naming the file.
- */
-const DECLARED_CONFIDENCE = 'declared';
-
-/** The key every fact from a document carries, naming the document. */
-export const DECLARED_BY = 'declaredBy';
-
-export interface ReadDocumentOptions {
-  /** Service name, which becomes the repo half of every id produced. */
-  service: string;
-  /**
-   * The document's path as a reader should see it, relative to the
-   * configuration file. It is the `file` of every node here, so `flow` and
-   * `impact` point at the document the way they point at a source file.
-   */
-  documentPath: string;
-  /** Fixed timestamp, for reproducible output. */
-  generatedAt?: string;
-}
-
-export interface ReadDocumentResult {
-  graph: RepoGraph;
-  /** How many routes the document declared, for the build's one-line summary. */
-  routes: number;
-}
-
-/**
- * Something about the document made it unusable as a whole.
- *
- * Thrown rather than reported, because a document that is not a document is a
- * configuration mistake: the alternative is a service that silently has no
- * routes, which reads exactly like a service that has none.
- */
-export class OpenapiDocumentError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'OpenapiDocumentError';
-  }
-}
 
 /**
  * A name for the operation, which is what a reader will see as the far end.
@@ -92,14 +51,6 @@ const operationName = (operation: Operation, verb: string, path: string): string
   typeof operation.operationId === 'string' && operation.operationId.trim() !== ''
     ? operation.operationId.trim()
     : `${verb} ${path}`;
-
-/** A name safe to build a registry entry out of, from a name that may be a route. */
-const shapeName = (name: string): string => {
-  const cleaned = name.replace(/[^A-Za-z0-9]+(.)?/g, (_, next: string | undefined) =>
-    next === undefined ? '' : next.toUpperCase(),
-  );
-  return cleaned === '' ? 'Anonymous' : `${cleaned.charAt(0).toUpperCase()}${cleaned.slice(1)}`;
-};
 
 /**
  * Which media type of a body or an answer this reads.
@@ -153,16 +104,16 @@ export const readOpenapiDocument = (
   options: ReadDocumentOptions,
 ): ReadDocumentResult => {
   if (raw === null || typeof raw !== 'object') {
-    throw new OpenapiDocumentError(`${options.documentPath} is not an object`);
+    throw new DocumentError(`${options.documentPath} is not an object`);
   }
   if (typeof (raw as { swagger?: unknown }).swagger === 'string') {
-    throw new OpenapiDocumentError(
+    throw new DocumentError(
       `${options.documentPath} is a Swagger 2 document; convert it to OpenAPI 3 first`,
     );
   }
   const parsed = openapiDocumentSchema.safeParse(raw);
   if (!parsed.success) {
-    throw new OpenapiDocumentError(
+    throw new DocumentError(
       `${options.documentPath} could not be read as an OpenAPI document: ${parsed.error.issues[0]?.message ?? 'unknown reason'}`,
     );
   }
@@ -244,7 +195,7 @@ export const readOpenapiDocument = (
   sealHashes(registry, declaredIn);
 
   return {
-    routes: nodes.filter((node) => node.type === 'entry').length,
+    declared: nodes.filter((node) => node.type === 'entry').length,
     graph: {
       schemaVersion: SCHEMA_VERSION,
       repo: service,

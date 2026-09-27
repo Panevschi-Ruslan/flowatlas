@@ -50,7 +50,13 @@ export type { HttpMethod, SiteLeafType } from './ids.js';
 export { ENTRY_KINDS, NODE_TYPES, isEntryKind } from './model/nodes.js';
 export type { EntryKind, GraphNode, NodeType } from './model/nodes.js';
 
-export { CONFIDENCE_LEVELS, CONFIDENCE_RANK, EDGE_TYPES, strongerConfidence } from './model/edges.js';
+export {
+  CONFIDENCE_LEVELS,
+  CONFIDENCE_RANK,
+  DECLARED_CONFIDENCE,
+  EDGE_TYPES,
+  strongerConfidence,
+} from './model/edges.js';
 export type { Confidence, EdgeType, GraphEdge } from './model/edges.js';
 
 export { TYPE_KINDS } from './model/types.js';

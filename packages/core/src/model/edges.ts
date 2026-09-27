@@ -64,6 +64,20 @@ export const CONFIDENCE_RANK: Record<Confidence, number> = {
 export const strongerConfidence = (a: Confidence, b: Confidence): Confidence =>
   CONFIDENCE_RANK[a] >= CONFIDENCE_RANK[b] ? a : b;
 
+/**
+ * The level a fact taken from a document carries, named once.
+ *
+ * Every reader of a document emits this, the join weakens to it, and the tests
+ * that model such a graph build it from here. It is a constant rather than a
+ * literal repeated at each of those places because the word has already changed
+ * once — it used to be `marker`, and one test went on modelling a graph the
+ * readers had stopped producing, passing the whole time because the comparison
+ * never looks at a confidence (R116). Two places holding one fact agree on the
+ * day they are written and drift on the day one is touched; this is the one
+ * place.
+ */
+export const DECLARED_CONFIDENCE: Confidence = 'declared';
+
 export interface GraphEdge {
   from: string;
   to: string;

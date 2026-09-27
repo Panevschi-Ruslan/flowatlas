@@ -75,8 +75,19 @@ const binPath = (): string => ownBin(import.meta.url);
  * not the name of a framework, because none was involved. A document was read,
  * completely, and saying so is what keeps a declared service out of the list of
  * repositories the tool could not handle.
+ *
+ * Named after the format, because which document was believed is the fact a
+ * reader of the report is owed and `document` alone would not say it. The suffix
+ * is what the summary below recognises, so a kind added to the reader lookup
+ * needs nothing here.
  */
-const DECLARED_EXTRACTOR = 'openapi-document';
+const DECLARED_SUFFIX = '-document';
+
+const declaredExtractor = (kind: string): string => `${kind}${DECLARED_SUFFIX}`;
+
+/** True for a service that was read out of a document, whatever format it was. */
+const wasDeclared = (extractor: string | null): boolean =>
+  extractor !== null && extractor.endsWith(DECLARED_SUFFIX);
 
 /** Where a repository's own graph lives, whoever wrote it. */
 export const serviceGraphPath = (repoDir: string): string =>
@@ -487,7 +498,7 @@ interface ExtractOneOptions {
  */
 const extractDeclared = async (options: ExtractOneOptions): Promise<Extracted> => {
   const { service } = options;
-  const base = emptyReport(service, DECLARED_EXTRACTOR);
+  const base = emptyReport(service, declaredExtractor((service.document as { kind: string }).kind));
   const started = Date.now();
   try {
     const { graph, documentPath } = await readDeclaredService({
@@ -1067,7 +1078,7 @@ export const summariseBuild = (result: BuildResult): string[] => {
    * service is the one part of the graph that was believed rather than checked
    * and the number of them is the size of what a reader is taking on trust.
    */
-  const declared = report.services.filter((service) => service.extractor === DECLARED_EXTRACTOR);
+  const declared = report.services.filter((service) => wasDeclared(service.extractor));
   if (declared.length > 0) {
     lines.push(
       `declared from a document: ${declared.map((service) => `${service.name} (${service.repo})`).join(', ')}` +

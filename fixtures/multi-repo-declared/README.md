@@ -52,7 +52,7 @@ caller's declared return type is about the success path, and comparing it
 against a failure body would report drift on every route that documents its
 failures well.
 
-**Every edge touching the declared end is `marker`, including the joins.** Not
+**Every edge touching the declared end is `declared`, including the joins.** Not
 only the four `handles` edges the document produced, but the three `http_calls`
 edges the linker draws *into* those routes. A join edge is the claim that this
 call reaches that route: the caller's half really was read, and the route's half
@@ -61,6 +61,12 @@ weakest of its two ends. This is the confidence a person actually meets, because
 `impact` and `flow` walk these edges. It was `static` for one commit, which is
 why `packages/linker/src/openapi/join.test.ts` runs the real join over this
 fixture rather than over a graph written by hand.
+
+`declared` rather than `marker`: the word changed in R77, because an annotation
+is written by somebody who can see the code and a document is not, and a reader
+filtering on `marker` to find annotations to delete should not be handed a
+service. This paragraph said `marker` for as long as the snapshot below said
+`declared` (R116) - the same drift in prose that R116 found in a test.
 
 ## What is snapshotted here
 
