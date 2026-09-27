@@ -9,13 +9,16 @@ import {
   DEFAULT_OUTPUT,
   FlowatlasError,
   loadConfig,
+  allDependencies,
   parseRepoGraph,
   readPackageJson,
   readResolvedPackageJson,
+  serviceSourceDirs,
   sitesIn,
   wasMissed,
   SCHEMA_VERSION,
   type FlowatlasConfig,
+  type PackageJson,
   type RepoGraph,
   type ServiceConfig,
   type Unresolved,
@@ -152,6 +155,8 @@ export interface BuildResult extends LinkResult {
   wrote: boolean;
   /** Services that were read and put nothing in the graph, with why. */
   readNothing: readonly ReadNothing[];
+  /** Adapters each service has only through a workspace member it reaches. */
+  armsLength: readonly ArmsLength[];
   plan: RebuildPlan;
   /**
    * Where each service's repository is, absolute.
@@ -416,6 +421,64 @@ const readNothingRow = (found: ReadNothing): Unresolved => ({
     ' what its manifest declares, or write an adapter for the framework it is built on.',
   symbol: found.service,
 });
+
+/** One adapter a service has only because a member it depends on declares it. */
+export interface ArmsLength {
+  service: string;
+  adapter: string;
+  /** The members whose manifest alone switches it on; empty when none does alone. */
+  through: readonly string[];
+}
+
+/**
+ * Frameworks a service was found to use at arm's length (R123).
+ *
+ * Detection reads the manifests of the workspace members a service reaches,
+ * because their sources are read as part of it; that is what turns tRPC on for
+ * an application whose procedures live in a package it depends on. It also
+ * turns React on for a NestJS API whose libraries render e-mail with it, and
+ * Nest's bootstrap check on a Next.js application whose shared types import
+ * `@nestjs/common`. All three are the same rule, and the rule cannot tell a
+ * framework a service is built on from one a library it uses is built on. So
+ * the difference is said rather than decided: the adapters that switch on only
+ * sideways, and the members that switch each one on, so a reader who sees a
+ * server with components in it knows where to look.
+ */
+const armsLengthOf = (
+  config: FlowatlasConfig,
+  repoDirOf: (service: ServiceConfig) => string,
+  extracted: readonly Extracted[],
+): ArmsLength[] => {
+  const registry = createRegistry();
+  return extracted.flatMap((item) => {
+    if (item.report.extractor === null || isDeclared(item.service)) return [];
+    const repoDir = repoDirOf(item.service);
+    const narrow = readResolvedPackageJson(repoDir, { sideways: false });
+    if (narrow === undefined) return [];
+    const along = new Set(adapterNames(registry, narrow, config));
+    const found = adapterNames(registry, readResolvedPackageJson(repoDir) ?? {}, config).filter(
+      (adapter) => !along.has(adapter),
+    );
+    if (found.length === 0) return [];
+    const members = serviceSourceDirs(repoDir)
+      .slice(1)
+      .map((dir) => readPackageJson(dir))
+      .filter((pkg): pkg is PackageJson => pkg !== undefined);
+    return found.map((adapter) => ({
+      service: item.service.name,
+      adapter,
+      through: members
+        .filter((member) =>
+          adapterNames(
+            registry,
+            { ...narrow, dependencies: { ...allDependencies(member), ...allDependencies(narrow) } },
+            config,
+          ).includes(adapter),
+        )
+        .map((member) => member.name ?? '(unnamed)'),
+    }));
+  });
+};
 
 const readGraph = async (path: string): Promise<RepoGraph> =>
   parseRepoGraph(JSON.parse(await readFile(path, 'utf8')));
@@ -835,6 +898,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   const extractedAt = Date.now();
 
   const silent = readNothing(loaded.config, (service) => loaded.repoDir(service), extracted);
+  const armsLength = armsLengthOf(loaded.config, (service) => loaded.repoDir(service), extracted);
   const rowFor = new Map(silent.map((found) => [found.service, readNothingRow(found)]));
   const graphs = extracted.flatMap((item) => {
     if (item.graph === undefined) return [];
@@ -896,6 +960,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
     failed: failed(extracted),
     wrote: !keeping,
     readNothing: silent,
+    armsLength,
     plan,
     repoDirs: Object.fromEntries(
       loaded.config.services.map((service) => [service.name, loaded.repoDir(service)]),
@@ -1096,6 +1161,21 @@ export const summariseBuild = (result: BuildResult): string[] => {
       `${found.service} contributed no node: read by ${found.extractor}` +
         (found.note === undefined ? '' : `, and ${found.note}`),
     );
+  }
+  /**
+   * Frameworks found only through a member a service depends on (R123).
+   *
+   * One line per service, named with the members that switched each one on,
+   * because what an adapter finds there is found in a library's sources rather
+   * than the service's own, and that may or may not be what the service is.
+   */
+  const bySideways = new Map<string, string[]>();
+  for (const found of result.armsLength) {
+    const via = found.through.length === 0 ? '' : ` (through ${found.through.join(', ')})`;
+    bySideways.set(found.service, [...(bySideways.get(found.service) ?? []), `${found.adapter}${via}`]);
+  }
+  for (const [service, adapters] of bySideways) {
+    lines.push(`${service} found at arm's length: ${adapters.join('; ')}`);
   }
   if (!result.wrote) {
     lines.push(
