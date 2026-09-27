@@ -114,6 +114,7 @@ export {
 } from './config.js';
 export type {
   CustomBrokerConfig,
+  CustomConsumerConfig,
   CustomProducerConfig,
   CustomSubscriberConfig,
   EntryHttpConfig,
@@ -174,6 +175,8 @@ export {
 } from './origin.js';
 export type { BodyRead, Origin, ResolveOriginOptions, TypeOrigin } from './origin.js';
 export type { BrokerAdapter, CallPattern, ChannelKind } from './adapters/broker.js';
+export { locatedExpressions } from './adapters/locator.js';
+export type { IsOperation, LocatorContext, LocatorSite, NameLocator } from './adapters/locator.js';
 export type { FrontendAdapter, FrontendExtractOptions } from './adapters/frontend.js';
 
 export { ADAPTER_SLOTS, AdapterRegistry, noAdapters } from './adapters/registry.js';

@@ -1,5 +1,5 @@
-import { hasAnyDependency, type CustomBrokerConfig } from '@flowatlas/core';
-import type { BrokerSpec } from './types.js';
+import { hasAnyDependency, type CustomBrokerConfig, type NameLocator } from '@flowatlas/core';
+import type { BrokerSpec, ConsumerPattern } from './types.js';
 
 /**
  * The transports this package knows.
@@ -9,6 +9,42 @@ import type { BrokerSpec } from './types.js';
  * another transport is another record.
  */
 
+/** The ordinary address: one plain argument, written where the call is. */
+const FIRST_ARGUMENT: readonly NameLocator[] = [{ kind: 'argument', index: 0 }];
+
+/**
+ * The queue a receiver is bound to, named on whatever provided it.
+ *
+ * `queue.add('send-email', job)` says which job and not which queue: the queue is
+ * the receiver's identity, and it was named once, on the parameter that asked for
+ * it. Nothing in the call can be read and nothing is missing — the name is one
+ * indirection away.
+ */
+const QUEUE_OF_RECEIVER: readonly NameLocator[] = [
+  { kind: 'provider-decorator', decorator: 'InjectQueue', index: 0 },
+];
+
+/**
+ * The queue a worker class declares, written either way round.
+ *
+ * `@Processor('mail')` and `@Processor({ name: 'mail' })` are the same statement,
+ * and two locators in one list is how one description reads both without either
+ * shape knowing about the other.
+ *
+ * The property is asked **first**, and the order is the whole of it. A record is
+ * itself a legal address on this side of the graph — the framework's own transport
+ * matches `send({ cmd: 'sum' })` against a decorator written the same way — so the
+ * plain argument does not fail on an options object, it succeeds with the wrong
+ * answer: `@Processor({ name: 'reports' })` resolved to a channel called
+ * `{"name":"reports"}`, which reads like an answer and is one nothing else can
+ * ever write. Asking the narrower locator first is the same lesson the table
+ * locators learned from a real repository's query builder.
+ */
+const QUEUE_OF_CLASS: readonly NameLocator[] = [
+  { kind: 'argument-property', index: 0, key: 'name' },
+  { kind: 'argument', index: 0 },
+];
+
 /** Two calls every client of the framework's transport layer offers. */
 const CLIENT_PROXY_PRODUCERS = [
   { method: 'emit', channelArg: 0, payloadArg: 1, kind: 'event', receiverPackages: ['@nestjs/microservices'] },
@@ -17,8 +53,8 @@ const CLIENT_PROXY_PRODUCERS = [
 
 /** Two decorators every handler of that transport layer uses. */
 const CLIENT_PROXY_CONSUMERS = [
-  { decorator: 'EventPattern', channelFrom: 'argument' as const, argIndex: 0, kind: 'event' },
-  { decorator: 'MessagePattern', channelFrom: 'argument' as const, argIndex: 0, kind: 'rpc' },
+  { decorator: 'EventPattern', channel: FIRST_ARGUMENT, kind: 'event' },
+  { decorator: 'MessagePattern', channel: FIRST_ARGUMENT, kind: 'rpc' },
 ];
 
 const kafka: BrokerSpec = {
@@ -50,9 +86,7 @@ const rabbitmq: BrokerSpec = {
     ...CLIENT_PROXY_CONSUMERS,
     {
       decorator: 'RabbitSubscribe',
-      channelFrom: 'option',
-      argIndex: 0,
-      optionKey: 'routingKey',
+      channel: [{ kind: 'argument-property', index: 0, key: 'routingKey' }],
       kind: 'message',
     },
   ],
@@ -68,7 +102,7 @@ const bullmq: BrokerSpec = {
     {
       method: 'add',
       channelArg: -1,
-      channelFromParameterDecorator: 'InjectQueue',
+      channel: QUEUE_OF_RECEIVER,
       nameArg: 0,
       payloadArg: 1,
       kind: 'job',
@@ -77,7 +111,7 @@ const bullmq: BrokerSpec = {
     {
       method: 'addBulk',
       channelArg: -1,
-      channelFromParameterDecorator: 'InjectQueue',
+      channel: QUEUE_OF_RECEIVER,
       payloadArg: 0,
       kind: 'job',
       receiverPackages: ['bullmq', 'bull', '@nestjs/bullmq', '@nestjs/bull'],
@@ -87,16 +121,16 @@ const bullmq: BrokerSpec = {
   consumerPatterns: [
     {
       decorator: 'Process',
-      channelFrom: 'class-decorator',
       classDecorator: 'Processor',
+      channel: QUEUE_OF_CLASS,
       nameArgIndex: 0,
       kind: 'job',
     },
     // A worker class handles its queue through one method.
     {
       decorator: 'Processor',
-      channelFrom: 'class-decorator',
       classDecorator: 'Processor',
+      channel: QUEUE_OF_CLASS,
       kind: 'job',
     },
   ],
@@ -172,7 +206,7 @@ const socketio: BrokerSpec = {
   ],
   consumerDecorators: ['SubscribeMessage'],
   consumerPatterns: [
-    { decorator: 'SubscribeMessage', channelFrom: 'argument' as const, argIndex: 0, kind: 'event' },
+    { decorator: 'SubscribeMessage', channel: FIRST_ARGUMENT, kind: 'event' },
   ],
   // Receiving in a browser is a call, and the same call registers what runs.
   subscriberPatterns: [
@@ -199,6 +233,27 @@ const socketio: BrokerSpec = {
 export const brokerAdapters: readonly BrokerSpec[] = [kafka, rabbitmq, bullmq, redisPubSub, socketio];
 
 /**
+ * One described handler, from either spelling.
+ *
+ * A bare decorator name is the shorthand and reads exactly as it always did.
+ * Written out, it can say where the decorator puts the channel — which is the
+ * half of R86 the consumer side needed: a project whose handlers are marked
+ * `@OnJob({ name: … })` could describe the publish and not the handler, so its
+ * channels had one end and joined nothing.
+ */
+const consumerOf = (described: CustomBrokerConfig['consumers'][number]): ConsumerPattern =>
+  typeof described === 'string'
+    ? { decorator: described, channel: FIRST_ARGUMENT, kind: 'event' }
+    : {
+        decorator: described.decorator,
+        ...(described.classDecorator === undefined
+          ? {}
+          : { classDecorator: described.classDecorator }),
+        channel: described.channel,
+        kind: described.kind,
+      };
+
+/**
  * An adapter built from configuration, for a bus a project wrote itself.
  *
  * There is no package to detect, so the description is the detection: naming a
@@ -210,23 +265,20 @@ export const createCustomBrokerAdapter = (config: CustomBrokerConfig): BrokerSpe
   producerPatterns: config.producers.map((producer) => ({
     method: producer.method,
     channelArg: producer.channelArg,
+    ...(producer.channel === undefined ? {} : { channel: producer.channel }),
     ...(producer.payloadArg === undefined ? {} : { payloadArg: producer.payloadArg }),
     receiverType: producer.receiverType,
     kind: producer.kind,
   })),
-  consumerDecorators: [...config.consumers],
-  consumerPatterns: config.consumers.map((decorator) => ({
-    decorator,
-    channelFrom: 'argument' as const,
-    argIndex: 0,
-    kind: 'event',
-  })),
+  consumerDecorators: config.consumers.map(consumerOf).map((each) => each.decorator),
+  consumerPatterns: config.consumers.map(consumerOf),
   // A bus of one's own usually has no decorator to mark a handler: it is a call
   // that names a channel and hands over what to run. Described the same way the
   // publishing call is, by the type it is made on.
   subscriberPatterns: config.subscribers.map((subscriber) => ({
     method: subscriber.method,
     channelArg: subscriber.channelArg,
+    ...(subscriber.channel === undefined ? {} : { channel: subscriber.channel }),
     ...(subscriber.handlerArg === undefined ? {} : { handlerArg: subscriber.handlerArg }),
     receiverType: subscriber.receiverType,
     kind: subscriber.kind,

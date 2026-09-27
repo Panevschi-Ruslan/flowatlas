@@ -1,3 +1,4 @@
+import type { NameLocator } from './locator.js';
 import type { PackageJson } from './manifest.js';
 
 /** What the transport calls the thing a message is addressed to. */
@@ -7,8 +8,25 @@ export type ChannelKind = 'topic' | 'queue' | 'exchange' | 'channel';
 export interface CallPattern {
   /** Method name on the receiver, e.g. `emit`. */
   method: string;
-  /** Index of the argument holding the channel name. */
+  /**
+   * Shorthand for an address written as one plain argument: `channelArg: 0` says
+   * exactly what `channel: [{ kind: 'argument', index: 0 }]` says, and `-1` says
+   * that the address is not an argument at all and `channel` is where to look.
+   *
+   * Kept because it is how most patterns read and because a reader outside this
+   * package reads it straight off a description; `channel` is what it expands to,
+   * in one place, so the two cannot come to disagree.
+   */
   channelArg: number;
+  /**
+   * Where the address is written, tried in order, first that yields a name wins.
+   *
+   * An index alone cannot reach the two shapes a large application actually
+   * writes — the name as a property of an options object, and a receiver that
+   * *is* the channel — and a description that cannot say where a name is has no
+   * way to say it at all. Overrides `channelArg` when present.
+   */
+  channel?: readonly NameLocator[];
   /** Index of the argument holding the payload, when there is one. */
   payloadArg?: number;
   /**

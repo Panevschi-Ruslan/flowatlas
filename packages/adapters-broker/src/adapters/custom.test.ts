@@ -48,4 +48,76 @@ describe('a bus described in configuration', () => {
       busFrom({ name: 'house-bus', subscribers: [{ method: 'pSubscribe' }] }),
     ).toThrow(/receiverType/);
   });
+
+  it('carries a producer’s locators through to the pattern', () => {
+    const bus = busFrom({
+      name: 'house-jobs',
+      producers: [
+        {
+          receiverType: 'JobBus',
+          method: 'queue',
+          channel: [{ kind: 'argument-property', index: 0, key: 'name' }],
+          payloadArg: 0,
+          kind: 'job',
+        },
+      ],
+    });
+    expect(bus.producerPatterns[0]?.channel).toEqual([
+      { kind: 'argument-property', index: 0, key: 'name' },
+    ]);
+  });
+
+  // The shorthand and the list are one statement, so a description that gives
+  // neither still reads as "argument 0" and a description that gives the index
+  // reads as the locator it stands for.
+  it('leaves the locators out when a producer names its channel by index', () => {
+    const bus = busFrom({
+      name: 'house-bus',
+      producers: [{ receiverType: 'EventBus', method: 'publish', channelArg: 1 }],
+    });
+    expect(bus.producerPatterns[0]).not.toHaveProperty('channel');
+    expect(bus.producerPatterns[0]?.channelArg).toBe(1);
+  });
+
+  it('reads a consumer named as a bare decorator as the shape it always meant', () => {
+    const bus = busFrom({ name: 'house-bus', consumers: ['OnEvent'] });
+    expect(bus.consumerDecorators).toEqual(['OnEvent']);
+    expect(bus.consumerPatterns).toEqual([
+      { decorator: 'OnEvent', channel: [{ kind: 'argument', index: 0 }], kind: 'event' },
+    ]);
+  });
+
+  /**
+   * The half of R86 the receiving side needed. Before this, a project whose
+   * handlers are marked `@OnJob({ name: … })` could describe its publishers and
+   * not its handlers, so every channel it had came out with one end.
+   */
+  it('reads a consumer written out, with the channel inside an options object', () => {
+    const bus = busFrom({
+      name: 'house-jobs',
+      consumers: [
+        {
+          decorator: 'OnJob',
+          channel: [{ kind: 'argument-property', index: 0, key: 'name' }],
+          kind: 'job',
+        },
+      ],
+    });
+    expect(bus.consumerDecorators).toEqual(['OnJob']);
+    expect(bus.consumerPatterns[0]?.channel).toEqual([
+      { kind: 'argument-property', index: 0, key: 'name' },
+    ]);
+    expect(bus.consumerPatterns[0]?.kind).toBe('job');
+  });
+
+  it('refuses a locator kind nobody implements', () => {
+    expect(() =>
+      busFrom({
+        name: 'house-bus',
+        producers: [
+          { receiverType: 'EventBus', method: 'publish', channel: [{ kind: 'guesswork' }] },
+        ],
+      }),
+    ).toThrow();
+  });
 });

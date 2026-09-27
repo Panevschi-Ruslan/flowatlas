@@ -1,4 +1,5 @@
-import { declarationOf, evaluateExpression } from '@flowatlas/core';
+import { declarationOf, evaluateExpression, locatedExpressions } from '@flowatlas/core';
+import type { LocatorContext, NameLocator } from '@flowatlas/core';
 import {
   Node,
   SyntaxKind,
@@ -10,201 +11,25 @@ import {
 /**
  * Where a library keeps the name of the table, when its types do not carry it.
  *
- * `typeorm` puts the entity in a type argument and `@prisma/client` puts the
- * model in the property the call was made on, and the core reads both. The
- * libraries added in P18 do neither: a query builder is parameterised by
- * nothing a reader would recognise, and the name sits in an expression
- * somewhere in the call — an argument of this call, an argument of the next
- * call in the chain, an argument of the call the chain started from, or the
- * receiver itself.
+ * The same vocabulary the channel side uses, and deliberately the same type: a
+ * locator says where in a call a name is written, and a stored collection and a
+ * channel are written in the same places for the same reasons. Two lists of
+ * kinds that happened to agree would be one idea recorded twice, and only one of
+ * the copies would ever be brought up to date. So the kinds live in the core,
+ * where neither half of the graph owns them.
  *
- * A locator says which of those, and nothing about how to turn the expression
- * it finds into a name; that is one question for all of them and is answered
- * once below. Supporting one more library stays a record rather than a parser
- * as long as both halves stay apart.
+ * What is *not* shared is the half below: turning the expression a locator found
+ * into a name. A table is named by following the declaration that states it —
+ * a schema object, a model class, a decorator's options. A channel is named by
+ * folding a template over the closed set of values its holes can hold, and
+ * refused outright when it cannot be read. Those are different questions, and
+ * keeping them apart is what lets one mechanism serve both and keeps supporting
+ * one more library a record rather than a parser.
  */
-export type TableLocator =
-  | { kind: 'argument'; index: number }
-  | { kind: 'chain-call'; method: string; index: number }
-  | { kind: 'chain-root-argument'; index: number }
-  | { kind: 'receiver' }
-  | { kind: 'receiver-type' };
+export type TableLocator = NameLocator;
 
-/**
- * Whether a method name is one of the library's operations.
- *
- * The one thing a locator needs from the descriptor it belongs to, and the
- * reason it is asked rather than assumed: `knex('users').first()` and
- * `knex.count('*').first()` are the same shape and only the first of them
- * starts from a table. What tells them apart is that `count` is an operation
- * and `db` is not.
- */
-export type IsOperation = (method: string) => boolean;
-
-/**
- * What the locators are allowed to ask about the call they are reading.
- *
- * Two questions and no more: whether a method name is one of the library's
- * operations, and what declares the type of the thing the call was made on. The
- * second is the caller's answer rather than one worked out here, because
- * resolving a receiver's type is the core's job and it has already been done by
- * the time a call is being classified.
- */
-export interface TableContext {
-  isOperation: IsOperation;
-  /** Declaration of the receiver's type, when the core resolved one. */
-  typeDeclaration?: TsNode;
-}
-
-type LocatorResolvers = {
-  [K in TableLocator['kind']]: (
-    call: CallExpression,
-    locator: Extract<TableLocator, { kind: K }>,
-    context: TableContext,
-  ) => TsNode | undefined;
-};
-
-/**
- * The outermost expression of the chain a call belongs to.
- *
- * A chain is read from whichever of its links the operation happened to be on,
- * and the table can be on a link before or after that one, so the search starts
- * from the top and works down rather than from the call in one direction.
- */
-const chainTop = (call: CallExpression): TsNode => {
-  let top: TsNode = call;
-  for (let depth = 0; depth < 32; depth += 1) {
-    const parent = top.getParent();
-    if (parent === undefined) return top;
-    const links =
-      (Node.isPropertyAccessExpression(parent) || Node.isCallExpression(parent)) &&
-      parent.getExpression() === top;
-    if (!links) return top;
-    top = parent;
-  }
-  return top;
-};
-
-/**
- * Every call in one chain, outermost first.
- *
- * The step down is from a call or a property access to what it was made on,
- * which is what makes `a().b().c()` three calls of one chain and `a(b()).c()`
- * two chains.
- */
-const chainCalls = (call: CallExpression): CallExpression[] => {
-  const calls: CallExpression[] = [];
-  let current: TsNode = chainTop(call);
-  for (let depth = 0; depth < 32; depth += 1) {
-    if (Node.isCallExpression(current)) {
-      calls.push(current);
-      current = current.getExpression();
-      continue;
-    }
-    if (Node.isPropertyAccessExpression(current)) {
-      current = current.getExpression();
-      continue;
-    }
-    return calls;
-  }
-  return calls;
-};
-
-/**
- * The argument of the call named `method`, anywhere in this chain.
- *
- * `db.select().from(orders)` and `knex.select('id').from('users').first()` are
- * the same fact reached from two different links: in the first the operation is
- * before the `from` and in the second it is after it. Searching the whole chain
- * rather than one direction is what reads both, and it is how directus — where
- * every query is written the second way — stopped reporting the selected column
- * as the name of the table.
- */
-const chainArgument = (
-  call: CallExpression,
-  method: string,
-  index: number,
-): TsNode | undefined => {
-  for (const each of chainCalls(call)) {
-    const callee = each.getExpression();
-    if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== method) continue;
-    const argument = each.getArguments()[index];
-    if (argument !== undefined) return argument;
-  }
-  return undefined;
-};
-
-/**
- * The call a chain of method calls started from, when it started somewhere else.
- *
- * `db('orders').where({ id }).first()` names the table in the call that made
- * the builder, however many methods were chained onto it afterwards. Walking
- * down the receivers until one is not itself a call is what finds it without
- * caring which methods were in between.
- *
- * The step is "a call made on a call", not "a call made on a property": the
- * builder is as often reached through `this.db(...)` as through a bare `db`,
- * and a walk that treated `this.db` as another link of the chain walked past
- * the root and off the end of every real query.
- *
- * A root that is itself an operation is no root. `knex.count('*').first()` ends
- * its walk at the `count`, and reading that call's first argument reported the
- * counted column as a table — a name that looks like an answer and is not,
- * which is worse than saying nothing. The connection a real chain starts from
- * is invoked rather than called by name, so its callee is never an operation.
- */
-const chainRoot = (
-  call: CallExpression,
-  isOperation: IsOperation,
-): CallExpression | undefined => {
-  let current = call;
-  for (let depth = 0; depth < 16; depth += 1) {
-    const callee = current.getExpression();
-    if (!Node.isPropertyAccessExpression(callee)) break;
-    const receiver = callee.getExpression();
-    if (!Node.isCallExpression(receiver)) break;
-    current = receiver;
-  }
-  if (current === call) return undefined;
-  const callee = current.getExpression();
-  const named = Node.isPropertyAccessExpression(callee) ? callee.getName() : null;
-  return named !== null && isOperation(named) ? undefined : current;
-};
-
-const receiverOf = (call: CallExpression): TsNode | undefined => {
-  const callee = call.getExpression();
-  return Node.isPropertyAccessExpression(callee) ? callee.getExpression() : undefined;
-};
-
-const resolvers: LocatorResolvers = {
-  argument: (call, locator) => call.getArguments()[locator.index],
-  'chain-call': (call, locator) => chainArgument(call, locator.method, locator.index),
-  'chain-root-argument': (call, locator, context) =>
-    chainRoot(call, context.isOperation)?.getArguments()[locator.index],
-  receiver: (call) => receiverOf(call),
-  // Not an expression at all, but the declaration one was resolved to. A method
-  // called on an instance — `document.save()` — writes nothing about a table
-  // anywhere in the call, and the class the instance is typed as is where the
-  // table is stated. The reading below takes a declaration as readily as an
-  // expression that names one, so the two paths meet immediately.
-  'receiver-type': (_call, _locator, context) => context.typeDeclaration,
-};
-
-// One cast, because a key and the map it indexes cannot be narrowed together.
-// The map above is exhaustive and typed per kind, which is where the checking
-// that matters happens.
-const expressionFor = (
-  call: CallExpression,
-  locator: TableLocator,
-  context: TableContext,
-): TsNode | undefined =>
-  (
-    resolvers[locator.kind] as (
-      c: CallExpression,
-      l: TableLocator,
-      o: TableContext,
-    ) => TsNode | undefined
-  )(call, locator, context);
+/** The context a locator reads, under the name this side of the graph uses. */
+export type TableContext = LocatorContext;
 
 /**
  * Calls that declare a stored collection, and the argument each one names it in.
@@ -409,9 +234,7 @@ export const locateTable = (
   locators: readonly TableLocator[],
   context: TableContext,
 ): string | null => {
-  for (const locator of locators) {
-    const expression = expressionFor(call, locator, context);
-    if (expression === undefined) continue;
+  for (const expression of locatedExpressions(call, locators, context)) {
     const name = nameFromExpression(expression);
     if (name !== null) return name;
   }

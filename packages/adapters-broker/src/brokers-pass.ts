@@ -6,13 +6,18 @@ import {
   findDecorators,
   forEachCall,
   getDecorator,
+  locatedExpressions,
   makeChannelId,
   narrowUnionByLiteral,
   makeLeafId,
   makeSymbolId,
+  resolveTypeOrigin,
   type CallPattern,
   type ExtractorPass,
   type GraphNode,
+  type LocatorContext,
+  type LocatorSite,
+  type NameLocator,
 } from '@flowatlas/core';
 // The context and the body walk, from the package neither extractor owns. This
 // import is the whole of R46's answer at this end: a channel reader is not part
@@ -35,6 +40,51 @@ import { pairKey, readBrokerMarkers } from './markers.js';
 
 const lineColOf = (node: TsNode): { line: number; column: number } =>
   node.getSourceFile().getLineAndColumnAtPos(node.getStart());
+
+/**
+ * Where a description says its channel is written.
+ *
+ * The one place `channelArg` is turned into a locator, which is what keeps the
+ * shorthand and the list from ever disagreeing: `channelArg: n` *is*
+ * `[{ kind: 'argument', index: n }]`, and `-1` has always meant "not an argument
+ * at all", which now reads as "whatever `channel` says" instead of as a flag a
+ * second field had to be consulted about.
+ */
+const channelLocators = (pattern: {
+  readonly channel?: readonly NameLocator[];
+  readonly channelArg: number;
+}): readonly NameLocator[] =>
+  pattern.channel ?? (pattern.channelArg < 0 ? [] : [{ kind: 'argument', index: pattern.channelArg }]);
+
+/**
+ * The channel a site is addressed to, read through the locators of its pattern.
+ *
+ * Every locator is tried and the first that yields a readable name wins; when
+ * none does, the first that pointed at anything is what the row reports, because
+ * a reader acting on the row needs the expression that was actually looked at
+ * rather than the whole call. A description that reached nothing at all has
+ * nothing to show but the call, which is the last fallback.
+ *
+ * The fold rather than the walk is what lives here: the walk is the core's and is
+ * shared with the side of the graph that reads stored collections, while what
+ * counts as a name differs — a channel that cannot be read is a refusal with a
+ * reason attached, and a table is simply absent.
+ */
+const channelAt = (
+  site: LocatorSite,
+  locators: readonly NameLocator[],
+  context: LocatorContext,
+  config: Parameters<typeof resolveChannelName>[1],
+  fallback: string,
+): ChannelResolution => {
+  const resolutions = locatedExpressions(site, locators, context).map((expression) =>
+    resolveChannelName(expression, config),
+  );
+  return (
+    resolutions.find(isResolved) ??
+    resolutions[0] ?? { unresolved: 'channel-dynamic', text: fallback }
+  );
+};
 
 /**
  * What the class a call sits in says about the names written in it.
@@ -163,23 +213,23 @@ export const extractBrokers = (ctx: PassContext): void => {
   };
 
   /**
-   * The queue a receiver is bound to, named on the parameter that injected it.
+   * What the locators may ask about a call beyond the call itself.
    *
-   * Only a class has constructor injection to read, so a publish written
-   * outside one has no parameter to carry the name.
+   * Two answers the reader already has and a locator cannot work out: the class
+   * the receiver was declared as, and the constructor parameter that provided it.
+   * A publish written outside a class has no injection to read, which is why the
+   * second is absent there rather than guessed at.
    */
-  const channelFromParameter = (
-    owner: ClassDeclaration | undefined,
-    receiver: TsNode,
-    decoratorName: string,
-  ): string | undefined => {
-    if (owner === undefined || !Node.isPropertyAccessExpression(receiver)) return undefined;
-    const entry = ctx.di.lookup(owner, receiver.getName());
-    if (entry?.parameter === undefined) return undefined;
-    const decorator = getDecorator(entry.parameter, decoratorName);
-    if (decorator === undefined) return undefined;
-    const [first] = decoratorArgs(decorator);
-    return first?.resolved === true && typeof first.value === 'string' ? first.value : undefined;
+  const contextOf = (receiver: TsNode, owner: ClassDeclaration | undefined): LocatorContext => {
+    const declaration = resolveTypeOrigin(receiver)?.declaration;
+    const provider =
+      owner !== undefined && Node.isPropertyAccessExpression(receiver)
+        ? ctx.di.lookup(owner, receiver.getName())?.parameter
+        : undefined;
+    return {
+      ...(declaration === undefined ? {} : { typeDeclaration: declaration }),
+      ...(provider === undefined ? {} : { providerDeclaration: provider }),
+    };
   };
 
   /**
@@ -205,23 +255,16 @@ export const extractBrokers = (ctx: PassContext): void => {
     const callee = call.getExpression();
     const receiver = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
 
-    let resolution: ChannelResolution;
-    if (pattern.channelArg < 0) {
-      const name =
-        pattern.channelFromParameterDecorator === undefined
-          ? undefined
-          : channelFromParameter(owner, receiver, pattern.channelFromParameterDecorator);
-      resolution =
-        name === undefined
-          ? { unresolved: 'channel-dynamic', text: receiver.getText() }
-          : { name, names: [name], via: 'const' };
-    } else {
-      const argument = args[pattern.channelArg];
-      resolution =
-        argument === undefined
-          ? { unresolved: 'channel-dynamic', text: call.getText().slice(0, 60) }
-          : resolveChannelName(argument, ctx.config);
-    }
+    const resolution = channelAt(
+      call,
+      channelLocators(pattern),
+      contextOf(receiver, owner),
+      ctx.config,
+      // A receiver that is the channel and names nothing readable is best shown
+      // as the receiver: `queue.add(job)` says nothing, and `queue` is the thing
+      // a reader has to go and look at.
+      pattern.channel === undefined ? call.getText().slice(0, 60) : receiver.getText(),
+    );
 
     const jobNameArg = pattern.nameArg === undefined ? undefined : args[pattern.nameArg];
     const jobName =
@@ -358,60 +401,45 @@ export const extractBrokers = (ctx: PassContext): void => {
     return true;
   };
 
-  /** The channel a decorated handler receives from. */
+  /**
+   * The channel a decorated handler receives from.
+   *
+   * One decorator and one list of locators, whichever shape the transport uses.
+   * The three branches this replaced — an argument, a key of an argument's object,
+   * a decorator on the class — were three ways of saying where a name is written,
+   * which is the one thing a locator says; and having them as branches meant a
+   * transport whose handlers are marked `@OnJob({ name: … })` was describable on
+   * the publishing side and not here.
+   */
   const consumerChannel = (
     pattern: ConsumerPattern,
     method: MethodDeclaration,
     owner: ClassDeclaration,
   ): { resolution: ChannelResolution; jobName?: string | null } => {
-    if (pattern.channelFrom === 'class-decorator') {
-      const classDecorator =
-        pattern.classDecorator === undefined ? undefined : getDecorator(owner, pattern.classDecorator);
-      const [first] = classDecorator === undefined ? [] : decoratorArgs(classDecorator);
-      const queue =
-        first?.resolved === true && typeof first.value === 'string'
-          ? first.value
-          : first?.resolved === true && typeof first.value === 'object' && first.value !== null
-            ? (first.value as { name?: unknown }).name
-            : undefined;
-      const nameDecorator = getDecorator(method, pattern.decorator);
-      const [nameArg] =
-        nameDecorator === undefined || pattern.nameArgIndex === undefined
-          ? []
-          : decoratorArgs(nameDecorator);
-      return {
-        resolution:
-          typeof queue === 'string'
-            ? { name: queue, names: [queue], via: 'const' }
-            : { unresolved: 'channel-dynamic', text: owner.getName() ?? '?' },
-        ...(nameArg?.resolved === true && typeof nameArg.value === 'string'
-          ? { jobName: nameArg.value }
-          : {}),
-      };
+    const site =
+      pattern.classDecorator === undefined
+        ? getDecorator(method, pattern.decorator)
+        : getDecorator(owner, pattern.classDecorator);
+    const nameDecorator =
+      pattern.nameArgIndex === undefined ? undefined : getDecorator(method, pattern.decorator);
+    const [nameArg] = nameDecorator === undefined ? [] : decoratorArgs(nameDecorator);
+    const jobName =
+      nameArg?.resolved === true && typeof nameArg.value === 'string' ? { jobName: nameArg.value } : {};
+    if (site === undefined) {
+      return { resolution: { unresolved: 'channel-dynamic', text: pattern.decorator }, ...jobName };
     }
-
-    const decorator = getDecorator(method, pattern.decorator);
-    const [first] = decorator === undefined ? [] : decorator.getArguments();
-    if (first === undefined) {
-      return { resolution: { unresolved: 'channel-dynamic', text: pattern.decorator } };
-    }
-    if (pattern.channelFrom === 'option') {
-      if (!Node.isObjectLiteralExpression(first)) {
-        return { resolution: { unresolved: 'channel-dynamic', text: first.getText() } };
-      }
-      const property = first.getProperty(pattern.optionKey ?? '');
-      const initializer =
-        property !== undefined && Node.isPropertyAssignment(property)
-          ? property.getInitializer()
-          : undefined;
-      return {
-        resolution:
-          initializer === undefined
-            ? { unresolved: 'channel-dynamic', text: first.getText().slice(0, 60) }
-            : resolveChannelName(initializer, ctx.config),
-      };
-    }
-    return { resolution: resolveChannelName(first, ctx.config) };
+    return {
+      resolution: channelAt(
+        site,
+        pattern.channel,
+        {},
+        ctx.config,
+        // What a reader has to go and look at is the decorator that was supposed
+        // to name the channel, not the method under it.
+        site.getText().slice(0, 60),
+      ),
+      ...jobName,
+    };
   };
 
   const emitConsumer = (
@@ -513,11 +541,13 @@ export const extractBrokers = (ctx: PassContext): void => {
           if (!receiverIsFrom(callee.getExpression(), pattern)) continue;
 
           const args = call.getArguments();
-          const channelArg = args[pattern.channelArg];
-          const resolution =
-            channelArg === undefined
-              ? { unresolved: 'channel-dynamic' as const, text: call.getText().slice(0, 60) }
-              : resolveChannelName(channelArg, ctx.config);
+          const resolution = channelAt(
+            call,
+            channelLocators(pattern),
+            contextOf(callee.getExpression(), owner),
+            ctx.config,
+            call.getText().slice(0, 60),
+          );
           const { line } = lineColOf(call);
           const shaping = shapingOf(owner, spec);
           const names = isResolved(resolution) && !isUnreadable(shaping)
@@ -648,10 +678,10 @@ export const extractBrokers = (ctx: PassContext): void => {
 
     for (const spec of specs) {
       for (const pattern of spec.consumerPatterns) {
-        if (pattern.channelFrom === 'class-decorator' && pattern.nameArgIndex === undefined) {
+        if (pattern.classDecorator !== undefined && pattern.nameArgIndex === undefined) {
           // A worker class handles its queue through one named method.
           if (method.getName() !== 'process') continue;
-          if (getDecorator(owner, pattern.classDecorator ?? '') === undefined) continue;
+          if (getDecorator(owner, pattern.classDecorator) === undefined) continue;
         } else if (findDecorators(method, { names: [pattern.decorator] }).length === 0) {
           continue;
         }

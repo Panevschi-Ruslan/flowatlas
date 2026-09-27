@@ -1,7 +1,7 @@
 {
   "schemaVersion": 4,
   "repo": "nest-bullmq",
-  "generatedAt": "2026-09-25T14:33:49.821Z",
+  "generatedAt": "2026-09-27T09:37:33.735Z",
   "nodes": [
     {
       "id": "channel:digest",
@@ -37,7 +37,7 @@
       "label": "reports",
       "repo": "nest-bullmq",
       "file": "src/mail/reports.processor.ts",
-      "line": 24,
+      "line": 30,
       "meta": {
         "channelKind": "queue",
         "adapters": [
@@ -112,7 +112,7 @@
       "label": "ReportsProcessor.process",
       "repo": "nest-bullmq",
       "file": "src/mail/reports.processor.ts",
-      "line": 24,
+      "line": 30,
       "kind": "job",
       "meta": {
         "kind": "job",
@@ -336,7 +336,7 @@
       "label": "ReportsProcessor",
       "repo": "nest-bullmq",
       "file": "src/mail/reports.processor.ts",
-      "line": 22,
+      "line": 28,
       "kind": "injectable"
     },
     {
@@ -345,7 +345,7 @@
       "label": "ReportsProcessor.process",
       "repo": "nest-bullmq",
       "file": "src/mail/reports.processor.ts",
-      "line": 24
+      "line": 30
     },
     {
       "id": "producer:nest-bullmq#src/mail/mail.service.ts:26:12",
@@ -358,7 +358,7 @@
       "meta": {
         "kind": "job",
         "adapter": "bullmq",
-        "channelVia": "const",
+        "channelVia": "literal",
         "method": "add",
         "jobName": "send-email"
       }
@@ -374,7 +374,7 @@
       "meta": {
         "kind": "job",
         "adapter": "bullmq",
-        "channelVia": "const",
+        "channelVia": "literal",
         "method": "add",
         "jobName": "send-digest"
       }
@@ -390,7 +390,7 @@
       "meta": {
         "kind": "job",
         "adapter": "bullmq",
-        "channelVia": "const",
+        "channelVia": "literal",
         "method": "add",
         "jobName": null
       }
@@ -466,7 +466,7 @@
       "type": "consumes",
       "confidence": "static",
       "file": "src/mail/reports.processor.ts",
-      "line": 24
+      "line": 30
     },
     {
       "from": "consumer:nest-bullmq#src/mail/anonymous.processor.ts:AnonymousProcessor.process",
@@ -510,7 +510,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/mail/reports.processor.ts",
-      "line": 24,
+      "line": 30,
       "returns": "void"
     },
     {
@@ -803,7 +803,7 @@
       "line": 11,
       "reason": "channel-dynamic",
       "hint": "The channel name cannot be read here. Annotate AnonymousProcessor.process with the channel it uses.",
-      "symbol": "AnonymousProcessor.process -> AnonymousProcessor"
+      "symbol": "AnonymousProcessor.process -> @Processor()"
     },
     {
       "file": "src/mail/mail.service.ts",
