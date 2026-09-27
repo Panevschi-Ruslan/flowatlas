@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:27:02.012Z",
+  "builtAt": "2026-09-27T15:28:19.152Z",
   "services": [
     {
       "name": "api",
@@ -278,7 +278,7 @@
         "kind": "event",
         "adapter": "socketio",
         "decorator": "SubscribeMessage",
-        "entryId": null
+        "entryId": "entry:api:event:order:updated"
       }
     },
     {
@@ -293,7 +293,7 @@
         "kind": "event",
         "adapter": "socketio",
         "decorator": "SubscribeMessage",
-        "entryId": null
+        "entryId": "entry:api:event:orders/order:cancel"
       }
     },
     {
@@ -308,7 +308,7 @@
         "kind": "event",
         "adapter": "socketio",
         "decorator": "SubscribeMessage",
-        "entryId": null
+        "entryId": "entry:api:event:orders/order:summary"
       }
     },
     {
@@ -354,6 +354,45 @@
         "adapter": "socketio",
         "decorator": "on",
         "entryId": null
+      }
+    },
+    {
+      "id": "entry:api:event:order:updated",
+      "type": "entry",
+      "label": "event order:updated",
+      "repo": "api",
+      "file": "src/orders/audit.gateway.ts",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "pattern": "order:updated",
+        "adapter": "socketio"
+      }
+    },
+    {
+      "id": "entry:api:event:orders/order:cancel",
+      "type": "entry",
+      "label": "event orders/order:cancel",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "pattern": "orders/order:cancel",
+        "adapter": "socketio"
+      }
+    },
+    {
+      "id": "entry:api:event:orders/order:summary",
+      "type": "entry",
+      "label": "event orders/order:summary",
+      "repo": "api",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 40,
+      "kind": "event",
+      "meta": {
+        "pattern": "orders/order:summary",
+        "adapter": "socketio"
       }
     },
     {
@@ -813,6 +852,51 @@
       "confidence": "static",
       "file": "src/app/orders-socket.service.ts",
       "line": 31
+    },
+    {
+      "from": "entry:api:event:order:updated",
+      "to": "api#src/orders/audit.gateway.ts:AuditGateway.record",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:api#OrderUpdate"
+      ],
+      "returns": "void",
+      "file": "src/orders/audit.gateway.ts",
+      "line": 16,
+      "meta": {
+        "body": "type:api#OrderUpdate"
+      }
+    },
+    {
+      "from": "entry:api:event:orders/order:cancel",
+      "to": "api#src/orders/orders.gateway.ts:OrdersGateway.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:api#CancelOrder"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 28,
+      "meta": {
+        "body": "type:api#CancelOrder"
+      }
+    },
+    {
+      "from": "entry:api:event:orders/order:summary",
+      "to": "api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#OrderSummary",
+      "file": "src/orders/orders.gateway.ts",
+      "line": 40,
+      "meta": {
+        "body": "string"
+      }
     },
     {
       "from": "producer:api#src/orders/orders.gateway.ts:31:5",

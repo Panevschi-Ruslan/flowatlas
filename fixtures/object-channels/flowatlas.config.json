@@ -15,6 +15,7 @@
               "method": "queue",
               "channel": [{ "kind": "argument-property", "index": 0, "key": "name" }],
               "payloadArg": 0,
+              "payloadPath": ["data"],
               "kind": "job"
             },
             {

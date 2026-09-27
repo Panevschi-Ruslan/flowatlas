@@ -9,6 +9,13 @@ here addressed in a way `channelArg` cannot express:
 - **the receiver is the channel** — `this.mail.push(payload)`, where `MailQueue`
   states its topic once, in the `super(...)` every instance goes through.
 
+It is also where the **payload path** is measured (R133). `jobs.queue` is handed
+a record holding the name and the message together while `@OnJob` hands its
+handler the message alone, so the two ends of one channel name two different
+values. `"payloadPath": ["data"]` in the configuration is how the description
+says which property carries the message; without it the two ends are compared as
+they stand and a correct handler is reported as requiring a field nobody sends.
+
 Both are read **from configuration alone**: nothing in `flowatlas.config.json`
 names a library, and the sources declare no broker package for an adapter to
 detect. `api` and `worker` each hold their own client of the same bus, which is
@@ -51,6 +58,18 @@ from the configuration and rebuilding:
 | the producer's `argument-property` | 4 channels → 3, 2 joined → 1; three rows name the whole record — `OrdersService.place -> { name: 'thumbnail.generate', data: { orderId } }` |
 | the producer's `base-constructor-argument` | 4 channels → 3, `channel:digest.send` disappears; the rows name the *payload* the fallback index pointed at |
 | the consumer's `argument-property` | 4 channels → **6**, 2 joined → **0**: `channel:{"name":"mail.send","queue":"mail"}` and `channel:{"name":"thumbnail.generate","queue":"thumbnails"}` appear beside the real nodes. This is R86's cost reproduced exactly — a message layer present and unusable, every channel with one end. |
+| the producer's `payloadPath` | `contracts` goes from `identical=2 errors=0` to `drift=2 errors=2`, twice `error missing_required: receiver worker requires orderId; sender api does not send it`, and twice `info extra_field: sender api sends data`. The envelope compared as though it were the message — a limit of static reading reported as somebody's mistake, at **error** severity (R133). |
+
+## What the comparison says
+
+```
+contracts: edges=2 shared=0 identical=2 drift=0 unchecked=3 errors=0 …
+```
+
+Both joined channels compare, and neither has anything to report. Before the
+handlers had a way in they were `no-type-on-receiver` twice — a row for a shape
+that cannot be read at all, given for two handlers whose shape is written
+plainly a few lines from the publish.
 
 ## Type-checked, never executed
 

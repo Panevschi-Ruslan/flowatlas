@@ -11,6 +11,7 @@ import {
 import {
   hasAcknowledgement,
   isResolved,
+  methodMatches,
   receiverIsFrom,
   resolveChannelName,
   shapeChannelNames,
@@ -318,7 +319,7 @@ export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) =>
   const emitSubscriber = (
     call: CallExpression,
     receiver: TsNode,
-    pattern: { method: string; channelArg: number; handlerArg?: number; kind: string },
+    pattern: { method: string | readonly string[]; channelArg: number; handlerArg?: number; kind: string },
     owner: ClassDeclaration,
     method: ClassMethod,
     file: string,
@@ -416,7 +417,9 @@ export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) =>
           return;
         }
         for (const pattern of SPEC.subscriberPatterns ?? []) {
-          if (name !== pattern.method || !receiverIsFrom(receiver, pattern)) continue;
+          // A description may name one spelling of a call or several, and which
+          // it is belongs to the description rather than to either reader of it.
+          if (!methodMatches(name, pattern.method) || !receiverIsFrom(receiver, pattern)) continue;
           ctx.ensureMethodNode(method);
           emitSubscriber(call, receiver, pattern, owner, method, indexed.file, indexed.name);
           return;

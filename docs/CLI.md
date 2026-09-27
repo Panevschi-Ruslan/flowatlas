@@ -880,6 +880,7 @@ same way, because a channel with one end joins nothing:
       "method": "queue",                    // jobs.queue({ name, data })
       "channel": [{ "kind": "argument-property", "index": 0, "key": "name" }],
       "payloadArg": 0,
+      "payloadPath": ["data"],              // the message is one property in
       "kind": "job"
     },
     {
@@ -906,10 +907,20 @@ written the same way — so a plain `argument` locator does not fail on an optio
 object, it succeeds with a name nothing at the other end can ever write. List the
 narrower locator first.
 
+**`payloadPath` says where the message sits inside what `payloadArg` points at.**
+A call handed a record holding the name and the message together is publishing
+the message, not the record, and the handler at the other end is given the
+message alone. Left out, the whole argument is the message, which is right for a
+call that takes it plainly. Getting it wrong is not a missing row: the two ends
+of one channel are compared as they stand, and a correct handler is reported as
+requiring a field nobody sends.
+
 A `consumers` entry may be a bare decorator name, which means what it always
 meant: the channel is that decorator's first argument. Written out it takes
 `decorator`, an optional `classDecorator` for a worker class that states its
-channel above the class rather than on each method, `channel`, and `kind`.
+channel above the class rather than on each method, `channel`, `kind`, and the
+same pair for the receiving end — `payloadArg`, which of the handler's parameters
+the message arrives in, and `payloadPath`, where inside it the message sits.
 
 A name no locator can read produces a publisher or a handler with no channel and
 a row saying which call to look at. It never produces a channel node: a guessed
@@ -919,6 +930,10 @@ name would silently join two services that never speak.
 with a decorator per handler is described by `consumers`; one where receiving is
 a call is described by `subscribers`. Without either, its channels are read as
 all publishers and no handlers, which reads as though nothing anywhere listens.
+A subscriber's `method` may be one name or a list of them, for a verb a transport
+spells more than one way — two clients of it, or two major versions of one, and a
+description holding one spelling reads the others as nothing at all.
+
 The channel a subscriber names may contain `*`, and it meets a publisher's
 template on the same node: `` `orders:${id}:created` `` and `'orders:*:created'`
 are both `channel:orders:*:created`.

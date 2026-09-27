@@ -22,6 +22,34 @@ export interface ConsumerPattern {
   channel: readonly NameLocator[];
   /** Argument naming one unit of work, when the transport has them. */
   nameArgIndex?: number;
+  /**
+   * Which of the handler's parameters the payload arrives in. The first by
+   * default.
+   *
+   * A transport that hands a handler more than the message - the connection it
+   * arrived on, the raw frame - passes them in a fixed order, and the message
+   * is not always first.
+   */
+  payloadArg?: number;
+  /**
+   * A parameter decorator that marks the payload wherever it is written.
+   *
+   * Where a transport lets a handler name its parameters rather than order
+   * them, the decorator is the statement and the position is an accident of how
+   * the author wrote the list. Asked first, with `payloadArg` as the answer for
+   * a handler that declares its parameters plainly.
+   */
+  payloadDecorator?: string;
+  /**
+   * Where the payload sits inside that parameter. Empty - the default - is the
+   * whole of it.
+   *
+   * The receiving half of the same fact a publishing call states: a queue hands
+   * its handler the library's envelope and the message is one property in, so a
+   * handler taking the envelope on purpose is not a receiver missing every
+   * field of the message (R133).
+   */
+  payloadPath?: readonly string[];
   kind: string;
 }
 
@@ -37,8 +65,24 @@ export interface ConsumerPattern {
  * a decorator.
  */
 export interface SubscriberPattern {
-  /** Method that begins listening. */
-  method: string;
+  /**
+   * Method that begins listening, in every spelling a client of it is written
+   * with.
+   *
+   * One verb is not one name. The same subscription is `psubscribe` in one
+   * client of a transport and `pSubscribe` in the next major version of
+   * another, and matching is exact, so a description holding one of the two
+   * read the other as nothing at all - not as a degraded answer, as a channel
+   * with one end, which joins nothing and says nothing about it (R135).
+   *
+   * So the spellings are stated here rather than known by the reader. A reader
+   * that ignored case would be a rule nobody wrote down, applying to every
+   * transport at once, including a bus a project wrote itself where `send` and
+   * `Send` may well be two different methods; here the description says which
+   * names mean the same call, and only the descriptions that need it pay for
+   * it. A single name is the shorthand and reads exactly as it always did.
+   */
+  method: string | readonly string[];
   /** Shorthand for `channel: [{ kind: 'argument', index }]`, as on a publish. */
   channelArg: number;
   /** Where the channel is written, when it is not one plain argument. */

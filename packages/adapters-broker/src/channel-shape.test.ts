@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { socketio } from './adapters/index.js';
+import { redisPubSub, socketio } from './adapters/index.js';
+import { methodMatches } from './call-site.js';
 import { shapeChannelNames, trimEndpoint } from './channel-name.js';
 
 describe('the endpoint a class declares', () => {
@@ -69,5 +70,41 @@ describe('the socket description', () => {
   // marks one is the same either way, so this end stays an event.
   it('says nothing about whether a handler answers', () => {
     expect(socketio.consumerPatterns.every((pattern) => pattern.kind === 'event')).toBe(true);
+  });
+});
+
+describe('the subscription verbs of a pub/sub transport', () => {
+  const methodsOf = (pattern: { method: string | readonly string[] }): readonly string[] =>
+    typeof pattern.method === 'string' ? [pattern.method] : pattern.method;
+  const spellings = (redisPubSub.subscriberPatterns ?? []).flatMap(methodsOf);
+
+  // The bug this replaced: two of these five were in the description, and the
+  // client that writes the other three had its subscriptions read by nothing.
+  it('names every spelling both clients of it write', () => {
+    expect(spellings).toEqual([
+      'subscribe',
+      'psubscribe',
+      'pSubscribe',
+      'ssubscribe',
+      'sSubscribe',
+    ]);
+  });
+
+  // What arrives is delivered on an event named after the same prefix, so the
+  // two halves of one verb cannot drift apart.
+  it('pairs each verb with the event that carries what arrives', () => {
+    expect((redisPubSub.subscriberPatterns ?? []).map((pattern) => pattern.listenerEvent)).toEqual([
+      'message',
+      'pmessage',
+      'smessage',
+    ]);
+  });
+
+  it('reads a call by any spelling the description names', () => {
+    expect(methodMatches('pSubscribe', ['psubscribe', 'pSubscribe'])).toBe(true);
+    expect(methodMatches('subscribe', 'subscribe')).toBe(true);
+    // A name the description does not hold is still not a match: the reader
+    // knows no casing rule of its own.
+    expect(methodMatches('PSUBSCRIBE', ['psubscribe', 'pSubscribe'])).toBe(false);
   });
 });

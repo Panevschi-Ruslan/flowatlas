@@ -216,6 +216,16 @@ export const customProducerSchema = z.strictObject({
   /** Where the channel is written, tried in order. Overrides `channelArg`. */
   channel: z.array(nameLocatorSchema).min(1).optional(),
   payloadArg: z.number().int().min(0).optional(),
+  /**
+   * Where the message sits inside that argument, when the argument wraps it.
+   *
+   * A bus whose publishing call takes a record holding the name and the message
+   * together is publishing the message, not the record, and the handler at the
+   * other end is given the message. Saying so is the difference between a
+   * boundary that compares and one that accuses a correct handler of requiring
+   * fields nobody sends. Left out, the whole argument is the message.
+   */
+  payloadPath: z.array(z.string().min(1)).min(1).optional(),
   kind: z.string().min(1).default('event'),
 });
 
@@ -229,7 +239,15 @@ export const customProducerSchema = z.strictObject({
 export const customSubscriberSchema = z.strictObject({
   /** Type the call is made on, as at the call site. A list, as for a producer. */
   receiverType: z.union([z.string().min(1), z.array(z.string().min(1))]),
-  method: z.string().min(1),
+  /**
+   * The call that begins receiving, or every spelling of it.
+   *
+   * One verb is not always one name: a transport reached through two clients, or
+   * through two major versions of one, spells the same call two ways, and a
+   * description holding one of them reads the others as nothing at all rather
+   * than as a degraded answer (R135).
+   */
+  method: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
   channelArg: z.number().int().min(0).default(0),
   /** Where the channel is written, tried in order. Overrides `channelArg`. */
   channel: z.array(nameLocatorSchema).min(1).optional(),
@@ -252,6 +270,10 @@ export const customConsumerSchema = z.strictObject({
   /** Class decorator the channel is read from instead, for a worker class. */
   classDecorator: z.string().min(1).optional(),
   channel: z.array(nameLocatorSchema).min(1).default([{ kind: 'argument', index: 0 }]),
+  /** Which parameter the handler is given the message in. The first by default. */
+  payloadArg: z.number().int().min(0).optional(),
+  /** Where the message sits inside that parameter. The whole of it by default. */
+  payloadPath: z.array(z.string().min(1)).min(1).optional(),
   kind: z.string().min(1).default('event'),
 });
 

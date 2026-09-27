@@ -13,6 +13,19 @@ import { Node } from 'ts-morph';
  */
 
 /**
+ * Whether the method a call names is one the pattern names.
+ *
+ * A description may hold one spelling or several, because one verb of a
+ * transport is not always one name: two clients of the same transport, or two
+ * major versions of one, spell the same subscription differently and a
+ * description that knows one of them reads the other as nothing (R135). The
+ * shorthand is a single name and means what it always meant; the question is
+ * asked here so that every reader of a pattern asks it the same way.
+ */
+export const methodMatches = (name: string, method: string | readonly string[]): boolean =>
+  typeof method === 'string' ? method === name : method.includes(name);
+
+/**
  * Whether the value a call is made on is the one a pattern names.
  *
  * A library is identified by the package that declares it; a bus a project wrote
