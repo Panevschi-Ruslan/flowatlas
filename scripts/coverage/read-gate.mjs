@@ -120,20 +120,6 @@ export const EXEMPT = [
       'the day the convention gets a reader, and the gate will then insist on it.',
   },
   {
-    where: 'novu',
-    path: 'packages/novu/src/commands/init/templates/**',
-    family: 'routes',
-    why:
-      'Files the command-line tool copies into somebody else’s project when they ' +
-      'scaffold one. They are route handlers, and the counting rule is right to see ' +
-      'them - it counts what somebody wrote down, and over-counting is the direction ' +
-      'it errs in on purpose - but they are not this service’s routes: nothing ' +
-      'imports them, no tsconfig here compiles them, and a reader that produced ' +
-      'entry points for them would be reporting addresses that this repository does ' +
-      'not serve. They arrived in the denominator with the extent, because the ' +
-      'package holding them is one the service declares.',
-  },
-  {
     where: 'nest-unknown-orm',
     path: '(anywhere)',
     family: 'models',

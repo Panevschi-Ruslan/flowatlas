@@ -3,6 +3,7 @@ import {
   hasAnyDependency,
   makeSymbolId,
   packageOfFile,
+  readPackageJson,
   stableKey,
   type AppliedWrapping,
   type GraphNode,
@@ -132,12 +133,24 @@ const wrapperNode = (
  * do anything. Asked of the manifest rather than of `services[].type`, because
  * `extract` on a bare directory has no configured type to ask, and those are
  * exactly the repositories that were being told to set it.
+ *
+ * And asked of the service's **own** manifest, not of `ctx.pkg`. "Is this a Nest
+ * application" is *what is this package*, which `readPackageJson` answers;
+ * `ctx.pkg` is widened along the workspace to answer *what can the code here
+ * import*, and every adapter is right to gate on that one. The two came apart
+ * on a Next.js application whose shared DTO package declares `@nestjs/common`
+ * for its decorators: the application can import Nest, it is not built on it,
+ * and it was told to configure a Nest bootstrap it will never have (R143).
  */
 const BOOTSTRAP_FRAMEWORK = ['@nestjs/core', '@nestjs/common'];
 
+/** Whether the service being read says, in its own manifest, that it is built on Nest. */
+const isNestApplication = (repoDir: string): boolean =>
+  hasAnyDependency(readPackageJson(repoDir) ?? {}, BOOTSTRAP_FRAMEWORK);
+
 /** Reads what the entry file said and settles every class's role. */
 export const wrappingCollectPass = definePass('wrapping-collect', (ctx) => {
-  if (!ctx.bootstrap.found && hasAnyDependency(ctx.pkg, BOOTSTRAP_FRAMEWORK)) {
+  if (!ctx.bootstrap.found && isNestApplication(ctx.repoDir)) {
     ctx.report({
       file: ctx.bootstrap.file ?? 'src/main.ts',
       line: 1,

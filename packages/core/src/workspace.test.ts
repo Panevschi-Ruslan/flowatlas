@@ -161,6 +161,53 @@ describe('serviceSourceDirs', () => {
     expect(serviceSourceDirs(web)).toEqual([web, lib, store]);
   });
 
+  it("follows the service's own devDependencies and not a member's (R143)", () => {
+    const root = makeRoot();
+    writePackage(root, { name: 'root', workspaces: ['apps/*', 'packages/*'] });
+    const api = writePackage(join(root, 'apps', 'api'), {
+      name: 'api',
+      dependencies: { '@p/mailer': 'workspace:*' },
+      devDependencies: { '@p/e2e': 'workspace:*' },
+    });
+    const mailer = writePackage(join(root, 'packages', 'mailer'), {
+      name: '@p/mailer',
+      devDependencies: { '@p/preview': 'workspace:*' },
+      peerDependencies: { '@p/peer': 'workspace:*' },
+      optionalDependencies: { '@p/optional': 'workspace:*' },
+    });
+    const e2e = writePackage(join(root, 'packages', 'e2e'), {
+      name: '@p/e2e',
+      devDependencies: { '@p/fixtures': 'workspace:*' },
+    });
+    const peer = writePackage(join(root, 'packages', 'peer'), { name: '@p/peer' });
+    const optional = writePackage(join(root, 'packages', 'optional'), { name: '@p/optional' });
+    writePackage(join(root, 'packages', 'preview'), { name: '@p/preview' });
+    writePackage(join(root, 'packages', 'fixtures'), { name: '@p/fixtures' });
+
+    // `preview` is the mailer's devDependency and `fixtures` the e2e helper's:
+    // neither is installed for the service, so neither is the service.
+    expect(serviceSourceDirs(api)).toEqual([api, e2e, mailer, optional, peer]);
+  });
+
+  it('keeps a member reached at run time even when another member reaches it only for development', () => {
+    const root = makeRoot();
+    writePackage(root, { name: 'root', workspaces: ['apps/*', 'packages/*'] });
+    const api = writePackage(join(root, 'apps', 'api'), {
+      name: 'api',
+      dependencies: { '@p/a': 'workspace:*', '@p/b': 'workspace:*' },
+    });
+    const a = writePackage(join(root, 'packages', 'a'), {
+      name: '@p/a',
+      devDependencies: { '@p/shared': 'workspace:*' },
+    });
+    const b = writePackage(join(root, 'packages', 'b'), {
+      name: '@p/b',
+      dependencies: { '@p/shared': 'workspace:*' },
+    });
+    const shared = writePackage(join(root, 'packages', 'shared'), { name: '@p/shared' });
+    expect(serviceSourceDirs(api)).toEqual([api, a, b, shared]);
+  });
+
   it('keeps the service directory first, whatever the names sort to', () => {
     const root = makeRoot();
     writePackage(root, { name: 'root', workspaces: ['*'] });

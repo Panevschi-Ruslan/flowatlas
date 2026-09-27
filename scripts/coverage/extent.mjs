@@ -48,7 +48,7 @@
  * Nothing here knows the name of a framework, and nothing here takes an
  * argument from `targets.json`. The rule is the same for every target: a
  * service is its own directory, plus every workspace package its manifest
- * names, plus the packages those name in turn.
+ * names, plus the packages those name in turn for run time.
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
@@ -56,13 +56,21 @@ import { join, relative, resolve } from 'node:path';
 /** Directories a workspace glob never means, however wide the glob. */
 const NEVER_A_PACKAGE = new Set(['node_modules', 'dist', 'build', 'coverage', 'tmp']);
 
-/** Dependency sections that make a package part of what a service is built from. */
-const DEPENDENCY_SECTIONS = [
-  'dependencies',
-  'devDependencies',
-  'peerDependencies',
-  'optionalDependencies',
-];
+/**
+ * Dependency sections that make a package part of what a service is built from,
+ * by whose manifest they are in.
+ *
+ * The line an installer draws: a package's devDependencies are installed when
+ * that package is the one being worked on, and never for a package that depends
+ * on it. So the service's own manifest is read in all four sections and a
+ * member's in the three that are there at run time. The tool draws the same
+ * line in `serviceSourceDirs`, for the same reason, and I14 holds the two to it
+ * (R143).
+ */
+const EXTENT_SECTIONS = {
+  service: ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'],
+  member: ['dependencies', 'peerDependencies', 'optionalDependencies'],
+};
 
 const readManifest = (dir) => {
   try {
@@ -313,7 +321,8 @@ export const extentOf = (cloneDir, readRoot) => {
     while (queue.length > 0) {
       const at = queue.shift();
       const manifest = readManifest(at) ?? {};
-      const declared = Object.assign({}, ...DEPENDENCY_SECTIONS.map((key) => manifest[key] ?? {}));
+      const sections = EXTENT_SECTIONS[at === own ? 'service' : 'member'];
+      const declared = Object.assign({}, ...sections.map((key) => manifest[key] ?? {}));
       for (const name of Object.keys(declared)) {
         const dir = byName.get(name);
         if (dir === undefined || seen.has(dir)) continue;

@@ -342,6 +342,46 @@ export const workspaceRootOf = (dir: string): string | undefined => {
 /** Answers already worked out, so every reader that asks pays for one walk. */
 const dirsByService = new Map<string, readonly string[]>();
 
+type DependencySection =
+  | 'dependencies'
+  | 'devDependencies'
+  | 'peerDependencies'
+  | 'optionalDependencies';
+
+/**
+ * Which sections of a manifest take a workspace package into a service's
+ * extent, by whose manifest it is (R143).
+ *
+ * The extent exists for one argument: a handler in `packages/features` that
+ * calls `packages/lib` is one call, and both ends of it belong to the service
+ * that reaches them. That is an argument about what runs, and the sections are
+ * chosen by it - which is the same line the package manager draws, because it is
+ * the package manager that decides what is there when the service runs.
+ *
+ * - **The service's own manifest: all four.** The service is the package being
+ *   built, and its devDependencies are what its own build and its own tests pull
+ *   in. An application that is bundled declares code it ships there, because
+ *   the bundler inlines it; a server keeps its test helpers there, and they call
+ *   into the same packages its handlers do. Either way it is this service's
+ *   code, and an installer installs a package's devDependencies exactly when
+ *   that package is the one being worked on.
+ * - **A member's manifest: everything but devDependencies.** A member's
+ *   devDependencies are what that member needs to be built or tested on its
+ *   own - a preview tool, a command-line companion, a test harness - and an
+ *   installer never installs them for anybody who depends on the member. None of
+ *   it is reachable from the service at run time, so none of it is the service.
+ *   Following them anyway is how a command-line tool's browser interface, two
+ *   devDependencies away, was read into a server as two hundred components.
+ *
+ * `peerDependencies` stay on both sides: a peer is a package the member expects
+ * whoever uses it to supply, and it runs in the same process as the member. So
+ * does `optionalDependencies`, which is `dependencies` that may fail to install.
+ */
+const EXTENT_SECTIONS: Readonly<Record<'service' | 'member', readonly DependencySection[]>> = {
+  service: ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'],
+  member: ['dependencies', 'peerDependencies', 'optionalDependencies'],
+};
+
 /**
  * The directories one service's code lives in: its own, then what it declares.
  *
@@ -349,7 +389,9 @@ const dirsByService = new Map<string, readonly string[]>();
  * path in its graph is relative to. The rest are the workspace packages its
  * manifest names, and the packages those name in turn, because a handler in
  * `packages/features` that calls `packages/lib` is one call and both ends of it
- * belong to the service that reaches them.
+ * belong to the service that reaches them. Which sections of each manifest are
+ * followed is `EXTENT_SECTIONS`, and the service's own manifest is read more
+ * widely than a member's.
  *
  * Three things are left out on purpose. A package that is not a member of the
  * workspace is left to the module resolver, which is what installed packages are
@@ -373,12 +415,11 @@ export const serviceSourceDirs = (repoDir: string): readonly string[] => {
     while (queue.length > 0) {
       const at = queue.shift() as string;
       const pkg = readPackageJson(at);
-      const declared = {
-        ...pkg?.dependencies,
-        ...pkg?.devDependencies,
-        ...pkg?.peerDependencies,
-        ...pkg?.optionalDependencies,
-      };
+      const sections = EXTENT_SECTIONS[at === own ? 'service' : 'member'];
+      const declared = Object.assign({}, ...sections.map((section) => pkg?.[section])) as Record<
+        string,
+        string
+      >;
       for (const name of Object.keys(declared)) {
         const dir = byName.get(name);
         if (dir === undefined || seen.has(dir)) continue;
