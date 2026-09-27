@@ -156,22 +156,38 @@ export const applicationOfFile = (
 };
 
 /**
- * Asks the entry adapters which applications the service holds, and leaves the
- * answer where every reader of this context looks for it.
+ * Leaves the one map of applications a service has where every reader of this
+ * context looks for it.
  *
- * The extractor does the asking and the adapter does the reading, so that a
- * browser reader can record which application a call site is in without knowing
- * what creates an application in any framework — which is the same division the
- * server reader already has, where a pass of its own fills this key before the
- * adapters that mint ids read it.
+ * One service, one map, one writer. The extractor does the asking and the
+ * adapter does the reading, so that a reader can record which application a
+ * call site is in without knowing what creates an application in any framework.
+ *
+ * A reader that finds applications itself — by following the calls that create
+ * them — hands what it read in as `read`, and where that names any application
+ * it is the answer: whatever reads what creates applications is the authority
+ * on which ones exist. Where it names none, nothing was read, and an empty map
+ * is not a reading of anything; it is the absence of one. Left on the key, it
+ * stood in front of an answer an entry adapter did have — a service whose
+ * applications are directories, read by a reader that looks for declarations,
+ * held a map saying there were no applications beside routes carrying two, and
+ * every request its server half read carried none (R136). So the adapters are
+ * asked then, exactly as they are for a reader with no reading of its own.
  *
  * The first adapter to answer is the answer. Two frameworks' address spaces in
- * one service is not a reading anything here could combine, and combining two
- * maps keyed differently would produce a map that answers neither question.
+ * one service is not a reading anything here could combine, and two maps keyed
+ * differently side by side would let {@link applicationOfFile} and
+ * {@link applicationsServing} answer one address two ways. A service never
+ * holds two: its one map is keyed one way and says which, and a question that
+ * map cannot answer is answered with nothing.
  */
-export const recordApplications = (ctx: ExtractContext): void => {
+export const recordApplications = (ctx: ExtractContext, read?: ApplicationMap): void => {
   const meta = ctx.meta;
   if (meta === undefined) return;
+  if (read !== undefined && read.names.length > 0) {
+    meta['applications'] = read;
+    return;
+  }
   for (const adapter of ctx.adapters.entry) {
     const map = adapter.applications?.(ctx);
     if (map === undefined) continue;

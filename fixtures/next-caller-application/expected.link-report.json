@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T15:28:47.212Z",
-  "configHash": "18e25cffc093",
+  "builtAt": "2026-09-27T18:38:03.009Z",
+  "configHash": "9864328032dc",
   "services": [
     {
       "name": "admin",
@@ -12,23 +12,23 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 496
+      "durationMs": 547
     },
     {
       "name": "shop",
       "repo": "./shop",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 23,
-      "edges": 13,
+      "nodes": 30,
+      "edges": 19,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 511
+      "durationMs": 574
     }
   ],
   "httpOut": {
-    "total": 4,
-    "linked": 0,
+    "total": 6,
+    "linked": 2,
     "byMarker": 0,
     "unknownEnv": 0,
     "noRoute": 0,
@@ -37,8 +37,8 @@
     "dynamic": 4
   },
   "ui": {
-    "total": 5,
-    "resolved": 4,
+    "total": 7,
+    "resolved": 6,
     "unresolved": 1,
     "byReason": {
       "ambiguous-route-application": 1
@@ -83,8 +83,8 @@
     }
   ],
   "totals": {
-    "nodes": 26,
-    "edges": 18,
+    "nodes": 33,
+    "edges": 28,
     "types": 0,
     "unresolved": 2
   }

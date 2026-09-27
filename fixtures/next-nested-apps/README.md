@@ -55,10 +55,20 @@ entries are, through the same `applicationsServing`. A relative address asks the
 origin the page came from, so a caller inside an application means its own
 application's route and no deployment decides otherwise. What that buys is a
 join, and a join is a link report: it is asserted in `next-caller-application`,
-which is a project and has one. Note what the two request nodes here do *not*
-agree about — the `http_out` node beside each of them, the server half's reading
-of the same call, carries no application, because the map that half is handed is
-keyed by declaration rather than by directory.
+which is a project and has one.
+
+Each `fetch` here is read twice — once as a `ui_api_call` by the browser half and
+once as an `http_out` by the server half — and since R136 both readings name the
+same application. Until then the `http_out` named none. The server reader looks
+for what creates an application by declaration, found nothing here, and still
+left its empty map on the one key every reader asks, in front of the directory
+map the route reader did have. A file cannot be placed in a map keyed by
+declaration, so the server half's answer was always "no application". Now a
+reading that found no application is treated as no reading at all, the
+directory map is asked in its place, and both halves get their answer from one
+map through one function. A service whose applications really are declarations
+still holds only that map, and its requests still carry nothing: a symbol id is
+not a directory.
 
 A request from *outside* every application is unchanged and still names both.
 

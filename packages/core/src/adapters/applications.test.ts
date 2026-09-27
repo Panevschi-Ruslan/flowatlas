@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { applicationOfFile, applicationsIn, applicationsServing } from './applications.js';
+import {
+  applicationOfFile,
+  applicationsIn,
+  applicationsServing,
+  recordApplications,
+  type ApplicationMap,
+} from './applications.js';
+import type { ExtractContext } from './context.js';
 
 const MAP = {
   names: ['ApiModule', 'WorkerModule'],
@@ -109,5 +116,54 @@ describe('applicationOfFile', () => {
 
   it('answers nothing where no extractor wrote a map', () => {
     expect(applicationOfFile(undefined, 'lib/store.ts')).toBeUndefined();
+  });
+});
+
+describe('recordApplications', () => {
+  const DIRECTORIES: ApplicationMap = {
+    names: ['.', 'examples/blog'],
+    of: { '.': ['.'], 'examples/blog': ['examples/blog'] },
+    keyedBy: 'directory',
+  };
+  const contextOf = (answers: ReadonlyArray<ApplicationMap | undefined>): ExtractContext =>
+    ({
+      meta: {},
+      adapters: { entry: answers.map((answer) => ({ applications: () => answer })) },
+    }) as unknown as ExtractContext;
+
+  it('keeps the reading of a reader that found applications itself', () => {
+    const ctx = contextOf([DIRECTORIES]);
+    recordApplications(ctx, MAP);
+    expect(ctx.meta?.['applications']).toBe(MAP);
+  });
+
+  // An empty reading is the absence of one. Left on the key, it stood in front
+  // of the map an adapter did have, and a request written in one of two
+  // applications could not say which (R136).
+  it('asks the adapters where the reader found no application', () => {
+    const ctx = contextOf([undefined, DIRECTORIES]);
+    recordApplications(ctx, { names: [], of: {} });
+    expect(ctx.meta?.['applications']).toBe(DIRECTORIES);
+    expect(applicationOfFile(ctx.meta, 'examples/blog/src/orders.ts')).toBe('examples/blog');
+  });
+
+  it('asks the adapters where the reader has no reading of its own', () => {
+    const ctx = contextOf([DIRECTORIES]);
+    recordApplications(ctx);
+    expect(ctx.meta?.['applications']).toBe(DIRECTORIES);
+  });
+
+  // One map, never two: the reader's own is kept whole, a file is then asked of
+  // a map that cannot answer it, and the answer is nothing.
+  it('answers nothing about a file where the one map is keyed by declaration', () => {
+    const ctx = contextOf([DIRECTORIES]);
+    recordApplications(ctx, MAP);
+    expect(applicationOfFile(ctx.meta, 'examples/blog/src/orders.ts')).toBeUndefined();
+  });
+
+  it('writes nothing where nothing was read', () => {
+    const ctx = contextOf([undefined]);
+    recordApplications(ctx, { names: [], of: {} });
+    expect(ctx.meta?.['applications']).toBeUndefined();
   });
 });
