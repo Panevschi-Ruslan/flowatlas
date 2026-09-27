@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T19:40:23.449Z",
+  "configHash": "5058ec93d4d4",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2835
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 7,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 2121
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 3,
+    "resolved": 0,
+    "unresolved": 3,
+    "byReason": {
+      "target-route-not-found": 3
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:api:http:GET:/${…}v1/orders",
+      "entry:api:http:GET:/${…}v1/orders/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/orders.ts",
+      "line": 8,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /v1/orders at an address read in full, though api GET /${…}v1/orders answers it if the part of its address nobody read is left open",
+      "hint": "This is not evidence that the route is missing. Part of the route’s address could not be read — a prefix or a version assembled from a setting, usually, with a row of its own where it is built — and until that part is read no request can be joined to it.",
+      "symbol": "ui_api_call:web#src/orders.ts:8:52"
+    },
+    {
+      "service": "web",
+      "file": "src/orders.ts",
+      "line": 10,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /v1/orders/:param at an address read in full, though api GET /${…}v1/orders/:param answers it if the part of its address nobody read is left open",
+      "hint": "This is not evidence that the route is missing. Part of the route’s address could not be read — a prefix or a version assembled from a setting, usually, with a row of its own where it is built — and until that part is read no request can be joined to it.",
+      "symbol": "ui_api_call:web#src/orders.ts:10:61"
+    },
+    {
+      "service": "web",
+      "file": "src/orders.ts",
+      "line": 12,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /v1/invoices",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /v1/invoices */.",
+      "symbol": "ui_api_call:web#src/orders.ts:12:54"
+    }
+  ],
+  "totals": {
+    "nodes": 14,
+    "edges": 5,
+    "types": 0,
+    "unresolved": 4
+  }
+}

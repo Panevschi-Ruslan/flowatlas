@@ -580,6 +580,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Add the settings key to services[].baseUrlEnv of exactly one service, so the address names a service.',
   'target-route-not-found': () =>
     "The target service serves no such route. Check its controllers for a rename, or annotate the call with @CallsService.",
+  'route-mount-assumed-empty': () =>
+    'The request was joined by taking the part in front of the route’s address as empty: it is read from settings that every committed environment file of the service leaves empty, so it is taken as where a deployment mounts the service. The join is marked heuristic. A deployment that sets those settings serves every route behind them, and the join is then wrong.',
   'ambiguous-route': () =>
     'More than one route in the target service answers this. Make the path more specific, or annotate the call with @CallsService.',
   'ambiguous-route-application': () =>

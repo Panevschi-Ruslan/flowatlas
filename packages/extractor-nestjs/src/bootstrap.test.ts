@@ -1,3 +1,6 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Project } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 import { addressingFindings, readBootstrap } from './bootstrap.js';
@@ -172,5 +175,102 @@ describe('reading how the service versions its routes', () => {
   it('says nothing about versions when the service enables none', () => {
     const info = read({ 'src/main.ts': `const app = x; app.setGlobalPrefix('api');` });
     expect(info.versioning).toBeUndefined();
+  });
+});
+
+/**
+ * The part in front of every address, where it is read from settings (R144).
+ *
+ * Only the facts are established here — which settings, and what the committed
+ * environment files say of them. Whether a join may take the part as empty is
+ * the linker's decision.
+ */
+describe('a mount read from settings', () => {
+  const VERSIONED = `
+    import { CONTEXT_PATH } from './config';
+    app.enableVersioning({ type: VersioningType.URI, prefix: \`\${CONTEXT_PATH}v\`, defaultVersion: '1' });
+  `;
+
+  it('names the setting a constant in front of the address is read from', () => {
+    const info = read({
+      'src/main.ts': VERSIONED,
+      'src/config.ts': `export const CONTEXT_PATH = process.env.API_CONTEXT_PATH ? \`\${process.env.API_CONTEXT_PATH}/\` : '';`,
+    });
+    expect(info.mount).toMatchObject({
+      call: 'enableVersioning',
+      settings: ['API_CONTEXT_PATH'],
+      setIn: [],
+      envFiles: 0,
+      at: 'src/main.ts:3',
+    });
+  });
+
+  it("follows novu's shape: a function reading settings through a name for the settings object", () => {
+    const info = read({
+      'src/main.ts': VERSIONED,
+      'src/config.ts': `
+        import { getContextPath, Component } from './context-path';
+        export const CONTEXT_PATH = getContextPath(Component.API);`,
+      'src/context-path.ts': `
+        export enum Component { WEB, API }
+        export function getContextPath(component: Component) {
+          const env = typeof process !== 'undefined' && process?.env ? process?.env : window._env_;
+          if (!env) return '';
+          const paths = { [Component.API]: env.API_CONTEXT_PATH, [Component.WEB]: env.FRONT_CONTEXT_PATH };
+          let path = env.GLOBAL_CONTEXT_PATH ? \`\${env.GLOBAL_CONTEXT_PATH}/\` : '';
+          if (paths[component]) path += \`\${paths[component]}/\`;
+          return path;
+        }`,
+    });
+    expect(info.mount?.settings).toEqual(['API_CONTEXT_PATH', 'FRONT_CONTEXT_PATH', 'GLOBAL_CONTEXT_PATH']);
+  });
+
+  it.each([
+    ['a literal of its own', `export const CONTEXT_PATH = process.env.API_CONTEXT_PATH ?? '/api/';`],
+    [
+      'a parameter that carries text',
+      `const mount = (base: string) => \`\${process.env.API_CONTEXT_PATH}\${base}\`;
+       export const CONTEXT_PATH = mount('');`,
+    ],
+    ['a value that may be reassigned', `export let CONTEXT_PATH = process.env.API_CONTEXT_PATH;`],
+    ['nothing read from settings at all', `export const CONTEXT_PATH = computeIt();`],
+  ])('is not a mount when the part is computed from %s', (_, config) => {
+    const info = read({ 'src/main.ts': VERSIONED, 'src/config.ts': config });
+    expect(info.mount).toBeUndefined();
+  });
+
+  it('is not in front of anything behind a global prefix read in full', () => {
+    const info = read({
+      'src/main.ts': `${VERSIONED}\napp.setGlobalPrefix('api');`,
+      'src/config.ts': `export const CONTEXT_PATH = process.env.API_CONTEXT_PATH ?? '';`,
+    });
+    expect(info.mount).toBeUndefined();
+  });
+
+  it('reads the global prefix when that is what opens the address', () => {
+    const info = read({ 'src/main.ts': 'app.setGlobalPrefix(`${process.env.MOUNT}api`);' });
+    expect(info.mount).toMatchObject({ call: 'setGlobalPrefix', settings: ['MOUNT'] });
+  });
+
+  it("says which of the service's committed environment files give the setting a value", () => {
+    const dir = mkdtempSync(join(tmpdir(), 'flowatlas-mount-'));
+    try {
+      mkdirSync(join(dir, 'src'));
+      writeFileSync(join(dir, '.env.example'), '# mount\nAPI_CONTEXT_PATH=\nPORT=3000\n');
+      writeFileSync(join(dir, 'src', '.env.test'), 'API_CONTEXT_PATH=""  \nexport OTHER=x\n');
+      writeFileSync(join(dir, 'src', '.env.production'), 'API_CONTEXT_PATH=/api # behind the proxy\n');
+      const project = new Project({ useInMemoryFileSystem: true });
+      project.createSourceFile(`${dir}/src/main.ts`, VERSIONED);
+      project.createSourceFile(`${dir}/src/config.ts`, `export const CONTEXT_PATH = process.env.API_CONTEXT_PATH ?? '';`);
+      const info = readBootstrap({
+        project,
+        rootDir: dir,
+        absolutePath: `${dir}/src/main.ts`,
+        relativePath: 'src/main.ts',
+      });
+      expect(info.mount).toMatchObject({ setIn: ['src/.env.production'], envFiles: 3 });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

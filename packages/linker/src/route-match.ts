@@ -1,9 +1,15 @@
-import { normalizePath, wasRead, type GraphNode } from '@flowatlas/core';
+import { normalizePath, UNREAD_SPAN, wasRead, type GraphNode } from '@flowatlas/core';
+import { cmp } from './order.js';
 
 export interface RouteMatch {
   entry: GraphNode;
   /** Ids of the routes that were beaten on specificity, when any were. */
   runnersUp?: string[];
+  /**
+   * The settings whose part of the route's address was taken as empty, when the
+   * route answered only because it was (R144). See {@link assumedMountOf}.
+   */
+  mountAssumed?: readonly string[];
 }
 
 export interface RouteMiss {
@@ -74,6 +80,77 @@ const pathAnswers = (routePath: string, requestPath: string): boolean => {
   }
   return route.length === request.length;
 };
+
+/**
+ * # A mount taken as empty (R144)
+ *
+ * The one place this is decided. Every join is decided through
+ * {@link answeringAt}, so the two linkers, the annotations and the queries that
+ * find an entry by address all hold the same opinion of it.
+ *
+ * R89's rule is that an address with a part nobody read is never joined, and it
+ * stands. This is one exception to it, taken narrowly and on purpose: a part at
+ * the very **front** of a route's address, read from settings that the service's
+ * committed environment files leave **empty or absent in every one of them**, is
+ * read as where the deployment mounts the service and taken as empty. It is the
+ * assumption the client side already makes of a base read from a setting (R114,
+ * R128) — a request is recorded without the base it is sent to — so taking it
+ * here puts both ends on the same footing rather than inventing a new one.
+ *
+ * A join made this way is not a join made from an address read in full, and it
+ * says so: the match carries the settings it assumed, the edge is weaker, and a
+ * row names the settings. Everything else with a hole keeps R89's rule — a hole
+ * in the middle, a setting some environment file does set, a service with no
+ * environment file to consult, a part computed from anything but settings —
+ * because each is a place where the empty value is a guess rather than what the
+ * repository itself says.
+ *
+ * The facts come from the reader of the application, which is the only thing
+ * that can see the environment files; the verdict is made here and nowhere else.
+ */
+export const assumedMountOf = (entry: GraphNode): { path: string; settings: string[] } | undefined => {
+  const mount = entry.meta?.['mount'];
+  if (typeof mount !== 'object' || mount === null) return undefined;
+  const { settings, setIn, envFiles } = mount as Record<string, unknown>;
+  if (!Array.isArray(settings) || settings.length === 0) return undefined;
+  if (!settings.every((setting): setting is string => typeof setting === 'string')) return undefined;
+  // No file to consult is not every file agreeing: nothing was said at all.
+  if (typeof envFiles !== 'number' || envFiles === 0) return undefined;
+  if (!Array.isArray(setIn) || setIn.length > 0) return undefined;
+  const path = String(entry.meta?.['path'] ?? '');
+  const leading = `/${UNREAD_SPAN}`;
+  if (!path.startsWith(leading)) return undefined;
+  const rest = path.slice(leading.length);
+  if (!wasRead(rest)) return undefined;
+  return { path: normalizePath(`/${rest}`), settings: [...settings].sort(cmp) };
+};
+
+/**
+ * Whether an entry answers a request for this path, and on what footing.
+ *
+ * `read` is an address read in full; `mount` is one that answers only once its
+ * leading part is taken as empty, carrying the settings that part is read from.
+ */
+export type Answer = { footing: 'read'; path: string } | { footing: 'mount'; path: string; settings: string[] };
+
+export const answeringAt = (entry: GraphNode, requestPath: string): Answer | undefined => {
+  const routePath = String(entry.meta?.['path'] ?? '');
+  if (pathAnswers(routePath, requestPath)) return { footing: 'read', path: routePath };
+  const assumed = assumedMountOf(entry);
+  return assumed !== undefined && pathAnswers(assumed.path, requestPath)
+    ? { footing: 'mount', path: assumed.path, settings: assumed.settings }
+    : undefined;
+};
+
+/** Which verbs a path does answer, for when only the verb was wrong. */
+export const verbsAnswering = (path: string, routes: readonly GraphNode[]): string[] =>
+  [
+    ...new Set(
+      routes
+        .filter((route) => answeringAt(route, path) !== undefined)
+        .map((route) => String(route.meta?.['method'] ?? '')),
+    ),
+  ].sort(cmp);
 
 /** The application a node belongs to, or the empty string where it has none. */
 const applicationOf = (node: GraphNode): string => String(node.meta?.['application'] ?? '');
@@ -197,12 +274,23 @@ export const matchRoute = (
   from?: string,
 ): RouteResult => {
   const wanted = method.toUpperCase();
-  const answering = entries.filter((entry) => {
-    if (entry.type !== 'entry' || entry.kind !== 'http') return false;
-    const routeMethod = String(entry.meta?.['method'] ?? '');
-    const routePath = String(entry.meta?.['path'] ?? '');
-    return methodAnswers(routeMethod, wanted) && pathAnswers(routePath, path);
-  });
+  const answers = new Map<GraphNode, Answer>();
+  for (const entry of entries) {
+    if (entry.type !== 'entry' || entry.kind !== 'http') continue;
+    if (!methodAnswers(String(entry.meta?.['method'] ?? ''), wanted)) continue;
+    const answer = answeringAt(entry, path);
+    if (answer !== undefined) answers.set(entry, answer);
+  }
+  const answering = [...answers.keys()];
+  /** The match, saying so when it rests on a mount taken as empty. */
+  const matched = (entry: GraphNode, runnersUp?: string[]): RouteMatch => {
+    const answer = answers.get(entry);
+    return {
+      entry,
+      ...(runnersUp === undefined ? {} : { runnersUp }),
+      ...(answer?.footing === 'mount' ? { mountAssumed: answer.settings } : {}),
+    };
+  };
 
   // A request written inside an application means that application's address,
   // and the rest of the service is not a candidate for it at all. Applied
@@ -214,10 +302,10 @@ export const matchRoute = (
   const own = from === undefined ? [] : answering.filter((entry) => applicationOf(entry) === from);
   const matching = own.length === 0 ? answering : own;
 
-  if (matching.length === 1) return { entry: matching[0] as GraphNode };
+  if (matching.length === 1) return matched(matching[0] as GraphNode);
   if (matching.length === 0) return { reason: 'not-found', candidates: [] };
 
-  const ranked = matching.map((entry) => specificityOf(String(entry.meta?.['path'] ?? '')));
+  const ranked = matching.map((entry) => specificityOf(answers.get(entry)?.path ?? ''));
   const winning = ranked.reduce((best, rank) => (moreSpecific(rank, best) < 0 ? rank : best));
   const best = matching.filter((_, index) => moreSpecific(ranked[index] as number[], winning) === 0);
   if (best.length > 1) {
@@ -228,13 +316,13 @@ export const matchRoute = (
       ...(applications.length > 1 ? { applications } : {}),
     };
   }
-  return {
-    entry: best[0] as GraphNode,
-    runnersUp: matching
+  return matched(
+    best[0] as GraphNode,
+    matching
       .filter((entry, index) => entry !== best[0] && (ranked[index] as number[])[0] === winning[0])
       .map((entry) => entry.id)
       .sort(),
-  };
+  );
 };
 
 /**
@@ -264,6 +352,64 @@ export const answeredOnlyByWildcard = (entry: GraphNode, routes: readonly GraphN
       applicationOf(route) === application &&
       !segmentsOf(String(route.meta?.['path'] ?? '')).includes('*'),
   );
+};
+
+/**
+ * A route's address as a pattern that leaves the part nobody read open.
+ *
+ * Each `${…}` may stand for any text, separators included, because that is what
+ * the marker means; a declared `:param` stands for one segment, as it does in a
+ * match. Case is ignored for the reason `pathAnswers` gives.
+ */
+const openShapeOf = (routePath: string): RegExp => {
+  const read = routePath.split(UNREAD_SPAN).map((piece) =>
+    piece
+      .split('/')
+      .map((segment) => (segment === ':param' ? '[^/]+' : segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+      .join('/'),
+  );
+  return new RegExp(`^${read.join('.*')}$`, 'i');
+};
+
+/** Whether what was read of an address says anything: one literal segment, at least. */
+const saysSomething = (routePath: string): boolean =>
+  routePath
+    .split(UNREAD_SPAN)
+    .join('/')
+    .split('/')
+    .some((segment) => segment !== '' && segment !== ':param');
+
+/**
+ * Routes that would answer this request if the part of their address nobody
+ * read were left open, as `service METHOD path`.
+ *
+ * Used for a sentence and never for an edge. Joining here is the prefix-tolerant
+ * retry R114 declined: a hole may stand for anything, so a match through one is
+ * a possibility and not a fact, and an edge claims a fact. The one hole that is
+ * joined across is decided by {@link assumedMountOf}, not here. What this does
+ * settle is that "nothing serves this" is not known either, and a row saying so
+ * is the most confident false thing the report can print. A route of which
+ * nothing but the hole was read is left out, because it would be named beside
+ * every request there is.
+ *
+ * Here rather than beside either linker because both ask it: a request from a
+ * browser and one from another service meet the same hole (R137, R144).
+ */
+export const behindUnread = (method: string, path: string, routes: readonly GraphNode[]): string[] => {
+  const wanted = method.toUpperCase();
+  return routes
+    .filter((route) => {
+      const routePath = String(route.meta?.['path'] ?? '');
+      const declared = String(route.meta?.['method'] ?? '').toUpperCase();
+      return (
+        !wasRead(routePath) &&
+        saysSomething(routePath) &&
+        (declared === 'ALL' || declared === wanted) &&
+        openShapeOf(routePath).test(path)
+      );
+    })
+    .map((route) => `${route.repo} ${String(route.meta?.['method'] ?? '')} ${String(route.meta?.['path'])}`)
+    .sort(cmp);
 };
 
 export { pathAnswers };

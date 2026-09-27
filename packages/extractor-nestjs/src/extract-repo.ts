@@ -180,6 +180,9 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
       // have to import from this package, which is what keeps an adapter for one
       // framework free of every other reader.
       ...(bootstrap.versioning === undefined ? {} : { versioning: bootstrap.versioning }),
+      // The part in front of every address, where it is read from settings, and
+      // what the committed environment files say of them (R144).
+      ...(bootstrap.mount === undefined ? {} : { mount: bootstrap.mount }),
       // `applications` is added to this record by the pass of that name, which
       // cannot answer until the modules have been read. Everything else here is
       // known before any pass runs.

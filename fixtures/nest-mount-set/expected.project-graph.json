@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T18:47:30.932Z",
+  "builtAt": "2026-09-27T19:40:23.449Z",
   "services": [
     {
       "name": "api",
@@ -77,8 +77,10 @@
           "settings": [
             "API_CONTEXT_PATH"
           ],
-          "setIn": [],
-          "envFiles": 0,
+          "setIn": [
+            "src/.env.production"
+          ],
+          "envFiles": 2,
           "at": "src/main.ts:11"
         },
         "controller": "OrdersController",
@@ -102,8 +104,10 @@
           "settings": [
             "API_CONTEXT_PATH"
           ],
-          "setIn": [],
-          "envFiles": 0,
+          "setIn": [
+            "src/.env.production"
+          ],
+          "envFiles": 2,
           "at": "src/main.ts:11"
         },
         "controller": "OrdersController",

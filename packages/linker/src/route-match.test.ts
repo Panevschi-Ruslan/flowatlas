@@ -1,6 +1,13 @@
 import type { GraphNode } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
-import { answeredOnlyByWildcard, isMatch, matchRoute, pathAnswers } from './route-match.js';
+import {
+  answeredOnlyByWildcard,
+  assumedMountOf,
+  isMatch,
+  matchRoute,
+  pathAnswers,
+  verbsAnswering,
+} from './route-match.js';
 
 const route = (method: string, path: string, controller = 'C'): GraphNode => ({
   id: `entry:orders:http:${method}:${path}`,
@@ -311,5 +318,52 @@ describe('answeredOnlyByWildcard', () => {
 
   it('says nothing about a route that is not a catch-all', () => {
     expect(answeredOnlyByWildcard(at('/api/orders'), [at('/api/orders')])).toBe(false);
+  });
+});
+
+/**
+ * A mount taken as empty (R144): the one exception to R89's rule, and how narrow
+ * it is.
+ */
+describe('a route whose address opens with a mount read from settings', () => {
+  const EMPTY = { settings: ['API_CONTEXT_PATH'], setIn: [], envFiles: 2 };
+  const mounted = (path: string, mount: Record<string, unknown> = EMPTY): GraphNode => {
+    const entry = route('GET', path);
+    entry.meta = { ...entry.meta, mount };
+    return entry;
+  };
+
+  it('answers once the mount is taken as empty, and says it was', () => {
+    const found = matchRoute('GET', '/v1/orders/42', [mounted('/${…}v1/orders/:param')]);
+    expect(isMatch(found) && found.mountAssumed).toEqual(['API_CONTEXT_PATH']);
+    expect(assumedMountOf(mounted('/${…}v1/orders/:param'))).toEqual({
+      path: '/v1/orders/:param',
+      settings: ['API_CONTEXT_PATH'],
+    });
+  });
+
+  it('says nothing of a mount where the address was read in full', () => {
+    const found = matchRoute('GET', '/v1/orders', [route('GET', '/v1/orders')]);
+    expect(isMatch(found) && found.mountAssumed).toBeUndefined();
+  });
+
+  it.each([
+    ['a committed environment file sets it', { ...EMPTY, setIn: ['src/.env.production'] }],
+    ['the service has no environment file to ask', { ...EMPTY, envFiles: 0 }],
+    ['no setting was named', { ...EMPTY, settings: [] }],
+  ])('keeps R89 where %s', (_, mount) => {
+    const found = matchRoute('GET', '/v1/orders', [mounted('/${…}v1/orders', mount)]);
+    expect(found).toEqual({ reason: 'not-found', candidates: [] });
+  });
+
+  it.each([
+    ['in the middle of the address', '/api/${…}v1/orders', '/api/v1/orders'],
+    ['a second one behind the mount', '/${…}v1/${…}/orders', '/v1/x/orders'],
+  ])('keeps R89 for a hole %s', (_, path, asked) => {
+    expect(isMatch(matchRoute('GET', asked, [mounted(path)]))).toBe(false);
+  });
+
+  it('names the verbs a path answers behind the mount', () => {
+    expect(verbsAnswering('/v1/orders', [mounted('/${…}v1/orders')])).toEqual(['GET']);
   });
 });

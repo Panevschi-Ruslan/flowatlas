@@ -1,13 +1,16 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { CallExpression, Project, SourceFile } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
 import {
   decoratorArgs,
   evaluateExpression,
   normalizeFilePath,
   resolveStaticString,
+  UNREAD_SPAN,
   wasRead,
+  workspacePackages,
+  workspaceRootOf,
   type StaticValue,
   type Unresolved,
 } from '@flowatlas/core';
@@ -59,6 +62,36 @@ export interface UnreadAddressing {
   text: string;
 }
 
+/** The two calls that can put a part in front of every address. */
+type AddressingCall = 'setGlobalPrefix' | 'enableVersioning';
+
+/**
+ * A part in front of every address that is read from settings, and what the
+ * service's committed environment files say of those settings (R144).
+ *
+ * Only facts. Whether a join may take the part as empty is decided in one place,
+ * the linker's `assumedMountOf`, because that is where a join is decided; this
+ * records what that decision needs and nothing it does not.
+ */
+export interface Mount {
+  /** The call whose argument begins with the part. */
+  call: AddressingCall;
+  /** Every setting the part is read from, sorted. */
+  settings: string[];
+  /** Committed environment files giving any of them a value, repo-relative and sorted. */
+  setIn: string[];
+  /** How many committed environment files the service has. */
+  envFiles: number;
+  /** Where the part is written, as `file:line`. */
+  at: string;
+}
+
+/** The opening hole of an address part, kept until the repository can be asked about it. */
+interface LeadingHole {
+  node: Node;
+  at: string;
+}
+
 export interface BootstrapInfo {
   /** Repo-relative path of the file that was read, when one was found. */
   file?: string;
@@ -82,6 +115,10 @@ export interface BootstrapInfo {
   globals: BootstrapGlobal[];
   /** Call sites that name a wrapper the analysis could not follow. */
   dynamicGlobals: Array<{ layer: WrappingLayer; line: number; text: string }>;
+  /** Address parts that open with a hole, by the call that wrote them. */
+  leadingHoles: Partial<Record<AddressingCall, LeadingHole>>;
+  /** The leading part of every address, when it is read from settings (R144). */
+  mount?: Mount;
 }
 
 const GLOBAL_METHODS: Record<string, WrappingLayer> = {
@@ -179,6 +216,27 @@ const readAddressPart = (node: Node): { value: string; complete: boolean } | und
   return found === null ? undefined : { value: found.value, complete: wasRead(found.value) };
 };
 
+/**
+ * The expression an address part opens with, when the part opens with a hole.
+ *
+ * Only a template whose very first character is a hole nobody read. A hole later
+ * in the part is not in front of anything, and a part read in full has nothing
+ * to ask about.
+ */
+const noteLeadingHole = (
+  node: Node,
+  value: string | undefined,
+  call: AddressingCall,
+  info: BootstrapInfo,
+  file: string,
+): void => {
+  if (value === undefined || !value.startsWith(UNREAD_SPAN)) return;
+  if (!Node.isTemplateExpression(node) || node.getHead().getLiteralText() !== '') return;
+  const [first] = node.getTemplateSpans();
+  if (first === undefined) return;
+  info.leadingHoles[call] = { node: first.getExpression(), at: `${file}:${node.getStartLineNumber()}` };
+};
+
 const readGlobalPrefix = (call: CallExpression, info: BootstrapInfo, file: string): void => {
   const [pathArg, optionsArg] = call.getArguments();
   if (pathArg === undefined) return;
@@ -187,6 +245,7 @@ const readGlobalPrefix = (call: CallExpression, info: BootstrapInfo, file: strin
     info.globalPrefix = prefix.value;
     info.addressedIn = file;
   }
+  noteLeadingHole(pathArg, prefix?.value, 'setGlobalPrefix', info, file);
   // The prefix decides every route's address, so a prefix nobody could read in
   // full is every address in the service being wrong by the same amount. Until
   // R89 that was silent: the field stayed unset and the paths came out short,
@@ -266,6 +325,7 @@ const readVersioning = (call: CallExpression, info: BootstrapInfo, file: string)
   // address part of which nobody has seen, while the route ids still differ by
   // version — which is the whole of what the false duplicate claims were about.
   const prefix = prefixNode === undefined ? undefined : readAddressPart(prefixNode);
+  if (prefixNode !== undefined) noteLeadingHole(prefixNode, prefix?.value, 'enableVersioning', info, file);
 
   const defaultNode = propertyIn(optionsArg, 'defaultVersion');
   const defaultVersion =
@@ -447,6 +507,9 @@ const foldAddressing = (info: BootstrapInfo, found: readonly BootstrapInfo[]): v
       info.globalPrefixExcludes = from.globalPrefixExcludes;
       info.globalPrefixExcludesDynamic = from.globalPrefixExcludesDynamic;
       info.addressedIn = from.addressedIn;
+      if (from.leadingHoles.setGlobalPrefix !== undefined) {
+        info.leadingHoles.setGlobalPrefix = from.leadingHoles.setGlobalPrefix;
+      }
     } else if (prefixes.length > 1) {
       info.unreadAddressing.push({
         call: 'setGlobalPrefix',
@@ -463,7 +526,11 @@ const foldAddressing = (info: BootstrapInfo, found: readonly BootstrapInfo[]): v
     const versionings = agreedOn(found, (each) => each.versioning);
     if (versionings.length === 1) {
       info.versioning = versionings[0];
-      info.addressedIn ??= found.find((each) => each.versioning !== undefined)?.addressedIn;
+      const from = found.find((each) => each.versioning !== undefined);
+      info.addressedIn ??= from?.addressedIn;
+      if (from?.leadingHoles.enableVersioning !== undefined) {
+        info.leadingHoles.enableVersioning = from.leadingHoles.enableVersioning;
+      }
     } else if (versionings.length > 1) {
       info.unreadAddressing.push({
         call: 'enableVersioning',
@@ -482,7 +549,340 @@ const emptyInfo = (): BootstrapInfo => ({
   unreadAddressing: [],
   globals: [],
   dynamicGlobals: [],
+  leadingHoles: {},
 });
+
+/**
+ * # A mount read from settings (R144)
+ *
+ * novu writes its versioning prefix as `${CONTEXT_PATH}v`, where `CONTEXT_PATH`
+ * is what `getContextPath()` makes of two settings, and every committed
+ * environment file leaves both empty. The address is recorded with a hole in
+ * front, as R89 says it must be, and nothing joins to it. What is established
+ * here is the pair of facts a narrower rule needs: which settings the opening
+ * hole is read from, and what the service's committed environment files say of
+ * them. Whether that licenses a join is not decided here.
+ *
+ * "Read from settings" is meant narrowly, and the trace below refuses anything
+ * wider. Every piece of text that could reach the part must be a setting or a
+ * separator: a literal of any other text, a parameter that could carry text, or
+ * a name the trace cannot follow makes the part something computed some other
+ * way, and it is left to R89's rule.
+ */
+
+/** How far a name is followed before the trace gives up on it. */
+const MOUNT_TRACE_DEPTH = 6;
+
+/** A settings key as environment files write one. */
+const SETTING_KEY = /^[A-Z][A-Z0-9_]*$/;
+
+/** The settings object itself, as the two runtimes spell it. */
+const ENV_OBJECT = /^(?:process\??\.env|import\.meta\.env)$/;
+
+/** Text that adds nothing to an address once it is normalised. */
+const SEPARATORS_ONLY = /^\/*$/;
+
+/** Whether an expression is the settings object, or a name bound to something that reads it. */
+const isSettingsObject = (node: Node): boolean => {
+  if (ENV_OBJECT.test(node.getText().replace(/\s+/g, ''))) return true;
+  if (!Node.isIdentifier(node)) return false;
+  const declaration = node.getSymbol()?.getDeclarations()[0];
+  if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return false;
+  const initializer = declaration.getInitializer();
+  return initializer !== undefined && /\bprocess\??\.env\b|import\.meta\.env/.test(initializer.getText());
+};
+
+/** The setting a property read names, when it reads one off the settings object. */
+const settingRead = (node: Node): string | undefined => {
+  if (Node.isPropertyAccessExpression(node)) {
+    const key = node.getName();
+    return SETTING_KEY.test(key) && isSettingsObject(node.getExpression()) ? key : undefined;
+  }
+  if (Node.isElementAccessExpression(node)) {
+    const argument = node.getArgumentExpression();
+    if (argument === undefined || !Node.isStringLiteral(argument)) return undefined;
+    const key = argument.getLiteralValue();
+    return SETTING_KEY.test(key) && isSettingsObject(node.getExpression()) ? key : undefined;
+  }
+  return undefined;
+};
+
+/** A literal whose text never reaches the value: a comparison operand, a key, a property name. */
+const textGoesNowhere = (literal: Node): boolean => {
+  const parent = literal.getParent();
+  if (parent === undefined) return false;
+  if (Node.isBinaryExpression(parent)) {
+    const operator = parent.getOperatorToken().getKind();
+    return (
+      operator === SyntaxKind.EqualsEqualsEqualsToken ||
+      operator === SyntaxKind.ExclamationEqualsEqualsToken ||
+      operator === SyntaxKind.EqualsEqualsToken ||
+      operator === SyntaxKind.ExclamationEqualsToken
+    );
+  }
+  if (Node.isElementAccessExpression(parent)) return parent.getArgumentExpression() === literal;
+  if (Node.isPropertyAssignment(parent)) return parent.getNameNode() === literal;
+  return false;
+};
+
+/** Literal text a node writes, for the kinds of node that write any. */
+const literalTextOf = (node: Node): string | undefined => {
+  if (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)) return node.getLiteralValue();
+  if (Node.isTemplateHead(node) || Node.isTemplateMiddle(node) || Node.isTemplateTail(node)) {
+    return node.getLiteralText();
+  }
+  return undefined;
+};
+
+/** What the trace can be asked beyond the node in front of it. */
+interface MountTrace {
+  /** The declaration a name imported from a package of this workspace stands for, when the resolver has none. */
+  importedFromWorkspace: (specifier: string, name: string) => Node | undefined;
+  /** Declarations already being read, so a recursion is read once. */
+  reading: Set<Node>;
+}
+
+/**
+ * The declaration a name stands for, through an import the resolver may not be
+ * able to follow.
+ *
+ * `null` is a global the checker was never told about — `process` or `window`
+ * without their type packages — which carries no text of its own; `undefined`
+ * is a name that stands for something nobody can read.
+ */
+const declarationBehind = (identifier: Node, trace: MountTrace): Node | undefined | null => {
+  const symbol = identifier.getSymbol();
+  if (symbol === undefined) return null;
+  const own = symbol.getDeclarations()[0];
+  const target = symbol.getAliasedSymbol()?.getDeclarations()[0];
+  if (target !== undefined) return target;
+  // A package of the same workspace that is only reachable through its build
+  // output, which a clone does not have. Its source is in the project anyway.
+  if (own !== undefined && Node.isImportSpecifier(own)) {
+    const specifier = own.getImportDeclaration().getModuleSpecifierValue();
+    return trace.importedFromWorkspace(specifier, own.getName());
+  }
+  return own;
+};
+
+/** Whether a declaration sits in an installed package or the language's own library. */
+const isAmbient = (declaration: Node): boolean => {
+  const sourceFile = declaration.getSourceFile();
+  return sourceFile.getFilePath().includes('/node_modules/') || sourceFile.isDeclarationFile();
+};
+
+/** Whether an identifier is a use of a name, rather than the name of a property or of a declaration. */
+const isReference = (identifier: Node): boolean => {
+  const parent = identifier.getParent();
+  if (parent === undefined) return true;
+  if (Node.isPropertyAccessExpression(parent) && parent.getNameNode() === identifier) return false;
+  if (Node.isPropertyAssignment(parent) && parent.getNameNode() === identifier) return false;
+  if (Node.isVariableDeclaration(parent) && parent.getNameNode() === identifier) return false;
+  if (Node.isParameterDeclaration(parent) && parent.getNameNode() === identifier) return false;
+  if (Node.isFunctionDeclaration(parent) && parent.getNameNode() === identifier) return false;
+  if (Node.isTypeReference(parent) || Node.isQualifiedName(parent)) return false;
+  return true;
+};
+
+const isWithin = (node: Node, root: Node): boolean =>
+  node.getSourceFile() === root.getSourceFile() &&
+  node.getPos() >= root.getPos() &&
+  node.getEnd() <= root.getEnd();
+
+/**
+ * The part of a declaration whose text could reach a value: a constant's
+ * initialiser, or a whole function, parameters included. Anything else — a
+ * `let` somebody may reassign, a class, a method — is not read.
+ */
+const readableBodyOf = (declaration: Node): Node | undefined => {
+  if (Node.isVariableDeclaration(declaration)) {
+    if (declaration.getVariableStatement()?.getDeclarationKind() !== 'const') return undefined;
+    return declaration.getInitializer();
+  }
+  if (Node.isFunctionDeclaration(declaration)) return declaration;
+  return undefined;
+};
+
+/** Whether a parameter can carry text into the value. */
+const carriesText = (parameter: Node): boolean => {
+  const type = parameter.getType();
+  return (
+    type.isAny() ||
+    type.isUnknown() ||
+    type.isString() ||
+    type.isStringLiteral() ||
+    type.isTemplateLiteral() ||
+    (type.isUnion() && type.getUnionTypes().some((each) => each.isString() || each.isStringLiteral()))
+  );
+};
+
+/**
+ * Every setting a subtree reads, or `undefined` when something other than
+ * settings and separators could reach its value.
+ */
+const settingsIn = (root: Node, trace: MountTrace, depth: number): Set<string> | undefined => {
+  if (depth > MOUNT_TRACE_DEPTH) return undefined;
+  const found = new Set<string>();
+  let refused = false;
+
+  const follow = (declaration: Node): void => {
+    if (trace.reading.has(declaration)) return;
+    trace.reading.add(declaration);
+    const body = readableBodyOf(declaration);
+    const inner = body === undefined ? undefined : settingsIn(body, trace, depth + 1);
+    if (inner === undefined) refused = true;
+    else for (const key of inner) found.add(key);
+  };
+
+  const visit = (node: Node): void => {
+    if (refused) return;
+    const setting = settingRead(node);
+    if (setting !== undefined) {
+      found.add(setting);
+      return;
+    }
+    const text = literalTextOf(node);
+    if (text !== undefined) {
+      if (!SEPARATORS_ONLY.test(text) && !textGoesNowhere(node)) refused = true;
+      return;
+    }
+    // A parameter is text from whoever calls, which nothing here has read. One
+    // whose type can hold no text — an enum member, a number — is a key into
+    // settings and not a part of the address.
+    if (Node.isParameterDeclaration(node)) {
+      if (carriesText(node)) refused = true;
+      return;
+    }
+    if (Node.isIdentifier(node) && isReference(node)) {
+      const declaration = declarationBehind(node, trace);
+      if (declaration === null) return;
+      if (declaration === undefined) {
+        refused = true;
+        return;
+      }
+      if (isAmbient(declaration) || isWithin(declaration, root)) return;
+      if (Node.isEnumDeclaration(declaration)) return;
+      if (Node.isEnumMember(declaration)) {
+        const initializer = declaration.getInitializer();
+        const written = initializer === undefined ? undefined : literalTextOf(initializer);
+        if (written !== undefined && !SEPARATORS_ONLY.test(written)) refused = true;
+        return;
+      }
+      follow(declaration);
+      return;
+    }
+    node.forEachChild(visit);
+  };
+
+  visit(root);
+  return refused ? undefined : found;
+};
+
+/** Environment files as a repository commits them: `.env`, `.env.production`, `.env.example`. */
+const ENV_FILE = /^\.env(?:\.[\w.-]+)?$/;
+
+/** Directories that hold no environment file of the service's own. */
+const NOT_THE_SERVICES = new Set(['node_modules', 'dist', 'build', 'coverage', '.git', '.flowatlas']);
+
+/** How deep under the service an environment file is looked for. */
+const ENV_FILE_DEPTH = 8;
+
+/** Every environment file under a service's directory, repo-relative and sorted. */
+const envFilesUnder = (rootDir: string): string[] => {
+  const out: string[] = [];
+  const walk = (at: string, depth: number): void => {
+    if (depth > ENV_FILE_DEPTH) return;
+    let entries;
+    try {
+      entries = readdirSync(join(rootDir, at), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const path = at === '' ? entry.name : `${at}/${entry.name}`;
+      if (entry.isDirectory()) {
+        if (!NOT_THE_SERVICES.has(entry.name)) walk(path, depth + 1);
+      } else if (ENV_FILE.test(entry.name)) {
+        out.push(path);
+      }
+    }
+  };
+  walk('', 0);
+  return out.sort();
+};
+
+/** The settings one environment file gives a value, empty values left out. */
+const settingsSetIn = (text: string): Set<string> => {
+  const set = new Set<string>();
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim().replace(/^export\s+/, '');
+    if (line === '' || line.startsWith('#')) continue;
+    const equals = line.indexOf('=');
+    if (equals <= 0) continue;
+    const key = line.slice(0, equals).trim();
+    const written = line.slice(equals + 1).trim();
+    const quoted = /^(['"`])(.*)\1$/.exec(written);
+    const value = quoted === null ? written.replace(/(?:^|\s+)#.*$/, '').trim() : (quoted[2] ?? '');
+    if (value !== '') set.add(key);
+  }
+  return set;
+};
+
+/**
+ * The leading part of every address, when it is read from settings.
+ *
+ * Leading means in front of everything: the global prefix when the service sets
+ * one, and otherwise the versioning prefix. A hole in a versioning prefix that
+ * sits behind a global prefix is in the middle of the address, and is left to
+ * R89's rule.
+ *
+ * The environment files are the service's own, under its directory. A file
+ * elsewhere in the repository configures something else, and whether it sets a
+ * setting of the same name says nothing certain about this service.
+ */
+const mountOf = (info: BootstrapInfo, project: Project, rootDir: string): Mount | undefined => {
+  const call: AddressingCall | undefined =
+    info.globalPrefix !== undefined && info.globalPrefix !== ''
+      ? 'setGlobalPrefix'
+      : info.versioning?.type === 'uri'
+        ? 'enableVersioning'
+        : undefined;
+  const hole = call === undefined ? undefined : info.leadingHoles[call];
+  if (call === undefined || hole === undefined) return undefined;
+
+  const workspace = workspaceRootOf(rootDir);
+  const packages = workspace === undefined ? [] : workspacePackages(workspace);
+  const trace: MountTrace = {
+    reading: new Set(),
+    importedFromWorkspace: (specifier, name) => {
+      const pkg = packages.find((each) => each.name === specifier);
+      if (pkg === undefined) return undefined;
+      for (const sourceFile of project.getSourceFiles()) {
+        const path = sourceFile.getFilePath();
+        if (!path.startsWith(`${pkg.dir}/`) || path.includes('/node_modules/')) continue;
+        if (sourceFile.isDeclarationFile()) continue;
+        const exported = sourceFile.getExportedDeclarations().get(name)?.[0];
+        if (exported !== undefined) return exported;
+      }
+      return undefined;
+    },
+  };
+  const settings = settingsIn(hole.node, trace, 0);
+  if (settings === undefined || settings.size === 0) return undefined;
+
+  const files = envFilesUnder(rootDir);
+  const setIn = files.filter((file) => {
+    let text: string;
+    try {
+      text = readFileSync(join(rootDir, file), 'utf8');
+    } catch {
+      return false;
+    }
+    const set = settingsSetIn(text);
+    return [...settings].some((key) => set.has(key));
+  });
+  return { call, settings: [...settings].sort(), setIn, envFiles: files.length, at: hole.at };
+};
 
 export interface ReadBootstrapOptions {
   project: Project;
@@ -532,6 +932,8 @@ export const readBootstrap = ({
     foldAddressing(info, readAddressingElsewhere(project, rootDir, absolutePath));
   }
 
+  const mount = mountOf(info, project, rootDir);
+  if (mount !== undefined) info.mount = mount;
   return info;
 };
 
