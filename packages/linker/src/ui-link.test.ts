@@ -249,3 +249,62 @@ describe('a request a browser makes of the service it was served from', () => {
     expect(outcome.kind === 'linked' && outcome.via).toBe('same-service');
   });
 });
+
+/**
+ * A request that no route read in full answers, beside a route whose address has
+ * a part nobody read (R137).
+ *
+ * novu's shape: every address begins with a mount the deployment sets, so each
+ * route is recorded as `/${…}v1/…`, and the client asks for `/v1/…` under a base
+ * that already carries the mount. Forty-two such requests were reported as ones
+ * no configured service serves.
+ */
+describe('a request behind the part of a route nobody read', () => {
+  const mounted = route('api', 'GET', '/${…}v1/agents/:param/bridge');
+
+  it('is still not joined', () => {
+    const outcome = resolveUiCall(
+      uiCall('cli', 'GET', '/v1/agents/:param/bridge'),
+      indexOf({ api: [mounted], cli: [] }),
+    );
+    expect(outcome.kind).toBe('noRoute');
+  });
+
+  it('names the route it would reach, rather than saying nothing serves it', () => {
+    const outcome = resolveUiCall(
+      uiCall('cli', 'GET', '/v1/agents/:param/bridge'),
+      indexOf({ api: [mounted], cli: [] }),
+    );
+    expect(outcome.kind === 'noRoute' && outcome.unread).toEqual(['api GET /${…}v1/agents/:param/bridge']);
+    const finding = uiFindingFor(outcome);
+    expect(finding?.reason).toBe('target-route-not-found');
+    expect(finding?.message).toBe(
+      'no configured service serves GET /v1/agents/:param/bridge at an address read in full, though ' +
+        'api GET /${…}v1/agents/:param/bridge answers it if the part of its address nobody read is left open',
+    );
+    expect(finding?.hint).toContain('not evidence that the route is missing');
+  });
+
+  it('says the same of a service the configuration named', () => {
+    const outcome = resolveUiCall(
+      uiCall('cli', 'GET', '/v1/agents/:param/bridge', { baseUrlEnv: 'NOVU_API_URL' }),
+      indexOf({ api: [mounted], cli: [] }, { 'cli\0NOVU_API_URL': 'api' }),
+    );
+    expect(uiFindingFor(outcome)?.message).toContain('target service api has no route GET');
+    expect(uiFindingFor(outcome)?.message).toContain('api GET /${…}v1/agents/:param/bridge answers it');
+  });
+
+  it('keeps the plain sentence where the read part already rules the route out', () => {
+    // By verb, by a literal segment, and by a route of which nothing but the
+    // hole was read, which would otherwise be named beside every request.
+    const outcome = resolveUiCall(
+      uiCall('cli', 'POST', '/v1/invoices'),
+      indexOf({
+        api: [mounted, route('api', 'GET', '/${…}v1/invoices'), route('api', 'POST', '/${…}')],
+        cli: [],
+      }),
+    );
+    expect(outcome.kind === 'noRoute' && outcome.unread).toEqual([]);
+    expect(uiFindingFor(outcome)?.message).toBe('no configured service serves POST /v1/invoices');
+  });
+});
