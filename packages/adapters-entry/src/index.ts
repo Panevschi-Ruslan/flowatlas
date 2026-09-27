@@ -8,6 +8,7 @@ import {
   koaRoutesAdapter,
 } from './call-routes.js';
 import { nestjsHttpAdapter } from './nestjs-http.js';
+import { medusaRoutesAdapter } from './medusa-routes.js';
 import { nextjsRoutesAdapter } from './nextjs-routes.js';
 import { nestjsMicroserviceAdapter } from './nestjs-microservice.js';
 import { nestjsScheduleAdapter } from './nestjs-schedule.js';
@@ -25,6 +26,7 @@ export const PACKAGE_NAME = '@flowatlas/adapters-entry';
 export const entryAdapters: readonly EntryAdapter[] = [
   nestjsHttpAdapter,
   nextjsRoutesAdapter,
+  medusaRoutesAdapter,
   honoRoutesAdapter,
   expressRoutesAdapter,
   fastifyRoutesAdapter,
@@ -58,11 +60,14 @@ export type {
 export { dialectOf, EXPRESS, FASTIFY, HONO, KOA, ROUTE_DIALECTS } from './route-dialects.js';
 export type { ActionBuilder } from './action-builders.js';
 export { ACTION_BUILDERS, NEXT_SAFE_ACTION, ZSA } from './action-builders.js';
-export { APP_PAGES, APP_ROUTER, PAGES_API, routePathOfFile } from './nextjs-paths.js';
-export type { FsRouter } from './nextjs-paths.js';
+export { APP_PAGES, APP_ROUTER, PAGES_API } from './nextjs-paths.js';
+export { pathPatternTest, readVerbFile, routePathOfFile, verbReading } from './fs-routes.js';
+export type { FsRouter, FsRouteVerb, SegmentConvention, VerbReading } from './fs-routes.js';
+export { MEDUSA_API } from './medusa-routes.js';
 export {
   entryRegistriesAdapter,
   honoRoutesAdapter,
+  medusaRoutesAdapter,
   nestjsHttpAdapter,
   nestjsMicroserviceAdapter,
   nestjsScheduleAdapter,

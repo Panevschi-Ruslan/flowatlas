@@ -1,78 +1,39 @@
-import { normalizePath, PARAM_PLACEHOLDER } from '@flowatlas/core';
+import type { FsRouter } from './fs-routes.js';
 
 /**
- * The framework whose router is the file system, described rather than
- * implemented.
- *
- * Every other framework this tool reads registers a route by calling something:
- * a decorator, a method on an application, an entry in a table. There is always
- * a call site, and the path is an argument to it. Here there is no call at all.
- * `app/api/orders/[id]/route.ts` is served at `/api/orders/:id` because of where
- * the file is, and nothing inside the file says so. So the reader for it is not
- * a reader of expressions but a reader of paths, and the rules below are the
- * whole of it.
+ * The routers one framework has had, as rows of the description in `fs-routes.ts`.
  *
  * Two routers, because the framework has had two and repositories have both at
  * once during the years it takes to move. They differ in one thing only: which
- * part of the path is the route, and whether the file name is part of it.
+ * part of the path is the route, and whether the file name is part of it. Neither
+ * of them is a reading — the reading is shared with every other file-system
+ * router this tool knows, and these three values are the whole of what is
+ * particular to this framework's address space (R91).
  */
-
-/** A directory that groups files without appearing in the address. */
-const GROUP = /^\(.*\)$/;
-
-/** A slot of a layout rendered beside another, which is not a path either. */
-const SLOT = /^@/;
 
 /**
- * A folder the router refuses to serve.
+ * Every segment spelling this framework has.
  *
- * The underscore is the framework's own way of saying "this is code, not a
- * route", and it is how a repository keeps components next to the pages that
- * use them without those components becoming addresses.
+ * All five, and it is the only router here that has all five. A group in
+ * brackets and a slot behind an at-sign both drop out of the address; an
+ * underscore opts a whole subtree out of routing; `[id]` is a parameter and
+ * `[...rest]` is any number of segments.
  */
-const PRIVATE = /^_/;
-
-/** `[id]` is one segment of any value; `[...rest]` and `[[...rest]]` are any number. */
-const DYNAMIC = /^\[(\.\.\.)?(.+?)\]$/;
-const OPTIONAL_CATCH_ALL = /^\[\[\.\.\..+\]\]$/;
-
-/**
- * One segment of a directory path, as the router reads it.
- *
- * `null` means the segment contributes nothing to the address, which is a
- * different answer from an empty string: a repository that spells a group as a
- * path serves `/api/(admin)/users` at `/api/users`, and getting that wrong
- * moves every route under it.
- */
-const segmentOf = (segment: string): string | null => {
-  if (segment === '') return null;
-  if (GROUP.test(segment) || SLOT.test(segment)) return null;
-  if (OPTIONAL_CATCH_ALL.test(segment)) return '*';
-  const dynamic = DYNAMIC.exec(segment);
-  if (dynamic === null) return segment;
-  return dynamic[1] === undefined ? PARAM_PLACEHOLDER : '*';
-};
-
-/** Where in a repo-relative path the router's root is, and what it serves. */
-export interface FsRouter {
-  /** The directory whose contents are the address space. */
-  readonly root: string;
-  /**
-   * File names that declare a route rather than contribute a segment.
-   *
-   * The App Router names them; the Pages Router has none, because there every
-   * file is a route and its own name is the last segment.
-   */
-  readonly routeFiles?: readonly string[];
-  /** A prefix every address under this router carries. */
-  readonly prefix?: string;
-}
+const NEXT_SEGMENTS = ['group', 'slot', 'private', 'param', 'catch-all'] as const;
 
 /** `app/**\/route.ts`, where the file name says what the file is for. */
-export const APP_ROUTER: FsRouter = { root: 'app', routeFiles: ['route'] };
+export const APP_ROUTER: FsRouter = {
+  root: 'app',
+  routeFiles: ['route'],
+  segments: NEXT_SEGMENTS,
+};
 
 /** `app/**\/page.tsx`, the screen at the same address. */
-export const APP_PAGES: FsRouter = { root: 'app', routeFiles: ['page'] };
+export const APP_PAGES: FsRouter = {
+  root: 'app',
+  routeFiles: ['page'],
+  segments: NEXT_SEGMENTS,
+};
 
 /**
  * `pages/api/**`, the older router, where the file name is the last segment.
@@ -80,92 +41,8 @@ export const APP_PAGES: FsRouter = { root: 'app', routeFiles: ['page'] };
  * `index` is the exception: it stands for the directory it is in, which is the
  * one rule the App Router dropped by naming its route files instead.
  */
-export const PAGES_API: FsRouter = { root: 'pages/api', prefix: '/api' };
-
-const FILE_EXTENSION = /\.[cm]?[jt]sx?$/;
-
-/**
- * The directory the framework's own convention allows between a package and its
- * application, which is part of neither the package's path nor the address.
- */
-const SOURCE_DIRECTORY = 'src';
-
-/**
- * Where an application begins, and what stands in front of everything it serves.
- *
- * A repository may hold more than one application, and the ones that do are not
- * exotic: payload keeps thirty-nine of them under `test/`, `templates/` and
- * `examples/`, each a whole Next.js application with its own `app/` directory.
- * Every one of those declares `api/[...slug]/route.ts`, so reading the router
- * root wherever it occurs and nothing in front of it made two hundred and
- * seventy-one route declarations claim the seventeen addresses their names
- * collide on, and the graph kept whichever arrived last. Seventeen of two
- * hundred and eighty-eight, and the arithmetic said nothing was missing.
- *
- * So the segments in front of the router root are kept, and they are what tells
- * one application from another. The address of a route in the application at the
- * service's own root is exactly what the framework serves it at, which is the
- * common case and the one every existing reading depends on. A route in an
- * application somewhere below is addressed from where that application is —
- * `/test/fields/api/*` rather than a second claim on `/api/*` — because those
- * two are never deployed together and a graph that merged them would say one
- * address is answered by thirty bodies.
- *
- * `src` drops out, because the framework itself allows an application to sit
- * either at a package's root or under `src` and serves both at the same
- * addresses.
- */
-const applicationPrefix = (before: readonly string[]): string => {
-  const kept = [...before];
-  if (kept[kept.length - 1] === SOURCE_DIRECTORY) kept.pop();
-  return kept.length === 0 ? '' : `/${kept.join('/')}`;
-};
-
-/**
- * The address a file is served at, or `null` when this router does not serve it.
- *
- * `file` is repo-relative and POSIX, as every path in the graph is. A path that
- * climbs out of the service — a file of a workspace package the service reads —
- * is served by nothing: a library has no address space of its own, and an
- * application inside one belongs to whichever service is that package.
- *
- * The root is matched wherever it occurs rather than only at the start, because
- * a repository is as likely to keep its application under `src/` as at the top.
- * The first occurrence is the one taken: an application whose own directories
- * include one called `app` has that inner one as an ordinary segment of its
- * addresses, and taking the last would both lose it and mistake it for a second
- * application.
- */
-export const routePathOfFile = (file: string, router: FsRouter): string | null => {
-  if (file.startsWith('../')) return null;
-  const parts = file.split('/');
-  const rootParts = router.root.split('/');
-  let at = -1;
-  for (let index = 0; index + rootParts.length <= parts.length && at < 0; index += 1) {
-    if (rootParts.every((part, offset) => parts[index + offset] === part)) at = index;
-  }
-  if (at < 0) return null;
-
-  const prefix = applicationPrefix(parts.slice(0, at));
-  const after = parts.slice(at + rootParts.length);
-  const name = (after.pop() ?? '').replace(FILE_EXTENSION, '');
-  if (name === '') return null;
-
-  if (router.routeFiles !== undefined) {
-    if (!router.routeFiles.includes(name)) return null;
-  } else {
-    // The older router: the file name is the last segment, and a private file
-    // is not a route at all.
-    if (PRIVATE.test(name)) return null;
-    if (name !== 'index') after.push(name);
-  }
-
-  // A directory the underscore opts out of routing serves nothing at all, so a
-  // file under one is not a route with a segment missing — it is not a route.
-  if (after.some((segment) => PRIVATE.test(segment))) return null;
-
-  // A grouped or slot directory drops out; nothing else may, because a segment
-  // that could not be read would make the address a different one.
-  const kept = after.map(segmentOf).filter((segment): segment is string => segment !== null);
-  return normalizePath(`${prefix}${router.prefix ?? ''}/${kept.join('/')}`);
+export const PAGES_API: FsRouter = {
+  root: 'pages/api',
+  prefix: '/api',
+  segments: NEXT_SEGMENTS,
 };

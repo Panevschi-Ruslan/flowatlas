@@ -26,7 +26,14 @@ export const REACT_EXTRACTOR = '@flowatlas/extractor-react';
  * exactly the same passes as a NestJS one, so its type belongs here rather than
  * in a reader of its own.
  */
-export const SERVER_TYPES: readonly string[] = ['nestjs', 'express', 'fastify', 'koa', 'nextjs'];
+export const SERVER_TYPES: readonly string[] = [
+  'nestjs',
+  'express',
+  'fastify',
+  'koa',
+  'nextjs',
+  'medusa',
+];
 
 /**
  * Repository types the React reader handles on its own.

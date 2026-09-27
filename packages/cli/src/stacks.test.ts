@@ -39,6 +39,19 @@ describe('the stack a repository is built on', () => {
     expect(guessUnread(pkg)).toBeUndefined();
   });
 
+  // The dependency that was a false signal. This framework declares Express and
+  // registers no route on it — every route it serves is the path of a file — and
+  // its admin panel is React, so a manifest that declares all three describes
+  // one framework and two things the repository is not (R91).
+  it('prefers the framework over the two dependencies it brings with it', () => {
+    const pkg = {
+      dependencies: { '@medusajs/medusa': '2.21.1', express: '4.21.2', react: '19.0.0' },
+    };
+    expect(guessType(pkg)).toBe('medusa');
+    expect(guessType({ devDependencies: { '@medusajs/framework': '2.21.1' } })).toBe('medusa');
+    expect(guessUnread(pkg)).toBeUndefined();
+  });
+
   it('names the framework when there is no reader for it', () => {
     expect(guessUnread({ dependencies: { nuxt: '3.14.0' } })).toBe('Nuxt');
     expect(guessUnread({ dependencies: { '@remix-run/react': '2.0.0' } })).toBe('Remix');

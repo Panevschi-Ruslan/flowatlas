@@ -1,0 +1,351 @@
+{
+  "schemaVersion": 4,
+  "repo": "medusa-fs-router",
+  "generatedAt": "2026-09-27T09:31:15.439Z",
+  "nodes": [
+    {
+      "id": "entry:medusa-fs-router:http:GET:/admin/orders",
+      "type": "entry",
+      "label": "GET /admin/orders",
+      "repo": "medusa-fs-router",
+      "file": "src/api/admin/orders/route.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/admin/orders",
+        "adapter": "medusa-routes",
+        "registration": "api/route",
+        "middlewareRead": false,
+        "middleware": [
+          "authenticate"
+        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:medusa-fs-router:http:GET:/admin/orders/:param",
+      "type": "entry",
+      "label": "GET /admin/orders/:param",
+      "repo": "medusa-fs-router",
+      "file": "src/api/admin/orders/[id]/route.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/admin/orders/:param",
+        "adapter": "medusa-routes",
+        "registration": "api/route",
+        "middlewareRead": false,
+        "middleware": [
+          "authenticate"
+        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:medusa-fs-router:http:GET:/store/(group)",
+      "type": "entry",
+      "label": "GET /store/(group)",
+      "repo": "medusa-fs-router",
+      "file": "src/api/store/(group)/route.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/store/(group)",
+        "adapter": "medusa-routes",
+        "registration": "api/route",
+        "middlewareRead": false,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:medusa-fs-router:http:GET:/store/products",
+      "type": "entry",
+      "label": "GET /store/products",
+      "repo": "medusa-fs-router",
+      "file": "src/api/store/products/route.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/store/products",
+        "adapter": "medusa-routes",
+        "registration": "api/route",
+        "middlewareRead": false,
+        "middleware": [
+          "authenticate"
+        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:medusa-fs-router:http:HEAD:/admin/orders/:param",
+      "type": "entry",
+      "label": "HEAD /admin/orders/:param",
+      "repo": "medusa-fs-router",
+      "file": "src/api/admin/orders/[id]/route.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "HEAD",
+        "path": "/admin/orders/:param",
+        "adapter": "medusa-routes",
+        "registration": "api/route",
+        "middlewareRead": false,
+        "middleware": [
+          "authenticate"
+        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:medusa-fs-router:http:POST:/admin/orders",
+      "type": "entry",
+      "label": "POST /admin/orders",
+      "repo": "medusa-fs-router",
+      "file": "src/api/admin/orders/route.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/admin/orders",
+        "adapter": "medusa-routes",
+        "registration": "api/route",
+        "middlewareRead": false,
+        "middleware": [
+          "authenticate",
+          "validateBody"
+        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:medusa-fs-router:http:POST:/hooks/:param",
+      "type": "entry",
+      "label": "POST /hooks/:param",
+      "repo": "medusa-fs-router",
+      "file": "src/api/hooks/[provider]/route.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/hooks/:param",
+        "adapter": "medusa-routes",
+        "registration": "api/route",
+        "middlewareRead": false,
+        "handlerVia": "function",
+        "handlerBodyRead": false
+      }
+    },
+    {
+      "id": "entry:medusa-fs-router:http:POST:/store/products",
+      "type": "entry",
+      "label": "POST /store/products",
+      "repo": "medusa-fs-router",
+      "file": "src/api/store/products/route.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/store/products",
+        "adapter": "medusa-routes",
+        "registration": "api/route",
+        "middlewareRead": false,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "medusa-fs-router#src/api/admin/orders/[id]/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "medusa-fs-router",
+      "file": "src/api/admin/orders/[id]/route.ts",
+      "line": 5
+    },
+    {
+      "id": "medusa-fs-router#src/api/admin/orders/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "medusa-fs-router",
+      "file": "src/api/admin/orders/route.ts",
+      "line": 12
+    },
+    {
+      "id": "medusa-fs-router#src/api/store/(group)/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "medusa-fs-router",
+      "file": "src/api/store/(group)/route.ts",
+      "line": 16
+    },
+    {
+      "id": "medusa-fs-router#src/api/store/products/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "medusa-fs-router",
+      "file": "src/api/store/products/route.ts",
+      "line": 11
+    },
+    {
+      "id": "medusa-fs-router#src/api/store/products/route.ts:POST",
+      "type": "function",
+      "label": "POST",
+      "repo": "medusa-fs-router",
+      "file": "src/api/store/products/route.ts",
+      "line": 15
+    },
+    {
+      "id": "medusa-fs-router#src/services/orders.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "medusa-fs-router",
+      "file": "src/services/orders.ts",
+      "line": 2
+    },
+    {
+      "id": "medusa-fs-router#src/services/orders.ts:oneOrder",
+      "type": "function",
+      "label": "oneOrder",
+      "repo": "medusa-fs-router",
+      "file": "src/services/orders.ts",
+      "line": 4
+    },
+    {
+      "id": "medusa-fs-router#src/services/products.ts:listProducts",
+      "type": "function",
+      "label": "listProducts",
+      "repo": "medusa-fs-router",
+      "file": "src/services/products.ts",
+      "line": 1
+    },
+    {
+      "id": "repo:medusa-fs-router",
+      "type": "repo",
+      "label": "medusa-fs-router",
+      "repo": "medusa-fs-router",
+      "meta": {
+        "stats": {
+          "files": 12,
+          "filesRead": 12,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@medusajs/framework": 6
+          }
+        },
+        "adapters": {
+          "entry": [
+            "medusa-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:medusa-fs-router:http:GET:/admin/orders",
+      "to": "medusa-fs-router#src/api/admin/orders/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/api/admin/orders/route.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:medusa-fs-router:http:GET:/admin/orders/:param",
+      "to": "medusa-fs-router#src/api/admin/orders/[id]/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/api/admin/orders/[id]/route.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:medusa-fs-router:http:GET:/store/(group)",
+      "to": "medusa-fs-router#src/api/store/(group)/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/api/store/(group)/route.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:medusa-fs-router:http:GET:/store/products",
+      "to": "medusa-fs-router#src/api/store/products/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/api/store/products/route.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:medusa-fs-router:http:HEAD:/admin/orders/:param",
+      "to": "medusa-fs-router#src/api/admin/orders/[id]/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/api/admin/orders/[id]/route.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:medusa-fs-router:http:POST:/store/products",
+      "to": "medusa-fs-router#src/api/store/products/route.ts:POST",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/api/store/products/route.ts",
+      "line": 15
+    },
+    {
+      "from": "medusa-fs-router#src/api/admin/orders/[id]/route.ts:GET",
+      "to": "medusa-fs-router#src/services/orders.ts:oneOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api/admin/orders/[id]/route.ts",
+      "line": 6
+    },
+    {
+      "from": "medusa-fs-router#src/api/admin/orders/route.ts:GET",
+      "to": "medusa-fs-router#src/services/orders.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api/admin/orders/route.ts",
+      "line": 13
+    },
+    {
+      "from": "medusa-fs-router#src/api/store/products/route.ts:GET",
+      "to": "medusa-fs-router#src/services/products.ts:listProducts",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api/store/products/route.ts",
+      "line": 12
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/api/admin/dead/route.ts",
+      "line": 1,
+      "reason": "route-verb-unread",
+      "message": "src/api/admin/dead/route.ts is served at /admin/dead but exports no verb this could read.",
+      "hint": "Export GET, POST and the rest by name; a verb assembled at run time cannot be joined to anything that asks for it.",
+      "symbol": "/admin/dead",
+      "adapter": "medusa-routes"
+    },
+    {
+      "file": "src/api/hooks/[provider]/route.ts",
+      "line": 12,
+      "reason": "route-handler-unread",
+      "message": "POST /hooks/:param is the value a call handed back, and nothing declared in this repository was handed to that call, so the way in has no handler that could be read. It answers at /hooks/:param.",
+      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
+      "symbol": "POST /hooks/:param",
+      "adapter": "medusa-routes"
+    },
+    {
+      "file": "src/api/middlewares.ts",
+      "line": 1,
+      "reason": "middleware-matcher-unread",
+      "sites": 1,
+      "message": "1 matcher in the middleware list is not a path pattern, so which routes it covers was not read.",
+      "hint": "Routes those entries cover are reported with nothing named in front of them. Write the matcher as a path pattern, or name the routes under doctor.publicRoutes.",
+      "symbol": "/^\\/hooks\\/.*$/",
+      "adapter": "medusa-routes"
+    }
+  ]
+}
