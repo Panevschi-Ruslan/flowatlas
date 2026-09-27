@@ -37,5 +37,13 @@ because it is a limit of this reading rather than a mistake somebody made.
 
 ## What is not here
 
-The reader for this convention. That is a separate ticket; this fixture holds the
-tool to the row and nothing more.
+The reader for this convention, and that is now deliberate rather than pending.
+This repository declares nothing that names a convention anybody has described,
+so it is the case the row is for: a repository that may be a library and may be a
+file-system router nobody here knows, said as those two and not as a clean bill of
+health.
+
+The other half of the pair is `medusa-fs-router`, next door. There the framework
+is declared, so the convention is described and the routes are read (R91). The two
+fixtures are the two sides of one sentence, and both have to keep passing: naming
+a convention must not make the row for an unnamed one go away.

@@ -10,7 +10,8 @@ import {
 } from '@flowatlas/core';
 import { Project } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
-import { APP_PAGES, APP_ROUTER, PAGES_API, routePathOfFile } from './nextjs-paths.js';
+import { routePathOfFile } from './fs-routes.js';
+import { APP_PAGES, APP_ROUTER, PAGES_API } from './nextjs-paths.js';
 import { nextjsRoutesAdapter } from './nextjs-routes.js';
 
 interface Read {

@@ -14,6 +14,15 @@ export const TYPE_SIGNATURES: ReadonlyArray<readonly [type: string, dependency: 
   // Nest application. The first match wins, so the most specific goes first.
   ['nestjs', '@nestjs/core'],
   ['angular', '@angular/core'],
+  // Above both Express and React, and for the same reason NestJS is above
+  // Express: this framework brings Express with it and never registers a route
+  // on it — its routes are the paths of its files — and its admin panel is
+  // React, so a repository built on it declares two dependencies that both
+  // describe something it is not. Read as Express it produced one route of four
+  // hundred and eighty-eight; read as React it would lose every query site it
+  // has. A dependency is not a stack, and this is the row that says so (R91).
+  ['medusa', '@medusajs/framework'],
+  ['medusa', '@medusajs/medusa'],
   // Before `react`, and for the same reason NestJS comes before Express: a
   // repository built on the file-system router declares both, and it is the
   // more specific of the two. Reading it as plain React would find its screens
@@ -38,11 +47,12 @@ export const UNKNOWN_TYPE = 'unknown';
  * strength of a second dependency it happens to declare.
  */
 export const UNREAD_SIGNATURES: ReadonlyArray<readonly [framework: string, dependency: string]> = [
-  // The two file-system routers that are left. What they have in common with
-  // the one that is now read is that the path a route is served at is the path
-  // of the file declaring it — a different fact from a call with a path in it.
-  // What they do not have in common with it is the language the rest is
-  // written in, which is what would have to be read next.
+  // The file-system routers that are left. What they have in common with the two
+  // that are now read is that the path a route is served at is the path of the
+  // file declaring it — a different fact from a call with a path in it — and by
+  // now that part is a row of data rather than a reader (`fs-routes.ts`). What
+  // they do not have in common with them is the language the rest is written in,
+  // which is what would have to be read next.
   ['Nuxt', 'nuxt'],
   ['Remix', '@remix-run/react'],
   ['Vue', 'vue'],
@@ -109,11 +119,17 @@ const importableByName = (pkg: PackageJson): boolean => {
  * Widening every member's manifest instead has been measured and it is wrong
  * here. `packages/medusa` declares Express, the monorepo root carries React in
  * its tooling, and the table above ranks React above Express because a repository
- * that declares both is usually the browser half; a medusa read from a widened
- * manifest is handed to the browser reader and loses every query site it has. The
- * table is the reason, so the guard belongs beside the table: what a service is
- * built on is answered from the manifest of the service, and the root is consulted
- * only where the service's own manifest says nothing whatsoever.
+ * that declares both is usually the browser half; such a member read from a
+ * widened manifest is handed to the browser reader and loses every query site it
+ * has. The table is the reason, so the guard belongs beside the table: what a
+ * service is built on is answered from the manifest of the service, and the root
+ * is consulted only where the service's own manifest says nothing whatsoever.
+ *
+ * That example's own case is now answered a step earlier — the member declares
+ * the framework it is built on and the table names it above both the dependencies
+ * it brings with it (R91) — so the measurement stands as the reason and not as a
+ * live symptom. The next member with two readable dependencies and nothing of its
+ * own will be the one this guard is for.
  */
 export const guessWorkspaceType = (pkg: PackageJson, root: PackageJson | undefined): string => {
   const own = guessType(pkg);

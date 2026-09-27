@@ -1,12 +1,10 @@
 import {
   hasAnyDependency,
   hasDependency,
-  HTTP_METHODS,
   makeEntryId,
   makeHttpEntryKey,
   namedFunction,
   normalizeFilePath,
-  originOfValue,
   type EntryAdapter,
   type EntryHandler,
   type EntryNode,
@@ -17,9 +15,9 @@ import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ActionBuilder } from './action-builders.js';
 import { ACTION_BUILDERS } from './action-builders.js';
-import { APP_ROUTER, PAGES_API, routePathOfFile } from './nextjs-paths.js';
+import { pathPatternTest, readVerbFile, reportUnreadHandler, routePathOfFile } from './fs-routes.js';
+import { APP_ROUTER, PAGES_API } from './nextjs-paths.js';
 import {
-  builtExportFunction,
   handlerOfFunction,
   inlineHandlerOf,
   repoFunctionOf,
@@ -57,156 +55,6 @@ const opensWith = (statements: readonly TsNode[], directive: string): boolean =>
 const exportedFunction = (declaration: TsNode): NamedFunction | undefined =>
   namedFunction(declaration);
 
-/**
- * The same, for a verb export, which may be a function a call handed back.
- *
- * `export const GET = withWorkspace(async (req) => { … })` is a route handler
- * and reads as no function at all by the rule above, because what the module
- * declares is a value. Every entry in such a file was correct — the route, the
- * verb and the path are all read from where the file is — and none of them had
- * anything behind it, so nothing on the far side of the boundary was attached
- * to the way in (R72). `builtExportFunction` is the reading the React function
- * index uses to give that export a node, shared rather than written again here,
- * because two rules for what the function behind an export is would name two
- * different things within a release. That shared reading now also covers the
- * two other spellings a large repository uses — a value bound to a local name
- * and re-exported under a verb's, and a verb taken out of an object a call
- * handed back (`export const { POST } = serve(…)`) — and it covers them on both
- * sides at once, which is the only way it is worth covering them: an adapter
- * that named a function the index had no node for would draw an edge to
- * nothing. The third spelling, a verb written as another verb's name, is read
- * below and needs nothing of the index, because the verb it names already has
- * the node.
- *
- * Deliberately not folded into `exportedFunction`, which the server actions
- * below also use: there, an export that is not a function written in place is
- * the signal to read the builder chain, which names the action inside the call
- * and records which library built it. That is a finer answer than this one and
- * it would be lost if this rule answered first.
- */
-const verbReading = (declaration: TsNode, depth = 0): VerbReading | undefined => {
-  const written = exportedFunction(declaration);
-  // A function declared here: its body is the body, and there is nothing to
-  // doubt about whether it was read.
-  if (written !== undefined) return { fn: written, bodyRead: true };
-  const built = builtExportFunction(declaration);
-  // A value a call handed back: what the node points at is the call, so whether
-  // anything was read depends on what the call was handed.
-  if (built !== undefined) return { fn: built, bodyRead: callHandedWork(built.body) };
-  return aliasedFunction(declaration, depth);
-};
-
-/**
- * What a verb export stands for, and whether there is code behind it.
- *
- * The two facts travel together because only the reading that answered knows the
- * second one. A `NamedFunction` carries a `body`, and what that body is depends
- * on which reading produced it — the function's own body, or the call that built
- * the value. Asking the question afterwards, of the body alone, cannot tell the
- * difference: `async () => Response.json(x)` has a call for a body and was read
- * in full, and `restHandler(config)` has a call for a body and was not read at
- * all.
- */
-interface VerbReading {
-  fn: NamedFunction;
-  /** False when the node points at a call that was handed nothing to read. */
-  bodyRead: boolean;
-}
-
-/** How far a verb written as another verb's name is followed. */
-const ALIAS_DEPTH = 4;
-
-/**
- * The verb an aliased verb stands for.
- *
- * `export const PUT = PATCH;` is how a repository keeps an old spelling of a
- * route working, and `export const POST = GET;` is how one answers a scheduled
- * job whichever way the scheduler calls it. The initializer is a name rather
- * than a call, so the two readings above both decline it and are right to: the
- * module declares no function here and built nothing either. But the verb it
- * names is in the graph already, with a node of its own, and pointing both ways
- * in at that one node is the whole of what the code says.
- *
- * The name is resolved rather than looked up in this file, because an alias is
- * free to name a verb another module exports, and the node the target has is
- * the one in the file it was declared in. Whatever the name resolves to is then
- * read as a verb in its own right, so an alias of a built export reaches the
- * built export's function; a chain is followed a few links and then abandoned,
- * which also settles the mutually aliased pair nobody writes on purpose.
- */
-const aliasedFunction = (declaration: TsNode, depth: number): VerbReading | undefined => {
-  if (depth >= ALIAS_DEPTH) return undefined;
-  if (!Node.isVariableDeclaration(declaration)) return undefined;
-  const initializer = declaration.getInitializer();
-  if (initializer === undefined) return undefined;
-  const value = unwrapValue(initializer);
-  if (!Node.isIdentifier(value)) return undefined;
-  const origin = originOfValue(value);
-  // A name that resolves into a package is that package's function, and this
-  // repository has no node for it to point at.
-  return origin.kind === 'local' ? verbReading(origin.declaration, depth + 1) : undefined;
-};
-
-/**
- * Whether a call that built a verb was handed anything to read.
- *
- * A verb exported as the value a call handed back is read as a function by
- * `builtExportFunction`, and the node it produces points at the call. That is
- * right when the call was handed the work — `withAdmin(async () => …)` has the
- * handler written inside it — and it is a hollow node when the call was handed
- * nothing this repository declares: `export const GET = REST_GET(config)` is a
- * way in whose body lives in a package, and an entry pointing at it says a
- * handler was read when none was.
- *
- * That distinction is the whole of R94. A route with no verb at all already had
- * a row; a verb whose body could not be followed produced an entry, sometimes a
- * `handles` edge onto a node with nothing in it, and no row at all — so a
- * repository where every handler is assembled by a helper reported full coverage
- * of routes nobody had read: seventeen of seventeen, where two of nine reached a
- * body that calls anything.
- *
- * What counts as work: a function written in the call, or an argument that
- * resolves to a function declared in this repository. Nothing else is followed,
- * because anything else is the same guess in a longer form.
- */
-const callHandedWork = (body: TsNode): boolean => {
-  if (!Node.isCallExpression(body)) return true;
-  return body.getArguments().some((argument) => {
-    const value = unwrapValue(argument);
-    return (
-      Node.isArrowFunction(value) ||
-      Node.isFunctionExpression(value) ||
-      repoFunctionOf(value) !== undefined
-    );
-  });
-};
-
-/**
- * How far a matcher pattern reaches, as a test on a path.
- *
- * `undefined` means the pattern could not be read, which is the common case and
- * deliberately not the same as "it does not cover this route". The framework
- * accepts a full regular expression here, and repositories use one — the
- * canonical example in its own documentation is a negative lookahead. Claiming
- * a route is guarded because an expression nobody read might have matched it
- * would be the worst thing this tool could say.
- */
-const matcherTest = (pattern: string): ((path: string) => boolean) | undefined => {
-  if (!pattern.startsWith('/')) return undefined;
-  if (/[()|?!]/.test(pattern)) return undefined;
-  const expression = pattern
-    .split('/')
-    .map((segment) => {
-      if (segment === '') return '';
-      if (segment.startsWith(':')) return segment.endsWith('*') ? '.*' : '[^/]+';
-      if (segment === '*') return '.*';
-      return segment.replace(/[.+^${}[\]\\]/g, '\\$&');
-    })
-    .join('/');
-  const compiled = new RegExp(`^${expression}$`);
-  return (path) => compiled.test(path);
-};
-
 /** What `middleware.ts` guards, when the repository has one. */
 interface Middleware {
   file: string;
@@ -242,7 +90,7 @@ const readMiddleware = (ctx: ExtractContext): Middleware | undefined => {
         unread.push(pattern.getText());
         continue;
       }
-      const test = matcherTest(pattern.getLiteralValue());
+      const test = pathPatternTest(pattern.getLiteralValue());
       if (test === undefined) unread.push(pattern.getLiteralValue());
       else tests.push(test);
     }
@@ -255,7 +103,7 @@ const readMiddleware = (ctx: ExtractContext): Middleware | undefined => {
   return undefined;
 };
 
-/** One way in, as both readers of this file describe it. */
+/** One way in, as every reader in this file describes it. */
 interface HttpEntryOptions {
   method: string;
   path: string;
@@ -266,45 +114,6 @@ interface HttpEntryOptions {
   /** False when a handler was named and there is nothing behind the name. */
   bodyRead?: boolean;
 }
-
-/**
- * Why one verb's body was not read, and what to do about it.
- *
- * A lookup rather than a pair of branches, because the two cases differ only in
- * the sentence they say: one reading decides which of them applies, and adding a
- * third spelling should be adding an entry here.
- */
-const UNREAD_HANDLER: Readonly<Record<'none' | 'built', (where: string) => string>> = Object.freeze({
-  none: (where) =>
-    `${where} is exported and nothing this could read is behind it, so the way in has no handler.`,
-  built: (where) =>
-    `${where} is the value a call handed back, and nothing declared in this repository was handed to that call, so the way in has no handler that could be read.`,
-});
-
-/**
- * A verb that is there and whose body is not.
- *
- * One row per verb rather than one folded row for the repository, which is the
- * opposite of the choice made for unreadable server actions below, and the
- * difference is what the number is for. An action a builder made is a limit of
- * this tool, said once. A route whose body was not read is a hole in the coverage
- * of that one route, and how many there are against how many routes were found
- * is the only honest way to read the summary, so each one is a place (R94).
- */
-const reportUnreadHandler = (
-  ctx: ExtractContext,
-  options: { file: string; line: number; label: string; path: string; why: 'none' | 'built' },
-): void => {
-  ctx.builder.addUnresolved({
-    file: options.file,
-    line: options.line,
-    reason: 'route-handler-unread',
-    message: `${UNREAD_HANDLER[options.why](options.label)} It answers at ${options.path}.`,
-    hint: 'Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.',
-    symbol: options.label,
-    adapter: 'nextjs-routes',
-  });
-};
 
 /**
  * Entry points a Next.js repository declares by where its files are.
@@ -395,7 +204,16 @@ export const nextjsRoutesAdapter: EntryAdapter = {
       const pagesPath = routePathOfFile(file, PAGES_API);
 
       if (appPath !== null) {
-        readAppRoute(ctx, sourceFile, file, appPath, httpEntry);
+        // The shared reading of a directory-addressed route file: the verbs it
+        // exports, what is behind each of them, and the rows for the ones with
+        // nothing behind them. Only what to do with each verb is this reader's
+        // own — the gate in front of it, and the name on the entry (R91).
+        readVerbFile(ctx, sourceFile, {
+          file,
+          path: appPath,
+          adapter: 'nextjs-routes',
+          emit: (verb) => httpEntry({ ...verb, via: 'app/route' }),
+        });
         continue;
       }
       if (pagesPath !== null) {
@@ -425,6 +243,7 @@ export const nextjsRoutesAdapter: EntryAdapter = {
             label: `ALL ${pagesPath}`,
             path: pagesPath,
             why: 'none',
+            adapter: 'nextjs-routes',
           });
         }
         continue;
@@ -451,63 +270,6 @@ export const nextjsRoutesAdapter: EntryAdapter = {
   },
 };
 
-/** The verbs a route file exports, each of them one way in. */
-const readAppRoute = (
-  ctx: ExtractContext,
-  sourceFile: SourceFile,
-  file: string,
-  path: string,
-  emit: (options: HttpEntryOptions) => void,
-): void => {
-  // Asked of the compiler rather than of the statements, so that the three
-  // shapes a real repository writes all answer: a function declared here, a
-  // name re-exported under a verb's name, and a whole module re-exported from
-  // somewhere else. In the repository this was measured against, twenty-six of
-  // the five hundred and twenty route files are one of the last two.
-  const exported = sourceFile.getExportedDeclarations();
-  let found = 0;
-  for (const method of HTTP_METHODS) {
-    const [declaration] = exported.get(method) ?? [];
-    if (declaration === undefined) continue;
-    found += 1;
-    const line = declaration.getStartLineNumber();
-    const reading = verbReading(declaration);
-    const read = reading?.bodyRead === true;
-    emit({
-      method,
-      path,
-      file,
-      line,
-      ...(reading === undefined ? {} : { handler: reading.fn }),
-      via: 'app/route',
-      bodyRead: read,
-    });
-    // The entry is still emitted, and the handler with it where there was one:
-    // the route exists, the wrapper call is where the framework enters, and
-    // dropping either would lose a fact that was read. What was missing was
-    // this row (R94).
-    if (!read) {
-      reportUnreadHandler(ctx, {
-        file,
-        line,
-        label: `${method} ${path}`,
-        path,
-        why: reading === undefined ? 'none' : 'built',
-      });
-    }
-  }
-
-  if (found > 0) return;
-  ctx.builder.addUnresolved({
-    file,
-    line: 1,
-    reason: 'route-verb-unread',
-    message: `${file} is served at ${path} but exports no verb this could read.`,
-    hint: 'Export GET, POST and the rest by name; a verb assembled at run time cannot be joined to anything that asks for it.',
-    symbol: path,
-    adapter: 'nextjs-routes',
-  });
-};
 
 /**
  * The functions a module hands to the client as a boundary.

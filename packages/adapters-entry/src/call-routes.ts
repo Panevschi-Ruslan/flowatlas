@@ -1387,7 +1387,13 @@ const reportSilence = (
         ? `Check appTypes on that description; it looks for ${types}.`
         : `Check verbs, verbArgument, pathArg and handlerArg on that description; it looks for ${verbs}.`
       : onTypes === 0
-        ? `Ordinary where ${dialect.packages[0] as string} is a dependency and no route is declared on it. If this repository does serve routes, they are declared in a way no reader here knows — a file-system convention, or a framework of its own in front of this one.`
+        // "Somewhere this reader does not look" rather than "in a way no reader
+        // here knows", which was true when it was written and is not any more: a
+        // file-system convention is now described for two frameworks, and on such
+        // a repository a sibling adapter has read every route while this one
+        // truthfully found none. This reader cannot see what the others found, so
+        // it names the possibility rather than denying it (R91).
+        ? `Ordinary where ${dialect.packages[0] as string} is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.`
         : `The types match and the routes do not: routes here are declared through something written around ${dialect.packages[0] as string} rather than on it, and no reader here knows that shape.`,
     symbol: dialect.name,
     adapter: dialect.name,
