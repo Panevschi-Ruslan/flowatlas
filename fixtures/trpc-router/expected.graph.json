@@ -1,7 +1,7 @@
 {
   "schemaVersion": 4,
   "repo": "trpc-router",
-  "generatedAt": "2026-09-27T09:45:33.134Z",
+  "generatedAt": "2026-09-27T11:07:55.915Z",
   "nodes": [
     {
       "id": "entry:trpc-router:http:ALL:/api/trpc/:param",
@@ -9,7 +9,7 @@
       "label": "ALL /api/trpc/:param",
       "repo": "trpc-router",
       "file": "src/pages/api/trpc/[trpc].ts",
-      "line": 1,
+      "line": 4,
       "kind": "http",
       "meta": {
         "method": "ALL",
@@ -27,7 +27,7 @@
       "label": "ALL /api/trpc/reports/:param",
       "repo": "trpc-router",
       "file": "src/pages/api/trpc/reports/[trpc].ts",
-      "line": 1,
+      "line": 4,
       "kind": "http",
       "meta": {
         "method": "ALL",
@@ -208,20 +208,11 @@
   "unresolved": [
     {
       "file": "src/pages/api/trpc/[trpc].ts",
-      "line": 1,
+      "line": 4,
       "reason": "route-handler-unread",
       "message": "ALL /api/trpc/:param is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/trpc/:param.",
       "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
       "symbol": "ALL /api/trpc/:param",
-      "adapter": "nextjs-routes"
-    },
-    {
-      "file": "src/pages/api/trpc/reports/[trpc].ts",
-      "line": 1,
-      "reason": "route-handler-unread",
-      "message": "ALL /api/trpc/reports/:param is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/trpc/reports/:param.",
-      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
-      "symbol": "ALL /api/trpc/reports/:param",
       "adapter": "nextjs-routes"
     },
     {
@@ -232,6 +223,15 @@
       "hint": "Import the tree from a file inside this service, or add the package it comes from to sharedPackages, so the ways in it serves can be read.",
       "symbol": "reportsRouterFor('daily')",
       "adapter": "trpc-procedures"
+    },
+    {
+      "file": "src/pages/api/trpc/reports/[trpc].ts",
+      "line": 4,
+      "reason": "route-handler-unread",
+      "message": "ALL /api/trpc/reports/:param is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/trpc/reports/:param.",
+      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
+      "symbol": "ALL /api/trpc/reports/:param",
+      "adapter": "nextjs-routes"
     },
     {
       "file": "src/server/reports-factory.ts",
