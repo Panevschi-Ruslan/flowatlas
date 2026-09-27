@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T15:28:47.212Z",
+  "builtAt": "2026-09-27T18:38:03.009Z",
   "services": [
     {
       "name": "shop",
@@ -23,6 +23,18 @@
       "repo": "admin",
       "file": "src/api/orders.ts",
       "line": 12
+    },
+    {
+      "id": "config_key:shop#SHOP_URL",
+      "type": "config_key",
+      "label": "SHOP_URL",
+      "repo": "shop",
+      "file": "app/orders-upstream.ts",
+      "line": 10,
+      "meta": {
+        "key": "SHOP_URL",
+        "source": "process.env"
+      }
     },
     {
       "id": "entry:shop@.:http:GET:/api/orders",
@@ -127,7 +139,26 @@
         "path": "/api/orders",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "application": "."
+      }
+    },
+    {
+      "id": "http_out:shop#app/orders-upstream.ts:10:24",
+      "type": "http_out",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "app/orders-upstream.ts",
+      "line": 10,
+      "meta": {
+        "method": "GET",
+        "url": "${SHOP_URL}/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": "SHOP_URL",
+        "responseType": null,
+        "bodyType": null,
+        "application": ".",
+        "targetService": "shop"
       }
     },
     {
@@ -143,7 +174,8 @@
         "path": "/api/orders",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "application": "examples/blog"
       }
     },
     {
@@ -159,7 +191,26 @@
         "path": "/api/posts",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "application": "examples/blog"
+      }
+    },
+    {
+      "id": "http_out:shop#examples/blog/src/orders-upstream.ts:10:24",
+      "type": "http_out",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "examples/blog/src/orders-upstream.ts",
+      "line": 10,
+      "meta": {
+        "method": "GET",
+        "url": "${SHOP_URL}/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": "SHOP_URL",
+        "responseType": null,
+        "bodyType": null,
+        "application": "examples/blog",
+        "targetService": "shop"
       }
     },
     {
@@ -175,7 +226,8 @@
         "path": "/api/orders",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "application": "examples/template"
       }
     },
     {
@@ -208,12 +260,12 @@
       "repo": "shop",
       "meta": {
         "stats": {
-          "files": 8,
-          "filesRead": 8,
+          "files": 10,
+          "filesRead": 10,
           "filesUnreadable": 0,
           "classes": 0,
           "skippedExternalCalls": {},
-          "functions": 9,
+          "functions": 11,
           "components": 0,
           "hooks": 0
         },
@@ -252,6 +304,14 @@
       "line": 7
     },
     {
+      "id": "shop#app/orders-upstream.ts:upstreamOrders",
+      "type": "function",
+      "label": "upstreamOrders",
+      "repo": "shop",
+      "file": "app/orders-upstream.ts",
+      "line": 9
+    },
+    {
       "id": "shop#examples/blog/src/api-client.ts:listOrders",
       "type": "function",
       "label": "listOrders",
@@ -282,6 +342,14 @@
       "repo": "shop",
       "file": "examples/blog/src/app/api/orders/route.ts",
       "line": 2
+    },
+    {
+      "id": "shop#examples/blog/src/orders-upstream.ts:upstreamOrders",
+      "type": "function",
+      "label": "upstreamOrders",
+      "repo": "shop",
+      "file": "examples/blog/src/orders-upstream.ts",
+      "line": 9
     },
     {
       "id": "shop#examples/template/src/app/api/[...slug]/route.ts:GET",
@@ -342,6 +410,28 @@
       }
     },
     {
+      "id": "ui_api_call:shop#app/orders-upstream.ts:10:24",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "app/orders-upstream.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${SHOP_URL}/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": "SHOP_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "application": ".",
+        "via": "template-env",
+        "targetService": "shop"
+      }
+    },
+    {
       "id": "ui_api_call:shop#examples/blog/src/api-client.ts:12:24",
       "type": "ui_api_call",
       "label": "GET /api/orders",
@@ -382,6 +472,28 @@
         "client": "fetch",
         "application": "examples/blog",
         "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#examples/blog/src/orders-upstream.ts:10:24",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "examples/blog/src/orders-upstream.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${SHOP_URL}/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": "SHOP_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "application": "examples/blog",
+        "via": "template-env",
         "targetService": "shop"
       }
     },
@@ -458,6 +570,30 @@
       "line": 5
     },
     {
+      "from": "http_out:shop#app/orders-upstream.ts:10:24",
+      "to": "entry:shop@.:http:GET:/api/orders",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "app/orders-upstream.ts",
+      "line": 10,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "http_out:shop#examples/blog/src/orders-upstream.ts:10:24",
+      "to": "entry:shop@examples/blog:http:GET:/api/orders",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "examples/blog/src/orders-upstream.ts",
+      "line": 10,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "shop"
+      }
+    },
+    {
       "from": "shop#app/orders-client.ts:listOrders",
       "to": "http_out:shop#app/orders-client.ts:8:24",
       "type": "calls",
@@ -472,6 +608,30 @@
       "confidence": "static",
       "file": "app/orders-client.ts",
       "line": 8
+    },
+    {
+      "from": "shop#app/orders-upstream.ts:upstreamOrders",
+      "to": "config_key:shop#SHOP_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "app/orders-upstream.ts",
+      "line": 10
+    },
+    {
+      "from": "shop#app/orders-upstream.ts:upstreamOrders",
+      "to": "http_out:shop#app/orders-upstream.ts:10:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/orders-upstream.ts",
+      "line": 10
+    },
+    {
+      "from": "shop#app/orders-upstream.ts:upstreamOrders",
+      "to": "ui_api_call:shop#app/orders-upstream.ts:10:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/orders-upstream.ts",
+      "line": 10
     },
     {
       "from": "shop#examples/blog/src/api-client.ts:listOrders",
@@ -506,6 +666,30 @@
       "line": 17
     },
     {
+      "from": "shop#examples/blog/src/orders-upstream.ts:upstreamOrders",
+      "to": "config_key:shop#SHOP_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "examples/blog/src/orders-upstream.ts",
+      "line": 10
+    },
+    {
+      "from": "shop#examples/blog/src/orders-upstream.ts:upstreamOrders",
+      "to": "http_out:shop#examples/blog/src/orders-upstream.ts:10:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "examples/blog/src/orders-upstream.ts",
+      "line": 10
+    },
+    {
+      "from": "shop#examples/blog/src/orders-upstream.ts:upstreamOrders",
+      "to": "ui_api_call:shop#examples/blog/src/orders-upstream.ts:10:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "examples/blog/src/orders-upstream.ts",
+      "line": 10
+    },
+    {
       "from": "shop#examples/template/src/orders-client.ts:listOrders",
       "to": "http_out:shop#examples/template/src/orders-client.ts:11:24",
       "type": "calls",
@@ -534,6 +718,18 @@
       }
     },
     {
+      "from": "ui_api_call:shop#app/orders-upstream.ts:10:24",
+      "to": "entry:shop@.:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/orders-upstream.ts",
+      "line": 10,
+      "meta": {
+        "via": "base-url-env",
+        "targetService": "shop"
+      }
+    },
+    {
       "from": "ui_api_call:shop#examples/blog/src/api-client.ts:12:24",
       "to": "entry:shop@examples/blog:http:GET:/api/orders",
       "type": "hits",
@@ -554,6 +750,18 @@
       "line": 17,
       "meta": {
         "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#examples/blog/src/orders-upstream.ts:10:24",
+      "to": "entry:shop@examples/blog:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "examples/blog/src/orders-upstream.ts",
+      "line": 10,
+      "meta": {
+        "via": "base-url-env",
         "targetService": "shop"
       }
     },

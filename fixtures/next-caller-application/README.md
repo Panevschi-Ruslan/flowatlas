@@ -35,6 +35,27 @@ of `shop`, its address is rooted at a settings key, and which of shop's two
 `/api/orders` answers it is decided by what is deployed behind that key. Both are
 named and neither is chosen, exactly as R119 left it.
 
+## A request the server makes to its own service
+
+`orders-upstream.ts` in the root application and in `examples/blog` each write
+`${process.env.SHOP_URL}/api/orders`, and the configuration says `SHOP_URL` is
+`shop`'s own. That call is read twice, as a `ui_api_call` and as an `http_out`,
+and the two halves of the linker join each reading on its own:
+
+| written in | `http_out` reaches | `ui_api_call` reaches |
+|---|---|---|
+| `shop/app` (`.`) | `entry:shop@.:http:GET:/api/orders` | the same |
+| `shop/examples/blog` | `entry:shop@examples/blog:http:GET:/api/orders` | the same |
+
+Before R136 the `http_out` column was two `ambiguous-route-application` rows. The
+server half has had the inside-caller rule since R132, but it never fired,
+because no server request recorded the application it was written in. The
+server reader left its own empty, declaration-keyed map on the context, and a
+file cannot be placed in a map like that. Now the one map a service holds is
+the directory map the route reader wrote. Both readings of one call ask it
+through the same `applicationOfFile`, so they agree about the application, and
+the two resolvers agree about the entry.
+
 ## Why `route-wildcard-only` is asked of one application
 
 The template's request lands on its own application's catch-all and says nothing

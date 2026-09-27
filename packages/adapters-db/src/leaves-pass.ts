@@ -1,4 +1,5 @@
 import {
+  applicationOfFile,
   classifyDbCall,
   declaredParameterType,
   isUniversalMethod,
@@ -869,6 +870,11 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
 
     const place = siteOf(ctx, site, owner.file);
     const id = makeLeafId('http_out', ctx.repo, owner.file, place.line, place.column);
+    // Which application this request is written in, asked of the file through
+    // the one function every browser reader asks too, so the two halves' readings
+    // of one call cannot disagree about it (R136). A map keyed by declaration
+    // answers nothing, and the request then carries nothing, as it did.
+    const application = applicationOfFile(ctx.meta, owner.file);
     ctx.builder.addNode({
       id,
       type: 'http_out',
@@ -886,6 +892,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         ...(bodyType === null ? {} : { bodyFrom }),
         ...(bodyKeys === undefined ? {} : { bodyKeys }),
         ...(info.host === null ? {} : { host: info.host }),
+        ...(application === undefined ? {} : { application }),
       },
     });
     owner.ensure();

@@ -190,10 +190,11 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
    *
    * The same rule the browser linker applies, written here too so the two
    * cannot develop different opinions about when a caller's own application
-   * decides a tie (R132). No server reader records this on a call yet, so for
-   * every caller that reaches this it is absent and nothing below changes; a
-   * call that crosses a service boundary is outside every application of the
-   * service it reaches and would be absent regardless.
+   * decides a tie (R132). A server request records it wherever the service's
+   * applications are directories (R136); where they are declarations it is
+   * absent and nothing below changes. A call that crosses a service boundary is
+   * outside every application of the service it reaches and is absent
+   * regardless.
    */
   const callerApplicationIn = (service: string): string | undefined =>
     service === call.repo ? callingApplication(call) : undefined;

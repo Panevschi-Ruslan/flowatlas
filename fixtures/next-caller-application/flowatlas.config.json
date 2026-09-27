@@ -3,7 +3,8 @@
     {
       "name": "shop",
       "repo": "./shop",
-      "type": "nextjs"
+      "type": "nextjs",
+      "baseUrlEnv": ["SHOP_URL"]
     },
     {
       "name": "admin",

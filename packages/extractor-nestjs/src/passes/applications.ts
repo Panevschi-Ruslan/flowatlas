@@ -1,3 +1,4 @@
+import { recordApplications } from '@flowatlas/core';
 import {
   applicationFindings,
   applicationMembership,
@@ -15,8 +16,14 @@ import { definePass } from './types.js';
  *
  * The answer goes onto `meta`, the record the extractor hands the adapters, for
  * the reason the global prefix and the versioning already go there: an adapter
- * for one framework may not import the reader for it. This pass is the only
- * thing that writes that key, and nothing reads it before this pass has run.
+ * for one framework may not import the reader for it. Nothing reads it before
+ * this pass has run.
+ *
+ * Written through the same `recordApplications` every other reader uses, so
+ * that which map a service holds is decided in one place. Where no application
+ * root was read, what was read is no map at all, and the entry adapters are
+ * asked instead: a repository whose applications are directories holds the map
+ * that says so, and a request its files make can be placed in one (R136).
  */
 export const applicationsPass = definePass('applications', (ctx) => {
   const { roots, unread } = readApplicationRoots({
@@ -25,7 +32,5 @@ export const applicationsPass = definePass('applications', (ctx) => {
   });
   for (const row of applicationFindings(unread)) ctx.report(row);
 
-  const meta = ctx.meta;
-  if (meta === undefined) return;
-  meta['applications'] = applicationMembership(roots, ctx.modules, ctx.classes);
+  recordApplications(ctx, applicationMembership(roots, ctx.modules, ctx.classes));
 });

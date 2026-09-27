@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "next-nested-apps",
-  "generatedAt": "2026-09-27T15:28:49.295Z",
+  "generatedAt": "2026-09-27T18:38:06.613Z",
   "nodes": [
     {
       "id": "entry:next-nested-apps@.:http:GET:/api/orders",
@@ -70,7 +70,8 @@
         "path": "/api/orders",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "application": "."
       }
     },
     {
@@ -86,7 +87,8 @@
         "path": "/api/orders",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "application": "examples/blog"
       }
     },
     {
