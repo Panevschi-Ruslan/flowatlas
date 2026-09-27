@@ -145,6 +145,55 @@ export const EXEMPT = [
       'output; a table would be a guess wearing a node. One descriptor turns all of ' +
       'them into tables at once, and then this entry goes.',
   },
+  // Medusa's four, all decided in R137 by reading the file rather than the count.
+  {
+    where: 'medusa',
+    path: 'packages/medusa-test-utils/**',
+    family: 'routes',
+    why:
+      'The package integration tests start a server with. Its one route is a ' +
+      '`/health` on an application `bootstrapApp` builds for a test runner, which ' +
+      'no deployment of this service starts: the service’s own `/health` is ' +
+      'declared in `packages/medusa/src/commands/start.ts` (see `BASELINE`). It ' +
+      'is in the extent because modules the service declares, `@medusajs/order` among ' +
+      'them, name `@medusajs/test-utils` as a dev dependency, ' +
+      'and a reader that placed its address would be reporting a second health ' +
+      'check this service does not serve.',
+  },
+  {
+    where: 'medusa',
+    path: 'packages/medusa/src/migration-scripts/**',
+    family: 'data',
+    why:
+      'Data migrations `medusa db:migrate:scripts` runs once per database and records ' +
+      'in `script_migrations`, never on a request. The connection each step uses is ' +
+      '`container.resolve(PG_CONNECTION)`, which the container types as `any`, so ' +
+      'nothing in the source says which library `knex(table)` belongs to and a ' +
+      'reader that named one would be guessing from a variable name.',
+  },
+  {
+    where: 'medusa',
+    path: 'packages/core/utils/src/modules-sdk/create-pg-connection.ts',
+    family: 'data',
+    why:
+      'The one site is the words "a new knex (pg in the future) connection" in ' +
+      'the doc comment above `createPgConnection`. The counting rule reads lines, ' +
+      'not syntax, and over-counts in that direction on purpose; the function ' +
+      'itself builds a connection and runs no query.',
+  },
+  {
+    where: 'medusa',
+    path: '(anywhere)',
+    family: 'models',
+    why:
+      'The one site is `@Entity({ abstract: true })` on the MikroORM base class in ' +
+      '`packages/core/utils/src/dal/mikro-orm/base-entity.ts`, which declares no ' +
+      'table: an abstract entity is the columns every table shares. Medusa ' +
+      'declares its tables with `model.define(…)`, which the counting rule has no ' +
+      'probe for, so the family’s real denominator here is zero and this gate ' +
+      'cannot see it (`BLIND`, R117). The day a probe counts `model.define`, this ' +
+      'entry stops being the only thing the family says and should be re-read.',
+  },
 ];
 
 /**
@@ -280,6 +329,57 @@ export const BASELINE = [
       'unrelated loss here has had somewhere to hide for as long as the gate has ' +
       'existed.',
   },
+  // Medusa's two kinds of known red (R137). Neither is a file that serves
+  // nothing - those are in `EXEMPT` - and both are recorded here so that a third
+  // file going unread beside them is new red rather than more of the same.
+  {
+    where: 'medusa',
+    state: 'fresh',
+    family: 'routes',
+    path: 'packages/medusa/src/commands/start.ts',
+    files: 1,
+    ticket: 'R137',
+    why:
+      'The service’s own `GET /health`, declared on `const app = express()`. With ' +
+      'dependencies installed it is read and the with-deps report holds its entry; ' +
+      'on a fresh clone `express` has no types, so `app` is `any` and the Express ' +
+      'reader, which knows an application by its type and by nothing else, cannot ' +
+      'tell it from any other object with a `get`. The same cause leaves ' +
+      'PeerTube’s fresh clone with no addresses at all.',
+  },
+  {
+    where: 'medusa',
+    state: 'fresh',
+    family: 'routes',
+    path: 'packages/admin/admin-bundler/src/commands/serve.ts',
+    files: 1,
+    ticket: 'R137',
+    why:
+      'The admin dashboard’s two catch-all `GET`s, declared on `Router()` from ' +
+      '`express`. Read with dependencies installed, and unread fresh for the reason ' +
+      'the entry above gives: the router’s type is in a package a fresh clone does ' +
+      'not have.',
+  },
+  ...['fresh', 'with-deps'].map((state) => ({
+    where: 'medusa',
+    state,
+    family: 'data',
+    path: 'packages/modules/inventory/src/repositories/inventory-level.ts',
+    files: 1,
+    ticket: 'R137',
+    why:
+      'A gap, not an exemption: the queries a real repository of the inventory ' +
+      'module runs on every stock lookup, and nothing reads them. The cause is ' +
+      'not in any reader. The service that calls it imports it as ' +
+      '`@repositories`, a path the inventory package’s own tsconfig maps and the ' +
+      'medusa service’s does not, and the project is compiled with one set of ' +
+      'paths, so the import resolves to nothing and the class is never reached; ' +
+      'the call site in `services/inventory-level.ts` says so with ' +
+      '`db-receiver-name-only`. Every module here writes `@models` and `@services` ' +
+      'the same way. Reading a declared package with its own tsconfig’s paths is ' +
+      'a change to how the core builds a project, and when it lands this count ' +
+      'drops to zero and fails, which is the point.',
+  })),
 ];
 
 const exemptionKey = (entry) => `${entry.where} ${entry.path} ${entry.family}`;

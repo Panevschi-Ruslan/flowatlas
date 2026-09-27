@@ -1113,19 +1113,43 @@ const isPathLike = (argument: TsNode): boolean => {
 /** What answers one route, and how confidently that could be said. */
 interface Answer {
   handler?: EntryHandler;
-  /** `function` named outright, `call` returned by one written in place, else none. */
+  /**
+   * `function` named outright; `call` the function a call written in place hands
+   * the answer to, or the function that built what a call answers with; else none.
+   */
   via: 'function' | 'call' | 'inline';
 }
+
+/** A function written where a value was expected. */
+const isWrittenFunction = (node: TsNode): boolean =>
+  Node.isArrowFunction(node) || Node.isFunctionExpression(node);
 
 /**
  * The function a handler argument really is, through the wrapper around it.
  *
  * `asyncHandler(async (req, res) => …)` is how most of Express catches a
  * rejected promise, and the wrapper is not the handler: it is a call that
- * returns one. A call with exactly one argument, and that argument a function
- * written in place, stands for that function — narrow on purpose, so that
- * `rateLimit({ max: 5 })` and `useCollection('users')`, which take a value and
- * return middleware, are not mistaken for it.
+ * returns one. A call with exactly one argument stands for that argument when
+ * the argument is work - a function written in place, a function this
+ * repository declares named by reference, or a further call, which is handed
+ * on unopened - and for itself otherwise. Narrow on purpose, so that `rateLimit({ max: 5 })`
+ * and `useCollection('users')`, which take a value and return middleware, are
+ * not mistaken for it.
+ *
+ * The named form is the one that was missing, and it is how PeerTube writes
+ * nearly every route it has: `asyncMiddleware(getVideo)`, and
+ * `asyncRetryTransactionMiddleware(addVideo)` where a route writes. Of its three
+ * hundred and forty-six registrations, two hundred and ninety-one were one of
+ * those two and read as a function written in place with nothing to point at,
+ * which was false: every one of them names its handler (R137).
+ *
+ * Not a field of a dialect, and it is worth saying why when everything else
+ * about reading a route is one. The wrappers are the repository's own -
+ * `asyncMiddleware` is declared in PeerTube's `core/middlewares/async.ts` - so
+ * there is no package a shipped row could name, and what makes the argument the
+ * handler is nothing a framework says: it is the only thing handed over. That is
+ * the rule `route-dialects.ts` lists among what every reader does the same way,
+ * and this is the one place it is decided.
  */
 const throughWrapper = (argument: TsNode | undefined): TsNode | undefined => {
   if (argument === undefined) return undefined;
@@ -1133,9 +1157,55 @@ const throughWrapper = (argument: TsNode | undefined): TsNode | undefined => {
   if (!Node.isCallExpression(node)) return node;
   const args = node.getArguments();
   const only = args.length === 1 ? unwrap(args[0] as TsNode) : undefined;
-  return only !== undefined && (Node.isArrowFunction(only) || Node.isFunctionExpression(only))
-    ? throughWrapper(only)
-    : node;
+  if (only === undefined) return node;
+  if (isWrittenFunction(only) || repoFunctionOf(only) !== undefined) return only;
+  // One level and no further. What a call inside the wrapper was handed is not
+  // the handler by the same argument, because that call may be a factory rather
+  // than a second wrapper: in `asyncMiddleware(listFactory(res => res.locals.account))`
+  // the function written in place picks an account and answers nothing. Which of
+  // the two the inner call is, is `builtBy`'s question.
+  return Node.isCallExpression(only) ? only : node;
+};
+
+/**
+ * Whether an argument hands a call work to run rather than a value to build with.
+ *
+ * A list counts, whatever is in it: `asyncMiddleware([check, run])` runs each in
+ * turn, and no one of them is the answer.
+ */
+const handsOverWork = (argument: TsNode): boolean => {
+  const value = unwrap(argument);
+  return (
+    isWrittenFunction(value) ||
+    Node.isArrayLiteralExpression(value) ||
+    repoFunctionOf(value) !== undefined
+  );
+};
+
+/**
+ * The function that built a handler, when a call to one is what answers.
+ *
+ * `getAccountVideoRateFactory('like')` is a function of this repository called
+ * with a value, and the handler is the function it returns. The factory's body
+ * holds that function, so a walk from the route into the factory reaches what
+ * the handler reaches - and whatever the factory does once while it builds,
+ * which is the over-reach `builtExportFunction` accepts for a handler a call
+ * made in a file-system router, for the same reason: the alternative is no body
+ * at all.
+ *
+ * A call handed work is not read as one of these, because it cannot be told
+ * from a wrapper: `listFactory(res => res.locals.account)` builds a handler out
+ * of a function, and `asyncMiddleware(getVideo)` wraps one, and pointing at a
+ * wrapper would name one shared function as the body of every route it wraps.
+ * Eight of PeerTube's registrations are the first and keep no handler, which is
+ * the honest answer to a question the source does not settle.
+ */
+const builtBy = (argument: TsNode | undefined): ReturnType<typeof repoFunctionOf> => {
+  if (argument === undefined) return undefined;
+  const node = unwrap(argument);
+  if (!Node.isCallExpression(node)) return undefined;
+  if (node.getArguments().some(handsOverWork)) return undefined;
+  return repoFunctionOf(node.getExpression());
 };
 
 /**
@@ -1144,7 +1214,9 @@ const throughWrapper = (argument: TsNode | undefined): TsNode | undefined => {
  * The last argument is the handler and anything before it is middleware, which
  * is how the framework itself reads the call. A named function is the answer
  * outright; one written in place is read for the single thing it hands the
- * answer over to, and only for that — see `handlerReturned`.
+ * answer over to, and only for that — see `handlerReturned`; a call to a
+ * function of this repository is read as that function having built the answer
+ * — see `builtBy`.
  *
  * Deliberately no fall back to whatever declaration the registration is written
  * inside, which is what the bot adapter does. A bot registration written in a
@@ -1157,7 +1229,11 @@ const answerOf = (call: TsNode, argument: TsNode | undefined, ctx: ExtractContex
   const named = repoFunctionOf(argument);
   if (named !== undefined) return { handler: handlerOfFunction(named, ctx), via: 'function' };
   const inside = handlerReturned(argument, enclosingClass(call), ctx);
-  return inside === undefined ? { via: 'inline' } : { handler: inside, via: 'call' };
+  if (inside !== undefined) return { handler: inside, via: 'call' };
+  const builder = builtBy(argument);
+  return builder === undefined
+    ? { via: 'inline' }
+    : { handler: handlerOfFunction(builder, ctx), via: 'call' };
 };
 
 /** One route, as declared. */

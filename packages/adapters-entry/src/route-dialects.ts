@@ -35,8 +35,10 @@ import { entryHttpSchema } from '@flowatlas/core';
  * middleware, that a call with one argument is a setting being read rather
  * than a route, that an argument is a path when its type is a string however
  * it is written, and that a single function handed to a single-argument
- * wrapper is still the handler. None of those is a fact about a framework, so
- * none of them is a field.
+ * wrapper is still the handler, whether it is written there or named. None of
+ * those is a fact about a framework, so none of them is a field — and the last
+ * could not be one if it were, because the wrapper is usually the repository's
+ * own (`asyncMiddleware`, in PeerTube) and there is no package to name.
  *
  * The second is the one field-shaped thing in a description that is not about
  * reading a route at all: `packages`. It earns its place twice over, because it

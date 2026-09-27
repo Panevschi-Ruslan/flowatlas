@@ -1,0 +1,303 @@
+{
+  "schemaVersion": 5,
+  "repo": "express-wrapped-handler",
+  "generatedAt": "2026-09-27T18:53:39.119Z",
+  "nodes": [
+    {
+      "id": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param",
+      "type": "entry",
+      "label": "GET /api/v1/videos/:param",
+      "repo": "express-wrapped-handler",
+      "file": "src/controllers/videos.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/v1/videos/:param",
+        "rawPath": "/api/v1/videos/:id",
+        "adapter": "express-routes",
+        "registration": "videosRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param/likes",
+      "type": "entry",
+      "label": "GET /api/v1/videos/:param/likes",
+      "repo": "express-wrapped-handler",
+      "file": "src/controllers/videos.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/v1/videos/:param/likes",
+        "rawPath": "/api/v1/videos/:id/likes",
+        "adapter": "express-routes",
+        "registration": "videosRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param/lists",
+      "type": "entry",
+      "label": "GET /api/v1/videos/:param/lists",
+      "repo": "express-wrapped-handler",
+      "file": "src/controllers/videos.ts",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/v1/videos/:param/lists",
+        "rawPath": "/api/v1/videos/:id/lists",
+        "adapter": "express-routes",
+        "registration": "videosRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param/plain",
+      "type": "entry",
+      "label": "GET /api/v1/videos/:param/plain",
+      "repo": "express-wrapped-handler",
+      "file": "src/controllers/videos.ts",
+      "line": 37,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/v1/videos/:param/plain",
+        "rawPath": "/api/v1/videos/:id/plain",
+        "adapter": "express-routes",
+        "registration": "videosRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:express-wrapped-handler:http:POST:/api/v1/videos",
+      "type": "entry",
+      "label": "POST /api/v1/videos",
+      "repo": "express-wrapped-handler",
+      "file": "src/controllers/videos.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/v1/videos",
+        "rawPath": "/api/v1/videos",
+        "adapter": "express-routes",
+        "registration": "videosRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:express-wrapped-handler:http:POST:/api/v1/videos/batch",
+      "type": "entry",
+      "label": "POST /api/v1/videos/batch",
+      "repo": "express-wrapped-handler",
+      "file": "src/controllers/videos.ts",
+      "line": 34,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/v1/videos/batch",
+        "rawPath": "/api/v1/videos/batch",
+        "adapter": "express-routes",
+        "registration": "videosRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "express-wrapped-handler#src/controllers/videos.ts:addVideo",
+      "type": "function",
+      "label": "addVideo",
+      "repo": "express-wrapped-handler",
+      "file": "src/controllers/videos.ts",
+      "line": 49
+    },
+    {
+      "id": "express-wrapped-handler#src/controllers/videos.ts:asyncMiddleware(videosGetValidator)",
+      "type": "middleware",
+      "label": "asyncMiddleware(videosGetValidator)",
+      "repo": "express-wrapped-handler",
+      "file": "src/controllers/videos.ts",
+      "line": 19,
+      "kind": "function"
+    },
+    {
+      "id": "express-wrapped-handler#src/controllers/videos.ts:authenticate",
+      "type": "middleware",
+      "label": "authenticate",
+      "repo": "express-wrapped-handler",
+      "file": "src/controllers/videos.ts",
+      "line": 19,
+      "kind": "function"
+    },
+    {
+      "id": "express-wrapped-handler#src/controllers/videos.ts:getRateFactory",
+      "type": "function",
+      "label": "getRateFactory",
+      "repo": "express-wrapped-handler",
+      "file": "src/controllers/videos.ts",
+      "line": 54
+    },
+    {
+      "id": "express-wrapped-handler#src/controllers/videos.ts:getVideo",
+      "type": "function",
+      "label": "getVideo",
+      "repo": "express-wrapped-handler",
+      "file": "src/controllers/videos.ts",
+      "line": 44
+    },
+    {
+      "id": "express-wrapped-handler#src/lib/videos.ts:countRates",
+      "type": "function",
+      "label": "countRates",
+      "repo": "express-wrapped-handler",
+      "file": "src/lib/videos.ts",
+      "line": 6
+    },
+    {
+      "id": "express-wrapped-handler#src/lib/videos.ts:loadVideo",
+      "type": "function",
+      "label": "loadVideo",
+      "repo": "express-wrapped-handler",
+      "file": "src/lib/videos.ts",
+      "line": 2
+    },
+    {
+      "id": "express-wrapped-handler#src/lib/videos.ts:saveVideo",
+      "type": "function",
+      "label": "saveVideo",
+      "repo": "express-wrapped-handler",
+      "file": "src/lib/videos.ts",
+      "line": 4
+    },
+    {
+      "id": "repo:express-wrapped-handler",
+      "type": "repo",
+      "label": "express-wrapped-handler",
+      "repo": "express-wrapped-handler",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 4
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param",
+      "to": "express-wrapped-handler#src/controllers/videos.ts:asyncMiddleware(videosGetValidator)",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/controllers/videos.ts",
+      "line": 19,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "videosRouter.get"
+      }
+    },
+    {
+      "from": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param",
+      "to": "express-wrapped-handler#src/controllers/videos.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/controllers/videos.ts",
+      "line": 19,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "videosRouter.get"
+      }
+    },
+    {
+      "from": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param",
+      "to": "express-wrapped-handler#src/controllers/videos.ts:getVideo",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/controllers/videos.ts",
+      "line": 44
+    },
+    {
+      "from": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param/likes",
+      "to": "express-wrapped-handler#src/controllers/videos.ts:getRateFactory",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/controllers/videos.ts",
+      "line": 54
+    },
+    {
+      "from": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param/plain",
+      "to": "express-wrapped-handler#src/controllers/videos.ts:getVideo",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/controllers/videos.ts",
+      "line": 44
+    },
+    {
+      "from": "entry:express-wrapped-handler:http:POST:/api/v1/videos",
+      "to": "express-wrapped-handler#src/controllers/videos.ts:addVideo",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/controllers/videos.ts",
+      "line": 49
+    },
+    {
+      "from": "express-wrapped-handler#src/controllers/videos.ts:addVideo",
+      "to": "express-wrapped-handler#src/lib/videos.ts:saveVideo",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/controllers/videos.ts",
+      "line": 50
+    },
+    {
+      "from": "express-wrapped-handler#src/controllers/videos.ts:getRateFactory",
+      "to": "express-wrapped-handler#src/lib/videos.ts:countRates",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/controllers/videos.ts",
+      "line": 56
+    },
+    {
+      "from": "express-wrapped-handler#src/controllers/videos.ts:getVideo",
+      "to": "express-wrapped-handler#src/lib/videos.ts:loadVideo",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/controllers/videos.ts",
+      "line": 45
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/controllers/videos.ts",
+      "line": 30,
+      "reason": "route-handler-anonymous",
+      "level": "info",
+      "sites": 2,
+      "message": "2 routes answer with a function written in the declaration, so nothing can be pointed at as the code behind them.",
+      "hint": "Give the handler a name and register that, or have the one written in place return what a single named function answers with.",
+      "symbol": "express",
+      "adapter": "express-routes"
+    }
+  ]
+}

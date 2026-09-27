@@ -47,7 +47,7 @@ addressed that way reads zero here before R125 and its true number after.
 | addresses told apart only by their application | 0 | each was overwritten before R119, silently and with no total moving |
 | declarations with a body attached | 488 | 488 of 491 |
 | …whose body reaches anything | 155 | 155 of 491 |
-| …behind middleware or a guard | 0 | 0 of 491 |
+| …behind middleware or a guard | 484 | 484 of 491 |
 
 Where those addresses are. One row per leading segment, which is enough of an
 address for a dropped global prefix to show and little enough that a new route
@@ -103,21 +103,17 @@ was never an edge to draw. The three are never added together.
 
 ## Files with sites and no output
 
-**6 file(s)** the counting rule found sites in yielded neither
-a node of that family nor any row naming them, and no baseline entry accounts for
-them. That is a reader giving up in silence, which is the class this gate exists
-for; a limit somebody has decided to accept belongs in the exemption list with a
-sentence beside it, and a limit somebody has decided to live with belongs in the
-baseline with a count and a ticket.
+None beyond what is baselined. Every other file the counting rule found a
+declaration site in yielded a node of that family, or a row naming the file.
 
-| file | family | sites |
+1 file(s) did go unread, and every one of them is red this gate
+already knew about, enumerated in `BASELINE` in `read-gate.mjs` with the ticket
+it belongs to. They are counted rather than silenced: one file more than this, or
+one fewer, fails the run.
+
+| family | files | ticket |
 |---|---|---|
-| `(anywhere)` | models | 1 |
-| `packages/core/utils/src/modules-sdk/create-pg-connection.ts` | data | 1 |
-| `packages/medusa-test-utils/src/medusa-test-runner-utils/bootstrap-app.ts` | routes | 1 |
-| `packages/medusa/src/migration-scripts/migrate-normalize-currency-codes-normalization.ts` | data | 4 |
-| `packages/medusa/src/migration-scripts/reconcile-inventory-reserved-quantity.ts` | data | 2 |
-| `packages/modules/inventory/src/repositories/inventory-level.ts` | data | 2 |
+| data | 1 | R137 |
 
 ### What this gate cannot see
 
