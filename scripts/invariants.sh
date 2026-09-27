@@ -88,7 +88,14 @@ I2_PRUNED='.git .claude .idea dist node_modules .coverage-cache .demo-casts .flo
 #                 thing the snapshot exists to record, and one such expectation
 #                 (`fixtures/multi-repo/expected.cli/...tree.ansi.txt`) is the
 #                 only file in the tree that carries one today
-I2_EXEMPT='*.gif *.png *.ansi.txt'
+#   .DS_Store     not this project's file at all: Finder writes it into any
+#                 directory somebody has looked at, it is gitignored, and this
+#                 gate reads the working tree rather than the index — on purpose,
+#                 because its own test runs against a directory that is not a
+#                 repository, where `git ls-files` would make it pass by reading
+#                 nothing. So an untracked file has to be named to be skipped,
+#                 and this is the one everybody on a Mac has.
+I2_EXEMPT='*.gif *.png *.ansi.txt */.DS_Store'
 
 # Every file the gate reads, built from the list above rather than from a second
 # copy of it written into a `find` expression.
@@ -108,8 +115,16 @@ i2_files() {
 }
 
 # Whether a path is on the exempt list above.
+#
+# `set -f` first, and it is load-bearing rather than tidy: without it the `for`
+# expands each pattern against the working directory before the `case` ever sees
+# it, so `*/.DS_Store` arrives as the name of a file that happens to exist and
+# matches nothing. The older entries only looked correct because nothing in the
+# root matches `*.gif`. Local to this function, so nothing else changes.
 i2_exempt() {
   local pattern
+  local -
+  set -f
   for pattern in $I2_EXEMPT; do
     # shellcheck disable=SC2254 — the list is a list of globs, on purpose.
     case "$1" in $pattern) return 0 ;; esac
