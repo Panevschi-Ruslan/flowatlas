@@ -7,11 +7,15 @@ import {
   namedFunction,
   normalizeFilePath,
   originOfValue,
+  reachHere,
+  reachMeta,
+  reachOf,
   type EntryAdapter,
   type EntryHandler,
   type EntryNode,
   type ExtractContext,
   type NamedFunction,
+  type Reach,
 } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -259,8 +263,14 @@ const readMiddleware = (ctx: ExtractContext): Middleware | undefined => {
 interface HttpEntryOptions {
   method: string;
   path: string;
-  file: string;
-  line: number;
+  /**
+   * Where the way in was found, and where its verb was written.
+   *
+   * One value rather than a `file` and a `line`, because the defect this replaced
+   * was a caller passing halves of two different answers: the file it was reading
+   * and the line the compiler gave for a verb another module declares (R99).
+   */
+  at: Reach;
   handler?: NamedFunction;
   via: string;
   /** False when a handler was named and there is nothing behind the name. */
@@ -370,14 +380,19 @@ export const nextjsRoutesAdapter: EntryAdapter = {
         ...(options.handler === undefined
           ? {}
           : { handler: handlerOfFunction(options.handler, ctx) }),
-        file: options.file,
-        line: options.line,
+        file: options.at.reached.file,
+        line: options.at.reached.line,
         meta: {
           method: options.method,
           path: options.path,
           adapter: 'nextjs-routes',
           registration: options.via,
           ...gateOf(options.path),
+          // The route file is what the node points at, because the address is
+          // read from where that file is and a node naming any other file would
+          // be a way in nothing serves. Where the verb was written is the other
+          // fact, and it is recorded rather than folded into the first one.
+          ...reachMeta(options.at),
           handlerVia: options.handler === undefined ? 'unread' : 'function',
           // Two different facts, and the second is the one a summary must not
           // read off the first. `handlerVia` says whether a function was named;
@@ -404,11 +419,18 @@ export const nextjsRoutesAdapter: EntryAdapter = {
         const [declaration] = sourceFile.getExportedDeclarations().get('default') ?? [];
         const handler = declaration === undefined ? undefined : exportedFunction(declaration);
         const read = handler !== undefined;
+        // The declaration may be in another file entirely — one line forwarding
+        // another module's default is how a large repository keeps its addresses
+        // in the application and its bodies in a package — so the position is
+        // asked of the file being read rather than of what the compiler resolved.
+        const at =
+          declaration === undefined
+            ? reachHere(file, 1)
+            : reachOf(declaration, sourceFile, 'default', ctx.repoDir);
         httpEntry({
           method: 'ALL',
           path: pagesPath,
-          file,
-          line: handler?.line ?? 1,
+          at,
           ...(handler === undefined ? {} : { handler }),
           via: 'pages/api',
           bodyRead: read,
@@ -420,8 +442,8 @@ export const nextjsRoutesAdapter: EntryAdapter = {
         // handler that was read, and there is one case to report rather than two.
         if (!read) {
           reportUnreadHandler(ctx, {
-            file,
-            line: 1,
+            file: at.reached.file,
+            line: at.reached.line,
             label: `ALL ${pagesPath}`,
             path: pagesPath,
             why: 'none',
@@ -470,14 +492,16 @@ const readAppRoute = (
     const [declaration] = exported.get(method) ?? [];
     if (declaration === undefined) continue;
     found += 1;
-    const line = declaration.getStartLineNumber();
+    // Asked of this file, not of the declaration: the table above resolves a verb
+    // across modules, so the declaration's line belongs to whichever file wrote
+    // it and only the route file's own line belongs beside the route file's path.
+    const at = reachOf(declaration, sourceFile, method, ctx.repoDir);
     const reading = verbReading(declaration);
     const read = reading?.bodyRead === true;
     emit({
       method,
       path,
-      file,
-      line,
+      at,
       ...(reading === undefined ? {} : { handler: reading.fn }),
       via: 'app/route',
       bodyRead: read,
@@ -488,8 +512,8 @@ const readAppRoute = (
     // this row (R94).
     if (!read) {
       reportUnreadHandler(ctx, {
-        file,
-        line,
+        file: at.reached.file,
+        line: at.reached.line,
         label: `${method} ${path}`,
         path,
         why: reading === undefined ? 'none' : 'built',
@@ -537,13 +561,14 @@ const readServerActions = (
    * One boundary, however it was written.
    *
    * Both spellings arrive here with the same four facts — the exported name,
-   * the line it is declared on, the code behind it and how confidently that
-   * could be named — so the node is built in one place and a reader comparing
-   * a built action with a declared one is comparing the same thing.
+   * where it was found and where it was written, the code behind it and how
+   * confidently that could be named — so the node is built in one place and a
+   * reader comparing a built action with a declared one is comparing the same
+   * thing.
    */
   const record = (options: {
     name: string;
-    line: number;
+    at: Reach;
     handler: EntryHandler | undefined;
     via: 'function' | 'inline';
     builder?: string;
@@ -558,10 +583,14 @@ const readServerActions = (
       label: `action ${options.name}`,
       key,
       ...(options.handler === undefined ? {} : { handler: options.handler }),
-      file,
-      line: options.line,
+      file: options.at.reached.file,
+      line: options.at.reached.line,
       meta: {
         action: options.name,
+        // The module the client imports is the boundary, so that is the file the
+        // node names; where the function itself was written is the second fact
+        // and is kept as one (R99).
+        ...reachMeta(options.at),
         adapter: 'nextjs-routes',
         registration: wholeModule ? "module 'use server'" : "function 'use server'",
         ...(options.builder === undefined ? {} : { builder: options.builder }),
@@ -588,14 +617,15 @@ const readServerActions = (
       // told about reads as a repository with no actions in it (R07).
       if (!wholeModule || !Node.isVariableDeclaration(declaration)) continue;
       const built = builtAction(declaration, builders);
+      const at = reachOf(declaration, sourceFile, name, ctx.repoDir);
       if (built === undefined) {
-        unreadable.push({ file, name, line: declaration.getStartLineNumber() });
+        unreadable.push({ file: at.reached.file, name, line: at.reached.line });
         continue;
       }
       const named = repoFunctionOf(built.action);
       record({
         name,
-        line: declaration.getStartLineNumber(),
+        at,
         handler:
           named === undefined
             ? inlineHandlerOf(built.action, `action ${name}`, ctx)
@@ -610,7 +640,12 @@ const readServerActions = (
     const marked = wholeModule || (Node.isBlock(fn.body) && opensWith(fn.body.getStatements(), USE_SERVER));
     if (!marked) continue;
 
-    record({ name, line: fn.line, handler: handlerOfFunction(fn, ctx), via: 'function' });
+    record({
+      name,
+      at: reachOf(fn.declaration, sourceFile, name, ctx.repoDir),
+      handler: handlerOfFunction(fn, ctx),
+      via: 'function',
+    });
   }
   return unreadable;
 };

@@ -186,6 +186,19 @@ export {
 } from './nodes.js';
 
 export {
+  DECLARED_IN,
+  DECLARED_LINE,
+  declaredAt,
+  exportSiteIn,
+  reachHere,
+  reachMeta,
+  reachOf,
+  reachedAt,
+  sameLocation,
+} from './location.js';
+export type { Location, Reach } from './location.js';
+
+export {
   isServiceSource,
   serviceSourceDirs,
   workspaceGlobs,
