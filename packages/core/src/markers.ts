@@ -64,15 +64,23 @@ const asWritten = (value: unknown): string => {
  * failure R38 was raised about, reappearing in the fix for it. A marker absent
  * from this table takes no names at all.
  */
-const NAME_ARGS: Readonly<Record<string, number>> = Object.freeze({
-  Emits: 0,
-  Consumes: 0,
+const NAME_ARGS: ReadonlyMap<string, number> = new Map([
+  ['Emits', 0],
+  ['Consumes', 0],
   // The first argument names the service; every one after it is a route.
-  CallsService: 1,
-});
+  ['CallsService', 1],
+]);
 
-/** Whether this marker takes names at all, and so must end up naming one. */
-export const takesNames = (marker: string): boolean => Object.hasOwn(NAME_ARGS, marker);
+/**
+ * Whether this marker takes names at all, and so must end up naming one.
+ *
+ * A `Map` rather than an object literal because the word looked up is a
+ * decorator name read out of somebody's source, so the table can be asked about
+ * `constructor` and `toString` as easily as about `Emits`. It was already read
+ * with `Object.hasOwn` here and with a plain index below, two answers to one
+ * question; a `Map` gives one (R134).
+ */
+export const takesNames = (marker: string): boolean => NAME_ARGS.has(marker);
 
 /**
  * The names a marker gives, from every argument it was given.
@@ -86,7 +94,7 @@ export const takesNames = (marker: string): boolean => Object.hasOwn(NAME_ARGS, 
  * are checked, and that is where it belongs.
  */
 export const namesGivenTo = (marker: RecordedMarker): MarkerNames => {
-  const from = NAME_ARGS[marker.name] ?? 0;
+  const from = NAME_ARGS.get(marker.name) ?? 0;
   const names: string[] = [];
   const refused: RefusedArg[] = [];
   const keep = (name: string): void => {

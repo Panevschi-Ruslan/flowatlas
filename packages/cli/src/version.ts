@@ -70,7 +70,7 @@ export const VERSION = typeof MANIFEST?.version === 'string' ? MANIFEST.version 
  */
 export const READER_PACKAGES: readonly string[] = [
   ...new Set([
-    ...Object.values(EXTRACTORS),
+    ...EXTRACTORS.values(),
     ...Object.keys({ ...MANIFEST?.dependencies, ...MANIFEST?.devDependencies }).filter((name) =>
       name.startsWith(SCOPE),
     ),

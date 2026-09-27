@@ -88,14 +88,19 @@ const sessionOf = <Ctx>(extractor: WarmExtractor<Ctx>, options: OpenOptions): Se
  * this is a fact about one reader's session, and a browser reader that learned to
  * hold a project open would be a row of its own here.
  */
-const OPENERS: Record<string, (options: OpenOptions) => ServiceSession> = Object.fromEntries(
+const OPENERS: ReadonlyMap<string, (options: OpenOptions) => ServiceSession> = new Map(
   typesReadBy(NESTJS_EXTRACTOR).map((type) => [
     type,
     (options: OpenOptions) => sessionOf(nestjs, options),
   ]),
 );
 
-export const isIncremental = (type: string): boolean => OPENERS[type] !== undefined;
+/**
+ * A `Map` for the reason the extractor table is one: the type asked about came
+ * out of a configuration file, and an object literal would say that a service
+ * typed `constructor` can be held open (R134).
+ */
+export const isIncremental = (type: string): boolean => OPENERS.has(type);
 
 /**
  * Opens a repository and holds it open.
@@ -104,4 +109,4 @@ export const isIncremental = (type: string): boolean => OPENERS[type] !== undefi
  * watch falls back to reading it in a process of its own.
  */
 export const openSession = (options: OpenOptions): ServiceSession | undefined =>
-  OPENERS[options.service.type]?.(options);
+  OPENERS.get(options.service.type)?.(options);

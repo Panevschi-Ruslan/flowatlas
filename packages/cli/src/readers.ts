@@ -110,20 +110,28 @@ export const READERS: readonly ReaderRow[] = [
   ['react', 'react', REACT_EXTRACTOR],
 ];
 
-/** The reader that reads a type, or `undefined` for a type nothing here reads. */
-const READER_OF: Readonly<Record<string, string>> = Object.freeze(
-  Object.fromEntries(READERS.map(([type, , reader]) => [type, reader])),
+/**
+ * The reader that reads a type, or `undefined` for a type nothing here reads.
+ *
+ * A `Map`, because the type asked about is the word somebody wrote in their
+ * configuration file. An object answers `constructor` and `toString` with a
+ * function, so a misspelled type would have a reader, a half and a browser
+ * flag, and the first thing to notice would be whatever that function did
+ * (R134).
+ */
+const READER_OF: ReadonlyMap<string, string> = new Map(
+  READERS.map(([type, , reader]) => [type, reader]),
 );
 
 /** The types this tool can read, each named once however many dependencies give it away. */
 export const READABLE_TYPES: readonly string[] = [...new Set(READERS.map(([type]) => type))];
 
 /** The reader for a repository of this type, or `undefined` when there is none. */
-export const readerOf = (type: string): string | undefined => READER_OF[type];
+export const readerOf = (type: string): string | undefined => READER_OF.get(type);
 
 /** The half a type's reader reads, or `undefined` for a type nothing here reads. */
 export const halfOf = (type: string): Half | undefined => {
-  const reader = READER_OF[type];
+  const reader = READER_OF.get(type);
   return reader === undefined ? undefined : HALF_OF_READER[reader];
 };
 

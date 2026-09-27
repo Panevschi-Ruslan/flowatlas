@@ -256,7 +256,7 @@ export class BuildInputError extends FlowatlasError {
 const cacheExpectations = (config: FlowatlasConfig): CacheExpectations => {
   const extractors: Record<string, string> = {};
   for (const service of config.services) {
-    const name = EXTRACTORS[service.type];
+    const name = EXTRACTORS.get(service.type);
     if (name !== undefined) extractors[name] = BUILD_STAMP;
   }
   return {
@@ -279,7 +279,7 @@ interface SurveyOptions {
 /** Everything planning needs to know about one repository, read from disk. */
 const surveyService = (options: SurveyOptions): RepoSurvey => {
   const { service, repoDir, config, previous, session } = options;
-  const extractor = EXTRACTORS[service.type] ?? null;
+  const extractor = EXTRACTORS.get(service.type) ?? null;
   const tsconfig = findTsconfig(repoDir, service.tsconfig);
   const graphPath = serviceGraphPath(repoDir);
   // Listed from disk even when the repository is already open: a file created
@@ -548,7 +548,7 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
   // one file is read and it produces the same graph a repository would have.
   if (isDeclared(service)) return await extractDeclared(options);
 
-  const extractor = EXTRACTORS[service.type] ?? null;
+  const extractor = EXTRACTORS.get(service.type) ?? null;
   const base = emptyReport(service, extractor);
 
   // Asked to leave the browsers out. It reads like a service with no extractor,

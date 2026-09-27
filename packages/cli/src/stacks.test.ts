@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { EXTRACTORS, isFrontend } from './build/extractor.js';
+import { isIncremental } from './build/session.js';
 import { BROWSER_READERS } from './commands/extract.js';
-import { halfOf, READERS, typesReadBy } from './readers.js';
+import { halfOf, READERS, readerOf, typesReadBy } from './readers.js';
 import {
   guessType,
   guessUnread,
@@ -102,7 +103,7 @@ describe('the stack a repository is built on', () => {
 
   it('sends every type to the reader its row names', () => {
     for (const [type, , reader] of READERS) {
-      expect({ type, reader: EXTRACTORS[type] }).toEqual({ type, reader });
+      expect({ type, reader: EXTRACTORS.get(type) }).toEqual({ type, reader });
       expect({ type, browser: isFrontend(type) }).toEqual({
         type,
         browser: halfOf(type) === 'browser',
@@ -224,6 +225,28 @@ describe('the readers this tool ships', () => {
     }
   });
 
+  /**
+   * Every table a configured `type` is looked up in, asked about the words the
+   * language puts on every object.
+   *
+   * The `type` is whatever somebody wrote in their configuration file, and while
+   * these were object literals each of them answered `constructor` with a
+   * function: a typo would have had a reader, a half, a browser flag and an
+   * incremental session, and the first sign of it would have been whatever that
+   * function did. They are `Map`s now, and the answer is the one a misspelling
+   * deserves - there is no such reader (R134).
+   */
+  it('has no reader anywhere for a type spelled like a member every object has', () => {
+    for (const type of ['constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__']) {
+      expect({ type, reader: EXTRACTORS.get(type) }).toEqual({ type, reader: undefined });
+      expect({ type, reader: readerOf(type) }).toEqual({ type, reader: undefined });
+      expect({ type, half: halfOf(type) }).toEqual({ type, half: undefined });
+      expect({ type, browser: isFrontend(type) }).toEqual({ type, browser: false });
+      expect({ type, incremental: isIncremental(type) }).toEqual({ type, incremental: false });
+      expect({ type, reader: BROWSER_READERS.get(type) }).toEqual({ type, reader: undefined });
+    }
+  });
+
   // The one place a reader is actually called for a repository that is only a
   // browser. A table of functions cannot be derived from a table of strings, so
   // the two are held to each other here instead.
@@ -231,6 +254,6 @@ describe('the readers this tool ships', () => {
     const browsers = [...new Set(READERS.map(([type]) => type))].filter(
       (type) => halfOf(type) === 'browser',
     );
-    expect(browsers.sort()).toEqual(Object.keys(BROWSER_READERS).sort());
+    expect(browsers.sort()).toEqual([...BROWSER_READERS.keys()].sort());
   });
 });

@@ -66,9 +66,61 @@ check_I1() {
 # obvious spelling would have passed on the one case that motivated it.
 PRINTABLE='[:print:]\n\t\200-\377'
 
+# What I2 reads: every file in this tree, whatever its language, minus the two
+# lists written out below. It used to be `packages/*/src` and `.ts`/`.tsx`, and
+# the file that carried the NUL was `scripts/coverage/read-gate.mjs` — the gate
+# was narrower than the hazard it was written for, and `scripts/` is where the
+# counting rule, the read gate, the fixture harness and these invariants live,
+# which is the last place a file may be unreadable to `grep` (R131).
+#
+# Stated here as two lists rather than implied by a glob nobody re-reads, so
+# that widening the gate is deleting a line and narrowing it is adding one with
+# a reason beside it.
+#
+# Directories holding nothing this repository maintains. `node_modules` is
+# pruned everywhere except under `fixtures/`, where the type stubs a fixture
+# ships are tracked source and are read like any other.
+I2_PRUNED='.git .claude .idea dist node_modules .coverage-cache .demo-casts .flowatlas'
+
+# Files entitled to a byte below the printable range, each with the reason:
+#   *.gif, *.png  images — the bytes are the picture
+#   *.ansi.txt    a recording of coloured terminal output — the ESC byte is the
+#                 thing the snapshot exists to record, and one such expectation
+#                 (`fixtures/multi-repo/expected.cli/...tree.ansi.txt`) is the
+#                 only file in the tree that carries one today
+I2_EXEMPT='*.gif *.png *.ansi.txt'
+
+# Every file the gate reads, built from the list above rather than from a second
+# copy of it written into a `find` expression.
+i2_files() {
+  local prune=()
+  local dir
+  for dir in $I2_PRUNED; do
+    # `-o` between the rows, so the first row is added without one.
+    [ "${#prune[@]}" -eq 0 ] || prune+=( -o )
+    if [ "$dir" = 'node_modules' ]; then
+      prune+=( '(' -name node_modules -not -path './fixtures/*' ')' )
+    else
+      prune+=( -name "$dir" )
+    fi
+  done
+  find . '(' "${prune[@]}" ')' -prune -o -type f -print 2>/dev/null | sort
+}
+
+# Whether a path is on the exempt list above.
+i2_exempt() {
+  local pattern
+  for pattern in $I2_EXEMPT; do
+    # shellcheck disable=SC2254 — the list is a list of globs, on purpose.
+    case "$1" in $pattern) return 0 ;; esac
+  done
+  return 1
+}
+
 check_I2() {
   echo "I2  no source carries a raw control character"
   local found=0
+  local read_count=0
   local file
   local count
   # A NUL byte written into a string literal instead of its escape compiled,
@@ -76,17 +128,20 @@ check_I2() {
   # every namespace read as unreadable. Nothing else in this repository looks at
   # the bytes of a source file, so nothing else could have caught it.
   while IFS= read -r file; do
+    i2_exempt "$file" && continue
+    read_count=$((read_count + 1))
     count="$(LC_ALL=C tr -d "$PRINTABLE" < "$file" | wc -c | tr -d ' ')"
     [ "$count" = "0" ] && continue
     echo "    $file: $count control character(s)"
     found=1
-  done < <(find packages/*/src -type f \( -name '*.ts' -o -name '*.tsx' \) 2>/dev/null | sort)
+  done < <(i2_files)
   if [ "$found" -ne 0 ]; then
     echo "    FAIL: a source file carries a raw control character."
     echo "    Run 'xxd <file> | grep -v ..' to find it, and write the escape instead."
     return 1
   fi
-  echo "    ok"
+  echo "    ok ($read_count files; every file in the tree except $I2_EXEMPT,"
+  echo "        and except $I2_PRUNED)"
 }
 
 check_I11() {

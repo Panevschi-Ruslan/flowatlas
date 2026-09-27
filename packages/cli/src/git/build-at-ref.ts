@@ -293,7 +293,7 @@ export const buildAtRef = async (
     options.services === undefined
       ? loaded.config.services
       : loaded.config.services.filter((service) => options.services?.includes(service.name));
-  const readable = wanted.filter((service) => EXTRACTORS[service.type] !== undefined);
+  const readable = wanted.filter((service) => EXTRACTORS.has(service.type));
 
   const limit = options.concurrency ?? Math.max(cpus().length - 1, 1);
   const sides = await inPools(readable, limit, async (service) => {
