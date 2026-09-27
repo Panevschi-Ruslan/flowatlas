@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T17:42:23.545Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.all",
+      "type": "method",
+      "label": "OrdersController.all",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.recent",
+      "type": "method",
+      "label": "OrdersController.recent",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.all",
+      "type": "method",
+      "label": "OrdersService.all",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 24
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.recent",
+      "type": "method",
+      "label": "OrdersService.recent",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 19
+    },
+    {
+      "id": "entry:api:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/orders/recent",
+      "type": "entry",
+      "label": "GET /orders/recent",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/recent",
+        "rawPath": "/orders/recent",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController",
+      "to": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController.all",
+      "to": "api#src/orders/orders.service.ts:OrdersService.all",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:@acme/db#Order[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController.recent",
+      "to": "api#src/orders/orders.service.ts:OrdersService.recent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:@acme/db#Order[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17
+    },
+    {
+      "from": "entry:api:http:GET:/orders",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.all",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:@acme/db#Order[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:api:http:GET:/orders/recent",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.recent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:@acme/db#Order[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15
+    }
+  ],
+  "types": {
+    "type:@acme/db#Order": {
+      "name": "Order",
+      "kind": "external",
+      "declaredIn": "@acme/db",
+      "structuralHash": "23d1cca572c34c9b",
+      "meta": {
+        "declKind": "external",
+        "package": "@acme/db"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "../packages/db/src/index.ts",
+      "line": 26,
+      "reason": "db-layer-unread",
+      "message": "OrdersRepository, which the workspace package @acme/db declares, reads as a data layer, and nothing was read through it.",
+      "hint": "Add \"OrdersRepository\" to adapters.db.localBaseClasses in flowatlas.config.json, so calls through it are recorded as data access.",
+      "symbol": "OrdersRepository",
+      "adapter": "local-base",
+      "service": "api"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 20,
+      "reason": "db-receiver-name-only",
+      "hint": "db is typed as Database, which the workspace package @acme/db declares: a wrapper of this project's own, not a library anything describes. If @acme/db is the data layer, name Database — or the class it extends — under adapters.db.localBaseClasses, so calls through it are read as data access.",
+      "symbol": "db.findOrders",
+      "service": "api"
+    }
+  ]
+}

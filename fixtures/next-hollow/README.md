@@ -29,6 +29,17 @@ are not raised for a wrapper that was handed a function.
 browser, so it has a reader; nothing in its manifest is a framework any frontend
 adapter recognises, so the reader walks it and puts nothing in the graph. It
 contributed no node, which `build` used to print as a line of zeroes among the
-services and `doctor` used to read as nothing to report. Both now name it, and
-`doctor` exits 2 over this project rather than 0: a graph missing a service is not
-a graph anybody can be told is healthy.
+services and `doctor` used to read as nothing to report. Both now name it: a
+graph missing a service is not a graph anybody can be told is healthy.
+
+`doctor` exits 2 over this project for two reasons, and each is enough on its
+own. `widget` is one. `shop` is the other: five of its six ways in have no body
+that was read, and a service whose ways in are mostly addresses is one whose
+changes the growth check cannot see — a change inside an unread body never adds a
+row — so accepting a baseline over it would accept the blindness (R94). This
+README used to say `doctor` exits 2 here, which was true for the first reason
+only: with `widget` taken out, `doctor` exited 0, before and after `--accept`.
+`expected.doctor.shop.txt` holds that case, narrowed to `shop`, and
+`expected.doctor.txt` the whole project. A service with a few unread handlers
+among many read ones is not refused; its rows are ordinary rows, and `doctor`
+prints the two numbers beside them.
