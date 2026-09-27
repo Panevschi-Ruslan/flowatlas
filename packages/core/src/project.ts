@@ -1,11 +1,12 @@
 import { existsSync, readdirSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import {
   Project,
   ts,
   type DiagnosticWithLocation,
   type DiagnosticMessageChain,
   type Program,
+  type ResolutionHostFactory,
   type SourceFile,
 } from 'ts-morph';
 import type { GraphBuilder } from './builder.js';
@@ -144,21 +145,202 @@ export const findTsconfig = (rootDir: string, tsconfig?: string): string | undef
 };
 
 /**
+ * The path aliases one package of a service's extent declares for its own files.
+ *
+ * `base` is the directory its patterns are written relative to, which is the
+ * directory of the tsconfig that wrote them — or of the one it extends — unless
+ * that tsconfig names a `baseUrl`.
+ */
+interface PackageAliases {
+  /** Absolute path of the package, as the extent spells it. */
+  readonly dir: string;
+  readonly paths: ts.MapLike<string[]>;
+  readonly base: string;
+  readonly baseUrl: string | undefined;
+}
+
+/**
+ * The `paths` a package's own tsconfig gives it, or nothing when it gives none.
+ *
+ * Only the aliases, not the rest of that configuration. A package's other
+ * settings — which files it allows, how it resolves a bare name — would change
+ * how every one of its imports lands, and nothing the service reads needs that;
+ * its aliases are the one setting whose absence leaves an import resolving to
+ * nothing at all. The directory listing is stubbed empty because the question is
+ * about the options and not about which files the package compiles: asked of a
+ * real tsconfig, the compiler would otherwise walk the whole package to answer
+ * something nobody asked.
+ */
+const aliasesOf = (dir: string): PackageAliases | undefined => {
+  const configPath = findTsconfig(dir);
+  if (configPath === undefined) return undefined;
+  const read = ts.readConfigFile(configPath, ts.sys.readFile);
+  if (read.error !== undefined) return undefined;
+  const parsed = ts.parseJsonConfigFileContent(
+    read.config,
+    {
+      useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
+      fileExists: ts.sys.fileExists,
+      readFile: ts.sys.readFile,
+      readDirectory: () => [],
+    },
+    dirname(configPath),
+    undefined,
+    configPath,
+  );
+  const { paths, baseUrl, pathsBasePath } = parsed.options;
+  if (paths === undefined || Object.keys(paths).length === 0) return undefined;
+  const base = typeof pathsBasePath === 'string' ? pathsBasePath : (baseUrl ?? dirname(configPath));
+  return { dir, paths, base, baseUrl };
+};
+
+/** Whether one `paths` key names a specifier: exactly, or around its one `*`. */
+const aliasMatches = (pattern: string, specifier: string): boolean => {
+  const star = pattern.indexOf('*');
+  if (star === -1) return pattern === specifier;
+  const prefix = pattern.slice(0, star);
+  const suffix = pattern.slice(star + 1);
+  return (
+    specifier.length >= prefix.length + suffix.length &&
+    specifier.startsWith(prefix) &&
+    specifier.endsWith(suffix)
+  );
+};
+
+/**
+ * The resolution mode of one import, the way the compiler would have asked it.
+ *
+ * The hook below is handed names rather than the literals they were written as,
+ * and in a module system with two kinds of import the kind is part of the
+ * question. The literal is found again by its text among the file's imports,
+ * which the compiler keeps on the file without declaring; where it is not there
+ * the file's own format is the answer the compiler would give most imports.
+ */
+const modeOf = (
+  file: ts.SourceFile | undefined,
+  name: string,
+  options: ts.CompilerOptions,
+): ts.ResolutionMode => {
+  if (file === undefined) return undefined;
+  const imports = (file as { imports?: readonly ts.StringLiteralLike[] }).imports;
+  const literal = imports?.find((usage) => usage.text === name);
+  return literal === undefined
+    ? file.impliedNodeFormat
+    : ts.getModeForUsageLocation(file, literal, options);
+};
+
+/**
+ * Module resolution for a service whose extent holds packages with aliases of
+ * their own (R141).
+ *
+ * A service is its own directory and the workspace packages it declares, and the
+ * project is compiled with the service's tsconfig. A package that imports its own
+ * code as `@repositories` — an alias only its own tsconfig defines — asked the
+ * service's configuration where that is, and the service's configuration had
+ * never heard of it: the import resolved to nothing and the class behind it was
+ * never reached.
+ *
+ * So an import written in a package's file is asked of that package's aliases
+ * first, and of the service's configuration otherwise. The first half is narrow
+ * on purpose: only a specifier one of the package's own `paths` keys names is
+ * asked differently, and when the package's aliases lead nowhere it falls back
+ * to the answer it had before. Everything else — every relative import, every
+ * installed package, every file of the service itself — is resolved exactly as
+ * the service's configuration resolved it, through one cache per configuration
+ * so that taking over the hook costs no more than the compiler's own did.
+ *
+ * Which packages have a say is not decided here. It is the extent
+ * {@link serviceSourceDirs} answers, the same list that decides which files are
+ * opened below: a package whose files a reader may open is a package whose
+ * aliases are honoured, and no other (R115). A package of the workspace the
+ * service does not declare has no files in the project and no aliases in it.
+ */
+const packageAliasResolution = (
+  packages: readonly PackageAliases[],
+): ResolutionHostFactory => (host) => {
+  const canonical = ts.sys.useCaseSensitiveFileNames
+    ? (path: string) => path
+    : (path: string) => path.toLowerCase();
+  const cwd = host.getCurrentDirectory?.() ?? process.cwd();
+  // One cache of package manifests for every configuration, because they are
+  // the same files on disk whoever is asking about them.
+  const packageJsonCache = ts.createModuleResolutionCache(cwd, canonical).getPackageJsonInfoCache();
+  const configured = new Map<PackageAliases | undefined, { options: ts.CompilerOptions; cache: ts.ModuleResolutionCache }>();
+  const configurationFor = (owner: PackageAliases | undefined, service: ts.CompilerOptions) => {
+    let found = configured.get(owner);
+    if (found === undefined) {
+      // The service's `baseUrl` goes with its `paths`: both are the service's
+      // spelling of where a bare name lives, and neither is the package's.
+      const { baseUrl: _serviceBase, ...rest } = service;
+      const options: ts.CompilerOptions =
+        owner === undefined
+          ? service
+          : {
+              ...rest,
+              paths: owner.paths,
+              pathsBasePath: owner.base,
+              ...(owner.baseUrl === undefined ? {} : { baseUrl: owner.baseUrl }),
+            };
+      found = { options, cache: ts.createModuleResolutionCache(cwd, canonical, options, packageJsonCache) };
+      configured.set(owner, found);
+    }
+    return found;
+  };
+  // Longest first, so a package nested inside another answers for its own files.
+  const byDepth = [...packages].sort((a, b) => b.dir.length - a.dir.length);
+  const ownerOf = (file: string): PackageAliases | undefined =>
+    byDepth.find((pkg) => file.startsWith(`${pkg.dir}/`));
+
+  return {
+    resolveModuleNames: (names, containingFile, _reused, redirected, options, containingSourceFile) => {
+      const owner = ownerOf(containingFile);
+      const resolve = (name: string, config: ReturnType<typeof configurationFor>) =>
+        ts.resolveModuleName(
+          name,
+          containingFile,
+          config.options,
+          host,
+          config.cache,
+          redirected,
+          modeOf(containingSourceFile, name, config.options),
+        ).resolvedModule;
+      const service = configurationFor(undefined, options);
+      const own = owner === undefined ? undefined : configurationFor(owner, options);
+      return names.map((name) => {
+        const claimed =
+          own !== undefined &&
+          owner !== undefined &&
+          Object.keys(owner.paths).some((pattern) => aliasMatches(pattern, name));
+        return (claimed ? resolve(name, own) : undefined) ?? resolve(name, service);
+      });
+    },
+  };
+};
+
+/**
  * Loads a repository for analysis.
  *
  * Files are added by glob rather than from the tsconfig, because a repository
  * usually compiles its tests and build output too and reading those doubles the
  * work for nothing. The tsconfig is still honoured for compiler options and
- * path mappings, which is what type resolution depends on.
+ * path mappings, which is what type resolution depends on — and a declared
+ * package's own path mappings are honoured for that package's own files, which
+ * {@link packageAliasResolution} is about.
  */
 export const createProject = (options: CreateProjectOptions): Project => {
   const { rootDir, tsconfig, include } = options;
   const tsConfigFilePath = findTsconfig(rootDir, tsconfig);
+  const packages = serviceSourceDirs(rootDir).slice(1);
+  const aliases = packages.flatMap((dir) => aliasesOf(dir) ?? []);
 
   const project = new Project({
     ...(tsConfigFilePath === undefined ? {} : { tsConfigFilePath }),
     skipAddingFilesFromTsConfig: true,
     ...(tsConfigFilePath === undefined ? { compilerOptions: FALLBACK_COMPILER_OPTIONS } : {}),
+    // Only when some package has aliases of its own. A service whose packages
+    // declare none — which is every service outside a workspace — keeps the
+    // compiler's own resolution untouched rather than an imitation of it.
+    ...(aliases.length === 0 ? {} : { resolutionHost: packageAliasResolution(aliases) }),
   });
 
   const sourceRoot = existsSync(join(rootDir, 'src')) ? 'src' : '.';
@@ -185,7 +367,7 @@ export const createProject = (options: CreateProjectOptions): Project => {
   // glob over that package walked into it and stopped the whole reading with
   // "Directory not found". The list comes from the file system and holds only
   // files that are there.
-  for (const dir of serviceSourceDirs(rootDir).slice(1)) {
+  for (const dir of packages) {
     for (const file of sourceFilesUnder(dir)) project.addSourceFileAtPath(join(dir, file));
   }
   return project;

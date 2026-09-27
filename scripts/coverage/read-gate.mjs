@@ -329,9 +329,12 @@ export const BASELINE = [
       'unrelated loss here has had somewhere to hide for as long as the gate has ' +
       'existed.',
   },
-  // Medusa's two kinds of known red (R137). Neither is a file that serves
-  // nothing - those are in `EXEMPT` - and both are recorded here so that a third
-  // file going unread beside them is new red rather than more of the same.
+  // Medusa's known red (R137): two files unread on a fresh clone for one reason.
+  // Neither is a file that serves nothing - those are in `EXEMPT` - and both are
+  // recorded here so that a third file going unread beside them is new red rather
+  // than more of the same. A third entry, the inventory module's repository, was
+  // a gap in how a project was built and went when R141 closed it: each declared
+  // package's own `paths` now resolve that package's own imports.
   {
     where: 'medusa',
     state: 'fresh',
@@ -360,26 +363,6 @@ export const BASELINE = [
       'the entry above gives: the router’s type is in a package a fresh clone does ' +
       'not have.',
   },
-  ...['fresh', 'with-deps'].map((state) => ({
-    where: 'medusa',
-    state,
-    family: 'data',
-    path: 'packages/modules/inventory/src/repositories/inventory-level.ts',
-    files: 1,
-    ticket: 'R137',
-    why:
-      'A gap, not an exemption: the queries a real repository of the inventory ' +
-      'module runs on every stock lookup, and nothing reads them. The cause is ' +
-      'not in any reader. The service that calls it imports it as ' +
-      '`@repositories`, a path the inventory package’s own tsconfig maps and the ' +
-      'medusa service’s does not, and the project is compiled with one set of ' +
-      'paths, so the import resolves to nothing and the class is never reached; ' +
-      'the call site in `services/inventory-level.ts` says so with ' +
-      '`db-receiver-name-only`. Every module here writes `@models` and `@services` ' +
-      'the same way. Reading a declared package with its own tsconfig’s paths is ' +
-      'a change to how the core builds a project, and when it lands this count ' +
-      'drops to zero and fails, which is the point.',
-  })),
 ];
 
 const exemptionKey = (entry) => `${entry.where} ${entry.path} ${entry.family}`;
