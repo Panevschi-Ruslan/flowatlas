@@ -5,7 +5,7 @@
  * `doctor` decides on it. Two copies of "was this body read" would be two
  * answers the day one of them learns a third condition (R94).
  */
-import type { GraphNode } from '@flowatlas/core';
+import { wayInBodyRead, type GraphNode } from '@flowatlas/core';
 
 export interface WaysIn {
   found: number;
@@ -13,18 +13,8 @@ export interface WaysIn {
   read: number;
 }
 
-/**
- * Whether the code behind one way in was read.
- *
- * Two conditions, and the second is why the first is not enough. A `handles`
- * edge is the graph's own answer to "what runs when this is called", whichever
- * adapter drew it. But an adapter that named a handler it could not follow says
- * so on the node, and the edge onto that handler is real — it points at the
- * call the framework enters — so the edge alone would count a way in nobody
- * read as read.
- */
-const bodyRead = (entry: GraphNode, handled: (id: string) => boolean): boolean =>
-  handled(entry.id) && entry.meta?.['handlerBodyRead'] !== false;
+/** Whether the code behind one way in was read: the core's one definition. */
+const bodyRead = wayInBodyRead;
 
 /** Every service's ways in, found and read; a service with none is absent. */
 export const waysInByService = (

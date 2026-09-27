@@ -1,3 +1,4 @@
+import { wayInBodyRead } from '@flowatlas/core';
 /**
  * What the tool saw, read back off the three files a run leaves behind.
  *
@@ -121,7 +122,16 @@ const routes = (graph, index) => {
   const entries = graph.nodes.filter((node) => node.type === 'entry');
   const httpNodes = entries.filter((node) => node.kind === 'http');
   const http = new Set(httpNodes.map((node) => node.id));
-  const handled = graph.edges.filter((edge) => edge.type === 'handles' && http.has(edge.from));
+  const handles = graph.edges.filter((edge) => edge.type === 'handles' && http.has(edge.from));
+  // A body counts as read by the core's one definition, the same `doctor` decides
+  // on: a `handles` edge onto code the adapter did not say it failed to follow.
+  // Counting the edge alone reported a service whose every route was built by a
+  // helper as having every body attached, while `doctor` refused the same graph.
+  const handledIds = new Set(handles.map((edge) => edge.from));
+  const readIds = new Set(
+    httpNodes.filter((node) => wayInBodyRead(node, (id) => handledIds.has(id))).map((node) => node.id),
+  );
+  const handled = handles.filter((edge) => readIds.has(edge.from));
   const reaching = handled.filter((edge) =>
     DOES_SOMETHING.some((type) => outCount(index, edge.to, type) > 0),
   );
@@ -155,7 +165,7 @@ const routes = (graph, index) => {
   // computed, which writes a row of its own - would fail an assertion for the
   // old reason wearing the new name.
   const claims = new Map();
-  for (const edge of handled) claims.set(edge.from, (claims.get(edge.from) ?? 0) + 1);
+  for (const edge of handles) claims.set(edge.from, (claims.get(edge.from) ?? 0) + 1);
   return {
     byKind,
     addresses: http.size,
