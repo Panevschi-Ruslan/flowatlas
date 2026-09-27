@@ -134,6 +134,8 @@ export type {
   ServiceConfig,
 } from './config.js';
 
+export { applicationsIn, applicationsServing } from './adapters/applications.js';
+export type { ApplicationMap } from './adapters/applications.js';
 export { LOG_LEVELS, createLogger, silentLogger } from './adapters/context.js';
 export type { ExtractContext, LogLevel, Logger } from './adapters/context.js';
 export {

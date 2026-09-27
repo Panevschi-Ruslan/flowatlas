@@ -192,6 +192,54 @@ describe('a request a browser makes of the service it was served from', () => {
     expect(uiFindingFor(outcome)?.hint).toContain('That path answers DELETE, GET.');
   });
 
+  /**
+   * A browser asking a service that creates two applications (R119).
+   *
+   * The interesting half is that the service is still found. Asking for a single
+   * match struck a service whose own entries tie out of the search for who
+   * answers, and the request then came back as one no configured service serves —
+   * false, and pointing at the configuration rather than at the two applications.
+   */
+  describe('two applications of one service answering', () => {
+    const inApplication = (repo: string, path: string, application: string): GraphNode => ({
+      id: `entry:${repo}@${application}:http:GET:${path}`,
+      type: 'entry',
+      kind: 'http',
+      label: `GET ${path} (${application})`,
+      repo,
+      meta: { method: 'GET', path, application },
+    });
+
+    it('names the applications rather than blaming the configuration', () => {
+      const outcome = resolveUiCall(
+        uiCall('web', 'GET', '/health'),
+        indexOf({
+          api: [
+            inApplication('api', '/health', 'ApiModule'),
+            inApplication('api', '/health', 'WorkerModule'),
+          ],
+          web: [],
+        }),
+      );
+      expect(outcome.kind).toBe('ambiguous');
+      expect(uiFindingFor(outcome)?.reason).toBe('ambiguous-route-application');
+      expect(uiFindingFor(outcome)?.hint).not.toContain('apiTarget');
+    });
+
+    it('still points at the configuration when two services answer', () => {
+      const outcome = resolveUiCall(
+        uiCall('web', 'GET', '/health'),
+        indexOf({
+          api: [route('api', 'GET', '/health')],
+          legacy: [route('legacy', 'GET', '/health')],
+          web: [],
+        }),
+      );
+      expect(uiFindingFor(outcome)?.reason).toBe('ambiguous-route-target');
+      expect(uiFindingFor(outcome)?.hint).toContain('apiTarget');
+    });
+  });
+
   it("finds a route of its own service behind that service's global prefix", () => {
     // The browser is handed a base address that already ends in the prefix, so
     // the path it writes is the path without it.

@@ -44,6 +44,19 @@ const addressOf = (node) => {
 };
 
 /**
+ * One entry id with the application taken out of it again.
+ *
+ * `entry:<service>@<application>:<kind>:<key>` becomes
+ * `entry:<service>:<kind>:<key>`, which is the id the same route had before R119.
+ * Counting the distinct ones answers the question acceptance asked and nothing
+ * else could: how many addresses were being lost to a collision, silently, while
+ * every total in every report stayed correct. Two applications serving `/health`
+ * are two addresses here and one there, so the difference is the count of
+ * addresses that used to be overwritten.
+ */
+const withoutApplication = (id) => id.replace(/^(entry:[^:@]+)@[^:]*:/, '$1:');
+
+/**
  * Addresses counted by their first segment, with the small ones folded.
  *
  * This is the smallest thing that makes a lost prefix visible. All of immich's
@@ -123,26 +136,31 @@ const routes = (graph, index) => {
   for (const node of entries) {
     byKind[node.kind ?? 'unknown'] = (byKind[node.kind ?? 'unknown'] ?? 0) + 1;
   }
-  // Addresses two or more declarations both claim.
+  // Addresses two or more declarations both claim, **inside one application**.
   //
-  // Not an error figure, and it would be wrong to print it as one. Two things
-  // land here and the graph cannot tell them apart: a route wrongly collapsed
-  // onto another one's address, which is what fourteen of novu's were, and two
-  // applications inside one service each serving the same address, which is
-  // what eleven of immich's are - a controller mounted in the application and
-  // again in a maintenance worker. An address is identified by its service and
-  // its path, so a second application in the same service is invisible to it.
+  // That qualifier is new and it is the whole of what R119 changed here. Two
+  // things used to land in this figure and the graph could not tell them apart:
+  // a route wrongly collapsed onto another one's address, which is what fourteen
+  // of novu's were, and two applications of one service each serving the same
+  // address, which is what eleven of immich's are - a controller mounted in the
+  // application and again in a maintenance worker. Now an entry id carries the
+  // application that serves it, so the second kind is two addresses and is not
+  // counted here at all.
   //
-  // What it is for is movement. Fourteen becoming three is the whole of R89 and
-  // no figure in any report moved when it happened; now that line moves. Making
-  // it an assertion would need the reader to record which application a route
-  // was mounted in, which it does not.
+  // What is left is the reading that can honestly be asserted to zero: one
+  // address, one application, two handlers, which means the framework answers
+  // with whichever it registered first and the other is dead code that still
+  // type-checks. It is still printed rather than asserted, because a service
+  // whose applications could not be read - a factory call handed something
+  // computed, which writes a row of its own - would fail an assertion for the
+  // old reason wearing the new name.
   const claims = new Map();
   for (const edge of handled) claims.set(edge.from, (claims.get(edge.from) ?? 0) + 1);
   return {
     byKind,
     addresses: http.size,
     duplicated: [...claims.values()].filter((count) => count > 1).length,
+    collided: http.size - new Set([...http].map(withoutApplication)).size,
     withBody: handled.length,
     reaching: reaching.length,
     guarded: guarded.length,

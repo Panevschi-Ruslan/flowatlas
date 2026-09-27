@@ -52,6 +52,8 @@ interface Details {
     method: string;
     path: string;
     candidates: readonly string[];
+    /** The applications answering, when the candidates are not all in one. */
+    applications?: readonly string[];
   };
 }
 
@@ -95,10 +97,38 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
       `${verbs.length === 0 ? '' : `That path answers ${verbs.join(', ')}. `}` +
       `Route renamed? Check ${targetService}'s controllers, or annotate the call with @CallsService.`,
   }),
-  ambiguous: ({ targetService, method, path, candidates }) => ({
+  ambiguous: (detail) => AMBIGUITY[detail.applications === undefined ? 'route' : 'application'](detail),
+};
+
+/**
+ * Two ways one request can answer to more than one entry, which are not one way.
+ *
+ * Two routes of one application tying is a defect in that application: whichever
+ * was registered first answers and the other is dead code that still type-checks,
+ * and the fix is to delete a route. Two *applications* of one service both
+ * serving the address is a defect in nothing — a worker and an API each answer on
+ * their own port — and what cannot be known is only which of them this caller
+ * reaches, because that is decided by deployment and written in no source. The
+ * rows say so separately, since a reader told to make a path more specific when
+ * nothing is wrong with the path spends the afternoon on it.
+ */
+const AMBIGUITY: Record<
+  'route' | 'application',
+  (detail: Details['ambiguous']) => Finding
+> = {
+  route: ({ targetService, method, path, candidates }) => ({
     reason: 'ambiguous-route',
     message: `more than one route in ${targetService} answers ${method} ${path}`,
     hint: `Candidates: ${candidates.join(', ')}. Make the path more specific, or annotate the call with @CallsService.`,
+  }),
+  application: ({ targetService, method, path, applications = [] }) => ({
+    reason: 'ambiguous-route-application',
+    message: `${applications.length} applications in ${targetService} serve ${method} ${path}: ${applications.join(', ')}`,
+    // Deliberately suggests nothing. @CallsService names a service, a verb and a
+    // path, and has no room for an application, so telling a reader to annotate
+    // the call would send them to write an annotation that resolves to the same
+    // two candidates. The row exists to be read, not acted on.
+    hint: `Nothing is wrong with the route, and nothing here can choose between them: which of ${applications.join(' and ')} answers a request from outside is decided by how they are deployed, and no source says. Both are named above rather than one of them guessed at.`,
   }),
 };
 
@@ -240,6 +270,7 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
         method,
         path: requested,
         candidates: found.candidates,
+        ...(found.applications === undefined ? {} : { applications: found.applications }),
       },
       notes,
     };

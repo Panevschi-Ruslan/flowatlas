@@ -347,8 +347,14 @@ const readCallsIn = (
   });
 };
 
-/** Files of the repository itself, skipping packages, declarations and tests. */
-const repoSourcesOf = function* (
+/**
+ * Files of the repository itself, skipping packages, declarations and tests.
+ *
+ * Exported because a second reading walks the same set for a different question
+ * — which applications this repository creates — and two answers to "is this file
+ * part of the repository" would be two answers to which files were read at all.
+ */
+export const repoSourcesOf = function* (
   project: Project,
   rootDir: string,
   except: string | undefined,

@@ -86,6 +86,7 @@ const DESYNC_REASONS: ReadonlySet<string> = new Set([
   'unknown-base-url-env',
   'target-route-not-found',
   'ambiguous-route',
+  'ambiguous-route-application',
   'ambiguous-route-target',
   'route-wildcard-only',
 ]);

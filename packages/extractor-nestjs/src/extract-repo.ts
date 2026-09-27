@@ -20,6 +20,7 @@ import type { Project } from 'ts-morph';
 import { addressingFindings, findBootstrapFile, readBootstrap } from './bootstrap.js';
 import { createNestContext, type NestStats } from './context.js';
 import { buildClassIndex } from './index-classes.js';
+import { applicationsPass } from './passes/applications.js';
 import { callsPass } from './passes/calls.js';
 import { diPass } from './passes/di.js';
 import { entriesPass } from './passes/entries.js';
@@ -63,10 +64,13 @@ export interface ExtractRepoOptions {
  *
  * The order is not arbitrary: roles are settled before any node is created,
  * injection is resolved before calls are followed, and the wrapping chain is
- * drawn last because matching middleware to routes needs the routes.
+ * drawn last because matching middleware to routes needs the routes. Which
+ * applications exist is settled between the modules and the entries, because it
+ * is read out of the modules and it decides what an address is an address of.
  */
 export const BUILT_IN_PASSES: readonly NestExtractorPass[] = [
   modulesPass,
+  applicationsPass,
   wrappingCollectPass,
   providersPass,
   entriesPass,
@@ -176,6 +180,9 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
       // have to import from this package, which is what keeps an adapter for one
       // framework free of every other reader.
       ...(bootstrap.versioning === undefined ? {} : { versioning: bootstrap.versioning }),
+      // `applications` is added to this record by the pass of that name, which
+      // cannot answer until the modules have been read. Everything else here is
+      // known before any pass runs.
     },
   };
 

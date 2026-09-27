@@ -101,6 +101,25 @@ describe('id constructors', () => {
     );
   });
 
+  // An address is only an address within an application (R119). One service that
+  // creates two of them has two address spaces, and the qualifier is absent for
+  // the one that creates a single application, because naming the only
+  // application there is adds a word and no information.
+  it('carries the application when one was named', () => {
+    expect(makeEntryId('orders', 'http', makeHttpEntryKey('GET', '/health'), 'WorkerModule')).toBe(
+      'entry:orders@WorkerModule:http:GET:/health',
+    );
+  });
+
+  it('leaves the key half in the position anything reading it expects', () => {
+    const id = makeEntryId('orders', 'http', makeHttpEntryKey('GET', '/health'), 'WorkerModule');
+    expect(id.split(':').slice(3).join(':')).toBe('GET:/health');
+  });
+
+  it('rejects an empty application rather than minting a bare separator', () => {
+    expect(() => makeEntryId('orders', 'http', 'GET:/health', '')).toThrow(InvalidIdError);
+  });
+
   it('upper-cases the method in an HTTP entry key', () => {
     expect(makeHttpEntryKey('post', 'orders/{id}')).toBe('POST:/orders/:param');
   });

@@ -1,7 +1,7 @@
 import { wasRead, type GraphNode } from '@flowatlas/core';
 import type { Finding } from './http-link.js';
 import { cmp } from './order.js';
-import { isMatch, matchRoute, pathAnswers } from './route-match.js';
+import { isMatch, matchRoute, pathAnswers, type RouteResult } from './route-match.js';
 
 /**
  * What the linker can be asked while resolving one request made in a browser.
@@ -49,8 +49,20 @@ interface Details {
     path: string;
     verbs: readonly string[];
   };
-  /** More than one service answers, and nothing says which one is meant. */
-  ambiguous: { method: string; path: string; candidates: readonly string[] };
+  /**
+   * More than one thing answers, and nothing says which one is meant.
+   *
+   * Two services, or — since R119 — two applications inside one service. The
+   * candidates are named either way; `applications` is what says which of the two
+   * questions this is, because they are not the same question and the second one
+   * has nothing wrong with it to fix.
+   */
+  ambiguous: {
+    method: string;
+    path: string;
+    candidates: readonly string[];
+    applications?: readonly string[];
+  };
 }
 
 export type UiOutcomeKind = keyof Details;
@@ -78,10 +90,33 @@ const FINDINGS: { [K in UiOutcomeKind]: ((detail: Details[K]) => Finding) | null
         ? `Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls ${method} ${path} */.`
         : `Route renamed? Check ${targetService}'s controllers, or annotate the method with /** @flowatlas-calls ${method} ${path} */.`),
   }),
-  ambiguous: ({ method, path, candidates }) => ({
+  ambiguous: (detail) => AMBIGUITY[detail.applications === undefined ? 'target' : 'application'](detail),
+};
+
+/**
+ * Which ambiguity a request ran into, by whether the answers differ by
+ * application.
+ *
+ * Two services answering is a question the configuration settles, and the hint
+ * says which setting. Two applications of one service answering is not a question
+ * any setting can settle: they listen on their own ports and whatever routes to
+ * them from outside the browser is not in this project's source. Spelling the two
+ * the same way sent a reader to `apiTarget` to fix something `apiTarget` has no
+ * word for.
+ */
+const AMBIGUITY: Record<
+  'target' | 'application',
+  (detail: Details['ambiguous']) => Finding
+> = {
+  target: ({ method, path, candidates }) => ({
     reason: 'ambiguous-route-target',
     message: `${candidates.join(' and ')} both answer ${method} ${path}`,
     hint: 'Set services[].apiTarget on the frontend to say which service its settings key names.',
+  }),
+  application: ({ method, path, applications = [] }) => ({
+    reason: 'ambiguous-route-application',
+    message: `${applications.length} applications serve ${method} ${path}: ${applications.join(', ')}`,
+    hint: `Nothing is wrong with the route, and nothing here can choose between them: which of ${applications.join(' and ')} a request reaches is decided by how they are deployed, and no source says.`,
   }),
 };
 
@@ -189,6 +224,20 @@ const bySameService = ({ call, method, path, index }: Ask): UiOutcome | undefine
 };
 
 /**
+ * Whether a service serves the address at all, which is not the same as knowing
+ * which of its entries answers.
+ *
+ * A service whose own entries tie is a service that serves it: since R119 that
+ * is the ordinary reading of a worker and an API in one repository both serving
+ * `/health`. Asking for a single match here excluded such a service from the
+ * search for who answers, and the request then came back as one no configured
+ * service serves — a sentence that is false, about the wrong thing, and pointing
+ * at the configuration rather than at the two applications.
+ */
+const answers = (result: RouteResult): boolean =>
+  isMatch(result) || result.reason === 'ambiguous';
+
+/**
  * Whoever happens to serve that route, when nothing said who should.
  *
  * A guess, and it comes back as one: the same address may be served by two
@@ -200,9 +249,9 @@ const byUniqueRoute = ({ method, path, index }: Ask): UiOutcome | undefined => {
     .services()
     .filter((service) => {
       const routes = index.routesOf(service) ?? [];
-      if (isMatch(matchRoute(method, path, routes))) return true;
+      if (answers(matchRoute(method, path, routes))) return true;
       const prefixed = withGlobalPrefix(path, routes);
-      return prefixed !== undefined && isMatch(matchRoute(method, prefixed, routes));
+      return prefixed !== undefined && answers(matchRoute(method, prefixed, routes));
     })
     .sort(cmp);
 
@@ -318,7 +367,13 @@ const within = (
     };
   }
   if (found.reason === 'ambiguous') {
-    return { kind: 'ambiguous', method, path, candidates: found.candidates };
+    return {
+      kind: 'ambiguous',
+      method,
+      path,
+      candidates: found.candidates,
+      ...(found.applications === undefined ? {} : { applications: found.applications }),
+    };
   }
   return {
     kind: 'noRoute',
