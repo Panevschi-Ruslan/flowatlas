@@ -2,21 +2,14 @@
 
 Koa + React + socket.io + Sequelize in one repository.
 
-> **Not measured on this branch, and not to be quoted.** Every figure below was
-> produced on one branch carrying one fix, and the sixteen reports' merge was
-> resolved file by file, so no number here is true of this tree (R113, fifth
-> row). The fresh-clone report beside this one has been re-measured; this one
-> needs a dependency install on the whole repository, which nobody has paid for
-> yet. Regenerate it with `pnpm coverage:deps --target <name>`, which overwrites
-> this notice along with the figures.
-
 |  |  |
 |---|---|
 | repository | `outline/outline` |
 | commit | `aacc98475d1f5bb0f192665b539db00126d491ee` |
 | read | `.` |
-| read by | outline (`koa`, set; `link` guessed `react`) |
+| read by | outline (`koa`) |
 | source files counted | 2188 |
+| extent counted over | `.` alone (not a member of any workspace here) |
 | flowatlas | 0.4.1 |
 
 ## Outcome
@@ -42,54 +35,72 @@ land on one address.
 |  | count | of what the counting rule found |
 |---|---|---|
 | addresses placed | 261 |  |
+| addresses claimed by more than one declaration | 0 | a collision, or one service holding two applications |
 | declarations with a body attached | 257 | 257 of 266 |
-| …whose body reaches anything | 242 | 242 of 266 |
+| …whose body reaches anything | 249 | 249 of 266 |
 | …behind middleware or a guard | 256 | 256 of 266 |
+
+Where those addresses are. One row per leading segment, which is enough of an
+address for a dropped global prefix to show and little enough that a new route
+is not a diff.
+
+| first segment | addresses |
+|---|---|
+| `/api` | 196 |
+| `/oauth` | 7 |
+
+58 more at 47 segment(s) of fewer than five addresses each, folded together so that a repository serving two hundred addresses at the top level does not write two hundred rows.
 
 ## What joined
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 2 | 0 |
+| requests from a browser | 30 | 19 |
 | requests between services | 32 | 0 |
-| channels | 31 | 1 with both ends |
+| channels | 33 | 1 with both ends |
 
 ## Storage and screens
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 168 | no denominator: the rule has no probe for it |
-| …that name a table | 0 | 0 of 168 |
-| tables | 0 | 0 of 103 |
+| query sites read | 1197 | no denominator: the rule has no probe for it |
+| …that name a table | 1165 | 1165 of 1197 |
+| tables | 41 | 41 of 103 |
 | components | 644 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
 | every other binding a template makes | 777 | not counted by the rule |
 
 ## What it could not read
 
-274 places somebody could act on, 1785 the tool
+160 places somebody could act on, 2000 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| api-path-dynamic | action | 2 |  |
+| api-path-dynamic | action | 4 |  |
 | call-dynamic-receiver | info | 344 |  |
 | channel-const-unresolved | action | 12 |  |
 | channel-dynamic | action | 9 |  |
 | consumer-handler-unresolved | action | 2 |  |
-| db-layer-unread | action | 4 |  |
-| db-receiver-name-only | action | 77 |  |
+| db-layer-unread | action | 6 |  |
+| db-receiver-name-only | action | 11 |  |
 | dynamic-cache-key | action | 40 |  |
 | dynamic-config-key | action | 2 |  |
 | dynamic-http-url | action | 24 |  |
-| dynamic-table-name | action | 91 |  |
+| dynamic-table-name | action | 32 |  |
 | route-handler-anonymous | info | 4 |  |
 | route-path-dynamic | action | 5 |  |
+| target-route-not-found | action | 7 |  |
 | type-depth-exceeded | info | 1209 |  |
-| type-generic-uninstantiated | info | 228 |  |
+| type-generic-uninstantiated | info | 443 |  |
 | type-unresolved | action | 5 |  |
 | unknown-base-url-env | action | 1 |  |
+
+## Files with sites and no output
+
+None. Every file the counting rule found a declaration site in yielded a node of
+that family, or a row naming the file.
 
 ## The denominators
 
@@ -116,9 +127,15 @@ applied identically to all eight targets and knows nothing about any of them.
 | places the code reaches storage | 0 |
 | tables or models declared (an upper bound) | 103 |
 
+Counted over the extent named at the top of this report - the read directory and
+the workspace packages it declares - because that is what the tool reads. A
+denominator counted over the read directory alone put more found than there was
+to find, and `extent.mjs` says why the rule works the extent out from the
+repository's manifests instead of asking the tool for it.
+
 ## Cost
 
-Wall clock 15 to 60 s, peak resident memory 3 to 4 GB.
+Wall clock 15 to 60 s, peak resident memory 2 to 3 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.
