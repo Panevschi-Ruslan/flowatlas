@@ -20,6 +20,7 @@ import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { MountShape, RouteDialect } from './route-dialects.js';
 import { EXPRESS, FASTIFY, HONO, KOA, MOUNT_HELPERS } from './route-dialects.js';
+import { Registries, registryOf } from './route-registries.js';
 import {
   enclosingClass,
   fileOfNode,
@@ -437,6 +438,22 @@ const helperMount = (
 };
 
 /**
+ * What a router turns itself into, taken back off again.
+ *
+ * `hook.value.routes()` is the middleware a Koa router hands back, and what the
+ * collection holds is the router. `mountedApp` strips the same call when it is
+ * written on something it can follow; this is that step for a member of a
+ * collection, which nothing can follow yet.
+ */
+const stripThrough = (node: TsNode, through: readonly string[] | undefined): TsNode => {
+  if (through === undefined || !Node.isCallExpression(node)) return node;
+  const callee = node.getExpression();
+  return Node.isPropertyAccessExpression(callee) && through.includes(callee.getName())
+    ? unwrap(callee.getExpression())
+    : node;
+};
+
+/**
  * The declaration an expression is the value of, when it is written as one.
  *
  * Only through a chain of calls, because that is the shape it exists for:
@@ -654,6 +671,25 @@ interface Mount {
 }
 
 /**
+ * A collection of applications mounted whole, which nothing here could read.
+ *
+ * The mechanism is worth a row of its own because it is the one way in that is
+ * registered once for an unknown number of ways in: the routes missing are not
+ * the routes of one application but of however many something put into the
+ * collection, and a reader that said nothing would be a reader claiming the
+ * repository serves what it happened to find written on an application.
+ */
+interface UnreadRegistry {
+  /** The collection and the keys the mount read off a member of it. */
+  registry: string;
+  /** The mount that installed them, as it is written. */
+  through: string;
+  site: Site;
+  /** The path the mount gives them, when it spells one. */
+  at?: string;
+}
+
+/**
  * Every place an application's base is shifted or its middleware installed,
  * collected before any route is.
  *
@@ -667,19 +703,27 @@ class Applications {
   readonly #dialect: RouteDialect;
   /** Held so that a walk started anywhere can say where a call is written. */
   readonly #ctx: ExtractContext;
+  readonly #registries: Registries;
   readonly #mounts = new Map<TsNode, Mount[]>();
   readonly #installs = new Map<TsNode, Install[]>();
   /** Prefixes a mutating prefix call put in front of a whole router. */
   readonly #shifted = new Map<TsNode, string | undefined>();
+  /** Collections mounted whole, whose members nothing here could enumerate. */
+  readonly #unread = new Map<string, UnreadRegistry>();
   #shifts = false;
 
-  constructor(dialect: RouteDialect, ctx: ExtractContext) {
+  constructor(dialect: RouteDialect, ctx: ExtractContext, registries: Registries) {
     this.#dialect = dialect;
     this.#ctx = ctx;
+    this.#registries = registries;
   }
 
   get shifts(): boolean {
     return this.#shifts;
+  }
+
+  get unreadRegistries(): readonly UnreadRegistry[] {
+    return [...this.#unread.values()];
   }
 
   collect(site: AppCall): void {
@@ -705,6 +749,13 @@ class Applications {
     const mount = this.#dialect.mount;
     if (mount === undefined || site.method !== mount.method) return false;
     const written = argumentAt(site.args, mount.appAt);
+    // Asked before an application is looked for, because a member of a
+    // collection is not a value this could follow and following it anyway lands
+    // somewhere worse than nowhere: `hook.value` resolves to the *type* the
+    // collection is declared with, so the mount was recorded against a property
+    // of an interface, nothing was ever mounted, and every route under it kept
+    // the address it is written at with no row to say so.
+    if (this.#collectRegistry(site, mount, written)) return true;
     const seenThrough = mountedApp(written, mount, this.#dialect);
     // A helper between the mount and the application hides the path and nothing
     // else: the application is still being hung somewhere, so it is recorded
@@ -748,6 +799,55 @@ class Applications {
         ...(at === undefined && helper !== undefined ? { through: label(written) } : {}),
       });
       this.#mounts.set(target, found);
+    }
+    return true;
+  }
+
+  /**
+   * A mount whose application is one member of a collection.
+   *
+   * True when the call was one, whether or not the collection could be read,
+   * because either way it is a mount and not a middleware install and either way
+   * it moves applications: the thing this must not do is let the line read as
+   * ordinary middleware and leave the routes under it at the addresses they are
+   * written at.
+   *
+   * Every member that is an application of this framework is mounted here, at
+   * the path this mount gives it. That the collection may hold other things is
+   * not a guess being made: the keys the mount itself read are the filter, and a
+   * value reached by them that is an application of the framework being read *is*
+   * one of the applications this line installs.
+   */
+  #collectRegistry(site: AppCall, mount: MountShape, written: TsNode | undefined): boolean {
+    if (written === undefined) return false;
+    const registry = registryOf(stripThrough(unwrap(written), mount.through));
+    if (registry === undefined) return false;
+    this.#shifts = true;
+    const at = this.#mountPath(site, mount);
+    const found = new Set<TsNode>();
+    for (const member of this.#registries.membersOf(registry)) {
+      if (!isApp(member, this.#dialect)) continue;
+      const declaration = appDeclaration(member);
+      if (declaration !== undefined) found.add(declaration);
+    }
+    const named = `${label(registry.source)}${registry.at.map((key) => `.${key}`).join('')}`;
+    const through = `${label(site.receiver)}.${site.method}`;
+    if (found.size === 0) {
+      // One row for the collection and the mount, and not one per member: there
+      // are no members to write a row about, which is the whole of what the row
+      // has to say.
+      this.#unread.set(`${named}\u0000${through}`, {
+        registry: named,
+        through,
+        site: site.site,
+        ...(at === undefined ? {} : { at }),
+      });
+      return true;
+    }
+    for (const target of found) {
+      const mounts = this.#mounts.get(target) ?? [];
+      mounts.push({ parent: site.receiver, site: site.site, ...(at === undefined ? {} : { at }) });
+      this.#mounts.set(target, mounts);
     }
     return true;
   }
@@ -1237,6 +1337,12 @@ export interface CallRoutesOptions {
    * wrong reads exactly like a clean repository. Off for a framework shipped
    * with the tool, where it is a limit of this reading and the reader is saying
    * so rather than asking for anything.
+   *
+   * Reading *some* of something is the same question, and it went unasked for
+   * longer: a reading that placed three routes out of three hundred and forty
+   * said nothing at all, because the row asked whether the count was zero (R91,
+   * R121). It is a row now under the same rule, and `reportSilence` decides its
+   * level for the same reason — see `reportRead`.
    */
   readonly reportSilence?: boolean;
 }
@@ -1253,7 +1359,7 @@ export const callRoutesAdapter = (
   detect: (pkg) => hasAnyDependency(pkg, dialect.packages),
   extractEntries: (ctx: ExtractContext) => {
     const sources = [...repoSources(ctx)];
-    const applications = new Applications(dialect, ctx);
+    const applications = new Applications(dialect, ctx, new Registries(sources));
     for (const sourceFile of sources) {
       for (const site of appCallsIn(sourceFile, dialect, ctx)) applications.collect(site);
     }
@@ -1266,6 +1372,13 @@ export const callRoutesAdapter = (
     // description whose types match nothing from one whose types match and
     // whose verbs do not, and only this walk has it.
     let onDescribedType = 0;
+    // Calls that really were route declarations, and the ones of those whose
+    // address could be told. The difference between them is what makes a partial
+    // read a gap rather than a lie: a reader that found three routes and could
+    // not place three hundred used to say nothing at all, because the one row it
+    // had asked whether the count was zero (R91).
+    let declared = 0;
+    let addressed = 0;
 
     for (const sourceFile of sources) {
       for (const site of appCallsIn(sourceFile, dialect, ctx)) {
@@ -1275,6 +1388,7 @@ export const callRoutesAdapter = (
           reportUnreadable(ctx, site, dialect);
           continue;
         }
+        declared += 1;
 
         const { file, line } = site.site;
         /** How the route was registered, as a reader would find it in the file. */
@@ -1297,6 +1411,7 @@ export const callRoutesAdapter = (
           });
           continue;
         }
+        addressed += 1;
 
         if (route.answer.via === 'inline' && route.answer.handler === undefined) {
           anonymous.push(site.site);
@@ -1388,23 +1503,40 @@ export const callRoutesAdapter = (
     }
 
     if (anonymous.length > 0) reportAnonymous(ctx, anonymous, dialect);
-    if (entries.length === 0) {
-      reportSilence(ctx, dialect, onDescribedType, options.reportSilence === true);
-    }
+    for (const unread of applications.unreadRegistries) reportRegistry(ctx, unread, dialect);
+    reportRead(
+      ctx,
+      dialect,
+      { onTypes: onDescribedType, declared, placed: addressed },
+      options.reportSilence === true,
+    );
     return entries;
   },
 });
 
 /**
- * A reader that read nothing, and which part of it read nothing.
+ * What one dialect's reading of a repository came to, when that is worth a row.
  *
- * The failure mode of every reader driven by a description is silence that looks
- * like a clean repository, and the two silences want different answers. No call
- * on any described type means the description is pointed at the wrong types —
- * the commonest cause being a framework whose application type is re-exported
- * from a package the repository does not import it from. Calls on the right
- * types and no route out of them means the types are right and the methods or
- * the argument positions are not.
+ * One reporter and one judgement, because the three things it can say are three
+ * answers to the same question — how much of what this reader was looking at did
+ * it come away with — and asking that question in three places is how two of the
+ * answers came to disagree.
+ *
+ * - **No call on any described type.** The description is pointed at the wrong
+ *   types, the commonest cause being a framework whose application type is
+ *   re-exported from a package the repository does not import it from.
+ * - **Calls on the right types and no route among them.** The types are right and
+ *   the methods or the argument positions are not.
+ * - **Routes read and not all of them placed.** The one that was missing, and the
+ *   sharpest of the three. It used to be asked as `entries.length === 0`, so a
+ *   repository where three routes were placed and three hundred and thirty-seven
+ *   were not looked exactly like a repository with three routes: a partial read
+ *   bought silence (R91). Every one of those three hundred and thirty-seven has a
+ *   row of its own already; what was missing is the sentence that says the
+ *   addresses in the graph are not the addresses this service serves, and that is
+ *   the difference between a gap and a lie. It generalises to every reader that
+ *   can read half of something: the floor is not "did I find nothing" but "did I
+ *   find everything I could see".
  *
  * Written against the manifest, because that is the nearest real file: what was
  * matched against the repository is a dependency of it and a row of description,
@@ -1412,42 +1544,149 @@ export const callRoutesAdapter = (
  * in the repository this row belongs to.
  *
  * `actionable` is whether somebody wrote the description being reported on. Where
- * they did, silence is a spelling mistake with a fix; where the tool ships the
- * row, silence is a fact about this repository that the reader is stating — the
- * fix, if there is one, is a reader for a convention nobody has written yet.
+ * they did, a gap is a spelling mistake with a fix; where the tool ships the row,
+ * it is a fact about this repository that the reader is stating — the fix, if
+ * there is one, is a reader for a convention nobody has written yet.
  */
-const reportSilence = (
+interface ReadCounts {
+  /** Calls written on a value of a type the dialect names. */
+  readonly onTypes: number;
+  /** Of those, the ones that spelled a verb and a path. */
+  readonly declared: number;
+  /** Of those, the ones whose address could be told. */
+  readonly placed: number;
+}
+
+/** Which of the three readings a run of this reader came to. */
+type Reading = 'types-unmatched' | 'routes-unmatched' | 'routes-unplaced' | 'whole';
+
+/**
+ * The one judgement, made once.
+ *
+ * Nothing but this decides which sentence is earned, and it is the whole of the
+ * fix: the question used to be `entries.length === 0`, which is not the same
+ * question and answers "whole" to a reading that placed three routes out of
+ * three hundred and forty.
+ */
+const readingOf = ({ onTypes, declared, placed }: ReadCounts): Reading => {
+  if (declared === 0) return onTypes === 0 ? 'types-unmatched' : 'routes-unmatched';
+  return placed === declared ? 'whole' : 'routes-unplaced';
+};
+
+/** What each reading says, as a row, by the reading it belongs to. */
+interface Said {
+  readonly ctx: ExtractContext;
+  readonly dialect: RouteDialect;
+  readonly counts: ReadCounts;
+  /** Whether somebody in this project wrote the description being reported on. */
+  readonly actionable: boolean;
+  /** `<name> description` or `<name> reader`, which is that same distinction. */
+  readonly named: string;
+  /** The first package the dialect is recognised by, for a sentence to name. */
+  readonly pkg: string;
+}
+
+const READINGS: Readonly<Record<Exclude<Reading, 'whole'>, (said: Said) => void>> = {
+  'types-unmatched': ({ ctx, dialect, actionable, named, pkg }) => {
+    const types = dialect.appTypes.map((app) => `${app.package}#${app.typeName}`).join(', ');
+    ctx.builder.addUnresolved({
+      file: 'package.json',
+      line: 1,
+      reason: 'entry-http-types-unmatched',
+      ...(actionable ? {} : { level: 'info' as const }),
+      message: `Nothing here is a value of any type the ${named} names, so none of its routes were read.`,
+      hint: actionable
+        ? `Check appTypes on that description; it looks for ${types}.`
+        : // "Somewhere this reader does not look" rather than "in a way no reader
+          // here knows", which was true when it was written and is not any more: a
+          // file-system convention is now described for two frameworks, and on
+          // such a repository a sibling adapter has read every route while this
+          // one truthfully found none. This reader cannot see what the others
+          // found, so it names the possibility rather than denying it (R91).
+          `Ordinary where ${pkg} is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.`,
+      symbol: dialect.name,
+      adapter: dialect.name,
+    });
+  },
+
+  'routes-unmatched': ({ ctx, dialect, counts, actionable, named, pkg }) => {
+    const verbs = Object.keys(dialect.verbs).join(', ');
+    const { onTypes } = counts;
+    ctx.builder.addUnresolved({
+      file: 'package.json',
+      line: 1,
+      reason: 'entry-http-routes-unmatched',
+      ...(actionable ? {} : { level: 'info' as const }),
+      message: `${onTypes} call${onTypes === 1 ? ' is' : 's are'} written on a type the ${named} names, and none of them spelled a verb and a path this could read.`,
+      hint: actionable
+        ? `Check verbs, verbArgument, pathArg and handlerArg on that description; it looks for ${verbs}.`
+        : `The types match and the routes do not: routes here are declared through something written around ${pkg} rather than on it, and no reader here knows that shape.`,
+      symbol: dialect.name,
+      adapter: dialect.name,
+    });
+  },
+
+  'routes-unplaced': ({ ctx, dialect, counts, actionable, named }) => {
+    const { declared, placed } = counts;
+    const unplaced = declared - placed;
+    ctx.builder.addUnresolved({
+      file: 'package.json',
+      line: 1,
+      reason: 'entry-http-routes-unplaced',
+      ...(actionable ? {} : { level: 'info' as const }),
+      message: `${placed} of ${declared} route${declared === 1 ? '' : 's'} the ${named} read could be placed at an address; the other ${unplaced} could not, so the ways in recorded here are a part of what this service serves rather than the whole of it.`,
+      hint: `Each of the ${unplaced} has a row of its own above, naming the application whose base could not be read. Until those are answered, a question this graph answers about which ways in exist is answered short.`,
+      symbol: dialect.name,
+      adapter: dialect.name,
+    });
+  },
+};
+
+const reportRead = (
   ctx: ExtractContext,
   dialect: RouteDialect,
-  onTypes: number,
+  counts: ReadCounts,
   actionable: boolean,
 ): void => {
-  const types = dialect.appTypes.map((app) => `${app.package}#${app.typeName}`).join(', ');
-  const verbs = Object.keys(dialect.verbs).join(', ');
-  const named = actionable ? `${dialect.name} description` : `${dialect.name} reader`;
+  const reading = readingOf(counts);
+  if (reading === 'whole') return;
+  READINGS[reading]({
+    ctx,
+    dialect,
+    counts,
+    actionable,
+    named: actionable ? `${dialect.name} description` : `${dialect.name} reader`,
+    pkg: dialect.packages[0] as string,
+  });
+};
+
+/**
+ * A collection of applications mounted whole, whose members nothing could read.
+ *
+ * One row, naming the collection and the mount, and never one per member —
+ * there are no members to write a row about, which is precisely what the row
+ * says. Before it existed the line read as an ordinary middleware install: the
+ * prefix was dropped and every route of every application in the collection kept
+ * the address it is written at, which is a wrong address rather than a missing
+ * one.
+ *
+ * The path is in the row when the mount spells one, because it is the fact that
+ * makes the row actionable: somebody reading it knows what is missing *and*
+ * where it would have gone.
+ */
+const reportRegistry = (
+  ctx: ExtractContext,
+  unread: UnreadRegistry,
+  dialect: RouteDialect,
+): void => {
+  const at = unread.at === undefined || unread.at === '' ? undefined : unread.at;
   ctx.builder.addUnresolved({
-    file: 'package.json',
-    line: 1,
-    reason: onTypes === 0 ? 'entry-http-types-unmatched' : 'entry-http-routes-unmatched',
-    ...(actionable ? {} : { level: 'info' as const }),
-    message:
-      onTypes === 0
-        ? `Nothing here is a value of any type the ${named} names, so none of its routes were read.`
-        : `${onTypes} call${onTypes === 1 ? ' is' : 's are'} written on a type the ${named} names, and none of them spelled a verb and a path this could read.`,
-    hint: actionable
-      ? onTypes === 0
-        ? `Check appTypes on that description; it looks for ${types}.`
-        : `Check verbs, verbArgument, pathArg and handlerArg on that description; it looks for ${verbs}.`
-      : onTypes === 0
-        // "Somewhere this reader does not look" rather than "in a way no reader
-        // here knows", which was true when it was written and is not any more: a
-        // file-system convention is now described for two frameworks, and on such
-        // a repository a sibling adapter has read every route while this one
-        // truthfully found none. This reader cannot see what the others found, so
-        // it names the possibility rather than denying it (R91).
-        ? `Ordinary where ${dialect.packages[0] as string} is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.`
-        : `The types match and the routes do not: routes here are declared through something written around ${dialect.packages[0] as string} rather than on it, and no reader here knows that shape.`,
-    symbol: dialect.name,
+    file: unread.site.file,
+    line: unread.site.line,
+    reason: 'route-registry-unread',
+    message: `${unread.through} mounts every application in ${unread.registry}${at === undefined ? '' : ` at ${at}`}, and nothing found here puts one into that collection, so however many routes it installs are missing.`,
+    hint: 'Members added by a loader at run time cannot be enumerated from the source. Put the applications in a list, or register each of them on the application they are mounted on with a literal path.',
+    symbol: unread.registry,
     adapter: dialect.name,
   });
 };

@@ -1024,14 +1024,25 @@ package to point at cannot be found any other way.
 
 **A description that matched nothing is a row, not a quiet zero.** Silence is
 the failure mode of every configuration-driven reader, because a repository
-nothing was read from looks exactly like a repository with nothing in it. Three
+nothing was read from looks exactly like a repository with nothing in it. Four
 rows say which part matched nothing: `entry-http-description-inactive` when none
 of the description's `packages` is a dependency here (ordinary in a project of
 several repositories, and `info`), `entry-http-types-unmatched` when nothing in
-the repository is a value of any type it names, and `entry-http-routes-unmatched`
-when calls on those types were found and none of them spelled a verb and a path.
+the repository is a value of any type it names, `entry-http-routes-unmatched`
+when calls on those types were found and none of them spelled a verb and a path,
+and `entry-http-routes-unplaced` when routes were read and only some of them
+could be placed at an address.
 
-The same two rows are written for a framework shipped with the tool, at `info`
+**A partial read does not buy silence.** That last row is the one the other three
+were missing, and it matters more than any of them: the question used to be
+whether the count was zero, so a service where three routes were placed and three
+hundred and thirty-seven were not looked exactly like a service with three routes
+(R121). Each of the unplaced ones has a row of its own naming the application
+whose base could not be read; this row is the sentence that says the addresses
+recorded are a part of what the service serves rather than the whole of it, which
+is the difference between a gap and a lie.
+
+The same rows are written for a framework shipped with the tool, at `info`
 rather than as something to act on. A repository that depends on Express and
 declares no route on it is ordinary — a library, a worker, a service whose routes
 live elsewhere — and it reads exactly like a repository whose routes are declared

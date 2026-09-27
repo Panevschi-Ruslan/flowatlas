@@ -317,6 +317,58 @@ export const unwrapValue = (expr: TsNode): TsNode => {
   return expr;
 };
 
+/** How far a list assembled out of other lists is followed. */
+const SPREAD_DEPTH = 8;
+
+/**
+ * Every element of a list, with the lists spread into it spread out.
+ *
+ * The list a real repository writes is very largely spreads of names: the
+ * declarative middleware list of one measured application is eighty-four
+ * `...adminXRoutesMiddlewares`, each a const in another file (R91). Reading only
+ * the elements written in place reads the two that are and calls the other
+ * several hundred absent, which is the shape of silence rather than a reading.
+ * So a spread of a name is resolved to the declaration it names and, where that
+ * is a list of this repository, its elements are taken as if they had been
+ * written here.
+ *
+ * A spread of anything else — a call, a name that resolves into a package — is
+ * left alone. It contributes members nobody here can see, and the honest
+ * consequence is that whatever they would have carried is what nothing was found
+ * for, which is already what a caller says about a member it has none of.
+ *
+ * Written once and used by both readers that meet a list: the declarative
+ * middleware list of a file-system router, and a registry of applications that a
+ * single mount installs. "What is in this list" is one question, and a second way
+ * of following a list would be a second set of the same bugs.
+ */
+export const arrayElements = (elements: readonly TsNode[], depth = 0): TsNode[] => {
+  const out: TsNode[] = [];
+  for (const element of elements) {
+    if (!Node.isSpreadElement(element)) {
+      out.push(unwrapValue(element));
+      continue;
+    }
+    if (depth >= SPREAD_DEPTH) continue;
+    const spread = unwrapValue(element.getExpression());
+    if (Node.isArrayLiteralExpression(spread)) {
+      out.push(...arrayElements(spread.getElements(), depth + 1));
+      continue;
+    }
+    if (!Node.isIdentifier(spread)) continue;
+    const origin = originOfValue(spread);
+    if (origin.kind !== 'local') continue;
+    const declaration = origin.declaration;
+    if (!Node.isVariableDeclaration(declaration)) continue;
+    const initializer = declaration.getInitializer();
+    if (initializer === undefined) continue;
+    const value = unwrapValue(initializer);
+    if (!Node.isArrayLiteralExpression(value)) continue;
+    out.push(...arrayElements(value.getElements(), depth + 1));
+  }
+  return out;
+};
+
 /**
  * The same, for a function that answers something rather than doing it.
  *

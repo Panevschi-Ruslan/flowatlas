@@ -5,7 +5,6 @@ import {
   reachMeta,
   makeHttpEntryKey,
   normalizeFilePath,
-  originOfValue,
   type EntryAdapter,
   type EntryNode,
   type ExtractContext,
@@ -21,7 +20,7 @@ import {
   type FsRouter,
   type FsRouteVerb,
 } from './fs-routes.js';
-import { handlerOfFunction, repoSources, unwrapValue } from './shared.js';
+import { arrayElements, handlerOfFunction, repoSources, unwrapValue } from './shared.js';
 
 const ADAPTER = 'medusa-routes';
 
@@ -60,9 +59,6 @@ const MIDDLEWARE_FILES = ['src/api/middlewares.ts', 'src/api/middlewares.js'];
 
 /** The call whose argument is that list. */
 const DEFINE_MIDDLEWARES = 'defineMiddlewares';
-
-/** How far a list assembled out of other lists is followed. */
-const SPREAD_DEPTH = 8;
 
 /** One entry of the declarative list, as much of it as could be read. */
 interface MiddlewareEntry {
@@ -111,49 +107,6 @@ const literalString = (node: TsNode | undefined): string | undefined => {
   return undefined;
 };
 
-/**
- * Every element of an array, with the arrays spread into it spread out.
- *
- * The list in a real repository of this kind is almost entirely spreads: the
- * application's own is eighty-four `...adminXRoutesMiddlewares`, each a const in
- * another file. Reading only the elements written in place would read the two
- * entries that are and call the other several hundred absent, which is the shape
- * of silence this ticket is about. So a spread of a name is resolved to the
- * declaration it names and, where that is an array in this repository, its
- * elements are taken as if they had been written here.
- *
- * A spread of anything else — a call, a name that resolves into a package — is
- * left alone. It contributes entries nobody here can see, and the honest
- * consequence is that the routes it covers are the routes nothing was found for,
- * which is already what this reader says about a route with no entry.
- */
-const flatten = (elements: readonly TsNode[], depth = 0): TsNode[] => {
-  const out: TsNode[] = [];
-  for (const element of elements) {
-    if (!Node.isSpreadElement(element)) {
-      out.push(unwrapValue(element));
-      continue;
-    }
-    if (depth >= SPREAD_DEPTH) continue;
-    const spread = unwrapValue(element.getExpression());
-    if (Node.isArrayLiteralExpression(spread)) {
-      out.push(...flatten(spread.getElements(), depth + 1));
-      continue;
-    }
-    if (!Node.isIdentifier(spread)) continue;
-    const origin = originOfValue(spread);
-    if (origin.kind !== 'local') continue;
-    const declaration = origin.declaration;
-    if (!Node.isVariableDeclaration(declaration)) continue;
-    const initializer = declaration.getInitializer();
-    if (initializer === undefined) continue;
-    const value = unwrapValue(initializer);
-    if (!Node.isArrayLiteralExpression(value)) continue;
-    out.push(...flatten(value.getElements(), depth + 1));
-  }
-  return out;
-};
-
 /** The argument the list call was handed, whichever of its two shapes it is. */
 const listArgument = (call: TsNode): TsNode | undefined => {
   if (!Node.isCallExpression(call)) return undefined;
@@ -197,7 +150,7 @@ const readMiddlewareList = (ctx: ExtractContext): MiddlewareList | undefined => 
 
     const entries: MiddlewareEntry[] = [];
     const unread: string[] = [];
-    for (const element of flatten(list.getElements())) {
+    for (const element of arrayElements(list.getElements())) {
       const matcher = propertyOf(element, 'matcher');
       const installed = propertyOf(element, 'middlewares');
       // An entry that installs nothing this could name says nothing about what
@@ -206,7 +159,7 @@ const readMiddlewareList = (ctx: ExtractContext): MiddlewareList | undefined => 
       // named in front of it, and the two must read the same.
       const installs =
         installed !== undefined && Node.isArrayLiteralExpression(installed)
-          ? flatten(installed.getElements()).map(nameOf)
+          ? arrayElements(installed.getElements()).map(nameOf)
           : [];
       if (installs.length === 0) continue;
 

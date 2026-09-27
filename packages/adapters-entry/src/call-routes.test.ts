@@ -489,7 +489,10 @@ describe('express routes', () => {
       },
     );
     expect(read.entries).toEqual([]);
-    expect(reasons(read).sort()).toEqual(['entry-http-routes-unmatched', 'route-path-dynamic']);
+    // `entry-http-routes-unplaced` and not `entry-http-routes-unmatched`: the one
+    // route here did spell a verb and a path, and the older row said none of them
+    // had, which was the reader misreporting its own reading (R121).
+    expect(reasons(read).sort()).toEqual(['entry-http-routes-unplaced', 'route-path-dynamic']);
   });
 
   it('says so when the path of a route is assembled at run time', () => {
@@ -798,5 +801,198 @@ describe('koa routes', () => {
     // which mounts nothing. Reading it as a mount would leave every route in the
     // repository with no readable address.
     expect(ids(read)).toEqual(['entry:api:http:GET:/orders']);
+  });
+});
+
+/**
+ * A way in registered once, over a collection.
+ *
+ * Written against Koa because that is the framework the shape was measured on —
+ * outline mounts every plugin's API router with one line — and the mechanism is
+ * not Koa's: it is a list nobody can enumerate without following where the list
+ * came from (R121).
+ */
+describe('a registry of applications, mounted whole', () => {
+  const REGISTRY = `
+    import type Router from '@koa/router';
+    export interface Hook { type: string; value: Router }
+    export class Registry {
+      private static held: Hook[] = [];
+      static add(hooks: Hook[]) { Registry.held.push(...hooks); }
+      static hooks(type: string): Hook[] { return Registry.held.filter((h) => h.type === type); }
+    }
+  `;
+
+  const PASSKEYS = `
+    import Router from '@koa/router';
+    import { Registry } from '../registry.js';
+    const api = new Router();
+    api.post('passkeys.list', async (ctx) => { ctx.body = 'ok'; });
+    Registry.add([{ type: 'api', value: api }]);
+  `;
+
+  it('mounts every application a registry holds, rather than none of them', () => {
+    const read = koa(
+      `
+      import Koa from 'koa';
+      import Router from '@koa/router';
+      import { Registry } from './registry.js';
+      import './plugins/passkeys.js';
+      const app = new Koa();
+      const router = new Router();
+      Registry.hooks('api').forEach((hook) => router.use('/', hook.value.routes()));
+      app.use('/api', router.routes());
+    `,
+      { '/src/registry.ts': REGISTRY, '/src/plugins/passkeys.ts': PASSKEYS },
+    );
+    // Not `POST /passkeys.list`, which is where it is written and also what a
+    // reader that never followed the registry would record: the router is
+    // mounted on one that answers under `/api`, so that is the address.
+    expect(ids(read)).toEqual(['entry:api:http:POST:/api/passkeys.list']);
+    expect(reasons(read)).toEqual([]);
+  });
+
+  it('carries the prefix of the mount that installed them into every member', () => {
+    const read = koa(
+      `
+      import Koa from 'koa';
+      import Router from '@koa/router';
+      import { Registry } from './registry.js';
+      import './plugins/passkeys.js';
+      const app = new Koa();
+      const router = new Router();
+      for (const hook of Registry.hooks('api')) {
+        router.use('/', hook.value.routes());
+      }
+      app.use('/api', router.routes());
+    `,
+      { '/src/registry.ts': REGISTRY, '/src/plugins/passkeys.ts': PASSKEYS },
+    );
+    // The whole point of following the registry, and the second spelling of the
+    // iteration: `/api` is what makes a request a browser writes to
+    // `/api/passkeys.list` join to the route that answers it.
+    expect(ids(read)).toEqual(['entry:api:http:POST:/api/passkeys.list']);
+  });
+
+  it('reads a registry behind a getter, by the keys the mount itself reads', () => {
+    const read = koa(
+      `
+      import Koa from 'koa';
+      import Router from '@koa/router';
+      import { Providers } from './providers.js';
+      import './plugins/google.js';
+      const app = new Koa();
+      const router = new Router();
+      void (async () => {
+        for (const provider of Providers.all) {
+          const resolved = await provider.value.router;
+          router.use('/', resolved.routes());
+        }
+      })();
+      app.use('/auth', router.routes());
+    `,
+      {
+        '/src/providers.ts': `
+          import type Router from '@koa/router';
+          export interface Hook { type: string; value: { router: Router; id: string } }
+          export class Registry {
+            private static held: Hook[] = [];
+            static add(hooks: Hook[]) { Registry.held.push(...hooks); }
+            static hooks(type: string): Hook[] { return Registry.held.filter((h) => h.type === type); }
+          }
+          export class Providers {
+            static get all(): Hook[] { return Registry.hooks('auth'); }
+          }
+        `,
+        '/src/plugins/google.ts': `
+          import Router from '@koa/router';
+          import { Registry } from '../providers.js';
+          const router = new Router();
+          router.get('/google', async (ctx) => { ctx.body = 'ok'; });
+          Registry.add([{ type: 'auth', value: { router, id: 'google' } }]);
+        `,
+      },
+    );
+    // Two hops a real repository does not let anybody skip: the collection is
+    // behind a getter, and the member is awaited into a name of its own before it
+    // is mounted. The keys `provider.value.router` are also what keeps this
+    // registry's routers apart from ones held at `hook.value` in the same map.
+    expect(ids(read)).toEqual(['entry:api:http:GET:/auth/google']);
+  });
+
+  it('leaves one row naming the registry and the mount where members cannot be followed', () => {
+    const read = koa(
+      `
+      import Koa from 'koa';
+      import Router from '@koa/router';
+      import { hooks } from 'plugin-host';
+      const app = new Koa();
+      const router = new Router();
+      hooks('api').forEach((hook) => router.use('/', hook.value.routes()));
+      app.use('/api', router.routes());
+    `,
+      {
+        '/node_modules/plugin-host/package.json': '{"types":"index.d.ts"}',
+        '/node_modules/plugin-host/index.d.ts': `
+          import type Router from '@koa/router';
+          export declare function hooks(type: string): Array<{ type: string; value: Router }>;
+        `,
+      },
+    );
+    // Nothing here puts an application into that collection, so there is nothing
+    // to place — and one row saying which collection and which mount, not one per
+    // member of a list nobody can enumerate.
+    const rows = read.unresolved.filter((row) => row.reason === 'route-registry-unread');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.message).toContain("mounts every application in hooks('api').value at /");
+    expect(rows[0]?.symbol).toBe("hooks('api').value");
+  });
+});
+
+describe('a partial read does not buy silence', () => {
+  it('says how many of the routes it read it could place', () => {
+    const read = express(
+      `
+      import express from 'express';
+      import ordersRouter from './orders.js';
+      import healthRouter from './health.js';
+      const prefix = process.env['PREFIX'];
+      const app = express();
+      app.use(prefix + '/orders', ordersRouter);
+      app.use('/health', healthRouter);
+    `,
+      {
+        '/src/orders.ts': `
+          import { Router } from 'express';
+          const router = Router();
+          router.get('/', (req, res) => res.send('ok'));
+          router.post('/', (req, res) => res.send('ok'));
+          export default router;
+        `,
+        '/src/health.ts': `
+          import { Router } from 'express';
+          const router = Router();
+          router.get('/', (req, res) => res.send('ok'));
+          export default router;
+        `,
+      },
+    );
+    // One address placed and two not. The row that says so used to be written
+    // only when the count was zero, so a repository read this way looked exactly
+    // like a repository with one route (R91).
+    expect(ids(read)).toEqual(['entry:api:http:GET:/health']);
+    const row = read.unresolved.find((item) => item.reason === 'entry-http-routes-unplaced');
+    expect(row?.message).toContain('1 of 3 routes');
+    expect(row?.message).toContain('the other 2 could not');
+    expect(row?.level).toBe('info');
+  });
+
+  it('says nothing where every route it read was placed', () => {
+    const read = express(`
+      import express from 'express';
+      const app = express();
+      app.get('/health', (req, res) => res.send('ok'));
+    `);
+    expect(reasons(read)).toEqual([]);
   });
 });

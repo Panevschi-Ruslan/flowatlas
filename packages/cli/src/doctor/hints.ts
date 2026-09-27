@@ -402,6 +402,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Nothing here is a value of any type that description names. Check its appTypes against the package the framework is imported from.',
   'entry-http-routes-unmatched': () =>
     'Its types match and its routes do not. Check verbs, verbArgument, pathArg and handlerArg on that description.',
+  'entry-http-routes-unplaced': () =>
+    'Routes were read and only some of them could be placed at an address, so the ways in recorded for that service are a part of what it serves rather than the whole of it. The rows above name each application whose base could not be read.',
+  'route-registry-unread': () =>
+    'One mount installs every application in a collection, and nothing here puts an application into that collection, so however many routes it installs are missing. Put them in a list, or register each on the application it is mounted on with a literal path.',
 
   // Trees of procedures (adapters-entry/procedure-routers)
   'procedure-router-unread': () =>
