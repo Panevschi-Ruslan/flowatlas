@@ -21,7 +21,12 @@ import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ActionBuilder } from './action-builders.js';
 import { ACTION_BUILDERS } from './action-builders.js';
-import { pathPatternTest, readVerbFile, reportUnreadHandler, routePathOfFile } from './fs-routes.js';
+import {
+  fsAddressSpace,
+  pathPatternTest,
+  readVerbFile,
+  reportUnreadHandler,
+} from './fs-routes.js';
 import { APP_ROUTER, PAGES_API } from './nextjs-paths.js';
 import {
   handlerOfFunction,
@@ -125,6 +130,13 @@ interface HttpEntryOptions {
   via: string;
   /** False when a handler was named and there is nothing behind the name. */
   bodyRead?: boolean;
+  /**
+   * The application that serves it, where the service holds more than one.
+   *
+   * An address is an address within one application, and which one is part of
+   * the identity rather than of the path (R119, R125).
+   */
+  application?: string;
 }
 
 /**
@@ -196,14 +208,17 @@ export const nextjsRoutesAdapter: EntryAdapter = {
 
     const httpEntry = (options: HttpEntryOptions): void => {
       const key = makeHttpEntryKey(options.method, options.path);
-      const id = makeEntryId(ctx.repo, 'http', key);
+      const id = makeEntryId(ctx.repo, 'http', key, options.application);
       if (seen.has(id)) return;
       seen.add(id);
       const gate = gateOf(options.path);
       entries.push({
         id,
         kind: 'http',
-        label: `${options.method} ${options.path}`,
+        label:
+          options.application === undefined
+            ? `${options.method} ${options.path}`
+            : `${options.method} ${options.path} (${options.application})`,
         key,
         ...(options.handler === undefined
           ? {}
@@ -216,6 +231,10 @@ export const nextjsRoutesAdapter: EntryAdapter = {
           path: options.path,
           adapter: 'nextjs-routes',
           registration: options.via,
+          // Only where there is more than one, which is where it says
+          // something: it is what tells a tie between two applications from a
+          // tie between two routes of one.
+          ...(options.application === undefined ? {} : { application: options.application }),
           middlewareRead,
           // The route file is what the node points at, because the address is
           // read from where that file is and a node naming any other file would
@@ -233,25 +252,34 @@ export const nextjsRoutesAdapter: EntryAdapter = {
       });
     };
 
+    // Which applications this repository holds, and what each address is
+    // qualified by. Read for the whole service before any of it is emitted,
+    // because whether an id names an application depends on how many
+    // applications there are — the one thing a single file cannot say (R125).
+    const space = fsAddressSpace(
+      [...repoSources(ctx)].map((source) => normalizeFilePath(source.getFilePath(), ctx.repoDir)),
+      [APP_ROUTER, PAGES_API],
+    );
+
     for (const sourceFile of repoSources(ctx)) {
       const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);
-      const appPath = routePathOfFile(file, APP_ROUTER);
-      const pagesPath = routePathOfFile(file, PAGES_API);
+      const appAddress = space.addressOf(file, APP_ROUTER);
+      const pagesAddress = space.addressOf(file, PAGES_API);
 
-      if (appPath !== null) {
+      if (appAddress !== null) {
         // The shared reading of a directory-addressed route file: the verbs it
         // exports, what is behind each of them, and the rows for the ones with
         // nothing behind them. Only what to do with each verb is this reader's
         // own — the gate in front of it, and the name on the entry (R91).
         readVerbFile(ctx, sourceFile, {
           file,
-          path: appPath,
+          path: appAddress.path,
           adapter: 'nextjs-routes',
-          emit: (verb) => httpEntry({ ...verb, via: 'app/route' }),
+          emit: (verb) => httpEntry({ ...verb, ...appAddress, via: 'app/route' }),
         });
         continue;
       }
-      if (pagesPath !== null) {
+      if (pagesAddress !== null) {
         // The older router answers every verb from one handler: the file is one
         // way in, and which method arrives is the handler's own business.
         const [declaration] = sourceFile.getExportedDeclarations().get('default') ?? [];
@@ -267,7 +295,7 @@ export const nextjsRoutesAdapter: EntryAdapter = {
             : reachOf(declaration, sourceFile, 'default', ctx.repoDir);
         httpEntry({
           method: 'ALL',
-          path: pagesPath,
+          ...pagesAddress,
           at,
           ...(handler === undefined ? {} : { handler }),
           via: 'pages/api',
@@ -282,8 +310,8 @@ export const nextjsRoutesAdapter: EntryAdapter = {
           reportUnreadHandler(ctx, {
             file: at.reached.file,
             line: at.reached.line,
-            label: `ALL ${pagesPath}`,
-            path: pagesPath,
+            label: `ALL ${pagesAddress.path}`,
+            path: pagesAddress.path,
             why: 'none',
             adapter: 'nextjs-routes',
           });

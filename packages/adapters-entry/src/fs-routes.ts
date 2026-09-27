@@ -1,10 +1,12 @@
 import {
+  applicationsServing,
   HTTP_METHODS,
   namedFunction,
   normalizePath,
   originOfValue,
   PARAM_PLACEHOLDER,
   reachOf,
+  type ApplicationMap,
   type ExtractContext,
   type NamedFunction,
   type Reach,
@@ -157,34 +159,51 @@ const FILE_EXTENSION = /\.[cm]?[jt]sx?$/;
 const SOURCE_DIRECTORY = 'src';
 
 /**
- * Where an application begins, and what stands in front of everything it serves.
+ * The name of the application at the service's own root.
+ *
+ * A name rather than an absence, because where a service holds a second
+ * application the root one is not the default — it is one of two, and both of
+ * them are named or neither is. `.` is the one spelling no directory can have,
+ * and it reads as what it is: the application here.
+ */
+const ROOT_APPLICATION = '.';
+
+/**
+ * Which application a file belongs to, read from the segments in front of the
+ * router root.
  *
  * A repository may hold more than one application, and the ones that do are not
  * exotic: payload keeps thirty-nine of them under `test/`, `templates/` and
- * `examples/`, each a whole Next.js application with its own `app/` directory.
- * Every one of those declares `api/[...slug]/route.ts`, so reading the router
- * root wherever it occurs and nothing in front of it made two hundred and
+ * `examples/`, each a whole application with its own `app/` directory. Every one
+ * of those declares `api/[...slug]/route.ts`, so reading the router root wherever
+ * it occurs and calling the result one address space made two hundred and
  * seventy-one route declarations claim the seventeen addresses their names
  * collide on, and the graph kept whichever arrived last. Seventeen of two
  * hundred and eighty-eight, and the arithmetic said nothing was missing.
  *
- * So the segments in front of the router root are kept, and they are what tells
- * one application from another. The address of a route in the application at the
- * service's own root is exactly what the framework serves it at, which is the
- * common case and the one every existing reading depends on. A route in an
- * application somewhere below is addressed from where that application is —
- * `/test/fields/api/*` rather than a second claim on `/api/*` — because those
- * two are never deployed together and a graph that merged them would say one
- * address is answered by thirty bodies.
+ * **One rule, and it is the same rule everywhere in this tool: an address is an
+ * address within one application, and which application belongs in the identity
+ * — `entry:<service>@<application>:<kind>:<key>` — not in the path** (R119,
+ * R125). So the segments in front of the router root name the application, and
+ * the address stays the one the framework serves.
  *
- * `src` drops out, because a framework may allow an application to sit either at
- * a package's root or under `src` and serves both at the same addresses. Where
+ * Keeping them in front of the path bought the same uniqueness and paid a price
+ * that could not be seen in any total: the address became one no framework
+ * answers on. Nothing serves `/test/fields/api/*`, and a caller written against
+ * `/api/orders` could not join to an entry recorded at
+ * `/examples/blog/api/orders` — with no row anywhere saying why, which is worse
+ * than either address being wrong, because every join in this tool is keyed on
+ * the address.
+ *
+ * `src` drops out: a framework may allow an application to sit either at a
+ * package's root or under `src` and serves both at the same addresses, so
+ * `examples/blog` and `examples/blog/src` are one application and not two. Where
  * the router's root already names `src` there is nothing in front of it to drop.
  */
-const applicationPrefix = (before: readonly string[]): string => {
+const applicationOf = (before: readonly string[]): string => {
   const kept = [...before];
   if (kept[kept.length - 1] === SOURCE_DIRECTORY) kept.pop();
-  return kept.length === 0 ? '' : `/${kept.join('/')}`;
+  return kept.length === 0 ? ROOT_APPLICATION : kept.join('/');
 };
 
 /**
@@ -212,7 +231,7 @@ const applicationPrefix = (before: readonly string[]): string => {
  * (R91, R111).
  */
 type FsFileReading =
-  | { readonly kind: 'route'; readonly path: string }
+  | { readonly kind: 'route'; readonly path: string; readonly application: string }
   | { readonly kind: 'not-served'; readonly why: 'private' }
   | { readonly kind: 'elsewhere' };
 
@@ -228,7 +247,7 @@ const readFsFile = (file: string, router: FsRouter): FsFileReading => {
   }
   if (at < 0) return ELSEWHERE;
 
-  const prefix = applicationPrefix(parts.slice(0, at));
+  const application = applicationOf(parts.slice(0, at));
   const after = parts.slice(at + rootParts.length);
   const name = (after.pop() ?? '').replace(FILE_EXTENSION, '');
   if (name === '') return ELSEWHERE;
@@ -251,13 +270,80 @@ const readFsFile = (file: string, router: FsRouter): FsFileReading => {
   const kept = after
     .map((segment) => segmentOf(segment, router))
     .filter((segment): segment is string => segment !== null);
-  return { kind: 'route', path: normalizePath(`${prefix}${router.prefix ?? ''}/${kept.join('/')}`) };
+  return {
+    kind: 'route',
+    path: normalizePath(`${router.prefix ?? ''}/${kept.join('/')}`),
+    application,
+  };
 };
 
-/** The address one file is served at, or nothing when it is not served there. */
+/**
+ * The address one file is served at, or nothing when it is not served there.
+ *
+ * The address the framework serves it at, and nothing else: which application
+ * serves it is a separate fact and is asked of {@link fsAddressSpace} by whatever
+ * mints an identity. A reader that only wants to say where a screen lives —
+ * which is what the front-end index wants of a page file — wants this one.
+ */
 export const routePathOfFile = (file: string, router: FsRouter): string | null => {
   const reading = readFsFile(file, router);
   return reading.kind === 'route' ? reading.path : null;
+};
+
+/** One address a file-system router serves, and which application serves it. */
+export interface FsAddress {
+  /** What the framework answers on, with nothing in front of it. */
+  readonly path: string;
+  /**
+   * The qualifier the entry id carries, absent where the service holds one
+   * application and the address is therefore the identity by itself.
+   */
+  readonly application?: string;
+}
+
+/** Every address one service's file-system routers serve. */
+export interface FsAddressSpace {
+  readonly addressOf: (file: string, router: FsRouter) => FsAddress | null;
+}
+
+/**
+ * The address space of one service, read once for the whole of it.
+ *
+ * Once for the service rather than per file, because no single file can answer
+ * the question: whether an id needs to name an application depends on how many
+ * applications the service has, and that is a fact about every file in it.
+ *
+ * The judgement itself is not made here. `applicationsServing` is the one place
+ * that decides whether an id carries an application — deliberately one place, so
+ * that two adapters cannot disagree about it (R119) — and this hands it a map in
+ * the shape it already reads. Every application mounts itself, because what the
+ * map is asked about here is the application: a file-system router has no
+ * declaration to key on, only a directory, and the directory *is* the
+ * application.
+ */
+export const fsAddressSpace = (
+  files: Iterable<string>,
+  routers: readonly FsRouter[],
+): FsAddressSpace => {
+  const names = new Set<string>();
+  for (const file of files) {
+    for (const router of routers) {
+      const reading = readFsFile(file, router);
+      if (reading.kind === 'route') names.add(reading.application);
+    }
+  }
+  const map: ApplicationMap = {
+    names: [...names].sort(),
+    of: Object.fromEntries([...names].map((name) => [name, [name]])),
+  };
+  return {
+    addressOf: (file, router) => {
+      const reading = readFsFile(file, router);
+      if (reading.kind !== 'route') return null;
+      const [application] = applicationsServing(map, reading.application);
+      return { path: reading.path, ...(application === undefined ? {} : { application }) };
+    },
+  };
 };
 
 /**

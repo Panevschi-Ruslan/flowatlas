@@ -1,4 +1,5 @@
 import express from 'express';
+import { authRouter } from './auth.routes';
 import { documentsRouter } from './documents.routes';
 
 /**
@@ -13,5 +14,7 @@ export const app = express();
 
 app.use(express.json());
 app.use('/api', documentsRouter);
+// The second mount, and the reason a call may need a base of its own.
+app.use('/auth', authRouter);
 
 app.listen(3000);

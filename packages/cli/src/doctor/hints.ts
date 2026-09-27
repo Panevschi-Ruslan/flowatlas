@@ -480,6 +480,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The address is built at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.',
   'api-method-dynamic': () =>
     'The verb is chosen at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.',
+  'api-base-override-unread': () =>
+    'The call writes a base of its own and it could not be read, so the address was recorded as the path alone. Write that option as a literal or a constant.',
   'api-base-unknown': () =>
     'Add the settings key to services[].apiBaseEnv, and services[].apiTarget to say which service answers it.',
   'api-client-unread': () =>

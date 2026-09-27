@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pathPatternTest, routePathOfFile, type FsRouter } from './fs-routes.js';
+import { fsAddressSpace, pathPatternTest, routePathOfFile, type FsRouter } from './fs-routes.js';
 import { MEDUSA_API } from './medusa-routes.js';
 import { APP_ROUTER } from './nextjs-paths.js';
 
@@ -48,10 +48,25 @@ describe('routePathOfFile, over more than one router', () => {
     expect(routePathOfFile('src/api/admin/orders/helpers.ts', MEDUSA_API)).toBeNull();
   });
 
-  it('addresses a router below the service root from where it is', () => {
+  it('serves a router below the service root at the address it serves', () => {
+    // A plugin package with an address space of its own. The address is the one
+    // the framework answers on wherever the package is loaded; which package
+    // declared it is the application half of the id, not a segment of the path
+    // (R125).
     expect(routePathOfFile('plugins/wishlist/src/api/store/wishlists/route.ts', MEDUSA_API)).toBe(
-      '/plugins/wishlist/store/wishlists',
+      '/store/wishlists',
     );
+    const space = fsAddressSpace(
+      ['src/api/store/wishlists/route.ts', 'plugins/wishlist/src/api/store/wishlists/route.ts'],
+      [MEDUSA_API],
+    );
+    expect(space.addressOf('plugins/wishlist/src/api/store/wishlists/route.ts', MEDUSA_API)).toEqual(
+      { path: '/store/wishlists', application: 'plugins/wishlist' },
+    );
+    expect(space.addressOf('src/api/store/wishlists/route.ts', MEDUSA_API)).toEqual({
+      path: '/store/wishlists',
+      application: '.',
+    });
   });
 
   it('serves nothing that a router honouring no spelling would rename', () => {

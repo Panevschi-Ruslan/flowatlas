@@ -19,7 +19,9 @@ export interface ApplicationMap {
   /** Every application read, by name, ascending. Empty when none was read. */
   names: readonly string[];
   /**
-   * Symbol id of a declaration to the applications that mount it, ascending.
+   * What an application is looked up by, to the applications that mount it,
+   * ascending — a declaration's symbol id, or an application's own name where
+   * the reader's applications are directories rather than declarations.
    *
    * More than one is ordinary and is not a mistake: a controller mounted in the
    * API and again in a worker really does answer at both, and each of those is
@@ -41,12 +43,21 @@ export const applicationsIn = (
 };
 
 /**
- * The applications one declaration is served by, as id qualifiers.
+ * The applications one thing is served by, as id qualifiers.
  *
  * One source of judgement for every adapter that mints an address, so that two
  * of them cannot disagree about when an id carries an application. `undefined`
  * stands for an unqualified id, and there are three ways to get one: no map, one
  * application, or a declaration no application mounts.
+ *
+ * The key is whatever the caller has that an application can be looked up by. A
+ * reader that finds applications by following the calls that create them has a
+ * declaration, and passes its symbol id. A reader whose applications *are*
+ * directories — a router addressed by the file system holds one per tree — has
+ * the application itself, and passes that. Both ask this, because the question
+ * they are asking is the same one and the answer must not depend on which reader
+ * asked it: two mechanisms for this rule is how one reader came to put the
+ * application in the path while every other put it in the identity (R125).
  *
  * One application needs no name because within one address space the address is
  * the identity, and a word repeated in every id of every ordinary service buys
@@ -59,9 +70,9 @@ export const applicationsIn = (
  */
 export const applicationsServing = (
   map: ApplicationMap | undefined,
-  symbolId: string,
+  key: string,
 ): ReadonlyArray<string | undefined> => {
   if (map === undefined || map.names.length < 2) return [undefined];
-  const mounted = map.of[symbolId];
+  const mounted = map.of[key];
   return mounted === undefined || mounted.length === 0 ? [undefined] : mounted;
 };

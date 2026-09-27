@@ -1,12 +1,12 @@
 {
   "schemaVersion": 5,
   "repo": "next-nested-apps",
-  "generatedAt": "2026-09-26T21:58:46.356Z",
+  "generatedAt": "2026-09-27T13:52:12.032Z",
   "nodes": [
     {
-      "id": "entry:next-nested-apps:http:GET:/api/orders",
+      "id": "entry:next-nested-apps@.:http:GET:/api/orders",
       "type": "entry",
-      "label": "GET /api/orders",
+      "label": "GET /api/orders (.)",
       "repo": "next-nested-apps",
       "file": "app/api/orders/route.ts",
       "line": 4,
@@ -16,40 +16,43 @@
         "path": "/api/orders",
         "adapter": "nextjs-routes",
         "registration": "app/route",
+        "application": ".",
         "middlewareRead": true,
         "handlerVia": "function"
       }
     },
     {
-      "id": "entry:next-nested-apps:http:GET:/examples/blog/api/orders",
+      "id": "entry:next-nested-apps@examples/blog:http:GET:/api/orders",
       "type": "entry",
-      "label": "GET /examples/blog/api/orders",
+      "label": "GET /api/orders (examples/blog)",
       "repo": "next-nested-apps",
       "file": "examples/blog/src/app/api/orders/route.ts",
       "line": 6,
       "kind": "http",
       "meta": {
         "method": "GET",
-        "path": "/examples/blog/api/orders",
+        "path": "/api/orders",
         "adapter": "nextjs-routes",
         "registration": "app/route",
+        "application": "examples/blog",
         "middlewareRead": true,
         "handlerVia": "function"
       }
     },
     {
-      "id": "entry:next-nested-apps:http:GET:/examples/blog/api/posts",
+      "id": "entry:next-nested-apps@examples/blog:http:GET:/api/posts",
       "type": "entry",
-      "label": "GET /examples/blog/api/posts",
+      "label": "GET /api/posts (examples/blog)",
       "repo": "next-nested-apps",
       "file": "examples/blog/src/app/api/posts/route.ts",
       "line": 2,
       "kind": "http",
       "meta": {
         "method": "GET",
-        "path": "/examples/blog/api/posts",
+        "path": "/api/posts",
         "adapter": "nextjs-routes",
         "registration": "app/route",
+        "application": "examples/blog",
         "middlewareRead": true,
         "handlerVia": "function"
       }
@@ -115,7 +118,7 @@
   ],
   "edges": [
     {
-      "from": "entry:next-nested-apps:http:GET:/api/orders",
+      "from": "entry:next-nested-apps@.:http:GET:/api/orders",
       "to": "next-nested-apps#app/api/orders/route.ts:GET",
       "type": "handles",
       "confidence": "static",
@@ -123,7 +126,7 @@
       "line": 4
     },
     {
-      "from": "entry:next-nested-apps:http:GET:/examples/blog/api/orders",
+      "from": "entry:next-nested-apps@examples/blog:http:GET:/api/orders",
       "to": "next-nested-apps#examples/blog/src/app/api/orders/route.ts:GET",
       "type": "handles",
       "confidence": "static",
@@ -131,7 +134,7 @@
       "line": 6
     },
     {
-      "from": "entry:next-nested-apps:http:GET:/examples/blog/api/posts",
+      "from": "entry:next-nested-apps@examples/blog:http:GET:/api/posts",
       "to": "next-nested-apps#examples/blog/src/app/api/posts/route.ts:GET",
       "type": "handles",
       "confidence": "static",

@@ -12,12 +12,18 @@ import {
 } from '@flowatlas/core';
 import type { CallExpression, ClassDeclaration, Node as TsNode, ObjectLiteralExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
-import { REQUEST_CLIENTS, VERB_CALLS, type CallShape, type RequestClient } from '../clients.js';
+import {
+  BASE_FIELDS,
+  REQUEST_CLIENTS,
+  VERB_CALLS,
+  type CallShape,
+  type RequestClient,
+} from '../clients.js';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { requestsOf, type ReadRequest, type RequestSite } from '../util/forward.js';
 import { localClientOf, type LocalClientReading } from '../util/local-client.js';
-import { analyzeApiUrl, analyzeClientBase, underBase } from '../util/url.js';
+import { analyzeApiUrl, analyzeClientBase, isSomewhere, underBase, type ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
 
 /** One request found in the source, before its address has been worked out. */
@@ -147,6 +153,40 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     return written.getArguments()[0] ?? written;
   };
 
+  /**
+   * The base one call spells for itself, when it spells one.
+   *
+   * A client holds a base and nearly every call takes it; a call may write its
+   * own — `client.post('/passkeys.register', body, { baseUrl: '/auth' })` — and
+   * until this was read the request was recorded under the client's default and
+   * landed at an address nothing serves. On outline it is the last three browser
+   * requests that do not join, and the route side of those three is already
+   * right, so the two halves disagree by exactly the base the call overrides
+   * (R114, R121, R128).
+   *
+   * Only an object written in place is read. An options argument that is a name
+   * may hold a base and may not, and nothing here can tell: reporting every such
+   * call would put a row on every request written with a shared config object,
+   * and the row would say nothing anybody could act on. The case this refuses to
+   * be quiet about is the one where the base *is* written here and could not be
+   * read — there the default is the one answer known to be wrong, so the address
+   * keeps what was read and a row names the line.
+   */
+  const baseWrittenAt = (
+    call: CallExpression,
+    shape: CallShape,
+  ): { readonly kind: 'base'; readonly base: ApiUrl } | { readonly kind: 'unread'; readonly name: string } | null => {
+    const object = objectAt(call, shape.optionsAt);
+    if (object === undefined) return null;
+    for (const name of BASE_FIELDS) {
+      const written = valueOf(object, name);
+      if (written === undefined) continue;
+      const base = analyzeClientBase(written, { sharedPackages: ctx.config.sharedPackages });
+      return isSomewhere(base) ? { kind: 'base', base } : { kind: 'unread', name };
+    }
+    return null;
+  };
+
   const record = (found: FoundCall, request: ReadRequest): void => {
     const { call: network, client, shape } = found;
     const { site } = request;
@@ -155,7 +195,14 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     // forgiven later: `impact`, `dead` and `contracts` all read what is written
     // here, and a recorded address missing a segment is wrong in the graph
     // whether or not the linker happens to forgive it (R114).
-    const address = underBase(client.base, request.address);
+    //
+    // Whose base: the call's own where it writes one, the client's otherwise,
+    // and neither where the call writes one that could not be read — the
+    // client's default is then the one answer already known to be wrong (R128).
+    const written = baseWrittenAt(network, shape);
+    const base =
+      written === null ? client.base : written.kind === 'base' ? written.base : undefined;
+    const address = underBase(base, request.address);
     const at = siteOf(site.call);
     const leaf = makeLeafId('ui_api_call', ctx.repo, site.file, at.line, at.column);
     // One caller may reach a wrapper that writes several requests, so where the
@@ -186,6 +233,10 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         ...(body.keys === undefined ? {} : { bodyKeys: body.keys }),
         package: client.package,
         client: client.name,
+        // Where the opening of the address came from, said only when it is not
+        // the client's own: an address that differs from every other one this
+        // client writes is a fact a reader should not have to go and work out.
+        ...(written?.kind === 'base' ? { baseFrom: 'call' } : {}),
         ...(found.local === undefined ? {} : { localClient: found.local }),
         via: address.via,
         ...(address.host === null ? {} : { host: address.host }),
@@ -227,6 +278,15 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         line: at.line,
         reason: 'api-path-dynamic',
         hint: 'The address is built at run time. Annotate the function with /** @flowatlas-calls METHOD /path */.',
+        symbol: network.getText().slice(0, 80),
+      });
+    }
+    if (written?.kind === 'unread') {
+      ctx.report({
+        file: site.file,
+        line: at.line,
+        reason: 'api-base-override-unread',
+        hint: `The call writes ${written.name} of its own and it could not be read, so the address is recorded as the path alone rather than under the client's default, which this call says is not the base. Write the base as a literal or a constant.`,
         symbol: network.getText().slice(0, 80),
       });
     }
