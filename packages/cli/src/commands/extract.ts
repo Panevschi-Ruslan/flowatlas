@@ -18,8 +18,8 @@ import {
   type RepoGraph,
   type ServiceConfig,
 } from '@flowatlas/core';
-import { angularFrontendAdapter, extractRepo as extractAngularRepo } from '@flowatlas/extractor-angular';
-import { reactFrontendAdapter, extractRepo as extractReactRepo } from '@flowatlas/extractor-react';
+import { extractRepo as extractAngularRepo } from '@flowatlas/extractor-angular';
+import { extractRepo as extractReactRepo } from '@flowatlas/extractor-react';
 import {
   extractRepo,
   findTsconfig,
@@ -44,13 +44,18 @@ import { hashGraphFile } from '../build/incremental.js';
 import { adapterNames, createRegistry, EXTRA_PASSES, NESTJS_EXTRACTOR } from '../build/extractor.js';
 
 /**
- * The browser readers, by the repository type each one reads.
+ * The browser readers, by the name of the half each one reads.
  *
  * A table rather than a pair of branches, so that the next browser reader is a
- * row. Everything not named here is read by the server reader, which is the
- * default for the same reason it always was: a repository nobody described is
- * far likelier to be a service, and the server reader is now also the one that
- * reads a repository which is both.
+ * row. The key is both a configured `type` and the name of the frontend adapter
+ * that recognises the same repository — they are one word because they are one
+ * fact — so this table answers whether a configuration named a browser and
+ * whether detection found one, without either question being asked twice.
+ *
+ * Everything not named here is read by the server reader, which is the default
+ * for the same reason it always was: a repository nobody described is far
+ * likelier to be a service, and the server reader is also the one that reads a
+ * repository which is both halves.
  */
 const BROWSER_READERS: Record<string, (options: ExtractRepoOptions) => Promise<RepoGraph>> = {
   angular: extractAngularRepo,
@@ -60,26 +65,34 @@ const BROWSER_READERS: Record<string, (options: ExtractRepoOptions) => Promise<R
 /**
  * The browser reader for a repository nothing in a configuration described.
  *
- * Asked of the adapters themselves, so the answer is the one the registry would
- * give and no framework is named twice in this file.
+ * One rule, asked of the adapters and of nothing else: a repository that
+ * declares a way in is read by the server reader even when a frontend adapter
+ * also recognises it, because that reader can answer for both halves — it opens
+ * every kind of TypeScript source and hands the browser half back to the
+ * frontend adapters — while a browser reader can answer only for one.
  *
- * A repository that declares a way in is read by the server reader even when a
- * frontend adapter also recognises it, because that reader can answer for both
- * halves — it opens every kind of TypeScript source and hands the browser half
- * back to the frontend adapters — while a browser reader can answer only for
- * one. That is the whole of the rule, and it is written in terms of what the
- * adapters detect rather than in terms of any framework's name: a repository
- * built on a file-system router lands on the server reader because its entry
- * adapter recognised it, and a browser with no server in it lands here because
- * nothing did.
+ * It is the same rule `stacks.ts` applies to the word `init` and `link` write,
+ * stated in the currency this side has: there is no `type` here to look up, so
+ * the question "is there a server in this directory" is put to the entry
+ * adapters, which is who it has always belonged to. No framework is named: a
+ * repository built on a file-system router lands on the server reader because
+ * its entry adapter recognised it, and a browser with no server in it lands on a
+ * browser reader because nothing did.
+ *
+ * Every frontend adapter is asked in turn rather than one being tried first,
+ * because a reader that is privileged over another is an ordering decision, and
+ * an ordering decision is what this file stopped making.
  */
 const detectBrowserReader = (
   registry: AdapterRegistry,
   pkg: PackageJson,
 ): ((options: ExtractRepoOptions) => Promise<RepoGraph>) | undefined => {
-  if (angularFrontendAdapter.detect(pkg)) return extractAngularRepo;
-  if (registry.detect(pkg, {}).entry.length > 0) return undefined;
-  if (reactFrontendAdapter.detect(pkg)) return extractReactRepo;
+  const detected = registry.detect(pkg, {});
+  if (detected.entry.length > 0) return undefined;
+  for (const adapter of detected.frontend) {
+    const reader = BROWSER_READERS[adapter.name];
+    if (reader !== undefined) return reader;
+  }
   return undefined;
 };
 import { BUILD_STAMP } from '../version.js';

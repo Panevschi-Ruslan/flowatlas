@@ -1,0 +1,413 @@
+{
+  "schemaVersion": 4,
+  "repo": "koa-react-full-stack",
+  "generatedAt": "2026-09-27T09:29:15.407Z",
+  "nodes": [
+    {
+      "id": "db_query:koa-react-full-stack#src/server/orders.repository.ts:16:33",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "koa-react-full-stack",
+      "file": "src/server/orders.repository.ts",
+      "line": 16,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:koa-react-full-stack#src/server/orders.repository.ts:18:5",
+      "type": "db_query",
+      "label": "write orders",
+      "repo": "koa-react-full-stack",
+      "file": "src/server/orders.repository.ts",
+      "line": 18,
+      "meta": {
+        "op": "write",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "entry:koa-react-full-stack:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "koa-react-full-stack",
+      "file": "src/server/orders.routes.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "adapter": "koa-routes",
+        "registration": "ordersRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:koa-react-full-stack:http:POST:/api/orders",
+      "type": "entry",
+      "label": "POST /api/orders",
+      "repo": "koa-react-full-stack",
+      "file": "src/server/orders.routes.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "adapter": "koa-routes",
+        "registration": "ordersRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "http_out:koa-react-full-stack#src/web/api/client.ts:10:26",
+      "type": "http_out",
+      "label": "GET ?",
+      "repo": "koa-react-full-stack",
+      "file": "src/web/api/client.ts",
+      "line": 10,
+      "meta": {
+        "method": "GET",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "koa-react-full-stack#src/server/orders.repository.ts:orders.insert",
+      "type": "function",
+      "label": "orders.insert",
+      "repo": "koa-react-full-stack",
+      "file": "src/server/orders.repository.ts",
+      "line": 17
+    },
+    {
+      "id": "koa-react-full-stack#src/server/orders.repository.ts:orders.list",
+      "type": "function",
+      "label": "orders.list",
+      "repo": "koa-react-full-stack",
+      "file": "src/server/orders.repository.ts",
+      "line": 16
+    },
+    {
+      "id": "koa-react-full-stack#src/server/orders.routes.ts:GET /@8",
+      "type": "function",
+      "label": "GET /@8",
+      "repo": "koa-react-full-stack",
+      "file": "src/server/orders.routes.ts",
+      "line": 8
+    },
+    {
+      "id": "koa-react-full-stack#src/server/orders.routes.ts:POST /@12",
+      "type": "function",
+      "label": "POST /@12",
+      "repo": "koa-react-full-stack",
+      "file": "src/server/orders.routes.ts",
+      "line": 12
+    },
+    {
+      "id": "koa-react-full-stack#src/web/OrdersScreen.tsx:OrdersScreen",
+      "type": "ui_component",
+      "label": "OrdersScreen",
+      "repo": "koa-react-full-stack",
+      "file": "src/web/OrdersScreen.tsx",
+      "line": 10,
+      "kind": "function"
+    },
+    {
+      "id": "koa-react-full-stack#src/web/api/client.ts:ApiClient",
+      "type": "provider",
+      "label": "ApiClient",
+      "repo": "koa-react-full-stack",
+      "file": "src/web/api/client.ts",
+      "line": 8,
+      "kind": "injectable"
+    },
+    {
+      "id": "koa-react-full-stack#src/web/api/client.ts:ApiClient.get",
+      "type": "method",
+      "label": "ApiClient.get",
+      "repo": "koa-react-full-stack",
+      "file": "src/web/api/client.ts",
+      "line": 14
+    },
+    {
+      "id": "koa-react-full-stack#src/web/api/client.ts:ApiClient.post",
+      "type": "method",
+      "label": "ApiClient.post",
+      "repo": "koa-react-full-stack",
+      "file": "src/web/api/client.ts",
+      "line": 16
+    },
+    {
+      "id": "koa-react-full-stack#src/web/api/client.ts:ApiClient.send",
+      "type": "method",
+      "label": "ApiClient.send",
+      "repo": "koa-react-full-stack",
+      "file": "src/web/api/client.ts",
+      "line": 9
+    },
+    {
+      "id": "repo:koa-react-full-stack",
+      "type": "repo",
+      "label": "koa-react-full-stack",
+      "repo": "koa-react-full-stack",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {
+            "pg": 2
+          },
+          "functions": 1,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "koa-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:koa-react-full-stack#orders",
+      "type": "table",
+      "label": "orders",
+      "repo": "koa-react-full-stack"
+    },
+    {
+      "id": "ui_action:koa-react-full-stack#src/web/OrdersScreen.tsx:16:15",
+      "type": "ui_action",
+      "label": "onClick={load}",
+      "repo": "koa-react-full-stack",
+      "file": "src/web/OrdersScreen.tsx",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "load",
+        "component": "koa-react-full-stack#src/web/OrdersScreen.tsx:OrdersScreen",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:koa-react-full-stack#src/web/OrdersScreen.tsx:17:15",
+      "type": "ui_action",
+      "label": "onClick={create}",
+      "repo": "koa-react-full-stack",
+      "file": "src/web/OrdersScreen.tsx",
+      "line": 17,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "create",
+        "component": "koa-react-full-stack#src/web/OrdersScreen.tsx:OrdersScreen",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:koa-react-full-stack#src/web/OrdersScreen.tsx:11:22",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "koa-react-full-stack",
+      "file": "src/web/OrdersScreen.tsx",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "ui_api_call:koa-react-full-stack#src/web/OrdersScreen.tsx:12:24",
+      "type": "ui_api_call",
+      "label": "POST /api/orders",
+      "repo": "koa-react-full-stack",
+      "file": "src/web/OrdersScreen.tsx",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{total:number}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "total"
+        ],
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:koa-react-full-stack#src/server/orders.repository.ts:16:33",
+      "to": "table:koa-react-full-stack#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/server/orders.repository.ts",
+      "line": 16
+    },
+    {
+      "from": "db_query:koa-react-full-stack#src/server/orders.repository.ts:18:5",
+      "to": "table:koa-react-full-stack#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/server/orders.repository.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:koa-react-full-stack:http:GET:/api/orders",
+      "to": "koa-react-full-stack#src/server/orders.routes.ts:GET /@8",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/orders.routes.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:koa-react-full-stack:http:POST:/api/orders",
+      "to": "koa-react-full-stack#src/server/orders.routes.ts:POST /@12",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/orders.routes.ts",
+      "line": 12
+    },
+    {
+      "from": "koa-react-full-stack#src/server/orders.repository.ts:orders.insert",
+      "to": "db_query:koa-react-full-stack#src/server/orders.repository.ts:18:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server/orders.repository.ts",
+      "line": 18
+    },
+    {
+      "from": "koa-react-full-stack#src/server/orders.repository.ts:orders.list",
+      "to": "db_query:koa-react-full-stack#src/server/orders.repository.ts:16:33",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server/orders.repository.ts",
+      "line": 16
+    },
+    {
+      "from": "koa-react-full-stack#src/server/orders.routes.ts:GET /@8",
+      "to": "koa-react-full-stack#src/server/orders.repository.ts:orders.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server/orders.routes.ts",
+      "line": 9
+    },
+    {
+      "from": "koa-react-full-stack#src/server/orders.routes.ts:POST /@12",
+      "to": "koa-react-full-stack#src/server/orders.repository.ts:orders.insert",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server/orders.routes.ts",
+      "line": 13
+    },
+    {
+      "from": "koa-react-full-stack#src/web/OrdersScreen.tsx:OrdersScreen",
+      "to": "ui_api_call:koa-react-full-stack#src/web/OrdersScreen.tsx:11:22",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/web/OrdersScreen.tsx",
+      "line": 11
+    },
+    {
+      "from": "koa-react-full-stack#src/web/OrdersScreen.tsx:OrdersScreen",
+      "to": "ui_api_call:koa-react-full-stack#src/web/OrdersScreen.tsx:12:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/web/OrdersScreen.tsx",
+      "line": 12
+    },
+    {
+      "from": "koa-react-full-stack#src/web/api/client.ts:ApiClient.get",
+      "to": "koa-react-full-stack#src/web/api/client.ts:ApiClient.send",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/web/api/client.ts",
+      "line": 14
+    },
+    {
+      "from": "koa-react-full-stack#src/web/api/client.ts:ApiClient.post",
+      "to": "koa-react-full-stack#src/web/api/client.ts:ApiClient.send",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/web/api/client.ts",
+      "line": 16
+    },
+    {
+      "from": "koa-react-full-stack#src/web/api/client.ts:ApiClient.send",
+      "to": "http_out:koa-react-full-stack#src/web/api/client.ts:10:26",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/web/api/client.ts",
+      "line": 10
+    },
+    {
+      "from": "ui_action:koa-react-full-stack#src/web/OrdersScreen.tsx:16:15",
+      "to": "koa-react-full-stack#src/web/OrdersScreen.tsx:OrdersScreen",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/web/OrdersScreen.tsx",
+      "line": 16
+    },
+    {
+      "from": "ui_action:koa-react-full-stack#src/web/OrdersScreen.tsx:17:15",
+      "to": "koa-react-full-stack#src/web/OrdersScreen.tsx:OrdersScreen",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/web/OrdersScreen.tsx",
+      "line": 17
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/web/api/client.ts",
+      "line": 10,
+      "reason": "dynamic-http-url",
+      "hint": "The address is built at run time. Annotate the call with the service and route it reaches.",
+      "symbol": "fetch(path, { method, body: JSON.stringify(body) })"
+    }
+  ]
+}

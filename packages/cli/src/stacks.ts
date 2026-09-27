@@ -1,29 +1,75 @@
 import { allDependencies, type PackageJson } from '@flowatlas/core';
 
 /**
+ * Which half of a repository a type's reader is the reader of.
+ *
+ * A repository can honestly be both halves at once - a server and the browser
+ * that talks to it, in one directory, sharing one manifest - and this column is
+ * the whole of what decides which reader it gets. A server type's reader opens
+ * every kind of TypeScript source and hands the browser half to whichever
+ * frontend adapter recognises it, so it can answer for both halves of one
+ * directory; a browser type's reader can answer for one. So where both halves
+ * are declared the reader that reads both wins, and a repository that is only a
+ * browser still gets the reader that is only a browser's.
+ *
+ * Written down rather than left to the order of the rows, which is what it used
+ * to be. outline declares Koa and React in one directory and React sat above Koa
+ * for a reason that had nothing to do with either, so its data layer, its
+ * channels and the bodies behind its routes - 1,197 query sites, 33 channels and
+ * 249 handlers of 257 - turned on which of the two rows somebody had typed first
+ * (R88). Order can say "the more specific of two servers"; it cannot say "both
+ * halves are here", because that is not a fact about either row.
+ *
+ * `build/extractor.ts` states the same fact in the other direction - which types
+ * each reader handles - and `stacks.test.ts` holds the two to each other, so a
+ * type that moves from one reader to the other cannot leave this column behind.
+ */
+type Half = 'server' | 'browser';
+
+/** One row: a type, the dependency that gives it away, and the half it reads. */
+type Signature = readonly [type: string, dependency: string, half: Half];
+
+/**
  * Service types `init` and `link` can suggest, and the dependency that gives
  * each one away.
  *
  * The list lives here rather than in the core on purpose: the core must not
  * know the name of any framework, and `type` stays an open string so that a
- * value it has never heard of is still a valid configuration.
+ * value it has never heard of is still a valid configuration. A repository whose
+ * way in is described in configuration rather than declared as a dependency is
+ * not in this table at all, for the same reason: nothing here gives it away.
  */
-export const TYPE_SIGNATURES: ReadonlyArray<readonly [type: string, dependency: string]> = [
-  // Order matters, and NestJS comes first for a reason: `@nestjs/platform-express`
-  // brings Express with it, and a Nest application that declares `express` is a
-  // Nest application. The first match wins, so the most specific goes first.
-  ['nestjs', '@nestjs/core'],
-  ['angular', '@angular/core'],
-  // Before `react`, and for the same reason NestJS comes before Express: a
-  // repository built on the file-system router declares both, and it is the
-  // more specific of the two. Reading it as plain React would find its screens
-  // and its requests and none of the routes it answers.
-  ['nextjs', 'next'],
-  ['react', 'react'],
-  ['express', 'express'],
-  ['fastify', 'fastify'],
-  ['koa', 'koa'],
+export const TYPE_SIGNATURES: readonly Signature[] = [
+  // Within a half, order is specificity and nothing else, and NestJS comes first
+  // for that reason: `@nestjs/platform-express` brings Express with it, and a
+  // Nest application that declares `express` is a Nest application. Across the
+  // halves order decides nothing, which is the point of the column.
+  ['nestjs', '@nestjs/core', 'server'],
+  // The file-system router is a server type although it is also a browser: it is
+  // both halves in one directory, and the reader that reads both is the server
+  // one. It used to earn its place by sitting above `react`; it earns it here by
+  // being what it is.
+  ['nextjs', 'next', 'server'],
+  ['express', 'express', 'server'],
+  ['fastify', 'fastify', 'server'],
+  ['koa', 'koa', 'server'],
+  ['angular', '@angular/core', 'browser'],
+  ['react', 'react', 'browser'],
 ];
+
+const inHalf = (half: Half): readonly Signature[] =>
+  TYPE_SIGNATURES.filter(([, , each]) => each === half);
+
+/**
+ * The rows in the order the rule asks them: everything that can read both
+ * halves, and only then everything that can read one.
+ */
+const READS_BOTH_FIRST = [...inHalf('server'), ...inHalf('browser')];
+
+/** The half a type's reader reads, for a type this table knows. */
+const HALF_OF: Readonly<Record<string, Half>> = Object.freeze(
+  Object.fromEntries(TYPE_SIGNATURES.map(([type, , half]) => [type, half])),
+);
 
 export const UNKNOWN_TYPE = 'unknown';
 
@@ -52,7 +98,7 @@ export const UNREAD_SIGNATURES: ReadonlyArray<readonly [framework: string, depen
 /** The first name in a table whose dependency the manifest declares. */
 const firstMatch = (
   pkg: PackageJson,
-  table: ReadonlyArray<readonly [name: string, dependency: string]>,
+  table: ReadonlyArray<readonly [name: string, dependency: string, ...rest: unknown[]]>,
 ): string | undefined => {
   const declared = allDependencies(pkg);
   for (const [name, dependency] of table) {
@@ -61,9 +107,30 @@ const firstMatch = (
   return undefined;
 };
 
-/** The type to suggest for a repository, or `unknown` when nothing gave it away. */
+/**
+ * The type to suggest for a repository, or `unknown` when nothing gave it away.
+ *
+ * One reader per repository, chosen by a rule a reader can predict: if there is
+ * a server here, the type is the server's, because that reader reads the browser
+ * half too. Two readers over one directory was the alternative and it is worse -
+ * the server reader already reads the browser half through the frontend
+ * adapters, so a second reading would be the same screens twice and two graphs
+ * of one repository to reconcile, for nothing either of them found alone.
+ */
 export const guessType = (pkg: PackageJson): string =>
-  firstMatch(pkg, TYPE_SIGNATURES) ?? UNKNOWN_TYPE;
+  firstMatch(pkg, READS_BOTH_FIRST) ?? UNKNOWN_TYPE;
+
+/**
+ * The half a manifest declares beside the one its guessed type reads, if any.
+ *
+ * What makes a repository the case this rule exists for, and the only thing that
+ * can explain the guess to somebody who can see both names in the manifest.
+ */
+const otherHalf = (pkg: PackageJson, type: string): string | undefined => {
+  const half = HALF_OF[type];
+  if (half === undefined) return undefined;
+  return firstMatch(pkg, inHalf(half === 'server' ? 'browser' : 'server'));
+};
 
 /** Keys by which a package offers itself to be imported under its name. */
 const ENTRY_POINT_KEYS = ['main', 'module', 'browser', 'bin'] as const;
@@ -153,11 +220,24 @@ export const guessUnread = (pkg: PackageJson): string | undefined =>
  * readable is declared is the answer that there is no reader, and saying the
  * second where the first is true sends somebody away from a project the tool
  * could have read in full.
+ *
+ * A repository that declares both halves gets the reason as well as the word,
+ * because the word on its own reads like a mistake: somebody looking at a
+ * manifest with two frameworks in it has no way to tell why this is the one to
+ * write, and the naming of the other half is what says the choice was made
+ * rather than stumbled into.
  */
 export const noReaderNote = (pkg: PackageJson | undefined): string | undefined => {
   if (pkg === undefined) return undefined;
   const readable = guessType(pkg);
-  if (readable !== UNKNOWN_TYPE) return `looks like ${readable}; set its type to "${readable}"`;
+  if (readable !== UNKNOWN_TYPE) {
+    const other = otherHalf(pkg, readable);
+    const because =
+      other === undefined
+        ? ''
+        : ` (it declares ${other} as well, and the ${readable} reader reads both halves)`;
+    return `looks like ${readable}; set its type to "${readable}"${because}`;
+  }
   const framework = guessUnread(pkg);
   return framework === undefined ? undefined : `${framework}, no reader yet`;
 };

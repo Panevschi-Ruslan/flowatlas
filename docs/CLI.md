@@ -66,11 +66,11 @@ configuration will go and asks which belong to the project.
 | `--no-mcp` | off | skip registering the graph server |
 
 The type of a repository is read from its manifest: `@nestjs/core` makes it
-`nestjs`, `@angular/core` makes it `angular`, `express`, `fastify` and `koa`
-make it each of those, and anything else is written as `unknown`. Where the
-manifest names a framework there is no reader for — Next.js, Nuxt, Remix, React,
-Vue or Svelte — `init` says so by name, and `build` repeats it on that
-repository's line:
+`nestjs`, `@angular/core` makes it `angular`, `next` makes it `nextjs`, `react`
+makes it `react`, `express`, `fastify` and `koa` make it each of those, and
+anything else is written as `unknown`. Where the manifest names a framework there
+is no reader for — Nuxt, Remix, Vue or Svelte — `init` says so by name, and
+`build` repeats it on that repository's line:
 
 ```
 web            skipped (no-extractor: Next.js, no reader yet)
@@ -90,6 +90,24 @@ is that repository's routes, calls and types. NestJS wins over Express in a
 repository that declares both, since `@nestjs/platform-express` brings Express
 with it and the Nest reader knows more about such a repository than the Express
 one would.
+
+**A repository that is a server and a browser in one directory declares the
+server.** Set `type` to `nestjs`, `express`, `fastify`, `koa` or `nextjs` — not to
+`react` or `angular` — and the browser half is read as well: that reader opens
+every kind of TypeScript source and hands the screens, the actions and the
+requests to whichever frontend adapter recognises the manifest, so one reading
+produces both halves and joins the requests to the routes that answer them. The
+reverse does not hold. `react` and `angular` are for a repository that is only a
+browser; asked of a full-stack one they read the screens and leave the data
+layer, the brokers, the wrapping chain and the contract types on the floor.
+
+This is what `init` and `link` suggest, so accepting the suggestion is enough,
+and a repository that declares both halves is told why:
+
+```
+web            skipped (no-extractor: looks like koa; set its type to "koa"
+               (it declares react as well, and the koa reader reads both halves))
+```
 
 For `express`, `fastify` and `koa` what is read is the route as the code
 registers it — the verb, the path, the handler, the router it is declared on and
