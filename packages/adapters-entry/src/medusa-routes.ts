@@ -227,10 +227,10 @@ const bucketOf = (segment: string, entry: MiddlewareEntry): Bucket => {
  * pattern into a tree by segment and walks the tree, putting an entry that names
  * no verb before one that does, a wildcard before a literal and a literal before
  * a parameter, and a pattern before the patterns below it. The position in the
- * chain is the one thing a `guarded_by` edge is asked (R109), so the walk is
- * reproduced here rather than the written order taken for it. Ported from the
- * framework's `RoutesSorter`; only patterns this reads as a path reach it, so the
- * framework's branch for a regular expression is not needed.
+ * chain is the one thing a `guarded_by` edge is asked (R109), so that order is
+ * what this records rather than the order the list is written in. Only patterns
+ * this reads as a path reach it, which is why a pattern given as a regular
+ * expression is never ordered here.
  */
 const inFrameworkOrder = (entries: readonly MiddlewareEntry[]): MiddlewareEntry[] => {
   const root = newBranch();
