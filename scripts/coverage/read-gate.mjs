@@ -56,6 +56,13 @@
  * and needs nothing cloned. The harness applies the same function to the
  * coverage targets, where the tree is somebody else's repository and the graph
  * is the one just built.
+ *
+ * Every fixture it reads is one service at the root of its tree, where a path
+ * relative to the service and a path relative to the clone are one string, so
+ * the translation between them is tested on its own, with services that are not
+ * at `.` (`read-gate.test.mjs`, run by `pnpm fixtures:check`):
+ *
+ *   node --test scripts/coverage/read-gate.test.mjs
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -131,23 +138,16 @@ export const EXEMPT = [
       'output; a table would be a guess wearing a node. One descriptor turns all of ' +
       'them into tables at once, and then this entry goes.',
   },
-  // Medusa's three, all decided in R137 by reading the file rather than the count.
-  // A fourth, over `models`, went in R149: the family has table nodes now that
-  // the inventory, pricing and product repositories' knex queries are read.
-  {
-    where: 'medusa',
-    path: 'packages/medusa-test-utils/**',
-    family: 'routes',
-    why:
-      'The package integration tests start a server with. Its one route is a ' +
-      '`/health` on an application `bootstrapApp` builds for a test runner, which ' +
-      'no deployment of this service starts: the service’s own `/health` is ' +
-      'declared in `packages/medusa/src/commands/start.ts`. It ' +
-      'is in the extent because modules the service declares, `@medusajs/order` among ' +
-      'them, name `@medusajs/test-utils` as a dev dependency, ' +
-      'and a reader that placed its address would be reporting a second health ' +
-      'check this service does not serve.',
-  },
+  // Medusa's two, decided in R137 by reading the file rather than the count.
+  // R137 decided a third; a fourth, over `models`, went in R149: the family has
+  // table nodes now that the inventory, pricing and product repositories' knex
+  // queries are read. The third, `packages/medusa-test-utils/**` over `routes`,
+  // went in R154: its one
+  // file with a site, `bootstrap-app.ts`, carries `calls` and `reads_config`
+  // edges, which count for the file once an edge's site is read relative to the
+  // service that drew it rather than to the clone. Still no entry is minted for
+  // its `/health`, which is what the exemption defended; what now speaks for the
+  // file is `BLIND` R154, not a node.
   {
     where: 'medusa',
     path: 'packages/medusa/src/migration-scripts/**',
@@ -246,6 +246,20 @@ export const BLIND = [
       'R119 needed a snapshot fixture for exactly this reason.',
   },
   {
+    what: 'A family unread in a file where the reader said something of another kind.',
+    ticket: 'R154',
+    measured:
+      'Anything said about a file - a row, or an edge recorded at a site in it - ' +
+      'speaks for every family the counting rule found there, not for the one it ' +
+      'is about. Once edges were read relative to the service that drew them, 123 ' +
+      'of cal.com’s 242 fresh-clone misses stopped being misses (176 of 235 with ' +
+      'its dependencies installed): files with data sites and no query node, and ' +
+      '2 with route sites and no entry, each ' +
+      'spoken for by `calls`, `reads_config`, `handles` or `guarded_by` edges and ' +
+      'by none of the kinds that answer its family. The rule is right that the ' +
+      'reader was in the file; it cannot say whether the data reader was.',
+  },
+  {
     what: 'A wrong value.',
     ticket: 'R110',
     measured:
@@ -336,6 +350,63 @@ const baselineFor = (where, state) =>
   BASELINE.filter((entry) => entry.where === where && (entry.state ?? null) === state);
 
 /**
+ * The translation from a path as the graph spells it to a path as the counting
+ * rule spells it, for one set of services.
+ *
+ * The counting rule names a file relative to the clone. The graph names it
+ * relative to the service that read it, which for a declared package is
+ * `../../packages/lib/…`. `services` is `{ name, repo }` with `repo` relative to
+ * the clone, `.` for a service at its root.
+ *
+ * A service that is not in the list is placed nowhere, and the answer is
+ * `undefined` rather than the root. It used to be the root, and a path joined to
+ * the wrong directory is not a smaller error than no path: it can name a file
+ * that does not exist, or worse one that does and was not read (R154). The
+ * caller says how many it could not place.
+ *
+ * A `Map`, because a service name is a word from somebody's configuration and
+ * `constructor` is as good a name for a service as any.
+ */
+export const clonePaths = (services) => {
+  const roots = new Map(services.map((service) => [service.name, service.repo]));
+  return (file, service) => {
+    const root = roots.get(service);
+    if (root === undefined) return undefined;
+    // Only the graph's own separator and `..` need normalising; `join` does both.
+    return join(root === '.' ? '' : root, file).split('\\').join('/');
+  };
+};
+
+/**
+ * Node types that belong to the project rather than to one service.
+ *
+ * The linker's own list (`isShared` in `packages/linker/src/merge.ts`): a channel
+ * and a third party are one node for every service that reaches them, and the
+ * `repo` such a node carries is whichever service the merge met first. It is
+ * therefore not evidence about who drew an edge. A consumer's `consumes` edge
+ * runs *from* the channel, and its site is in the consumer's service.
+ */
+const SHARED_NODES = new Set(['channel', 'external_api']);
+
+/**
+ * The service that drew an edge, from what the graph records, or nothing.
+ *
+ * An edge carries no service of its own. What it carries is its two ends, and an
+ * edge is recorded by the service that read its site, which is the service of
+ * the end that belongs to one: the source, unless the source is a node the whole
+ * project shares, and then the target. No guess from the path, and no default:
+ * an edge whose ends are both shared, or missing from the graph, is reported as
+ * unplaced by the caller.
+ */
+const serviceOfEdge = (edge, nodes) => {
+  for (const id of [edge.from, edge.to]) {
+    const node = nodes.get(id);
+    if (node !== undefined && !SHARED_NODES.has(node.type)) return node.repo;
+  }
+  return undefined;
+};
+
+/**
  * What one graph says about each file: which families it yielded, and whether
  * anything at all was said about it.
  *
@@ -345,13 +416,25 @@ const baselineFor = (where, state) =>
  * that read it, as `../../packages/lib/…` - and comparing the two spellings
  * without that translation would report every file of every declared package as
  * unread.
+ *
+ * Each of the three is translated with the service that produced it: a node
+ * with its `repo`, a row with its `service`, and an edge with the service of
+ * the end that belongs to one (`serviceOfEdge`). Whatever cannot be placed is
+ * listed in `unplaced` and counts for no file, because the one place it could
+ * have defaulted to - the clone's root - is a place it was not read from.
  */
 const readingOf = (graph, toPath) => {
+  const nodes = new Map();
   const families = new Map();
+  const unplaced = [];
   for (const node of graph.nodes ?? []) {
+    nodes.set(node.id, node);
     if (node.file === undefined) continue;
     const path = toPath(node.file, node.repo);
-    if (path === undefined) continue;
+    if (path === undefined) {
+      unplaced.push({ what: 'node', file: node.file, service: node.repo });
+      continue;
+    }
     const found = families.get(path) ?? new Set();
     found.add(node.type);
     families.set(path, found);
@@ -360,17 +443,20 @@ const readingOf = (graph, toPath) => {
   for (const row of graph.unresolved ?? []) {
     if (typeof row.file !== 'string') continue;
     const path = toPath(row.file, row.service);
-    if (path !== undefined) spokenFor.add(path);
+    if (path === undefined) unplaced.push({ what: 'row', file: row.file, service: row.service });
+    else spokenFor.add(path);
   }
   // An edge recorded at a site is the reader saying it read that line, even
   // where the node it drew from lives in another file. A file whose only output
-  // is an edge is read, not skipped.
+  // is an edge is read, not skipped - in the service that drew it (R154).
   for (const edge of graph.edges ?? []) {
     if (typeof edge.file !== 'string') continue;
-    const path = toPath(edge.file, undefined);
-    if (path !== undefined) spokenFor.add(path);
+    const service = serviceOfEdge(edge, nodes);
+    const path = service === undefined ? undefined : toPath(edge.file, service);
+    if (path === undefined) unplaced.push({ what: 'edge', file: edge.file, service });
+    else spokenFor.add(path);
   }
-  return { families, spokenFor };
+  return { families, spokenFor, unplaced };
 };
 
 /**
@@ -420,7 +506,7 @@ const againstBaseline = (where, state, missing) => {
  * on whether anybody ran an install.
  */
 export const readGate = ({ where, state = null, perFile, graph, toPath }) => {
-  const { families, spokenFor } = readingOf(graph, toPath);
+  const { families, spokenFor, unplaced } = readingOf(graph, toPath);
   const missing = [];
   const used = new Set();
   const total = {};
@@ -469,6 +555,7 @@ export const readGate = ({ where, state = null, perFile, graph, toPath }) => {
     known: split.known,
     drift: split.drift,
     stale,
+    unplaced,
     blind: BLIND.length,
   };
 };
@@ -559,6 +646,10 @@ const main = () => {
     }
     for (const row of result.stale) {
       console.error(`    ${name}: exemption for ${row.path} (${row.family}) is no longer needed`);
+      failed += 1;
+    }
+    for (const row of result.unplaced) {
+      console.error(`    ${name}: the ${row.what} at ${row.file} belongs to no service the gate can name`);
       failed += 1;
     }
   }
