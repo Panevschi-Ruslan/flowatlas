@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from 'node:fs';
-import { dirname, join, relative, sep } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import {
   Project,
   ts,
@@ -12,7 +12,13 @@ import {
 import type { GraphBuilder } from './builder.js';
 import { normalizeFilePath } from './ids.js';
 import type { Unresolved } from './model/graph.js';
-import { serviceSourceDirs } from './workspace.js';
+import { readPackageJson } from './package-json.js';
+import {
+  serviceSourceDirs,
+  workspaceGlobs,
+  workspacePackages,
+  workspaceRootsAbove,
+} from './workspace.js';
 
 export interface CreateProjectOptions {
   /** Absolute path to the repository root. */
@@ -230,8 +236,224 @@ const modeOf = (
 };
 
 /**
+ * A package of the workspace a bare name can reach without an install (R152).
+ *
+ * `manifest` is kept because the way in is written there: its `exports` map, or
+ * the older fields a package without one is entered through.
+ */
+interface NamedMember {
+  /** Absolute path of the package. */
+  readonly dir: string;
+  readonly manifest: Readonly<Record<string, unknown>>;
+}
+
+/**
+ * The workspace packages of a service's extent, by the name each is imported by.
+ *
+ * Which packages is not a second answer to "which files are the repository's".
+ * It is the extent {@link serviceSourceDirs} gives, the same list that decides
+ * which files are opened (R96, R115): a named package whose directory is one of
+ * those directories, or inside one, and no other. A service read at the root of
+ * a workspace has the whole workspace in its extent, so every member is here; a
+ * member read as a service has itself and what it declares. A package of the
+ * workspace the service does not declare stays unresolved by name, exactly as
+ * its files stay unopened.
+ *
+ * Nearest workspace first, so a nested workspace answers for its own names; a
+ * name two members share is the first one's.
+ */
+const namedMembersOf = (rootDir: string): ReadonlyMap<string, NamedMember> => {
+  const extent = serviceSourceDirs(rootDir);
+  const own = extent[0] as string;
+  const roots = [...(workspaceGlobs(own).length > 0 ? [own] : []), ...workspaceRootsAbove(own)];
+  const inExtent = (dir: string): boolean =>
+    extent.some((at) => dir === at || dir.startsWith(`${at}/`));
+  const found = new Map<string, NamedMember>();
+  for (const root of roots) {
+    for (const { name, dir } of workspacePackages(root)) {
+      if (found.has(name) || !inExtent(dir)) continue;
+      found.set(name, { dir, manifest: readPackageJson(dir) ?? {} });
+    }
+  }
+  return found;
+};
+
+/** A bare specifier split into the package it names and the subpath inside it. */
+const splitSpecifier = (specifier: string): { name: string; subpath: string } | undefined => {
+  if (specifier.startsWith('.') || specifier.startsWith('/') || specifier.includes('\\')) {
+    return undefined;
+  }
+  const parts = specifier.split('/');
+  const width = specifier.startsWith('@') ? 2 : 1;
+  if (parts.length < width || parts.slice(0, width).some((part) => part === '')) return undefined;
+  const rest = parts.slice(width).join('/');
+  return { name: parts.slice(0, width).join('/'), subpath: rest === '' ? '.' : `./${rest}` };
+};
+
+/**
+ * Every path a target of an `exports` map names, in the order the map names them.
+ *
+ * Under every condition rather than the one set a runtime would pick: the
+ * question is which of the package's own files the specifier means, and on a
+ * clone with nothing built the condition a runtime takes usually names an output
+ * that is not there while the one beside it names the source. The first path
+ * that is a file wins, so the map's own order still decides between two that
+ * both are.
+ */
+const exportTargets = (target: unknown, star: string | undefined): string[] => {
+  if (typeof target === 'string') {
+    return [star === undefined ? target : target.split('*').join(star)];
+  }
+  if (Array.isArray(target)) return target.flatMap((item) => exportTargets(item, star));
+  if (typeof target === 'object' && target !== null) {
+    return Object.values(target).flatMap((item) => exportTargets(item, star));
+  }
+  return [];
+};
+
+/**
+ * What a package's manifest says one of its subpaths is, as paths relative to it.
+ *
+ * The `exports` map when there is one, and then it is the whole answer: a
+ * subpath the map does not name is not importable. Its keys either all name
+ * subpaths or none do, in which case the object is the conditions of `.`. A
+ * pattern key has one `*`, and of the patterns that match, the one with the
+ * longest literal start wins, which is how a runtime reads the map too. Without
+ * a map, `.` is the package's declared entry and anything else is a path inside
+ * it.
+ */
+const manifestTargets = (manifest: Readonly<Record<string, unknown>>, subpath: string): string[] => {
+  const map = manifest['exports'];
+  if (map === undefined || map === null) {
+    if (subpath !== '.') return [subpath];
+    const entries = ['types', 'typings', 'module', 'main']
+      .map((field) => manifest[field])
+      .filter((value): value is string => typeof value === 'string');
+    return [...entries, './index'];
+  }
+  if (typeof map !== 'object' || Array.isArray(map)) {
+    return subpath === '.' ? exportTargets(map, undefined) : [];
+  }
+  const entries = map as Record<string, unknown>;
+  const keys = Object.keys(entries);
+  if (!keys.every((key) => key.startsWith('.'))) {
+    return subpath === '.' ? exportTargets(entries, undefined) : [];
+  }
+  if (Object.hasOwn(entries, subpath)) return exportTargets(entries[subpath], undefined);
+  let best: { key: string; star: string } | undefined;
+  for (const key of keys) {
+    const at = key.indexOf('*');
+    if (at === -1 || !aliasMatches(key, subpath)) continue;
+    if (best !== undefined && best.key.indexOf('*') >= at) continue;
+    best = { key, star: subpath.slice(at, subpath.length - (key.length - at - 1)) };
+  }
+  return best === undefined ? [] : exportTargets(entries[best.key], best.star);
+};
+
+/**
+ * The files one written path may stand for, source first.
+ *
+ * A manifest names what a runtime loads, which is usually the compiled `.js`
+ * of a source file sitting beside it under another extension; the compiler
+ * makes the same substitution for a relative import, and this is that
+ * substitution for a path a manifest wrote. A path with no extension is tried
+ * as a file and then as a directory's index.
+ */
+const STAND_INS: ReadonlyArray<readonly [RegExp, readonly string[]]> = [
+  [/\.(ts|tsx|mts|cts)$/, ['']],
+  [/\.js$/, ['.ts', '.tsx', '.d.ts']],
+  [/\.jsx$/, ['.tsx', '.d.ts']],
+  [/\.mjs$/, ['.mts', '.d.mts']],
+  [/\.cjs$/, ['.cts', '.d.cts']],
+];
+
+/** The compiler's name for a file's kind; declaration suffixes before the rest. */
+const EXTENSIONS: ReadonlyArray<readonly [string, ts.Extension]> = [
+  ['.d.ts', ts.Extension.Dts],
+  ['.d.mts', ts.Extension.Dmts],
+  ['.d.cts', ts.Extension.Dcts],
+  ['.tsx', ts.Extension.Tsx],
+  ['.mts', ts.Extension.Mts],
+  ['.cts', ts.Extension.Cts],
+  ['.ts', ts.Extension.Ts],
+];
+
+const extensionOf = (file: string): ts.Extension =>
+  EXTENSIONS.find(([suffix]) => file.endsWith(suffix))?.[1] ?? ts.Extension.Ts;
+
+const candidateFiles = (path: string): string[] => {
+  const standIn = STAND_INS.find(([pattern]) => pattern.test(path));
+  if (standIn !== undefined) {
+    const [pattern, replacements] = standIn;
+    return replacements.map((ext) => (ext === '' ? path : path.replace(pattern, ext)));
+  }
+  if (/\.[cm]?jsx?$|\.json$/.test(path)) return [];
+  return [
+    ...SOURCE_EXTENSIONS.map((ext) => `${path}${ext}`),
+    `${path}.d.ts`,
+    ...SOURCE_EXTENSIONS.map((ext) => join(path, `index${ext}`)),
+    join(path, 'index.d.ts'),
+  ];
+};
+
+/**
+ * A workspace package's file, reached by the name the package is imported by,
+ * when nothing is installed (R152).
+ *
+ * Inside a workspace, one package importing another by its name is resolved
+ * through the link the package manager puts under `node_modules`. A clone with
+ * nothing installed has no such link, and unless a tsconfig happens to alias
+ * that exact name the import resolves to nothing and every call through it is
+ * lost. The repository has already said everything the link would: the member
+ * is named in its manifest, and the manifest's `exports` map says which of its
+ * files each subpath is.
+ *
+ * Three things keep this from reaching further than that.
+ *
+ * - It is asked last. Whatever the service's configuration resolves (an
+ *   installed package, a `paths` alias, a package's own alias) wins, so a clone
+ *   with dependencies installed reads what it read before.
+ * - Only a package of the service's extent can be named ({@link namedMembersOf}),
+ *   so the answer to which files are the repository's stays one answer.
+ * - The file must be inside the package whose manifest named it and under no
+ *   `node_modules`. A target written as `../elsewhere` is refused, not followed.
+ *
+ * One answer per specifier, remembered: it depends on the manifest and the file
+ * system and on nothing about the file that asked.
+ */
+const workspaceMemberResolution = (
+  members: ReadonlyMap<string, NamedMember>,
+  fileExists: (path: string) => boolean,
+): ((specifier: string) => ts.ResolvedModuleFull | undefined) => {
+  const answers = new Map<string, ts.ResolvedModuleFull | undefined>();
+  const answer = (specifier: string): ts.ResolvedModuleFull | undefined => {
+    const split = splitSpecifier(specifier);
+    const member = split === undefined ? undefined : members.get(split.name);
+    if (split === undefined || member === undefined) return undefined;
+    for (const target of manifestTargets(member.manifest, split.subpath)) {
+      const path = resolve(member.dir, target);
+      const inside = relative(member.dir, path);
+      const segments = inside.split(sep);
+      if (segments[0] === '..' || segments.includes('node_modules')) continue;
+      const file = candidateFiles(path).find(fileExists);
+      if (file === undefined) continue;
+      return {
+        resolvedFileName: file,
+        extension: extensionOf(file),
+        isExternalLibraryImport: false,
+      };
+    }
+    return undefined;
+  };
+  return (specifier) => {
+    if (!answers.has(specifier)) answers.set(specifier, answer(specifier));
+    return answers.get(specifier);
+  };
+};
+
+/**
  * Module resolution for a service whose extent holds packages with aliases of
- * their own (R141).
+ * their own (R141), or packages it imports by name (R152).
  *
  * A service is its own directory and the workspace packages it declares, and the
  * project is compiled with the service's tsconfig. A package that imports its own
@@ -254,9 +476,15 @@ const modeOf = (
  * opened below: a package whose files a reader may open is a package whose
  * aliases are honoured, and no other (R115). A package of the workspace the
  * service does not declare has no files in the project and no aliases in it.
+ *
+ * What neither configuration resolves is then asked of the workspace itself, by
+ * the name a package of the extent is imported by
+ * ({@link workspaceMemberResolution}). Last, so it only ever answers what would
+ * otherwise have been nothing.
  */
-const packageAliasResolution = (
+const workspaceResolution = (
   packages: readonly PackageAliases[],
+  members: ReadonlyMap<string, NamedMember>,
 ): ResolutionHostFactory => (host) => {
   const canonical = ts.sys.useCaseSensitiveFileNames
     ? (path: string) => path
@@ -290,6 +518,7 @@ const packageAliasResolution = (
   const byDepth = [...packages].sort((a, b) => b.dir.length - a.dir.length);
   const ownerOf = (file: string): PackageAliases | undefined =>
     byDepth.find((pkg) => file.startsWith(`${pkg.dir}/`));
+  const byName = workspaceMemberResolution(members, (path) => host.fileExists(path));
 
   return {
     resolveModuleNames: (names, containingFile, _reused, redirected, options, containingSourceFile) => {
@@ -311,7 +540,9 @@ const packageAliasResolution = (
           own !== undefined &&
           owner !== undefined &&
           Object.keys(owner.paths).some((pattern) => aliasMatches(pattern, name));
-        return (claimed ? resolve(name, own) : undefined) ?? resolve(name, service);
+        return (
+          (claimed ? resolve(name, own) : undefined) ?? resolve(name, service) ?? byName(name)
+        );
       });
     },
   };
@@ -324,23 +555,27 @@ const packageAliasResolution = (
  * usually compiles its tests and build output too and reading those doubles the
  * work for nothing. The tsconfig is still honoured for compiler options and
  * path mappings, which is what type resolution depends on — and a declared
- * package's own path mappings are honoured for that package's own files, which
- * {@link packageAliasResolution} is about.
+ * package's own path mappings are honoured for that package's own files, and a
+ * package of the extent imported by its name is found without an install, which
+ * is what {@link workspaceResolution} is about.
  */
 export const createProject = (options: CreateProjectOptions): Project => {
   const { rootDir, tsconfig, include } = options;
   const tsConfigFilePath = findTsconfig(rootDir, tsconfig);
   const packages = serviceSourceDirs(rootDir).slice(1);
   const aliases = packages.flatMap((dir) => aliasesOf(dir) ?? []);
+  const members = namedMembersOf(rootDir);
 
   const project = new Project({
     ...(tsConfigFilePath === undefined ? {} : { tsConfigFilePath }),
     skipAddingFilesFromTsConfig: true,
     ...(tsConfigFilePath === undefined ? { compilerOptions: FALLBACK_COMPILER_OPTIONS } : {}),
-    // Only when some package has aliases of its own. A service whose packages
-    // declare none — which is every service outside a workspace — keeps the
-    // compiler's own resolution untouched rather than an imitation of it.
-    ...(aliases.length === 0 ? {} : { resolutionHost: packageAliasResolution(aliases) }),
+    // Only inside a workspace. A service with no package of its own to alias and
+    // none to import by name, which is every service outside a workspace, keeps
+    // the compiler's own resolution untouched rather than an imitation of it.
+    ...(aliases.length === 0 && members.size === 0
+      ? {}
+      : { resolutionHost: workspaceResolution(aliases, members) }),
   });
 
   const sourceRoot = existsSync(join(rootDir, 'src')) ? 'src' : '.';
