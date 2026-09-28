@@ -6,6 +6,11 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+## [0.5.1][] - 2026-09-28
+
+`@flowatlas/cli` only: the npm page (README and keywords) brought up to date
+with what 0.5.0 reads, and no change to the tool.
+
 ## [0.5.0][] - 2026-09-28
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0. The graph's
@@ -999,7 +1004,8 @@ could not read.
 
 The first published version of both `@flowatlas/cli` and `@flowatlas/markers`.
 
-[unreleased]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.5.0...HEAD
+[unreleased]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.3.0...v0.4.0
