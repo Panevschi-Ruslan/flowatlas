@@ -1,0 +1,547 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-28T07:00:36.536Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "UsersService",
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/legacy/legacy.ts:oldest",
+      "type": "function",
+      "label": "oldest",
+      "repo": "api",
+      "file": "src/legacy/legacy.ts",
+      "line": 10
+    },
+    {
+      "id": "api#src/orders/move.ts:move",
+      "type": "function",
+      "label": "move",
+      "repo": "api",
+      "file": "src/orders/move.ts",
+      "line": 4
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 9
+    },
+    {
+      "id": "api#src/reports/count.ts:countUsers",
+      "type": "function",
+      "label": "countUsers",
+      "repo": "api",
+      "file": "src/reports/count.ts",
+      "line": 8
+    },
+    {
+      "id": "api#src/reports/count.ts:totals",
+      "type": "function",
+      "label": "totals",
+      "repo": "api",
+      "file": "src/reports/count.ts",
+      "line": 13
+    },
+    {
+      "id": "api#src/users/lazy.ts:firstUser",
+      "type": "function",
+      "label": "firstUser",
+      "repo": "api",
+      "file": "src/users/lazy.ts",
+      "line": 7
+    },
+    {
+      "id": "api#src/users/lazy.ts:lastUser",
+      "type": "function",
+      "label": "lastUser",
+      "repo": "api",
+      "file": "src/users/lazy.ts",
+      "line": 12
+    },
+    {
+      "id": "api#src/users/lazy.ts:settle",
+      "type": "function",
+      "label": "settle",
+      "repo": "api",
+      "file": "src/users/lazy.ts",
+      "line": 17
+    },
+    {
+      "id": "api#src/users/users.service.ts:UsersService",
+      "type": "provider",
+      "label": "UsersService",
+      "repo": "api",
+      "file": "src/users/users.service.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/users/users.service.ts:UsersService.findAll",
+      "type": "method",
+      "label": "UsersService.findAll",
+      "repo": "api",
+      "file": "src/users/users.service.ts",
+      "line": 13
+    },
+    {
+      "id": "api#src/users/users.service.ts:UsersService.place",
+      "type": "method",
+      "label": "UsersService.place",
+      "repo": "api",
+      "file": "src/users/users.service.ts",
+      "line": 17
+    },
+    {
+      "id": "db_query:api#src/legacy/legacy.ts:10:47",
+      "type": "db_query",
+      "label": "read order",
+      "repo": "api",
+      "file": "src/legacy/legacy.ts",
+      "line": 10,
+      "meta": {
+        "op": "read",
+        "table": "order",
+        "tables": [
+          "order"
+        ],
+        "package": "@prisma/client",
+        "method": "findFirst",
+        "receiver": "client.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:api#src/orders/move.ts:5:3",
+      "type": "db_query",
+      "label": "write Order",
+      "repo": "api",
+      "file": "src/orders/move.ts",
+      "line": 5,
+      "meta": {
+        "op": "write",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "@prisma/client",
+        "method": "update",
+        "receiver": "tx.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:api#src/orders/orders.service.ts:10:12",
+      "type": "db_query",
+      "label": "delete Order",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 10,
+      "meta": {
+        "op": "delete",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "@prisma/client",
+        "method": "delete",
+        "receiver": "this.db.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:api#src/reports/count.ts:10:10",
+      "type": "db_query",
+      "label": "read users",
+      "repo": "api",
+      "file": "src/reports/count.ts",
+      "line": 10,
+      "meta": {
+        "op": "read",
+        "table": "users",
+        "tables": [
+          "users"
+        ],
+        "package": "@prisma/client",
+        "method": "count",
+        "receiver": "prisma.user",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:api#src/reports/count.ts:13:63",
+      "type": "db_query",
+      "label": "read Order",
+      "repo": "api",
+      "file": "src/reports/count.ts",
+      "line": 13,
+      "meta": {
+        "op": "read",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "@prisma/client",
+        "method": "aggregate",
+        "receiver": "ctx.prisma.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:api#src/users/lazy.ts:14:10",
+      "type": "db_query",
+      "label": "read users",
+      "repo": "api",
+      "file": "src/users/lazy.ts",
+      "line": 14,
+      "meta": {
+        "op": "read",
+        "table": "users",
+        "tables": [
+          "users"
+        ],
+        "package": "@prisma/client",
+        "method": "findFirst",
+        "receiver": "prisma.user",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:api#src/users/lazy.ts:17:57",
+      "type": "db_query",
+      "label": "write Order",
+      "repo": "api",
+      "file": "src/users/lazy.ts",
+      "line": 17,
+      "meta": {
+        "op": "write",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "@prisma/client",
+        "method": "updateMany",
+        "receiver": "db.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:api#src/users/lazy.ts:9:10",
+      "type": "db_query",
+      "label": "read users",
+      "repo": "api",
+      "file": "src/users/lazy.ts",
+      "line": 9,
+      "meta": {
+        "op": "read",
+        "table": "users",
+        "tables": [
+          "users"
+        ],
+        "package": "@prisma/client",
+        "method": "findUnique",
+        "receiver": "prisma.user",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:api#src/users/users.service.ts:14:12",
+      "type": "db_query",
+      "label": "read users",
+      "repo": "api",
+      "file": "src/users/users.service.ts",
+      "line": 14,
+      "meta": {
+        "op": "read",
+        "table": "users",
+        "tables": [
+          "users"
+        ],
+        "package": "@prisma/client",
+        "method": "findMany",
+        "receiver": "prisma.user",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:api#src/users/users.service.ts:18:12",
+      "type": "db_query",
+      "label": "write Order",
+      "repo": "api",
+      "file": "src/users/users.service.ts",
+      "line": 18,
+      "meta": {
+        "op": "write",
+        "table": "Order",
+        "tables": [
+          "Order"
+        ],
+        "package": "@prisma/client",
+        "method": "create",
+        "receiver": "client.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:api#Order",
+      "type": "table",
+      "label": "Order",
+      "repo": "api"
+    },
+    {
+      "id": "table:api#order",
+      "type": "table",
+      "label": "order",
+      "repo": "api"
+    },
+    {
+      "id": "table:api#users",
+      "type": "table",
+      "label": "users",
+      "repo": "api"
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/legacy/legacy.ts:oldest",
+      "to": "db_query:api#src/legacy/legacy.ts:10:47",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/legacy/legacy.ts",
+      "line": 10
+    },
+    {
+      "from": "api#src/orders/move.ts:move",
+      "to": "db_query:api#src/orders/move.ts:5:3",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/move.ts",
+      "line": 5
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "db_query:api#src/orders/orders.service.ts:10:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 10
+    },
+    {
+      "from": "api#src/reports/count.ts:countUsers",
+      "to": "db_query:api#src/reports/count.ts:10:10",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/reports/count.ts",
+      "line": 10
+    },
+    {
+      "from": "api#src/reports/count.ts:totals",
+      "to": "db_query:api#src/reports/count.ts:13:63",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/reports/count.ts",
+      "line": 13
+    },
+    {
+      "from": "api#src/users/lazy.ts:firstUser",
+      "to": "db_query:api#src/users/lazy.ts:9:10",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/users/lazy.ts",
+      "line": 9
+    },
+    {
+      "from": "api#src/users/lazy.ts:lastUser",
+      "to": "db_query:api#src/users/lazy.ts:14:10",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/users/lazy.ts",
+      "line": 14
+    },
+    {
+      "from": "api#src/users/lazy.ts:settle",
+      "to": "db_query:api#src/users/lazy.ts:17:57",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/users/lazy.ts",
+      "line": 17
+    },
+    {
+      "from": "api#src/users/users.service.ts:UsersService.findAll",
+      "to": "db_query:api#src/users/users.service.ts:14:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/users/users.service.ts",
+      "line": 14
+    },
+    {
+      "from": "api#src/users/users.service.ts:UsersService.place",
+      "to": "db_query:api#src/users/users.service.ts:18:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/users/users.service.ts",
+      "line": 18
+    },
+    {
+      "from": "db_query:api#src/legacy/legacy.ts:10:47",
+      "to": "table:api#order",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/legacy/legacy.ts",
+      "line": 10
+    },
+    {
+      "from": "db_query:api#src/orders/move.ts:5:3",
+      "to": "table:api#Order",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/orders/move.ts",
+      "line": 5
+    },
+    {
+      "from": "db_query:api#src/orders/orders.service.ts:10:12",
+      "to": "table:api#Order",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 10
+    },
+    {
+      "from": "db_query:api#src/reports/count.ts:10:10",
+      "to": "table:api#users",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/reports/count.ts",
+      "line": 10
+    },
+    {
+      "from": "db_query:api#src/reports/count.ts:13:63",
+      "to": "table:api#Order",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/reports/count.ts",
+      "line": 13
+    },
+    {
+      "from": "db_query:api#src/users/lazy.ts:14:10",
+      "to": "table:api#users",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/users/lazy.ts",
+      "line": 14
+    },
+    {
+      "from": "db_query:api#src/users/lazy.ts:17:57",
+      "to": "table:api#Order",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/users/lazy.ts",
+      "line": 17
+    },
+    {
+      "from": "db_query:api#src/users/lazy.ts:9:10",
+      "to": "table:api#users",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/users/lazy.ts",
+      "line": 9
+    },
+    {
+      "from": "db_query:api#src/users/users.service.ts:14:12",
+      "to": "table:api#users",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/users/users.service.ts",
+      "line": 14
+    },
+    {
+      "from": "db_query:api#src/users/users.service.ts:18:12",
+      "to": "table:api#Order",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/users/users.service.ts",
+      "line": 18
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 7,
+      "reason": "di-type-unresolved",
+      "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
+      "symbol": "OrdersService.constructor[0]",
+      "service": "api"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 10,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 3,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "OrdersService.cancel -> this.db.order.delete",
+      "service": "api"
+    }
+  ]
+}
