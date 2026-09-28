@@ -45,7 +45,7 @@ addressed that way reads zero here before R125 and its true number after.
 | addresses claimed by more than one declaration | 0 | two handlers of one application; one of them is dead code |
 | addresses told apart only by their application | 0 | each was overwritten before R119, silently and with no total moving |
 | declarations with a body attached | 258 | 258 of 266 |
-| …whose body reaches anything | 241 | 241 of 266 |
+| …whose body reaches anything | 247 | 247 of 266 |
 | …behind middleware or a guard | 258 | 258 of 266 |
 
 Where those addresses are. One row per leading segment, which is enough of an
@@ -72,35 +72,36 @@ is not a diff.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 724 | no denominator: the rule has no probe for it |
-| …that name a table | 722 | 722 of 724 |
-| tables | 34 | 34 of 103 |
+| query sites read | 820 | no denominator: the rule has no probe for it |
+| …that name a table | 805 | 805 of 820 |
+| tables | 41 | 41 of 102 |
 | components | 644 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
 | every other binding a template makes | 777 | not counted by the rule |
 
 ## What it could not read
 
-812 places somebody could act on, 4717 the tool
+814 places somebody could act on, 4730 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
 | api-path-dynamic | action | 4 |  |
-| call-dynamic-receiver | info | 3969 |  |
+| call-dynamic-receiver | info | 3964 |  |
 | db-layer-unread | action | 6 |  |
 | db-receiver-name-only | action | 11 |  |
 | dynamic-config-key | action | 2 |  |
 | dynamic-http-url | action | 24 |  |
-| dynamic-table-name | action | 2 |  |
+| dynamic-table-name | action | 15 |  |
 | entry-http-routes-unplaced | info | 1 |  |
 | route-handler-anonymous | info | 3 |  |
 | route-mount-unread | action | 1 |  |
 | route-path-dynamic | action | 4 |  |
+| test-directory-skipped | info | 20 |  |
 | type-depth-exceeded | info | 573 |  |
-| type-generic-uninstantiated | info | 171 |  |
-| type-unresolved | action | 757 |  |
+| type-generic-uninstantiated | info | 169 |  |
+| type-unresolved | action | 746 |  |
 | unknown-base-url-env | action | 1 |  |
 
 ## Files with sites and no output
@@ -121,7 +122,7 @@ A query count fell from 77 to 0 on one target and this gate could not have caugh
 
 **R119 - Two applications colliding, where the file that loses is named by an edge.**
 
-A graph was broken on purpose - two applications collided and one controller’s file contributed nothing - and the gate answered `read gate ok`. The mechanism is structural rather than a tuning problem: the surviving entry takes a `handles` edge to *each* controller’s method, an edge recorded at a site counts as the reader having read that line, so `spokenFor` contains the losing file and the gate skips it. Strength 2 asks whether anything was said about a file; a collision is two files having the same thing said about them. R119 needed a snapshot fixture for exactly this reason.
+A graph was broken on purpose - two applications collided and one controller’s file contributed nothing - and the gate answered `read gate ok`. The mechanism is structural rather than a tuning problem: the surviving entry takes a `handles` edge to *each* controller’s method, a `handles` edge from an entry speaks for the routes of the file it is recorded in (R160 narrowed this to its own family and left it true), so the losing file is answered and the gate skips it. Strength 2 asks whether anything was said about a file; a collision is two files having the same thing said about them. R119 needed a snapshot fixture for exactly this reason.
 
 **R110 - A wrong value.**
 
@@ -140,13 +141,13 @@ applied identically to all eight targets and knows nothing about any of them.
 |---|---|---|
 | `nest-route-decorator` | an HTTP method decorator on a controller method | 0 |
 | `registered-route-call` | a verb called on a router or an application | 266 |
-| `exported-verb-handler` | an exported handler named for an HTTP verb | 0 |
+| `exported-verb-handler` | an exported handler named for an HTTP verb, in a file a router serves | 0 |
 | `pages-api-module` | a file under `pages/api` that default-exports a handler | 0 |
 | `component-declaration` | an Angular component declaration | 0 |
 | `template-click-binding` | a click bound in a template | 0 |
 | `prisma-call-site` | a model method called through a Prisma client | 0 |
 | `query-builder-site` | a table named in a query builder | 0 |
-| `model-declaration` | a table or model declared as a class or a schema | 103 |
+| `model-declaration` | a table or model declared as a class or a schema | 102 |
 
 | family | sites |
 |---|---|
@@ -154,7 +155,7 @@ applied identically to all eight targets and knows nothing about any of them.
 | screens | 0 |
 | things a person can click | 0 |
 | places the code reaches storage | 0 |
-| tables or models declared (an upper bound) | 103 |
+| tables or models declared (an upper bound) | 102 |
 
 Counted over the extent named at the top of this report - the read directory and
 the workspace packages it declares - because that is what the tool reads. A

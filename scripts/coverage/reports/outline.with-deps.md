@@ -74,23 +74,23 @@ is not a diff.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 1197 | no denominator: the rule has no probe for it |
-| …that name a table | 1165 | 1165 of 1197 |
-| tables | 41 | 41 of 103 |
+| query sites read | 1161 | no denominator: the rule has no probe for it |
+| …that name a table | 1129 | 1129 of 1161 |
+| tables | 41 | 41 of 102 |
 | components | 644 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
 | every other binding a template makes | 777 | not counted by the rule |
 
 ## What it could not read
 
-153 places somebody could act on, 2003 the tool
+153 places somebody could act on, 1980 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
 | api-path-dynamic | action | 4 |  |
-| call-dynamic-receiver | info | 347 |  |
+| call-dynamic-receiver | info | 346 |  |
 | channel-const-unresolved | action | 12 |  |
 | channel-dynamic | action | 9 |  |
 | consumer-handler-unresolved | action | 2 |  |
@@ -104,8 +104,9 @@ was never an edge to draw. The three are never added together.
 | route-handler-anonymous | info | 3 |  |
 | route-mount-unread | action | 1 |  |
 | route-path-dynamic | action | 4 |  |
-| type-depth-exceeded | info | 1209 |  |
-| type-generic-uninstantiated | info | 443 |  |
+| test-directory-skipped | info | 20 |  |
+| type-depth-exceeded | info | 1200 |  |
+| type-generic-uninstantiated | info | 410 |  |
 | type-unresolved | action | 5 |  |
 | unknown-base-url-env | action | 1 |  |
 
@@ -127,7 +128,7 @@ A query count fell from 77 to 0 on one target and this gate could not have caugh
 
 **R119 - Two applications colliding, where the file that loses is named by an edge.**
 
-A graph was broken on purpose - two applications collided and one controller’s file contributed nothing - and the gate answered `read gate ok`. The mechanism is structural rather than a tuning problem: the surviving entry takes a `handles` edge to *each* controller’s method, an edge recorded at a site counts as the reader having read that line, so `spokenFor` contains the losing file and the gate skips it. Strength 2 asks whether anything was said about a file; a collision is two files having the same thing said about them. R119 needed a snapshot fixture for exactly this reason.
+A graph was broken on purpose - two applications collided and one controller’s file contributed nothing - and the gate answered `read gate ok`. The mechanism is structural rather than a tuning problem: the surviving entry takes a `handles` edge to *each* controller’s method, a `handles` edge from an entry speaks for the routes of the file it is recorded in (R160 narrowed this to its own family and left it true), so the losing file is answered and the gate skips it. Strength 2 asks whether anything was said about a file; a collision is two files having the same thing said about them. R119 needed a snapshot fixture for exactly this reason.
 
 **R110 - A wrong value.**
 
@@ -146,13 +147,13 @@ applied identically to all eight targets and knows nothing about any of them.
 |---|---|---|
 | `nest-route-decorator` | an HTTP method decorator on a controller method | 0 |
 | `registered-route-call` | a verb called on a router or an application | 266 |
-| `exported-verb-handler` | an exported handler named for an HTTP verb | 0 |
+| `exported-verb-handler` | an exported handler named for an HTTP verb, in a file a router serves | 0 |
 | `pages-api-module` | a file under `pages/api` that default-exports a handler | 0 |
 | `component-declaration` | an Angular component declaration | 0 |
 | `template-click-binding` | a click bound in a template | 0 |
 | `prisma-call-site` | a model method called through a Prisma client | 0 |
 | `query-builder-site` | a table named in a query builder | 0 |
-| `model-declaration` | a table or model declared as a class or a schema | 103 |
+| `model-declaration` | a table or model declared as a class or a schema | 102 |
 
 | family | sites |
 |---|---|
@@ -160,7 +161,7 @@ applied identically to all eight targets and knows nothing about any of them.
 | screens | 0 |
 | things a person can click | 0 |
 | places the code reaches storage | 0 |
-| tables or models declared (an upper bound) | 103 |
+| tables or models declared (an upper bound) | 102 |
 
 Counted over the extent named at the top of this report - the read directory and
 the workspace packages it declares - because that is what the tool reads. A

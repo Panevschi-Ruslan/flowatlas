@@ -465,6 +465,10 @@ but joined to nothing.
 repositories import from a shared package is merged into one registry entry, so
 comparing a contract compares the same thing rather than a copy against itself.
 
+**`readTestDirectories`**, on a service, names directories called like tests
+(`fixtures`, `e2e`, `test`, …) that hold code the application runs. Every other
+such directory is left out and reported with a row, so you see what to name.
+
 ---
 
 ## How it works
@@ -651,8 +655,13 @@ prove, and the path is given so you can run it.
   workspace package that re-exports a library's client needs nothing
   (`fixtures/nest-prisma-wrapper`); one that wraps it in classes of its own is
   named in the rows it produces until you name it in the configuration
-  (`fixtures/nest-workspace-wrapper`). Redis and cache-manager, outgoing
-  requests and settings keys are leaves too.
+  (`fixtures/nest-workspace-wrapper`). A Prisma client that was never generated
+  is followed through the import that binds it, and a model is mapped to its
+  table by the schema's `@@map` (`fixtures/prisma-not-generated`). Knex reached
+  through an ORM manager's `getKnex()` is read as knex
+  (`fixtures/nest-mikro-orm-knex`), and so is the SQL handed to `knex.raw`
+  (`fixtures/nest-knex-raw`). Redis and cache-manager, outgoing requests and
+  settings keys are leaves too.
 - **Channels** for Kafka, RabbitMQ, BullMQ and Redis pub/sub — both clients, and
   every spelling of a subscribe verb, `pSubscribe` and `sSubscribe` among them
   (`fixtures/nest-kafka`, `fixtures/nest-rabbitmq`, `fixtures/nest-bullmq`,
@@ -664,7 +673,9 @@ prove, and the path is given so you can run it.
   payload path for a message inside an envelope (`fixtures/object-channels`,
   `fixtures/fn-broker`). A publish is read wherever it is written, and a channel
   template whose varying part is a closed set of strings is folded into the
-  channels it reaches (`fixtures/folded-channels`).
+  channels it reaches (`fixtures/folded-channels`). The reply to a
+  request-reply message is compared with what the handler returns, the way an
+  HTTP response is (`fixtures/multi-repo-contracts`).
 - **Browsers.** Angular templates, services and the router, lazy routes
   included (`fixtures/angular-basic`, `fixtures/angular-lazy-routes`); React
   components and hooks; requests made through the platform's `fetch`, `axios`,
@@ -734,12 +745,15 @@ Known gaps in what it can read:
 - A query written at the top level of a module, which runs when the module is
   imported and belongs to no function anybody can name. It is a
   `db-call-at-module-level` row rather than absent.
-- A generated client that was never generated. Prisma's client is code its own
-  build step writes, and a repository cloned or installed without running that
-  step has no `PrismaClient` declaration anywhere, so every query through it is
-  a receiver whose type could not be resolved, and says so. A wrapper package is
-  not itself the obstacle: where the client's types exist, a query through a
-  re-export is read under the library's own name.
+- A client whose type was erased. `(manager as any).getKnex()` may be an ORM's
+  manager and may be anything with a method of that name, so the query is not
+  read, and a `db-handover-unstated` row says which type to state.
+- Test code. A file named as a test (`*.test.ts`, `*.spec.ts`,
+  `*.integration-test.ts`) is not read, and neither is a directory named like
+  one (`test`, `tests`, `e2e`, `fixtures`, `playwright`, `__tests__` and a few
+  more). Each such directory is an `info` row with its file count, so a
+  `fixtures` directory that holds runtime code is visible, and
+  `readTestDirectories` reads it (`fixtures/nest-test-directories`).
 - A data layer this repository declares and does not name. Where a query goes
   through a repository class of the project's own, the class is what says which
   table is meant, and `adapters.db.localBaseClasses` is where a reader names it.
@@ -780,7 +794,7 @@ Or one at a time:
 pnpm -r build
 pnpm -r typecheck
 pnpm fixtures:run     # run the tool over every fixture
-pnpm -r test          # 2,315 tests
+pnpm -r test          # 2,469 tests
 pnpm invariants       # rules no test can express
 pnpm fixtures:check   # extraction, server and terminal snapshots, and the read gate
 ```

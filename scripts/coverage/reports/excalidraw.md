@@ -59,7 +59,7 @@ No addresses.
 |  | found | joined |
 |---|---|---|
 | requests from a browser | 12 | 0 |
-| requests between services | 11 | 0 |
+| requests between services | 13 | 0 |
 | channels | 0 | 0 with both ends |
 
 ## Storage and screens
@@ -75,19 +75,20 @@ No addresses.
 
 ## What it could not read
 
-44 places somebody could act on, 658 the tool
+46 places somebody could act on, 630 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
 | api-path-dynamic | action | 7 |  |
-| call-dynamic-receiver | info | 572 |  |
+| call-dynamic-receiver | info | 534 |  |
 | db-layer-unread | action | 5 |  |
-| dynamic-http-url | action | 6 |  |
+| dynamic-http-url | action | 8 |  |
 | target-route-not-found | action | 3 |  |
+| test-directory-skipped | info | 12 |  |
 | type-depth-exceeded | info | 39 |  |
-| type-generic-uninstantiated | info | 47 |  |
+| type-generic-uninstantiated | info | 45 |  |
 | type-unresolved | action | 20 |  |
 | unknown-base-url-env | action | 3 |  |
 
@@ -109,7 +110,7 @@ A query count fell from 77 to 0 on one target and this gate could not have caugh
 
 **R119 - Two applications colliding, where the file that loses is named by an edge.**
 
-A graph was broken on purpose - two applications collided and one controller’s file contributed nothing - and the gate answered `read gate ok`. The mechanism is structural rather than a tuning problem: the surviving entry takes a `handles` edge to *each* controller’s method, an edge recorded at a site counts as the reader having read that line, so `spokenFor` contains the losing file and the gate skips it. Strength 2 asks whether anything was said about a file; a collision is two files having the same thing said about them. R119 needed a snapshot fixture for exactly this reason.
+A graph was broken on purpose - two applications collided and one controller’s file contributed nothing - and the gate answered `read gate ok`. The mechanism is structural rather than a tuning problem: the surviving entry takes a `handles` edge to *each* controller’s method, a `handles` edge from an entry speaks for the routes of the file it is recorded in (R160 narrowed this to its own family and left it true), so the losing file is answered and the gate skips it. Strength 2 asks whether anything was said about a file; a collision is two files having the same thing said about them. R119 needed a snapshot fixture for exactly this reason.
 
 **R110 - A wrong value.**
 
@@ -128,7 +129,7 @@ applied identically to all eight targets and knows nothing about any of them.
 |---|---|---|
 | `nest-route-decorator` | an HTTP method decorator on a controller method | 0 |
 | `registered-route-call` | a verb called on a router or an application | 0 |
-| `exported-verb-handler` | an exported handler named for an HTTP verb | 0 |
+| `exported-verb-handler` | an exported handler named for an HTTP verb, in a file a router serves | 0 |
 | `pages-api-module` | a file under `pages/api` that default-exports a handler | 0 |
 | `component-declaration` | an Angular component declaration | 0 |
 | `template-click-binding` | a click bound in a template | 0 |

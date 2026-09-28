@@ -237,6 +237,36 @@ README says what it exists to prove.
   contracts report is a compared snapshot, and a fixture whose build is not yet
   trusted as an expectation is named in `UNHELD` with the disagreement, printed
   on every run.
+- **A Prisma call with no generated client.** A fresh clone has no
+  `prisma generate` output, so `prisma.booking.findMany()` had no type and was
+  not a query. The client is now followed through the import that binds it,
+  including into an unlinked workspace package, and a module that does not exist
+  counts as the Prisma client only where a `schema.prisma` names it as a
+  client generator's output. The model maps to its table by `@@map` when the
+  schema is readable. The context object tRPC hands a handler, a destructured
+  client, a narrowed type (`Pick<PrismaClient, 'order'>`) and a client loaded by
+  `await import()` in any of its three spellings are read. Every edge is
+  `heuristic`, and a local value merely named `prisma` is never read
+  (`prisma-not-generated`).
+- **The SQL handed to `knex.raw`** is read with the reader a driver's query
+  text is read with. A `raw` handed to another call of the same builder is part
+  of that query, not a second one (`nest-knex-raw`).
+- **A request-reply message compares its reply**, the way an HTTP call's
+  response is compared: `client.send<OrderDto>(…)` and an acknowledgement
+  callback's parameter are the receiver's side, the handler's return the
+  sender's, through the same comparison (`multi-repo-contracts`, and the
+  Angular socket reader in `socket-channels`).
+- **A workspace package imported by its name, with nothing installed.** The
+  package's manifest `exports` (exact subpaths, then `*` patterns) or its
+  `types`/`module`/`main` is followed into its source, after an installed copy,
+  the service's own aliases and the package's own. Only packages the service
+  declares resolve (`workspace-package-by-name`).
+- **A handler built by a factory of the repository.** `export const GET =
+  handlerBuilder` and a route registered with `makeHandler(config)` point at the
+  factory, followed through up to four re-bindings, instead of raising a
+  `route-handler-unread` row (`next-hollow`).
+- **`readTestDirectories`** on a service entry: directories named like tests
+  that hold code the application runs, read after all (`nest-test-directories`).
 
 ### Changed
 
@@ -369,6 +399,24 @@ README says what it exists to prove.
   it, and `route-handler-anonymous` names both shapes that reach it — a handler a
   package's call hands back, and one a factory of the repository builds from a
   function it is handed. Neither reason string changed.
+- **A test directory is reported rather than silent.** A directory named like
+  tests (`test`, `tests`, `e2e`, `fixtures`, `cypress`, `playwright`,
+  `__tests__`, `__mocks__`, `__snapshots__`, `__fixtures__`) is still not read,
+  and each one now carries a `test-directory-skipped` row at level `info` with
+  the number of source files it held. An `info` row that counts its own sites is
+  no longer folded into one row per reason (`nest-test-directories`).
+- **The coverage read gate counts an edge or a row only for its own family.**
+  A file with query sites no longer passes because one of its functions calls
+  another: `queries` answers for data, `handles` from an entry for routes, and
+  so on, from one table. An edge's file is placed by the service that drew it.
+  The gate also runs over fixtures that keep only a project graph, with
+  services declared only by a document set aside by a stated rule.
+- **The browser reader reads a file only where the framework is supplied to the
+  package that holds it**: by the service, by the member's own dependencies, or
+  as a peer by whoever depends on it. A Node API that renders e-mail with React
+  no longer has its own server code read as a browser's
+  (`nest-rendered-mail`, `nest-member-dev-react`, and `nest-member-angular` for
+  the Angular reader).
 
 ### Fixed
 
@@ -613,6 +661,27 @@ README says what it exists to prove.
   (`nest-kafka`).
 - `@Transform(fn)`, and `@Expose` or `@Type` with an argument nobody can read, is
   a `decorator-arg-dynamic` row at the decorator (`nest-types`).
+- **A token a configured module provides is provided.** `ClientsModule.register(
+  [{ name: 'KAFKA_CLIENT', … }])` registers its client under that name; the
+  token was reported as provided by nothing. It now resolves to the installed
+  `ClientProxy`, and calls through it are counted as calls into the package
+  (`nest-kafka`, `nest-rabbitmq`, `multi-repo`).
+- **A parameter forwarded through an interface method reaches only the callers
+  of that implementation.** One calendar's URL was forwarded to every other
+  calendar's `this.deleteEvent(…)` call through the interface they share, which
+  lost the real request and put wrong ones in its place
+  (`nest-interface-dispatch`).
+- **A forwarded request keeps its own verb and host.** `fetch(url, { method:
+  'PUT' })` credited to its caller read as `GET`, and a whole-URL template lost
+  its host to a path starting `/https:/`. A request's settings object is no
+  longer recorded as its body type (`nest-forwarded-verb`).
+- **A statement that names no table is not a failure.** `SELECT 1`, `BEGIN` and
+  `COMMIT` wrote `sql-parse-failed`; they are counted and write nothing
+  (`pg-no-table`).
+- **A described handover on a value whose type was erased is said.**
+  `(context.manager as any).getKnex()` is not read, because `any` may be
+  anything with a method of that name, and it used to be silent; it now writes
+  one `db-handover-unstated` row per query (`nest-mikro-orm-knex-not-installed`).
 
 ## [0.4.1][] - 2026-09-22
 

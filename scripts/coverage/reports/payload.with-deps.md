@@ -15,7 +15,7 @@ Next.js, nested application roots, a heap the default limit does not hold.
 
 ## Outcome
 
-build **exit 0**, doctor exit 2, link exit 0
+build **exit 0**, doctor exit 0, link exit 0
 
 ## Dependencies
 
@@ -27,8 +27,8 @@ build **exit 0**, doctor exit 2, link exit 0
 
 | kind | entry points |
 |---|---|
-| http | 288 |
-| rpc | 9 |
+| http | 230 |
+| rpc | 6 |
 
 HTTP routes. The first row counts addresses and is not coverage; the rest count
 handlers, which is what the counting rule counts, because two declarations may
@@ -43,12 +43,12 @@ addressed that way reads zero here before R125 and its true number after.
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| addresses placed | 288 |  |
+| addresses placed | 230 |  |
 | addresses claimed by more than one declaration | 0 | two handlers of one application; one of them is dead code |
-| addresses told apart only by their application | 271 | each was overwritten before R119, silently and with no total moving |
-| declarations with a body attached | 29 | 29 of 128 |
-| …whose body reaches anything | 7 | 7 of 128 |
-| …behind middleware or a guard | 0 | 0 of 128 |
+| addresses told apart only by their application | 213 | each was overwritten before R119, silently and with no total moving |
+| declarations with a body attached | 230 | 230 against 119: **more found than the rule can see, so this is not a fraction** |
+| …whose body reaches anything | 220 | 220 against 119: **more found than the rule can see, so this is not a fraction** |
+| …behind middleware or a guard | 0 | 0 of 119 |
 
 Where those addresses are. One row per leading segment, which is enough of an
 address for a dropped global prefix to show and little enough that a new route
@@ -56,8 +56,8 @@ is not a diff.
 
 | first segment | addresses |
 |---|---|
-| `/api` | 259 |
-| `/my-route` | 12 |
+| `/api` | 203 |
+| `/my-route` | 10 |
 | `/next` | 11 |
 
 6 more at 4 segment(s) of fewer than five addresses each, folded together so that a repository serving two hundred addresses at the top level does not write two hundred rows.
@@ -66,59 +66,49 @@ is not a diff.
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 160 | 41 |
-| requests between services | 162 | 0 |
+| requests from a browser | 136 | 30 |
+| requests between services | 128 | 0 |
 | channels | 0 | 0 with both ends |
 
 ## Storage and screens
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 43 | no denominator: the rule has no probe for it |
-| …that name a table | 0 | 0 of 43 |
+| query sites read | 33 | no denominator: the rule has no probe for it |
+| …that name a table | 0 | 0 of 33 |
 | tables | 0 | 0 of 2 |
-| components | 1915 | no denominator: the rule has no probe for it |
+| components | 1474 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
-| every other binding a template makes | 897 | not counted by the rule |
+| every other binding a template makes | 741 | not counted by the rule |
 
 ## What it could not read
 
-818 places somebody could act on, 125 the tool
+449 places somebody could act on, 2059 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
 | ambiguous-route-application | action | 1 |  |
-| api-client-unread | action | 1 |  |
-| api-path-dynamic | action | 75 |  |
-| call-dynamic-receiver | info | 115 |  |
-| db-receiver-name-only | action | 261 |  |
+| api-path-dynamic | action | 69 |  |
+| call-dynamic-receiver | info | 281 |  |
+| db-receiver-name-only | action | 199 |  |
 | dynamic-cache-key | action | 7 |  |
-| dynamic-config-key | action | 7 |  |
-| dynamic-http-url | action | 75 |  |
-| dynamic-table-name | action | 43 |  |
-| route-handler-unread | action | 259 |  |
-| route-wildcard-only | action | 35 |  |
-| target-route-not-found | action | 26 |  |
+| dynamic-config-key | action | 1 |  |
+| dynamic-http-url | action | 74 |  |
+| dynamic-table-name | action | 33 |  |
+| route-wildcard-only | action | 24 |  |
+| target-route-not-found | action | 23 |  |
+| test-directory-skipped | info | 1769 |  |
 | type-depth-exceeded | info | 3 |  |
-| type-generic-uninstantiated | info | 7 |  |
-| type-unresolved | action | 5 |  |
-| unknown-base-url-env | action | 23 |  |
+| type-generic-uninstantiated | info | 6 |  |
+| type-unresolved | action | 1 |  |
+| unknown-base-url-env | action | 17 |  |
 
 ## Files with sites and no output
 
-**2 file(s)** the counting rule found sites in yielded neither
-a node of that family nor any row naming them, and no baseline entry accounts for
-them. That is a reader giving up in silence, which is the class this gate exists
-for; a limit somebody has decided to accept belongs in the exemption list with a
-sentence beside it, and a limit somebody has decided to live with belongs in the
-baseline with a count and a ticket.
-
-| file | family | sites |
-|---|---|---|
-| `(anywhere)` | models | 2 |
-| `templates/ecommerce/src/app/(app)/next/exit-preview/GET.ts` | routes | 1 |
+None beyond what is baselined. Every other file the counting rule found a
+declaration site in yielded a node of that family, or a row naming the file.
 
 ### What this gate cannot see
 
@@ -133,7 +123,7 @@ A query count fell from 77 to 0 on one target and this gate could not have caugh
 
 **R119 - Two applications colliding, where the file that loses is named by an edge.**
 
-A graph was broken on purpose - two applications collided and one controller’s file contributed nothing - and the gate answered `read gate ok`. The mechanism is structural rather than a tuning problem: the surviving entry takes a `handles` edge to *each* controller’s method, an edge recorded at a site counts as the reader having read that line, so `spokenFor` contains the losing file and the gate skips it. Strength 2 asks whether anything was said about a file; a collision is two files having the same thing said about them. R119 needed a snapshot fixture for exactly this reason.
+A graph was broken on purpose - two applications collided and one controller’s file contributed nothing - and the gate answered `read gate ok`. The mechanism is structural rather than a tuning problem: the surviving entry takes a `handles` edge to *each* controller’s method, a `handles` edge from an entry speaks for the routes of the file it is recorded in (R160 narrowed this to its own family and left it true), so the losing file is answered and the gate skips it. Strength 2 asks whether anything was said about a file; a collision is two files having the same thing said about them. R119 needed a snapshot fixture for exactly this reason.
 
 **R110 - A wrong value.**
 
@@ -152,7 +142,7 @@ applied identically to all eight targets and knows nothing about any of them.
 |---|---|---|
 | `nest-route-decorator` | an HTTP method decorator on a controller method | 0 |
 | `registered-route-call` | a verb called on a router or an application | 0 |
-| `exported-verb-handler` | an exported handler named for an HTTP verb | 128 |
+| `exported-verb-handler` | an exported handler named for an HTTP verb, in a file a router serves | 119 |
 | `pages-api-module` | a file under `pages/api` that default-exports a handler | 0 |
 | `component-declaration` | an Angular component declaration | 0 |
 | `template-click-binding` | a click bound in a template | 0 |
@@ -162,7 +152,7 @@ applied identically to all eight targets and knows nothing about any of them.
 
 | family | sites |
 |---|---|
-| ways in over HTTP | 128 |
+| ways in over HTTP | 119 |
 | screens | 0 |
 | things a person can click | 0 |
 | places the code reaches storage | 0 |

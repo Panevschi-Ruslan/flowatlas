@@ -9,7 +9,7 @@ NestJS, versioning, deep-subpath imports.
 | commit | `85ae4fdfcd12b1189633b0bc369c23a76883d76f` |
 | read | `apps/api` |
 | read by | api-service (`nestjs`) |
-| source files counted | 4602 |
+| source files counted | 4583 |
 | extent counted over | `apps/api` plus 21 declared package(s): `enterprise/packages/ai`, `enterprise/packages/api`, `enterprise/packages/auth`, `enterprise/packages/billing`, `enterprise/packages/shared-services`, `enterprise/packages/translation`, `libs/application-generic`, `libs/dal`, `libs/internal-sdk`, `libs/maily-render`, `libs/notifications`, `libs/testing`, `packages/agent-event-protocol`, `packages/chat-adapter-email`, `packages/chat-adapter-photon-imessage`, `packages/chat-adapter-sendblue`, `packages/chat-adapter-web-chat`, `packages/framework`, `packages/providers`, `packages/shared`, `packages/stateless` |
 | flowatlas | 0.4.1 |
 
@@ -64,54 +64,50 @@ is not a diff.
 
 |  | found | joined |
 |---|---|---|
-| requests from a browser | 38 | 5 |
-| requests between services | 128 | 0 |
+| requests from a browser | 0 | 0 |
+| requests between services | 108 | 0 |
 | channels | 0 | 0 with both ends |
 
 ## Storage and screens
 
 |  | count | of what the counting rule found |
 |---|---|---|
-| query sites read | 100 | no denominator: the rule has no probe for it |
-| …that name a table | 61 | 61 of 100 |
+| query sites read | 102 | no denominator: the rule has no probe for it |
+| …that name a table | 61 | 61 of 102 |
 | tables | 20 | no denominator: the rule has no probe for it |
-| components | 17 | no denominator: the rule has no probe for it |
+| components | 16 | no denominator: the rule has no probe for it |
 | clicks | 0 | nothing of this kind here |
 | every other binding a template makes | 0 | not counted by the rule |
 
 ## What it could not read
 
-6708 places somebody could act on, 2927 the tool
+6656 places somebody could act on, 2913 the tool
 reports as a limit of static reading, and 0 where there
 was never an edge to draw. The three are never added together.
 
 | reason | level | places |  |
 |---|---|---|---|
-| api-method-dynamic | action | 1 |  |
-| api-path-dynamic | action | 6 |  |
-| call-dynamic-receiver | info | 2036 |  |
+| call-dynamic-receiver | info | 2035 |  |
 | call-module-ref | action | 33 |  |
 | channel-dynamic | action | 2 |  |
 | db-layer-unread | action | 4 |  |
-| db-receiver-name-only | action | 1616 |  |
+| db-receiver-name-only | action | 1583 |  |
 | decorator-arg-dynamic | action | 65 |  |
 | di-token-ambiguous | action | 3 |  |
 | di-token-unknown | action | 24 |  |
 | di-type-unresolved | action | 1501 |  |
 | dynamic-cache-key | action | 25 |  |
-| dynamic-config-key | action | 21 |  |
+| dynamic-config-key | action | 19 |  |
 | dynamic-http-url | action | 31 |  |
-| dynamic-table-name | action | 39 |  |
-| entry-http-routes-unmatched | info | 1 |  |
-| entry-http-types-unmatched | info | 1 |  |
+| dynamic-table-name | action | 41 |  |
+| entry-http-types-unmatched | info | 2 |  |
 | module-controllers-unread | action | 1 |  |
 | module-import-dynamic | action | 9 |  |
-| route-mount-assumed-empty | info | 5 |  |
 | route-path-dynamic | action | 1 |  |
-| target-route-not-found | action | 6 |  |
-| type-depth-exceeded | info | 401 |  |
-| type-generic-uninstantiated | info | 483 |  |
-| type-unresolved | action | 3311 |  |
+| test-directory-skipped | info | 22 |  |
+| type-depth-exceeded | info | 366 |  |
+| type-generic-uninstantiated | info | 488 |  |
+| type-unresolved | action | 3305 |  |
 | unknown-base-url-env | action | 9 |  |
 
 ## Files with sites and no output
@@ -132,7 +128,7 @@ A query count fell from 77 to 0 on one target and this gate could not have caugh
 
 **R119 - Two applications colliding, where the file that loses is named by an edge.**
 
-A graph was broken on purpose - two applications collided and one controller’s file contributed nothing - and the gate answered `read gate ok`. The mechanism is structural rather than a tuning problem: the surviving entry takes a `handles` edge to *each* controller’s method, an edge recorded at a site counts as the reader having read that line, so `spokenFor` contains the losing file and the gate skips it. Strength 2 asks whether anything was said about a file; a collision is two files having the same thing said about them. R119 needed a snapshot fixture for exactly this reason.
+A graph was broken on purpose - two applications collided and one controller’s file contributed nothing - and the gate answered `read gate ok`. The mechanism is structural rather than a tuning problem: the surviving entry takes a `handles` edge to *each* controller’s method, a `handles` edge from an entry speaks for the routes of the file it is recorded in (R160 narrowed this to its own family and left it true), so the losing file is answered and the gate skips it. Strength 2 asks whether anything was said about a file; a collision is two files having the same thing said about them. R119 needed a snapshot fixture for exactly this reason.
 
 **R110 - A wrong value.**
 
@@ -151,7 +147,7 @@ applied identically to all eight targets and knows nothing about any of them.
 |---|---|---|
 | `nest-route-decorator` | an HTTP method decorator on a controller method | 459 |
 | `registered-route-call` | a verb called on a router or an application | 0 |
-| `exported-verb-handler` | an exported handler named for an HTTP verb | 0 |
+| `exported-verb-handler` | an exported handler named for an HTTP verb, in a file a router serves | 0 |
 | `pages-api-module` | a file under `pages/api` that default-exports a handler | 0 |
 | `component-declaration` | an Angular component declaration | 0 |
 | `template-click-binding` | a click bound in a template | 0 |
@@ -175,7 +171,7 @@ repository's manifests instead of asking the tool for it.
 
 ## Cost
 
-Wall clock 15 to 60 s, peak resident memory 3 to 4 GB.
+Wall clock 15 to 60 s, peak resident memory 2 to 3 GB.
 Bands rather than figures, on purpose: two runs over the same commits differ by
 a second and a hundred megabytes for reasons that have nothing to do with this
 tool, and a line that moves then is a line nobody will read twice.
