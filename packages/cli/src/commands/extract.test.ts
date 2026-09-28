@@ -495,6 +495,14 @@ describe('nest-types', () => {
     expect(types()['type:nest-types#Paginated<type:nest-types#Order>']?.fields).toBeDefined();
   });
 
+  it('registers a generic used with only its parameter as the template, not beside it', () => {
+    const ids = Object.keys(types()).filter((id) => id.startsWith('type:nest-types#Paginated'));
+    expect(ids.sort()).toEqual([
+      'type:nest-types#Paginated',
+      'type:nest-types#Paginated<type:nest-types#Order>',
+    ]);
+  });
+
   it('reads a shared package in full, under its own name', () => {
     const shared = types()['type:@fixture/contracts#SharedOrderEvent'];
     expect(shared?.kind).toBe('object');
@@ -759,6 +767,16 @@ describe('cache, outgoing calls and configuration', () => {
 });
 
 describe('channels', () => {
+  // One decorator with nothing in it is one thing to fix, and the entry reader
+  // is the one that reads a pattern's argument: the consumer reuses that
+  // reading, so where it was refused there is nothing new to say (R148).
+  it('writes one row for a pattern decorator with no argument, not two', () => {
+    const rows = load('nest-kafka').unresolved.filter(
+      (row) => row.file === 'src/orders/orders.controller.ts' && row.line === 47,
+    );
+    expect(rows.map((row) => row.reason)).toEqual(['decorator-arg-dynamic']);
+  });
+
   it.each(['nest-kafka', 'nest-rabbitmq', 'nest-bullmq', 'nest-redis-pubsub', 'nest-broker-markers'])(
     '%s gives every channel an id no repository could claim',
     (name) => {

@@ -44,7 +44,7 @@ tie-breaker.
 | `client.emit(topic, dto)` | 117 | none | `event` | heuristic | `channel-dynamic` |
 | `client.emit(...args)` | 123 | none | `event` | heuristic | `channel-dynamic` |
 | `firstValueFrom(client.send<Order, OrderQuery>('get.order', query))` | 130 | `get.order` | `rpc` | static | — |
-| `client.send('get.order.raw', query)` | 136 | `get.order.raw` | `rpc` | static | `rpc-return-type-unknown` |
+| `client.send('get.order.raw', query)` | 136 | `get.order.raw` | `rpc` | static | — |
 | `telemetry.emit('order.created', …)` | 143 | — | — | — | — |
 
 `meta.channelVia` per row: `literal` (35, 42, 51), `enum` (59), `shared-package`
@@ -95,14 +95,15 @@ producers and three `emits` edges.
 | `@EventPattern(Topics.ORDER_PAID)` | 25 | `order.paid` | `event` | — | static | — |
 | `@EventPattern({ cmd: 'order.sync' })` | 32 | `{"cmd":"order.sync"}` | `event` | — | static | — |
 | `@EventPattern('order.checksum')` | 40 | `order.checksum` | `event` | — | static | — |
-| `@EventPattern()` | 47 | none | `event` | — | heuristic | `channel-dynamic` |
+| `@EventPattern()` | 47 | none | `event` | — | — | `decorator-arg-dynamic` (the entry reader's; no channel row) |
 | `@EventPattern('order.audit')` | 55 | `order.audit` | `event` | — | static | — |
 | `@MessagePattern('get.order')` | 63 | `get.order` | `rpc` | `type:nest-kafka#Order` | static | — |
-| `@MessagePattern('get.order.raw')` | 70 | `get.order.raw` | `rpc` | none | static | `rpc-return-type-unknown` |
+| `@MessagePattern('get.order.raw')` | 70 | `get.order.raw` | `rpc` | `any` | static | — |
 
-Every consumer here sits on a P01 entry, so each one carries `meta.entryId` —
-`entry:nest-kafka:event:<pattern>` or `entry:nest-kafka:rpc:<pattern>` — and
-never duplicates it (D1, §12).
+Every consumer here with a pattern sits on a P01 entry, so each one carries
+`meta.entryId` — `entry:nest-kafka:event:<pattern>` or
+`entry:nest-kafka:rpc:<pattern>` — and never duplicates it (D1, §12). The one
+on line 47 has no pattern and so no entry: its `entryId` is `null`.
 
 The object pattern on line 32 keeps P01's `meta.pattern` verbatim as the channel
 name, so the id is `channel:{"cmd":"order.sync"}` and the two sides of the repo
@@ -123,9 +124,7 @@ end plus a row saying which publish lost it is the honest shape of that.
 | `this.config.get('ORDER_TOPIC')` | `orders.service.ts:112` | `channel-from-config`, hint `add @Emits('<topic>') on OrdersService.emitConfigured` |
 | `topic` parameter | `orders.service.ts:117` | `channel-dynamic`, same hint: a parameter is not a constant nobody could follow, and its row must not say it is (R140) |
 | `emit(...args)` spread | `orders.service.ts:123` | `channel-dynamic`; the point is that it must not crash |
-| `@EventPattern()` with no argument | `orders.controller.ts:47` | `channel-dynamic`; must not crash |
-| `client.send` with no type argument | `orders.service.ts:136` | `rpc-return-type-unknown` |
-| `@MessagePattern` handler returning `any` | `orders.controller.ts:70` | `rpc-return-type-unknown` |
+| `@EventPattern()` with no argument | `orders.controller.ts:47` | `decorator-arg-dynamic`, once, and no `channel-dynamic` beside it; must not crash |
 
 `COMPUTED_TOPIC` (`topics.ts:17`) is the mirror image of `REGION_TOPIC`: its hole
 is one other const with a literal value, so it is the half of §10's computed-
@@ -138,8 +137,51 @@ and `expected.link-report.json` what `build` writes. `channel:order.legacy` is i
 the link report's `noConsumers`, which is right: nothing in this repository
 handles it.
 
-Two rows above are not written yet, and the snapshots say so rather than hiding
-it: nothing in the tool emits `rpc-return-type-unknown` (lines 136 and 70 produce
-no row; the handler's `returns` is `any`), and the handler at
-`orders.controller.ts:47` carries a `decorator-arg-dynamic` row beside its
-`channel-dynamic` one. Both are recorded against R140 as found, not decided here.
+## What R148 decided
+
+Four places where this README and the snapshots used to disagree, each settled
+by saying which of the two was right and why.
+
+**No `rpc-return-type-unknown`, at `service:136` or `controller:70`. The README
+was wrong.** Nothing in the tool emits that reason, `flowatlas doctor` has no
+sentence for it, and it should not have one. An unresolved row says that the
+source holds something the reader could not follow. Neither site is that. The
+handler declares `: any`, and the handles edge records `returns: "any"` exactly
+as written. The call passes no type argument, so `ClientProxy.send`'s own
+default applies and the answer is `Observable<any>`, which is also read as
+written. An untyped answer is not an unread one. The tool already has words for
+"this end declares nothing to compare": the contracts report's
+`no-type-on-sender` and `no-type-on-receiver`, per direction. A handler that
+returns `any` on an HTTP route is reported there and nowhere else. A second
+reason, only for rpc and in the other report, would say the same thing about
+the same fact. One gap remains, and it sits in the contracts report, not here:
+a broker edge is compared in the `payload` direction only, so the reply of an
+rpc is not compared at all yet. That is why neither of these sites shows up
+anywhere as unchecked.
+
+**`controller:47` has one row, `decorator-arg-dynamic`, and not a
+`channel-dynamic` beside it. The second row was a duplicate.** A pattern
+decorator's argument is read once, by the entry reader (P01). The consumer
+reuses that reading as its channel name, which is D1 above. When the entry
+reader refuses the argument, the consumer read the same argument of the same
+decorator and has nothing new to say. For `@EventPattern()` the channel row was
+also false. Nothing here is "built at run time": there is no pattern, Nest
+stores `[undefined]`, and no producer can reach the handler. The row's advice,
+annotate with `@Consumes`, would claim a channel for a handler that receives
+nothing. The entry reader's row gives the fix that is true: write the pattern.
+A decorator no entry reader knows, such as `@RabbitSubscribe` or `@Process`,
+has no such row, so its consumer still reports its own.
+
+**`di-token-unknown` at `service:28` is in the snapshots, and it is wrong. The
+reader is at fault, not this README.** The row says "No module in this
+repository provides KAFKA_CLIENT". `ClientsModule.register([{ name:
+'KAFKA_CLIENT', … }])` at `app.module.ts:15-21` provides exactly that token,
+because Nest registers each client's `name` as a provider. The module reader
+reads a module's `providers:` and nothing that an imported dynamic module
+contributes. The row stays in the snapshots until that is fixed, and it is
+recorded here so that it is not read as a truth. The fix is not made here
+because the same false row sits in the snapshots of five other fixtures
+(`nest-rabbitmq`, `multi-repo`, `multi-repo-analytics`,
+`multi-repo-contracts`, `multi-repo-doctor`), and `multi-repo-diff`'s sources
+have the same shape. `multi-repo-doctor`'s two-token `di-token-unknown` group
+(R35) is also built on `EVENTS_CLIENT`, one of those false rows.

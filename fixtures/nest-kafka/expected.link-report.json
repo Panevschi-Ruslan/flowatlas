@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T19:38:09.911Z",
+  "builtAt": "2026-09-28T06:20:15.643Z",
   "configHash": "7360f535f4dc",
   "services": [
     {
@@ -11,8 +11,8 @@
       "nodes": 74,
       "edges": 52,
       "types": 7,
-      "unresolved": 8,
-      "durationMs": 984
+      "unresolved": 7,
+      "durationMs": 651
     }
   ],
   "httpOut": {
@@ -61,6 +61,6 @@
     "nodes": 74,
     "edges": 52,
     "types": 7,
-    "unresolved": 8
+    "unresolved": 7
   }
 }

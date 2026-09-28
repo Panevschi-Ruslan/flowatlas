@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T19:38:09.911Z",
+  "builtAt": "2026-09-28T06:20:15.643Z",
   "services": [
     {
       "name": "nest-kafka",
@@ -1584,14 +1584,6 @@
     }
   },
   "unresolved": [
-    {
-      "file": "src/orders/orders.controller.ts",
-      "line": 47,
-      "reason": "channel-dynamic",
-      "hint": "The channel name cannot be read here. Annotate OrdersController.onAnything with the channel it uses.",
-      "symbol": "OrdersController.onAnything -> @EventPattern()",
-      "service": "nest-kafka"
-    },
     {
       "file": "src/orders/orders.controller.ts",
       "line": 47,

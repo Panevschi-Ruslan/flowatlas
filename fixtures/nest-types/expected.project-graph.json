@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T19:38:25.631Z",
+  "builtAt": "2026-09-28T06:20:30.272Z",
   "services": [
     {
       "name": "nest-types",
@@ -1422,36 +1422,6 @@
       "meta": {
         "declKind": "interface",
         "exported": true
-      }
-    },
-    "type:nest-types#Paginated<T>": {
-      "name": "Paginated",
-      "kind": "object",
-      "declaredIn": "nest-types#src/types/paginated.ts",
-      "structuralHash": "772e379432ce5e34",
-      "fields": [
-        {
-          "name": "items",
-          "type": "T[]",
-          "optional": false
-        },
-        {
-          "name": "total",
-          "type": "number",
-          "optional": false
-        },
-        {
-          "name": "page",
-          "type": "number",
-          "optional": false
-        }
-      ],
-      "meta": {
-        "declKind": "interface",
-        "exported": true,
-        "typeArgs": [
-          "T"
-        ]
       }
     },
     "type:nest-types#Paginated<type:nest-types#Order>": {

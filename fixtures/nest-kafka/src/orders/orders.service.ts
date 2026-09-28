@@ -130,8 +130,8 @@ export class OrdersService {
     return firstValueFrom(this.client.send<Order, OrderQuery>('get.order', query));
   }
 
-  // An rpc whose result is never given a type: the producer still exists, the
-  // return does not. Expected: unresolved `rpc-return-type-unknown`.
+  // An rpc whose result is never given a type: the producer still exists, and
+  // `send`'s own default makes the answer `any` - untyped, not unread, so no row (R148).
   getAnything(query: OrderQuery): unknown {
     return this.client.send('get.order.raw', query);
   }
