@@ -227,6 +227,37 @@ describe('the SQL handed to knex.raw', () => {
 });
 
 /**
+ * A statement read in full that names no table is counted, and is not a
+ * failure, whichever driver takes it (R162).
+ *
+ * `knex.raw('SELECT 1')` was counted after R155, while `pool.query('SELECT 1')`,
+ * `pool.query('BEGIN')` and `pool.query('COMMIT')` each wrote
+ * `sql-parse-failed`, whose hint says the text "is not a literal". Only the
+ * statement whose table is computed is one the reader could not read.
+ */
+describe('a pg statement that names no table', () => {
+  const FILE = 'src/orders/orders.service.ts';
+
+  it('draws the statements that name a table, and nothing for the rest', async () => {
+    const graph = await graphOf('pg-no-table');
+    const read = queriesIn(graph, FILE).map((node) => [node.line, node.label]);
+    expect(read).toEqual([
+      [10, 'read orders'],
+      [24, 'write orders'],
+      [31, 'access ?'],
+    ]);
+  });
+
+  it('writes a row only for the statement whose table is computed', async () => {
+    const graph = await graphOf('pg-no-table');
+    const rows = graph.unresolved
+      .filter((row) => row.file === FILE)
+      .map((row) => [row.line, row.reason]);
+    expect(rows).toEqual([[31, 'sql-parse-failed']]);
+  });
+});
+
+/**
  * A call written against a method's name belongs to the method it dispatches
  * to (R158).
  *

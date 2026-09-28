@@ -52,7 +52,7 @@ import {
 import { locateTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
 import { hostCallOf } from './leaves/fragment.js';
-import { readSqlArgument, type SqlArgument } from './leaves/sql-argument.js';
+import { namesNoTable, readSqlArgument, type SqlArgument } from './leaves/sql-argument.js';
 import { handedOverOrigin } from './leaves/handover.js';
 import { dataLayerOf } from './leaves/silence.js';
 import { statedOrigin } from './leaves/stated.js';
@@ -474,13 +474,12 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    *
    * Where the call sits cannot say what a value kept in a variable becomes, so
    * the text decides next. A text no verb opens - `lower(email)`, `"${alias}".id`
-   * - is not a statement wherever it is kept, and a whole statement that names
-   * no table - `SELECT 1` - touches nothing a reader could look for. Both are
-   * counted, as a method that touches no data is.
+   * - is not a statement wherever it is kept, and is counted, as a method that
+   * touches no data is.
    *
-   * What is left is a statement. Its tables are read with the reader a driver's
-   * query string is read with, and one whose text is computed gets the row that
-   * reader writes for computed SQL.
+   * What is left is a statement, read as a driver's query string is: one that
+   * names no table is counted there, for every driver alike (R162), and one
+   * whose text is computed gets the row that reader writes for computed SQL.
    */
   const statementOf = (
     call: CallExpression,
@@ -494,7 +493,6 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (host !== undefined && madeOn(host, descriptor.package)) return 'fragment';
     const sql = readSqlArgument(call.getArguments()[index]);
     if (sql.text !== null && sqlOperation(sql.text) === null) return 'fragment';
-    if (sql.complete && sql.text !== null && sqlTables(sql.text).length === 0) return 'fragment';
     return { sql, descriptor: { ...descriptor, tableOverride: { kind: 'sql-parse', argIndex: index } } };
   };
 
@@ -538,6 +536,12 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       (descriptor?.tableOverride?.kind === 'sql-parse'
         ? readSqlArgument(call.getArguments()[descriptor.tableOverride.argIndex])
         : undefined);
+    if (sql !== undefined && namesNoTable(sql)) {
+      // `SELECT 1`, `BEGIN`: read in full, and nothing in it to look for. Not a
+      // query site, and not a failure either (R162).
+      ctx.countExternalCall(`${origin?.package ?? descriptor?.package ?? 'unknown'}.${method}`);
+      return true;
+    }
     if (sql !== undefined) {
       // Only a whole statement is read. One whose tables are decided at run time
       // names none, and says so in the row the core writes for it.

@@ -5,7 +5,7 @@ import {
   type TemplateExpression,
   type Node as TsNode,
 } from 'ts-morph';
-import { SQL_VALUE_HOLE, isValuePosition } from '../sql.js';
+import { SQL_VALUE_HOLE, isValuePosition, sqlTables } from '../sql.js';
 
 /**
  * The SQL an argument holds, as far as the source says.
@@ -83,3 +83,20 @@ export const readSqlArgument = (argument: TsNode | undefined): SqlArgument => {
   }
   return { text, complete };
 };
+
+/**
+ * Whether an argument is a statement read in full that names no table.
+ *
+ * `SELECT 1`, `BEGIN`, `COMMIT`, `SET search_path …`: the text is all there,
+ * and there is nothing in it to look for. Such a call is counted, as a method
+ * that touches no data is, and it is not a failure: the row for SQL that could
+ * not be read says the text "is not a literal", and this one is. The row stays
+ * for a text that is not all there - a table computed at run time, a statement
+ * handed over as a parameter.
+ *
+ * Asked once, of every data layer that takes its query as text, so that
+ * `pool.query('SELECT 1')` and `knex.raw('SELECT 1')` get the same answer
+ * (R162).
+ */
+export const namesNoTable = (sql: SqlArgument): boolean =>
+  sql.complete && sql.text !== null && sqlTables(sql.text).length === 0;
