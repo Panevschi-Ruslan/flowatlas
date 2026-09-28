@@ -9,6 +9,7 @@ import {
   recordApplications,
   reportUnreadableSources,
   silentLogger,
+  suppliedWith,
   type ExtractContext,
   type FlowatlasConfig,
   type FrontendExtractOptions,
@@ -18,6 +19,7 @@ import {
   type ServiceConfig,
 } from '@flowatlas/core';
 import { createAngularContext } from './context.js';
+import { declaresAngular } from './framework.js';
 import { buildAngularClassIndex } from './index-classes.js';
 import { callsPass } from './passes/calls.js';
 import { classesPass } from './passes/classes.js';
@@ -83,14 +85,30 @@ export const extractAngular = (
   base: ExtractContext,
   options: FrontendExtractOptions = {},
 ): void => {
+  // Which files are Angular's to read. Detection said the framework is
+  // somewhere in what this service can import, which switches the reader on and
+  // says nothing about which files are written for it: a server one of whose
+  // members installs Angular runs Angular in that member alone. So a file is
+  // read only when the framework is supplied to the package holding it - by the
+  // service, to everything it reaches; by a member that installs it, to itself;
+  // or, for a peer, by a dependent that is supplied. The rule and its argument
+  // are `suppliedWith` in the core, asked with this adapter's own description
+  // of the framework, exactly as the sibling reader asks it (R145, R159).
+  //
+  // Everything the passes read comes through the class index, and the route
+  // configurations through the same predicate on the context, so a file left
+  // out here is left out of the whole reading and not of one pass.
+  const reads = suppliedWith(base.repoDir, declaresAngular);
   const classes = buildAngularClassIndex({
     project: base.project,
     repo: base.repo,
     repoDir: base.repoDir,
+    reads,
   });
   const ctx = createAngularContext({
     base,
     classes,
+    reads,
     sources: countSources(base.project),
     ...(options.typesDepth === undefined ? {} : { maxDepth: options.typesDepth }),
   });

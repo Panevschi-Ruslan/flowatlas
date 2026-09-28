@@ -542,7 +542,11 @@ export const collectRoutes = (ctx: AngularExtractContext): RouteEntry[] => {
     walk(array, prefix, depth);
   };
 
-  const sources = ctx.project.getSourceFiles();
+  // Only the files this reader is entitled to: a route configuration in a
+  // package Angular is not supplied to is somebody else's router (R159).
+  const sources = ctx.project
+    .getSourceFiles()
+    .filter((sourceFile) => ctx.reads(sourceFile.getFilePath()));
 
   for (const sourceFile of sources) {
     sourceFile.forEachDescendant((node: TsNode) => {

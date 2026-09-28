@@ -1,0 +1,12 @@
+{
+  "name": "@member-angular/api",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@member-angular/mailer": "workspace:*",
+    "@member-angular/sdk": "workspace:*",
+    "@member-angular/widgets": "workspace:*",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0"
+  }
+}

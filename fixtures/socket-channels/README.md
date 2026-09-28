@@ -125,6 +125,12 @@ method that wrote it and the chain already runs through it:
     -> OrdersSocketService.show            web/src/app/orders-socket.service.ts:58
 ```
 
+What the answer *is* does go on the graph: the callback's parameter is typed
+`OrderSummary`, so the `emits` edge carries `returns: type:web#OrderSummary`,
+read by the same `replyAt` the service half uses (R151, R159). `contracts` then
+compares it with what `OrdersGateway.summarise` returns, `type:api#OrderSummary`,
+and the row is `identical` rather than "declares no type for what it expects".
+
 The gateway's end of that same channel is `event` and not `rpc`, on purpose.
 `@SubscribeMessage` is the same decorator whether or not anybody is waiting for
 what the method returns, so nothing on that side states which it is, and the

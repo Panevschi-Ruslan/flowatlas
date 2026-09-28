@@ -1,0 +1,12 @@
+{
+  "name": "@member-angular/widgets",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Angular pieces for the storefront. Angular is installed with this package, so its own files are Angular it runs.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@angular/common": "^19.0.0",
+    "@angular/core": "^19.0.0"
+  }
+}

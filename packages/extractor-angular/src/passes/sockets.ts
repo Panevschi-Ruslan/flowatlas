@@ -14,6 +14,7 @@ import {
   isUnreadable,
   methodMatches,
   receiverIsFrom,
+  replyAt,
   resolveChannelName,
   shapeChannelNames,
   socketio,
@@ -148,10 +149,17 @@ export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) =>
     // no edge of its own: the callback's body is part of the method that wrote
     // it, so whatever it delegates to is already on the chain and `flow` walks
     // straight into it.
-    const kind =
-      SPEC.acknowledgedKind !== undefined && hasAcknowledgement(args)
-        ? SPEC.acknowledgedKind
-        : (pattern.kind ?? 'event');
+    const acknowledgedKind =
+      SPEC.acknowledgedKind !== undefined && hasAcknowledgement(args) ? SPEC.acknowledgedKind : undefined;
+    const kind = acknowledgedKind ?? pattern.kind ?? 'event';
+    // A request has an answer, and the answer is a second shape crossing the
+    // same boundary. It is read where the service half reads it, by the same
+    // function - the callback's parameter, or what the call returns - and goes
+    // on the edge as `returns`, the field contracts compares an answer in. A
+    // publish expects nothing back and is given nothing (R151, R159).
+    const reply = kind === 'rpc' ? replyAt(call, acknowledgedKind !== undefined) : undefined;
+    const replyType =
+      reply === undefined ? undefined : ctx.types.collectType(ctx.types.unwrapAsync(reply), call);
 
     const payloadArg = pattern.payloadArg === undefined ? undefined : args[pattern.payloadArg];
     // A socket's `emit` is typed as `(event: string, ...args: any[])`, so the
@@ -198,6 +206,7 @@ export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) =>
         file,
         line,
         ...(payloadType === undefined ? {} : { params: [payloadType] }),
+        ...(replyType === undefined ? {} : { returns: replyType }),
       });
     }
   };

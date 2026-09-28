@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T19:38:36.447Z",
+  "builtAt": "2026-09-28T07:40:05.418Z",
   "services": [
     {
       "name": "api",
@@ -961,6 +961,7 @@
       "params": [
         "string"
       ],
+      "returns": "type:web#OrderSummary",
       "file": "src/app/orders-socket.service.ts",
       "line": 46
     },
@@ -1166,6 +1167,33 @@
         {
           "name": "reason",
           "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:web#OrderSummary": {
+      "name": "OrderSummary",
+      "kind": "object",
+      "declaredIn": "web#src/app/order-events.ts",
+      "structuralHash": "bd346bcc437b8241",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "lines",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
           "optional": false
         }
       ],
