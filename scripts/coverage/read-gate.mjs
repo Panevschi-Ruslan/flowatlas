@@ -180,6 +180,32 @@ export const EXEMPT = [
       'cannot see it (`BLIND`, R117). The day a probe counts `model.define`, this ' +
       'entry stops being the only thing the family says and should be re-read.',
   },
+  // Payload's two, decided in R147 by reading the file rather than the count.
+  {
+    where: 'payload',
+    path: 'templates/ecommerce/src/app/(app)/next/exit-preview/GET.ts',
+    family: 'routes',
+    why:
+      'A byte-for-byte copy of the `route.ts` beside it, under a name Next.js does ' +
+      'not serve: the App Router takes a route handler from `route.ts` and from no ' +
+      'other file name, and nothing imports this one. The route it would declare, ' +
+      '`GET /next/exit-preview` of the ecommerce template, is read from `route.ts` ' +
+      'in both states, so a reader that minted it again here would be reporting a ' +
+      'second declaration of an address that has one.',
+  },
+  {
+    where: 'payload',
+    path: '(anywhere)',
+    family: 'models',
+    why:
+      'The two sites are `interface CollectionModel extends Model<any>` and ' +
+      '`interface GlobalModel extends Model<Document>` in ' +
+      '`packages/db-mongodb/src/types.ts`: the Mongoose type every collection’s ' +
+      'model is given, which declares no table. Payload declares its collections as ' +
+      'configuration objects that a database adapter turns into tables when it ' +
+      'starts, which the counting rule has no probe for, so the family’s real ' +
+      'denominator here is zero and this gate cannot see it (`BLIND`, R117).',
+  },
 ];
 
 /**
