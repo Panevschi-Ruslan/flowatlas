@@ -1,0 +1,12 @@
+{
+  "name": "@member-angular/sdk",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A client for the platform, written for Angular applications that supply Angular. Angular is a peer, and its only dependent here is the API, which supplies none.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "peerDependencies": {
+    "@angular/common": "^19.0.0",
+    "@angular/core": "^19.0.0"
+  }
+}

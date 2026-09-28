@@ -147,6 +147,40 @@ describe("the browser's half of a socket", () => {
     ).toBe(true);
   });
 
+  // A request has an answer, and the answer is the second shape crossing the
+  // boundary: the callback's parameter is what the browser expects back, so it
+  // goes on the edge as `returns`, the field contracts compares (R151, R159).
+  it("records what a request's callback expects back as the reply", () => {
+    const graph = extract(`
+  private readonly socket: Socket = io(\`\${environment.apiUrl}/orders\`);
+  summary: Summary | null = null;
+  request(id: string): void {
+    this.socket.emit('order:summary', id, (summary: Summary) => this.show(summary));
+  }
+  show(summary: Summary): void {
+    this.summary = summary;
+  }
+}
+interface Summary { id: string; total: number }
+class Unused {
+`);
+    const emits = graph.edges.filter((edge) => edge.type === 'emits');
+    expect(emits).toHaveLength(1);
+    expect(emits[0]?.returns).toMatch(/Summary$/);
+  });
+
+  it('records no reply on a publish that expects none', () => {
+    const graph = extract(`
+  private readonly socket: Socket = io(\`\${environment.apiUrl}/orders\`);
+  cancel(id: string): void {
+    this.socket.emit('order:cancel', { id });
+  }
+`);
+    const emits = graph.edges.filter((edge) => edge.type === 'emits');
+    expect(emits).toHaveLength(1);
+    expect(emits[0]?.returns).toBeUndefined();
+  });
+
   it('leaves the library signalling to itself off the graph entirely', () => {
     const graph = extract(`
   private readonly socket: Socket = io(\`\${environment.apiUrl}/orders\`);

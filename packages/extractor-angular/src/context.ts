@@ -61,6 +61,12 @@ export interface RouteEntry {
  */
 export interface AngularExtractContext extends ExtractContext {
   readonly classes: AngularClassIndex;
+  /**
+   * Whether a file, by absolute path, is this framework's code: the predicate
+   * the class index was built with, for the one reading that walks the
+   * project's files itself rather than the index (the route configurations).
+   */
+  reads(file: string): boolean;
   readonly di: DiMap;
   readonly stats: AngularStats;
   readonly modules: ModuleMembership;
@@ -92,6 +98,8 @@ export interface AngularExtractContext extends ExtractContext {
 export interface CreateContextOptions {
   base: ExtractContext;
   classes: AngularClassIndex;
+  /** Which files are this framework's code; every file when absent. */
+  reads?: (file: string) => boolean;
   /** What the parser made of the repository's sources, counted before any pass ran. */
   sources: SourceCounts;
   /** How deep anonymous shapes are written out. Defaults to the configured value. */
@@ -99,7 +107,7 @@ export interface CreateContextOptions {
 }
 
 export const createAngularContext = (options: CreateContextOptions): AngularExtractContext => {
-  const { base, classes, sources } = options;
+  const { base, classes, sources, reads = () => true } = options;
   const { builder, repo, repoDir } = base;
   const di = new DiMap();
   const membership = new Map<ClassDeclaration, string>();
@@ -156,6 +164,7 @@ export const createAngularContext = (options: CreateContextOptions): AngularExtr
   return {
     ...base,
     classes,
+    reads,
     di,
     stats,
     routes: [],

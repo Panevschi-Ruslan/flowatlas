@@ -1,5 +1,6 @@
-import { hasDependency, type AdapterRegistry, type FrontendAdapter } from '@flowatlas/core';
+import type { AdapterRegistry, FrontendAdapter } from '@flowatlas/core';
 import { extractAngular } from './extract-repo.js';
+import { declaresAngular } from './framework.js';
 
 /**
  * The frontend this extractor reads.
@@ -10,7 +11,7 @@ import { extractAngular } from './extract-repo.js';
  */
 export const angularFrontendAdapter: FrontendAdapter = {
   name: 'angular',
-  detect: (pkg) => hasDependency(pkg, '@angular/core'),
+  detect: declaresAngular,
   extract: (ctx, options) => extractAngular(ctx, options),
 };
 
