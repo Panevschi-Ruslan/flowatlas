@@ -67,28 +67,29 @@ Five repositories that ship as one product: three NestJS services and two Angula
 frontends, with a shared package of types between them. It is the project this
 was built against, which is worth knowing when you read the numbers: they are
 reproducible, and they are from one codebase whose author also wrote the tool.
-Measured with 0.4.0.
+Measured with 0.5.0.
 
 | | |
 |---|---|
-| Source read | 1,523 files, 259,337 lines of TypeScript and templates |
-| Cold build | 5.5 s |
-| Rebuild with nothing changed | 1.0 s |
-| Graph | 11,352 nodes, 19,825 edges |
-| **Edges that cross a repository boundary** | **542** |
+| Source read | 1,312 files, 229,680 lines of TypeScript and templates, tests left out |
+| Cold build | 8.0 s |
+| Rebuild with nothing changed | 1.1 s |
+| Graph | 11,668 nodes, 20,523 edges |
+| **Edges that cross a repository boundary** | **543** |
 
-That last row is the point. Five hundred and forty two connections that no
+That last row is the point. Five hundred and forty three connections that no
 compiler in any of those five checkouts can see, because each one only ever
 reads its own.
 
-**Where the edges come from.** 19,406 were read from the code, 397 were
+**Where the edges come from.** 20,323 were read from the code, 178 were
 inferred and marked `heuristic`, and 22 were declared by an annotation. Every
 edge says which of the three it is.
 
-**Ways in.** 564 HTTP routes, and 64 more through a bot: 13 commands, 45 button
-callbacks, 6 events. Something in the project reaches 507 of the routes. Nothing
-it can see calls the other 57 — and of those, 12 are declared public in the
-configuration and 7 look like health probes, which leaves 38 worth a look.
+**Ways in.** 564 HTTP routes, 64 more through a bot — 13 commands, 45 button
+callbacks, 6 events — and 2 event streams. Something in the project reaches 508
+of the routes. Nothing it can see calls the other 56 — and of those, 12 are
+declared public in the configuration and 7 look like health probes, which leaves
+37 worth a look.
 
 **What joined across the boundaries.** Two columns, because the first build of
 any project is not the one to judge it by and quoting only the second would be
@@ -96,10 +97,10 @@ selling you something:
 
 | | first build | configured |
 |---|---|---|
-| Browser requests matched to the route that answers them | 493 of 499 | 493 of 499 |
-| Calls between services matched to a route | **1 of 61** | 41 of 61 |
-| Routes something in the project reaches | 481 | 507 |
-| Message channels with a handler | 0 | 7 of 17 |
+| Browser requests matched to the route that answers them | 494 of 503 | 494 of 503 |
+| Calls between services matched to a route | **1 of 43** | 41 of 43 |
+| Routes something in the project reaches | 483 | 508 |
+| Message channels with a handler | 7 of 19 | 7 of 19 |
 
 The configuration behind the second column names the settings key that
 addresses a service (`baseUrlEnv`), the key a frontend's requests are rooted at
@@ -112,16 +113,16 @@ the line that wants it.
 **What each version changed, on the same repositories.** The same configuration
 and the same commit of every repository, read by each:
 
-| | 0.1.1 | 0.2.0 | 0.3.0 | 0.4.0 |
-|---|---|---|---|---|
-| Browser requests found | 343 | 495 | 499 | 499 |
-| …matched to the route that answers them | 318 | 489 | 493 | 493 |
-| Routes nothing appears to call | 220 | 62 | 58 | 57 |
-| Edges that cross a repository boundary | 366 | 537 | 541 | 542 |
-| Boundaries a contract could be compared on | 337 | 636 | 636 | 636 |
-| Contract errors | 37 | 1 | 1 | 0 |
-| Contract warnings | 398 | 1,069 | 1,069 | 1,014 |
-| Front ends asking for a route nothing serves | — | 2 | 1 | **0** |
+| | 0.1.1 | 0.2.0 | 0.3.0 | 0.4.0 | 0.5.0 |
+|---|---|---|---|---|---|
+| Browser requests found | 343 | 495 | 499 | 499 | 503 |
+| …matched to the route that answers them | 318 | 489 | 493 | 493 | 494 |
+| Routes nothing appears to call | 220 | 62 | 58 | 57 | 56 |
+| Edges that cross a repository boundary | 366 | 537 | 541 | 542 | 543 |
+| Boundaries a contract could be compared on | 337 | 636 | 636 | 636 | 636 |
+| Contract errors | 37 | 1 | 1 | 0 | 0 |
+| Contract warnings | 398 | 1,069 | 1,069 | 1,014 | 1,014 |
+| Front ends asking for a route nothing serves | — | 2 | 1 | **0** | **0** |
 
 Most of the first step is requests made through a wrapper — a pass-through
 client, a base service whose resource a subclass decides — that 0.1.1 followed
@@ -139,18 +140,29 @@ things rather than reading new ones: the one contract error and the one route
 the front end appeared to ask for and the back end appeared not to serve were
 both false, and both are gone.
 
+The fourth step moves the joins by one or two and moves the data layer a great
+deal. Queries through the project's own repository classes now name the
+collection each class states, and a collection named in the driver's chain is
+read from there: 1,867 of 1,974 query sites name a real collection, where 0.4.0
+put a table called `Document` on every untyped one. A plain `fetch` in a
+browser is read, and an outgoing request keeps the verb and host its own code
+states. The cold build is slower for reading all of that.
+
 **What it found once they were joined.**
 
 | | |
 |---|---|
 | Names declared more than one way in two repositories | 64 |
-| Channels published to and handled nowhere | 10 |
+| Channels published to and handled nowhere | 12 |
 | Contract errors, over 636 compared boundaries | 0 |
 | Front ends asking for a route nothing serves | 0 |
 
-**What it says it cannot see.** 22 findings to act on, and 387 places static
-reading cannot reach at all, folded into 19 rows so the list stays readable.
-None of it is guessed at; each row carries a file, a line and a reason.
+**What it says it cannot see.** 145 findings to act on, and 328 places static
+reading cannot reach at all, folded into 24 rows so the list stays readable.
+None of it is guessed at; each row carries a file, a line and a reason. The
+findings went up from 0.4.0's 22 because the tool stopped being quiet: a query
+whose collection is decided at run time, or reached only by a name, is now a
+row saying so, where 0.4.0 said nothing or guessed.
 
 A further 397 places are listed apart from both, because nothing joins them to
 anything: a template binding that assigns to a field has no method behind it, in
