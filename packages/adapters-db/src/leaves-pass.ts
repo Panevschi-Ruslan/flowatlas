@@ -39,7 +39,7 @@ import type {
   SourceFile,
 } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
-import { dataNameHints, descriptorAliases, tableReadings } from './descriptors/index.js';
+import { dataNameHints, descriptorAliases, schemaTables, tableReadings } from './descriptors/index.js';
 import { locateTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
 import { dataLayerOf } from './leaves/silence.js';
@@ -379,7 +379,12 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    */
   const originOf = (
     receiver: TsNode,
-  ): { origin: TypeOrigin | null; resolved: TypeOrigin | null; fromSource: boolean } => {
+  ): {
+    origin: TypeOrigin | null;
+    resolved: TypeOrigin | null;
+    fromSource: boolean;
+    statedIn?: SourceFile;
+  } => {
     const resolved = resolveTypeOrigin(receiver, { localBaseClasses });
     if (descriptorFor(resolved) !== undefined) return { origin: resolved, resolved, fromSource: false };
     const stated = statedOrigin(receiver);
@@ -387,10 +392,40 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // about the receiver's methods either, so reading its type off the source
     // would change no answer and would only make a row say something new about
     // a call it still could not read.
-    if (stated === null || descriptorFor(stated) === undefined) {
-      return { origin: resolved, resolved, fromSource: false };
+    if (stated !== null && descriptorFor(stated) !== undefined) {
+      return { origin: stated, resolved, fromSource: true, statedIn: stated.statedIn };
     }
-    return { origin: stated, resolved, fromSource: true };
+    // A library whose calls name the table as a property of the client holds the
+    // client one step further out: in `prisma.booking.findMany()` the receiver is
+    // `prisma.booking`, a delegate whose type exists only in the generated client,
+    // and what the source states a type for is `prisma`. Asked only where the
+    // descriptor that answers says the table is that property, so no other
+    // library's receiver is ever read from the value it was reached through
+    // (R146).
+    const client = Node.isPropertyAccessExpression(receiver) ? statedOrigin(receiver.getExpression()) : null;
+    if (client !== null && descriptorFor(client)?.tableOverride?.kind === 'receiver-prop') {
+      return { origin: client, resolved, fromSource: true, statedIn: client.statedIn };
+    }
+    return { origin: resolved, resolved, fromSource: false };
+  };
+
+  /**
+   * The table a call names by a property of its receiver, as the library's
+   * schema maps it.
+   *
+   * `prisma.user` is the delegate of `model User`, and the table is `users` when
+   * the model says `@@map("users")`. The schema asked is the one governing the
+   * file the client was stated in - the wrapper, where a schema sits beside the
+   * client it generates - or, for a client the checker resolved, the file the
+   * call is in. Where no schema is readable the call's own word stands.
+   */
+  const tableOfProperty = (
+    descriptor: DbDescriptor | undefined,
+    name: string,
+    anchor: SourceFile,
+  ): string => {
+    if (descriptor === undefined) return name;
+    return schemaTables.get(descriptor.package)?.(anchor, name) ?? name;
   };
 
   const emitDb = (call: CallExpression, scope: Scope): boolean => {
@@ -399,7 +434,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (!Node.isPropertyAccessExpression(callee)) return false;
     const receiver = callee.getExpression();
     const method = callee.getName();
-    const { origin, resolved, fromSource } = originOf(receiver);
+    const { origin, resolved, fromSource, statedIn } = originOf(receiver);
     const descriptor = descriptorFor(origin);
 
     // A data layer is something a class depends on. A call on `this` is a class
@@ -461,7 +496,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       ...(workspacePackage === undefined ? {} : { workspacePackage }),
       ...(parsedTables === undefined ? {} : { sqlTables: parsedTables }),
       ...(parsedOp === undefined ? {} : { sqlOp: parsedOp }),
-      ...(Node.isPropertyAccessExpression(receiver) ? { receiverProp: receiver.getName() } : {}),
+      ...(Node.isPropertyAccessExpression(receiver)
+        ? {
+            receiverProp: tableOfProperty(
+              descriptor,
+              receiver.getName(),
+              statedIn ?? call.getSourceFile(),
+            ),
+          }
+        : {}),
       ...(located === null ? {} : { stringArg: located }),
     });
     if (classification === null) return false;

@@ -113,3 +113,182 @@ describe('the type the source states for a receiver', () => {
     ).toBeNull();
   });
 });
+
+/**
+ * The client a Prisma call is made through: the receiver of the first method
+ * call, one step further out, since the receiver itself is the model's delegate.
+ * Beside `a.ts`, the project holds whatever other files the case needs.
+ */
+const clientIn = (source: string, others: Record<string, string> = {}): TsNode => {
+  const project = new Project({ useInMemoryFileSystem: true });
+  for (const [path, text] of Object.entries(others)) {
+    if (path.endsWith('.ts')) project.createSourceFile(path, text);
+    else project.getFileSystem().writeFileSync(path, text);
+  }
+  const file = project.createSourceFile('/app/a.ts', source);
+  for (const call of file.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+    const callee = call.getExpression();
+    if (Node.isPropertyAccessExpression(callee) && Node.isPropertyAccessExpression(callee.getExpression())) {
+      return callee.getExpression().asKindOrThrow(SyntaxKind.PropertyAccessExpression).getExpression();
+    }
+  }
+  throw new Error('the source must hold a call through a delegate');
+};
+
+const SCHEMA = `
+generator client {
+  provider = "prisma-client"
+  output   = "./generated/prisma"
+}
+
+generator zod {
+  provider = "zod-prisma-types"
+  output   = "./zod"
+}
+`;
+
+describe('a Prisma client whose generated code does not exist', () => {
+  it('reads a client constructed from the package', () => {
+    const origin = statedOrigin(
+      clientIn(`
+        import { PrismaClient } from '@prisma/client';
+        const client = new PrismaClient();
+        const rows = client.order.findMany();
+      `),
+    );
+    expect(origin?.package).toBe('@prisma/client');
+  });
+
+  it('reads the constructing side of a remembered client', () => {
+    const origin = statedOrigin(
+      clientIn(`
+        import { PrismaClient } from '@prisma/client';
+        const client = (globalThis as { c?: PrismaClient }).c ?? new PrismaClient();
+        const rows = client.order.findMany();
+      `),
+    );
+    expect(origin?.package).toBe('@prisma/client');
+  });
+
+  it('follows an imported client into the wrapper and out to the directory the schema generates', () => {
+    const origin = statedOrigin(
+      clientIn(
+        `
+          import { prisma } from '../db/index';
+          const rows = prisma.booking.findMany();
+        `,
+        {
+          '/db/schema.prisma': SCHEMA,
+          '/db/index.ts': `
+            import { PrismaClient } from './generated/prisma/client';
+            export const prisma: PrismaClient = new PrismaClient();
+          `,
+        },
+      ),
+    );
+    expect(origin?.package).toBe('@prisma/client');
+    expect(origin?.statedIn.getFilePath()).toBe('/db/index.ts');
+  });
+
+  it('does not take the output of a generator that writes something else for a client', () => {
+    expect(
+      statedOrigin(
+        clientIn(
+          `
+            import { prisma } from '../db/index';
+            const rows = prisma.booking.findMany();
+          `,
+          {
+            '/db/schema.prisma': SCHEMA,
+            '/db/index.ts': `
+              import { PrismaClient } from './zod/client';
+              export const prisma: PrismaClient = new PrismaClient();
+            `,
+          },
+        ),
+      ),
+    ).toBeNull();
+  });
+
+  it('does not take a missing module for a client when no schema says it generates one', () => {
+    expect(
+      statedOrigin(
+        clientIn(
+          `
+            import { prisma } from '../db/index';
+            const rows = prisma.booking.findMany();
+          `,
+          {
+            '/db/index.ts': `
+              import { PrismaClient } from './generated/prisma/client';
+              export const prisma: PrismaClient = new PrismaClient();
+            `,
+          },
+        ),
+      ),
+    ).toBeNull();
+  });
+
+  it('does not read a value named prisma that nothing traces to a client', () => {
+    expect(
+      statedOrigin(
+        clientIn(`
+          const prisma = { order: { findMany: async () => [] } };
+          const rows = prisma.order.findMany();
+        `),
+      ),
+    ).toBeNull();
+    expect(
+      statedOrigin(
+        clientIn(`
+          export const load = (prisma: any) => prisma.order.findMany();
+        `),
+      ),
+    ).toBeNull();
+  });
+
+  it('does not read a value by the package it was imported from', () => {
+    // A package exports values of every type, not only its own; a value is read
+    // by what its declaration states.
+    expect(
+      statedOrigin(
+        clientIn(`
+          import { prisma } from '@prisma/client';
+          const rows = prisma.order.findMany();
+        `),
+      ),
+    ).toBeNull();
+  });
+
+  it('reads a client narrowed by the language’s own derivations as the client', () => {
+    const origin = statedOrigin(
+      clientIn(`
+        import { PrismaClient } from '@prisma/client';
+        type Orders = Pick<PrismaClient, 'order'>;
+        export const settle = (db: Orders) => db.order.updateMany({});
+      `),
+    );
+    expect(origin?.package).toBe('@prisma/client');
+  });
+
+  it('follows a client loaded by an import written as an expression', () => {
+    const origin = statedOrigin(
+      clientIn(
+        `
+          export const load = async () => {
+            const prisma = (await import('../db/index')).default;
+            return prisma.user.findMany();
+          };
+        `,
+        {
+          '/db/index.ts': `
+            import { PrismaClient } from '@prisma/client';
+            const prisma = new PrismaClient();
+            export default prisma;
+          `,
+        },
+      ),
+    );
+    expect(origin?.package).toBe('@prisma/client');
+  });
+});

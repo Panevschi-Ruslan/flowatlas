@@ -1,4 +1,6 @@
 import { hasAnyDependency, type DbAdapter, type DbDescriptor } from '@flowatlas/core';
+import type { SourceFile } from 'ts-morph';
+import { isGeneratedPrismaClient, prismaTableOf } from '../leaves/prisma-schema.js';
 import type { TableLocator } from './table.js';
 
 /**
@@ -455,6 +457,39 @@ export const tableReadings: ReadonlyMap<string, TableReading> = new Map([
 export const descriptorAliases: ReadonlyMap<string, string> = new Map([
   ['sequelize-typescript', 'sequelize'],
 ]);
+
+/**
+ * Modules a repository generates, and the package whose client each one is.
+ *
+ * A generated client is the library's own client written into the repository
+ * rather than installed beside it: Prisma writes `PrismaClient` to wherever the
+ * schema's generator says, and cal.com says `./generated/prisma`. A clone whose
+ * install ran no scripts has an import of that path and no file behind it, so
+ * the checker cannot say what came out of it - and the schema can, because it is
+ * the schema that names the directory (R146).
+ *
+ * A record per generator, keyed by the package whose descriptor then reads the
+ * call, so a second generating library is a row here and not a branch in the
+ * reader that follows imports.
+ */
+export const generatedModules: readonly {
+  readonly package: string;
+  readonly generates: (from: SourceFile, target: string) => boolean;
+}[] = [{ package: '@prisma/client', generates: isGeneratedPrismaClient }];
+
+/**
+ * Libraries whose calls name a model, and how the model's table is read.
+ *
+ * `prisma.booking.findMany()` names the delegate, and the table is what the
+ * schema maps the model to: the model's own name unless `@@map` says otherwise.
+ * Asked with the file the client was imported or constructed in, since that is
+ * the file the schema governs. A library with no entry here keeps the name the
+ * call wrote, and so does a Prisma call where no schema is readable.
+ *
+ * A `Map`, for the reason every table keyed by a package name here is one (R130).
+ */
+export const schemaTables: ReadonlyMap<string, (from: SourceFile, name: string) => string | undefined> =
+  new Map([['@prisma/client', prismaTableOf]]);
 
 export const dbAdapters: readonly DbAdapter[] = [
   {
