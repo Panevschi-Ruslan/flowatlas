@@ -6,8 +6,16 @@ import type {
   EntryWrapping,
   ExtractContext,
 } from '@flowatlas/core';
-import { hasAnyDependency, makeEntryId } from '@flowatlas/core';
-import type { Node as TsNode, SourceFile, Symbol as TsSymbol } from 'ts-morph';
+import { hasAnyDependency, makeEntryId, placedFunction, suppliedTypes } from '@flowatlas/core';
+import type {
+  ArrowFunction,
+  FunctionDeclaration,
+  FunctionExpression,
+  MethodDeclaration,
+  Node as TsNode,
+  SourceFile,
+  Symbol as TsSymbol,
+} from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { ProcedureDialect } from './procedure-dialects.js';
 import { TRPC } from './procedure-dialects.js';
@@ -27,6 +35,23 @@ const LABEL_LENGTH = 40;
 
 const label = (node: TsNode | undefined): string =>
   node === undefined ? '<none>' : node.getText().replace(/\s+/g, ' ').slice(0, LABEL_LENGTH);
+
+/**
+ * How a guard is named: a function written in place by where it is, and
+ * anything else by how it is spelled.
+ *
+ * A function written in place has no name, and it used to be labelled with the
+ * first forty characters of its text - `async ({ ctx, input, next }) => { // End`
+ * on cal.com - which named nothing and matched nothing. It is named instead the
+ * way the walk over bodies names it (`placedFunction`), so the node drawn in
+ * front of the way in and the node its queries hang off are one node (R157).
+ */
+const guardLabel = (argument: TsNode): string => {
+  const value = unwrapValue(argument);
+  return Node.isArrowFunction(value) || Node.isFunctionExpression(value)
+    ? placedFunction(value).name
+    : label(argument);
+};
 
 /** Where something was written, kept so a folded row still points somewhere. */
 interface Site {
@@ -159,7 +184,7 @@ const guardsOn = (
     .filter((link) => link.method === dialect.guardMethod)
     .flatMap((link) =>
       link.args.map((argument) => ({
-        label: label(argument),
+        label: guardLabel(argument),
         layer: 'middleware' as const,
         scope,
         source,
@@ -509,6 +534,170 @@ const mountsIn = function* (
   }
 };
 
+/** How many steps a chain is followed back towards its root. */
+const MOST_ROOT_STEPS = 32;
+
+/**
+ * The type a chain's root was given for its context, as the source writes it.
+ *
+ * Walked back from whatever a link was called on: a call to the call before it,
+ * a member to what it is a member of, a name to the value it was declared with -
+ * `authedProcedure` to `procedure.use(…)`, `procedure` to `tRPCContext.procedure`,
+ * `tRPCContext` to `initTRPC.context<typeof createContextInner>().create()` -
+ * until a call of the description's `context.method` is met with a type
+ * argument. Anything else ends the walk with no answer, which is what an
+ * `app.use(fn)` of any other library comes to: its root is a call of a function,
+ * not a context.
+ *
+ * Remembered per value, because every chain of a repository ends at the same
+ * root and cal.com has several hundred of them.
+ */
+const contextWrittenFor = (
+  receiver: TsNode,
+  method: string,
+  memo: Map<TsNode, TsNode | null>,
+): TsNode | undefined => {
+  const visited: TsNode[] = [];
+  let at: TsNode | undefined = unwrapValue(receiver);
+  let found: TsNode | null = null;
+  for (let step = 0; at !== undefined && step < MOST_ROOT_STEPS; step += 1) {
+    const known = memo.get(at);
+    if (known !== undefined) {
+      found = known;
+      break;
+    }
+    visited.push(at);
+    if (Node.isCallExpression(at)) {
+      const callee = unwrapValue(at.getExpression());
+      if (!Node.isPropertyAccessExpression(callee)) break;
+      const [written] = at.getTypeArguments();
+      if (callee.getName() === method && written !== undefined) {
+        found = createdContext(written) ?? null;
+        break;
+      }
+      at = unwrapValue(callee.getExpression());
+      continue;
+    }
+    if (Node.isPropertyAccessExpression(at)) {
+      at = unwrapValue(at.getExpression());
+      continue;
+    }
+    if (Node.isIdentifier(at)) {
+      at = declaredValue(at);
+      continue;
+    }
+    break;
+  }
+  for (const node of visited) memo.set(node, found);
+  return found ?? undefined;
+};
+
+/**
+ * The context a root's type argument describes.
+ *
+ * A type is the context itself. A function's type - `typeof createContextInner`,
+ * which is how a project that builds its context in a function writes it - is
+ * the context that function creates: the type its declaration says it returns,
+ * awaited when it is a promise of one. A function that does not say what it
+ * returns states no context, and none is supplied.
+ */
+const createdContext = (written: TsNode): TsNode | undefined => {
+  if (!Node.isTypeQuery(written)) return written;
+  const name = written.getExprName();
+  const symbol = name.getSymbol();
+  const target = symbol?.getAliasedSymbol() ?? symbol;
+  for (const declaration of target?.getDeclarations() ?? []) {
+    const creates = Node.isVariableDeclaration(declaration)
+      ? declaration.getInitializer()
+      : declaration;
+    if (
+      creates === undefined ||
+      !(
+        Node.isFunctionDeclaration(creates) ||
+        Node.isArrowFunction(creates) ||
+        Node.isFunctionExpression(creates)
+      )
+    ) {
+      continue;
+    }
+    const returned = creates.getReturnTypeNode();
+    if (returned === undefined) return undefined;
+    return awaited(returned);
+  }
+  return undefined;
+};
+
+/** `Promise<T>` is `T` once awaited, and every other type is itself. */
+const awaited = (written: TsNode): TsNode => {
+  if (!Node.isTypeReference(written) || written.getTypeName().getText() !== 'Promise') return written;
+  const [inner] = written.getTypeArguments();
+  return inner === undefined ? written : inner;
+};
+
+/** A function whose parameters can be asked for. */
+const isFunctionLike = (
+  node: TsNode | undefined,
+): node is ArrowFunction | FunctionExpression | FunctionDeclaration | MethodDeclaration =>
+  Node.isArrowFunction(node) ||
+  Node.isFunctionExpression(node) ||
+  Node.isFunctionDeclaration(node) ||
+  Node.isMethodDeclaration(node);
+
+/** The function an argument hands over, written in place or named. */
+const handedFunction = (argument: TsNode): TsNode | undefined => {
+  const value = unwrapValue(argument);
+  if (isFunctionLike(value)) return value;
+  const declaration = repoFunctionOf(value)?.declaration;
+  if (Node.isVariableDeclaration(declaration) || Node.isPropertyAssignment(declaration)) {
+    return declaration.getInitializer();
+  }
+  return declaration;
+};
+
+/**
+ * Tells the rest of the reading what every guard and every handler is handed as
+ * its context (R157).
+ *
+ * Every call of the guard method or of a terminator, wherever it is written and
+ * whether or not a tree was found to hold it: a starting point nobody begins a
+ * way in from still holds a guard, and a guard built inside a function that
+ * returns a chain is not on any chain the tree walk follows. What decides is the
+ * root, and only the root: the call's receiver is followed back until it meets
+ * the description's `context` call with a type argument, and a chain that never
+ * does is left alone. The type is recorded against the first parameter of each
+ * function the call is handed, under the key the description names, for the
+ * reader of the data layer to ask (`suppliedTypes`).
+ */
+const supplyContexts = (
+  sources: readonly SourceFile[],
+  dialect: ProcedureDialect,
+  ctx: ExtractContext,
+): void => {
+  const context = dialect.context;
+  if (context === undefined) return;
+  const handing = new Set([
+    ...(dialect.guardMethod === undefined ? [] : [dialect.guardMethod]),
+    ...dialect.terminators.keys(),
+  ]);
+  const supplied = suppliedTypes(ctx.project);
+  const memo = new Map<TsNode, TsNode | null>();
+  for (const sourceFile of sources) {
+    for (const call of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      const callee = call.getExpression();
+      if (!Node.isPropertyAccessExpression(callee) || !handing.has(callee.getName())) continue;
+      const functions = call.getArguments().flatMap((argument) => handedFunction(argument) ?? []);
+      if (functions.length === 0) continue;
+      const written = contextWrittenFor(callee.getExpression(), context.method, memo);
+      if (written === undefined) continue;
+      for (const fn of functions) {
+        if (!isFunctionLike(fn)) continue;
+        const [parameter] = fn.getParameters();
+        if (parameter !== undefined) supplied.supply(parameter, context.key, written);
+      }
+    }
+  }
+};
+
 export interface ProcedureRoutersOptions {
   /**
    * Whether reading nothing is something somebody should act on.
@@ -566,6 +755,7 @@ export const procedureRoutersAdapter = (
       for (const tree of treesIn(sourceFile, dialect, ctx)) forest.add(tree);
     }
     forest.settle();
+    supplyContexts(sources, dialect, ctx);
 
     const mounts: Mount[] = [];
     for (const sourceFile of sources) {

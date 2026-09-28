@@ -90,6 +90,19 @@ tracks in git, inside the service's **extent**, with a source extension, outside
 tests and build output. Nothing git does not carry is counted, so the same file
 list is counted whether or not the dependencies are installed.
 
+What a test is comes from one place, `isTestFile` in
+[`packages/core/src/test-files.ts`](../packages/core/src/test-files.ts), which
+the tool reads by as well: a file one of whose name's dot-separated parts is
+`test`, `spec` or `e2e` (`orders.test.ts`, `app.e2e-spec.ts`,
+`booking.integration-test.ts`), or a file under a directory only tests live in
+(`__tests__`, `playwright`, `e2e` and a few more). The tool does not read a test,
+and the rule does not count one, so neither can expect of the other what it
+never looked at.
+
+A probe reads code, not comments. A call shown in a doc comment is somebody
+describing a declaration rather than making one, so every file of code has its
+comments blanked before a probe sees it, with every line kept where it was.
+
 The extent is the service's own directory plus the workspace packages it
 declares at run time, which is what the tool itself reads as one service.
 [`scripts/coverage/extent.mjs`](../scripts/coverage/extent.mjs) works it out
@@ -101,9 +114,11 @@ two implementations of one question, and invariant I14 in `pnpm invariants` hold
 them to each other over every fixture, failing on any disagreement and naming
 the packages each side claims.
 
-A probe is a named pattern. A `line` probe counts every match in a file; a
-`file` probe counts a whole file once, which is how a router that keeps the
-address in the directory name is counted at all. Each probe belongs to one of
+A probe is a named pattern. A `line` probe counts every match in a file, and may
+name the file it must be in: an HTTP verb exported for a file-system router is
+counted in a file the router serves (`route.ts`, `+server.ts`) and not in the
+module it was imported from. A `file` probe counts a whole file once, which is
+how a router that keeps the address in the directory name is counted at all. Each probe belongs to one of
 five families: `routes`, `screens`, `clicks`, `data` and `models`.
 
 **Every probe runs against every repository.** A probe that does not apply

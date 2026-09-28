@@ -563,6 +563,26 @@ export const entryProcedureSchema = z.strictObject({
    * protects.
    */
   guardMethod: z.string().min(1).optional(),
+  /**
+   * How the functions of a chain are handed the context, and where its type is
+   * written (R157).
+   *
+   * A handler and a guard are both given one object, and the context arrives on
+   * it under `key`; nobody annotates it, because the framework carries its type
+   * from the root the chain was built on. That root is written once, with the
+   * context's type as the first type argument of `method` - so the type is in the
+   * source, only a long way from the functions that use it. Naming both is what
+   * lets a reader that meets `ctx.db` in a handler know what `ctx` is with
+   * nothing installed.
+   */
+  context: z
+    .strictObject({
+      /** The call on the root that is given the context's type: `context` in `initTRPC.context<T>()`. */
+      method: z.string().min(1),
+      /** The member of a handler's first parameter the context arrives under: `ctx`. */
+      key: z.string().min(1),
+    })
+    .optional(),
   /** Where a tree is hung so that requests reach it. */
   mounts: z.array(entryProcedureMountSchema).default([]),
 });

@@ -17,8 +17,12 @@
  * A **source file** is a file the repository tracks in git, inside the
  * **extent** of the service being read, whose extension is one of
  * `SOURCE_EXTENSIONS`, and none
- * of whose path segments is one of `SKIPPED_SEGMENTS`, and whose name does not
- * match `SKIPPED_FILES`. Nothing is read that git does not carry, so a build
+ * of whose path segments is one of `SKIPPED_SEGMENTS`, whose name does not
+ * match `SKIPPED_FILES`, and which is not a test. What a test is comes from
+ * `isTestFile` in `@flowatlas/core`, the definition the tool reads by, and from
+ * nowhere else: a rule that counted a test the tool never opens would expect
+ * nodes from it, and that is how six of cal.com's `*.integration-test.ts` files
+ * came to fail the read gate (R157). Nothing is read that git does not carry, so a build
  * directory somebody left behind and an installed dependency are both invisible
  * whatever state the clone is in, and the same file list is counted whether the
  * dependencies are installed or not.
@@ -34,10 +38,20 @@
  *
  * A **probe** is a named pattern with a scope. A `line` probe is a regular
  * expression matched against the whole file with the global flag, and every
- * match is one site, so two routes declared on one line count twice. A `file`
+ * match is one site, so two routes declared on one line count twice; it may also
+ * name the `path` a file must be at. A `file`
  * probe matches on the path, optionally requires a pattern in the contents, and
  * counts the whole file as one site, which is how a router that keeps the
  * address in the directory name is counted at all.
+ *
+ * A probe reads **code, not comments**. A comment is somebody describing a
+ * declaration, not making one: cal.com's `getMetadataHelpers.ts` shows its
+ * caller's `prisma.team.update(…)` in a doc comment, and medusa's
+ * `create-pg-connection.ts` says "a new knex (pg in the future) connection" above
+ * a function that runs no query. Both were counted, and each needed somebody to
+ * read the file and write an excuse for it (R157). So every file of code has its
+ * comments blanked before a probe sees it (`withoutComments` below): each
+ * character becomes a space and every line break stays, so no match moves.
  *
  * **Every probe runs against every repository.** A probe that does not apply
  * returns zero there, and that zero is part of the answer rather than a gap in
@@ -59,6 +73,7 @@
  * probe's own name beside every figure so a suspicious number can be checked
  * against the pattern that produced it in one step.
  */
+import { isTestFile } from '@flowatlas/core';
 
 /** Extensions a probe may look at. */
 export const SOURCE_EXTENSIONS = [
@@ -75,12 +90,18 @@ export const SOURCE_EXTENSIONS = [
 ];
 
 /**
- * Path segments that take a file out of the count.
+ * Path segments that take a file out of the count, a test's apart.
  *
- * Matched as whole segments rather than as substrings, so `src/test-utils` is
- * source and `src/test` is not. Tests declare routes that are never served and
- * components that are never rendered; counting them would put things in the
- * denominator that the tool is right not to have found.
+ * Matched as whole segments rather than as substrings, so `src/build-utils` is
+ * source and `src/build` is not. What is here is output, somebody else's code,
+ * and code nobody runs as the system: a build, a dependency, an example, a
+ * story, a generated client. A test's directories - `test`, `__tests__`,
+ * `playwright` and the rest - used to be listed here too, and the tool read
+ * every one of them; they are part of what a test is now, which `isTestFile` in
+ * `@flowatlas/core` says for the tool and for this rule at once (R157). Tests
+ * declare routes that are never served and queries that only seed rows, and
+ * counting them would put things in the denominator the tool is right not to
+ * have found.
  */
 export const SKIPPED_SEGMENTS = new Set([
   'node_modules',
@@ -91,16 +112,6 @@ export const SKIPPED_SEGMENTS = new Set([
   '.turbo',
   '.yarn',
   'coverage',
-  'test',
-  'tests',
-  '__tests__',
-  '__mocks__',
-  '__snapshots__',
-  'e2e',
-  'cypress',
-  'playwright',
-  'fixtures',
-  '__fixtures__',
   'examples',
   'example',
   'storybook',
@@ -109,8 +120,14 @@ export const SKIPPED_SEGMENTS = new Set([
   'vendor',
 ]);
 
-/** File names that are not somebody declaring something. */
-export const SKIPPED_FILES = /(?:\.test\.|\.spec\.|\.stories\.|\.d\.ts$|\.min\.js$)/;
+/**
+ * File names that are not somebody declaring something, a test apart.
+ *
+ * A test is left out as well, by `isTestFile` rather than by a pattern here: the
+ * tool does not read what this rule does not count, and the two used to keep a
+ * list each and disagree about `*.integration-test.ts` (R157).
+ */
+export const SKIPPED_FILES = /(?:\.stories\.|\.d\.ts$|\.min\.js$)/;
 
 /**
  * The probes, in report order.
@@ -163,7 +180,17 @@ export const PROBES = [
     // A file-system router keeps the address in the directory name and the verb
     // in the name of an export. Next.js, Medusa and Payload all spell it this
     // way, which is why one probe covers three of the eight targets.
-    what: 'an exported handler named for an HTTP verb',
+    //
+    // In a file a router serves, and in no other. Such a router knows its files
+    // by name - `route.*` for the Next.js App Router and Medusa, `+server.*` for
+    // SvelteKit - so a verb exported anywhere else is a function called `GET`
+    // that a route file imports and wraps, and not a way in. cal.com's
+    // `tasker/api/cron.ts` is served from `apps/web/app/api/tasks/cron/route.ts`;
+    // payload's `routes/rest/index.ts` builds the handlers its route files
+    // export. Counting those put one way in into the denominator twice, at the
+    // file that is served and at the file its handler came from (R157).
+    what: 'an exported handler named for an HTTP verb, in a file a router serves',
+    path: /(?:^|\/)(?:route|\+server)\.[cm]?[jt]sx?$/,
     pattern:
       /^\s*export\s+(?:const|(?:async\s+)?function)\s+(?:GET|POST|PUT|PATCH|DELETE|OPTIONS|HEAD)\b/gm,
   },
@@ -246,10 +273,98 @@ export const isSourceFile = (path) => {
   if (!SOURCE_EXTENSIONS.includes(extensionOf(path))) return false;
   const segments = path.split('/');
   if (segments.some((segment) => SKIPPED_SEGMENTS.has(segment))) return false;
-  return !SKIPPED_FILES.test(segments[segments.length - 1]);
+  return !SKIPPED_FILES.test(segments[segments.length - 1]) && !isTestFile(path);
 };
 
-const countLine = (probe, text) => {
+/**
+ * Where a slash is a regular expression rather than a division: where an
+ * operand is due. After an operator, an opening bracket, a comma or a
+ * semicolon, after a keyword that takes an expression, and at the start of the
+ * file. A regular expression matters here only because it may hold `//` or `/*`
+ * and be read as a comment's opening; a division never does.
+ */
+const OPERAND_DUE = /(?:^|[=(,:;!&|?{}[+\-*%<>~^]|\b(?:return|typeof|case|do|else|in|of|new|delete|void|throw|yield|await))$/;
+
+/**
+ * The same text with every comment blanked: each character a space and each
+ * line break kept, so a probe's match stays on the line it was on.
+ *
+ * Not a parser, and deliberately small. It knows where a comment, a string, a
+ * template and a regular expression begin and end, which is what it takes to
+ * tell `// prisma.user.findMany()` from `prisma.user.findMany()` and to leave
+ * `'http://x/*'` a string. A template's `${…}` is read as part of the template,
+ * so a comment written inside an interpolation stays; that is the rarer case,
+ * and keeping it errs towards counting, which is this rule's side.
+ */
+export const withoutComments = (text) => {
+  let out = '';
+  let kept = 0;
+  let before = '';
+  const blankFrom = (start, stop) => {
+    out += text.slice(kept, start) + text.slice(start, stop).replace(/[^\n]/g, ' ');
+    kept = stop;
+  };
+  const endOfQuoted = (quote, start) => {
+    let index = start + 1;
+    while (index < text.length && text[index] !== quote) {
+      if (text[index] === '\\') index += 1;
+      else if (text[index] === '\n' && quote !== '`') return index;
+      index += 1;
+    }
+    return Math.min(index + 1, text.length);
+  };
+  const endOfRegex = (start) => {
+    let index = start + 1;
+    let inClass = false;
+    while (index < text.length && text[index] !== '\n') {
+      const char = text[index];
+      if (char === '\\') index += 1;
+      else if (char === '[') inClass = true;
+      else if (char === ']') inClass = false;
+      else if (char === '/' && !inClass) return index + 1;
+      index += 1;
+    }
+    return index;
+  };
+  let at = 0;
+  while (at < text.length) {
+    const char = text[at];
+    const next = text[at + 1];
+    if (char === '/' && (next === '/' || next === '*')) {
+      const close = next === '/' ? text.indexOf('\n', at) : text.indexOf('*/', at + 2);
+      const stop = close === -1 ? text.length : next === '/' ? close : close + 2;
+      blankFrom(at, stop);
+      at = stop;
+      continue;
+    }
+    if (char === '"' || char === "'" || char === '`') {
+      at = endOfQuoted(char, at);
+      before = char;
+      continue;
+    }
+    if (char === '/' && OPERAND_DUE.test(before)) {
+      at = endOfRegex(at);
+      before = '/';
+      continue;
+    }
+    if (!/\s/.test(char)) before = /[\w$]/.test(char) ? (/[\w$]$/.test(before) ? before : '') + char : char;
+    at += 1;
+  }
+  return out + text.slice(kept);
+};
+
+/**
+ * Files whose comments a probe must not read: every kind of code, and a Prisma
+ * schema, whose `//` and `///` are line comments too. A template is markup,
+ * where `//` is part of an address and nothing is a comment of this kind.
+ */
+const COMMENTED = new Set(SOURCE_EXTENSIONS.filter((extension) => extension !== '.html'));
+
+/** What a probe reads: the file, with its comments blanked where it has any. */
+const codeOf = (path, text) => (COMMENTED.has(extensionOf(path)) ? withoutComments(text) : text);
+
+const countLine = (probe, path, text) => {
+  if (probe.path !== undefined && !probe.path.test(path)) return 0;
   probe.pattern.lastIndex = 0;
   let sites = 0;
   while (probe.pattern.exec(text) !== null) sites += 1;
@@ -261,7 +376,7 @@ const countFile = (probe, path, text) =>
 
 /** Strategy by scope, so adding a third kind of probe adds a row and no branch. */
 const COUNTERS = {
-  line: (probe, _path, text) => countLine(probe, text),
+  line: (probe, path, text) => countLine(probe, path, text),
   file: (probe, path, text) => countFile(probe, path, text),
 };
 
@@ -286,7 +401,8 @@ const FAMILY_OF = Object.fromEntries(PROBES.map((probe) => [probe.name, probe.fa
 export const measureSites = (files) => {
   const byProbe = Object.fromEntries(PROBES.map((probe) => [probe.name, 0]));
   const perFile = new Map();
-  for (const [path, text] of files) {
+  for (const [path, source] of files) {
+    const text = codeOf(path, source);
     let found;
     for (const probe of PROBES) {
       const sites = COUNTERS[probe.scope](probe, path, text);

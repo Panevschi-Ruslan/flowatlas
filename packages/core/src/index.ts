@@ -255,6 +255,8 @@ export type {
   UnreadableSourceContext,
 } from './project.js';
 
+export { isTestDirectory, isTestFile } from './test-files.js';
+
 export { namesGivenTo, takesNames } from './markers.js';
 export type { MarkerNames, RecordedMarker, RefusedArg } from './markers.js';
 
@@ -262,7 +264,17 @@ export { definePass } from './passes.js';
 export type { ExtractorPass } from './passes.js';
 
 export { buildClassIndex, ClassIndex } from './class-index.js';
-export { functionAt, inlineFunction, memberFunction, moduleFunctions, namedFunction } from './functions.js';
+export {
+  functionAt,
+  inlineFunction,
+  memberFunction,
+  moduleFunctions,
+  namedFunction,
+  placedFunction,
+  placeOf,
+} from './functions.js';
+export { suppliedTypes } from './supplied.js';
+export type { SuppliedTypes } from './supplied.js';
 export type { NamedFunction } from './functions.js';
 export type { BuildClassIndexOptions, IndexedClass } from './class-index.js';
 

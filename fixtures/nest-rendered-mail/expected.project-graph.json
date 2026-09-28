@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-28T08:36:04.973Z",
+  "builtAt": "2026-09-28T09:57:04.900Z",
   "services": [
     {
       "name": "api",
@@ -78,14 +78,6 @@
       }
     },
     {
-      "id": "api#src/e2e/helpers.ts:placeOrder",
-      "type": "function",
-      "label": "placeOrder",
-      "repo": "api",
-      "file": "src/e2e/helpers.ts",
-      "line": 5
-    },
-    {
       "id": "api#src/orders/orders.controller.ts:OrdersController",
       "type": "provider",
       "label": "OrdersController",
@@ -104,18 +96,6 @@
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
       "line": 13
-    },
-    {
-      "id": "config_key:api#E2E_API_URL",
-      "type": "config_key",
-      "label": "E2E_API_URL",
-      "repo": "api",
-      "file": "src/e2e/helpers.ts",
-      "line": 6,
-      "meta": {
-        "key": "E2E_API_URL",
-        "source": "process.env"
-      }
     },
     {
       "id": "config_key:api#MAIL_RELAY_URL",
@@ -190,30 +170,14 @@
       }
     },
     {
-      "id": "http_out:api#src/e2e/helpers.ts:6:3",
-      "type": "http_out",
-      "label": "POST /orders",
-      "repo": "api",
-      "file": "src/e2e/helpers.ts",
-      "line": 6,
-      "meta": {
-        "method": "POST",
-        "url": "${E2E_API_URL}/orders",
-        "path": "/orders",
-        "baseUrlEnv": "E2E_API_URL",
-        "responseType": null,
-        "bodyType": null
-      }
-    },
-    {
       "id": "repo:api",
       "type": "repo",
       "label": "api",
       "repo": "api",
       "meta": {
         "stats": {
-          "files": 11,
-          "filesRead": 11,
+          "files": 10,
+          "filesRead": 10,
           "filesUnreadable": 0,
           "classes": 2,
           "skippedExternalCalls": {},
@@ -275,22 +239,6 @@
       "line": 7
     },
     {
-      "from": "api#src/e2e/helpers.ts:placeOrder",
-      "to": "config_key:api#E2E_API_URL",
-      "type": "reads_config",
-      "confidence": "static",
-      "file": "src/e2e/helpers.ts",
-      "line": 6
-    },
-    {
-      "from": "api#src/e2e/helpers.ts:placeOrder",
-      "to": "http_out:api#src/e2e/helpers.ts:6:3",
-      "type": "calls",
-      "confidence": "static",
-      "file": "src/e2e/helpers.ts",
-      "line": 6
-    },
-    {
       "from": "api#src/orders/orders.controller.ts:OrdersController.place",
       "to": "api#../../packages/relay/src/index.ts:relay",
       "type": "calls",
@@ -341,15 +289,6 @@
       "message": "no service declares PLATFORM_URL",
       "hint": "Add PLATFORM_URL to services[].baseUrlEnv of whichever service answers it.",
       "symbol": "http_out:api#../../packages/sdk/src/http.ts:3:3"
-    },
-    {
-      "service": "api",
-      "file": "src/e2e/helpers.ts",
-      "line": 6,
-      "reason": "unknown-base-url-env",
-      "message": "no service declares E2E_API_URL",
-      "hint": "Add E2E_API_URL to services[].baseUrlEnv of whichever service answers it.",
-      "symbol": "http_out:api#src/e2e/helpers.ts:6:3"
     }
   ]
 }

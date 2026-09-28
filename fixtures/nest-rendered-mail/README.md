@@ -26,8 +26,13 @@ What to watch:
   were three UI calls - the e2e helper's `POST /orders` (joined to the API's own
   route, as if a page called it), the SDK's `GET /customers/:param` and the
   relay's `POST /send` - and `SdkProvider` was a component.
-- **Still in the graph:** the same three requests as `http_out`, which is what they
-  are and what the server reader always said. Each is now read once.
+- **Still in the graph:** the SDK's and the relay's requests as `http_out`, which is
+  what they are and what the server reader always said. Each is now read once.
+- **Not read at all:** the e2e helper, `apps/api/src/e2e/helpers.ts`. It was the
+  third `http_out` until R157, which settled that a test is not read, and a file
+  in a directory named `e2e` is a test's (`isTestFile` in
+  `packages/core/src/test-files.ts`, the definition the coverage harness counts
+  by too). Its `POST /orders` and its `E2E_API_URL` went with it.
 
 `react` is still named at arm's length in `build`'s summary: detection is a
 different question (R123), and the answer to it - React is in what this service

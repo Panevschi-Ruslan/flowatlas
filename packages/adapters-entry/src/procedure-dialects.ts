@@ -63,6 +63,8 @@ export interface ProcedureDialect {
   readonly inputMethod?: string;
   /** The chain link that installs something in front of a way in. */
   readonly guardMethod?: string;
+  /** Where the context's type is written, and the key a function is handed it under. */
+  readonly context?: { readonly method: string; readonly key: string };
   /** Every place a tree is hung. */
   readonly mounts: readonly ProcedureMount[];
 }
@@ -91,6 +93,7 @@ export const procedureDialectOf = (config: EntryProcedureConfig): ProcedureDiale
   separator: config.separator,
   ...(config.inputMethod === undefined ? {} : { inputMethod: config.inputMethod }),
   ...(config.guardMethod === undefined ? {} : { guardMethod: config.guardMethod }),
+  ...(config.context === undefined ? {} : { context: { ...config.context } }),
   mounts: config.mounts.map(mountOf),
 });
 
@@ -156,6 +159,12 @@ export const TRPC: ProcedureDialect = described({
   terminators: { query: 'rpc', mutation: 'rpc', subscription: 'event' },
   inputMethod: 'input',
   guardMethod: 'use',
+  // `initTRPC.context<Context>().create()` is where a project writes what every
+  // procedure's `ctx` is, and it is the only place: a handler written
+  // `async ({ ctx }) => …` states nothing, and with nothing installed the
+  // checker has no tRPC to carry the type across. cal.com's three read-gate
+  // files that query through `ctx.prisma` were unread for exactly that (R157).
+  context: { method: 'context', key: 'ctx' },
   mounts: [
     // The Next.js adapter, and the one cal.com wraps under the same name. The
     // library's own spelling hands it an options object; a project's wrapper

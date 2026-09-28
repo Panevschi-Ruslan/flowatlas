@@ -13,6 +13,7 @@ import type { GraphBuilder } from './builder.js';
 import { normalizeFilePath } from './ids.js';
 import type { Unresolved } from './model/graph.js';
 import { readPackageJson } from './package-json.js';
+import { isTestDirectory, isTestFile } from './test-files.js';
 import {
   serviceSourceDirs,
   workspaceGlobs,
@@ -51,18 +52,14 @@ const SKIPPED_DIRECTORIES = new Set(['node_modules', 'dist', 'build']);
 export const SOURCE_EXTENSIONS = ['.ts', '.tsx'] as const;
 
 /**
- * Files that are compiled but say nothing about the shape of the system.
- *
- * Written as stems crossed with {@link SOURCE_EXTENSIONS} rather than as a
- * literal list, so that adding an extension cannot silently start reading
- * everyone's tests in it.
+ * Files that are compiled but say nothing about the shape of the system: a
+ * declaration file, and a test ({@link isTestFile}, the one definition the
+ * coverage harness counts by too, R157).
  */
-const SKIPPED_STEMS = ['.spec', '.test', '.e2e-spec'] as const;
+const DECLARATION_SUFFIX = '.d.ts';
 
-const SKIPPED_SUFFIXES = [
-  ...SKIPPED_STEMS.flatMap((stem) => SOURCE_EXTENSIONS.map((ext) => `${stem}${ext}`)),
-  '.d.ts',
-];
+const isSkippedFile = (name: string): boolean =>
+  name.endsWith(DECLARATION_SUFFIX) || isTestFile(name);
 
 /** Tried in order when the caller does not name one. */
 export const TSCONFIG_CANDIDATES = [
@@ -125,11 +122,12 @@ const sourceFilesUnder = (dir: string): string[] => {
       const path = at === '' ? entry.name : `${at}/${entry.name}`;
       if (entry.isDirectory()) {
         if (SKIPPED_DIRECTORIES.has(entry.name) || entry.name.startsWith('.')) continue;
+        if (isTestDirectory(entry.name)) continue;
         walk(path);
         continue;
       }
       if (!SOURCE_EXTENSIONS.some((ext) => entry.name.endsWith(ext))) continue;
-      if (SKIPPED_SUFFIXES.some((suffix) => entry.name.endsWith(suffix))) continue;
+      if (isSkippedFile(entry.name)) continue;
       out.push(path);
     }
   };
@@ -583,8 +581,15 @@ export const createProject = (options: CreateProjectOptions): Project => {
   project.addSourceFilesAtPaths([
     ...globs.map((glob) => join(rootDir, glob)),
     ...[...SKIPPED_DIRECTORIES].map((dir) => `!${join(rootDir, `**/${dir}/**`)}`),
-    ...SKIPPED_SUFFIXES.map((suffix) => `!${join(rootDir, `**/*${suffix}`)}`),
+    `!${join(rootDir, `**/*${DECLARATION_SUFFIX}`)}`,
   ]);
+  // A test is told by the shape of its name, which a glob cannot spell, so the
+  // files the globs matched are asked the same question the walk below asks.
+  // Relative to the root, because a test is a test of the tree being read and
+  // the directories above the root are the machine's business.
+  for (const file of project.getSourceFiles()) {
+    if (isTestFile(relative(rootDir, file.getFilePath()))) project.removeSourceFile(file);
+  }
 
   // Then every other directory this service's code is in. A workspace member
   // whose handlers live in a sibling package used to have those files opened

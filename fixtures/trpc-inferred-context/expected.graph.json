@@ -1,0 +1,422 @@
+{
+  "schemaVersion": 5,
+  "repo": "trpc-inferred-context",
+  "generatedAt": "2026-09-28T09:18:02.808Z",
+  "nodes": [
+    {
+      "id": "db_query:trpc-inferred-context#src/procedures.ts:10:23",
+      "type": "db_query",
+      "label": "read order",
+      "repo": "trpc-inferred-context",
+      "file": "src/procedures.ts",
+      "line": 10,
+      "meta": {
+        "op": "read",
+        "table": "order",
+        "tables": [
+          "order"
+        ],
+        "package": "@prisma/client",
+        "method": "findFirst",
+        "receiver": "ctx.prisma.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:trpc-inferred-context#src/procedures.ts:17:9",
+      "type": "db_query",
+      "label": "write auditLog",
+      "repo": "trpc-inferred-context",
+      "file": "src/procedures.ts",
+      "line": 17,
+      "meta": {
+        "op": "write",
+        "table": "auditLog",
+        "tables": [
+          "auditLog"
+        ],
+        "package": "@prisma/client",
+        "method": "create",
+        "receiver": "prisma.auditLog",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:trpc-inferred-context#src/procedures.ts:24:9",
+      "type": "db_query",
+      "label": "read user",
+      "repo": "trpc-inferred-context",
+      "file": "src/procedures.ts",
+      "line": 24,
+      "meta": {
+        "op": "read",
+        "table": "user",
+        "tables": [
+          "user"
+        ],
+        "package": "@prisma/client",
+        "method": "count",
+        "receiver": "ctx.prisma.user",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:trpc-inferred-context#src/router.ts:11:13",
+      "type": "db_query",
+      "label": "delete order",
+      "repo": "trpc-inferred-context",
+      "file": "src/router.ts",
+      "line": 11,
+      "meta": {
+        "op": "delete",
+        "table": "order",
+        "tables": [
+          "order"
+        ],
+        "package": "@prisma/client",
+        "method": "deleteMany",
+        "receiver": "prisma.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:trpc-inferred-context#src/router.ts:17:15",
+      "type": "db_query",
+      "label": "write order",
+      "repo": "trpc-inferred-context",
+      "file": "src/router.ts",
+      "line": 17,
+      "meta": {
+        "op": "write",
+        "table": "order",
+        "tables": [
+          "order"
+        ],
+        "package": "@prisma/client",
+        "method": "updateMany",
+        "receiver": "tx.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "entry:trpc-inferred-context:rpc:orders.archive",
+      "type": "entry",
+      "label": "rpc orders.archive",
+      "repo": "trpc-inferred-context",
+      "file": "src/router.ts",
+      "line": 15,
+      "kind": "rpc",
+      "meta": {
+        "key": "orders.archive",
+        "adapter": "trpc-procedures",
+        "call": "mutation",
+        "registration": "router({ … })",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:trpc-inferred-context:rpc:orders.clearDrafts",
+      "type": "entry",
+      "label": "rpc orders.clearDrafts",
+      "repo": "trpc-inferred-context",
+      "file": "src/router.ts",
+      "line": 9,
+      "kind": "rpc",
+      "meta": {
+        "key": "orders.clearDrafts",
+        "adapter": "trpc-procedures",
+        "call": "mutation",
+        "registration": "router({ … })",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:trpc-inferred-context:rpc:orders.mine",
+      "type": "entry",
+      "label": "rpc orders.mine",
+      "repo": "trpc-inferred-context",
+      "file": "src/router.ts",
+      "line": 6,
+      "kind": "rpc",
+      "meta": {
+        "key": "orders.mine",
+        "adapter": "trpc-procedures",
+        "call": "query",
+        "registration": "router({ … })",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:trpc-inferred-context:rpc:orders.stamp",
+      "type": "entry",
+      "label": "rpc orders.stamp",
+      "repo": "trpc-inferred-context",
+      "file": "src/router.ts",
+      "line": 7,
+      "kind": "rpc",
+      "meta": {
+        "key": "orders.stamp",
+        "adapter": "trpc-procedures",
+        "call": "mutation",
+        "registration": "router({ … })",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "repo:trpc-inferred-context",
+      "type": "repo",
+      "label": "trpc-inferred-context",
+      "repo": "trpc-inferred-context",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@prisma/client.$transaction": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "trpc-procedures"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:trpc-inferred-context#auditLog",
+      "type": "table",
+      "label": "auditLog",
+      "repo": "trpc-inferred-context"
+    },
+    {
+      "id": "table:trpc-inferred-context#order",
+      "type": "table",
+      "label": "order",
+      "repo": "trpc-inferred-context"
+    },
+    {
+      "id": "table:trpc-inferred-context#user",
+      "type": "table",
+      "label": "user",
+      "repo": "trpc-inferred-context"
+    },
+    {
+      "id": "trpc-inferred-context#src/procedures.ts:auditedProcedure.use@16",
+      "type": "middleware",
+      "label": "auditedProcedure.use@16",
+      "repo": "trpc-inferred-context",
+      "file": "src/procedures.ts",
+      "line": 16,
+      "kind": "function"
+    },
+    {
+      "id": "trpc-inferred-context#src/procedures.ts:orderOwnerProcedure.use@9",
+      "type": "middleware",
+      "label": "orderOwnerProcedure.use@9",
+      "repo": "trpc-inferred-context",
+      "file": "src/procedures.ts",
+      "line": 9,
+      "kind": "function"
+    },
+    {
+      "id": "trpc-inferred-context#src/procedures.ts:unusedProcedure.use@23",
+      "type": "function",
+      "label": "unusedProcedure.use@23",
+      "repo": "trpc-inferred-context",
+      "file": "src/procedures.ts",
+      "line": 23
+    },
+    {
+      "id": "trpc-inferred-context#src/router.ts:orders.archive@15",
+      "type": "function",
+      "label": "orders.archive@15",
+      "repo": "trpc-inferred-context",
+      "file": "src/router.ts",
+      "line": 15
+    },
+    {
+      "id": "trpc-inferred-context#src/router.ts:orders.clearDrafts@9",
+      "type": "function",
+      "label": "orders.clearDrafts@9",
+      "repo": "trpc-inferred-context",
+      "file": "src/router.ts",
+      "line": 9
+    },
+    {
+      "id": "trpc-inferred-context#src/router.ts:orders.mine@6",
+      "type": "function",
+      "label": "orders.mine@6",
+      "repo": "trpc-inferred-context",
+      "file": "src/router.ts",
+      "line": 6
+    },
+    {
+      "id": "trpc-inferred-context#src/router.ts:orders.stamp@7",
+      "type": "function",
+      "label": "orders.stamp@7",
+      "repo": "trpc-inferred-context",
+      "file": "src/router.ts",
+      "line": 7
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:trpc-inferred-context#src/procedures.ts:10:23",
+      "to": "table:trpc-inferred-context#order",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/procedures.ts",
+      "line": 10
+    },
+    {
+      "from": "db_query:trpc-inferred-context#src/procedures.ts:17:9",
+      "to": "table:trpc-inferred-context#auditLog",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/procedures.ts",
+      "line": 17
+    },
+    {
+      "from": "db_query:trpc-inferred-context#src/procedures.ts:24:9",
+      "to": "table:trpc-inferred-context#user",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/procedures.ts",
+      "line": 24
+    },
+    {
+      "from": "db_query:trpc-inferred-context#src/router.ts:11:13",
+      "to": "table:trpc-inferred-context#order",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/router.ts",
+      "line": 11
+    },
+    {
+      "from": "db_query:trpc-inferred-context#src/router.ts:17:15",
+      "to": "table:trpc-inferred-context#order",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/router.ts",
+      "line": 17
+    },
+    {
+      "from": "entry:trpc-inferred-context:rpc:orders.archive",
+      "to": "trpc-inferred-context#src/router.ts:orders.archive@15",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:trpc-inferred-context:rpc:orders.clearDrafts",
+      "to": "trpc-inferred-context#src/router.ts:orders.clearDrafts@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:trpc-inferred-context:rpc:orders.mine",
+      "to": "trpc-inferred-context#src/procedures.ts:orderOwnerProcedure.use@9",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/procedures.ts",
+      "line": 9,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "orderOwnerProcedure"
+      }
+    },
+    {
+      "from": "entry:trpc-inferred-context:rpc:orders.mine",
+      "to": "trpc-inferred-context#src/router.ts:orders.mine@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:trpc-inferred-context:rpc:orders.stamp",
+      "to": "trpc-inferred-context#src/procedures.ts:auditedProcedure.use@16",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/procedures.ts",
+      "line": 16,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "auditedProcedure"
+      }
+    },
+    {
+      "from": "entry:trpc-inferred-context:rpc:orders.stamp",
+      "to": "trpc-inferred-context#src/router.ts:orders.stamp@7",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 7
+    },
+    {
+      "from": "trpc-inferred-context#src/procedures.ts:auditedProcedure.use@16",
+      "to": "db_query:trpc-inferred-context#src/procedures.ts:17:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/procedures.ts",
+      "line": 17
+    },
+    {
+      "from": "trpc-inferred-context#src/procedures.ts:orderOwnerProcedure.use@9",
+      "to": "db_query:trpc-inferred-context#src/procedures.ts:10:23",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/procedures.ts",
+      "line": 10
+    },
+    {
+      "from": "trpc-inferred-context#src/procedures.ts:unusedProcedure.use@23",
+      "to": "db_query:trpc-inferred-context#src/procedures.ts:24:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/procedures.ts",
+      "line": 24
+    },
+    {
+      "from": "trpc-inferred-context#src/router.ts:orders.archive@15",
+      "to": "db_query:trpc-inferred-context#src/router.ts:17:15",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/router.ts",
+      "line": 17
+    },
+    {
+      "from": "trpc-inferred-context#src/router.ts:orders.clearDrafts@9",
+      "to": "db_query:trpc-inferred-context#src/router.ts:11:13",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/router.ts",
+      "line": 11
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/router.ts",
+      "line": 11,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "orders.clearDrafts@9 -> prisma.order.deleteMany",
+      "sites": 3
+    }
+  ]
+}
