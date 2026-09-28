@@ -372,7 +372,7 @@ export const medusaRoutesAdapter: EntryAdapter = {
           // tie between two routes of one (R119, R125).
           ...(application === undefined ? {} : { application }),
           middlewareRead: false,
-          handlerVia: verb.handler === undefined ? 'unread' : 'function',
+          handlerVia: verb.handlerVia,
           // Two different facts, and the second is the one a summary must not
           // read off the first. `handlerVia` says whether a function was named;
           // this says whether there is code behind the name (R94).

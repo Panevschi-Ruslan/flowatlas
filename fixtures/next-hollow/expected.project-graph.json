@@ -31,7 +31,7 @@
         "registration": "pages/api",
         "middlewareRead": true,
         "declaredIn": "lib/rest.ts",
-        "declaredLine": 29,
+        "declaredLine": 22,
         "handlerVia": "unread",
         "handlerBodyRead": false
       }
@@ -77,7 +77,7 @@
       "label": "GET /api/orders",
       "repo": "shop",
       "file": "app/api/orders/route.ts",
-      "line": 12,
+      "line": 17,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -87,6 +87,23 @@
         "middlewareRead": true,
         "handlerVia": "function",
         "handlerBodyRead": false
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/products",
+      "type": "entry",
+      "label": "GET /api/products",
+      "repo": "shop",
+      "file": "app/api/products/route.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/products",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "call"
       }
     },
     {
@@ -132,12 +149,14 @@
       "repo": "shop",
       "meta": {
         "stats": {
-          "files": 7,
-          "filesRead": 7,
+          "files": 9,
+          "filesRead": 9,
           "filesUnreadable": 0,
           "classes": 0,
-          "skippedExternalCalls": {},
-          "functions": 5,
+          "skippedExternalCalls": {
+            "rest-kit": 2
+          },
+          "functions": 6,
           "components": 0,
           "hooks": 0
         },
@@ -165,7 +184,7 @@
       "label": "GET",
       "repo": "shop",
       "file": "app/api/orders/route.ts",
-      "line": 12
+      "line": 17
     },
     {
       "id": "shop#lib/invoices-store.ts:listInvoices",
@@ -176,20 +195,12 @@
       "line": 9
     },
     {
-      "id": "shop#lib/rest.ts:legacyHandler",
+      "id": "shop#lib/products.ts:handlerBuilder",
       "type": "function",
-      "label": "legacyHandler",
+      "label": "handlerBuilder",
       "repo": "shop",
-      "file": "lib/rest.ts",
-      "line": 29
-    },
-    {
-      "id": "shop#lib/rest.ts:restHandler",
-      "type": "function",
-      "label": "restHandler",
-      "repo": "shop",
-      "file": "lib/rest.ts",
-      "line": 12
+      "file": "lib/products.ts",
+      "line": 9
     }
   ],
   "edges": [
@@ -207,7 +218,15 @@
       "type": "handles",
       "confidence": "static",
       "file": "app/api/orders/route.ts",
-      "line": 12
+      "line": 17
+    },
+    {
+      "from": "entry:shop:http:GET:/api/products",
+      "to": "shop#lib/products.ts:handlerBuilder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "lib/products.ts",
+      "line": 9
     },
     {
       "from": "shop#app/api/invoices/route.ts:GET",
@@ -218,20 +237,12 @@
       "line": 11
     },
     {
-      "from": "shop#app/api/orders/route.ts:GET",
-      "to": "shop#lib/rest.ts:restHandler",
+      "from": "shop#lib/products.ts:handlerBuilder",
+      "to": "shop#lib/invoices-store.ts:listInvoices",
       "type": "calls",
       "confidence": "static",
-      "file": "app/api/orders/route.ts",
+      "file": "lib/products.ts",
       "line": 12
-    },
-    {
-      "from": "shop#lib/rest.ts:legacyHandler",
-      "to": "shop#lib/rest.ts:restHandler",
-      "type": "calls",
-      "confidence": "static",
-      "file": "lib/rest.ts",
-      "line": 29
     }
   ],
   "types": {},
@@ -258,9 +269,9 @@
     },
     {
       "file": "app/api/orders/route.ts",
-      "line": 12,
+      "line": 17,
       "reason": "route-handler-unread",
-      "message": "GET /api/orders is the value a call handed back, and nothing declared in this repository was handed to that call, so the way in has no handler that could be read. It answers at /api/orders.",
+      "message": "GET /api/orders is the value a call handed back, and neither the function called nor anything handed to it is declared in this repository, so the way in has no handler that could be read. It answers at /api/orders.",
       "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
       "symbol": "GET /api/orders",
       "adapter": "nextjs-routes",

@@ -28,6 +28,7 @@ import {
   pathPatternTest,
   readVerbFile,
   reportUnreadHandler,
+  type FsRouteVerb,
 } from './fs-routes.js';
 import { APP_ROUTER, PAGES_API } from './nextjs-paths.js';
 import {
@@ -130,6 +131,11 @@ interface HttpEntryOptions {
   at: Reach;
   handler?: NamedFunction;
   via: string;
+  /**
+   * How the handler was named, where the shared verb reading said (R153). The
+   * older router has one reading only, so there it follows from the handler.
+   */
+  handlerVia?: FsRouteVerb['handlerVia'];
   /** False when a handler was named and there is nothing behind the name. */
   bodyRead?: boolean;
   /**
@@ -258,7 +264,7 @@ export const nextjsRoutesAdapter: EntryAdapter = {
           // be a way in nothing serves. Where the verb was written is the other
           // fact, and it is recorded rather than folded into the first one.
           ...reachMeta(options.at),
-          handlerVia: options.handler === undefined ? 'unread' : 'function',
+          handlerVia: options.handlerVia ?? (options.handler === undefined ? 'unread' : 'function'),
           // Two different facts, and the second is the one a summary must not
           // read off the first. `handlerVia` says whether a function was named;
           // this says whether there is code behind the name. A route counted as

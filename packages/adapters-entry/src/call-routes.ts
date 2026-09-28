@@ -22,11 +22,13 @@ import { EXPRESS, FASTIFY, HONO, KOA, MOUNT_HELPERS } from './route-dialects.js'
 import { Registries, registryOf } from './route-registries.js';
 import { appDeclaration, statedApp, statedBase } from './stated-apps.js';
 import {
+  builtByFactory,
   enclosingClass,
   fileOfNode,
   handlerOfFunction,
   handlerReturned,
   inlineHandlerOf,
+  isWrittenFunction,
   joinPath,
   packageOfCall,
   repoFunctionOf,
@@ -1131,10 +1133,6 @@ interface Answer {
   via: 'function' | 'call' | 'inline';
 }
 
-/** A function written where a value was expected. */
-const isWrittenFunction = (node: TsNode): boolean =>
-  Node.isArrowFunction(node) || Node.isFunctionExpression(node);
-
 /**
  * The function a handler argument really is, through the wrapper around it.
  *
@@ -1174,49 +1172,8 @@ const throughWrapper = (argument: TsNode | undefined): TsNode | undefined => {
   // the handler by the same argument, because that call may be a factory rather
   // than a second wrapper: in `asyncMiddleware(listFactory(res => res.locals.account))`
   // the function written in place picks an account and answers nothing. Which of
-  // the two the inner call is, is `builtBy`'s question.
+  // the two the inner call is, is `builtByFactory`'s question.
   return Node.isCallExpression(only) ? only : node;
-};
-
-/**
- * Whether an argument hands a call work to run rather than a value to build with.
- *
- * A list counts, whatever is in it: `asyncMiddleware([check, run])` runs each in
- * turn, and no one of them is the answer.
- */
-const handsOverWork = (argument: TsNode): boolean => {
-  const value = unwrap(argument);
-  return (
-    isWrittenFunction(value) ||
-    Node.isArrayLiteralExpression(value) ||
-    repoFunctionOf(value) !== undefined
-  );
-};
-
-/**
- * The function that built a handler, when a call to one is what answers.
- *
- * `getAccountVideoRateFactory('like')` is a function of this repository called
- * with a value, and the handler is the function it returns. The factory's body
- * holds that function, so a walk from the route into the factory reaches what
- * the handler reaches - and whatever the factory does once while it builds,
- * which is the over-reach `builtExportFunction` accepts for a handler a call
- * made in a file-system router, for the same reason: the alternative is no body
- * at all.
- *
- * A call handed work is not read as one of these, because it cannot be told
- * from a wrapper: `listFactory(res => res.locals.account)` builds a handler out
- * of a function, and `asyncMiddleware(getVideo)` wraps one, and pointing at a
- * wrapper would name one shared function as the body of every route it wraps.
- * Eight of PeerTube's registrations are the first and keep no handler, which is
- * the honest answer to a question the source does not settle.
- */
-const builtBy = (argument: TsNode | undefined): ReturnType<typeof repoFunctionOf> => {
-  if (argument === undefined) return undefined;
-  const node = unwrap(argument);
-  if (!Node.isCallExpression(node)) return undefined;
-  if (node.getArguments().some(handsOverWork)) return undefined;
-  return repoFunctionOf(node.getExpression());
 };
 
 /**
@@ -1227,7 +1184,10 @@ const builtBy = (argument: TsNode | undefined): ReturnType<typeof repoFunctionOf
  * outright; one written in place is read for the single thing it hands the
  * answer over to, and only for that — see `handlerReturned`; a call to a
  * function of this repository is read as that function having built the answer
- * — see `builtBy`.
+ * — see `builtByFactory`, which the file-system routers ask as well. A call
+ * handed work keeps no handler here: eight of PeerTube's registrations are
+ * `listFactory(res => res.locals.account)`, a factory or a wrapper the source
+ * does not say which, and no handler is the honest answer to that.
  *
  * Deliberately no fall back to whatever declaration the registration is written
  * inside, which is what the bot adapter does. A bot registration written in a
@@ -1241,7 +1201,7 @@ const answerOf = (call: TsNode, argument: TsNode | undefined, ctx: ExtractContex
   if (named !== undefined) return { handler: handlerOfFunction(named, ctx), via: 'function' };
   const inside = handlerReturned(argument, enclosingClass(call), ctx);
   if (inside !== undefined) return { handler: inside, via: 'call' };
-  const builder = builtBy(argument);
+  const builder = builtByFactory(argument);
   return builder === undefined
     ? { via: 'inline' }
     : { handler: handlerOfFunction(builder, ctx), via: 'call' };
