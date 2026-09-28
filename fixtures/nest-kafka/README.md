@@ -87,6 +87,12 @@ the producer must be attributed to `importAll`, the enclosing method.
 Lines 35, 42 and 51 share one `channel:order.created` node between three
 producers and three `emits` edges.
 
+The two `rpc` rows are the only `emits` edges with a `returns`: the reply the
+call reads, which a publish does not have (R151). Line 130's is
+`type:nest-kafka#Order`, and contracts compares it with the handler's on line 63
+as the answer to a route is compared. Line 136's is `any`, so the answer is
+listed unchecked rather than left out.
+
 ## Consumers — `src/orders/orders.controller.ts`
 
 | Handler | Line | Channel | `meta.kind` | `returns` | Confidence | `unresolved.reason` |

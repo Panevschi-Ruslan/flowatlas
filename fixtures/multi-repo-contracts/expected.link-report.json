@@ -10,7 +10,7 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 12,
       "edges": 6,
-      "types": 3,
+      "types": 4,
       "unresolved": 1,
       "durationMs": 0
     },
@@ -77,7 +77,7 @@
     "duplicated": []
   },
   "types": {
-    "total": 43,
+    "total": 44,
     "sharedPackage": 1
   },
   "unresolved": [
@@ -112,7 +112,7 @@
   "totals": {
     "nodes": 118,
     "edges": 109,
-    "types": 43,
+    "types": 44,
     "unresolved": 9
   }
 }

@@ -2716,6 +2716,7 @@
       "params": [
         "type:billing#GetOrderQuery"
       ],
+      "returns": "type:billing#OrderDto",
       "file": "src/invoices/orders.rpc.client.ts",
       "line": 15
     },
@@ -2916,6 +2917,38 @@
         },
         {
           "name": "placedAt",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:billing#OrderDto": {
+      "name": "OrderDto",
+      "kind": "object",
+      "declaredIn": "billing#src/invoices/dto.ts",
+      "structuralHash": "375ac8e3e6b2514c",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "placedAt",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
           "type": "string",
           "optional": false
         }

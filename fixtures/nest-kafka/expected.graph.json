@@ -1303,7 +1303,8 @@
       "line": 130,
       "params": [
         "type:nest-kafka#OrderQuery"
-      ]
+      ],
+      "returns": "type:nest-kafka#Order"
     },
     {
       "from": "producer:nest-kafka#src/orders/orders.service.ts:136:12",
@@ -1314,7 +1315,8 @@
       "line": 136,
       "params": [
         "type:nest-kafka#OrderQuery"
-      ]
+      ],
+      "returns": "any"
     },
     {
       "from": "producer:nest-kafka#src/orders/orders.service.ts:35:5",

@@ -25,7 +25,7 @@ const missing = (direction: Direction, side: 'sender' | 'receiver'): UncheckedNo
   if (direction === 'response') {
     return side === 'sender'
       ? 'Give the handler a return type. A handler that answers with nothing has no contract to check.'
-      : 'Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`.';
+      : 'Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to.';
   }
   return side === 'sender'
     ? 'Pass a typed value rather than a literal, so there is a declared shape to compare.'

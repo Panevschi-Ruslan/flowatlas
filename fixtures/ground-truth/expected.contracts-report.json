@@ -43,7 +43,7 @@
       "direction": "response",
       "reason": "no-type-on-receiver",
       "message": "client#src/orders/orders.client.ts:OrdersClient.rename declares no type for what it expects",
-      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`."
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     },
     {
       "edge": {
@@ -67,7 +67,7 @@
       "direction": "response",
       "reason": "no-type-on-receiver",
       "message": "client#src/orders/orders.client.ts:OrdersClient.newest declares no type for what it expects",
-      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`."
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     }
   ],
   "summary": {
