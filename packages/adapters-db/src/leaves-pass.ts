@@ -46,9 +46,12 @@ import {
   handedOverIn,
   handovers,
   tableReadings,
+  type TableReading,
 } from './descriptors/index.js';
 import { locateTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
+import { hostCallOf } from './leaves/fragment.js';
+import { readSqlArgument, type SqlArgument } from './leaves/sql-argument.js';
 import { handedOverOrigin } from './leaves/handover.js';
 import { dataLayerOf } from './leaves/silence.js';
 import { statedOrigin } from './leaves/stated.js';
@@ -416,6 +419,49 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return { origin: resolved, resolved, fromSource: false };
   };
 
+  /** Whether a call is made on something the same library declares. */
+  const madeOn = (call: CallExpression, pkg: string): boolean => {
+    const callee = call.getExpression();
+    const target = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
+    return descriptorFor(originOf(target).origin)?.package === pkg;
+  };
+
+  /**
+   * What a call that takes its statement as text is: a statement to read, a
+   * fragment of some other query, or not such a call at all (undefined).
+   *
+   * Where the call sits decides first. Handed to a call of the same library -
+   * `.where(knex.raw('…'))`, `.update({ at: knex.raw('now()') })` - it is part of
+   * that call's query, which is read on its own chain, and counting it again
+   * would report one visit to the database as two. That holds even when the
+   * fragment is a whole sub-select: it runs inside the query that took it.
+   *
+   * Where the call sits cannot say what a value kept in a variable becomes, so
+   * the text decides next. A text no verb opens - `lower(email)`, `"${alias}".id`
+   * - is not a statement wherever it is kept, and a whole statement that names
+   * no table - `SELECT 1` - touches nothing a reader could look for. Both are
+   * counted, as a method that touches no data is.
+   *
+   * What is left is a statement. Its tables are read with the reader a driver's
+   * query string is read with, and one whose text is computed gets the row that
+   * reader writes for computed SQL.
+   */
+  const statementOf = (
+    call: CallExpression,
+    method: string,
+    descriptor: DbDescriptor,
+    reading: TableReading | undefined,
+  ): 'fragment' | { sql: SqlArgument; descriptor: DbDescriptor } | undefined => {
+    const index = reading?.statements?.get(method);
+    if (index === undefined) return undefined;
+    const host = hostCallOf(call);
+    if (host !== undefined && madeOn(host, descriptor.package)) return 'fragment';
+    const sql = readSqlArgument(call.getArguments()[index]);
+    if (sql.text !== null && sqlOperation(sql.text) === null) return 'fragment';
+    if (sql.complete && sql.text !== null && sqlTables(sql.text).length === 0) return 'fragment';
+    return { sql, descriptor: { ...descriptor, tableOverride: { kind: 'sql-parse', argIndex: index } } };
+  };
+
   const emitDb = (call: CallExpression, scope: Scope): boolean => {
     const { id: holderId, file, owner } = scope;
     const callee = call.getExpression();
@@ -438,36 +484,50 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       return false;
     }
 
+    const reading = descriptor === undefined ? undefined : tableReadings.get(descriptor.package);
+
+    // A method that takes its statement as text, when the library has one: the
+    // call is read as a driver's query is, or not read as a query at all.
+    const statement =
+      descriptor === undefined ? undefined : statementOf(call, method, descriptor, reading);
+    if (statement === 'fragment') {
+      ctx.countExternalCall(`${origin?.package ?? descriptor?.package ?? 'unknown'}.${method}`);
+      return true;
+    }
+
     let parsedTables: string[] | undefined;
     let parsedOp: 'read' | 'write' | 'delete' | null | undefined;
-    if (descriptor?.tableOverride?.kind === 'sql-parse') {
-      const argument = call.getArguments()[descriptor.tableOverride.argIndex];
-      const value = argument === undefined ? undefined : evaluateExpression(argument);
-      if (value?.resolved === true && typeof value.value === 'string') {
-        parsedTables = sqlTables(value.value);
-        parsedOp = sqlOperation(value.value);
-      } else {
-        parsedTables = [];
-        parsedOp = null;
-      }
+    const sql =
+      statement?.sql ??
+      (descriptor?.tableOverride?.kind === 'sql-parse'
+        ? readSqlArgument(call.getArguments()[descriptor.tableOverride.argIndex])
+        : undefined);
+    if (sql !== undefined) {
+      // Only a whole statement is read. One whose tables are decided at run time
+      // names none, and says so in the row the core writes for it.
+      const whole = sql.complete ? sql.text : null;
+      parsedTables = whole === null ? [] : sqlTables(whole);
+      parsedOp = whole === null ? null : sqlOperation(whole);
     }
 
     // A library whose table is in an expression rather than in the types. The
     // locators say where to look; what comes back is either the name or the
     // fact that it was decided at run time, which is reported below rather than
-    // guessed at.
-    const reading = descriptor === undefined ? undefined : tableReadings.get(descriptor.package);
+    // guessed at. A statement names its tables in its text, and no locator is
+    // asked.
     const located =
-      reading === undefined || descriptor === undefined
+      reading === undefined || descriptor === undefined || statement !== undefined
         ? null
         : locateTable(call, reading.locators, {
             isOperation: (name) => operationOf(descriptor, name) !== null,
             ...(origin?.declaration === undefined ? {} : { typeDeclaration: origin.declaration }),
           });
     const effective =
-      reading === undefined || located !== null
-        ? descriptor
-        : (withoutOverride.get(descriptor?.package ?? '') ?? descriptor);
+      statement !== undefined
+        ? statement.descriptor
+        : reading === undefined || located !== null
+          ? descriptor
+          : (withoutOverride.get(descriptor?.package ?? '') ?? descriptor);
 
     const fromPackage = entityFromPackage(origin);
     const workspacePackage =

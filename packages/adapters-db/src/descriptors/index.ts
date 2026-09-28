@@ -25,6 +25,21 @@ import type { TableLocator } from './table.js';
 export interface TableReading {
   locators: readonly TableLocator[];
   entityInTypeArgs: boolean;
+  /**
+   * Methods that take a statement as text instead of naming a table, and the
+   * argument the text is in.
+   *
+   * `knex.raw(sql)` is knex's way out of its own builder, and what it touches is
+   * written in the SQL rather than anywhere a locator looks. Its text is read by
+   * the same reader a driver's query string is, so a statement means the same
+   * thing whichever library it was handed to (R155).
+   *
+   * Such a call is a statement only where it is used on its own. Handed to a
+   * call of the same library - `.where(knex.raw('…'))` - it is a fragment of
+   * that call's query, and a text no verb opens is a fragment wherever it is
+   * kept. A `Map` because it is asked about every method name a program calls.
+   */
+  statements?: ReadonlyMap<string, number>;
 }
 
 /**
@@ -529,6 +544,7 @@ export const tableReadings: ReadonlyMap<string, TableReading> = new Map([
         { kind: 'chain-root-argument', index: 0 },
       ],
       entityInTypeArgs: true,
+      statements: new Map([['raw', 0]]),
     },
   ],
   ['kysely', { locators: [{ kind: 'argument', index: 0 }], entityInTypeArgs: false }],
