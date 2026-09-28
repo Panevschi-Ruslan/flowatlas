@@ -272,51 +272,29 @@ export const EXEMPT = [
       'output; a table would be a guess wearing a node. One descriptor turns all of ' +
       'them into tables at once, and then this entry goes.',
   },
-  // Medusa's two, decided in R137 by reading the file rather than the count.
-  // R137 decided a third; a fourth, over `models`, went in R149: the family has
-  // table nodes now that the inventory, pricing and product repositories' knex
-  // queries are read. The third, `packages/medusa-test-utils/**` over `routes`,
-  // went in R154: its one
-  // file with a site, `bootstrap-app.ts`, carries `calls` and `reads_config`
-  // edges, which count for the file once an edge's site is read relative to the
-  // service that drew it rather than to the clone. Still no entry is minted for
-  // its `/health`, which is what the exemption defended. Since R160 neither edge
-  // speaks for routes, so the file is red again and reported as red rather than
-  // excused a second time.
-  {
-    where: 'medusa',
-    path: 'packages/medusa/src/migration-scripts/**',
-    family: 'data',
-    why:
-      'Data migrations `medusa db:migrate:scripts` runs once per database and records ' +
-      'in `script_migrations`, never on a request. The connection each step uses is ' +
-      '`container.resolve(PG_CONNECTION)`, which the container types as `any`, so ' +
-      'nothing in the source says which library `knex(table)` belongs to and a ' +
-      'reader that named one would be guessing from a variable name.',
-  },
-  {
-    where: 'medusa',
-    path: 'packages/core/utils/src/modules-sdk/create-pg-connection.ts',
-    family: 'data',
-    why:
-      'The one site is the words "a new knex (pg in the future) connection" in ' +
-      'the doc comment above `createPgConnection`. The counting rule reads lines, ' +
-      'not syntax, and over-counts in that direction on purpose; the function ' +
-      'itself builds a connection and runs no query.',
-  },
-  // Payload's two, decided in R147 by reading the file rather than the count.
-  {
-    where: 'payload',
-    path: 'templates/ecommerce/src/app/(app)/next/exit-preview/GET.ts',
-    family: 'routes',
-    why:
-      'A byte-for-byte copy of the `route.ts` beside it, under a name Next.js does ' +
-      'not serve: the App Router takes a route handler from `route.ts` and from no ' +
-      'other file name, and nothing imports this one. The route it would declare, ' +
-      '`GET /next/exit-preview` of the ecommerce template, is read from `route.ts` ' +
-      'in both states, so a reader that minted it again here would be reporting a ' +
-      'second declaration of an address that has one.',
-  },
+  // Medusa has none left. R137 decided three and a fourth, over `models`, went in
+  // R149: the family has table nodes now that the inventory, pricing and product
+  // repositories' knex queries are read. `packages/medusa-test-utils/**` over
+  // `routes` went in R154: its one file with a site, `bootstrap-app.ts`, carries
+  // `calls` and `reads_config` edges, which count for the file once an edge's
+  // site is read relative to the service that drew it rather than to the clone.
+  // Still no entry is minted for its `/health`, which is what the exemption
+  // defended. Since R160 neither edge speaks for routes, so the file is red again
+  // and reported as red rather than excused a second time (R163). The last two
+  // went in R157. `create-pg-connection.ts` over `data`: its one site was words in
+  // a doc comment, and the counting rule no longer reads comments.
+  // `packages/medusa/src/migration-scripts/**` over `data`: each query there is
+  // written in a function handed to `createStep`, which had no holder, so the
+  // file said nothing; it is a body now, and each `knex(table)` on
+  // `container.resolve(PG_CONNECTION)` - typed `any`, so still unread - carries
+  // the `db-receiver-name-only` row that says so, which is the honest output the
+  // exemption stood in for.
+  //
+  // Payload's two were decided in R147 by reading the file rather than the
+  // count. The first, `templates/ecommerce/.../exit-preview/GET.ts` over
+  // `routes`, went in R157: it is a copy of the `route.ts` beside it under a
+  // name Next.js does not serve, and the probe for an exported verb now counts
+  // only the files a router serves - which is the sentence that exemption said.
   {
     where: 'payload',
     path: '(anywhere)',

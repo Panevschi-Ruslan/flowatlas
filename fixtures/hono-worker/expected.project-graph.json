@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T17:37:35.453Z",
+  "builtAt": "2026-09-28T09:18:37.831Z",
   "services": [
     {
       "name": "api",
@@ -171,6 +171,14 @@
       "line": 67
     },
     {
+      "id": "api#src/worker.ts:all@65",
+      "type": "function",
+      "label": "all@65",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 65
+    },
+    {
       "id": "api#src/worker.ts:boot",
       "type": "function",
       "label": "boot",
@@ -185,6 +193,14 @@
       "repo": "api",
       "file": "src/worker.ts",
       "line": 73
+    },
+    {
+      "id": "api#src/worker.ts:post@52",
+      "type": "function",
+      "label": "post@52",
+      "repo": "api",
+      "file": "src/worker.ts",
+      "line": 52
     },
     {
       "id": "api#src/worker.ts:requestLogger",
@@ -706,6 +722,22 @@
       "returns": "void",
       "file": "src/worker.ts",
       "line": 69
+    },
+    {
+      "from": "api#src/worker.ts:all@65",
+      "to": "api#src/worker.ts:forwardToNest",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 65
+    },
+    {
+      "from": "api#src/worker.ts:post@52",
+      "to": "api#src/worker.ts:acceptUpdate",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 52
     },
     {
       "from": "entry:api:http:ALL:/api/*",

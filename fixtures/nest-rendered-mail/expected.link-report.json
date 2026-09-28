@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-28T07:59:16.133Z",
+  "builtAt": "2026-09-28T09:26:17.621Z",
   "configHash": "168204fe61cf",
   "services": [
     {
@@ -8,18 +8,18 @@
       "repo": "./apps/api",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 18,
-      "edges": 10,
+      "nodes": 15,
+      "edges": 8,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 835
+      "durationMs": 658
     }
   ],
   "httpOut": {
-    "total": 3,
+    "total": 2,
     "linked": 0,
     "byMarker": 0,
-    "unknownEnv": 3,
+    "unknownEnv": 2,
     "noRoute": 0,
     "ambiguous": 0,
     "external": 0,
@@ -67,21 +67,12 @@
       "message": "no service declares PLATFORM_URL",
       "hint": "Add PLATFORM_URL to services[].baseUrlEnv of whichever service answers it.",
       "symbol": "http_out:api#../../packages/sdk/src/http.ts:3:3"
-    },
-    {
-      "service": "api",
-      "file": "src/e2e/helpers.ts",
-      "line": 6,
-      "reason": "unknown-base-url-env",
-      "message": "no service declares E2E_API_URL",
-      "hint": "Add E2E_API_URL to services[].baseUrlEnv of whichever service answers it.",
-      "symbol": "http_out:api#src/e2e/helpers.ts:6:3"
     }
   ],
   "totals": {
-    "nodes": 18,
-    "edges": 10,
+    "nodes": 15,
+    "edges": 8,
     "types": 0,
-    "unresolved": 3
+    "unresolved": 2
   }
 }

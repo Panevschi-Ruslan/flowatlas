@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:26:59.199Z",
+  "builtAt": "2026-09-28T09:19:35.952Z",
   "services": [
     {
       "name": "shop",
@@ -390,6 +390,14 @@
       "id": "shop#app/api/jobs/route.ts:POST",
       "type": "function",
       "label": "POST",
+      "repo": "shop",
+      "file": "app/api/jobs/route.ts",
+      "line": 14
+    },
+    {
+      "id": "shop#app/api/jobs/route.ts:serveJob@14",
+      "type": "function",
+      "label": "serveJob@14",
       "repo": "shop",
       "file": "app/api/jobs/route.ts",
       "line": 14
@@ -1106,6 +1114,14 @@
       "confidence": "static",
       "file": "app/api/jobs/route.ts",
       "line": 14
+    },
+    {
+      "from": "shop#app/api/jobs/route.ts:serveJob@14",
+      "to": "shop#lib/orders-store.ts:saveOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/jobs/route.ts",
+      "line": 15
     },
     {
       "from": "shop#app/api/orders/[id]/route.ts:GET",

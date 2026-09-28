@@ -457,6 +457,34 @@ export const handovers: readonly Handover[] = [
 ];
 
 /**
+ * A call that hands a client back to a callback it runs (R157).
+ *
+ * `prisma.$transaction(async (tx) => { await tx.order.update(…) })` runs the
+ * callback with a client of its own - the same delegates, inside one transaction
+ * - and writes no type for `tx`; the library's generic types carry it, and with
+ * the client never generated they carry nothing. What the call says is enough:
+ * calling `method` on a client of `package` hands parameter `parameter` of the
+ * function at argument `callback` a client of that same library. So `tx` is read
+ * as the client it was handed by, and nothing else is: a callback of any other
+ * method, or of this method on anything that is not such a client, is left as it
+ * was.
+ */
+export interface ClientCallback {
+  /** The library whose client makes the call. */
+  package: string;
+  /** The method that runs the callback: `$transaction`. */
+  method: string;
+  /** Which argument is the callback. */
+  callback: number;
+  /** Which of the callback's parameters is handed the client. */
+  parameter: number;
+}
+
+export const clientCallbacks: readonly ClientCallback[] = [
+  { package: '@prisma/client', method: '$transaction', callback: 0, parameter: 0 },
+];
+
+/**
  * The libraries a manifest reaches through a package that hands them over.
  *
  * A project that queries knex only through its ORM does not declare knex: it is

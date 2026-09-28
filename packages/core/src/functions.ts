@@ -91,6 +91,49 @@ export const inlineFunction = (
 };
 
 /**
+ * What a function written in place is written for, as a name: the value it is
+ * kept under and the call it is handed to.
+ *
+ * `export const bookingsProcedure = authedProcedure.use(async ({ ctx }) => …)`
+ * is `bookingsProcedure.use`, `describe('orders', () => …)` is `describe`, and a
+ * function set as a member of an object handed to a call is that member:
+ * `config({ setup: () => … })` is `setup`. Nothing here knows what `use` means;
+ * the name says where the function is, which is all a name is for when the
+ * source gave none.
+ *
+ * One answer for everything that names such a function, because two things do:
+ * the walk that reads its body and the reader that draws it in front of a way in
+ * (R157). Were they to differ, one function would be two nodes.
+ */
+export const placeOf = (fn: ArrowFunction | FunctionExpression): string => {
+  const parent = fn.getParent();
+  let handedTo: string | undefined;
+  if (Node.isCallExpression(parent)) {
+    const callee = parent.getExpression();
+    if (Node.isPropertyAccessExpression(callee)) handedTo = callee.getName();
+    else if (Node.isIdentifier(callee)) handedTo = callee.getText();
+  } else if (Node.isPropertyAssignment(parent)) {
+    handedTo = parent.getName();
+  }
+  const holder = fn.getFirstAncestor(
+    (node) => Node.isVariableDeclaration(node) || Node.isExportAssignment(node),
+  );
+  const keptAs = Node.isVariableDeclaration(holder)
+    ? Node.isIdentifier(holder.getNameNode())
+      ? holder.getName()
+      : undefined
+    : holder === undefined
+      ? undefined
+      : 'default';
+  const parts = [keptAs, handedTo].filter((part): part is string => part !== undefined);
+  return parts.length === 0 ? '(module)' : parts.join('.');
+};
+
+/** A function written in place, named by where it is (`placeOf`). */
+export const placedFunction = (fn: ArrowFunction | FunctionExpression): NamedFunction =>
+  inlineFunction(fn, placeOf(fn));
+
+/**
  * The function written in place that starts at a position, when one does.
  *
  * The innermost one wins, so a handler that itself passes an arrow along is still

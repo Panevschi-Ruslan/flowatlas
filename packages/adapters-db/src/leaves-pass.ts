@@ -44,6 +44,7 @@ import {
   dbAdapters,
   descriptorAliases,
   handedOverIn,
+  clientCallbacks,
   handovers,
   schemaTables,
   tableReadings,
@@ -53,6 +54,7 @@ import { locateTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
 import { hostCallOf } from './leaves/fragment.js';
 import { readSqlArgument, type SqlArgument } from './leaves/sql-argument.js';
+import { handedBackBy } from './leaves/handed-back.js';
 import { handedOverOrigin } from './leaves/handover.js';
 import { dataLayerOf } from './leaves/silence.js';
 import { statedOrigin } from './leaves/stated.js';
@@ -433,7 +435,42 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (client !== null && descriptorFor(client)?.tableOverride?.kind === 'receiver-prop') {
       return { origin: client, resolved, fromSource: true, statedIn: client.statedIn };
     }
+    // The same step, where the client was handed to a callback by a call a
+    // record describes: `tx` of `prisma.$transaction(async (tx) => …)` is read
+    // as the client the transaction was opened on, and only when that client is
+    // the recorded library's (R157).
+    const handedBack = Node.isPropertyAccessExpression(receiver)
+      ? handedBackBy(receiver.getExpression(), clientCallbacks)
+      : undefined;
+    if (handedBack !== undefined) {
+      const opener = clientOriginOf(handedBack.holder);
+      if (opener !== null && descriptorFor(opener.origin)?.package === handedBack.record.package) {
+        return {
+          origin: opener.origin,
+          resolved,
+          fromSource: true,
+          ...(opener.statedIn === undefined ? {} : { statedIn: opener.statedIn }),
+        };
+      }
+    }
     return { origin: resolved, resolved, fromSource: false };
+  };
+
+  /**
+   * What a value that is itself a client comes from: the checker's answer where
+   * a descriptor knows it, and what the source states where it does not. Asked
+   * of the value a transaction was opened on, which is a client rather than a
+   * delegate of one.
+   */
+  const clientOriginOf = (
+    value: TsNode,
+  ): { origin: TypeOrigin; statedIn?: SourceFile } | null => {
+    const resolved = resolveTypeOrigin(value, { localBaseClasses });
+    if (resolved !== null && descriptorFor(resolved) !== undefined) return { origin: resolved };
+    const stated = statedOrigin(value);
+    return stated !== null && descriptorFor(stated) !== undefined
+      ? { origin: stated, statedIn: stated.statedIn }
+      : null;
   };
 
   /**

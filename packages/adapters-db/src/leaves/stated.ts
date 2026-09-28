@@ -2,11 +2,20 @@ import { dirname, join, resolve } from 'node:path';
 import {
   declarationOf,
   readPackageJson,
+  suppliedTypes,
   workspacePackages,
   workspaceRootOf,
   type TypeOrigin,
 } from '@flowatlas/core';
-import { Node, SyntaxKind, type Node as TsNode, type Project, type SourceFile } from 'ts-morph';
+import {
+  Node,
+  SyntaxKind,
+  type Node as TsNode,
+  type Project,
+  type PropertyDeclaration,
+  type PropertySignature,
+  type SourceFile,
+} from 'ts-morph';
 import { generatedModules } from '../descriptors/index.js';
 
 /**
@@ -152,9 +161,134 @@ const STATED_THROUGH: Partial<Record<SyntaxKind, (node: TsNode) => TsNode | unde
     // by its initialiser, which is the value whose property this is.
     const source = Node.isVariableDeclaration(holder) ? holder.getInitializer() : holder;
     const key = (node.getPropertyNameNode() ?? node.getNameNode()).getText();
-    return source?.getType().getProperty(key)?.getDeclarations()[0];
+    return (
+      source?.getType().getProperty(key)?.getDeclarations()[0] ??
+      (source === undefined ? undefined : writtenMember(writtenTypeOf(source, 0), key, 0))
+    );
   },
 };
+
+/** How far a written type is followed: aliases, interfaces and the names between them. */
+const MAX_TYPE_HOPS = 8;
+
+/**
+ * The type the source writes for a value, where it writes one (R157).
+ *
+ * The checker's answer is asked first everywhere this is used; this is what is
+ * left when the checker has nothing, which on a clone with nothing installed is
+ * every value whose type came through a framework. A value states its type by an
+ * annotation, by being a member of something whose type is written, or - for a
+ * parameter a framework fills and the source leaves bare - by what the reader of
+ * that framework recorded (`suppliedTypes`): `async ({ ctx }) => …` handed to a
+ * procedure has the context the procedure's root was made with.
+ */
+const writtenTypeOf = (value: TsNode, hops: number): TsNode | undefined => {
+  if (hops > MAX_TYPE_HOPS) return undefined;
+  let at = value;
+  while (Node.isParenthesizedExpression(at) || Node.isNonNullExpression(at) || Node.isAwaitExpression(at)) {
+    at = at.getExpression();
+  }
+  if (Node.isAsExpression(at)) return at.getTypeNode();
+  if (Node.isPropertyAccessExpression(at)) {
+    return writtenMember(writtenTypeOf(at.getExpression(), hops + 1), at.getName(), hops + 1)?.getTypeNode();
+  }
+  if (!Node.isIdentifier(at)) return undefined;
+  const step = followName(at);
+  const declaration = step !== null && 'declaration' in step ? step.declaration : undefined;
+  if (declaration === undefined) return undefined;
+  if (Node.isParameterDeclaration(declaration) || Node.isPropertySignature(declaration)) {
+    return declaration.getTypeNode();
+  }
+  if (Node.isPropertyDeclaration(declaration)) return declaration.getTypeNode();
+  if (Node.isVariableDeclaration(declaration)) {
+    const initializer = declaration.getInitializer();
+    return (
+      declaration.getTypeNode() ??
+      (initializer === undefined ? undefined : writtenTypeOf(initializer, hops + 1))
+    );
+  }
+  if (Node.isBindingElement(declaration)) {
+    const pattern = declaration.getParent();
+    const holder = pattern.getParent();
+    if (!Node.isObjectBindingPattern(pattern)) return undefined;
+    const key = (declaration.getPropertyNameNode() ?? declaration.getNameNode()).getText();
+    if (Node.isParameterDeclaration(holder)) {
+      const annotated = holder.getTypeNode();
+      return annotated === undefined
+        ? suppliedTypes(holder.getProject()).memberOf(holder, key)
+        : writtenMember(annotated, key, hops + 1)?.getTypeNode();
+    }
+    if (Node.isVariableDeclaration(holder)) {
+      const initializer = holder.getInitializer();
+      const from = holder.getTypeNode() ?? (initializer === undefined ? undefined : writtenTypeOf(initializer, hops + 1));
+      return writtenMember(from, key, hops + 1)?.getTypeNode();
+    }
+  }
+  return undefined;
+};
+
+/**
+ * The declaration of one member of a written type.
+ *
+ * Read the way the type is written: an object type literal by its members, an
+ * intersection by each part, a narrowing (`Partial<T>`) by what it narrows, a
+ * name by the interface, class or alias it names - through its imports, as every
+ * name here is followed - and `typeof value` by what that value is declared as.
+ * A union is not read: a member of one side is not a member of the whole.
+ */
+const writtenMember = (
+  written: TsNode | undefined,
+  key: string,
+  hops: number,
+): PropertySignature | PropertyDeclaration | undefined => {
+  if (written === undefined || hops > MAX_TYPE_HOPS) return undefined;
+  if (Node.isParenthesizedTypeNode(written)) return writtenMember(written.getTypeNode(), key, hops + 1);
+  if (Node.isTypeLiteral(written)) return written.getProperty(key);
+  if (Node.isIntersectionTypeNode(written)) {
+    for (const part of written.getTypeNodes()) {
+      const found = writtenMember(part, key, hops + 1);
+      if (found !== undefined) return found;
+    }
+    return undefined;
+  }
+  if (Node.isTypeQuery(written)) {
+    const step = followName(written.getExprName());
+    const declaration = step !== null && 'declaration' in step ? step.declaration : undefined;
+    return Node.isVariableDeclaration(declaration)
+      ? writtenMember(declaration.getTypeNode(), key, hops + 1)
+      : undefined;
+  }
+  if (!Node.isTypeReference(written) && !Node.isExpressionWithTypeArguments(written)) return undefined;
+  const head = Node.isTypeReference(written) ? written.getTypeName() : written.getExpression();
+  if (Node.isTypeReference(written) && NARROWING_TYPES.has(head.getText())) {
+    return writtenMember(written.getTypeArguments()[0], key, hops + 1);
+  }
+  if (!Node.isIdentifier(head)) return undefined;
+  const step = followName(head);
+  const declaration = step !== null && 'declaration' in step ? step.declaration : undefined;
+  if (Node.isTypeAliasDeclaration(declaration)) return writtenMember(declaration.getTypeNode(), key, hops + 1);
+  if (Node.isInterfaceDeclaration(declaration)) {
+    const own = declaration.getProperty(key);
+    if (own !== undefined) return own;
+    for (const base of declaration.getExtends()) {
+      const found = writtenMember(base, key, hops + 1);
+      if (found !== undefined) return found;
+    }
+    return undefined;
+  }
+  if (Node.isClassDeclaration(declaration)) return declaration.getProperty(key);
+  return undefined;
+};
+
+/**
+ * The member a receiver reaches, declared where the source writes the type of
+ * what it is a member of: `ctx.prisma` is `prisma: typeof prisma` in the
+ * context's interface, found from the type `ctx` was given.
+ */
+const memberReachedBy = (receiver: TsNode): TsNode | undefined =>
+  Node.isPropertyAccessExpression(receiver)
+    ? writtenMember(writtenTypeOf(receiver.getExpression(), 0), receiver.getName(), 0)
+    : undefined;
 
 /**
  * Types the language's own library derives from another without renaming it.
@@ -540,7 +674,9 @@ export interface StatedOrigin extends TypeOrigin {
 export const statedOrigin = (receiver: TsNode): StatedOrigin | null => {
   const start = Node.isIdentifier(receiver) ? followName(receiver) : null;
   let declaration =
-    start !== null && 'declaration' in start ? start.declaration : declarationOf(receiver);
+    start !== null && 'declaration' in start
+      ? start.declaration
+      : (declarationOf(receiver) ?? memberReachedBy(receiver));
   for (let depth = 0; declaration !== undefined && depth < MAX_HOPS; depth += 1) {
     const through = STATED_THROUGH[declaration.getKind()]?.(declaration);
     if (through !== undefined) {

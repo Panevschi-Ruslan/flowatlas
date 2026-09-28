@@ -483,6 +483,20 @@ README says what it exists to prove.
   drawn when that function leads to something the graph holds, from a method, a
   function or a handler alike, and a helper that reaches nothing held stays out
   (`nest-held-calls`).
+- A function written in place in a module's own statements is a body like any
+  other: `export const bookingsProcedure = authedProcedure.use(async ({ ctx }) =>
+  …)` holds the queries in it, under a node named for where it is
+  (`bookingsProcedure.use@20`), which is also the node the way in's `guarded_by`
+  edge points at. A tRPC handler's or guard's `ctx` is read from the type the
+  root was created with, `initTRPC.context<…>()`, and a transaction's `tx` as the
+  client it was handed by, both with nothing installed
+  (`trpc-inferred-context`).
+- A test is not read, and what a test is is one definition the coverage
+  harness counts by too: a name with a `test`, `spec` or `e2e` part
+  (`*.integration-test.ts` and `*.e2e.ts` included), or a directory only tests
+  live in (`__tests__`, `playwright`, `e2e` and a few more). The tool read
+  cal.com's whole `playwright/` directory before (`trpc-inferred-context`,
+  `nest-rendered-mail`).
 - A write records the document it stores whether or not the entity's name had a
   wrapper suffix to strip. `Repository<OrderEntity>` recorded it and
   `Repository<Order>` did not, so `stripImpact` answered `unknown` — the answer

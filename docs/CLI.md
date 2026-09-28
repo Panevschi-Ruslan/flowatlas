@@ -1475,6 +1475,17 @@ with its body, its guards and the mount file that serves the tree
 under a computed key, and a branch imported from a package this repository does
 not have are each a row rather than an invented way in.
 
+A guard written in place — `authedProcedure.use(async ({ ctx, next }) => …)` —
+is a node named for where it is (`bookingsProcedure.use@20`), and the queries,
+requests and settings in its body hang off that node, so a walk from the way in
+reaches what its guard reads. What every handler and guard is handed as `ctx` is
+read from the one place the source writes it, the type argument of
+`initTRPC.context<…>()` — through the function it names, where that is how the
+context is built — so `ctx.prisma.booking.findFirst(…)` and
+`const { prisma } = ctx` are read with nothing installed. A client handed to a
+transaction's callback, `prisma.$transaction(async (tx) => …)`, is read as the
+client it was handed by (`fixtures/trpc-inferred-context`).
+
 A caller writes the same path as property accesses on a client proxy —
 `trpc.orders.list.useQuery(input)`, `client.orders.create.mutate(order)` — and
 each call is a request of kind `rpc` carrying the path and what it does on the

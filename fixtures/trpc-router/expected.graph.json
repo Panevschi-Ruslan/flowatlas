@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "trpc-router",
-  "generatedAt": "2026-09-27T18:01:17.528Z",
+  "generatedAt": "2026-09-28T09:19:43.269Z",
   "nodes": [
     {
       "id": "entry:trpc-router:http:ALL:/api/trpc/:param",
@@ -171,6 +171,14 @@
       "line": 8
     },
     {
+      "id": "trpc-router#src/server/orders.ts:ordersRouter.mutation@14",
+      "type": "function",
+      "label": "ordersRouter.mutation@14",
+      "repo": "trpc-router",
+      "file": "src/server/orders.ts",
+      "line": 14
+    },
+    {
       "id": "trpc-router#src/server/procedures.ts:isAdmin",
       "type": "middleware",
       "label": "isAdmin",
@@ -319,6 +327,14 @@
     },
     {
       "from": "trpc-router#src/server/orders.ts:ordersRouter",
+      "to": "trpc-router#src/server/orders-store.ts:storeOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server/orders.ts",
+      "line": 16
+    },
+    {
+      "from": "trpc-router#src/server/orders.ts:ordersRouter.mutation@14",
       "to": "trpc-router#src/server/orders-store.ts:storeOrder",
       "type": "calls",
       "confidence": "static",
