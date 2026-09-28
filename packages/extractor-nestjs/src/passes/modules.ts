@@ -5,6 +5,7 @@ import type { ModuleInfo, ModuleKind, ProviderRegistration } from '../modules-in
 import { getDecorator, lineOf } from '@flowatlas/core';
 import { NEST_COMMON } from '../index-classes.js';
 import { isDynamicModuleExpression, resolveClassExpression } from '../util/resolve-class.js';
+import { tokenOf, tokensProvidedBy } from './module-tokens.js';
 import { definePass } from './types.js';
 
 const arrayProperty = (
@@ -25,12 +26,6 @@ const moduleOptions = (
   const [argument] = decorator?.getArguments() ?? [];
   return argument !== undefined && Node.isObjectLiteralExpression(argument) ? argument : undefined;
 };
-
-/** Token as written: a string literal keeps its value, anything else its text. */
-const tokenOf = (expr: Expression): string =>
-  Node.isStringLiteral(expr) || Node.isNoSubstitutionTemplateLiteral(expr)
-    ? expr.getLiteralValue()
-    : expr.getText();
 
 const PROVIDER_SHAPES = ['useClass', 'useValue', 'useFactory', 'useExisting'] as const;
 
@@ -132,6 +127,7 @@ export const modulesPass = definePass('modules', (ctx) => {
     const exports = arrayProperty(options, 'exports').map((expr) => tokenOf(expr));
 
     const imports: ModuleInfo['imports'] = [];
+    const providedByImports: ProviderRegistration[] = [];
     for (const expr of arrayProperty(options, 'imports')) {
       const dynamic = isDynamicModuleExpression(expr);
       const ref = resolveClassExpression(expr);
@@ -146,6 +142,10 @@ export const modulesPass = definePass('modules', (ctx) => {
         continue;
       }
       if (ref.kind === 'external') {
+        // `ClientsModule.register([{ name: 'KAFKA_CLIENT' }])` provides that
+        // token as surely as `providers:` would (R150); which modules do, and
+        // where in their arguments, is described in module-tokens.ts.
+        providedByImports.push(...tokensProvidedBy(expr, ref, ctx));
         const node = ctx.ensureExternalClassNode({
           typeName: ref.typeName,
           package: ref.package,
@@ -173,6 +173,7 @@ export const modulesPass = definePass('modules', (ctx) => {
       declaration: indexed.declaration,
       controllers,
       providers,
+      providedByImports,
       exports,
       imports,
     });

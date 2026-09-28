@@ -140,6 +140,18 @@
       }
     },
     {
+      "id": "billing#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "billing",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
       "id": "billing#node_modules/@nestjs/microservices:ClientsModule",
       "type": "module",
       "label": "ClientsModule",
@@ -968,6 +980,18 @@
       }
     },
     {
+      "id": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "orders",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
       "id": "orders#node_modules/@nestjs/microservices:ClientsModule",
       "type": "module",
       "label": "ClientsModule",
@@ -1336,7 +1360,8 @@
           "classes": 6,
           "skippedExternalCalls": {
             "@nestjs/axios": 1,
-            "@nestjs/config": 1
+            "@nestjs/config": 1,
+            "@nestjs/microservices": 1
           }
         },
         "bootstrap": "src/main.ts",
@@ -1385,6 +1410,7 @@
           "filesUnreadable": 0,
           "classes": 11,
           "skippedExternalCalls": {
+            "@nestjs/microservices": 2,
             "@nestjs/axios": 2,
             "@nestjs/config": 4
           }
@@ -1580,6 +1606,14 @@
       "returns": "unknown",
       "file": "src/invoices/invoices.controller.ts",
       "line": 12
+    },
+    {
+      "from": "billing#src/invoices/invoices.service.ts:InvoicesService",
+      "to": "billing#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 6
     },
     {
       "from": "billing#src/invoices/invoices.service.ts:InvoicesService.sync",
@@ -2071,6 +2105,14 @@
       }
     },
     {
+      "from": "orders#src/audit/audit.service.ts:AuditService",
+      "to": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/audit/audit.service.ts",
+      "line": 7
+    },
+    {
       "from": "orders#src/audit/audit.service.ts:AuditService.record",
       "to": "producer:orders#src/audit/audit.service.ts:10:5",
       "type": "calls",
@@ -2217,6 +2259,14 @@
       "confidence": "static",
       "file": "src/orders/orders.repository.ts",
       "line": 10
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService",
+      "to": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
     },
     {
       "from": "orders#src/orders/orders.service.ts:OrdersService",
@@ -2463,22 +2513,6 @@
   },
   "unresolved": [
     {
-      "file": "src/invoices/invoices.service.ts",
-      "line": 6,
-      "reason": "di-token-unknown",
-      "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
-      "symbol": "InvoicesService.constructor[0]",
-      "service": "billing"
-    },
-    {
-      "file": "src/audit/audit.service.ts",
-      "line": 7,
-      "reason": "di-token-unknown",
-      "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
-      "symbol": "AuditService.constructor[0]",
-      "service": "orders"
-    },
-    {
       "file": "src/orders/orders.repository.ts",
       "line": 5,
       "reason": "db-layer-unread",
@@ -2489,11 +2523,11 @@
       "service": "orders"
     },
     {
-      "file": "src/orders/orders.service.ts",
-      "line": 16,
+      "file": "src/orders/orders.repository.ts",
+      "line": 7,
       "reason": "di-token-unknown",
-      "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
-      "symbol": "OrdersService.constructor[4]",
+      "hint": "No module in this repository provides ORDERS_DB. Register it with { provide, useClass } or force the adapter that does.",
+      "symbol": "OrdersRepository.constructor[1]",
       "service": "orders"
     },
     {

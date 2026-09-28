@@ -306,6 +306,26 @@ describe('nest-di-tokens', () => {
     expect(reasons(load('nest-di-tokens'))).toContain('di-token-unknown');
   });
 
+  // R150. `ClientsModule.register([{ name: 'KAFKA_CLIENT', ... }])` provides the
+  // token as surely as `providers: [{ provide: 'KAFKA_CLIENT', useValue }]` would:
+  // Nest writes exactly that provider for each entry, and the value is a
+  // `ClientProxy`. A reader that saw only `providers:` reported the token
+  // unprovided, and six snapshots agreed.
+  it.each([
+    ['nest-kafka', 'KAFKA_CLIENT'],
+    ['nest-rabbitmq', 'RMQ_CLIENT'],
+  ])('takes a token a client module registers as provided (%s)', (name, token) => {
+    const graph = load(name);
+    const mentions = graph.unresolved.filter((row) => row.hint?.includes(token) === true);
+    expect(mentions).toEqual([]);
+    const proxy = graph.nodes.find((node) => node.label === 'ClientProxy');
+    const service = graph.nodes.find((node) => node.label === 'OrdersService');
+    const injected = edgesOf(graph, 'injects').filter(
+      (edge) => edge.from === service?.id && edge.to === proxy?.id,
+    );
+    expect(injected).toHaveLength(1);
+  });
+
   it('survives a cycle written with forwardRef, and keeps both edges', () => {
     const graph = load('nest-di-tokens');
     const injects = edgesOf(graph, 'injects');

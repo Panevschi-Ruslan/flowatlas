@@ -155,6 +155,18 @@
       }
     },
     {
+      "id": "nest-rabbitmq#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "nest-rabbitmq",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
       "id": "nest-rabbitmq#node_modules/@nestjs/microservices:ClientsModule",
       "type": "module",
       "label": "ClientsModule",
@@ -352,7 +364,8 @@
           "filesUnreadable": 0,
           "classes": 4,
           "skippedExternalCalls": {
-            "@golevelup/nestjs-rabbitmq": 3
+            "@golevelup/nestjs-rabbitmq": 3,
+            "@nestjs/microservices": 1
           }
         },
         "bootstrap": "src/main.ts",
@@ -489,6 +502,14 @@
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
       "line": 26
+    },
+    {
+      "from": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-rabbitmq#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 27
     },
     {
       "from": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService.cancel",
@@ -640,13 +661,6 @@
     }
   },
   "unresolved": [
-    {
-      "file": "src/orders/orders.service.ts",
-      "line": 27,
-      "reason": "di-token-unknown",
-      "hint": "No module in this repository provides RMQ_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
-      "symbol": "OrdersService.constructor[1]"
-    },
     {
       "file": "src/orders/orders.service.ts",
       "line": 48,

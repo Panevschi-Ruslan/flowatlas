@@ -29,6 +29,18 @@
   ],
   "nodes": [
     {
+      "id": "billing#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "billing",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
       "id": "billing#node_modules/@nestjs/microservices:ClientsModule",
       "type": "module",
       "label": "ClientsModule",
@@ -1049,6 +1061,18 @@
       }
     },
     {
+      "id": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "orders",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
       "id": "orders#node_modules/@nestjs/microservices:ClientsModule",
       "type": "module",
       "label": "ClientsModule",
@@ -1394,7 +1418,9 @@
           "filesRead": 5,
           "filesUnreadable": 0,
           "classes": 3,
-          "skippedExternalCalls": {}
+          "skippedExternalCalls": {
+            "@nestjs/microservices": 1
+          }
         },
         "bootstrap": "src/main.ts",
         "adapters": {
@@ -1441,7 +1467,8 @@
           "filesUnreadable": 0,
           "classes": 11,
           "skippedExternalCalls": {
-            "typeorm": 2
+            "typeorm": 2,
+            "@nestjs/microservices": 1
           }
         },
         "bootstrap": "src/main.ts",
@@ -1591,6 +1618,14 @@
       "meta": {
         "moduleKind": "external"
       }
+    },
+    {
+      "from": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient",
+      "to": "billing#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/invoices/orders.rpc.client.ts",
+      "line": 10
     },
     {
       "from": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient.ask",
@@ -2675,6 +2710,14 @@
       "returns": "type:orders#CreateDraftDto",
       "file": "src/orders/orders.controller.ts",
       "line": 92
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService",
+      "to": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 20
     },
     {
       "from": "orders#src/orders/orders.service.ts:OrdersService",
@@ -3863,14 +3906,6 @@
   },
   "unresolved": [
     {
-      "file": "src/invoices/orders.rpc.client.ts",
-      "line": 10,
-      "reason": "di-token-unknown",
-      "hint": "No module in this repository provides ORDERS_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
-      "symbol": "OrdersRpcClient.constructor[0]",
-      "service": "billing"
-    },
-    {
       "file": "src/app.module.ts",
       "line": 9,
       "reason": "module-import-dynamic",
@@ -3920,14 +3955,6 @@
       "message": "POST /orders/drafts/batch has no guard in front of it and reaches Draft.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
       "symbol": "POST /orders/drafts/batch"
-    },
-    {
-      "file": "src/orders/orders.service.ts",
-      "line": 20,
-      "reason": "di-token-unknown",
-      "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
-      "symbol": "OrdersService.constructor[0]",
-      "service": "orders"
     },
     {
       "file": "src/wire/wire.dto.ts",

@@ -149,6 +149,7 @@ const indexOf = (project: Project, declared: Record<string, { imports?: string[]
       declaration: indexed.declaration,
       controllers: (options.controllers ?? []).map((each) => find(each).declaration),
       providers: [],
+      providedByImports: [],
       exports: [],
       imports: (options.imports ?? []).map((each) => {
         const target = find(each);

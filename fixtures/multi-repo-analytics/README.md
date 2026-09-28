@@ -83,8 +83,13 @@ the default edge set: left in, this shape would bury the two above.
 | `entry:billing:event:orphan.in` | `billing/src/invoices/orphan.consumer.ts` | the publisher could live in a repository the configuration does not name |
 | `channel:audit.log` | published by `orders/src/audit/audit.service.ts` | same: a handler may exist outside the graph |
 | `channel:orphan.in` | handled by `billing/src/invoices/orphan.consumer.ts` | same, from the other side |
-| `UnusedService` | `orders/src/orders/unused.service.ts` | `orders` has unresolved `@Inject` tokens; one of them could be this |
+| `UnusedService` | `orders/src/orders/unused.service.ts` | `orders` has an unresolved `@Inject` token (`ORDERS_DB` in `OrdersRepository`, which no module provides); it could be this |
 | `OrdersApiService` | `web/src/app/orders-api.service.ts` | `web` is this one file, with no component to inject it; in a real front end something would |
+
+Until R150 the unresolved tokens behind `UnusedService`'s doubt were the three
+`@Inject('EVENTS_CLIENT')`s, which are not unresolved: `ClientsModule.register`
+in each `AppModule` provides that token, and the module reader did not read it.
+`ORDERS_DB` is a token nothing here provides.
 
 `entry:admin:cron:SyncJob.hourly` is **never** listed. A clock starts it, and
 nothing inside the graph ever will.

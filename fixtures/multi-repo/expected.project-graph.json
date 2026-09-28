@@ -957,6 +957,18 @@
       }
     },
     {
+      "id": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "orders",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
       "id": "orders#node_modules/@nestjs/microservices:ClientsModule",
       "type": "module",
       "label": "ClientsModule",
@@ -1217,7 +1229,8 @@
           "filesUnreadable": 0,
           "classes": 6,
           "skippedExternalCalls": {
-            "typeorm": 4
+            "typeorm": 4,
+            "@nestjs/microservices": 2
           }
         },
         "bootstrap": "src/main.ts",
@@ -2486,6 +2499,14 @@
     },
     {
       "from": "orders#src/orders/orders.service.ts:OrdersService",
+      "to": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService",
       "to": "orders#node_modules/typeorm:Repository",
       "type": "injects",
       "confidence": "static",
@@ -3238,14 +3259,6 @@
       "message": "POST /orders/:param/archive has no guard in front of it and reaches Order.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
       "symbol": "POST /orders/:param/archive"
-    },
-    {
-      "file": "src/orders/orders.service.ts",
-      "line": 16,
-      "reason": "di-token-unknown",
-      "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
-      "symbol": "OrdersService.constructor[1]",
-      "service": "orders"
     },
     {
       "service": "web",

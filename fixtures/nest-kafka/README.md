@@ -172,16 +172,9 @@ nothing. The entry reader's row gives the fix that is true: write the pattern.
 A decorator no entry reader knows, such as `@RabbitSubscribe` or `@Process`,
 has no such row, so its consumer still reports its own.
 
-**`di-token-unknown` at `service:28` is in the snapshots, and it is wrong. The
-reader is at fault, not this README.** The row says "No module in this
-repository provides KAFKA_CLIENT". `ClientsModule.register([{ name:
-'KAFKA_CLIENT', … }])` at `app.module.ts:15-21` provides exactly that token,
-because Nest registers each client's `name` as a provider. The module reader
-reads a module's `providers:` and nothing that an imported dynamic module
-contributes. The row stays in the snapshots until that is fixed, and it is
-recorded here so that it is not read as a truth. The fix is not made here
-because the same false row sits in the snapshots of five other fixtures
-(`nest-rabbitmq`, `multi-repo`, `multi-repo-analytics`,
-`multi-repo-contracts`, `multi-repo-doctor`), and `multi-repo-diff`'s sources
-have the same shape. `multi-repo-doctor`'s two-token `di-token-unknown` group
-(R35) is also built on `EVENTS_CLIENT`, one of those false rows.
+**No `di-token-unknown` at `service:28`.** `ClientsModule.register([{ name:
+'KAFKA_CLIENT', … }])` at `app.module.ts:15-21` provides that token, because
+Nest registers each client's `name` as a provider. The module reader asks its
+table of configured modules what such an import contributes, and the token is
+resolved to the installed `ClientProxy` it holds. The calls made through it are
+counted under `skippedExternalCalls["@nestjs/microservices"]`.

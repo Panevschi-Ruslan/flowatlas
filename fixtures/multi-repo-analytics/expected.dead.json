@@ -45,7 +45,7 @@
       "service": "orders",
       "file": "src/orders/unused.service.ts",
       "line": 9,
-      "reason": "nothing injects it and nothing reaches its methods; orders has 2 unresolved injects — verify"
+      "reason": "nothing injects it and nothing reaches its methods; orders has 1 unresolved injects — verify"
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService",
@@ -84,5 +84,5 @@
     "bot_event",
     "scene_step"
   ],
-  "unresolvedInjects": 3
+  "unresolvedInjects": 1
 }
