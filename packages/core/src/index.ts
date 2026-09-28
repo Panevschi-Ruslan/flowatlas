@@ -102,6 +102,8 @@ export {
   DEFAULT_OUTPUT,
   DEFAULT_TYPE_MAX_DEPTH,
   adapterForceSchema,
+  localBaseClassNames,
+  localBaseTableProperty,
   customBrokerSchema,
   customProducerSchema,
   customSubscriberSchema,
@@ -120,6 +122,7 @@ export {
   serviceConfigSchema,
 } from './config.js';
 export type {
+  LocalBaseClass,
   CustomBrokerConfig,
   CustomConsumerConfig,
   CustomProducerConfig,

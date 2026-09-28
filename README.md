@@ -431,7 +431,8 @@ them in, and what to check when a client will not list the server.
 
   "adapters": {
     "auto": true,
-    "db": { "localBaseClasses": ["BaseRepository"] },
+    // a repository base of your own, and where its classes state their table
+    "db": { "localBaseClasses": [{ "name": "BaseRepository", "tableProperty": "collectionName" }] },
     // a client class of your own the reader could not follow to a request
     "frontend": { "localClientClasses": ["ApiClient"] },
     "broker": {
@@ -660,7 +661,10 @@ prove, and the path is given so you can run it.
   table by the schema's `@@map` (`fixtures/prisma-not-generated`). Knex reached
   through an ORM manager's `getKnex()` is read as knex
   (`fixtures/nest-mikro-orm-knex`), and so is the SQL handed to `knex.raw`
-  (`fixtures/nest-knex-raw`). Redis and cache-manager, outgoing requests and
+  (`fixtures/nest-knex-raw`). A MongoDB collection is read where the driver's
+  chain names it, `db.collection('orders').find()`, and a repository base of
+  your own reads the table each subclass states in a property you name
+  (`fixtures/nest-mongo-tables`). Redis and cache-manager, outgoing requests and
   settings keys are leaves too.
 - **Channels** for Kafka, RabbitMQ, BullMQ and Redis pub/sub — both clients, and
   every spelling of a subscribe verb, `pSubscribe` and `sSubscribe` among them
@@ -756,7 +760,8 @@ Known gaps in what it can read:
   `readTestDirectories` reads it (`fixtures/nest-test-directories`).
 - A data layer this repository declares and does not name. Where a query goes
   through a repository class of the project's own, the class is what says which
-  table is meant, and `adapters.db.localBaseClasses` is where a reader names it.
+  table is meant, and `adapters.db.localBaseClasses` is where a reader names it,
+  with `tableProperty` saying which property of each class states its table.
   Until it is named, those calls are rows saying so, naming the workspace package
   the class comes from where it comes from one, rather than queries nobody
   checked.

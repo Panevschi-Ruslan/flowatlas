@@ -206,6 +206,8 @@ const localBaseDescriptor: DbDescriptor = {
 /** The driver, used directly rather than through a mapper. */
 const mongodbDescriptor: DbDescriptor = {
   package: 'mongodb',
+  // The collection is named in the chain, where `tableReadings` says (R165).
+  tableOverride: { kind: 'string-arg', index: 0 },
   operations: {
     find: READ,
     findOne: READ,
@@ -578,6 +580,17 @@ export const tableReadings: ReadonlyMap<string, TableReading> = new Map([
     },
   ],
   ['kysely', { locators: [{ kind: 'argument', index: 0 }], entityInTypeArgs: false }],
+  [
+    'mongodb',
+    {
+      // The driver names the collection once, in the call that hands it out:
+      // `db.collection('orders').find()`, or a constant bound to that call. Its
+      // type argument is the shape of a document and never a name - reading it
+      // made a table called `Document` of every untyped collection (R165).
+      locators: [{ kind: 'chain-call', method: 'collection', index: 0 }],
+      entityInTypeArgs: false,
+    },
+  ],
 ]);
 
 /**

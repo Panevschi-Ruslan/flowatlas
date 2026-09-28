@@ -1,5 +1,7 @@
 import {
   applicationOfFile,
+  localBaseClassNames,
+  localBaseTableProperty,
   classifyDbCall,
   declaredParameterType,
   isUniversalMethod,
@@ -38,7 +40,7 @@ import type {
   ParameterDeclaration,
   SourceFile,
 } from 'ts-morph';
-import { Node, SyntaxKind } from 'ts-morph';
+import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import {
   dataNameHints,
   dbAdapters,
@@ -237,7 +239,8 @@ const siteOf = (ctx: NestExtractContext, node: TsNode, file: string): Site => {
  * `orderCache` whose type comes from a database package proves everything.
  */
 export const extractLeaves = (ctx: NestExtractContext): void => {
-  const localBaseClasses = ctx.config.adapters.db.localBaseClasses;
+  const configuredBases = ctx.config.adapters.db.localBaseClasses;
+  const localBaseClasses = localBaseClassNames(configuredBases);
   const byPackage = new Map<string, DbDescriptor>();
   for (const adapter of ctx.adapters.db) byPackage.set(adapter.descriptor.package, adapter.descriptor);
   // A library the project reaches only through a package that hands it over is
@@ -249,6 +252,156 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     const adapter = dbAdapters.find((candidate) => candidate.descriptor.package === library);
     if (adapter !== undefined) byPackage.set(library, adapter.descriptor);
   }
+
+  /**
+   * Where a library writes the name of its table, and for a repository base the
+   * configuration names, where its subclasses do (R165).
+   *
+   * A base of the project's own has no description to carry the fact, so the
+   * configuration states it: the property each subclass sets to its table. With
+   * it, a call through `menuItemRepository` reads the table the class it is typed
+   * as states; without it, the base is read as before and the row that says the
+   * table is unread names the key that would read it.
+   */
+  /**
+   * What to say about a query whose table was not read.
+   *
+   * Through a repository base the configuration names, the table is the one the
+   * receiver's class states, and the only thing missing is which property says
+   * it; naming the call directly is not advice anybody could take there.
+   */
+  const unreadTableHint = (
+    receiver: string,
+    method: string,
+    origin: TypeOrigin | null,
+    call: TsNode,
+  ): string => {
+    const base =
+      origin?.package?.startsWith('local:') === true
+        ? origin.package.slice(6)
+        : unnamedBaseAround(call);
+    if (base !== undefined && localBaseTableProperty(configuredBases, base) === undefined) {
+      return `${receiver}.${method} goes through ${base}, whose classes name their table somewhere the configuration has not said. Write the base as { "name": "${base}", "tableProperty": "<property>" } under adapters.db.localBaseClasses, naming the property each class sets to its table.`;
+    }
+    return `The table ${receiver}.${method} touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.`;
+  };
+
+  /**
+   * The configured repository base a call is written inside, when that base
+   * says which property its classes name their table in.
+   */
+  const configuredBaseAround = (call: TsNode): string | undefined => {
+    const holder = classAround(call);
+    // A class that states its table is not generic: a query in it that still
+    // has none is a real gap, and gets the ordinary row.
+    const key = tablePropertyAbove(holder);
+    if (
+      holder !== undefined &&
+      key !== undefined &&
+      locateTable(call as CallExpression, [{ kind: 'receiver-type-property', key }], {
+        typeDeclaration: holder,
+      }) !== null
+    ) {
+      return undefined;
+    }
+    let current = holder;
+    for (let depth = 0; current !== undefined && depth < 8; depth += 1) {
+      const name = current.getName();
+      if (name !== undefined && localBaseTableProperty(configuredBases, name) !== undefined) return name;
+      current = current.getBaseClass();
+    }
+    return undefined;
+  };
+
+  /** A base configured without `tableProperty` that a call is written inside. */
+  const unnamedBaseAround = (call: TsNode): string | undefined => {
+    const holder = call.getFirstAncestor((node) => Node.isClassDeclaration(node));
+    let current = holder !== undefined && Node.isClassDeclaration(holder) ? holder : undefined;
+    for (let depth = 0; current !== undefined && depth < 8; depth += 1) {
+      const name = current.getName();
+      if (name !== undefined && localBaseClasses.includes(name)) {
+        return localBaseTableProperty(configuredBases, name) === undefined ? name : undefined;
+      }
+      current = current.getBaseClass();
+    }
+    return undefined;
+  };
+
+  /** The class a call is written in, when it is written in one. */
+  const classAround = (call: TsNode): ClassDeclaration | undefined => {
+    const holder = call.getFirstAncestor((node) => Node.isClassDeclaration(node));
+    return holder !== undefined && Node.isClassDeclaration(holder) ? holder : undefined;
+  };
+
+  /** The property the configured base a class extends names its table in. */
+  const tablePropertyAbove = (holder: ClassDeclaration | undefined): string | undefined => {
+    let current = holder;
+    for (let depth = 0; current !== undefined && depth < 8; depth += 1) {
+      const name = current.getName();
+      const key = name === undefined ? undefined : localBaseTableProperty(configuredBases, name);
+      if (key !== undefined) return key;
+      current = current.getBaseClass();
+    }
+    return undefined;
+  };
+
+  /** Whether an expression is reached from `this`, through calls, accesses and awaits. */
+  const madeThroughThis = (expression: TsNode): boolean => {
+    let current: TsNode | undefined = expression;
+    for (let depth = 0; current !== undefined && depth < 24; depth += 1) {
+      if (Node.isThisExpression(current)) return true;
+      // `const c = await this.coll(); c.findOne(…)`: a constant bound once, with
+      // no type of its own stated, stands for what it was bound to.
+      if (Node.isIdentifier(current)) {
+        const declaration: TsNode | undefined = current.getSymbol()?.getDeclarations()[0];
+        if (
+          declaration === undefined ||
+          !Node.isVariableDeclaration(declaration) ||
+          declaration.getTypeNode() !== undefined ||
+          declaration.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Const
+        ) {
+          return false;
+        }
+        current = declaration.getInitializer();
+        continue;
+      }
+      if (
+        Node.isCallExpression(current) ||
+        Node.isPropertyAccessExpression(current) ||
+        Node.isParenthesizedExpression(current) ||
+        Node.isAwaitExpression(current) ||
+        Node.isNonNullExpression(current) ||
+        Node.isAsExpression(current)
+      ) {
+        current = current.getExpression();
+        continue;
+      }
+      return false;
+    }
+    return false;
+  };
+
+  /** The table the class a `this` query is written in states, when it states one. */
+  const ownTableOf = (call: CallExpression, receiver: TsNode): string | null => {
+    if (!madeThroughThis(receiver)) return null;
+    const holder = classAround(call);
+    const key = tablePropertyAbove(holder);
+    if (holder === undefined || key === undefined) return null;
+    return locateTable(call, [{ kind: 'receiver-type-property', key }], { typeDeclaration: holder });
+  };
+
+  const readingFor = (
+    descriptor: DbDescriptor | undefined,
+    origin: TypeOrigin | null,
+  ): TableReading | undefined => {
+    if (descriptor === undefined) return undefined;
+    if (descriptor.package !== 'local') return tableReadings.get(descriptor.package);
+    const base = origin?.package?.startsWith('local:') === true ? origin.package.slice(6) : undefined;
+    const key = base === undefined ? undefined : localBaseTableProperty(configuredBases, base);
+    return key === undefined
+      ? undefined
+      : { locators: [{ kind: 'receiver-type-property', key }], entityInTypeArgs: false };
+  };
 
   const descriptorFor = (origin: TypeOrigin | null): DbDescriptor | undefined => {
     if (origin?.package == null) return undefined;
@@ -603,7 +756,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       return false;
     }
 
-    const reading = descriptor === undefined ? undefined : tableReadings.get(descriptor.package);
+    const reading = readingFor(descriptor, origin);
 
     // A method that takes its statement as text, when the library has one: the
     // call is read as a driver's query is, or not read as a query at all.
@@ -640,19 +793,33 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // fact that it was decided at run time, which is reported below rather than
     // guessed at. A statement names its tables in its text, and no locator is
     // asked.
-    const located =
+    const locatedInCall =
       reading === undefined || descriptor === undefined || statement !== undefined
         ? null
         : locateTable(call, reading.locators, {
             isOperation: (name) => operationOf(descriptor, name) !== null,
             ...(origin?.declaration === undefined ? {} : { typeDeclaration: origin.declaration }),
           });
+    // Inside a class of a configured base, a query made through `this` whose
+    // chain names nothing is on the class's own table: `this.coll().find()` in
+    // `MenuRepository` is a query on what `MenuRepository` sets its table
+    // property to. The chain is asked first, so a collection named outright
+    // still wins (R165).
+    const located =
+      locatedInCall ?? (reading === undefined || statement !== undefined ? null : ownTableOf(call, receiver));
+    // A repository base whose classes state their table is read from what they
+    // state, ahead of its type argument, exactly as a described library whose
+    // table is in an argument is (R165).
+    const stated =
+      descriptor?.package === 'local' && reading !== undefined
+        ? { ...descriptor, tableOverride: { kind: 'string-arg', index: 0 } as const }
+        : descriptor;
     const effective =
       statement !== undefined
         ? statement.descriptor
         : reading === undefined || located !== null
-          ? descriptor
-          : (withoutOverride.get(descriptor?.package ?? '') ?? descriptor);
+          ? stated
+          : (withoutOverride.get(descriptor?.package ?? '') ?? stated);
 
     const fromPackage = entityFromPackage(origin);
     const workspacePackage =
@@ -833,11 +1000,20 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // invisible to `doctor` and therefore to everybody. Guarded on there being
     // no row already, so the queries that carry their own reason keep it.
     if (classification.table === null && classification.unresolved === undefined) {
+      // Inside a configured base whose classes state their table, a query has
+      // no one table: it runs for every class extending the base, and each call
+      // through one of them is recorded with that class's table. That is the
+      // reader describing a fact, not a gap anybody can close (R165).
+      const generic = configuredBaseAround(call);
       ctx.report({
         file,
         line: site.line,
         reason: 'dynamic-table-name',
-        hint: `The table ${receiver.getText().slice(0, 40)}.${method} touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.`,
+        ...(generic === undefined ? {} : { level: 'info' as const }),
+        hint:
+          generic === undefined
+            ? unreadTableHint(receiver.getText().slice(0, 40), method, origin, call)
+            : `${generic} declares this query for every class that extends it; the table is each class's own, and is recorded at each call made through one of them.`,
         symbol: `${receiver.getText().slice(0, 60)}.${method}`,
       });
     }

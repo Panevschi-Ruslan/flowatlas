@@ -1,4 +1,10 @@
-import { Node, type CallExpression, type Decorator, type Node as TsNode } from 'ts-morph';
+import {
+  Node,
+  VariableDeclarationKind,
+  type CallExpression,
+  type Decorator,
+  type Node as TsNode,
+} from 'ts-morph';
 
 /**
  * Where a library writes the name of the thing a call is addressed to.
@@ -50,6 +56,16 @@ export type NameLocator =
    * away, which is exactly what a locator is for.
    */
   | { kind: 'base-constructor-argument'; index: number }
+  /**
+   * The value a property is initialised to on the receiver's declared class.
+   *
+   * The other way a class per name states the name once: not by handing it to
+   * `super(...)` but by setting a field the base reads,
+   * `protected readonly collectionName = 'menuItems'`. The class itself first,
+   * then each class it extends, so a name stated on an intermediate base is
+   * found as readily as one on the leaf (R165).
+   */
+  | { kind: 'receiver-type-property'; key: string }
   /**
    * An argument of the decorator on whatever provided the receiver.
    *
@@ -147,9 +163,32 @@ const chainCalls = (call: CallExpression): CallExpression[] => {
       current = current.getExpression();
       continue;
     }
+    // A link kept in a constant is still a link of the chain:
+    // `const users = db.collection('users'); users.find()` names the collection
+    // exactly as `db.collection('users').find()` does. Only a `const` with no
+    // annotation, because a binding that can be reassigned, or that states its
+    // own type, is not the call it was first given (R165).
+    const bound = Node.isIdentifier(current) ? constInitialiser(current) : undefined;
+    if (bound !== undefined) {
+      current = bound;
+      continue;
+    }
     return calls;
   }
   return calls;
+};
+
+/** What a name was bound to, when it is an unannotated `const` bound once. */
+const constInitialiser = (name: TsNode): TsNode | undefined => {
+  const symbol = name.getSymbol();
+  const declaration = symbol?.getDeclarations()[0];
+  if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return undefined;
+  if (declaration.getTypeNode() !== undefined) return undefined;
+  if (declaration.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Const) {
+    return undefined;
+  }
+  const initialiser = declaration.getInitializer();
+  return initialiser !== undefined && Node.isCallExpression(initialiser) ? initialiser : undefined;
 };
 
 /**
@@ -267,6 +306,28 @@ const baseConstructorArgument = (
   return undefined;
 };
 
+/**
+ * What a property of a class, or of a class it extends, is initialised to.
+ *
+ * The nearest declaration wins, because that is the one an instance holds: a
+ * subclass that sets the field overrides the base that declared it. A property
+ * declared with no initialiser - the base's `abstract readonly` - says nothing,
+ * so the walk goes on past it. Bounded like the constructor walk above.
+ */
+const classPropertyValue = (
+  declaration: TsNode | undefined,
+  key: string,
+): TsNode | undefined => {
+  let current = declaration;
+  for (let depth = 0; depth < 8; depth += 1) {
+    if (current === undefined || !Node.isClassDeclaration(current)) return undefined;
+    const initialiser = current.getProperty(key)?.getInitializer();
+    if (initialiser !== undefined) return initialiser;
+    current = current.getBaseClass();
+  }
+  return undefined;
+};
+
 const decoratorArgument = (
   declaration: TsNode | undefined,
   name: string,
@@ -306,6 +367,8 @@ const resolvers: LocatorResolvers = {
   'receiver-type': (_site, _locator, context) => context.typeDeclaration,
   'base-constructor-argument': (_site, locator, context) =>
     baseConstructorArgument(context.typeDeclaration, locator.index),
+  'receiver-type-property': (_site, locator, context) =>
+    classPropertyValue(context.typeDeclaration, locator.key),
   'provider-decorator': (_site, locator, context) =>
     decoratorArgument(context.providerDeclaration, locator.decorator, locator.index),
 };

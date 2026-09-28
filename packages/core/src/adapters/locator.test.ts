@@ -188,3 +188,48 @@ class Reports {
     ).toEqual([]);
   });
 });
+
+describe('a name a property of the receiver’s class is set to (R165)', () => {
+  const TABLE: readonly NameLocator[] = [{ kind: 'receiver-type-property', key: 'collectionName' }];
+  const file = parse(`
+    const ORDERS = 'orders';
+    abstract class Base { protected abstract readonly collectionName: string; find() {} }
+    class Orders extends Base { protected readonly collectionName = ORDERS; }
+    class Middle extends Base { protected readonly collectionName = 'middle'; }
+    class Leaf extends Middle {}
+    class Bare extends Base {}
+    new Orders().find();
+  `);
+  const site = callTo(file, 'find');
+
+  it('reads what the class itself sets the property to', () => {
+    expect(texts(site, TABLE, { typeDeclaration: classNamed(file, 'Orders') })).toEqual(['ORDERS']);
+  });
+
+  it('reads it from a base the class extends when the class sets nothing', () => {
+    expect(texts(site, TABLE, { typeDeclaration: classNamed(file, 'Leaf') })).toEqual(["'middle'"]);
+  });
+
+  it('points at nothing when only the abstract declaration exists', () => {
+    expect(texts(site, TABLE, { typeDeclaration: classNamed(file, 'Bare') })).toEqual([]);
+  });
+});
+
+describe('a chain continued through a constant (R165)', () => {
+  const COLLECTION: readonly NameLocator[] = [{ kind: 'chain-call', method: 'collection', index: 0 }];
+
+  it('reads the call a constant was bound to as a link of the chain', () => {
+    const file = parse(`const users = db.collection('users'); users.updateMany({}, {});`);
+    expect(texts(callTo(file, 'updateMany'), COLLECTION)).toEqual(["'users'"]);
+  });
+
+  it('does not follow a binding that can be reassigned', () => {
+    const file = parse(`let users = db.collection('users'); users.updateMany({}, {});`);
+    expect(texts(callTo(file, 'updateMany'), COLLECTION)).toEqual([]);
+  });
+
+  it('does not follow a binding that states its own type', () => {
+    const file = parse(`const users: Store = db.collection('users'); users.updateMany({}, {});`);
+    expect(texts(callTo(file, 'updateMany'), COLLECTION)).toEqual([]);
+  });
+});

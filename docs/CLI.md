@@ -967,7 +967,7 @@ it.
 |---|---|---|---|
 | `auto` | boolean | `true` | detect which adapters apply from each repository's manifest |
 | `force` | object | `{}` | use these adapters regardless of what was detected |
-| `db.localBaseClasses` | string[] | `[]` | classes of your own that behave like a repository, so calls through them are data access — including classes a workspace package of yours declares |
+| `db.localBaseClasses` | (string \| object)[] | `[]` | classes of your own that behave like a repository, so calls through them are data access — including classes a workspace package of yours declares. An entry may be `{ "name": "BaseRepository", "tableProperty": "collectionName" }` to say which property each class extending it sets to its table |
 | `frontend.localClientClasses` | string[] | `[]` | classes of your own that make HTTP requests, so `get`/`post`/… called on them are requests |
 | `broker.custom` | object[] | `[]` | an in-house message bus, described so its publishers and handlers are found |
 | `entry.registries` | object[] | `[]` | a table of handlers you keep yourself, described so each registration is a way in |
@@ -1062,6 +1062,33 @@ Each call through a named class becomes a `db_query` whose `package` is
 repository base's is (`find*` reads, `save*` writes). The table is named where
 the class carries it as a type argument — `OrdersRepository extends
 Repo<Order>` — and is otherwise reported as a table the call does not name.
+
+A base whose classes state their table in a property is written with that
+property, and the table is then read from the class each call is made through:
+
+```jsonc
+{
+  "adapters": {
+    "db": {
+      "localBaseClasses": [{ "name": "BaseRepository", "tableProperty": "collectionName" }]
+    }
+  }
+}
+```
+
+`class MenuRepository extends BaseRepository<MenuItem> { protected readonly
+collectionName = 'menuItems'; }` makes every call through a `MenuRepository`
+a query on `menuItems`, whether the value is a literal or a constant; the class
+itself first, then each class it extends. The stated name wins over the type
+argument. Inside such a class, a query made through `this` whose chain names no
+collection is on the class's own table: `const c = await this.coll();
+c.find(…)` in `MenuRepository` is a query on `menuItems`. A query written inside
+the base itself runs for every class that extends it, so it has no one table; it
+is an `info` row saying so, and each call through a subclass carries that
+subclass's table. A base named as a plain string
+keeps working as before, and a query through it whose table is not read carries
+a row naming `tableProperty` as the key that would read it
+(`fixtures/nest-mongo-tables`).
 
 Two things a wrapper can hide are not configuration, and no key reaches them.
 The library has to be among the service's dependencies — directly or along the

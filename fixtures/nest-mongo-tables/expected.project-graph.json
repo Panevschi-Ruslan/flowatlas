@@ -1,0 +1,862 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-28T13:25:27.916Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "MongoConnection",
+          "OrdersRepository",
+          "MenuRepository",
+          "AuditRepository",
+          "OrdersService",
+          "Migrations"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/audit/audit.repository.ts:AuditRepository",
+      "type": "provider",
+      "label": "AuditRepository",
+      "repo": "api",
+      "file": "src/audit/audit.repository.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/db/base.repository.ts:BaseRepository",
+      "type": "provider",
+      "label": "BaseRepository",
+      "repo": "api",
+      "file": "src/db/base.repository.ts",
+      "line": 9,
+      "kind": "injectable"
+    },
+    {
+      "id": "api#src/db/base.repository.ts:BaseRepository.coll",
+      "type": "method",
+      "label": "BaseRepository.coll",
+      "repo": "api",
+      "file": "src/db/base.repository.ts",
+      "line": 14
+    },
+    {
+      "id": "api#src/db/base.repository.ts:BaseRepository.findAll",
+      "type": "method",
+      "label": "BaseRepository.findAll",
+      "repo": "api",
+      "file": "src/db/base.repository.ts",
+      "line": 22
+    },
+    {
+      "id": "api#src/db/base.repository.ts:BaseRepository.findById",
+      "type": "method",
+      "label": "BaseRepository.findById",
+      "repo": "api",
+      "file": "src/db/base.repository.ts",
+      "line": 18
+    },
+    {
+      "id": "api#src/db/connection.ts:MongoConnection",
+      "type": "provider",
+      "label": "MongoConnection",
+      "repo": "api",
+      "file": "src/db/connection.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/db/connection.ts:MongoConnection.collection",
+      "type": "method",
+      "label": "MongoConnection.collection",
+      "repo": "api",
+      "file": "src/db/connection.ts",
+      "line": 9
+    },
+    {
+      "id": "api#src/db/legacy.repository.ts:LegacyRepository",
+      "type": "provider",
+      "label": "LegacyRepository",
+      "repo": "api",
+      "file": "src/db/legacy.repository.ts",
+      "line": 9,
+      "kind": "injectable"
+    },
+    {
+      "id": "api#src/db/legacy.repository.ts:LegacyRepository.list",
+      "type": "method",
+      "label": "LegacyRepository.list",
+      "repo": "api",
+      "file": "src/db/legacy.repository.ts",
+      "line": 14
+    },
+    {
+      "id": "api#src/db/migrations.ts:Migrations",
+      "type": "provider",
+      "label": "Migrations",
+      "repo": "api",
+      "file": "src/db/migrations.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/db/migrations.ts:Migrations.backfillUsers",
+      "type": "method",
+      "label": "Migrations.backfillUsers",
+      "repo": "api",
+      "file": "src/db/migrations.ts",
+      "line": 13
+    },
+    {
+      "id": "api#src/db/migrations.ts:Migrations.dropDecorations",
+      "type": "method",
+      "label": "Migrations.dropDecorations",
+      "repo": "api",
+      "file": "src/db/migrations.ts",
+      "line": 8
+    },
+    {
+      "id": "api#src/db/migrations.ts:Migrations.purge",
+      "type": "method",
+      "label": "Migrations.purge",
+      "repo": "api",
+      "file": "src/db/migrations.ts",
+      "line": 19
+    },
+    {
+      "id": "api#src/menu/menu.repository.ts:MenuRepository",
+      "type": "provider",
+      "label": "MenuRepository",
+      "repo": "api",
+      "file": "src/menu/menu.repository.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/menu/menu.repository.ts:MenuRepository.findByCategory",
+      "type": "method",
+      "label": "MenuRepository.findByCategory",
+      "repo": "api",
+      "file": "src/menu/menu.repository.ts",
+      "line": 12
+    },
+    {
+      "id": "api#src/orders/orders.repository.ts:OrdersRepository",
+      "type": "provider",
+      "label": "OrdersRepository",
+      "repo": "api",
+      "file": "src/orders/orders.repository.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.repository.ts:OrdersRepository.large",
+      "type": "method",
+      "label": "OrdersRepository.large",
+      "repo": "api",
+      "file": "src/orders/orders.repository.ts",
+      "line": 14
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.history",
+      "type": "method",
+      "label": "OrdersService.history",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 25
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.item",
+      "type": "method",
+      "label": "OrdersService.item",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 20
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.list",
+      "type": "method",
+      "label": "OrdersService.list",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "id": "db_query:api#src/db/base.repository.ts:19:12",
+      "type": "db_query",
+      "label": "read ?",
+      "repo": "api",
+      "file": "src/db/base.repository.ts",
+      "line": 19,
+      "meta": {
+        "op": "read",
+        "table": null,
+        "tables": [],
+        "package": "mongodb",
+        "method": "findOne",
+        "receiver": "this.coll()",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:api#src/db/base.repository.ts:23:12",
+      "type": "db_query",
+      "label": "read ?",
+      "repo": "api",
+      "file": "src/db/base.repository.ts",
+      "line": 23,
+      "meta": {
+        "op": "read",
+        "table": null,
+        "tables": [],
+        "package": "mongodb",
+        "method": "find",
+        "receiver": "this.coll()",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:api#src/db/legacy.repository.ts:15:12",
+      "type": "db_query",
+      "label": "read ?",
+      "repo": "api",
+      "file": "src/db/legacy.repository.ts",
+      "line": 15,
+      "meta": {
+        "op": "read",
+        "table": null,
+        "tables": [],
+        "package": "mongodb",
+        "method": "find",
+        "receiver": "this.mongo.collection<T>(this.source)",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:api#src/db/migrations.ts:15:12",
+      "type": "db_query",
+      "label": "write users",
+      "repo": "api",
+      "file": "src/db/migrations.ts",
+      "line": 15,
+      "meta": {
+        "op": "write",
+        "table": "users",
+        "tables": [
+          "users"
+        ],
+        "package": "mongodb",
+        "method": "updateMany",
+        "receiver": "users",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:api#src/db/migrations.ts:20:12",
+      "type": "db_query",
+      "label": "delete ?",
+      "repo": "api",
+      "file": "src/db/migrations.ts",
+      "line": 20,
+      "meta": {
+        "op": "delete",
+        "table": null,
+        "tables": [],
+        "package": "mongodb",
+        "method": "deleteOne",
+        "receiver": "db.collection(name)",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:api#src/db/migrations.ts:9:12",
+      "type": "db_query",
+      "label": "delete floor_decorations",
+      "repo": "api",
+      "file": "src/db/migrations.ts",
+      "line": 9,
+      "meta": {
+        "op": "delete",
+        "table": "floor_decorations",
+        "tables": [
+          "floor_decorations"
+        ],
+        "package": "mongodb",
+        "method": "drop",
+        "receiver": "db.collection('floor_decorations')",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:api#src/menu/menu.repository.ts:13:12",
+      "type": "db_query",
+      "label": "read menuItems",
+      "repo": "api",
+      "file": "src/menu/menu.repository.ts",
+      "line": 13,
+      "meta": {
+        "op": "read",
+        "table": "menuItems",
+        "tables": [
+          "menuItems"
+        ],
+        "package": "mongodb",
+        "method": "find",
+        "receiver": "this.coll()",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:api#src/orders/orders.repository.ts:16:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "api",
+      "file": "src/orders/orders.repository.ts",
+      "line": 16,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "mongodb",
+        "method": "find",
+        "receiver": "c",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:api#src/orders/orders.service.ts:16:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 16,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "local:BaseRepository",
+        "method": "findAll",
+        "receiver": "this.orders",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:api#src/orders/orders.service.ts:21:12",
+      "type": "db_query",
+      "label": "read menuItems",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 21,
+      "meta": {
+        "op": "read",
+        "table": "menuItems",
+        "tables": [
+          "menuItems"
+        ],
+        "package": "local:BaseRepository",
+        "method": "findById",
+        "receiver": "this.menu",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:api#src/orders/orders.service.ts:26:12",
+      "type": "db_query",
+      "label": "read AuditEntry",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 26,
+      "meta": {
+        "op": "read",
+        "table": "AuditEntry",
+        "tables": [
+          "AuditEntry"
+        ],
+        "package": "local:LegacyRepository",
+        "method": "list",
+        "receiver": "this.audit",
+        "source": "type-arg"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 11,
+          "filesRead": 11,
+          "filesUnreadable": 0,
+          "classes": 9,
+          "skippedExternalCalls": {
+            "mongodb": 17,
+            "local:BaseRepository.coll": 4,
+            "mongodb.toArray": 4,
+            "mongodb.collection": 4,
+            "mongodb.db": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:api#AuditEntry",
+      "type": "table",
+      "label": "AuditEntry",
+      "repo": "api"
+    },
+    {
+      "id": "table:api#floor_decorations",
+      "type": "table",
+      "label": "floor_decorations",
+      "repo": "api"
+    },
+    {
+      "id": "table:api#menuItems",
+      "type": "table",
+      "label": "menuItems",
+      "repo": "api"
+    },
+    {
+      "id": "table:api#orders",
+      "type": "table",
+      "label": "orders",
+      "repo": "api"
+    },
+    {
+      "id": "table:api#users",
+      "type": "table",
+      "label": "users",
+      "repo": "api"
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/db/base.repository.ts:BaseRepository.coll",
+      "to": "api#src/db/connection.ts:MongoConnection.collection",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:mongodb#Collection<T>",
+      "file": "src/db/base.repository.ts",
+      "line": 15
+    },
+    {
+      "from": "api#src/db/base.repository.ts:BaseRepository.findAll",
+      "to": "api#src/db/base.repository.ts:BaseRepository.coll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:mongodb#Collection<T>",
+      "file": "src/db/base.repository.ts",
+      "line": 23
+    },
+    {
+      "from": "api#src/db/base.repository.ts:BaseRepository.findAll",
+      "to": "db_query:api#src/db/base.repository.ts:23:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/db/base.repository.ts",
+      "line": 23
+    },
+    {
+      "from": "api#src/db/base.repository.ts:BaseRepository.findById",
+      "to": "api#src/db/base.repository.ts:BaseRepository.coll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:mongodb#Collection<T>",
+      "file": "src/db/base.repository.ts",
+      "line": 19
+    },
+    {
+      "from": "api#src/db/base.repository.ts:BaseRepository.findById",
+      "to": "db_query:api#src/db/base.repository.ts:19:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/db/base.repository.ts",
+      "line": 19
+    },
+    {
+      "from": "api#src/db/legacy.repository.ts:LegacyRepository.list",
+      "to": "api#src/db/connection.ts:MongoConnection.collection",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:mongodb#Collection<T>",
+      "file": "src/db/legacy.repository.ts",
+      "line": 15
+    },
+    {
+      "from": "api#src/db/legacy.repository.ts:LegacyRepository.list",
+      "to": "db_query:api#src/db/legacy.repository.ts:15:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/db/legacy.repository.ts",
+      "line": 15
+    },
+    {
+      "from": "api#src/db/migrations.ts:Migrations.backfillUsers",
+      "to": "db_query:api#src/db/migrations.ts:15:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/db/migrations.ts",
+      "line": 15
+    },
+    {
+      "from": "api#src/db/migrations.ts:Migrations.dropDecorations",
+      "to": "db_query:api#src/db/migrations.ts:9:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/db/migrations.ts",
+      "line": 9
+    },
+    {
+      "from": "api#src/db/migrations.ts:Migrations.purge",
+      "to": "db_query:api#src/db/migrations.ts:20:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/db/migrations.ts",
+      "line": 20
+    },
+    {
+      "from": "api#src/menu/menu.repository.ts:MenuRepository.findByCategory",
+      "to": "api#src/db/base.repository.ts:BaseRepository.coll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:mongodb#Collection<T>",
+      "file": "src/menu/menu.repository.ts",
+      "line": 13
+    },
+    {
+      "from": "api#src/menu/menu.repository.ts:MenuRepository.findByCategory",
+      "to": "db_query:api#src/menu/menu.repository.ts:13:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/menu/menu.repository.ts",
+      "line": 13
+    },
+    {
+      "from": "api#src/orders/orders.repository.ts:OrdersRepository.large",
+      "to": "api#src/db/base.repository.ts:BaseRepository.coll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:mongodb#Collection<T>",
+      "file": "src/orders/orders.repository.ts",
+      "line": 15
+    },
+    {
+      "from": "api#src/orders/orders.repository.ts:OrdersRepository.large",
+      "to": "db_query:api#src/orders/orders.repository.ts:16:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 16
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService",
+      "to": "api#src/audit/audit.repository.ts:AuditRepository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 11
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService",
+      "to": "api#src/menu/menu.repository.ts:MenuRepository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 10
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService",
+      "to": "api#src/orders/orders.repository.ts:OrdersRepository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 9
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.history",
+      "to": "api#src/db/legacy.repository.ts:LegacyRepository.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "T[]",
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.history",
+      "to": "db_query:api#src/orders/orders.service.ts:26:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.item",
+      "to": "api#src/db/base.repository.ts:BaseRepository.findById",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "T",
+      "file": "src/orders/orders.service.ts",
+      "line": 21
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.item",
+      "to": "db_query:api#src/orders/orders.service.ts:21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 21
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.list",
+      "to": "api#src/db/base.repository.ts:BaseRepository.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "T[]",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.list",
+      "to": "db_query:api#src/orders/orders.service.ts:16:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "from": "db_query:api#src/db/migrations.ts:15:12",
+      "to": "table:api#users",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/db/migrations.ts",
+      "line": 15
+    },
+    {
+      "from": "db_query:api#src/db/migrations.ts:9:12",
+      "to": "table:api#floor_decorations",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/db/migrations.ts",
+      "line": 9
+    },
+    {
+      "from": "db_query:api#src/menu/menu.repository.ts:13:12",
+      "to": "table:api#menuItems",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/menu/menu.repository.ts",
+      "line": 13
+    },
+    {
+      "from": "db_query:api#src/orders/orders.repository.ts:16:12",
+      "to": "table:api#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 16
+    },
+    {
+      "from": "db_query:api#src/orders/orders.service.ts:16:12",
+      "to": "table:api#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "from": "db_query:api#src/orders/orders.service.ts:21:12",
+      "to": "table:api#menuItems",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 21
+    },
+    {
+      "from": "db_query:api#src/orders/orders.service.ts:26:12",
+      "to": "table:api#AuditEntry",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    }
+  ],
+  "types": {
+    "type:api#MenuItem": {
+      "name": "MenuItem",
+      "kind": "object",
+      "declaredIn": "api#src/menu/menu.repository.ts",
+      "structuralHash": "a91bef03a19c4298",
+      "fields": [
+        {
+          "name": "_id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "api#src/orders/orders.repository.ts",
+      "structuralHash": "ea7f9f057490df7e",
+      "fields": [
+        {
+          "name": "_id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:mongodb#Collection<T>": {
+      "name": "Collection",
+      "kind": "external",
+      "declaredIn": "mongodb",
+      "structuralHash": "270854a4f441623c",
+      "meta": {
+        "declKind": "external",
+        "package": "mongodb"
+      }
+    },
+    "type:mongodb#Db": {
+      "name": "Db",
+      "kind": "external",
+      "declaredIn": "mongodb",
+      "structuralHash": "f07b82636835ac93",
+      "meta": {
+        "declKind": "external",
+        "package": "mongodb"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/db/base.repository.ts",
+      "line": 14,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "sites": 5,
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "api"
+    },
+    {
+      "file": "src/db/base.repository.ts",
+      "line": 19,
+      "reason": "dynamic-table-name",
+      "level": "info",
+      "sites": 2,
+      "hint": "BaseRepository declares this query for every class that extends it; the table is each class's own, and is recorded at each call made through one of them.",
+      "symbol": "this.coll().findOne",
+      "service": "api"
+    },
+    {
+      "file": "src/db/legacy.repository.ts",
+      "line": 15,
+      "reason": "dynamic-table-name",
+      "hint": "this.mongo.collection<T>(this.source).find goes through LegacyRepository, whose classes name their table somewhere the configuration has not said. Write the base as { \"name\": \"LegacyRepository\", \"tableProperty\": \"<property>\" } under adapters.db.localBaseClasses, naming the property each class sets to its table.",
+      "symbol": "this.mongo.collection<T>(this.source).find",
+      "service": "api"
+    },
+    {
+      "file": "src/db/migrations.ts",
+      "line": 20,
+      "reason": "dynamic-table-name",
+      "hint": "The table db.collection(name).deleteOne touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.",
+      "symbol": "db.collection(name).deleteOne",
+      "service": "api"
+    }
+  ]
+}

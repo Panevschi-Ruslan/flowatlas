@@ -632,7 +632,22 @@ export const flowatlasConfigSchema = z
              * point at, so this is how it names one without the core learning
              * anything about the store behind it.
              */
-            localBaseClasses: z.array(z.string().min(1)).default([]),
+            localBaseClasses: z
+              .array(
+                z.union([
+                  z.string().min(1),
+                  z.strictObject({
+                    name: z.string().min(1),
+                    /**
+                     * The property each class extending the base sets to the name
+                     * of its table: `collectionName` for
+                     * `protected readonly collectionName = 'menuItems'` (R165).
+                     */
+                    tableProperty: z.string().min(1).optional(),
+                  }),
+                ]),
+              )
+              .default([]),
           })
           .default({ localBaseClasses: [] }),
         frontend: z
@@ -940,4 +955,25 @@ export const loadConfig = (
     outputDir: isAbsolute(config.output) ? config.output : resolve(rootDir, config.output),
     repoDir: repoDirOf,
   };
+};
+
+/** One entry of `adapters.db.localBaseClasses`, in either spelling. */
+export type LocalBaseClass = string | { readonly name: string; readonly tableProperty?: string | undefined };
+
+/** The names of the configured repository bases, whichever spelling named them. */
+export const localBaseClassNames = (entries: readonly LocalBaseClass[]): string[] =>
+  entries.map((entry) => (typeof entry === 'string' ? entry : entry.name));
+
+/**
+ * The property a configured repository base's subclasses name their table in,
+ * when the configuration says; undefined for a base named as a bare string.
+ */
+export const localBaseTableProperty = (
+  entries: readonly LocalBaseClass[],
+  base: string,
+): string | undefined => {
+  for (const entry of entries) {
+    if (typeof entry !== 'string' && entry.name === base) return entry.tableProperty;
+  }
+  return undefined;
 };

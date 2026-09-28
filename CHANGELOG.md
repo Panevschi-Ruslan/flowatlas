@@ -270,6 +270,15 @@ README says what it exists to prove.
   `route-handler-unread` row (`next-hollow`).
 - **`readTestDirectories`** on a service entry: directories named like tests
   that hold code the application runs, read after all (`nest-test-directories`).
+- **A repository base says where its classes name their table.** An entry of
+  `adapters.db.localBaseClasses` may be `{ "name": "BaseRepository",
+  "tableProperty": "collectionName" }`, and every call through a class extending
+  it then reads the table that class sets the property to, as a literal or a
+  constant, ahead of its type argument. Inside such a class, a query made through
+  `this` (`const c = await this.coll(); c.find(…)`) is on the class's own table.
+  A query written inside the base runs for every subclass and is an `info` row
+  saying so (`nest-mongo-tables`).
+
 
 ### Changed
 
@@ -685,6 +694,14 @@ README says what it exists to prove.
   `(context.manager as any).getKnex()` is not read, because `any` may be
   anything with a method of that name, and it used to be silent; it now writes
   one `db-handover-unstated` row per query (`nest-mikro-orm-knex-not-installed`).
+- **A MongoDB collection is read where the driver names it.**
+  `db.collection('orders').find()`, and a `const` bound to
+  `db.collection('orders')`, name `orders`. The driver's type argument is the
+  shape of a document, and reading it made a table called `Document` of every
+  untyped collection; it is no longer asked (`nest-mongo-tables`).
+- **A query with no table says what would read it.** Through a repository base
+  named without `tableProperty`, the row names that key rather than asking for
+  the call to be rewritten.
 
 ## [0.4.1][] - 2026-09-22
 

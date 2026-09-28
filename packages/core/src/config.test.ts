@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import {
+import { localBaseClassNames, localBaseTableProperty,
   CONFIG_FILENAME,
   DEFAULT_OUTPUT,
   DEFAULT_TYPE_MAX_DEPTH,
@@ -334,5 +334,26 @@ describe('loadConfig', () => {
     const root = makeRoot();
     writeConfig(root, {});
     expect(() => loadConfig(root).repoDir('nope')).toThrow(ConfigInvalidError);
+  });
+});
+
+describe('a repository base that says where its classes name their table (R165)', () => {
+  const bases = (entries: unknown[]) =>
+    parseConfig({ adapters: { db: { localBaseClasses: entries } } }).adapters.db.localBaseClasses;
+
+  it('accepts a bare name and a name with its table property, side by side', () => {
+    const entries = bases(['LegacyRepository', { name: 'BaseRepository', tableProperty: 'collectionName' }]);
+    expect(localBaseClassNames(entries)).toEqual(['LegacyRepository', 'BaseRepository']);
+    expect(localBaseTableProperty(entries, 'BaseRepository')).toBe('collectionName');
+    expect(localBaseTableProperty(entries, 'LegacyRepository')).toBeUndefined();
+  });
+
+  it('answers nothing for a word that is not a configured base, prototype names included', () => {
+    const entries = bases([{ name: 'BaseRepository', tableProperty: 'collectionName' }]);
+    expect(localBaseTableProperty(entries, 'toString')).toBeUndefined();
+  });
+
+  it('refuses an entry with a key it does not know', () => {
+    expect(() => bases([{ name: 'BaseRepository', table: 'x' }])).toThrow();
   });
 });
