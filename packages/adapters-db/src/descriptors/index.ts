@@ -1,4 +1,10 @@
-import { hasAnyDependency, type DbAdapter, type DbDescriptor } from '@flowatlas/core';
+import {
+  allDependencies,
+  hasAnyDependency,
+  type DbAdapter,
+  type DbDescriptor,
+  type PackageJson,
+} from '@flowatlas/core';
 import type { TableLocator } from './table.js';
 
 /**
@@ -365,6 +371,100 @@ const knexDescriptor: DbDescriptor = {
     delete: DELETE,
     truncate: DELETE,
   },
+};
+
+/**
+ * A call that hands out another library's data layer.
+ *
+ * An ORM that builds its SQL with a query builder will hand the builder over:
+ * `manager.getKnex()` returns a knex instance, and from that call on every query
+ * is knex's own — a table, a chain, an operation along it — which the knex
+ * descriptor already reads. What was missing is the one step between them, and
+ * it is a fact about the ORM rather than about knex or about any reader: calling
+ * `method` on something `holders` declare yields what `yields` names. So it is a
+ * record here, and the reader asks it rather than knowing it.
+ *
+ * `holders` are written the way a module is imported, because that is how the
+ * source states a manager's type when nothing is installed to resolve it: a
+ * package, or a path inside one that re-exports it. A framework that hands its
+ * users the ORM under its own name — `@medusajs/framework/mikro-orm/postgresql`
+ * is `@mikro-orm/postgresql` — is a path inside that framework, and naming the
+ * path rather than the framework keeps every other module of it out: the
+ * framework's `utils` holds no manager (R149).
+ */
+export interface Handover {
+  /** The method that hands the data layer over: `getKnex` in `manager.getKnex()`. */
+  method: string;
+  /** Modules that declare, or re-export, what the method is called on. */
+  holders: readonly string[];
+  /** The library the returned value belongs to, and the type it is known by there. */
+  yields: { package: string; type: string };
+}
+
+/**
+ * Whether a module is a package or a path inside it.
+ *
+ * `@mikro-orm/postgresql` is inside `@mikro-orm/postgresql`, and so is
+ * `@mikro-orm/postgresql/dist/index`; `@mikro-orm/postgresql-extra` is not, which
+ * is why the test is against the name and a slash rather than the name alone.
+ */
+export const isWithin = (module: string, pkg: string): boolean =>
+  module === pkg || module.startsWith(`${pkg}/`);
+
+/**
+ * MikroORM's SQL manager, and everywhere it is imported from.
+ *
+ * The manager is declared in `@mikro-orm/knex` and every SQL driver package
+ * re-exports it, which is how an application imports it: from the driver it
+ * runs. Its connection has a `getKnex()` too, and is declared in the same
+ * packages, so the one record covers both.
+ */
+const MIKRO_ORM_SQL: readonly string[] = [
+  '@mikro-orm/knex',
+  '@mikro-orm/postgresql',
+  '@mikro-orm/mysql',
+  '@mikro-orm/mariadb',
+  '@mikro-orm/sqlite',
+  '@mikro-orm/better-sqlite',
+  '@mikro-orm/libsql',
+  '@mikro-orm/mssql',
+  // The same packages under a framework's name, as its modules import them.
+  '@medusajs/framework/mikro-orm/knex',
+  '@medusajs/framework/mikro-orm/postgresql',
+  '@medusajs/deps/mikro-orm/knex',
+  '@medusajs/deps/mikro-orm/postgresql',
+];
+
+export const handovers: readonly Handover[] = [
+  { method: 'getKnex', holders: MIKRO_ORM_SQL, yields: { package: 'knex', type: 'Knex' } },
+];
+
+/**
+ * The libraries a manifest reaches through a package that hands them over.
+ *
+ * A project that queries knex only through its ORM does not declare knex: it is
+ * the ORM's dependency, installed beside it and never named, so the knex reader
+ * is never chosen by the manifest and a call the checker traces into `knex` has
+ * no descriptor to be read with.
+ *
+ * This is deliberately not detection. Detecting knex in every project that
+ * declares a MikroORM driver, or a framework that re-exports one, would also say
+ * knex *applies* there - and a project that never calls `getKnex()` would then
+ * carry a row saying the knex reader found nothing (it did, on the fixture of a
+ * framework's file router, which queries nothing at all). What a holder in the
+ * manifest earns is only that the library it hands over can be read when a call
+ * is traced to it, which is a statement about calls rather than about the
+ * project.
+ */
+export const handedOverIn = (pkg: PackageJson): Set<string> => {
+  const declared = Object.keys(allDependencies(pkg));
+  const libraries = new Set<string>();
+  for (const handover of handovers) {
+    if (handover.holders.some((holder) => declared.some((name) => isWithin(holder, name)))) {
+      libraries.add(handover.yields.package);
+    }
+  }
+  return libraries;
 };
 
 /**

@@ -131,7 +131,9 @@ export const EXEMPT = [
       'output; a table would be a guess wearing a node. One descriptor turns all of ' +
       'them into tables at once, and then this entry goes.',
   },
-  // Medusa's four, all decided in R137 by reading the file rather than the count.
+  // Medusa's three, all decided in R137 by reading the file rather than the count.
+  // A fourth, over `models`, went in R149: the family has table nodes now that
+  // the inventory, pricing and product repositories' knex queries are read.
   {
     where: 'medusa',
     path: 'packages/medusa-test-utils/**',
@@ -166,19 +168,6 @@ export const EXEMPT = [
       'the doc comment above `createPgConnection`. The counting rule reads lines, ' +
       'not syntax, and over-counts in that direction on purpose; the function ' +
       'itself builds a connection and runs no query.',
-  },
-  {
-    where: 'medusa',
-    path: '(anywhere)',
-    family: 'models',
-    why:
-      'The one site is `@Entity({ abstract: true })` on the MikroORM base class in ' +
-      '`packages/core/utils/src/dal/mikro-orm/base-entity.ts`, which declares no ' +
-      'table: an abstract entity is the columns every table shares. Medusa ' +
-      'declares its tables with `model.define(…)`, which the counting rule has no ' +
-      'probe for, so the family’s real denominator here is zero and this gate ' +
-      'cannot see it (`BLIND`, R117). The day a probe counts `model.define`, this ' +
-      'entry stops being the only thing the family says and should be re-read.',
   },
   // Payload's two, decided in R147 by reading the file rather than the count.
   {

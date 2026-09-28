@@ -179,6 +179,15 @@ README says what it exists to prove.
   read where a resolved type produced nothing, for a library something here
   describes. Every query read that way is `heuristic`; the same repository
   installed reads the same tables at `static` (`db-not-installed`).
+- **A query builder an ORM hands over.** `manager.getKnex()` on a MikroORM
+  manager returns knex, and every query after that call is knex's own. The step
+  is a record beside the knex descriptor — this method, on something these
+  modules declare, yields that library — so a project that reaches knex only
+  through its ORM is read without naming knex in its manifest. Where the manager
+  does not resolve, its type is read from the type argument, cast or annotation
+  that states it, at `heuristic`. An alias written as an object,
+  `knex({ il: 'inventory_level' })`, names its table
+  (`nest-mikro-orm-knex`, `nest-mikro-orm-knex-not-installed`).
 - **A service whose source you do not have.** A service entry may name a
   document instead of a repository, `document: { kind, path }`, and its routes,
   channels and shapes join and compare like any other end. `kind` is `openapi`
