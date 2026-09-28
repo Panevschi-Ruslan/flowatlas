@@ -284,14 +284,63 @@ describe('a parameter forwarded through an interface method', () => {
       [
         // Called through the interface: either provider may run, so each keeps
         // the request it writes, with the hole where `uid` goes.
-        'BasecampCalendarService.deleteEvent -> GET /schedule_entries/:param/trashed.json',
-        'ZohoCalendarService.deleteEvent -> GET /events/:param',
+        'BasecampCalendarService.deleteEvent -> PUT /schedule_entries/:param/trashed.json',
+        'ZohoCalendarService.deleteEvent -> DELETE /events/:param',
         // Called through `this`: the class's own implementation, and only it.
-        'BasecampCalendarService.updateEvent -> GET /schedule_entries/draft/trashed.json',
-        'ZohoCalendarService.updateEvent -> GET /events/stale',
+        'BasecampCalendarService.updateEvent -> PUT /schedule_entries/draft/trashed.json',
+        'ZohoCalendarService.updateEvent -> DELETE /events/stale',
         // Called through the concrete class from elsewhere.
-        'CalendarManagerService.archive -> GET /schedule_entries/archived/trashed.json',
+        'CalendarManagerService.archive -> PUT /schedule_entries/archived/trashed.json',
       ].sort(),
     );
+  });
+});
+
+/**
+ * A request credited to the caller that fills in its address keeps the verb
+ * and the host it states itself (R161).
+ *
+ * Only the address used to be rebuilt at the caller. The verb came from the
+ * caller's call - its name, or GET - so `fetch(url, { method: 'PUT' })` read as
+ * GET, and a caller of a client method named `get` turned `axios.delete` into
+ * GET. The host was read as the first segment of a path, `/https:/host/…`.
+ */
+describe('a request forwarded to its callers', () => {
+  const requests = async (): Promise<string[]> => {
+    const graph = await graphOf('nest-forwarded-verb');
+    const byId = new Map(graph.nodes.map((node) => [node.id, node]));
+    return graph.edges
+      .filter((edge) => edge.type === 'calls' && byId.get(edge.from)?.type === 'http_out')
+      .map((edge) => {
+        const request = byId.get(edge.from);
+        const caller = graph.edges.find((item) => item.to === edge.from)?.from.split(':').pop();
+        return `${caller} -> ${request?.label} @ ${byId.get(edge.to)?.label}`;
+      })
+      .sort();
+  };
+
+  it('keeps the verb and the host the request states', async () => {
+    expect(await requests()).toEqual(
+      [
+        'ItemsService.restore -> PUT /items/featured @ api.example.com',
+        'StockService.refill -> PUT /items/restocked @ api.example.com',
+        // Through a client method named `get`: the request says DELETE.
+        'ItemsService.purge -> DELETE /items/expired @ api.example.com',
+        'StockService.retire -> DELETE /items/retired @ api.example.com',
+        // `{ method: 'GET', ...init }` is a default the caller's settings
+        // replace, so the caller's verb is the one sent.
+        'StockService.archive -> POST /items/archive @ api.example.com',
+      ].sort(),
+    );
+  });
+
+  it('reads no body from a caller whose request carries its own settings', async () => {
+    const graph = await graphOf('nest-forwarded-verb');
+    const bodies = graph.nodes
+      .filter((node) => node.type === 'http_out')
+      .map((node) => node.meta?.bodyType ?? null);
+    // The caller's second argument is `reason`, or the settings it hands
+    // over; neither is a body.
+    expect(bodies).toEqual([null, null, null, null, null]);
   });
 });
