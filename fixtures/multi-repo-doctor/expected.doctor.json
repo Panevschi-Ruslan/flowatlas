@@ -1,7 +1,7 @@
 {
   "doctorFormatVersion": 2,
   "schemaVersion": 5,
-  "flowatlasVersion": "0.5.0",
+  "flowatlasVersion": "0.5.1",
   "generatedAt": "1970-01-01T00:00:00.000Z",
   "strict": false,
   "baselinePath": "<root>/fixtures/multi-repo-doctor/baseline.accepted.json",
