@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sqlOperation, sqlTables } from './sql.js';
+import { isValuePosition, sqlOperation, sqlTables } from './sql.js';
 
 describe('reading tables out of a query', () => {
   it('finds the table a select reads from', () => {
@@ -68,5 +68,58 @@ describe('reading what a query does', () => {
 
   it('says nothing when the verb is not one it knows', () => {
     expect(sqlOperation('EXPLAIN ANALYZE SELECT 1')).toBeNull();
+  });
+});
+
+describe('names a WITH clause introduces (R155)', () => {
+  it('leaves out every one of them, not only the first', () => {
+    expect(
+      sqlTables(
+        'WITH a AS (SELECT id FROM orders), b AS (SELECT id FROM refunds) SELECT * FROM a JOIN b ON a.id = b.id',
+      ),
+    ).toEqual(['orders', 'refunds']);
+  });
+
+  it('leaves out one written with its columns, and one that is recursive', () => {
+    expect(
+      sqlTables(
+        'WITH input_pairs(product_id, option_id) AS (VALUES (?, ?)) SELECT * FROM product_option po JOIN input_pairs ip ON ip.option_id = po.id',
+      ),
+    ).toEqual(['product_option']);
+    expect(
+      sqlTables(
+        'WITH RECURSIVE tree AS (SELECT id FROM roles UNION ALL SELECT r.id FROM roles r JOIN tree t ON t.id = r.parent_id) SELECT * FROM tree',
+      ),
+    ).toEqual(['roles']);
+  });
+});
+
+describe('where a substitution can only be a value (R155)', () => {
+  it.each([
+    "SELECT * FROM orders WHERE region = '",
+    'SELECT * FROM orders WHERE id = ',
+    'SELECT * FROM orders WHERE total >= ',
+    'SELECT * FROM orders WHERE name ILIKE ',
+    'SELECT * FROM orders LIMIT ',
+    'SELECT * FROM orders WHERE id IN (',
+    'SELECT * FROM orders WHERE id IN (1, ',
+    'INSERT INTO orders (a, b) VALUES (',
+    'WITH input_pairs(a, b) AS (VALUES ',
+  ])('takes the hole after %j for a value', (before) => {
+    expect(isValuePosition(before)).toBe(true);
+  });
+
+  it.each([
+    'SELECT * FROM ',
+    'SELECT * FROM orders JOIN ',
+    'SELECT * FROM orders WHERE ',
+    'SELECT * FROM orders WHERE a = 1 AND ',
+    'SELECT * FROM (',
+    'SELECT a, ',
+    'INSERT INTO orders (a, ',
+    'SELECT * FROM orders WHERE id IN (SELECT id FROM ',
+    '"',
+  ])('does not take the hole after %j for one', (before) => {
+    expect(isValuePosition(before)).toBe(false);
   });
 });

@@ -181,3 +181,47 @@ describe('a method every object has', () => {
     });
   }
 });
+
+/**
+ * `knex.raw(sql)` is a statement when it runs on its own and a fragment of
+ * another query when a builder takes it (R155).
+ *
+ * Before R155 every one of these calls was counted and nothing else: `raw` is
+ * not an operation of the knex descriptor, so its SQL was never read. The text
+ * is read with the reader the `pg` descriptor already uses, and where the call
+ * sits decides whether it is a query at all.
+ */
+describe('the SQL handed to knex.raw', () => {
+  const FILE = 'src/reports/reports.service.ts';
+
+  it('reads each statement on its own, and each builder query once', async () => {
+    const graph = await graphOf('nest-knex-raw');
+    const read = queriesIn(graph, FILE).map((node) => [
+      node.line,
+      node.label,
+      node.meta?.['tables'],
+    ]);
+    expect(read).toEqual([
+      [14, 'read orders', ['orders']],
+      [20, 'delete order_events', ['order_events']],
+      [27, 'read orders', ['orders', 'customers']],
+      [36, 'read orders', ['orders']],
+      [44, 'read orders', ['orders']],
+      [45, 'read refunds', ['refunds']],
+      [52, 'access ?', []],
+      [67, 'read orders', ['orders']],
+      [78, 'read customers', ['customers']],
+      [86, 'write orders', ['orders']],
+      [98, 'read orders', ['orders', 'refunds']],
+    ]);
+  });
+
+  it('says a statement whose table is computed could not be read, and nothing else', async () => {
+    const graph = await graphOf('nest-knex-raw');
+    // The call graph's own rows about the builder chain are another reader's.
+    const rows = graph.unresolved
+      .filter((row) => row.file === FILE && row.reason !== 'call-dynamic-receiver')
+      .map((row) => [row.line, row.reason]);
+    expect(rows).toEqual([[52, 'sql-parse-failed']]);
+  });
+});
