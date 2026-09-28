@@ -4,7 +4,7 @@ import type { Calendar } from './calendar.js';
 @Injectable()
 export class ZohoCalendarService implements Calendar {
   async deleteEvent(uid: string): Promise<void> {
-    await fetch(`${process.env.ZOHO_URL}/events/${uid}`);
+    await fetch(`${process.env.ZOHO_URL}/events/${uid}`, { method: 'DELETE' });
   }
 
   // The same call, spelled the same way, in another class. It runs zoho's

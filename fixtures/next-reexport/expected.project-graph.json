@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T11:36:13.900Z",
+  "builtAt": "2026-09-28T08:36:17.272Z",
   "services": [
     {
       "name": "web",
@@ -92,8 +92,7 @@
         "path": "/deliveries",
         "baseUrlEnv": "DELIVERIES_UPSTREAM_URL",
         "responseType": null,
-        "bodyType": "RequestInit",
-        "bodyFrom": "type"
+        "bodyType": null
       }
     },
     {

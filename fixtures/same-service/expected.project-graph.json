@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:27:00.859Z",
+  "builtAt": "2026-09-28T08:36:25.894Z",
   "services": [
     {
       "name": "site",
@@ -73,8 +73,7 @@
         "path": "/api/things",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": "RequestInit",
-        "bodyFrom": "type"
+        "bodyType": null
       }
     },
     {

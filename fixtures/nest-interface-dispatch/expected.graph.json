@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "nest-interface-dispatch",
-  "generatedAt": "2026-09-28T07:50:40.046Z",
+  "generatedAt": "2026-09-28T08:35:48.814Z",
   "nodes": [
     {
       "id": "config_key:nest-interface-dispatch#BASECAMP_URL",
@@ -30,12 +30,12 @@
     {
       "id": "http_out:nest-interface-dispatch#src/calendars/basecamp.service.ts:13:11",
       "type": "http_out",
-      "label": "GET /schedule_entries/draft/trashed.json",
+      "label": "PUT /schedule_entries/draft/trashed.json",
       "repo": "nest-interface-dispatch",
       "file": "src/calendars/basecamp.service.ts",
       "line": 13,
       "meta": {
-        "method": "GET",
+        "method": "PUT",
         "url": "${BASECAMP_URL}/schedule_entries/draft/trashed.json",
         "path": "/schedule_entries/draft/trashed.json",
         "baseUrlEnv": "BASECAMP_URL",
@@ -46,12 +46,12 @@
     {
       "id": "http_out:nest-interface-dispatch#src/calendars/basecamp.service.ts:7:11",
       "type": "http_out",
-      "label": "GET /schedule_entries/:param/trashed.json",
+      "label": "PUT /schedule_entries/:param/trashed.json",
       "repo": "nest-interface-dispatch",
       "file": "src/calendars/basecamp.service.ts",
       "line": 7,
       "meta": {
-        "method": "GET",
+        "method": "PUT",
         "url": "${BASECAMP_URL}/schedule_entries/${…}/trashed.json",
         "path": "/schedule_entries/:param/trashed.json",
         "baseUrlEnv": "BASECAMP_URL",
@@ -62,12 +62,12 @@
     {
       "id": "http_out:nest-interface-dispatch#src/calendars/calendar-manager.service.ts:18:11",
       "type": "http_out",
-      "label": "GET /schedule_entries/archived/trashed.json",
+      "label": "PUT /schedule_entries/archived/trashed.json",
       "repo": "nest-interface-dispatch",
       "file": "src/calendars/calendar-manager.service.ts",
       "line": 18,
       "meta": {
-        "method": "GET",
+        "method": "PUT",
         "url": "${BASECAMP_URL}/schedule_entries/archived/trashed.json",
         "path": "/schedule_entries/archived/trashed.json",
         "baseUrlEnv": "BASECAMP_URL",
@@ -78,12 +78,12 @@
     {
       "id": "http_out:nest-interface-dispatch#src/calendars/zoho.service.ts:13:11",
       "type": "http_out",
-      "label": "GET /events/stale",
+      "label": "DELETE /events/stale",
       "repo": "nest-interface-dispatch",
       "file": "src/calendars/zoho.service.ts",
       "line": 13,
       "meta": {
-        "method": "GET",
+        "method": "DELETE",
         "url": "${ZOHO_URL}/events/stale",
         "path": "/events/stale",
         "baseUrlEnv": "ZOHO_URL",
@@ -94,12 +94,12 @@
     {
       "id": "http_out:nest-interface-dispatch#src/calendars/zoho.service.ts:7:11",
       "type": "http_out",
-      "label": "GET /events/:param",
+      "label": "DELETE /events/:param",
       "repo": "nest-interface-dispatch",
       "file": "src/calendars/zoho.service.ts",
       "line": 7,
       "meta": {
-        "method": "GET",
+        "method": "DELETE",
         "url": "${ZOHO_URL}/events/${…}",
         "path": "/events/:param",
         "baseUrlEnv": "ZOHO_URL",

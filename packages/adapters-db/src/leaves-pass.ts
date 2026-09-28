@@ -56,7 +56,7 @@ import { readSqlArgument, type SqlArgument } from './leaves/sql-argument.js';
 import { handedOverOrigin } from './leaves/handover.js';
 import { dataLayerOf } from './leaves/silence.js';
 import { statedOrigin } from './leaves/stated.js';
-import { analyzeUrl, routePathOf, type UrlInfo } from './leaves/url.js';
+import { analyzeUrl, composeAddress } from './leaves/url.js';
 import {
   deref,
   forwardedFrom,
@@ -133,6 +133,45 @@ const isFetchAlias = (callee: TsNode): boolean => {
   if (operator !== SyntaxKind.QuestionQuestionToken && operator !== SyntaxKind.BarBarToken) return false;
   return isFetch(held.getRight()) || isFetch(held.getLeft());
 };
+
+/**
+ * The verb a request's settings object writes outright, `{ method: 'PUT' }`.
+ *
+ * `settled` asks for a verb nothing can replace. `{ method: 'GET', ...init }`
+ * writes a default the spread overrides, which is how a shared client sends
+ * whatever its callers ask for, so it states no verb of its own.
+ */
+const verbInSettings = (settings: TsNode | undefined, settled = false): string | undefined => {
+  if (settings === undefined || !Node.isObjectLiteralExpression(settings)) return undefined;
+  const property = settings.getProperty('method');
+  if (property === undefined || !Node.isPropertyAssignment(property)) return undefined;
+  if (settled) {
+    const written = settings.getProperties();
+    const spreadAfter = written
+      .slice(written.indexOf(property) + 1)
+      .some((item) => Node.isSpreadAssignment(item));
+    if (spreadAfter) return undefined;
+  }
+  const initializer = property.getInitializer();
+  const value = initializer === undefined ? undefined : evaluateExpression(initializer);
+  return value?.resolved === true && typeof value.value === 'string'
+    ? value.value.toUpperCase()
+    : undefined;
+};
+
+/** How one request is recorded, beyond where and by whom. */
+interface RecordOptions {
+  /** The address's fixed half, when a caller supplied the rest. */
+  split?: SplitAddress;
+  /** The settings of a `new Request(url, init)` the call was handed. */
+  init?: TsNode;
+  /**
+   * Whether the site's second argument belongs to this request, as its
+   * settings or its body. It does not when the site is a caller credited with a
+   * request whose own settings were already read.
+   */
+  readsSite?: boolean;
+}
 
 /**
  * The address and options a `Request` was built with, when the call is handed one.
@@ -801,25 +840,6 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   };
 
   /**
-   * Puts an address back together from its two halves.
-   *
-   * The client knew the base and the caller knew the path; neither knew the
-   * whole address, and the request is only useful once they are joined.
-   */
-  const compose = (info: UrlInfo, split?: SplitAddress): UrlInfo => {
-    if (split === undefined) return info;
-    if (info.host !== null) return info;
-    const path = info.path === null ? null : routePathOf(split.before + info.path + split.after);
-    const env = split.baseUrlEnv ?? info.baseUrlEnv;
-    return {
-      url: path === null ? info.url : `${env === null ? '' : `\${${env}}`}${path}`,
-      path,
-      baseUrlEnv: env,
-      host: null,
-    };
-  };
-
-  /**
    * Where a request's verb comes from, when it is not written at the call.
    *
    * A client that takes the verb as an argument writes `fetch(url, { method })`
@@ -897,6 +917,35 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return null;
   };
 
+  /**
+   * The verb a request states itself, where it is made: `fetch(url, { method:
+   * 'PUT' })`, or a client method named for its verb, `axios.delete(url)`.
+   *
+   * When a caller is credited with the request, this is still its verb (R161):
+   * the caller only filled in part of the address. `settings` says the verb was
+   * read out of the request's own settings, which also carry its body, so the
+   * caller's second argument is neither.
+   */
+  const statedVerbOf = (
+    call: CallExpression,
+    recognised: string,
+    init: TsNode | undefined,
+  ): { verb: string; settings: boolean } | undefined => {
+    if (recognised === 'GET') {
+      const settings = init === undefined ? call.getArguments()[1] : deref(init);
+      const stated = verbInSettings(settings, true);
+      if (stated !== undefined) return { verb: stated, settings: true };
+    }
+    const callee = call.getExpression();
+    if (!Node.isPropertyAccessExpression(callee)) return undefined;
+    // `get` is a verb and `request` is not: only a name that is its own verb
+    // states one, and `fetch` only defaults to GET.
+    const name = callee.getName().toLowerCase();
+    return HTTP_METHODS.get(name) === name.toUpperCase()
+      ? { verb: recognised, settings: false }
+      : undefined;
+  };
+
   /** The verb a wrapper's own name gives away, for a request made through one. */
   const verbOfSite = (site: TsNode): string | undefined => {
     if (!Node.isCallExpression(site)) return undefined;
@@ -935,10 +984,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     urlArg: TsNode,
     method: string,
     owner: Holder,
-    split?: SplitAddress,
-    init?: TsNode,
+    options: RecordOptions = {},
   ): void => {
-    const info = compose(analyzeUrl(urlArg), split);
+    const { split, init, readsSite = true } = options;
+    const info = composeAddress(analyzeUrl(urlArg), split);
 
     // A second argument can carry the method for a generic request.
     let verb = method;
@@ -947,26 +996,23 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // are not the keys of anything sent, and recording them as such would let
     // `method` and `headers` stand for what a call puts on the wire.
     let secondIsSettings = false;
-    if (verb === 'GET') {
-      const optionsArg = init === undefined ? site.getArguments()[1] : deref(init);
-      if (optionsArg !== undefined && Node.isObjectLiteralExpression(optionsArg)) {
-        const property = optionsArg.getProperty('method');
-        if (property !== undefined && Node.isPropertyAssignment(property)) {
-          const initializer = property.getInitializer();
-          const value = initializer === undefined ? undefined : evaluateExpression(initializer);
-          if (value?.resolved === true && typeof value.value === 'string') {
-            verb = value.value.toUpperCase();
-            secondIsSettings = init === undefined;
-          }
-        }
+    if (verb === 'GET' && readsSite) {
+      const stated = verbInSettings(init === undefined ? site.getArguments()[1] : deref(init));
+      if (stated !== undefined) {
+        verb = stated;
+        secondIsSettings = init === undefined;
       }
     }
 
     const [typeArgument] = site.getTypeArguments();
     const responseType =
       typeArgument === undefined ? null : ctx.types.collectType(typeArgument.getType(), site);
-    const bodyArgument = init === undefined ? site.getArguments()[1] : undefined;
-    const declaredBodyWide = declaredParameterType(site, 1, ctx.checker);
+    // The second argument is a body only when it is nothing else. A settings
+    // object declares the settings' type, and `RequestInit` read as the body of
+    // `fetch(url, { method: 'PUT' })` named a type nothing sends.
+    const bodyAtSite = readsSite && init === undefined && !secondIsSettings;
+    const bodyArgument = bodyAtSite ? site.getArguments()[1] : undefined;
+    const declaredBodyWide = bodyAtSite ? declaredParameterType(site, 1, ctx.checker) : undefined;
     const declaredBody =
       declaredBodyWide !== undefined && bodyArgument !== undefined
         ? narrowUnionByLiteral(declaredBodyWide, bodyArgument)
@@ -1077,14 +1123,23 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     const split = isReadable(urlArg) ? undefined : splitAtParameterIn(urlArg, settingReader);
     if (split !== undefined) {
       const verbSource = verbParameterOf(call);
+      const stated = statedVerbOf(call, recognised.method, request?.init);
       const forwarded = forwardedFrom(split.parameter);
       let recorded = 0;
       for (const hop of forwarded.calls) {
         const owner = ownerOf(hop.site);
         if (owner === undefined || !Node.isCallExpression(hop.site)) continue;
+        // What the request states is the request's; a caller's name or
+        // argument only stands in for a verb the request leaves open.
         const verb =
-          verbOfSite(hop.site) ?? verbFromSite(hop.site, verbSource) ?? recognised.method;
-        recordHttp(hop.site, hop.argument, verb, owner, split);
+          stated?.verb ??
+          verbOfSite(hop.site) ??
+          verbFromSite(hop.site, verbSource) ??
+          recognised.method;
+        recordHttp(hop.site, hop.argument, verb, owner, {
+          split,
+          readsSite: stated?.settings !== true,
+        });
         recorded += 1;
       }
       // A call through an interface this method implements may run it and may
@@ -1094,7 +1149,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       if (recorded > 0 && !forwarded.undecided) return true;
     }
 
-    recordHttp(call, urlArg, recognised.method, holder, undefined, request?.init);
+    recordHttp(call, urlArg, recognised.method, holder, { init: request?.init });
     return true;
   };
 

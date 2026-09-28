@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-28T07:59:16.133Z",
+  "builtAt": "2026-09-28T08:36:04.973Z",
   "services": [
     {
       "name": "api",
@@ -170,8 +170,7 @@
         "path": "/send",
         "baseUrlEnv": "MAIL_RELAY_URL",
         "responseType": null,
-        "bodyType": "RequestInit",
-        "bodyFrom": "type"
+        "bodyType": null
       }
     },
     {
@@ -203,8 +202,7 @@
         "path": "/orders",
         "baseUrlEnv": "E2E_API_URL",
         "responseType": null,
-        "bodyType": "RequestInit",
-        "bodyFrom": "type"
+        "bodyType": null
       }
     },
     {

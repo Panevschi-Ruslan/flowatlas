@@ -1,0 +1,412 @@
+{
+  "schemaVersion": 5,
+  "repo": "nest-forwarded-verb",
+  "generatedAt": "2026-09-28T09:08:55.138Z",
+  "nodes": [
+    {
+      "id": "external_api:api.example.com",
+      "type": "external_api",
+      "label": "api.example.com",
+      "repo": "nest-forwarded-verb",
+      "meta": {
+        "host": "api.example.com"
+      }
+    },
+    {
+      "id": "http_out:nest-forwarded-verb#src/items/items.service.ts:13:11",
+      "type": "http_out",
+      "label": "DELETE /items/expired",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/items.service.ts",
+      "line": 13,
+      "meta": {
+        "method": "DELETE",
+        "url": "https://api.example.com/items/expired",
+        "path": "/items/expired",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "api.example.com"
+      }
+    },
+    {
+      "id": "http_out:nest-forwarded-verb#src/items/items.service.ts:9:11",
+      "type": "http_out",
+      "label": "PUT /items/featured",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/items.service.ts",
+      "line": 9,
+      "meta": {
+        "method": "PUT",
+        "url": "https://api.example.com/items/featured",
+        "path": "/items/featured",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "api.example.com"
+      }
+    },
+    {
+      "id": "http_out:nest-forwarded-verb#src/items/stock.service.ts:13:11",
+      "type": "http_out",
+      "label": "POST /items/archive",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/stock.service.ts",
+      "line": 13,
+      "meta": {
+        "method": "POST",
+        "url": "https://api.example.com/items/archive",
+        "path": "/items/archive",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "api.example.com"
+      }
+    },
+    {
+      "id": "http_out:nest-forwarded-verb#src/items/stock.service.ts:17:11",
+      "type": "http_out",
+      "label": "DELETE /items/retired",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/stock.service.ts",
+      "line": 17,
+      "meta": {
+        "method": "DELETE",
+        "url": "https://api.example.com/items/retired",
+        "path": "/items/retired",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "api.example.com"
+      }
+    },
+    {
+      "id": "http_out:nest-forwarded-verb#src/items/stock.service.ts:9:11",
+      "type": "http_out",
+      "label": "PUT /items/restocked",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/stock.service.ts",
+      "line": 9,
+      "meta": {
+        "method": "PUT",
+        "url": "https://api.example.com/items/restocked",
+        "path": "/items/restocked",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "api.example.com"
+      }
+    },
+    {
+      "id": "nest-forwarded-verb#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-forwarded-verb",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "ItemsClient",
+          "ItemsService",
+          "StockService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/items.client.ts:ItemsClient",
+      "type": "provider",
+      "label": "ItemsClient",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/items.client.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/items.client.ts:ItemsClient.get",
+      "type": "method",
+      "label": "ItemsClient.get",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/items.client.ts",
+      "line": 26
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/items.client.ts:ItemsClient.replace",
+      "type": "method",
+      "label": "ItemsClient.replace",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/items.client.ts",
+      "line": 14
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/items.client.ts:ItemsClient.send",
+      "type": "method",
+      "label": "ItemsClient.send",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/items.client.ts",
+      "line": 20
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/items.service.ts:ItemsService",
+      "type": "provider",
+      "label": "ItemsService",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/items.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/items.service.ts:ItemsService.purge",
+      "type": "method",
+      "label": "ItemsService.purge",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/items.service.ts",
+      "line": 12
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/items.service.ts:ItemsService.restore",
+      "type": "method",
+      "label": "ItemsService.restore",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/items.service.ts",
+      "line": 8
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/stock.service.ts:StockService",
+      "type": "provider",
+      "label": "StockService",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/stock.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/stock.service.ts:StockService.archive",
+      "type": "method",
+      "label": "StockService.archive",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/stock.service.ts",
+      "line": 12
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/stock.service.ts:StockService.refill",
+      "type": "method",
+      "label": "StockService.refill",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/stock.service.ts",
+      "line": 8
+    },
+    {
+      "id": "nest-forwarded-verb#src/items/stock.service.ts:StockService.retire",
+      "type": "method",
+      "label": "StockService.retire",
+      "repo": "nest-forwarded-verb",
+      "file": "src/items/stock.service.ts",
+      "line": 16
+    },
+    {
+      "id": "repo:nest-forwarded-verb",
+      "type": "repo",
+      "label": "nest-forwarded-verb",
+      "repo": "nest-forwarded-verb",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {
+            "axios": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "http_out:nest-forwarded-verb#src/items/items.service.ts:13:11",
+      "to": "external_api:api.example.com",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/items.service.ts",
+      "line": 13
+    },
+    {
+      "from": "http_out:nest-forwarded-verb#src/items/items.service.ts:9:11",
+      "to": "external_api:api.example.com",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/items.service.ts",
+      "line": 9
+    },
+    {
+      "from": "http_out:nest-forwarded-verb#src/items/stock.service.ts:13:11",
+      "to": "external_api:api.example.com",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/stock.service.ts",
+      "line": 13
+    },
+    {
+      "from": "http_out:nest-forwarded-verb#src/items/stock.service.ts:17:11",
+      "to": "external_api:api.example.com",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/stock.service.ts",
+      "line": 17
+    },
+    {
+      "from": "http_out:nest-forwarded-verb#src/items/stock.service.ts:9:11",
+      "to": "external_api:api.example.com",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/stock.service.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/items.service.ts:ItemsService",
+      "to": "nest-forwarded-verb#src/items/items.client.ts:ItemsClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/items/items.service.ts",
+      "line": 6
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/items.service.ts:ItemsService.purge",
+      "to": "http_out:nest-forwarded-verb#src/items/items.service.ts:13:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/items.service.ts",
+      "line": 13
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/items.service.ts:ItemsService.purge",
+      "to": "nest-forwarded-verb#src/items/items.client.ts:ItemsClient.get",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/items.service.ts",
+      "line": 13,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/items.service.ts:ItemsService.restore",
+      "to": "http_out:nest-forwarded-verb#src/items/items.service.ts:9:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/items.service.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/items.service.ts:ItemsService.restore",
+      "to": "nest-forwarded-verb#src/items/items.client.ts:ItemsClient.replace",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/items.service.ts",
+      "line": 9,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/stock.service.ts:StockService",
+      "to": "nest-forwarded-verb#src/items/items.client.ts:ItemsClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/items/stock.service.ts",
+      "line": 6
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/stock.service.ts:StockService.archive",
+      "to": "http_out:nest-forwarded-verb#src/items/stock.service.ts:13:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/stock.service.ts",
+      "line": 13
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/stock.service.ts:StockService.archive",
+      "to": "nest-forwarded-verb#src/items/items.client.ts:ItemsClient.send",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/stock.service.ts",
+      "line": 13,
+      "params": [
+        "string",
+        "RequestInit"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/stock.service.ts:StockService.refill",
+      "to": "http_out:nest-forwarded-verb#src/items/stock.service.ts:9:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/stock.service.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/stock.service.ts:StockService.refill",
+      "to": "nest-forwarded-verb#src/items/items.client.ts:ItemsClient.replace",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/stock.service.ts",
+      "line": 9,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/stock.service.ts:StockService.retire",
+      "to": "http_out:nest-forwarded-verb#src/items/stock.service.ts:17:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/stock.service.ts",
+      "line": 17
+    },
+    {
+      "from": "nest-forwarded-verb#src/items/stock.service.ts:StockService.retire",
+      "to": "nest-forwarded-verb#src/items/items.client.ts:ItemsClient.get",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/stock.service.ts",
+      "line": 17,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown"
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/main.ts",
+      "line": 1,
+      "reason": "bootstrap-not-found",
+      "hint": "Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.",
+      "symbol": "bootstrap"
+    }
+  ]
+}
