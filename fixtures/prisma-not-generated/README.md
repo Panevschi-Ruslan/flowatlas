@@ -19,7 +19,7 @@ to a client value, and every step of that trace is written in the repository.
 | `this.db.order.delete(…)` | `Order` | delete | `db: PrismaClient`, the type `@acme/db` re-exports with `export type { PrismaClient }` |
 | `prisma.user.count()` | `users` | read | `const { prisma } = ctx`, `ctx: { prisma: PrismaClient }` |
 | `ctx.prisma.order.aggregate({})` | `Order` | read | the same property, reached directly |
-| `prisma.user.findUnique(…)` in `lazy.ts` | `users` | read | `const prisma = (await import('@acme/db')).default`, an import written as an expression; `import('@acme/db').then((mod) => mod.default)` in `lastUser` is the same statement, read the same way |
+| `prisma.user.findUnique(…)` in `lazy.ts` | `users` | read | `const prisma = (await import('@acme/db')).default`, an import written as an expression; `import('@acme/db').then((mod) => mod.default)` in `lastUser` and `const { default: prisma } = await import('@acme/db')` in `someUsers` (R163) are the same statement, read the same way |
 | `db.order.updateMany(…)` | `Order` | write | `db: Orders`, `type Orders = Pick<PrismaClient, 'order'>` - the client with less of it visible |
 | `tx.order.update(…)` | `Order` | write | `tx: Prisma.TransactionClient`, `Prisma` from the subpath `@acme/db/client`, whose `export * from '../generated/prisma/client'` passes on every name the generated client has |
 | `client.order.findFirst()` | `order` | read | `cached ?? new PrismaClient()`, `PrismaClient` from `@prisma/client` |

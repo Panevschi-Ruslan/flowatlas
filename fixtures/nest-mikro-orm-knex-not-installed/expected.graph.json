@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "nest-mikro-orm-knex-not-installed",
-  "generatedAt": "2026-09-28T06:32:19.981Z",
+  "generatedAt": "2026-09-28T10:17:29.773Z",
   "nodes": [
     {
       "id": "db_query:nest-mikro-orm-knex-not-installed#src/inventory/inventory-level.repository.ts:24:12",
@@ -352,6 +352,13 @@
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "InventoryLevelRepository.reserved -> super\n      .getActiveManager<SqlEntityManager>()\n      .getKnex()({ il: 'inventory_level' })\n      .select('reserved_quantity').where",
       "sites": 14
+    },
+    {
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 74,
+      "reason": "db-handover-unstated",
+      "hint": "`getKnex()` is called on a value whose type is not stated, so whether it hands over knex cannot be told. State the type of what it is called on, with an annotation or a cast, and the query is read.",
+      "symbol": "knex('product_option_value').select"
     },
     {
       "file": "src/inventory/manager-base.ts",

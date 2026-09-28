@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-28T07:00:36.536Z",
+  "builtAt": "2026-09-28T10:11:28.384Z",
   "services": [
     {
       "name": "api",
@@ -102,6 +102,14 @@
       "repo": "api",
       "file": "src/users/lazy.ts",
       "line": 17
+    },
+    {
+      "id": "api#src/users/lazy.ts:someUsers",
+      "type": "function",
+      "label": "someUsers",
+      "repo": "api",
+      "file": "src/users/lazy.ts",
+      "line": 20
     },
     {
       "id": "api#src/users/users.service.ts:UsersService",
@@ -261,6 +269,25 @@
         "package": "@prisma/client",
         "method": "updateMany",
         "receiver": "db.order",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:api#src/users/lazy.ts:22:10",
+      "type": "db_query",
+      "label": "read users",
+      "repo": "api",
+      "file": "src/users/lazy.ts",
+      "line": 22,
+      "meta": {
+        "op": "read",
+        "table": "users",
+        "tables": [
+          "users"
+        ],
+        "package": "@prisma/client",
+        "method": "findMany",
+        "receiver": "prisma.user",
         "source": "receiver-prop"
       }
     },
@@ -427,6 +454,14 @@
       "line": 17
     },
     {
+      "from": "api#src/users/lazy.ts:someUsers",
+      "to": "db_query:api#src/users/lazy.ts:22:10",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/users/lazy.ts",
+      "line": 22
+    },
+    {
       "from": "api#src/users/users.service.ts:UsersService.findAll",
       "to": "db_query:api#src/users/users.service.ts:14:12",
       "type": "calls",
@@ -497,6 +532,14 @@
       "confidence": "heuristic",
       "file": "src/users/lazy.ts",
       "line": 17
+    },
+    {
+      "from": "db_query:api#src/users/lazy.ts:22:10",
+      "to": "table:api#users",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/users/lazy.ts",
+      "line": 22
     },
     {
       "from": "db_query:api#src/users/lazy.ts:9:10",

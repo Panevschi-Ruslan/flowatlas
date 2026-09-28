@@ -55,7 +55,7 @@ import { readConfig } from './leaves/config.js';
 import { hostCallOf } from './leaves/fragment.js';
 import { namesNoTable, readSqlArgument, type SqlArgument } from './leaves/sql-argument.js';
 import { handedBackBy } from './leaves/handed-back.js';
-import { handedOverOrigin } from './leaves/handover.js';
+import { handedOverOrigin, unconfirmedHandover } from './leaves/handover.js';
 import { dataLayerOf } from './leaves/silence.js';
 import { statedOrigin } from './leaves/stated.js';
 import { analyzeUrl, composeAddress } from './leaves/url.js';
@@ -572,6 +572,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return { sql, descriptor: { ...descriptor, tableOverride: { kind: 'sql-parse', argIndex: index } } };
   };
 
+  /**
+   * Whether a call is the first link of a chain: made on a builder or a name,
+   * not on what an earlier link of the same chain returned.
+   */
+  const isFirstLink = (receiver: TsNode): boolean => {
+    const at = Node.isParenthesizedExpression(receiver) ? receiver.getExpression() : receiver;
+    return !(Node.isCallExpression(at) && Node.isPropertyAccessExpression(at.getExpression()));
+  };
+
   const emitDb = (call: CallExpression, scope: Scope): boolean => {
     const { id: holderId, file, owner } = scope;
     const callee = call.getExpression();
@@ -671,7 +680,23 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         : {}),
       ...(located === null ? {} : { stringArg: located }),
     });
-    if (classification === null) return false;
+    if (classification === null) {
+      // A described handover made on something whose type the source erased:
+      // not read, and said once per query, at the chain's first link (R163).
+      const unstated =
+        descriptor === undefined && isFirstLink(receiver)
+          ? unconfirmedHandover(receiver, handovers)
+          : undefined;
+      if (unstated === undefined) return false;
+      ctx.report({
+        file,
+        line: siteOf(ctx, call, file).line,
+        reason: 'db-handover-unstated',
+        hint: `\`${unstated.method}()\` is called on a value whose type is not stated, so whether it hands over ${unstated.yields.package} cannot be told. State the type of what it is called on, with an annotation or a cast, and the query is read.`,
+        symbol: `${receiver.getText().slice(0, 60)}.${method}`,
+      });
+      return true;
+    }
     const site = siteOf(ctx, call, file);
 
     /** The row a classification asked for, wherever in this function it asked. */

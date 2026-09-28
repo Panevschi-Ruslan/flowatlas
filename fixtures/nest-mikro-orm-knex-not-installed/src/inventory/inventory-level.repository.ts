@@ -64,3 +64,12 @@ export const reservedLocations = (context: { manager?: unknown }): Promise<unkno
   const knex = manager.getKnex();
   return knex.select('location_id').from('reservation_item');
 };
+
+// The same, cast to `any`: nothing states which manager this is, so which
+// library the query runs on cannot be read. The row says so; the file is not
+// left with nothing said about the query it holds.
+export const optionValues = (context: { manager?: unknown }, ids: string[]): Promise<unknown[]> => {
+  const manager = context.manager as any;
+  const knex = manager.getTransactionContext() ?? manager.getKnex();
+  return knex('product_option_value').select('id').whereIn('option_id', ids);
+};

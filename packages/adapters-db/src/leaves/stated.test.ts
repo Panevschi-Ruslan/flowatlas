@@ -291,4 +291,57 @@ describe('a Prisma client whose generated code does not exist', () => {
     );
     expect(origin?.package).toBe('@prisma/client');
   });
+
+  const DB_MODULE = {
+    '/db/index.ts': `
+      import { PrismaClient } from '@prisma/client';
+      export const db = new PrismaClient();
+      export default db;
+    `,
+  };
+
+  it('follows a client destructured from an import written as an expression', () => {
+    const origin = statedOrigin(
+      clientIn(
+        `
+          export const load = async () => {
+            const { default: prisma } = await import('../db/index');
+            return prisma.user.findMany();
+          };
+        `,
+        DB_MODULE,
+      ),
+    );
+    expect(origin?.package).toBe('@prisma/client');
+  });
+
+  it('takes a destructured name as the export it names', () => {
+    const origin = statedOrigin(
+      clientIn(
+        `
+          export const load = async () => {
+            const { db: prisma } = await import('../db/index');
+            return prisma.user.findMany();
+          };
+        `,
+        DB_MODULE,
+      ),
+    );
+    expect(origin?.package).toBe('@prisma/client');
+  });
+
+  it('does not read a destructured value that no import hands over', () => {
+    const origin = statedOrigin(
+      clientIn(
+        `
+          export const load = async (holder: any) => {
+            const { default: prisma } = await holder.load('../db/index');
+            return prisma.user.findMany();
+          };
+        `,
+        DB_MODULE,
+      ),
+    );
+    expect(origin).toBeNull();
+  });
 });

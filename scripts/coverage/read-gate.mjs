@@ -178,6 +178,7 @@ const GATED = {
       'unknown-db-operation',
       'db-package-unread',
       'db-layer-unread',
+      'db-handover-unstated',
       'db-receiver-name-only',
       'db-call-at-module-level',
       'dynamic-table-name',
@@ -279,8 +280,8 @@ export const EXEMPT = [
   // `calls` and `reads_config` edges, which count for the file once an edge's
   // site is read relative to the service that drew it rather than to the clone.
   // Still no entry is minted for its `/health`, which is what the exemption
-  // defended. Since R160 neither edge speaks for routes, so the file is red again
-  // and reported as red rather than excused a second time (R163). The last two
+  // defended. Since R160 neither edge speaks for routes, so the file was red
+  // again, and R163 decided it by reading the file: the entry below. The last two
   // went in R157. `create-pg-connection.ts` over `data`: its one site was words in
   // a doc comment, and the counting rule no longer reads comments.
   // `packages/medusa/src/migration-scripts/**` over `data`: each query there is
@@ -295,6 +296,19 @@ export const EXEMPT = [
   // `routes`, went in R157: it is a copy of the `route.ts` beside it under a
   // name Next.js does not serve, and the probe for an exported verb now counts
   // only the files a router serves - which is the sentence that exemption said.
+  {
+    where: 'medusa',
+    path: 'packages/medusa-test-utils/src/medusa-test-runner-utils/bootstrap-app.ts',
+    family: 'routes',
+    why:
+      'The one site is `app.get("/health")` on an express app this test-support ' +
+      'package builds to host medusa during integration tests. The service read is ' +
+      '`packages/medusa`, which never serves that address, so an entry here would ' +
+      'claim a way in the application does not have. Not read as test code either: ' +
+      'the package is named by a hyphenated word, and matching directories that ' +
+      'way would drop real packages such as an `ab-test` service. Decided in R163 ' +
+      'for this one file and family; any other route in the package is still gated.',
+  },
   {
     where: 'payload',
     path: '(anywhere)',

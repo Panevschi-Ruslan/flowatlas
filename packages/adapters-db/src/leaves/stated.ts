@@ -159,6 +159,8 @@ const STATED_THROUGH: Partial<Record<SyntaxKind, (node: TsNode) => TsNode | unde
     // A pattern's own type is what it was destructured *from* only where nothing
     // was assigned to it: a parameter is typed by its annotation, and a variable
     // by its initialiser, which is the value whose property this is.
+    const imported = destructuredFromImport(node, holder);
+    if (imported !== undefined) return imported;
     const source = Node.isVariableDeclaration(holder) ? holder.getInitializer() : holder;
     const key = (node.getPropertyNameNode() ?? node.getNameNode()).getText();
     return (
@@ -585,18 +587,16 @@ const importTaken = (value: TsNode | undefined): { call: TsNode; name: string } 
   return { call: callee.getExpression(), name: body.getName() };
 };
 
-const dynamicallyImported = (holder: TsNode): TsNode | undefined => {
-  if (!Node.isVariableDeclaration(holder)) return undefined;
-  const taken = importTaken(holder.getInitializer());
-  const loaded = taken?.call;
-  if (taken === undefined || loaded === undefined) return undefined;
-  if (!Node.isCallExpression(loaded) || loaded.getExpression().getKind() !== SyntaxKind.ImportKeyword) {
-    return undefined;
-  }
-  const [argument] = loaded.getArguments();
-  if (argument === undefined || !Node.isStringLiteral(argument)) return undefined;
-  const from = holder.getSourceFile();
-  const specifier = argument.getLiteralValue();
+/** The module a call loads, when it is `import(m)` with a written path. */
+const importedSpecifier = (call: TsNode | undefined): string | undefined => {
+  if (call === undefined || !Node.isCallExpression(call)) return undefined;
+  if (call.getExpression().getKind() !== SyntaxKind.ImportKeyword) return undefined;
+  const [argument] = call.getArguments();
+  return argument !== undefined && Node.isStringLiteral(argument) ? argument.getLiteralValue() : undefined;
+};
+
+/** The declaration an export of a dynamically imported module is, followed as an import statement's is. */
+const exportOfImported = (from: SourceFile, specifier: string, name: string): TsNode | undefined => {
   const step = referenced(
     {
       from,
@@ -605,11 +605,35 @@ const dynamicallyImported = (holder: TsNode): TsNode | undefined => {
         packageOfSpecifier(specifier) === undefined
           ? moduleAt(from.getProject(), resolve(dirname(from.getFilePath()), specifier))
           : undefined,
-      name: taken.name,
+      name,
     },
     0,
   );
   return step !== null && 'declaration' in step ? step.declaration : undefined;
+};
+
+const dynamicallyImported = (holder: TsNode): TsNode | undefined => {
+  if (!Node.isVariableDeclaration(holder)) return undefined;
+  const taken = importTaken(holder.getInitializer());
+  const specifier = importedSpecifier(taken?.call);
+  if (taken === undefined || specifier === undefined) return undefined;
+  return exportOfImported(holder.getSourceFile(), specifier, taken.name);
+};
+
+/**
+ * The declaration a binding destructured from a dynamic import is.
+ *
+ * `const { default: prisma } = await import('@calcom/prisma')` is the third
+ * spelling of the same statement: the pattern's key is the export's name, and
+ * the module is the one the awaited call loads. Asked before the value's type,
+ * which on a clone nobody installed is a module the checker could not find.
+ */
+const destructuredFromImport = (element: TsNode, holder: TsNode): TsNode | undefined => {
+  if (!Node.isBindingElement(element) || !Node.isVariableDeclaration(holder)) return undefined;
+  const specifier = importedSpecifier(unwrapped(holder.getInitializer()));
+  if (specifier === undefined) return undefined;
+  const key = (element.getPropertyNameNode() ?? element.getNameNode()).getText();
+  return exportOfImported(holder.getSourceFile(), specifier, key);
 };
 
 /** The source file a module path names, among the files the project holds. */

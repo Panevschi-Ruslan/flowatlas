@@ -36,7 +36,38 @@ import { moduleImportedFrom, statedTypeName } from './stated.js';
 export const handedOver = (
   receiver: TsNode,
   described: readonly Handover[],
-): Handover | undefined => (described.length === 0 ? undefined : walk(receiver, described, 0));
+): Handover | undefined => {
+  const found = described.length === 0 ? undefined : walk(receiver, described, 0);
+  return found?.confirmed === true ? found.handover : undefined;
+};
+
+/**
+ * The handover a receiver came out of when nothing states what it was called on.
+ *
+ * `(context.manager as any).getKnex()` calls the described method on a value
+ * whose type the source erased: it may be the ORM's manager and it may be
+ * anything else with a method of that name, so the query is not read (R163).
+ * It is not silent either. A holder that states some *other* type is a
+ * different library's method and is not this; only a holder that states
+ * nothing is.
+ */
+export const unconfirmedHandover = (
+  receiver: TsNode,
+  described: readonly Handover[],
+): Handover | undefined => {
+  const found = described.length === 0 ? undefined : walk(receiver, described, 0);
+  return found?.confirmed === false ? found.handover : undefined;
+};
+
+/** A described method reached, and whether its holder was shown to be a described one. */
+interface Found {
+  readonly handover: Handover;
+  readonly confirmed: boolean;
+}
+
+/** One side of `a ?? b` over the other: a confirmed handover over one that is not. */
+const either = (a: Found | undefined, b: Found | undefined): Found | undefined =>
+  a?.confirmed === true ? a : b?.confirmed === true ? b : (a ?? b);
 
 /**
  * The origin a handed-over receiver has: the library the handover names and
@@ -79,7 +110,7 @@ const walk = (
   start: TsNode | undefined,
   described: readonly Handover[],
   steps: number,
-): Handover | undefined => {
+): Found | undefined => {
   let current = start;
   for (let step = steps; current !== undefined && step < MOST_STEPS; step += 1) {
     const node = unwrap(current);
@@ -93,8 +124,9 @@ const walk = (
       continue;
     }
     if (Node.isBinaryExpression(node) && FALLBACKS.has(node.getOperatorToken().getKind())) {
-      return (
-        walk(node.getRight(), described, step + 1) ?? walk(node.getLeft(), described, step + 1)
+      return either(
+        walk(node.getRight(), described, step + 1),
+        walk(node.getLeft(), described, step + 1),
       );
     }
     if (Node.isIdentifier(node)) {
@@ -109,18 +141,22 @@ const walk = (
   return undefined;
 };
 
-/** The handover a call of `method` on `holder` is, if it is one. */
+/** The handover a call of `method` on `holder` is, if it is one, and whether that is shown. */
 const handoverAt = (
   method: string,
   holder: TsNode,
   described: readonly Handover[],
-): Handover | undefined => {
+): Found | undefined => {
   const candidates = described.filter((handover) => handover.method === method);
-  if (candidates.length === 0) return undefined;
+  const [first] = candidates;
+  if (first === undefined) return undefined;
   const modules = holderModules(holder);
-  return candidates.find((handover) =>
+  // Nothing written and nothing resolved: the method's name is all there is.
+  if (modules.length === 0) return { handover: first, confirmed: false };
+  const confirmed = candidates.find((handover) =>
     modules.some((module) => handover.holders.some((holder) => isWithin(module, holder))),
   );
+  return confirmed === undefined ? undefined : { handover: confirmed, confirmed: true };
 };
 
 /**

@@ -1,7 +1,7 @@
 import { Node, Project, SyntaxKind, type Node as TsNode } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 import { dbAdapters, handedOverIn, handovers, type Handover } from '../descriptors/index.js';
-import { handedOver } from './handover.js';
+import { handedOver, unconfirmedHandover } from './handover.js';
 
 /**
  * What the method call named `method` was made on.
@@ -148,6 +148,50 @@ describe('a data layer handed over by a described call', () => {
       'select',
     );
     expect(handedOver(receiver, none)).toBeUndefined();
+  });
+});
+
+/**
+ * A described method called on something whose type the source erased (R163).
+ *
+ * Not read - `any` may be the manager and may be anything with a method of that
+ * name - and not silent either: the handover is reported as unconfirmed, which
+ * is what the row a reader acts on is written from.
+ */
+describe('a handover whose holder states no type', () => {
+  const unconfirmed = (source: string, method: string): string | undefined =>
+    unconfirmedHandover(receiverOf(source, method), handovers)?.method;
+
+  const ERASED = `${IMPORTS}
+    export const optionValues = (context: { manager?: unknown }, ids: string[]) => {
+      const manager = context.manager as any;
+      const knex = manager.getTransactionContext() ?? manager.getKnex();
+      return knex('product_option_value').select('id').whereIn('option_id', ids);
+    };`;
+
+  it('is not read as the library the handover yields', () => {
+    expect(yielded(ERASED, 'select')).toBeUndefined();
+  });
+
+  it('is reported as the described method it reached', () => {
+    expect(unconfirmed(ERASED, 'select')).toBe('getKnex');
+  });
+
+  it('is not reported when the holder states some other type', () => {
+    const source = `
+      import type { Pool } from './pool.js';
+      export const go = (pool: Pool) => pool.getKnex()('t').select('id');`;
+    expect(unconfirmed(source, 'select')).toBeUndefined();
+  });
+
+  it('is not reported when either side of a fallback is confirmed', () => {
+    const source = `${IMPORTS}
+      export const go = (context: { manager?: unknown }, typed: SqlEntityManager) => {
+        const knex = (context.manager as any).getKnex() ?? typed.getKnex();
+        return knex('t').select('id');
+      };`;
+    expect(unconfirmed(source, 'select')).toBeUndefined();
+    expect(yielded(source, 'select')).toBe('knex');
   });
 });
 

@@ -15,3 +15,9 @@ export const lastUser = async (): Promise<unknown> => {
 };
 
 export const settle = (db: Orders): Promise<unknown> => db.order.updateMany({ data: {} });
+
+/** The same import with its export taken by a pattern, which is how cal.com's logo route writes it. */
+export const someUsers = async (): Promise<unknown> => {
+  const { default: prisma } = await import('@acme/db');
+  return prisma.user.findMany();
+};

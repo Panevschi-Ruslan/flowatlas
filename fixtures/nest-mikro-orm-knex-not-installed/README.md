@@ -31,6 +31,14 @@ as though the checker had got there itself.
 | `this.em.getKnex()('inventory_level').where(…).update(…)` | `inventory_level` | write | the annotation |
 | `knex.select('location_id').from('reservation_item')` | `reservation_item` | read | the cast, `context.manager as SqlEntityManager` |
 
+One more query is deliberately **not** read. In `optionValues`, the manager is
+`context.manager as any`: the source erases its type, so `getKnex()` may be the
+ORM's and may be any other method of that name. The walk reaches the described
+method and cannot confirm what it was called on, so there is no query. There is
+one `db-handover-unstated` row, at the chain's first link (line 74), saying
+which type to state (R163). A holder that states some *other* type is a
+different library's method and gets no row at all.
+
 The type argument and the cast are read here and nowhere else. Each takes the
 written type *and* a described method called on what it names to produce
 anything, so no other receiver reads differently because of them.

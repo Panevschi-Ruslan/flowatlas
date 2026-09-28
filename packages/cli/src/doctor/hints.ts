@@ -528,6 +528,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The query names a table, but its text does not open with a verb that says whether it reads or writes (SELECT, WITH … SELECT, INSERT INTO, UPDATE, DELETE FROM or TRUNCATE, as the very first word): a leading comment hides the verb, and EXPLAIN is not one of them. Start the string with its verb, with any comment after it; a statement that neither reads nor writes, such as EXPLAIN, can be left as it is. The operation comes from that verb, not from the descriptor, so the descriptor needs no change.',
   'db-receiver-name-only': () =>
     'Name the base class under adapters.db.localBaseClasses in flowatlas.config.json if this is a data layer of your own.',
+  'db-handover-unstated': () =>
+    'State the type of the value the handover method is called on - an annotation or a cast to the ORM manager - so the query can be read.',
   'db-layer-unread': () =>
     'Add the class to adapters.db.localBaseClasses in flowatlas.config.json, so calls through it are recorded as data access.',
   'db-package-unread': () =>
