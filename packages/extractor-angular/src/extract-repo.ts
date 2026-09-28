@@ -7,6 +7,7 @@ import {
   parseConfig,
   readResolvedPackageJson,
   recordApplications,
+  reportSkippedTestDirectories,
   reportUnreadableSources,
   silentLogger,
   suppliedWith,
@@ -160,6 +161,9 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const project = createProject({
     rootDir,
     ...(tsconfig === undefined ? {} : { tsconfig }),
+    ...(service.readTestDirectories === undefined
+      ? {}
+      : { readTestDirectories: service.readTestDirectories }),
   });
   // The manifest that answers what this repository can import, which on a
   // package inside a workspace is not the leaf manifest alone. Everything below
@@ -199,6 +203,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // reader and its siblings say the same thing about the same event, and so
   // does the count of them the repository node carries.
   reportUnreadableSources(base);
+  reportSkippedTestDirectories(base);
 
   // Every adapter goes through the registry, this one included: a repository no
   // frontend adapter recognises is read by none of them.

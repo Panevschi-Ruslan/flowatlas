@@ -32,7 +32,9 @@ What to watch:
   third `http_out` until R157, which settled that a test is not read, and a file
   in a directory named `e2e` is a test's (`isTestFile` in
   `packages/core/src/test-files.ts`, the definition the coverage harness counts
-  by too). Its `POST /orders` and its `E2E_API_URL` went with it.
+  by too). Its `POST /orders` and its `E2E_API_URL` went with it. The skip is
+  not silent: one `test-directory-skipped` row at level `info` names `src/e2e/`
+  and its one file, and says how to have it read if it were runtime code.
 
 `react` is still named at arm's length in `build`'s summary: detection is a
 different question (R123), and the answer to it - React is in what this service

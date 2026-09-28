@@ -244,7 +244,10 @@ export {
   createProject,
   findTsconfig,
   listRepoSources,
+  reportSkippedTestDirectories,
   reportUnreadableSources,
+  SKIPPED_TEST_DIRECTORY_REASON,
+  skippedTestDirectories,
   TSCONFIG_CANDIDATES,
   UNREADABLE_FILE_REASON,
 } from './project.js';

@@ -7,6 +7,7 @@ import {
   normalizeFilePath,
   parseConfig,
   readResolvedPackageJson,
+  reportSkippedTestDirectories,
   reportUnreadableSources,
   silentLogger,
   type ExtractContext,
@@ -92,9 +93,11 @@ export const CLOSING_PASSES: readonly NestExtractorPass[] = [heldCallsPass];
 /** Parses a repository, honouring the tsconfig the caller or the service names. */
 export const createRepoProject = (options: ExtractRepoOptions): Project => {
   const tsconfig = options.tsconfig ?? options.service?.tsconfig;
+  const readTestDirectories = options.service?.readTestDirectories;
   return createProject({
     rootDir: options.rootDir,
     ...(tsconfig === undefined ? {} : { tsconfig }),
+    ...(readTestDirectories === undefined ? {} : { readTestDirectories }),
   });
 };
 
@@ -213,6 +216,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // go on the repository node, so the rows and the figure beside them cannot
   // disagree about how many files were read.
   reportUnreadableSources(base);
+  reportSkippedTestDirectories(base);
   const sources = countSources(project);
 
   // The other half of the same directory. A repository built on a file-system

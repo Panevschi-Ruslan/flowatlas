@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "trpc-inferred-context",
-  "generatedAt": "2026-09-28T09:18:02.808Z",
+  "generatedAt": "2026-09-28T11:06:52.466Z",
   "nodes": [
     {
       "id": "db_query:trpc-inferred-context#src/procedures.ts:10:23",
@@ -409,6 +409,16 @@
   ],
   "types": {},
   "unresolved": [
+    {
+      "file": "src/__tests__/seed.ts",
+      "line": 1,
+      "reason": "test-directory-skipped",
+      "level": "info",
+      "sites": 1,
+      "message": "1 source file(s) under src/__tests__/ were not read: a directory named `__tests__` is taken to hold tests",
+      "hint": "If it holds code the application runs, add \"src/__tests__\" to readTestDirectories in this service's entry in flowatlas.config.json.",
+      "symbol": "src/__tests__"
+    },
     {
       "file": "src/router.ts",
       "line": 11,

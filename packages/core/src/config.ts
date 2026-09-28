@@ -103,6 +103,12 @@ const serviceEntrySchema = z.strictObject({
   apiTarget: z.record(z.string().min(1), z.string().min(1)).optional(),
   /** Path to a tsconfig, when it is not the one at the repository root. */
   tsconfig: z.string().min(1).optional(),
+  /**
+   * Directories named like tests (`fixtures`, `e2e`, `test`, …) that hold code
+   * the application runs, relative to the service's directory. Every other one
+   * is left out, and reported as `test-directory-skipped`.
+   */
+  readTestDirectories: z.array(z.string().min(1)).optional(),
   /** Entry file where global wrapping is installed, when there is one. */
   bootstrap: z.string().min(1).optional(),
 });

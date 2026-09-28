@@ -181,6 +181,22 @@ describe('GraphBuilder', () => {
     );
   });
 
+  it('keeps a row that counts its own sites, one per thing it describes', () => {
+    // One row per skipped test directory, each standing for its files: folding
+    // them would lose which directory, and add a row's count to a count of rows.
+    const b = builder();
+    b.addUnresolved({ file: 'src/e2e/a.ts', line: 1, reason: 'skipped', level: 'info', sites: 3 });
+    b.addUnresolved({ file: 'src/test/b.ts', line: 1, reason: 'skipped', level: 'info', sites: 5 });
+    b.addUnresolved({ file: 'src/c.ts', line: 1, reason: 'skipped', level: 'info' });
+    b.addUnresolved({ file: 'src/d.ts', line: 1, reason: 'skipped', level: 'info' });
+    const rows = b.build().unresolved;
+    expect(rows.map((row) => [row.file, row.sites ?? 1])).toEqual([
+      ['src/c.ts', 2],
+      ['src/e2e/a.ts', 3],
+      ['src/test/b.ts', 5],
+    ]);
+  });
+
   it('throws when an edge points at a node that was never added', () => {
     const b = builder();
     b.addNode(node('a'));

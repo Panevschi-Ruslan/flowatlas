@@ -60,6 +60,9 @@ const TEST_DIRECTORIES: ReadonlySet<string> = new Set([
 /** True when a directory, by its name alone, holds tests. */
 export const isTestDirectory = (name: string): boolean => TEST_DIRECTORIES.has(name);
 
+/** True when a file's name alone says it is a test: `a.test.ts`, `a.integration-test.ts`. */
+export const isTestName = (name: string): boolean => TEST_FILE_NAME.test(name);
+
 /**
  * True when a path, relative to the tree being read, is a test: by its name, or
  * by a directory it is in.
@@ -67,5 +70,5 @@ export const isTestDirectory = (name: string): boolean => TEST_DIRECTORIES.has(n
 export const isTestFile = (path: string): boolean => {
   const segments = path.split(/[\\/]/);
   const name = segments.pop() ?? '';
-  return TEST_FILE_NAME.test(name) || segments.some(isTestDirectory);
+  return isTestName(name) || segments.some(isTestDirectory);
 };

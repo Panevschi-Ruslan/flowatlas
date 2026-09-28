@@ -290,7 +290,7 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
   const graphPath = serviceGraphPath(repoDir);
   // Listed from disk even when the repository is already open: a file created
   // since it was opened is exactly the change the survey must not miss.
-  const files = listRepoSources(repoDir);
+  const files = listRepoSources(repoDir, service.readTestDirectories);
 
   return {
     service: service.name,

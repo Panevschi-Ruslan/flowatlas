@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-28T09:57:04.900Z",
+  "builtAt": "2026-09-28T11:06:35.051Z",
   "services": [
     {
       "name": "api",
@@ -289,6 +289,17 @@
       "message": "no service declares PLATFORM_URL",
       "hint": "Add PLATFORM_URL to services[].baseUrlEnv of whichever service answers it.",
       "symbol": "http_out:api#../../packages/sdk/src/http.ts:3:3"
+    },
+    {
+      "file": "src/e2e/helpers.ts",
+      "line": 1,
+      "reason": "test-directory-skipped",
+      "level": "info",
+      "sites": 1,
+      "message": "1 source file(s) under src/e2e/ were not read: a directory named `e2e` is taken to hold tests",
+      "hint": "If it holds code the application runs, add \"src/e2e\" to readTestDirectories in this service's entry in flowatlas.config.json.",
+      "symbol": "src/e2e",
+      "service": "api"
     }
   ]
 }

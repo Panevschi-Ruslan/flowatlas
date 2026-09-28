@@ -666,7 +666,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 
 | About | Reasons |
 |---|---|
-| A graph or a service that could not be read | `service-read-nothing`, `file-not-parsed`, `duplicate-node-id` |
+| A graph or a service that could not be read | `service-read-nothing`, `file-not-parsed`, `duplicate-node-id`, `test-directory-skipped` (info) |
 | Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic` |
 | Injection and calls | `di-token-unknown`, `di-token-ambiguous`, `inject-token-unresolved`, `call-dynamic-receiver`, `call-module-ref`, `call-through-token`, `global-wrapper-dynamic` |
 | NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-import-dynamic`, `middleware-route-dynamic` |
@@ -762,6 +762,16 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `openapi` | string | none | the older spelling of `{ "kind": "openapi", "path": … }`, still read |
 | `tsconfig` | string | found in the repository | which TypeScript configuration to parse with |
 | `bootstrap` | string | `src/main.ts` | the application entry file, when it is elsewhere |
+| `readTestDirectories` | string[] | `[]` | directories named like tests (`test`, `tests`, `e2e`, `fixtures`, `cypress`, `playwright`, `__tests__`, `__mocks__`, `__snapshots__`, `__fixtures__`) that hold code the application runs, relative to the service's directory: `["src/fixtures"]` |
+
+**A directory named like tests is not read, and says so.** Test code is left out
+of every graph: a file whose name marks it (`a.test.ts`, `a.spec.ts`,
+`a.integration-test.ts`, `a.e2e.ts`) silently, and a directory with one of the
+names above with one `test-directory-skipped` row, at level `info`, naming the
+directory and how many source files it held. The name is a guess that is right
+for nearly every repository. When it is wrong, because a `fixtures` or `e2e`
+directory holds code the application runs, name it under `readTestDirectories`
+and it is read like any other.
 
 **`baseUrlEnv` is what turns a request into an edge.** When a request's address
 is rooted at one of these keys, it resolves to that service's route. A key two

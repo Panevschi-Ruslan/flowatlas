@@ -13,7 +13,7 @@ import type { GraphBuilder } from './builder.js';
 import { normalizeFilePath } from './ids.js';
 import type { Unresolved } from './model/graph.js';
 import { readPackageJson } from './package-json.js';
-import { isTestDirectory, isTestFile } from './test-files.js';
+import { isTestDirectory, isTestName } from './test-files.js';
 import {
   serviceSourceDirs,
   workspaceGlobs,
@@ -28,6 +28,12 @@ export interface CreateProjectOptions {
   tsconfig?: string;
   /** Extra globs to add, relative to the root. */
   include?: string[];
+  /**
+   * Test directories to read after all, relative to the root: a `fixtures` or
+   * `e2e` directory that holds code the application runs. Every other one is
+   * skipped and reported (see {@link reportSkippedTestDirectories}).
+   */
+  readTestDirectories?: readonly string[];
 }
 
 /** Directories that never hold sources worth reading. */
@@ -53,13 +59,12 @@ export const SOURCE_EXTENSIONS = ['.ts', '.tsx'] as const;
 
 /**
  * Files that are compiled but say nothing about the shape of the system: a
- * declaration file, and a test ({@link isTestFile}, the one definition the
+ * declaration file, and a test ({@link isTestName}, and a directory named like
+ * one unless the service names it; the one definition the
  * coverage harness counts by too, R157).
  */
 const DECLARATION_SUFFIX = '.d.ts';
 
-const isSkippedFile = (name: string): boolean =>
-  name.endsWith(DECLARATION_SUFFIX) || isTestFile(name);
 
 /** Tried in order when the caller does not name one. */
 export const TSCONFIG_CANDIDATES = [
@@ -100,6 +105,36 @@ const FALLBACK_COMPILER_OPTIONS = {
 } as const;
 
 /**
+ * Which test directories a reading enters, and what it hears about the rest.
+ *
+ * A directory is told to be a test by its name alone (`isTestDirectory`), which
+ * is right for nearly every repository and wrong for one that keeps runtime
+ * code in, say, `src/fixtures`. So the name decides only by default: a
+ * directory the service names is read, and every other one is recorded with how
+ * many source files it held, so the skip is a row somebody can see rather than
+ * code that silently is not there.
+ */
+interface TestDirectories {
+  /** Whether the test directory at this absolute path is read after all. */
+  reads(absoluteDir: string): boolean;
+  /** Told of each test directory not read, with the source files it holds. */
+  skipped(absoluteDir: string, files: readonly string[]): void;
+}
+
+/** Reads no test directory, and records nothing. */
+const NO_TEST_DIRECTORIES: TestDirectories = { reads: () => false, skipped: () => {} };
+
+/** A policy that reads the directories the service named, relative to its root. */
+const testDirectoriesOf = (
+  rootDir: string,
+  read: readonly string[] | undefined,
+  skipped: TestDirectories['skipped'] = () => {},
+): TestDirectories => {
+  const named = new Set((read ?? []).map((dir) => resolve(rootDir, dir)));
+  return { reads: (dir) => named.has(resolve(dir)), skipped };
+};
+
+/**
  * The source files of one directory, relative to it and in a settled order.
  *
  * The one enumeration, used both to open a directory and to answer "has anything
@@ -107,34 +142,78 @@ const FALLBACK_COMPILER_OPTIONS = {
  * asked by a glob on one side and a walk on the other with a fixture standing
  * between them to check that the two lists had not drifted.
  */
-const sourceFilesUnder = (dir: string): string[] => {
+const sourceFilesUnder = (dir: string, tests: TestDirectories = NO_TEST_DIRECTORIES): string[] => {
   const sourceRoot = existsSync(join(dir, 'src')) ? 'src' : '.';
-  const out: string[] = [];
+  return walkSources(dir, sourceRoot === '.' ? '' : sourceRoot, tests).sort();
+};
 
-  const walk = (at: string): void => {
+/**
+ * Every source file under `at`, relative to `dir`.
+ *
+ * With `tests` undefined every directory is entered: that is how a skipped test
+ * directory's own files are counted for the row that reports it.
+ */
+const walkSources = (dir: string, at: string, tests: TestDirectories | undefined): string[] => {
+  const out: string[] = [];
+  const walk = (under: string): void => {
     let entries;
     try {
-      entries = readdirSync(join(dir, at), { withFileTypes: true });
+      entries = readdirSync(join(dir, under), { withFileTypes: true });
     } catch {
       return;
     }
     for (const entry of entries) {
-      const path = at === '' ? entry.name : `${at}/${entry.name}`;
+      const path = under === '' ? entry.name : `${under}/${entry.name}`;
       if (entry.isDirectory()) {
         if (SKIPPED_DIRECTORIES.has(entry.name) || entry.name.startsWith('.')) continue;
-        if (isTestDirectory(entry.name)) continue;
+        if (tests !== undefined && isTestDirectory(entry.name) && !tests.reads(join(dir, path))) {
+          tests.skipped(
+            join(dir, path),
+            walkSources(dir, path, undefined).map((file) => join(dir, file)),
+          );
+          continue;
+        }
         walk(path);
         continue;
       }
       if (!SOURCE_EXTENSIONS.some((ext) => entry.name.endsWith(ext))) continue;
-      if (isSkippedFile(entry.name)) continue;
+      if (entry.name.endsWith(DECLARATION_SUFFIX) || isTestName(entry.name)) continue;
       out.push(path);
     }
   };
-
-  walk(sourceRoot === '.' ? '' : sourceRoot);
-  return out.sort();
+  walk(at);
+  return out;
 };
+
+/**
+ * The test directory a file is left out by, when one is: the first directory on
+ * its path, below the root, that holds tests by its name and was not named.
+ */
+const skippingTestDirectory = (
+  rootDir: string,
+  file: string,
+  tests: TestDirectories,
+): string | undefined => {
+  const segments = relative(rootDir, file).split(sep);
+  segments.pop();
+  for (let at = 0; at < segments.length; at += 1) {
+    if (!isTestDirectory(segments[at] ?? '')) continue;
+    const dir = join(rootDir, ...segments.slice(0, at + 1));
+    if (!tests.reads(dir)) return dir;
+  }
+  return undefined;
+};
+
+/** The test directories a project was opened without, with the files each held. */
+const SKIPPED_TEST_DIRECTORIES = new WeakMap<Project, ReadonlyMap<string, readonly string[]>>();
+
+/**
+ * The test directories {@link createProject} left out of a project, by absolute
+ * path, with the absolute paths of the source files each held.
+ */
+export const skippedTestDirectories = (
+  project: Project,
+): ReadonlyMap<string, readonly string[]> => SKIPPED_TEST_DIRECTORIES.get(project) ?? new Map();
 
 export const findTsconfig = (rootDir: string, tsconfig?: string): string | undefined => {
   if (tsconfig !== undefined) {
@@ -558,7 +637,11 @@ const workspaceResolution = (
  * is what {@link workspaceResolution} is about.
  */
 export const createProject = (options: CreateProjectOptions): Project => {
-  const { rootDir, tsconfig, include } = options;
+  const { rootDir, tsconfig, include, readTestDirectories } = options;
+  const skipped = new Map<string, string[]>();
+  const tests = testDirectoriesOf(rootDir, readTestDirectories, (dir, files) => {
+    skipped.set(dir, [...(skipped.get(dir) ?? []), ...files]);
+  });
   const tsConfigFilePath = findTsconfig(rootDir, tsconfig);
   const packages = serviceSourceDirs(rootDir).slice(1);
   const aliases = packages.flatMap((dir) => aliasesOf(dir) ?? []);
@@ -587,8 +670,20 @@ export const createProject = (options: CreateProjectOptions): Project => {
   // files the globs matched are asked the same question the walk below asks.
   // Relative to the root, because a test is a test of the tree being read and
   // the directories above the root are the machine's business.
+  //
+  // A test by its name is left out without a word. A file left out because a
+  // directory it is in is named like a test is recorded against that directory,
+  // unless the service named it to be read (`readTestDirectories`).
   for (const file of project.getSourceFiles()) {
-    if (isTestFile(relative(rootDir, file.getFilePath()))) project.removeSourceFile(file);
+    const path = file.getFilePath();
+    if (isTestName(file.getBaseName())) {
+      project.removeSourceFile(file);
+      continue;
+    }
+    const dir = skippingTestDirectory(rootDir, path, tests);
+    if (dir === undefined) continue;
+    tests.skipped(dir, [path]);
+    project.removeSourceFile(file);
   }
 
   // Then every other directory this service's code is in. A workspace member
@@ -608,8 +703,12 @@ export const createProject = (options: CreateProjectOptions): Project => {
   // "Directory not found". The list comes from the file system and holds only
   // files that are there.
   for (const dir of packages) {
-    for (const file of sourceFilesUnder(dir)) project.addSourceFileAtPath(join(dir, file));
+    for (const file of sourceFilesUnder(dir, tests)) project.addSourceFileAtPath(join(dir, file));
   }
+  SKIPPED_TEST_DIRECTORIES.set(
+    project,
+    new Map([...skipped].map(([dir, files]) => [dir, [...new Set(files)].sort()])),
+  );
   return project;
 };
 
@@ -756,6 +855,47 @@ export const reportUnreadableSources = (
   return rows;
 };
 
+/** The reason written on a test directory a reading left out. */
+export const SKIPPED_TEST_DIRECTORY_REASON = 'test-directory-skipped';
+
+/**
+ * Records every test directory the project was opened without, as one row each.
+ *
+ * Informational: the tool describing a decision it made, not a hole somebody
+ * must close. It is written because the decision is made from a directory's
+ * name alone, and a `fixtures` or `e2e` directory can hold code the application
+ * runs; a guess that is wrong must be visible, and the row says the one key
+ * that overrides it. The row points at the directory's first source file and
+ * stands for all of them (`sites`).
+ */
+export const reportSkippedTestDirectories = (
+  context: UnreadableSourceContext,
+): readonly Unresolved[] => {
+  const { project, repoDir, builder } = context;
+  const rows: Unresolved[] = [];
+  for (const [dir, files] of [...skippedTestDirectories(project)].sort(([a], [b]) =>
+    a < b ? -1 : a > b ? 1 : 0,
+  )) {
+    const [first] = files;
+    if (first === undefined) continue;
+    const at = normalizeFilePath(dir, repoDir);
+    const name = at.split('/').pop() ?? at;
+    rows.push(
+      builder.addUnresolved({
+        file: normalizeFilePath(first, repoDir),
+        line: 1,
+        reason: SKIPPED_TEST_DIRECTORY_REASON,
+        level: 'info',
+        sites: files.length,
+        message: `${files.length} source file(s) under ${at}/ were not read: a directory named \`${name}\` is taken to hold tests`,
+        hint: `If it holds code the application runs, add "${at}" to readTestDirectories in this service's entry in flowatlas.config.json.`,
+        symbol: at,
+      }),
+    );
+  }
+  return rows;
+};
+
 /**
  * The files {@link createProject} would add, listed without parsing any of them.
  *
@@ -765,14 +905,18 @@ export const reportUnreadableSources = (
  * agree by construction for every directory but the service's own, which is
  * still globbed there and walked here; the check earns its keep on that one.
  */
-export const listRepoSources = (rootDir: string): string[] => {
+export const listRepoSources = (
+  rootDir: string,
+  readTestDirectories?: readonly string[],
+): string[] => {
+  const tests = testDirectoriesOf(rootDir, readTestDirectories);
   // One walk per directory the service's code is in, so that a change in a
   // workspace package the service reads is a change to the service. Without
   // that, editing a handler body in a sibling package would leave the graph of
   // the service that calls it on disk unchanged and out of date.
   const out = serviceSourceDirs(rootDir).flatMap((dir) => {
     const prefix = relative(rootDir, dir).split(sep).join('/');
-    const files = sourceFilesUnder(dir);
+    const files = sourceFilesUnder(dir, tests);
     return prefix === '' ? files : files.map((file) => `${prefix}/${file}`);
   });
   return out.sort();

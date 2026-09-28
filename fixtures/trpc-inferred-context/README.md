@@ -32,7 +32,9 @@ What is **not** in the graph:
   read (`isTestFile` in `packages/core/src/test-files.ts`), and the counting rule
   does not count one by the same definition. Before R157 the first was read and
   counted - its spelling matched neither list - and its `seedOrder` query was in
-  the graph as though the service ran it.
+  the graph as though the service ran it. The file skipped by its name says
+  nothing; `src/__tests__/` is skipped for its directory's name and carries one
+  `test-directory-skipped` row at level `info`.
 - `src/metadata.ts`, whose only Prisma call is in a doc comment. The counting rule
   reads code, not comments; before R157 it counted the comment and the read gate
   called the file unread.
