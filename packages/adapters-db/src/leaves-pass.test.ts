@@ -225,3 +225,42 @@ describe('the SQL handed to knex.raw', () => {
     expect(rows).toEqual([[52, 'sql-parse-failed']]);
   });
 });
+
+/**
+ * A call written against a method's name belongs to the method it dispatches
+ * to (R158).
+ *
+ * Two providers implement one interface, each builds its address from `uid`,
+ * and each calls itself through `this`. The compiler's references of one
+ * provider's `deleteEvent` take in the interface member and, through it, the
+ * other provider's calls, so basecamp's request was forwarded to zoho's
+ * `this.deleteEvent('stale')` and to the manager's call through the interface,
+ * and basecamp's own request went missing. On cal.com that was seven `GET ?`
+ * rows at the wrong calendars and no `PUT .../trashed.json` at all.
+ */
+describe('a parameter forwarded through an interface method', () => {
+  const requests = async (): Promise<string[]> => {
+    const graph = await graphOf('nest-interface-dispatch');
+    const byId = new Map(graph.nodes.map((node) => [node.id, node]));
+    return graph.edges
+      .filter((edge) => edge.type === 'calls' && byId.get(edge.to)?.type === 'http_out')
+      .map((edge) => `${edge.from.split(':').pop()} -> ${byId.get(edge.to)?.label}`)
+      .sort();
+  };
+
+  it('reaches only the callers that run this implementation, and keeps its own request', async () => {
+    expect(await requests()).toEqual(
+      [
+        // Called through the interface: either provider may run, so each keeps
+        // the request it writes, with the hole where `uid` goes.
+        'BasecampCalendarService.deleteEvent -> GET /schedule_entries/:param/trashed.json',
+        'ZohoCalendarService.deleteEvent -> GET /events/:param',
+        // Called through `this`: the class's own implementation, and only it.
+        'BasecampCalendarService.updateEvent -> GET /schedule_entries/draft/trashed.json',
+        'ZohoCalendarService.updateEvent -> GET /events/stale',
+        // Called through the concrete class from elsewhere.
+        'CalendarManagerService.archive -> GET /schedule_entries/archived/trashed.json',
+      ].sort(),
+    );
+  });
+});

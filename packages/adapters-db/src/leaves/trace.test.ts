@@ -163,16 +163,106 @@ describe('splitting an address at the part a caller supplies', () => {
     `);
     const split = splitAtParameter(address(file));
     const callers = forwardedFrom(split!.parameter);
-    expect(callers.map((caller) => caller.argument.getText())).toEqual([
+    expect(callers.calls.map((caller) => caller.argument.getText())).toEqual([
       '`/orders/${id}`',
       "'/orders'",
     ]);
+    expect(callers.undecided).toBe(false);
   });
 
   it('reports no caller for a client nothing uses, rather than an imaginary one', () => {
     const file = parse(client);
     const split = splitAtParameter(address(file));
-    expect(forwardedFrom(split!.parameter)).toEqual([]);
+    expect(forwardedFrom(split!.parameter)).toEqual({ calls: [], undecided: false });
+  });
+});
+
+/**
+ * A call belongs to the method it dispatches to (R158).
+ *
+ * The compiler's references of a method that implements an interface take in
+ * every implementation's calls through the interface member. Only the calls
+ * whose name resolves to this very method run it.
+ */
+describe('following a parameter out to the calls that run the method', () => {
+  const calendars = `
+    interface Calendar { remove(uid: string): Promise<Response> }
+    class Basecamp implements Calendar {
+      remove(uid: string) { return fetch(\`/trash/\${uid}\`); }
+      tidy() { return this.remove('draft'); }
+    }
+    class Zoho implements Calendar {
+      remove(uid: string) { return Promise.resolve({} as Response); }
+      tidy() { return this.remove('stale'); }
+    }
+  `;
+  const callersOf = (source: string) => {
+    const split = splitAtParameter(address(parse(source)));
+    const found = forwardedFrom(split!.parameter);
+    return {
+      calls: found.calls.map((caller) => caller.argument.getText()),
+      undecided: found.undecided,
+    };
+  };
+
+  it("leaves a sibling's call through `this` to the sibling", () => {
+    expect(callersOf(calendars)).toEqual({ calls: ["'draft'"], undecided: false });
+  });
+
+  it('attributes nothing to a call through the interface, and says one is there', () => {
+    expect(
+      callersOf(`${calendars}
+        class Manager { drop(calendar: Calendar) { return calendar.remove('gone'); } }
+      `),
+    ).toEqual({ calls: ["'draft'"], undecided: true });
+  });
+
+  it('follows a call through the concrete class, and one of a union holding a sibling not at all', () => {
+    expect(
+      callersOf(`${calendars}
+        class Manager {
+          archive(basecamp: Basecamp) { return basecamp.remove('archived'); }
+          either(calendar: Basecamp | Zoho) { return calendar.remove('either'); }
+        }
+      `),
+    ).toEqual({ calls: ["'draft'", "'archived'"], undecided: true });
+  });
+
+  it("reaches a subclass's override only through its `super` call", () => {
+    // `this.remove('mine')` in Loud runs Loud's override, which hands the value
+    // on to this one through `super`; Quiet overrides nothing, so its call runs
+    // this one directly.
+    const found = callersOf(`
+      class Base {
+        remove(uid: string) { return fetch(\`/trash/\${uid}\`); }
+      }
+      class Loud extends Base {
+        remove(uid: string) { return super.remove(uid); }
+        tidy() { return this.remove('mine'); }
+      }
+      class Quiet extends Base {
+        tidy() { return this.remove('inherited'); }
+      }
+    `);
+    expect({ ...found, calls: [...found.calls].sort() }).toEqual({
+      calls: ["'inherited'", "'mine'"],
+      undecided: false,
+    });
+  });
+
+  it('calls a call through a base class the method overrides undecided', () => {
+    expect(
+      callersOf(`
+        abstract class Store { abstract remove(uid: string): Promise<Response>; }
+        class Disk extends Store {
+          remove(uid: string) { return fetch(\`/trash/\${uid}\`); }
+        }
+        class Memory extends Store {
+          remove(uid: string) { return Promise.resolve({} as Response); }
+        }
+        const clear = (store: Store) => store.remove('all');
+      `),
+    ).toEqual({ calls: [], undecided: true });
   });
 });
 

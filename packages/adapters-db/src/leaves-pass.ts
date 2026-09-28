@@ -1077,8 +1077,9 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     const split = isReadable(urlArg) ? undefined : splitAtParameterIn(urlArg, settingReader);
     if (split !== undefined) {
       const verbSource = verbParameterOf(call);
+      const forwarded = forwardedFrom(split.parameter);
       let recorded = 0;
-      for (const hop of forwardedFrom(split.parameter)) {
+      for (const hop of forwarded.calls) {
         const owner = ownerOf(hop.site);
         if (owner === undefined || !Node.isCallExpression(hop.site)) continue;
         const verb =
@@ -1086,7 +1087,11 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         recordHttp(hop.site, hop.argument, verb, owner, split);
         recorded += 1;
       }
-      if (recorded > 0) return true;
+      // A call through an interface this method implements may run it and may
+      // run a sibling, so what it passes is nobody's to attribute (R158). The
+      // request is still made from somewhere, and the one written here is the
+      // answer for it.
+      if (recorded > 0 && !forwarded.undecided) return true;
     }
 
     recordHttp(call, urlArg, recognised.method, holder, undefined, request?.init);
