@@ -109,7 +109,9 @@ describe('dead on the analytics fixture', () => {
 
   it('says how many injects went unresolved, so a provider row can be doubted', async () => {
     const { result, lines } = await runDead({ db });
-    expect(result.unresolvedInjects).toBe(3);
+    // One: `ORDERS_DB`, which nothing provides. The three `EVENTS_CLIENT`s this
+    // used to count are provided by `ClientsModule.register` (R150).
+    expect(result.unresolvedInjects).toBe(1);
     expect(lines.join('\n')).toContain('could not be resolved');
   });
 

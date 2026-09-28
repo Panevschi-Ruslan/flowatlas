@@ -8,10 +8,10 @@
       "repo": ".",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 74,
-      "edges": 52,
+      "nodes": 75,
+      "edges": 53,
       "types": 7,
-      "unresolved": 8,
+      "unresolved": 7,
       "durationMs": 984
     }
   ],
@@ -58,9 +58,9 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 74,
-    "edges": 52,
+    "nodes": 75,
+    "edges": 53,
     "types": 7,
-    "unresolved": 8
+    "unresolved": 7
   }
 }

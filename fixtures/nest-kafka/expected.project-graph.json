@@ -424,6 +424,18 @@
       }
     },
     {
+      "id": "nest-kafka#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "nest-kafka",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
       "id": "nest-kafka#node_modules/@nestjs/microservices:ClientsModule",
       "type": "module",
       "label": "ClientsModule",
@@ -927,7 +939,7 @@
           "filesUnreadable": 0,
           "classes": 4,
           "skippedExternalCalls": {
-            "@nestjs/microservices": 1,
+            "@nestjs/microservices": 16,
             "@nestjs/config": 1
           }
         },
@@ -1173,6 +1185,14 @@
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
       "line": 29
+    },
+    {
+      "from": "nest-kafka#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-kafka#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 28
     },
     {
       "from": "nest-kafka#src/orders/orders.service.ts:OrdersService",
@@ -1599,14 +1619,6 @@
       "hint": "Use a literal or a const pattern; a computed one cannot be matched to a producer.",
       "symbol": "OrdersController.onAnything",
       "adapter": "nestjs-microservice",
-      "service": "nest-kafka"
-    },
-    {
-      "file": "src/orders/orders.service.ts",
-      "line": 28,
-      "reason": "di-token-unknown",
-      "hint": "No module in this repository provides KAFKA_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
-      "symbol": "OrdersService.constructor[0]",
       "service": "nest-kafka"
     },
     {

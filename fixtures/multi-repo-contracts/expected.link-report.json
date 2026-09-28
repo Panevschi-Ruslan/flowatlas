@@ -8,10 +8,10 @@
       "repo": "./billing",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 12,
-      "edges": 6,
+      "nodes": 13,
+      "edges": 7,
       "types": 3,
-      "unresolved": 1,
+      "unresolved": 0,
       "durationMs": 0
     },
     {
@@ -30,10 +30,10 @@
       "repo": "./orders",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 59,
-      "edges": 42,
+      "nodes": 60,
+      "edges": 43,
       "types": 17,
-      "unresolved": 2,
+      "unresolved": 1,
       "durationMs": 0
     },
     {
@@ -110,9 +110,9 @@
     }
   ],
   "totals": {
-    "nodes": 118,
-    "edges": 109,
+    "nodes": 120,
+    "edges": 111,
     "types": 43,
-    "unresolved": 9
+    "unresolved": 7
   }
 }

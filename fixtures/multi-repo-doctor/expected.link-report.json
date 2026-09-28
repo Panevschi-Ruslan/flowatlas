@@ -30,8 +30,8 @@
       "repo": "./orders",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 49,
-      "edges": 37,
+      "nodes": 50,
+      "edges": 38,
       "types": 3,
       "unresolved": 17,
       "durationMs": 785
@@ -139,8 +139,8 @@
     }
   ],
   "totals": {
-    "nodes": 84,
-    "edges": 68,
+    "nodes": 85,
+    "edges": 69,
     "types": 8,
     "unresolved": 31
   }

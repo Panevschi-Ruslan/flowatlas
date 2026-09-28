@@ -243,7 +243,7 @@
             "level": "action",
             "sites": 1,
             "message": "di-token-unknown",
-            "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does."
+            "hint": "No module in this repository provides LEDGER_CLIENT. Register it with { provide, useClass } or force the adapter that does."
           },
           {
             "service": "orders",

@@ -31,7 +31,7 @@ unresolved: 26 to act on over 31 rows, and 5 places static reading cannot see, f
   di-token-unknown: 2 rows
     No module in this repository provides the token these constructors ask for. Register it with { provide, useClass }, or force the adapter that does.
       orders/src/orders/orders.service.ts:24  OrdersService.constructor[0]
-        ↳ No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.
+        ↳ No module in this repository provides LEDGER_CLIENT. Register it with { provide, useClass } or force the adapter that does.
       orders/src/orders/orders.service.ts:35  OrdersService.constructor[1]
         ↳ No module in this repository provides AUDIT_CLIENT. Register it with { provide, useClass } or force the adapter that does.
   dynamic-http-url: 2 rows

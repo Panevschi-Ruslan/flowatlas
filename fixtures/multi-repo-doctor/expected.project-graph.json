@@ -848,6 +848,18 @@
       }
     },
     {
+      "id": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "orders",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
       "id": "orders#node_modules/@nestjs/microservices:ClientsModule",
       "type": "module",
       "label": "ClientsModule",
@@ -1298,6 +1310,7 @@
           "classes": 5,
           "skippedExternalCalls": {
             "fake-orm": 9,
+            "@nestjs/microservices": 6,
             "@nestjs/config": 5
           }
         },
@@ -1737,6 +1750,14 @@
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
       "line": 37
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService",
+      "to": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 36
     },
     {
       "from": "orders#src/orders/orders.service.ts:OrdersService.archive",
@@ -2257,7 +2278,7 @@
       "file": "src/orders/orders.service.ts",
       "line": 24,
       "reason": "di-token-unknown",
-      "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
+      "hint": "No module in this repository provides LEDGER_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
       "symbol": "OrdersService.constructor[0]",
       "service": "orders"
     },
