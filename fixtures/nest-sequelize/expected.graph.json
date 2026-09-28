@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "repo": "nest-sequelize",
-  "generatedAt": "2026-09-24T16:07:12.552Z",
+  "generatedAt": "2026-09-27T09:26:48.945Z",
   "nodes": [
     {
       "id": "db_query:nest-sequelize#src/invoices/invoices.service.ts:13:12",
@@ -312,6 +312,8 @@
       "meta": {
         "stats": {
           "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
           "classes": 4,
           "skippedExternalCalls": {
             "sequelize": 7

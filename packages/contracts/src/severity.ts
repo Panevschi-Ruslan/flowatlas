@@ -26,15 +26,15 @@ export const SEVERITY_RANK: Record<Severity, number> = { error: 0, warning: 1, i
  * receiver reads where it declared the field optional breaks nothing at run
  * time, and says only that the declaration is imprecise.
  */
-const SOFTENED_BY: Record<string, Severity> = {
-  'set-map-json': 'warning',
+const SOFTENED_BY: ReadonlyMap<string, Severity> = new Map([
+  ['set-map-json', 'warning'],
   // A `null` arriving where an unvalidated receiver declares the field optional.
-  'null-for-optional': 'warning',
+  ['null-for-optional', 'warning'],
   // A choice of shapes too wide to walk. Nothing was compared, so nothing was
   // found to disagree, and the row says what was not done rather than claiming
   // a mismatch it never established.
-  'choice-too-wide': 'info',
-};
+  ['choice-too-wide', 'info'],
+]);
 
 /**
  * The one exception to softening only.
@@ -44,7 +44,7 @@ const SOFTENED_BY: Record<string, Severity> = {
  * the route, and it removes the field before the handler runs. A field sent and
  * silently thrown away is not waste, it is data the sender believes arrived.
  */
-const HARDENED_BY: Record<string, Severity> = { 'whitelist-strip': 'warning' };
+const HARDENED_BY: ReadonlyMap<string, Severity> = new Map([['whitelist-strip', 'warning']]);
 
 /**
  * A strip, by what it can cost.
@@ -80,18 +80,21 @@ export const severityOf = (
   impact?: StripImpact,
 ): Severity => {
   const base = BY_KIND[kind];
-  if (rule !== null && HARDENED_BY[rule] !== undefined && impact !== undefined) {
+  // `BY_KIND` and `BY_IMPACT` are keyed by a union this project declares, so the
+  // compiler has already checked that every key exists and no other can be
+  // asked. The two rule tables are keyed by a plain string, which is the shape
+  // that answers for `constructor`, so they are `Map`s (R130).
+  const hardest = rule === null ? undefined : HARDENED_BY.get(rule);
+  if (hardest !== undefined && impact !== undefined) {
     // The impact refines the hardening, and like the hardening it may only
     // reach the level that rule is allowed to reach. Returning it outright
     // would let a measurement quietly soften a verdict the kind had made
     // harsher, which is the one direction this module does not travel.
     const measured = BY_IMPACT[impact];
-    const hardest = HARDENED_BY[rule] as Severity;
     return SEVERITY_RANK[measured] < SEVERITY_RANK[hardest] ? hardest : measured;
   }
-  const hardened = rule === null ? undefined : HARDENED_BY[rule];
-  if (hardened !== undefined && SEVERITY_RANK[hardened] < SEVERITY_RANK[base]) return hardened;
-  const softened = rule === null ? undefined : SOFTENED_BY[rule];
+  if (hardest !== undefined && SEVERITY_RANK[hardest] < SEVERITY_RANK[base]) return hardest;
+  const softened = rule === null ? undefined : SOFTENED_BY.get(rule);
   if (softened === undefined) return base;
   return SEVERITY_RANK[softened] > SEVERITY_RANK[base] ? softened : base;
 };

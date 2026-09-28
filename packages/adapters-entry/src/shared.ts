@@ -6,8 +6,22 @@ import type {
   InlineHandler,
   NamedFunction,
 } from '@flowatlas/core';
-import { methodNamedOn, namedFunction, normalizeFilePath, originOfValue } from '@flowatlas/core';
-import type { ClassDeclaration, MethodDeclaration, Node as TsNode, SourceFile } from 'ts-morph';
+import {
+  decoratorExportedName,
+  decoratorModule,
+  decoratorName,
+  methodNamedOn,
+  namedFunction,
+  normalizeFilePath,
+  originOfValue,
+} from '@flowatlas/core';
+import type {
+  ClassDeclaration,
+  Decorator,
+  MethodDeclaration,
+  Node as TsNode,
+  SourceFile,
+} from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 
 /** Files of the repository, ignoring anything that came from a package. */
@@ -25,6 +39,186 @@ export const repoClasses = function* (ctx: ExtractContext): Generator<ClassDecla
 
 export const fileOfNode = (node: { getSourceFile(): SourceFile }, ctx: ExtractContext): string =>
   normalizeFilePath(node.getSourceFile().getFilePath(), ctx.repoDir);
+
+/**
+ * The package a module specifier names, or undefined when it names a file.
+ *
+ * `@nestjs/common/decorators` is `@nestjs/common`: a subpath import of a package
+ * is an import of that package, and a reader that matched the specifier exactly
+ * skipped every controller written the second way. On a notification service that was 21 routes in
+ * 3 files, dropped with no row to say so, while the classes and the methods
+ * around them were read normally — so nothing in the output even hinted that a
+ * file had been half read (R84).
+ */
+export const packageOfSpecifier = (specifier: string): string | undefined => {
+  if (specifier === '' || specifier.startsWith('.') || specifier.startsWith('/')) return undefined;
+  const [first, second] = specifier.split('/');
+  if (first === undefined || first === '') return undefined;
+  if (!first.startsWith('@')) return first;
+  return second === undefined || second === '' ? undefined : `${first}/${second}`;
+};
+
+/**
+ * The package the function a call names was imported from.
+ *
+ * `mount('/api', api)` says nothing about itself; `import mount from 'koa-mount'`
+ * at the top of the same file says everything, and that is where this reads. The
+ * import statement first and the checker second, for the reason `importedAs`
+ * below gives at greater length: the statement is there in every state of the
+ * repository, including a fixture and a fresh clone where no package resolves,
+ * and the checker is the fallback for a namespace import or a re-export it
+ * managed to follow. A subpath import is an import of the package, which
+ * `packageOfSpecifier` settles.
+ *
+ * A namespace access is read through to the namespace — `helpers.mount(...)`
+ * comes from wherever `helpers` was imported from — because that is the same
+ * fact written differently, and a description keyed on the package would
+ * otherwise match one spelling of an import and not the other.
+ */
+export const packageOfCall = (call: TsNode): string | undefined => {
+  if (!Node.isCallExpression(call)) return undefined;
+  const callee = call.getExpression();
+  const named = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
+  if (!Node.isIdentifier(named)) return undefined;
+  for (const declaration of named.getSymbol()?.getDeclarations() ?? []) {
+    const statement = declaration.getFirstAncestorByKind(SyntaxKind.ImportDeclaration);
+    if (statement === undefined) continue;
+    const pkg = packageOfSpecifier(statement.getModuleSpecifierValue());
+    if (pkg !== undefined) return pkg;
+  }
+  const origin = originOfValue(named);
+  return origin.kind === 'external' ? origin.package : undefined;
+};
+
+/**
+ * The identifier a decorator applies, through a call and a namespace access.
+ *
+ * The same reading core's decorator matcher does, needed here because what this
+ * module wants out of it is the import specifier rather than the module alone:
+ * the name a package exports and the module it was imported from are one fact
+ * written in one place, and asking two questions of two functions is how the
+ * second half of R84 came to be answerable only when the checker could resolve
+ * the package.
+ */
+const appliedIdentifier = (decorator: Decorator): TsNode | undefined => {
+  const expression = decorator.getExpression();
+  const applied = Node.isCallExpression(expression) ? expression.getExpression() : expression;
+  if (Node.isPropertyAccessExpression(applied)) return applied.getNameNode();
+  return Node.isIdentifier(applied) ? applied : undefined;
+};
+
+/**
+ * The import a decorator's name is bound by: the module, and the name inside it.
+ *
+ * Read off the import statement rather than resolved through the checker, and
+ * that is the point. `import { Get as HttpGet } from '@nestjs/common/decorators'`
+ * says both things in the file, in plain sight, whether or not the package is
+ * installed — and a fixture, a fresh clone and a repository whose dependencies
+ * do not resolve are all cases where the checker has no aliased symbol to offer
+ * and the statement still says everything needed.
+ */
+const importedAs = (decorator: Decorator): { module: string; name: string } | undefined => {
+  const identifier = appliedIdentifier(decorator);
+  if (identifier === undefined || !Node.isIdentifier(identifier)) return undefined;
+  for (const declaration of identifier.getSymbol()?.getDeclarations() ?? []) {
+    if (!Node.isImportSpecifier(declaration)) continue;
+    return {
+      module: declaration.getImportDeclaration().getModuleSpecifierValue(),
+      // As written before any `as`, which is the name the package exports.
+      name: declaration.getName(),
+    };
+  }
+  return undefined;
+};
+
+/**
+ * Where a decorator came from, as far as the checker can tell.
+ *
+ * `unreadable` is not `elsewhere`: a symbol the checker could not follow is a
+ * limit of this reading rather than evidence that somebody else exported the
+ * name, and the matcher below gives it the benefit of the doubt exactly as the
+ * one in core does. Refusing it would drop real routes wherever a re-export
+ * cannot be resolved.
+ */
+export type DecoratorOrigin =
+  | { readonly from: 'asked'; readonly package: string }
+  | { readonly from: 'elsewhere'; readonly module: string }
+  | { readonly from: 'unreadable' };
+
+export const decoratorOrigin = (
+  decorator: Decorator,
+  packages: readonly string[],
+): DecoratorOrigin => {
+  // The import statement first, the checker second: the statement is there in
+  // every state of the repository, and the checker's answer is what it falls
+  // back to for a namespace import or a symbol it followed into a package.
+  const module = importedAs(decorator)?.module ?? decoratorModule(decorator);
+  if (module === undefined) return { from: 'unreadable' };
+  const pkg = packageOfSpecifier(module);
+  if (pkg !== undefined && packages.includes(pkg)) return { from: 'asked', package: pkg };
+  return { from: 'elsewhere', module };
+};
+
+/** A decorator this reader recognised by name and could not place by package. */
+export interface ForeignDecorator {
+  readonly decorator: Decorator;
+  /** The module it was imported from, as written. */
+  readonly module: string;
+}
+
+/**
+ * Decorators named here, told apart by whether these packages exported them.
+ *
+ * The second list is the whole reason this exists rather than a call to
+ * `getDecorator` with a list of module names. A decorator spelled like a
+ * framework's and imported from somewhere else is either the framework's after
+ * all — re-exported through a barrel this cannot follow — or a local one that
+ * happens to share the name, and the reader cannot tell which. What it must not
+ * do is treat the two the same as a class carrying no such decorator at all:
+ * that is the silence R84 is about, so the caller is handed what it could not
+ * place and is expected to write a row about it.
+ */
+export interface SortedDecorators {
+  readonly matched: readonly Decorator[];
+  readonly foreign: readonly ForeignDecorator[];
+}
+
+export const decoratorsFrom = (
+  node: { getDecorators(): Decorator[] },
+  names: readonly string[],
+  packages: readonly string[],
+): SortedDecorators => {
+  const matched: Decorator[] = [];
+  const foreign: ForeignDecorator[] = [];
+  // Matched here rather than by `findDecorators`, because the names this asks
+  // about include the one the import statement spells and that function knows
+  // only the written name and whatever the checker could alias it to.
+  for (const decorator of node.getDecorators()) {
+    if (!decoratorNames(decorator).some((name) => names.includes(name))) continue;
+    const origin = decoratorOrigin(decorator, packages);
+    if (origin.from === 'elsewhere') foreign.push({ decorator, module: origin.module });
+    else matched.push(decorator);
+  }
+  return { matched, foreign };
+};
+
+/**
+ * Every name a decorator answers to: as written, as imported, as exported.
+ *
+ * `import { Get as HttpGet }` is still `Get`, and a table keyed by the names a
+ * package exports has no answer for the alias. The written name comes first
+ * because it is what the file says and nothing can be wrong about it; the
+ * imported name comes next because the import statement is there whether or not
+ * the package is; the checker's answer comes last, for a name that reached the
+ * file some other way.
+ */
+export const decoratorNames = (decorator: Decorator): readonly string[] => {
+  const names = [decoratorName(decorator)];
+  for (const name of [importedAs(decorator)?.name, decoratorExportedName(decorator)]) {
+    if (name !== undefined && !names.includes(name)) names.push(name);
+  }
+  return names;
+};
 
 export const handlerOf = (method: ClassMethod, ctx: ExtractContext) => {
   const owner = method.getParent() as ClassDeclaration;
@@ -54,6 +248,95 @@ export const repoFunctionOf = (node: TsNode | undefined): NamedFunction | undefi
   if (node === undefined) return undefined;
   const origin = originOfValue(node);
   return origin.kind === 'local' ? namedFunction(origin.declaration) : undefined;
+};
+
+/** A function written where a value was expected. */
+export const isWrittenFunction = (node: TsNode): boolean =>
+  Node.isArrowFunction(node) || Node.isFunctionExpression(node);
+
+/**
+ * Whether an argument hands a call work to run rather than a value to build with.
+ *
+ * Work is a function written in place, a function this repository declares
+ * named by reference, or a list - whatever is in it: `asyncMiddleware([check,
+ * run])` runs each in turn, and no one of them is the answer. Anything else is
+ * a value, and following it would be the same guess in a longer form.
+ *
+ * One answer for every reader that asks, because two ask: a route registered by
+ * a call, and a verb a file-system router exports as the value a call built.
+ * They used to ask it twice, and the second copy had forgotten the list.
+ */
+export const handsOverWork = (argument: TsNode): boolean => {
+  const value = unwrapValue(argument);
+  return (
+    isWrittenFunction(value) ||
+    Node.isArrayLiteralExpression(value) ||
+    repoFunctionOf(value) !== undefined
+  );
+};
+
+/**
+ * The factory of this repository that built a handler, when a call to one is
+ * what answers a way in.
+ *
+ * `getAccountVideoRateFactory('like')` in a registration, and
+ * `export const GET = REST_GET(config)` in a route file, are one thing written
+ * in two places: a function of this repository called with values, and the
+ * handler is the function it returns. The factory's body holds that function,
+ * so a walk from the route into the factory reaches what the handler reaches -
+ * and whatever the factory does once while it builds, which is the over-reach
+ * accepted here because the alternative is no body at all (R137, R153).
+ *
+ * The function called is what decides it, not what it was handed. Asking only
+ * the arguments is how a CMS monorepo's two hundred and fifty-nine routes read as
+ * "nothing declared in this repository was handed to that call" while the
+ * function they call, `handlerBuilder`, is declared in the repository and is a
+ * body anybody can open (R153).
+ *
+ * A call handed work is not read as one of these, because it cannot be told
+ * from a wrapper: `listFactory(res => res.locals.account)` builds a handler out
+ * of a function, and `asyncMiddleware(getVideo)` wraps one, and pointing at a
+ * wrapper would name one shared function as the body of every route it wraps.
+ * What a reader does with such a call is its own business - a registration
+ * keeps no handler, a verb export points at the call it can see. A function
+ * called that resolves into a package is not followed either: its body is not
+ * in the repository, and that is the row a reader still writes.
+ */
+export const builtByFactory = (value: TsNode | undefined): NamedFunction | undefined => {
+  if (value === undefined) return undefined;
+  const node = unwrapValue(value);
+  if (!Node.isCallExpression(node)) return undefined;
+  if (node.getArguments().some(handsOverWork)) return undefined;
+  return factoryNamed(node.getExpression(), 0);
+};
+
+/** How far a factory written as another name is followed. */
+const FACTORY_ALIAS_DEPTH = 4;
+
+/**
+ * The function of this repository a called name stands for, through the names
+ * it was bound to.
+ *
+ * A CMS monorepo's `REST_GET` is `GET` re-exported under another name, and `GET` is
+ * `export const GET = handlerBuilder`: a name bound to a name, which is how one
+ * factory is handed out under five verbs. `repoFunctionOf` stops at the first
+ * binding, because a `const` whose value is a name is not a function declared
+ * there - and it is right to, for every reader that asks what was declared.
+ * What was *called* is another question, and the answer is whatever the chain
+ * of names ends at. Followed a few links and then abandoned, as a verb written
+ * as another verb's name is.
+ */
+const factoryNamed = (callee: TsNode, depth: number): NamedFunction | undefined => {
+  const fn = repoFunctionOf(callee);
+  if (fn !== undefined || depth >= FACTORY_ALIAS_DEPTH) return fn;
+  const origin = originOfValue(callee);
+  if (origin.kind !== 'local' || !Node.isVariableDeclaration(origin.declaration)) return undefined;
+  const initializer = origin.declaration.getInitializer();
+  if (initializer === undefined) return undefined;
+  const bound = unwrapValue(initializer);
+  return Node.isIdentifier(bound) || Node.isPropertyAccessExpression(bound)
+    ? factoryNamed(bound, depth + 1)
+    : undefined;
 };
 
 /** A function written where a handler was expected, or undefined for anything else. */
@@ -115,12 +398,64 @@ export const handlerInside = (
 };
 
 /** `await x`, `(x)` and `x as T` all stand for whatever is inside them. */
-const unwrapValue = (expr: TsNode): TsNode => {
+export const unwrapValue = (expr: TsNode): TsNode => {
   if (Node.isAwaitExpression(expr)) return unwrapValue(expr.getExpression());
   if (Node.isParenthesizedExpression(expr) || Node.isAsExpression(expr)) {
     return unwrapValue(expr.getExpression());
   }
   return expr;
+};
+
+/** How far a list assembled out of other lists is followed. */
+const SPREAD_DEPTH = 8;
+
+/**
+ * Every element of a list, with the lists spread into it spread out.
+ *
+ * The list a real repository writes is very largely spreads of names: the
+ * declarative middleware list of one measured application is eighty-four
+ * `...adminXRoutesMiddlewares`, each a const in another file (R91). Reading only
+ * the elements written in place reads the two that are and calls the other
+ * several hundred absent, which is the shape of silence rather than a reading.
+ * So a spread of a name is resolved to the declaration it names and, where that
+ * is a list of this repository, its elements are taken as if they had been
+ * written here.
+ *
+ * A spread of anything else — a call, a name that resolves into a package — is
+ * left alone. It contributes members nobody here can see, and the honest
+ * consequence is that whatever they would have carried is what nothing was found
+ * for, which is already what a caller says about a member it has none of.
+ *
+ * Written once and used by both readers that meet a list: the declarative
+ * middleware list of a file-system router, and a registry of applications that a
+ * single mount installs. "What is in this list" is one question, and a second way
+ * of following a list would be a second set of the same bugs.
+ */
+export const arrayElements = (elements: readonly TsNode[], depth = 0): TsNode[] => {
+  const out: TsNode[] = [];
+  for (const element of elements) {
+    if (!Node.isSpreadElement(element)) {
+      out.push(unwrapValue(element));
+      continue;
+    }
+    if (depth >= SPREAD_DEPTH) continue;
+    const spread = unwrapValue(element.getExpression());
+    if (Node.isArrayLiteralExpression(spread)) {
+      out.push(...arrayElements(spread.getElements(), depth + 1));
+      continue;
+    }
+    if (!Node.isIdentifier(spread)) continue;
+    const origin = originOfValue(spread);
+    if (origin.kind !== 'local') continue;
+    const declaration = origin.declaration;
+    if (!Node.isVariableDeclaration(declaration)) continue;
+    const initializer = declaration.getInitializer();
+    if (initializer === undefined) continue;
+    const value = unwrapValue(initializer);
+    if (!Node.isArrayLiteralExpression(value)) continue;
+    out.push(...arrayElements(value.getElements(), depth + 1));
+  }
+  return out;
 };
 
 /**
@@ -214,4 +549,136 @@ export const inlineHandlerOf = (
   const sourceFile = argument.getSourceFile();
   const at = sourceFile.getLineAndColumnAtPos(argument.getStart());
   return { file: fileOfNode(argument, ctx), line: at.line, column: at.column, label, inline: true };
+};
+
+/**
+ * The call an initializer is, when the value was built by one.
+ *
+ * The body of a built export is the whole initializer, so the export reaches
+ * whatever the code inside the call reaches — which is what a person asking
+ * what a route handler touches means, and the reason this edge is worth
+ * drawing at all.
+ */
+const builtValue = (initializer: TsNode | undefined): TsNode | undefined => {
+  if (initializer === undefined) return undefined;
+  const value = unwrapValue(initializer);
+  return Node.isCallExpression(value) ? value : undefined;
+};
+
+/** `export const GET = withWorkspace(…)`: the declaration is what the name belongs to. */
+const builtFromDeclaration = (declaration: TsNode): NamedFunction | undefined => {
+  if (!Node.isVariableDeclaration(declaration)) return undefined;
+  // A declaration whose name is a pattern names no single value; its elements
+  // do, and they are read below.
+  if (!Node.isIdentifier(declaration.getNameNode())) return undefined;
+  const body = builtValue(declaration.getInitializer());
+  if (body === undefined) return undefined;
+  return {
+    name: declaration.getName(),
+    declaration,
+    body,
+    line: declaration.getStartLineNumber(),
+  };
+};
+
+/**
+ * `export const { POST } = serve<Input>(…)`: one name taken out of a built value.
+ *
+ * A library that answers several verbs from one configuration hands back an
+ * object and the module exports a piece of it, which is a `BindingElement`
+ * rather than a declaration of its own. What the name reaches is still the
+ * call, because nothing here can tell which part of the returned object the
+ * piece is, and the call is what was written.
+ *
+ * The declaration recorded is the variable declaration around the pattern,
+ * which is the node this package's `NamedFunction` can carry. Two names taken
+ * out of one call therefore share a declaration, and a reader that keys on the
+ * declaration will see the first of them; the names, the ids and the lines
+ * stay distinct, which is what every reading downstream of here asks for.
+ *
+ * Only an element written directly in the declaration's own pattern is read. A
+ * name nested a level deeper stands for a piece of a piece, and saying it
+ * reaches the call would be claiming more than was written.
+ */
+const builtFromBindingElement = (element: TsNode): NamedFunction | undefined => {
+  if (!Node.isBindingElement(element)) return undefined;
+  const name = element.getNameNode();
+  if (!Node.isIdentifier(name)) return undefined;
+  const declaration = element.getParent()?.getParent();
+  if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return undefined;
+  const body = builtValue(declaration.getInitializer());
+  if (body === undefined) return undefined;
+  return { name: name.getText(), declaration, body, line: element.getStartLineNumber() };
+};
+
+/**
+ * How a built export is read, by the kind of node the export table hands back.
+ *
+ * A table rather than a chain of tests because the two shapes are two readings
+ * of equal standing, and a third — should a framework invent one — is a row
+ * here and nothing else.
+ */
+const BUILT_EXPORT_READINGS: ReadonlyMap<SyntaxKind, (node: TsNode) => NamedFunction | undefined> =
+  new Map([
+    [SyntaxKind.VariableDeclaration, builtFromDeclaration],
+    [SyntaxKind.BindingElement, builtFromBindingElement],
+  ]);
+
+/**
+ * The function an export stands for when a call built its value.
+ *
+ * `export const GET = withWorkspace(async (req) => { … })` declares a value, so
+ * every reader that asks what a module *declares a function* to be says there
+ * is none here — and that is the wrong answer twice over, because this is how
+ * a route handler and a wrapped screen are ordinarily written, and because the
+ * name an importer writes is the exported one. The React function index reads
+ * such an export as a function under its own name (R61); this is the same
+ * reading, in one place, so that an adapter naming the code behind a way in and
+ * the index that owns the node it points at cannot disagree about what the
+ * function behind an export is (R72).
+ *
+ * What is *not* here any more is the test that the declaration carries an
+ * `export` keyword, and its absence is the point rather than an oversight. That
+ * test was standing in for the question that actually matters — does the module
+ * export this — and it answered wrongly for a value bound to a local name and
+ * re-exported under another (`const handler = NextAuth(opts); export { handler
+ * as GET, handler as POST }`), which is neither a rare spelling nor a private
+ * value. The question is now asked of the module's export table, once, in
+ * `builtExportFunctions` below and in the adapter that looks a verb up in the
+ * same table. Passing a declaration nobody exports to this function will
+ * therefore get an answer, and that is why both callers reach it through an
+ * export table: indexing every local `const x = f()` would turn every
+ * configured client and every memoised value in a repository into a "function",
+ * which is exactly what the old test existed to prevent (R74).
+ */
+export const builtExportFunction = (declaration: TsNode): NamedFunction | undefined =>
+  BUILT_EXPORT_READINGS.get(declaration.getKind())?.(declaration);
+
+/**
+ * Every export of a module whose value a call built.
+ *
+ * Driven by the export table rather than by the variable declarations written
+ * in the file, because that table is the one place that already knows what the
+ * module exports however it was spelled: a declaration marked `export`, a local
+ * re-exported under another name, or a name taken out of a pattern.
+ *
+ * Two things the table hands back are deliberately dropped. A declaration that
+ * lives in another file arrives here through `export { x } from './other'`, and
+ * indexing it under this file would put a second node where the other module's
+ * reader already made one. And one declaration exported under two names is one
+ * function, recorded under the name it was declared with, because that is the
+ * name the node carries and the one an adapter naming the same declaration will
+ * compute.
+ */
+export const builtExportFunctions = (sourceFile: SourceFile): NamedFunction[] => {
+  const found = new Map<TsNode, NamedFunction>();
+  for (const [, declarations] of sourceFile.getExportedDeclarations()) {
+    for (const declaration of declarations) {
+      if (declaration.getSourceFile() !== sourceFile) continue;
+      if (found.has(declaration)) continue;
+      const fn = builtExportFunction(declaration);
+      if (fn !== undefined) found.set(declaration, fn);
+    }
+  }
+  return [...found.values()];
 };

@@ -40,13 +40,17 @@ const unresolvedKey = (row: Unresolved): string =>
  * templates bind expressions that are not calls — and repeating it once per
  * site buries everything worth acting on. The row kept is the first by file and
  * line, so it still points at somewhere real, and `sites` says how many there
- * were.
+ * were. A row that already says how many sites it stands for is not folded.
  */
 const foldBelowAction = (rows: readonly Unresolved[]): Unresolved[] => {
   const out: Unresolved[] = [];
   const folded = new Map<string, Unresolved>();
   for (const row of rows) {
-    if (row.level === undefined || row.level === 'action') {
+    // A row that counts its own sites is already one row per thing it
+    // describes - one per skipped test directory, one per service's anonymous
+    // handlers - and folding it would lose which thing, and add a row's count
+    // to a count of places.
+    if (row.level === undefined || row.level === 'action' || row.sites !== undefined) {
       out.push(row);
       continue;
     }

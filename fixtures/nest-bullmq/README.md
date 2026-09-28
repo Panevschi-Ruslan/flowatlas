@@ -56,7 +56,7 @@ was constructed from a variable, so there is no token and no channel.
 | `@Processor('mail')` + `@Process('send-email')` | `src/mail/legacy-mail.processor.ts:15` | `mail` | `mail` | `send-email` | static | — |
 | `@Processor('mail')` + `@Process()` | `src/mail/legacy-mail.processor.ts:22` | `mail` | `mail` | `null` | static | — |
 | `@Processor()` + `process(job)` | `src/mail/anonymous.processor.ts:11` | none | `null` | — | heuristic | `channel-dynamic` |
-| `@Processor('reports')` + `process(job)`, unreached | `src/mail/reports.processor.ts:24` | `reports` | `reports` | — | static | — |
+| `@Processor({ name: 'reports' })` + `process(job)`, unreached | `src/mail/reports.processor.ts:30` | `reports` | `reports` | — | static | — |
 
 The bullmq shape yields **one** consumer for the whole class, on `process`, with
 `meta.jobNames` read from the literal `case` labels of `switch (job.name)`
@@ -64,8 +64,18 @@ The bullmq shape yields **one** consumer for the whole class, on `process`, with
 method**. Both land on `channel:mail`, which therefore has one node, one
 producer set and three consumers.
 
-None of these is a P01 entry, so every consumer here carries
-`meta.entryId: null`.
+None of these decorators is one a P01 reader knows, so the way in is drawn by
+the channel reader instead: each consumer points at
+`entry:nest-bullmq:event:<queue>`, one node per queue with a `handles` edge per
+handler (R133).
+
+Each of those edges carries `meta.body`, and that is the whole of R133. The
+`params` of the edge are what the handler declares — `Job<SendEmailJob>`, the
+library's own record of the job — while `meta.body` is
+`type:nest-bullmq#SendEmailJob`, the message one property in, because the
+description says the message sits at `data`. Drawn without that, the entry made
+the tool report a correct handler as requiring every field of a message nobody
+sends.
 
 `ReportsProcessor` is the one class here that no module lists, no constructor
 asks for and nothing calls. It is the R60 case: receiving used to be skipped
@@ -83,6 +93,7 @@ deployed on its own looks like from inside one repository.
 | `new Queue<ReportJob>(queueName)` with a parameter | `src/mail/mail.service.ts:45` | `channel-dynamic` — no token to read the queue name from |
 | `@Process()` with no argument | `src/mail/legacy-mail.processor.ts:22` | `meta.jobName: null`; must not crash |
 | `@Processor()` with no argument | `src/mail/anonymous.processor.ts:9` | `channel-dynamic`; must not crash |
+| `@Processor({ name: 'reports' })`, the options overload | `src/mail/reports.processor.ts:30` | `channel:reports` — **not** `channel:{"name":"reports"}`, which is what reading the whole argument produced before the channel side was described with locators (R86) |
 
 `expected.graph.json` is deliberately absent: it is generated once the P04 passes
 exist and reviewed as a diff.

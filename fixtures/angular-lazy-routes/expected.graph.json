@@ -1,0 +1,287 @@
+{
+  "schemaVersion": 5,
+  "repo": "angular-lazy-routes",
+  "generatedAt": "2026-09-27T11:35:44.721Z",
+  "nodes": [
+    {
+      "id": "angular-lazy-routes#src/app/admin/admin-shell.component.ts:AdminShellComponent",
+      "type": "ui_component",
+      "label": "AdminShellComponent",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/admin/admin-shell.component.ts",
+      "line": 3,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-admin-shell"
+      }
+    },
+    {
+      "id": "angular-lazy-routes#src/app/admin/plugins.component.ts:PluginsComponent",
+      "type": "ui_component",
+      "label": "PluginsComponent",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/admin/plugins.component.ts",
+      "line": 3,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-plugins"
+      }
+    },
+    {
+      "id": "angular-lazy-routes#src/app/admin/reports.component.ts:ReportsComponent",
+      "type": "ui_component",
+      "label": "ReportsComponent",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/admin/reports.component.ts",
+      "line": 3,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-reports"
+      }
+    },
+    {
+      "id": "angular-lazy-routes#src/app/admin/reports.module.ts:ReportsModule",
+      "type": "module",
+      "label": "ReportsModule",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/admin/reports.module.ts",
+      "line": 9,
+      "kind": "ngmodule"
+    },
+    {
+      "id": "angular-lazy-routes#src/app/home.component.ts:HomeComponent",
+      "type": "ui_component",
+      "label": "HomeComponent",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/home.component.ts",
+      "line": 3,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-home"
+      }
+    },
+    {
+      "id": "angular-lazy-routes#src/app/shell.component.ts:ShellComponent",
+      "type": "ui_component",
+      "label": "ShellComponent",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/shell.component.ts",
+      "line": 10,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-shell"
+      }
+    },
+    {
+      "id": "repo:angular-lazy-routes",
+      "type": "repo",
+      "label": "angular-lazy-routes",
+      "repo": "angular-lazy-routes",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
+          "classes": 6,
+          "templates": 5,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_action:angular-lazy-routes#src/app/shell.component.ts:13:8",
+      "type": "ui_action",
+      "label": "routerLink=\"/home\"",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/shell.component.ts",
+      "line": 13,
+      "kind": "route",
+      "meta": {
+        "event": "routerLink",
+        "handler": "/home",
+        "component": "angular-lazy-routes#src/app/shell.component.ts:ShellComponent",
+        "template": "src/app/shell.component.ts",
+        "route": "/home"
+      }
+    },
+    {
+      "id": "ui_action:angular-lazy-routes#src/app/shell.component.ts:14:8",
+      "type": "ui_action",
+      "label": "routerLink=\"/admin/settings\"",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/shell.component.ts",
+      "line": 14,
+      "kind": "route",
+      "meta": {
+        "event": "routerLink",
+        "handler": "/admin/settings",
+        "component": "angular-lazy-routes#src/app/shell.component.ts:ShellComponent",
+        "template": "src/app/shell.component.ts",
+        "route": "/admin/settings"
+      }
+    },
+    {
+      "id": "ui_action:angular-lazy-routes#src/app/shell.component.ts:15:8",
+      "type": "ui_action",
+      "label": "routerLink=\"/admin/settings/plugins\"",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/shell.component.ts",
+      "line": 15,
+      "kind": "route",
+      "meta": {
+        "event": "routerLink",
+        "handler": "/admin/settings/plugins",
+        "component": "angular-lazy-routes#src/app/shell.component.ts:ShellComponent",
+        "template": "src/app/shell.component.ts",
+        "route": "/admin/settings/plugins"
+      }
+    },
+    {
+      "id": "ui_action:angular-lazy-routes#src/app/shell.component.ts:16:8",
+      "type": "ui_action",
+      "label": "routerLink=\"/admin/reports/weekly\"",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/shell.component.ts",
+      "line": 16,
+      "kind": "route",
+      "meta": {
+        "event": "routerLink",
+        "handler": "/admin/reports/weekly",
+        "component": "angular-lazy-routes#src/app/shell.component.ts:ShellComponent",
+        "template": "src/app/shell.component.ts",
+        "route": "/admin/reports/weekly"
+      }
+    },
+    {
+      "id": "ui_action:angular-lazy-routes#src/app/shell.component.ts:17:8",
+      "type": "ui_action",
+      "label": "routerLink=\"/nowhere\"",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/shell.component.ts",
+      "line": 17,
+      "kind": "route",
+      "meta": {
+        "event": "routerLink",
+        "handler": "/nowhere",
+        "component": "angular-lazy-routes#src/app/shell.component.ts:ShellComponent",
+        "template": "src/app/shell.component.ts",
+        "route": "/nowhere"
+      }
+    },
+    {
+      "id": "ui_action:angular-lazy-routes#src/app/shell.component.ts:19:15",
+      "type": "ui_action",
+      "label": "click=\"hide()\"",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/shell.component.ts",
+      "line": 19,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "hide()",
+        "component": "angular-lazy-routes#src/app/shell.component.ts:ShellComponent",
+        "template": "src/app/shell.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:angular-lazy-routes#src/app/shell.component.ts:21:13",
+      "type": "ui_action",
+      "label": "click=\"dialog.open()\"",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/shell.component.ts",
+      "line": 21,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "dialog.open()",
+        "component": "angular-lazy-routes#src/app/shell.component.ts:ShellComponent",
+        "template": "src/app/shell.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:angular-lazy-routes#src/app/shell.component.ts:22:13",
+      "type": "ui_action",
+      "label": "click=\"rename()\"",
+      "repo": "angular-lazy-routes",
+      "file": "src/app/shell.component.ts",
+      "line": 22,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "rename()",
+        "component": "angular-lazy-routes#src/app/shell.component.ts:ShellComponent",
+        "template": "src/app/shell.component.ts"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "ui_action:angular-lazy-routes#src/app/shell.component.ts:13:8",
+      "to": "angular-lazy-routes#src/app/home.component.ts:HomeComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/shell.component.ts",
+      "line": 13
+    },
+    {
+      "from": "ui_action:angular-lazy-routes#src/app/shell.component.ts:14:8",
+      "to": "angular-lazy-routes#src/app/admin/admin-shell.component.ts:AdminShellComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/shell.component.ts",
+      "line": 14
+    },
+    {
+      "from": "ui_action:angular-lazy-routes#src/app/shell.component.ts:15:8",
+      "to": "angular-lazy-routes#src/app/admin/plugins.component.ts:PluginsComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/shell.component.ts",
+      "line": 15
+    },
+    {
+      "from": "ui_action:angular-lazy-routes#src/app/shell.component.ts:16:8",
+      "to": "angular-lazy-routes#src/app/admin/reports.component.ts:ReportsComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/shell.component.ts",
+      "line": 16
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/app/shell.component.ts",
+      "line": 17,
+      "reason": "route-target-unresolved",
+      "hint": "No configured route answers /nowhere.",
+      "symbol": "ShellComponent /nowhere"
+    },
+    {
+      "file": "src/app/shell.component.ts",
+      "line": 19,
+      "reason": "handler-not-a-method",
+      "level": "nothing",
+      "hint": "hide is bound by the template itself - a let- context field, a #ref, a @for item, an @if alias or an @let - so no method of ShellComponent answers it.",
+      "symbol": "ShellComponent (click)=\"hide()\"",
+      "sites": 2
+    },
+    {
+      "file": "src/app/shell.component.ts",
+      "line": 22,
+      "reason": "handler-not-found",
+      "hint": "No method named rename is declared on ShellComponent.",
+      "symbol": "ShellComponent (click)=\"rename()\""
+    }
+  ]
+}

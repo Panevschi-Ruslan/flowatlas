@@ -21,19 +21,19 @@ export class OrdersService {
   private readonly rows = new Repo<Order>();
 
   constructor(
-    @Inject('EVENTS_CLIENT')
-    private readonly events: ClientProxy,
+    @Inject('LEDGER_CLIENT') private readonly ledger: ClientProxy,
     /**
      * A second token nothing provides, for the group that has to be read top
-     * down.
-     *
-     * Two rows of one reason, each naming a different token. The heading over
-     * them may say what `di-token-unknown` means and may not say either token,
-     * and each row's own sentence has to belong to the row it sits under
+     * down: two rows of one reason, each naming a different token. The heading
+     * over them may say what `di-token-unknown` means and may not say either
+     * token, and each row's own sentence has to belong to the row it sits under
      * (R35). One token in one group cannot catch that; two can.
+     *
+     * `EVENTS_CLIENT` below is not one: `ClientsModule.register` in `AppModule`
+     * provides it. Until R150 the group leaned on a reader that missed that.
      */
-    @Inject('AUDIT_CLIENT')
-    private readonly audit: ClientProxy,
+    @Inject('AUDIT_CLIENT') private readonly audit: ClientProxy,
+    @Inject('EVENTS_CLIENT') private readonly events: ClientProxy,
     private readonly config: ConfigService,
   ) {}
 

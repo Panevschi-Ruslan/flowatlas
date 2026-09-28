@@ -1,5 +1,6 @@
 import {
   callSitesOf,
+  dispatchOf,
   enclosingMethod,
   finiteLookups,
   literalChoices,
@@ -221,6 +222,11 @@ const passesOn = (argument: TsNode, outer: ClassMethod): boolean => {
  * class, a subclass included, is where the address is decided and the request
  * is attributed. A layer nothing calls stands for no request at all and is
  * dropped.
+ *
+ * A call through an interface or a base class the method implements may run it
+ * and may run a sibling, so it is attributed nowhere (R158). It is answered
+ * with an empty chain, which is a caller that cannot be named: the wrapper
+ * keeps its own request for it.
  */
 const forwardChains = (
   method: ClassMethod,
@@ -230,6 +236,10 @@ const forwardChains = (
   const declaring = method.getParent();
   const chains: CallFrame[][] = [];
   for (const call of callSitesOf(method)) {
+    if (dispatchOf(call, method) === 'undecided') {
+      chains.push([]);
+      continue;
+    }
     const frame: CallFrame = { call, method };
     const outer = enclosingMethod(call);
     const layered =
@@ -243,7 +253,7 @@ const forwardChains = (
     }
     if (depth <= 1) continue;
     for (const chain of forwardChains(outer, depth - 1, new Set([...seen, outer]))) {
-      chains.push([frame, ...chain]);
+      chains.push(chain.length === 0 ? chain : [frame, ...chain]);
     }
   }
   return chains;
@@ -299,8 +309,9 @@ export const requestsOf = (
     const outermost = frames[frames.length - 1];
     const caller = outermost === undefined ? undefined : siteAt(outermost.call);
     // A caller outside any class method — a constructor, a field initializer, a
-    // resolver function — is still a caller. It cannot be attributed here, so
-    // the wrapper keeps its own row rather than the request vanishing.
+    // resolver function — is still a caller. So is one through an interface,
+    // which arrives as an empty chain. It cannot be attributed here, so the
+    // wrapper keeps its own row rather than the request vanishing.
     if (caller === undefined) {
       unread += 1;
       continue;

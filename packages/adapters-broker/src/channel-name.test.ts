@@ -16,7 +16,13 @@ const MIXED_CHANNELS = ['a.one', { nope: true }] as const;
 export enum Topics { OrderPaid = 'order.paid' }
 const ORDER_CREATED = 'order.created';
 let mutable = 'nope';
+// Written, and annotated wider than what is written. The binding is still a
+// const: nothing can ever assign it anything but this (R140).
+const WIDENED: string = 'order.widened';
+// A const whose value the source does not hold: declared, never written here.
+declare const AMBIENT: string;
 declare function lookup(x: string): string;
+const LOOKED_UP = lookup('topic');
 type Verb = 'opened' | 'closed';
 declare const registry: { verbFor(x: string): Verb };
 
@@ -36,6 +42,8 @@ export class Publisher {
   fromTemplate(id: string) { return \`order:\${id}:created\` }
   allHoles(a: string, b: string) { return \`\${a}\${b}\` }
   objectPattern() { return { cmd: 'sum' } }
+  jobPattern() { return { name: 'IntegrityChecksumFiles', data: {} } }
+  emptyPattern() { return {} }
 
   // R42 — a hole computed from a closed set of strings is not a hole.
   folded(id: string, type: 'TICKET_OPENED' | 'TICKET_ON_HOLD' | 'TICKET_CLOSED') {
@@ -69,6 +77,10 @@ export class Publisher {
   // A catalogue wider than the cap is a list nobody can use, not an object.
   wideList() { return WIDE_CHANNELS }
   fromVariable() { return mutable }
+  fromWidened() { return WIDENED }
+  fromAmbient() { return AMBIENT }
+  fromLookedUp() { return LOOKED_UP }
+  fromParameter(topic: string) { return topic }
   computed(a: string) { return a.toUpperCase() }
 }
 `;
@@ -223,16 +235,66 @@ describe('resolving which channel a call addresses', () => {
     expect(of('objectPattern')).toEqual({ name: '{"cmd":"sum"}', names: ['{"cmd":"sum"}'], via: 'pattern' });
   });
 
+  /**
+   * A job is not an address.
+   *
+   * `{ name, data }` was stringified into a channel of its own, so the graph
+   * held `channel:{"data":{},"name":"IntegrityChecksumFiles"}` beside the
+   * `channel:IntegrityChecksumFiles` the consumers produced — and the publish
+   * pointed at the one nothing else could ever write (R83).
+   */
+  it('refuses a record that carries a payload rather than addressing a channel', () => {
+    const result = of('jobPattern');
+    expect(isResolved(result)).toBe(false);
+    if (!isResolved(result)) expect(result.unresolved).toBe('channel-dynamic');
+  });
+
+  it('refuses a record that names nothing', () => {
+    expect(isResolved(of('emptyPattern'))).toBe(false);
+  });
+
   it('will not guess a channel read from settings, and says which it was', () => {
     const result = of('fromConfig');
     expect(isResolved(result)).toBe(false);
     if (!isResolved(result)) expect(result.unresolved).toBe('channel-from-config');
   });
 
-  it('tells an unfollowable name apart from an expression that was never constant', () => {
-    const named = of('fromVariable');
-    const computed = of('computed');
-    if (!isResolved(named)) expect(named.unresolved).toBe('channel-const-unresolved');
-    if (!isResolved(computed)) expect(computed.unresolved).toBe('channel-dynamic');
+  /**
+   * Which of the two rows a name the resolver could not read gets.
+   *
+   * `channel-const-unresolved` says a constant exists and its value could not be
+   * followed, and its hint is to move the constant somewhere it can be. That is
+   * the wrong sentence for a parameter or a `let`: neither is a constant, the
+   * value is decided at run time, and no amount of moving it makes it readable.
+   * Every identifier fell into the constant branch, so a parameter came out as a
+   * constant nobody could follow (R140).
+   */
+  describe('a name that could not be read (R140)', () => {
+    it('reports a parameter as decided at run time, not as a constant', () => {
+      expect(of('fromParameter')).toEqual({ unresolved: 'channel-dynamic', text: 'topic' });
+    });
+
+    it('reports a reassignable binding as decided at run time', () => {
+      expect(of('fromVariable')).toEqual({ unresolved: 'channel-dynamic', text: 'mutable' });
+    });
+
+    it('reports a constant whose value could not be followed as that', () => {
+      expect(of('fromAmbient')).toEqual({ unresolved: 'channel-const-unresolved', text: 'AMBIENT' });
+      expect(of('fromLookedUp')).toEqual({ unresolved: 'channel-const-unresolved', text: 'LOOKED_UP' });
+    });
+
+    it('still tells an expression that was never a name apart', () => {
+      expect(of('computed')).toEqual({ unresolved: 'channel-dynamic', text: 'a.toUpperCase()' });
+    });
+
+    /**
+     * The judgement, pinned. An annotation wider than the value changes what the
+     * type system lets other code assume, and nothing about what the binding
+     * holds: a `const` is assigned once, here, and every call that names it sends
+     * exactly this. Refusing it would drop a channel the program really uses.
+     */
+    it('reads a const annotated wider than the value it is written with', () => {
+      expect(of('fromWidened')).toEqual({ name: 'order.widened', names: ['order.widened'], via: 'const' });
+    });
   });
 });

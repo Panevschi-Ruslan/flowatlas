@@ -1,6 +1,6 @@
 {
   "doctorFormatVersion": 2,
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "flowatlasVersion": "0.4.1",
   "generatedAt": "1970-01-01T00:00:00.000Z",
   "strict": false,
@@ -201,7 +201,7 @@
             "symbol": "POST /orders",
             "level": "action",
             "sites": 1,
-            "message": "POST /orders has no guard in front of it and reaches Order.",
+            "message": "POST /orders has no guard in front of it and reaches stored data.",
             "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
           },
           {
@@ -211,7 +211,7 @@
             "symbol": "POST /orders/legacy",
             "level": "action",
             "sites": 1,
-            "message": "POST /orders/legacy has no guard in front of it and reaches Order.",
+            "message": "POST /orders/legacy has no guard in front of it and reaches stored data.",
             "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
           },
           {
@@ -221,7 +221,7 @@
             "symbol": "GET /orders/:param",
             "level": "action",
             "sites": 1,
-            "message": "GET /orders/:param has no guard in front of it and reaches Order.",
+            "message": "GET /orders/:param has no guard in front of it and reaches stored data.",
             "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes."
           }
         ]
@@ -243,7 +243,7 @@
             "level": "action",
             "sites": 1,
             "message": "di-token-unknown",
-            "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does."
+            "hint": "No module in this repository provides LEDGER_CLIENT. Register it with { provide, useClass } or force the adapter that does."
           },
           {
             "service": "orders",
@@ -445,7 +445,11 @@
         ]
       }
     ],
-    "unknownReasons": []
+    "unknownReasons": [],
+    "waysIn": {
+      "found": 4,
+      "read": 4
+    }
   },
   "markers": {
     "status": "ok",
@@ -745,7 +749,7 @@
   },
   "baseline": {
     "status": "ok",
-    "note": null,
+    "note": "accepted against graph schema 3, and this graph is 5; the counts are still comparable, but a schema change can move them on its own",
     "total": {
       "baseline": 26,
       "current": 26,

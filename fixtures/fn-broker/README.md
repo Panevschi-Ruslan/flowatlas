@@ -39,6 +39,33 @@ With the class walk alone, `orders:created` had one producer instead of two and
 the other two channels had none — three handlers listening to something nobody
 sends, in a graph that said so with a straight face.
 
+## Both spellings of one consumer
+
+`worker` receives `orders:created` twice, on purpose:
+
+| written as | file | has an entry from |
+| --- | --- | --- |
+| a `bus.subscribe(channel, handler)` call | `worker/src/projections/orders.service.ts` | the broker reader, since R126 |
+| an `@EventPattern('orders:created')` decorator | `worker/src/projections/declared-projections.service.ts` | the microservice entry reader |
+
+The two declare the same payload type, from the same file, so the contract report
+must say the same thing about both. Until R126 it did not: a consumer's shape is
+read off the `handles` edge out of the entry it answers, the decorated handler had
+one and the call-registered handler had none, so the decorated half was compared
+and the other half came back `no-type-on-receiver` - the row for a receiver whose
+shape cannot be read at all, given for a parameter written in plain sight two
+lines away.
+
+Run `flowatlas contracts` here: 6 boundaries, 0 unchecked. With the entry taken
+away again it is 2 boundaries and 4 rows of `no-type-on-receiver`, which is the
+shape of the defect and the reason this fixture has two spellings in it rather
+than one.
+
+`@EventPattern` is claimed on the consuming side by `adapters.broker.custom[].consumers`
+in `flowatlas.config.json`, because the bus here is the project's own and nothing
+detects it. The entry itself comes from `@nestjs/microservices`, which `worker`
+depends on - the real package out of the shared fixture manifest, not a stub.
+
 ## The bus
 
 There is no broker library here. `EventBus.publish` and `EventBus.subscribe` are

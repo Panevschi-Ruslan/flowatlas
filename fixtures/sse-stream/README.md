@@ -72,7 +72,7 @@ row, because there is no stream to have missed.
 | `events.publish(\`depot:${id}:events\`, …)` | `orders/orders.service.ts:16` | `depot:*:events` | static | — |
 | `broadcaster.pSubscribe('depot:*:events', …)` | `events/event-bus.service.ts:30` | `depot:*:events` | static | — |
 | `metrics.pSubscribe('depot:*:events', …)` | `events/event-bus.service.ts:34` | none | — | nothing at all |
-| `broadcaster.pSubscribe(pattern, …)` | `events/event-bus.service.ts:41` | none | — | `channel-const-unresolved` |
+| `broadcaster.pSubscribe(pattern, …)` | `events/event-bus.service.ts:41` | none | — | `channel-dynamic`: `pattern` is a parameter, not a constant (R140) |
 
 The publisher writes a template and the subscriber writes a pattern, and they
 meet on one node: the hole the template leaves is the segment the `*` stands for,

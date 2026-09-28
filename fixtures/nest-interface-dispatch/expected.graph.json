@@ -1,0 +1,365 @@
+{
+  "schemaVersion": 5,
+  "repo": "nest-interface-dispatch",
+  "generatedAt": "2026-09-28T08:35:48.814Z",
+  "nodes": [
+    {
+      "id": "config_key:nest-interface-dispatch#BASECAMP_URL",
+      "type": "config_key",
+      "label": "BASECAMP_URL",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/basecamp.service.ts",
+      "line": 7,
+      "meta": {
+        "key": "BASECAMP_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:nest-interface-dispatch#ZOHO_URL",
+      "type": "config_key",
+      "label": "ZOHO_URL",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/zoho.service.ts",
+      "line": 7,
+      "meta": {
+        "key": "ZOHO_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "http_out:nest-interface-dispatch#src/calendars/basecamp.service.ts:13:11",
+      "type": "http_out",
+      "label": "PUT /schedule_entries/draft/trashed.json",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/basecamp.service.ts",
+      "line": 13,
+      "meta": {
+        "method": "PUT",
+        "url": "${BASECAMP_URL}/schedule_entries/draft/trashed.json",
+        "path": "/schedule_entries/draft/trashed.json",
+        "baseUrlEnv": "BASECAMP_URL",
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:nest-interface-dispatch#src/calendars/basecamp.service.ts:7:11",
+      "type": "http_out",
+      "label": "PUT /schedule_entries/:param/trashed.json",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/basecamp.service.ts",
+      "line": 7,
+      "meta": {
+        "method": "PUT",
+        "url": "${BASECAMP_URL}/schedule_entries/${…}/trashed.json",
+        "path": "/schedule_entries/:param/trashed.json",
+        "baseUrlEnv": "BASECAMP_URL",
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:nest-interface-dispatch#src/calendars/calendar-manager.service.ts:18:11",
+      "type": "http_out",
+      "label": "PUT /schedule_entries/archived/trashed.json",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/calendar-manager.service.ts",
+      "line": 18,
+      "meta": {
+        "method": "PUT",
+        "url": "${BASECAMP_URL}/schedule_entries/archived/trashed.json",
+        "path": "/schedule_entries/archived/trashed.json",
+        "baseUrlEnv": "BASECAMP_URL",
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:nest-interface-dispatch#src/calendars/zoho.service.ts:13:11",
+      "type": "http_out",
+      "label": "DELETE /events/stale",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/zoho.service.ts",
+      "line": 13,
+      "meta": {
+        "method": "DELETE",
+        "url": "${ZOHO_URL}/events/stale",
+        "path": "/events/stale",
+        "baseUrlEnv": "ZOHO_URL",
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:nest-interface-dispatch#src/calendars/zoho.service.ts:7:11",
+      "type": "http_out",
+      "label": "DELETE /events/:param",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/zoho.service.ts",
+      "line": 7,
+      "meta": {
+        "method": "DELETE",
+        "url": "${ZOHO_URL}/events/${…}",
+        "path": "/events/:param",
+        "baseUrlEnv": "ZOHO_URL",
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "nest-interface-dispatch#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-interface-dispatch",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "BasecampCalendarService",
+          "ZohoCalendarService",
+          "CalendarManagerService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-interface-dispatch#src/calendars/basecamp.service.ts:BasecampCalendarService",
+      "type": "provider",
+      "label": "BasecampCalendarService",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/basecamp.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-interface-dispatch#src/calendars/basecamp.service.ts:BasecampCalendarService.deleteEvent",
+      "type": "method",
+      "label": "BasecampCalendarService.deleteEvent",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/basecamp.service.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-interface-dispatch#src/calendars/basecamp.service.ts:BasecampCalendarService.updateEvent",
+      "type": "method",
+      "label": "BasecampCalendarService.updateEvent",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/basecamp.service.ts",
+      "line": 12
+    },
+    {
+      "id": "nest-interface-dispatch#src/calendars/calendar-manager.service.ts:CalendarManagerService",
+      "type": "provider",
+      "label": "CalendarManagerService",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/calendar-manager.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-interface-dispatch#src/calendars/calendar-manager.service.ts:CalendarManagerService.archive",
+      "type": "method",
+      "label": "CalendarManagerService.archive",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/calendar-manager.service.ts",
+      "line": 17
+    },
+    {
+      "id": "nest-interface-dispatch#src/calendars/calendar-manager.service.ts:CalendarManagerService.remove",
+      "type": "method",
+      "label": "CalendarManagerService.remove",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/calendar-manager.service.ts",
+      "line": 12
+    },
+    {
+      "id": "nest-interface-dispatch#src/calendars/zoho.service.ts:ZohoCalendarService",
+      "type": "provider",
+      "label": "ZohoCalendarService",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/zoho.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-interface-dispatch#src/calendars/zoho.service.ts:ZohoCalendarService.deleteEvent",
+      "type": "method",
+      "label": "ZohoCalendarService.deleteEvent",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/zoho.service.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-interface-dispatch#src/calendars/zoho.service.ts:ZohoCalendarService.updateEvent",
+      "type": "method",
+      "label": "ZohoCalendarService.updateEvent",
+      "repo": "nest-interface-dispatch",
+      "file": "src/calendars/zoho.service.ts",
+      "line": 12
+    },
+    {
+      "id": "repo:nest-interface-dispatch",
+      "type": "repo",
+      "label": "nest-interface-dispatch",
+      "repo": "nest-interface-dispatch",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "nest-interface-dispatch#src/calendars/basecamp.service.ts:BasecampCalendarService.deleteEvent",
+      "to": "config_key:nest-interface-dispatch#BASECAMP_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/calendars/basecamp.service.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-interface-dispatch#src/calendars/basecamp.service.ts:BasecampCalendarService.deleteEvent",
+      "to": "http_out:nest-interface-dispatch#src/calendars/basecamp.service.ts:7:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calendars/basecamp.service.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-interface-dispatch#src/calendars/basecamp.service.ts:BasecampCalendarService.updateEvent",
+      "to": "http_out:nest-interface-dispatch#src/calendars/basecamp.service.ts:13:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calendars/basecamp.service.ts",
+      "line": 13
+    },
+    {
+      "from": "nest-interface-dispatch#src/calendars/basecamp.service.ts:BasecampCalendarService.updateEvent",
+      "to": "nest-interface-dispatch#src/calendars/basecamp.service.ts:BasecampCalendarService.deleteEvent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calendars/basecamp.service.ts",
+      "line": 13,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-interface-dispatch#src/calendars/calendar-manager.service.ts:CalendarManagerService",
+      "to": "nest-interface-dispatch#src/calendars/basecamp.service.ts:BasecampCalendarService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/calendars/calendar-manager.service.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-interface-dispatch#src/calendars/calendar-manager.service.ts:CalendarManagerService.archive",
+      "to": "http_out:nest-interface-dispatch#src/calendars/calendar-manager.service.ts:18:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calendars/calendar-manager.service.ts",
+      "line": 18
+    },
+    {
+      "from": "nest-interface-dispatch#src/calendars/calendar-manager.service.ts:CalendarManagerService.archive",
+      "to": "nest-interface-dispatch#src/calendars/basecamp.service.ts:BasecampCalendarService.deleteEvent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calendars/calendar-manager.service.ts",
+      "line": 18,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-interface-dispatch#src/calendars/zoho.service.ts:ZohoCalendarService.deleteEvent",
+      "to": "config_key:nest-interface-dispatch#ZOHO_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/calendars/zoho.service.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-interface-dispatch#src/calendars/zoho.service.ts:ZohoCalendarService.deleteEvent",
+      "to": "http_out:nest-interface-dispatch#src/calendars/zoho.service.ts:7:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calendars/zoho.service.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-interface-dispatch#src/calendars/zoho.service.ts:ZohoCalendarService.updateEvent",
+      "to": "http_out:nest-interface-dispatch#src/calendars/zoho.service.ts:13:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calendars/zoho.service.ts",
+      "line": 13
+    },
+    {
+      "from": "nest-interface-dispatch#src/calendars/zoho.service.ts:ZohoCalendarService.updateEvent",
+      "to": "nest-interface-dispatch#src/calendars/zoho.service.ts:ZohoCalendarService.deleteEvent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calendars/zoho.service.ts",
+      "line": 13,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    }
+  ],
+  "types": {
+    "type:nest-interface-dispatch#Calendar": {
+      "name": "Calendar",
+      "kind": "object",
+      "declaredIn": "nest-interface-dispatch#src/calendars/calendar.ts",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/calendars/calendar-manager.service.ts",
+      "line": 13,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "CalendarManagerService.remove -> calendar.deleteEvent"
+    },
+    {
+      "file": "src/main.ts",
+      "line": 1,
+      "reason": "bootstrap-not-found",
+      "hint": "Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.",
+      "symbol": "bootstrap"
+    }
+  ]
+}

@@ -1,6 +1,30 @@
 {
   "types": [
     {
+      "id": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "fields": []
+    },
+    {
+      "id": "type:axios#AxiosResponse<type:gateway#InvoiceDto>",
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "fields": []
+    },
+    {
+      "id": "type:axios#AxiosResponse<unknown>",
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "fields": []
+    },
+    {
       "id": "type:billing#CreateInvoiceDto",
       "name": "CreateInvoiceDto",
       "kind": "object",
@@ -259,5 +283,5 @@
       "fields": []
     }
   ],
-  "total": 11
+  "total": 14
 }

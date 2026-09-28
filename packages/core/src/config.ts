@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { z } from 'zod';
+import { isUniversalMethod } from './adapters/db.js';
 import { ConfigInvalidError, ConfigNotFoundError } from './errors.js';
 import { ENTRY_KINDS } from './model/nodes.js';
 
@@ -9,17 +10,85 @@ export const DEFAULT_OUTPUT = '.flowatlas';
 export const DEFAULT_TYPE_MAX_DEPTH = 3;
 
 /**
- * One repository of the project.
+ * What a service whose source nobody here has is called.
+ *
+ * A word about where the facts came from rather than about what the service is
+ * built on, because that is all anybody here knows about it: nothing was read,
+ * so there is no framework to name. Module-local on purpose — it is a value
+ * this schema fills in and reports print, never something to branch on. What a
+ * reader downstream actually wants to know is whether `document` is set, which
+ * is the fact rather than a word chosen to stand for it.
+ */
+const DECLARED_SERVICE_TYPE = 'declared';
+
+/**
+ * One end of the project: a repository, or a document standing in for one.
  *
  * `type` is an open string on purpose: the core must not know the names of the
  * frameworks it can be pointed at. The command line and the extractors own the
  * list of values they understand.
+ *
+ * `document` is the one exception to that, and its `kind` is a document format
+ * rather than a framework. A service named this way has no source anybody here
+ * can read — a payment provider, another team's repository, something written in
+ * another language — and the document is the only statement of its routes, its
+ * channels and its shapes there is.
+ *
+ * This project deleted `@flowatlas-hole`, an annotation whose purpose was to
+ * accept a claim nothing could check, and the argument for deleting it was that
+ * a checked way of saying the same thing already existed: the code the
+ * annotation described sat in the same file, so the tool could go and read it
+ * instead of being told. A document is not that. There is no source to read and
+ * therefore no checked alternative, and the choice here is not between a claim
+ * and a reading — it is between a claim and silence. Silence is what the tool
+ * did before: the call was counted as third party and the question stopped
+ * there, which was honest and answered nothing.
+ *
+ * What keeps this from being the annotation again is that nothing produced from
+ * a document is ever presented as read. Every end of it is named as declared
+ * wherever it is reported, in prose and in `--format json` alike, and `doctor`
+ * says when the document last changed relative to the commits — because a stale
+ * document is a wrong answer wearing a confident face, and that is the one
+ * failure this way in can have.
  */
-export const serviceConfigSchema = z.strictObject({
+const serviceEntrySchema = z.strictObject({
   name: z.string().min(1),
-  /** Path to the repository, relative to the configuration file. */
-  repo: z.string().min(1),
-  type: z.string().min(1),
+  /**
+   * Path to the repository, relative to the configuration file.
+   *
+   * Absent for a declared service, where the directory holding the document
+   * stands in for it: everything downstream asks a service where it lives, and
+   * a document that lives somewhere is a truer answer than none.
+   */
+  repo: z.string().min(1).optional(),
+  /**
+   * The document that declares this service, and which format it is written in.
+   *
+   * Two fields rather than one key per format, because "which format is this"
+   * is a question with exactly one right number of answers. A second scalar
+   * beside `openapi` would have it answered here, again wherever a build asks
+   * whether a service is declared, and a third time wherever a reader is
+   * chosen — three places to keep in step, and the format is not even the part
+   * that differs most between two documents.
+   *
+   * `kind` is an open string for the same reason `type` is: the core must not
+   * hold the list of things it can be pointed at. The kinds that exist are the
+   * keys of the reader lookup, which is where a document is actually read, and
+   * an unknown one is refused there by name.
+   */
+  document: z.strictObject({ kind: z.string().min(1), path: z.string().min(1) }).optional(),
+  /**
+   * The older spelling of a document, which is `document.kind: 'openapi'`.
+   *
+   * Kept working because configurations in the wild are written by hand and a
+   * key that silently stops being read is the worst kind of breaking change:
+   * the build succeeds and the service quietly has no routes. Normalised into
+   * `document` below, so nothing downstream ever asks this question twice. It
+   * survives on the parsed service for one purpose only — naming the key the
+   * file actually used when a path turns out not to be a file.
+   */
+  openapi: z.string().min(1).optional(),
+  type: z.string().min(1).optional(),
   /** Environment variables that hold this service's own base URL. */
   baseUrlEnv: z.array(z.string().min(1)).optional(),
   /** Settings keys a frontend reads its API base URL from. */
@@ -34,11 +103,105 @@ export const serviceConfigSchema = z.strictObject({
   apiTarget: z.record(z.string().min(1), z.string().min(1)).optional(),
   /** Path to a tsconfig, when it is not the one at the repository root. */
   tsconfig: z.string().min(1).optional(),
+  /**
+   * Directories named like tests (`fixtures`, `e2e`, `test`, …) that hold code
+   * the application runs, relative to the service's directory. Every other one
+   * is left out, and reported as `test-directory-skipped`.
+   */
+  readTestDirectories: z.array(z.string().min(1)).optional(),
   /** Entry file where global wrapping is installed, when there is one. */
   bootstrap: z.string().min(1).optional(),
 });
 
+/** The directory part of a configured path, in the spelling it was written in. */
+const directoryOf = (path: string): string => {
+  const cut = path.replace(/\\/g, '/').lastIndexOf('/');
+  return cut <= 0 ? '.' : path.slice(0, cut);
+};
+
+/**
+ * A service entry, with what a declared one leaves out filled in.
+ *
+ * Filled in here rather than left optional because every reader downstream asks
+ * a service for its directory and its type, and making those two questions
+ * answerable only sometimes would push the same branch into every one of them
+ * for no gain. A declared service lives in the directory its document is in,
+ * and is of the type that says nothing was read.
+ */
+/**
+ * The document a service was declared by, whichever key said so.
+ *
+ * The one place the two spellings meet, so that everything downstream asks one
+ * question and gets one answer.
+ */
+const documentOf = (service: {
+  document?: { kind: string; path: string };
+  openapi?: string;
+}): { kind: string; path: string } | undefined =>
+  service.document ?? (service.openapi === undefined ? undefined : { kind: 'openapi', path: service.openapi });
+
+export const serviceConfigSchema = serviceEntrySchema
+  .superRefine((service, ctx) => {
+    if (service.document !== undefined && service.openapi !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['document'],
+        message: 'a service is declared by one document: write document, not openapi as well.',
+      });
+      return;
+    }
+    const sources = [service.repo, documentOf(service)].filter((each) => each !== undefined);
+    if (sources.length === 1) return;
+    ctx.addIssue({
+      code: 'custom',
+      path: ['repo'],
+      message:
+        sources.length === 0
+          ? 'a service needs either a repo to read or a document to take the word of.'
+          : 'a service has either a repo or a document, not both: source that can be read is read.',
+    });
+  })
+  .transform((service) => ({
+    ...service,
+    ...(documentOf(service) === undefined ? {} : { document: documentOf(service) }),
+    repo: service.repo ?? directoryOf((documentOf(service) as { path: string }).path),
+    type: service.type ?? DECLARED_SERVICE_TYPE,
+  }));
+
 const adapterNamesSchema = z.array(z.string().min(1));
+
+/**
+ * Where a name is written, described in configuration.
+ *
+ * The same vocabulary the descriptions shipped with the tool are written in, and
+ * the same type they use, so a project describing its own bus can say everything
+ * a built-in description can say. An index alone could only reach a name written
+ * as one plain argument, which is the one shape a large application does not
+ * write: the name is a property of an options object, or the receiver is the
+ * channel and the name was stated once on the class behind it.
+ */
+const nameLocatorSchema = z.discriminatedUnion('kind', [
+  z.strictObject({ kind: z.literal('argument'), index: z.number().int().min(0) }),
+  z.strictObject({
+    kind: z.literal('argument-property'),
+    index: z.number().int().min(0),
+    key: z.string().min(1),
+  }),
+  z.strictObject({
+    kind: z.literal('chain-call'),
+    method: z.string().min(1),
+    index: z.number().int().min(0),
+  }),
+  z.strictObject({ kind: z.literal('chain-root-argument'), index: z.number().int().min(0) }),
+  z.strictObject({ kind: z.literal('receiver') }),
+  z.strictObject({ kind: z.literal('receiver-type') }),
+  z.strictObject({ kind: z.literal('base-constructor-argument'), index: z.number().int().min(0) }),
+  z.strictObject({
+    kind: z.literal('provider-decorator'),
+    decorator: z.string().min(1),
+    index: z.number().int().min(0),
+  }),
+]);
 
 /**
  * A call shape that publishes to a channel, described in configuration.
@@ -55,8 +218,21 @@ export const customProducerSchema = z.strictObject({
    */
   receiverType: z.union([z.string().min(1), z.array(z.string().min(1))]),
   method: z.string().min(1),
+  /** Shorthand for a channel written as one plain argument. */
   channelArg: z.number().int().min(0).default(0),
+  /** Where the channel is written, tried in order. Overrides `channelArg`. */
+  channel: z.array(nameLocatorSchema).min(1).optional(),
   payloadArg: z.number().int().min(0).optional(),
+  /**
+   * Where the message sits inside that argument, when the argument wraps it.
+   *
+   * A bus whose publishing call takes a record holding the name and the message
+   * together is publishing the message, not the record, and the handler at the
+   * other end is given the message. Saying so is the difference between a
+   * boundary that compares and one that accuses a correct handler of requiring
+   * fields nobody sends. Left out, the whole argument is the message.
+   */
+  payloadPath: z.array(z.string().min(1)).min(1).optional(),
   kind: z.string().min(1).default('event'),
 });
 
@@ -70,10 +246,41 @@ export const customProducerSchema = z.strictObject({
 export const customSubscriberSchema = z.strictObject({
   /** Type the call is made on, as at the call site. A list, as for a producer. */
   receiverType: z.union([z.string().min(1), z.array(z.string().min(1))]),
-  method: z.string().min(1),
+  /**
+   * The call that begins receiving, or every spelling of it.
+   *
+   * One verb is not always one name: a transport reached through two clients, or
+   * through two major versions of one, spells the same call two ways, and a
+   * description holding one of them reads the others as nothing at all rather
+   * than as a degraded answer (R135).
+   */
+  method: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
   channelArg: z.number().int().min(0).default(0),
+  /** Where the channel is written, tried in order. Overrides `channelArg`. */
+  channel: z.array(nameLocatorSchema).min(1).optional(),
   /** Argument holding what runs when a message arrives, when the call takes one. */
   handlerArg: z.number().int().min(0).optional(),
+  kind: z.string().min(1).default('event'),
+});
+
+/**
+ * A decorator that marks a handler, described in configuration.
+ *
+ * A bare decorator name is the shorthand and means what it always meant: the
+ * channel is the decorator's first argument. The long form exists because the
+ * shorthand could not describe the shape a large application writes -
+ * `@OnJob({ name: JobName.Thumbnail, queue: QueueName.Thumbnails })` - and a
+ * handler whose channel cannot be named is a handler that meets no publisher.
+ */
+export const customConsumerSchema = z.strictObject({
+  decorator: z.string().min(1),
+  /** Class decorator the channel is read from instead, for a worker class. */
+  classDecorator: z.string().min(1).optional(),
+  channel: z.array(nameLocatorSchema).min(1).default([{ kind: 'argument', index: 0 }]),
+  /** Which parameter the handler is given the message in. The first by default. */
+  payloadArg: z.number().int().min(0).optional(),
+  /** Where the message sits inside that parameter. The whole of it by default. */
+  payloadPath: z.array(z.string().min(1)).min(1).optional(),
   kind: z.string().min(1).default('event'),
 });
 
@@ -81,8 +288,8 @@ export const customBrokerSchema = z.strictObject({
   name: z.string().min(1),
   channelKind: z.enum(['topic', 'queue', 'exchange', 'channel']).default('channel'),
   producers: z.array(customProducerSchema).default([]),
-  /** Decorator names that mark a method as receiving from a channel. */
-  consumers: z.array(z.string().min(1)).default([]),
+  /** Decorators that mark a method as receiving, as a name or as a description. */
+  consumers: z.array(z.union([z.string().min(1), customConsumerSchema])).default([]),
   /** Calls that start receiving, for a bus that has no decorator to mark one. */
   subscribers: z.array(customSubscriberSchema).default([]),
 });
@@ -95,6 +302,35 @@ export const customBrokerSchema = z.strictObject({
  * This is how the project points at one — which object holds the table, which
  * method fills it, and which arguments carry the key and the function — so the
  * core still knows nothing about what is behind it.
+ *
+ * It names no packages, and that is a decision rather than an omission. Its
+ * counterpart for HTTP frameworks says where it applies by naming a dependency,
+ * which works there because a framework is something installed and a manifest
+ * is where installed things are listed. A table of functions the project wrote
+ * is installed from nowhere. What says where it lives is `receiver`: the name
+ * the object is written under in this repository's own source, and a truer
+ * statement of where the description applies than any dependency could be,
+ * since it names the table itself rather than a library that happens to sit
+ * beside it. It is also the one thing detection cannot read, because detection
+ * answers from the manifest before a single source file has been opened.
+ *
+ * Adding a `packages` key anyway would buy the two descriptions the same
+ * spelling and not the same meaning. Empty would have to mean everywhere, as it
+ * does there — and empty is exactly what a project with a table of its own
+ * writes, because it has no dependency to name, so describing one table in one
+ * repository would put this reader's name on every repository of the project.
+ * Non-empty would be no better: the dependency named would stand for the
+ * repository rather than for the table, and every repository of the project
+ * that happens to share that dependency would claim the description too.
+ *
+ * So this description does state where it applies, in `receiver`, and it is the
+ * reading rather than detection that acts on the statement: a description whose
+ * receiver is written nowhere in the repository matches nothing there, which is
+ * the same outcome a dependency that is absent would have produced. What
+ * decides whether the reader runs at all stays with the adapter's own
+ * dependency list, and with `adapters.force.entry` for a repository that is on
+ * neither — both statements about the repository, which is the question
+ * detection is actually asking.
  */
 export const entryRegistrySchema = z.strictObject({
   /** How this registry is named in reports and on the entries it produces. */
@@ -241,6 +477,122 @@ export const entryHttpSchema = z.strictObject({
   routeObject: entryHttpRouteObjectSchema.optional(),
 });
 
+/**
+ * Where a tree of named ways in is hung so that requests reach it.
+ *
+ * The tree itself is a value in one file and is served from another, and the
+ * serving file is usually three lines long: a call to something that turns the
+ * tree into a handler. That call is worth describing for one reason — it is the
+ * only place a reader can stand and say *this file serves a tree I could not
+ * read*, which is the sentence a repository whose ways in are all of this shape
+ * needs most.
+ *
+ * The tree is either the argument itself or a key of an options object written
+ * there. Both are allowed on one row rather than two, because it is one call
+ * with two accepted spellings and the reader tries the object first.
+ */
+export const entryProcedureMountSchema = z.strictObject({
+  /** The function that turns a tree into something requests arrive at. */
+  call: z.string().min(1),
+  /** Which argument carries the tree, when it is the argument itself. */
+  treeArg: z.number().int().min(0).default(0),
+  /** The key of an options argument that carries the tree, when it is one. */
+  treeKey: z.string().min(1).optional(),
+});
+
+/**
+ * A tree of named ways in, assembled from object literals.
+ *
+ * The second family of call-registered boundary this tool reads, and it differs
+ * from the first in exactly one structural fact, which is why it is a
+ * description of its own rather than a field on the other one: the name of a way
+ * in is a *key* of an object literal rather than a string argument at a
+ * position, and its full address is every key above it. `entryHttpSchema` and
+ * `entryRegistrySchema` both say where a name sits among a call's arguments —
+ * `pathArg`, `keyArg` — and neither can say "the key this value is written
+ * under", nor "and every key of every literal that encloses it". Nothing but a
+ * walk of the tree produces the address, so the walk is code and this says what
+ * the code should look for.
+ *
+ * `terminators` is the other half, and the half that makes the reading safe: a
+ * value is a way in when it is a chain of calls whose last link is one of these
+ * and whose argument is a function. That is a shape a repository does not write
+ * by accident, and it is why this description needs no types to be sure of
+ * itself — which matters, because a repository nobody has installed resolves
+ * almost nothing and is the state most readers are pointed at.
+ *
+ * Every field says where something is or what something is called. None of them
+ * says how to walk the tree.
+ */
+export const entryProcedureSchema = z.strictObject({
+  /** How this is named in reports and on the entries it produces. */
+  name: z.string().min(1),
+  /**
+   * Dependencies any one of which means this is in use.
+   *
+   * One configuration covers every repository of a project. An empty list means
+   * the description is tried everywhere.
+   */
+  packages: z.array(z.string().min(1)).default([]),
+  /**
+   * Functions that assemble a tree out of one object literal.
+   *
+   * Names rather than types, and that is the one place this description is
+   * looser than its HTTP counterpart. The builder is nearly always re-exported
+   * through a file of the project's own — the value the library hands back is
+   * taken apart and its pieces published under the project's own names — so the
+   * type on the receiver is the project's, not the library's, and a row naming
+   * the library's types would match nothing. What makes the looseness safe is
+   * that a name alone is never enough: a call is only a tree once one of the
+   * literal's values turns out to be a way in by the rule above.
+   */
+  assembledBy: z.array(z.string().min(1)).min(1),
+  /**
+   * The last link of a chain, and the kind of way in it opens.
+   *
+   * A lookup rather than a list, because the reader asks exactly one question of
+   * it — what does this method mean — and the answer differs per spelling: one
+   * of them reads and one of them writes, and a third may be a stream that is
+   * not a request at all.
+   */
+  terminators: z.record(z.string().min(1), z.enum(ENTRY_KINDS)),
+  /** How the keys down the tree are joined into one address. */
+  separator: z.string().min(1).default('.'),
+  /** The chain link carrying the shape of what a caller sends. */
+  inputMethod: z.string().min(1).optional(),
+  /**
+   * The chain link that installs something in front of a way in.
+   *
+   * It is read on the chain and on whatever the chain starts from, because the
+   * ordinary way to write this is to name the guarded starting point once and
+   * then use it everywhere — which means the guard is nowhere near the way in it
+   * protects.
+   */
+  guardMethod: z.string().min(1).optional(),
+  /**
+   * How the functions of a chain are handed the context, and where its type is
+   * written (R157).
+   *
+   * A handler and a guard are both given one object, and the context arrives on
+   * it under `key`; nobody annotates it, because the framework carries its type
+   * from the root the chain was built on. That root is written once, with the
+   * context's type as the first type argument of `method` - so the type is in the
+   * source, only a long way from the functions that use it. Naming both is what
+   * lets a reader that meets `ctx.db` in a handler know what `ctx` is with
+   * nothing installed.
+   */
+  context: z
+    .strictObject({
+      /** The call on the root that is given the context's type: `context` in `initTRPC.context<T>()`. */
+      method: z.string().min(1),
+      /** The member of a handler's first parameter the context arrives under: `ctx`. */
+      key: z.string().min(1),
+    })
+    .optional(),
+  /** Where a tree is hung so that requests reach it. */
+  mounts: z.array(entryProcedureMountSchema).default([]),
+});
+
 export const adapterForceSchema = z.strictObject({
   entry: adapterNamesSchema.optional(),
   db: adapterNamesSchema.optional(),
@@ -262,8 +614,10 @@ export const flowatlasConfigSchema = z
             registries: z.array(entryRegistrySchema).default([]),
             /** Frameworks that register an HTTP route by calling an application. */
             http: z.array(entryHttpSchema).default([]),
+            /** Frameworks whose ways in are the keys of a tree of object literals. */
+            procedures: z.array(entryProcedureSchema).default([]),
           })
-          .default({ registries: [], http: [] }),
+          .default({ registries: [], http: [], procedures: [] }),
         broker: z
           .strictObject({
             custom: z.array(customBrokerSchema).default([]),
@@ -278,16 +632,50 @@ export const flowatlasConfigSchema = z
              * point at, so this is how it names one without the core learning
              * anything about the store behind it.
              */
-            localBaseClasses: z.array(z.string().min(1)).default([]),
+            localBaseClasses: z
+              .array(
+                z.union([
+                  z.string().min(1),
+                  z.strictObject({
+                    name: z.string().min(1),
+                    /**
+                     * The property each class extending the base sets to the name
+                     * of its table: `collectionName` for
+                     * `protected readonly collectionName = 'menuItems'` (R165).
+                     */
+                    tableProperty: z.string().min(1).optional(),
+                  }),
+                ]),
+              )
+              .default([]),
           })
           .default({ localBaseClasses: [] }),
+        frontend: z
+          .strictObject({
+            /**
+             * Classes declared in a repository that stand for its HTTP client.
+             *
+             * The browser's half of what `db.localBaseClasses` does for the data
+             * half, and it is needed for the same reason: a class wrapping
+             * `fetch` behind `get` and `post` is the normal way to write a front
+             * end, and there is no package to point at. The reader recognises
+             * such a class on its own wherever it can follow the class's own
+             * verbs to the network; this is how a project says so where it
+             * cannot — a base the verbs are inherited from, a transport reached
+             * through a helper module, a repository whose dependencies are not
+             * installed. Naming the class or any class it extends is enough.
+             */
+            localClientClasses: z.array(z.string().min(1)).default([]),
+          })
+          .default({ localClientClasses: [] }),
       })
       .default({
         auto: true,
         force: {},
-        entry: { registries: [], http: [] },
+        entry: { registries: [], http: [], procedures: [] },
         broker: { custom: [] },
         db: { localBaseClasses: [] },
+        frontend: { localClientClasses: [] },
       }),
     /** Directory for generated artefacts, relative to the configuration file. */
     output: z.string().min(1).default(DEFAULT_OUTPUT),
@@ -379,6 +767,16 @@ export const flowatlasConfigSchema = z
         });
       }
       seen.add(service.name);
+      // A service's name keys every per-service table from the cache to the
+      // diff, and the language keeps these for itself: a graph stored under
+      // `__proto__` is silently not stored at all (R130).
+      if (isUniversalMethod(service.name)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['services', index, 'name'],
+          message: `${JSON.stringify(service.name)} is a name every object already has; call the service something else.`,
+        });
+      }
     });
 
     // A target naming a service that does not exist is a typo that would
@@ -408,6 +806,16 @@ export type EntryHttpConfig = z.infer<typeof entryHttpSchema>;
  */
 export type EntryHttpDescription = z.input<typeof entryHttpSchema>;
 export type EntryRegistryConfig = z.infer<typeof entryRegistrySchema>;
+export type EntryProcedureConfig = z.infer<typeof entryProcedureSchema>;
+/**
+ * A description as it is written, before the schema fills in what it leaves out.
+ *
+ * Exported for the same reason its HTTP counterpart is: what ships with the tool
+ * is written in the shape a person writes in configuration and goes in through
+ * the same schema, so a field only configuration had ever tested cannot exist.
+ */
+export type EntryProcedureDescription = z.input<typeof entryProcedureSchema>;
+export type CustomConsumerConfig = z.infer<typeof customConsumerSchema>;
 export type CustomProducerConfig = z.infer<typeof customProducerSchema>;
 export type CustomSubscriberConfig = z.infer<typeof customSubscriberSchema>;
 export type ServiceConfig = z.infer<typeof serviceConfigSchema>;
@@ -511,9 +919,23 @@ export const loadConfig = (
   };
 
   if (options.checkRepos !== false) {
-    const missing = config.services
-      .filter((service) => !isDirectory(repoDirOf(service)))
-      .map((service) => `services.${service.name}.repo: ${service.repo} is not a directory`);
+    // A declared service is checked on the one path it actually has. Its `repo`
+    // is the document's directory, filled in by the schema, so checking that
+    // instead would pass whenever the folder existed and the document did not —
+    // and the failure would arrive much later, as a service with no routes.
+    const missing = config.services.flatMap((service) => {
+      if (service.document !== undefined) {
+        const written = service.document.path;
+        const path = isAbsolute(written) ? written : resolve(rootDir, written);
+        // Named by the key the file actually used, because a message pointing at
+        // a key the reader did not write is a message they cannot act on.
+        const key = service.openapi === undefined ? 'document.path' : 'openapi';
+        return isFile(path) ? [] : [`services.${service.name}.${key}: ${written} is not a file`];
+      }
+      return isDirectory(repoDirOf(service))
+        ? []
+        : [`services.${service.name}.repo: ${service.repo} is not a directory`];
+    });
     if (missing.length > 0) {
       // Not "re-run init": when init was the thing that wrote them, running it
       // again writes the same paths and the reader is in a loop. Say what they
@@ -533,4 +955,25 @@ export const loadConfig = (
     outputDir: isAbsolute(config.output) ? config.output : resolve(rootDir, config.output),
     repoDir: repoDirOf,
   };
+};
+
+/** One entry of `adapters.db.localBaseClasses`, in either spelling. */
+export type LocalBaseClass = string | { readonly name: string; readonly tableProperty?: string | undefined };
+
+/** The names of the configured repository bases, whichever spelling named them. */
+export const localBaseClassNames = (entries: readonly LocalBaseClass[]): string[] =>
+  entries.map((entry) => (typeof entry === 'string' ? entry : entry.name));
+
+/**
+ * The property a configured repository base's subclasses name their table in,
+ * when the configuration says; undefined for a base named as a bare string.
+ */
+export const localBaseTableProperty = (
+  entries: readonly LocalBaseClass[],
+  base: string,
+): string | undefined => {
+  for (const entry of entries) {
+    if (typeof entry !== 'string' && entry.name === base) return entry.tableProperty;
+  }
+  return undefined;
 };

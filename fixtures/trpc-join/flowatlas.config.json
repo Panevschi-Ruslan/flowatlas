@@ -1,0 +1,22 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nextjs"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "nextjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "apiBaseEnv": ["VITE_API_URL"],
+      "apiTarget": { "VITE_API_URL": "api" }
+    }
+  ],
+  "output": ".flowatlas"
+}

@@ -40,8 +40,8 @@ export class CatalogService {
 
   // unresolved: type-generic-uninstantiated (info, `meta.level: 'info'`) — the type
   // argument is a method type parameter, unknown at this site, so the ref is
-  // `type:nest-types#Paginated<T>` pointing at the bare `kind: generic` template
-  // entry rather than at an instantiation (§10 / D6).
+  // `type:nest-types#Paginated`, the bare `kind: generic` template entry, and no
+  // `Paginated<T>` instantiation is registered beside it (§10 / D6, R148).
   wrap<T>(items: T[]): Paginated<T> {
     return { items, total: items.length, page: 1 };
   }

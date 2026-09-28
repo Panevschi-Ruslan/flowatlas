@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "repo": "nest-no-data",
-  "generatedAt": "2026-09-10T16:11:50.838Z",
+  "generatedAt": "2026-09-27T09:26:44.833Z",
   "nodes": [
     {
       "id": "entry:nest-no-data:http:DELETE:/notifications/:param",
@@ -146,6 +146,8 @@
       "meta": {
         "stats": {
           "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
           "classes": 4,
           "skippedExternalCalls": {}
         },

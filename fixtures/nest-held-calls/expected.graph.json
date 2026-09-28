@@ -1,0 +1,336 @@
+{
+  "schemaVersion": 5,
+  "repo": "nest-held-calls",
+  "generatedAt": "2026-09-28T07:58:52.016Z",
+  "nodes": [
+    {
+      "id": "config_key:nest-held-calls#GITHUB_API_TOKEN",
+      "type": "config_key",
+      "label": "GITHUB_API_TOKEN",
+      "repo": "nest-held-calls",
+      "file": "src/skills/github-bundle.ts",
+      "line": 8,
+      "meta": {
+        "key": "GITHUB_API_TOKEN",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:nest-held-calls:http:GET:/skills/:param/:param",
+      "type": "entry",
+      "label": "GET /skills/:param/:param",
+      "repo": "nest-held-calls",
+      "file": "src/skills/skills.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/skills/:param/:param",
+        "rawPath": "/skills/:owner/:repo",
+        "controller": "SkillsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-held-calls:http:GET:/skills/token",
+      "type": "entry",
+      "label": "GET /skills/token",
+      "repo": "nest-held-calls",
+      "file": "src/skills/skills.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/skills/token",
+        "rawPath": "/skills/token",
+        "controller": "SkillsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "external_api:api.github.com",
+      "type": "external_api",
+      "label": "api.github.com",
+      "repo": "nest-held-calls",
+      "meta": {
+        "host": "api.github.com"
+      }
+    },
+    {
+      "id": "http_out:nest-held-calls#src/skills/github-bundle.ts:19:26",
+      "type": "http_out",
+      "label": "GET /repos/:param/tarball",
+      "repo": "nest-held-calls",
+      "file": "src/skills/github-bundle.ts",
+      "line": 19,
+      "meta": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/${…}/tarball",
+        "path": "/repos/:param/tarball",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "api.github.com"
+      }
+    },
+    {
+      "id": "nest-held-calls#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-held-calls",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "SkillsController"
+        ],
+        "providers": [
+          "SkillsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-held-calls#src/skills/github-bundle.ts:buildGithubHeaders",
+      "type": "function",
+      "label": "buildGithubHeaders",
+      "repo": "nest-held-calls",
+      "file": "src/skills/github-bundle.ts",
+      "line": 7
+    },
+    {
+      "id": "nest-held-calls#src/skills/github-bundle.ts:fetchSkillBundle",
+      "type": "function",
+      "label": "fetchSkillBundle",
+      "repo": "nest-held-calls",
+      "file": "src/skills/github-bundle.ts",
+      "line": 27
+    },
+    {
+      "id": "nest-held-calls#src/skills/github-bundle.ts:isGithubConfigured",
+      "type": "function",
+      "label": "isGithubConfigured",
+      "repo": "nest-held-calls",
+      "file": "src/skills/github-bundle.ts",
+      "line": 32
+    },
+    {
+      "id": "nest-held-calls#src/skills/github-bundle.ts:streamTarball",
+      "type": "function",
+      "label": "streamTarball",
+      "repo": "nest-held-calls",
+      "file": "src/skills/github-bundle.ts",
+      "line": 18
+    },
+    {
+      "id": "nest-held-calls#src/skills/skills.controller.ts:SkillsController",
+      "type": "provider",
+      "label": "SkillsController",
+      "repo": "nest-held-calls",
+      "file": "src/skills/skills.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-held-calls#src/skills/skills.controller.ts:SkillsController.bundle",
+      "type": "method",
+      "label": "SkillsController.bundle",
+      "repo": "nest-held-calls",
+      "file": "src/skills/skills.controller.ts",
+      "line": 14
+    },
+    {
+      "id": "nest-held-calls#src/skills/skills.controller.ts:SkillsController.token",
+      "type": "method",
+      "label": "SkillsController.token",
+      "repo": "nest-held-calls",
+      "file": "src/skills/skills.controller.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-held-calls#src/skills/skills.service.ts:SkillsService",
+      "type": "provider",
+      "label": "SkillsService",
+      "repo": "nest-held-calls",
+      "file": "src/skills/skills.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-held-calls#src/skills/skills.service.ts:SkillsService.bundle",
+      "type": "method",
+      "label": "SkillsService.bundle",
+      "repo": "nest-held-calls",
+      "file": "src/skills/skills.service.ts",
+      "line": 11
+    },
+    {
+      "id": "nest-held-calls#src/skills/skills.service.ts:SkillsService.hasToken",
+      "type": "method",
+      "label": "SkillsService.hasToken",
+      "repo": "nest-held-calls",
+      "file": "src/skills/skills.service.ts",
+      "line": 16
+    },
+    {
+      "id": "repo:nest-held-calls",
+      "type": "repo",
+      "label": "nest-held-calls",
+      "repo": "nest-held-calls",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-held-calls:http:GET:/skills/:param/:param",
+      "to": "nest-held-calls#src/skills/skills.controller.ts:SkillsController.bundle",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/skills/skills.controller.ts",
+      "line": 14,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "string",
+      "meta": {
+        "params": "{owner:string;repo:string}"
+      }
+    },
+    {
+      "from": "entry:nest-held-calls:http:GET:/skills/token",
+      "to": "nest-held-calls#src/skills/skills.controller.ts:SkillsController.token",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/skills/skills.controller.ts",
+      "line": 9,
+      "params": [],
+      "returns": "boolean"
+    },
+    {
+      "from": "http_out:nest-held-calls#src/skills/github-bundle.ts:19:26",
+      "to": "external_api:api.github.com",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/skills/github-bundle.ts",
+      "line": 19
+    },
+    {
+      "from": "nest-held-calls#src/skills/github-bundle.ts:buildGithubHeaders",
+      "to": "config_key:nest-held-calls#GITHUB_API_TOKEN",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/skills/github-bundle.ts",
+      "line": 8
+    },
+    {
+      "from": "nest-held-calls#src/skills/github-bundle.ts:fetchSkillBundle",
+      "to": "nest-held-calls#src/skills/github-bundle.ts:streamTarball",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/skills/github-bundle.ts",
+      "line": 28
+    },
+    {
+      "from": "nest-held-calls#src/skills/github-bundle.ts:isGithubConfigured",
+      "to": "nest-held-calls#src/skills/github-bundle.ts:buildGithubHeaders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/skills/github-bundle.ts",
+      "line": 33
+    },
+    {
+      "from": "nest-held-calls#src/skills/github-bundle.ts:streamTarball",
+      "to": "http_out:nest-held-calls#src/skills/github-bundle.ts:19:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/skills/github-bundle.ts",
+      "line": 19
+    },
+    {
+      "from": "nest-held-calls#src/skills/github-bundle.ts:streamTarball",
+      "to": "nest-held-calls#src/skills/github-bundle.ts:buildGithubHeaders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/skills/github-bundle.ts",
+      "line": 20
+    },
+    {
+      "from": "nest-held-calls#src/skills/skills.controller.ts:SkillsController",
+      "to": "nest-held-calls#src/skills/skills.service.ts:SkillsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/skills/skills.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-held-calls#src/skills/skills.controller.ts:SkillsController.bundle",
+      "to": "nest-held-calls#src/skills/skills.service.ts:SkillsService.bundle",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/skills/skills.controller.ts",
+      "line": 16,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-held-calls#src/skills/skills.controller.ts:SkillsController.token",
+      "to": "nest-held-calls#src/skills/skills.service.ts:SkillsService.hasToken",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/skills/skills.controller.ts",
+      "line": 11,
+      "params": [],
+      "returns": "boolean"
+    },
+    {
+      "from": "nest-held-calls#src/skills/skills.service.ts:SkillsService.bundle",
+      "to": "nest-held-calls#src/skills/github-bundle.ts:fetchSkillBundle",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/skills/skills.service.ts",
+      "line": 12
+    },
+    {
+      "from": "nest-held-calls#src/skills/skills.service.ts:SkillsService.hasToken",
+      "to": "nest-held-calls#src/skills/github-bundle.ts:buildGithubHeaders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/skills/skills.service.ts",
+      "line": 17
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/skills/github-bundle.ts",
+      "line": 15,
+      "reason": "db-receiver-name-only",
+      "hint": "The type of repository could not be resolved. Install the repository's dependencies, or name its base class under adapters.db.localBaseClasses.",
+      "symbol": "repository.trim"
+    }
+  ]
+}

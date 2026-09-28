@@ -11,6 +11,7 @@ export const environment = { apiUrl: 'https://api.test', api: { baseUrl: 'https:
 export const ROUTES = { orders: '/orders' } as const;
 export enum Channel { Created = 'order.created' }
 
+const VERSION = 'v1';
 const id = String(Math.random());
 const build = () => '/x';
 function query(filters?: Record<string, string>): string {
@@ -40,6 +41,14 @@ export const values = {
   queryTail: \`\${environment.apiUrl}/reviews\${qs}\`,
   queryTailAfterHole: \`\${environment.apiUrl}/orders/\${id}\${query({ a: 'b' })}\`,
   unknownTail: \`\${environment.apiUrl}/reviews\${anything}\`,
+  joinedConst: '/api/' + VERSION,
+  joinedLiterals: '/api/' + 'v1',
+  joinedTemplate: \`/api/\${VERSION}\`,
+  bareConst: VERSION,
+  joinedThrice: '/api/' + VERSION + '/orders',
+  joinedNumber: '/api/v' + 1,
+  joinedUnreadable: '/api/' + anything,
+  joinedBoolean: '/api/' + true,
 };
 `;
 
@@ -165,5 +174,45 @@ describe('a query string at the end of a string', () => {
 
   it('stays a hole when it could be anything', () => {
     expect(of('unknownTail')?.value).toBe('/reviews${…}');
+  });
+});
+
+/**
+ * Two strings added together are one string, and the checker will not say so:
+ * the type of a `+` is the widened `string` even where both operands are
+ * literals. Refusing it cost a video platform 290 of its 344 routes, from the single
+ * mount written `app.use('/api/' + API_VERSION, apiRouter)` (R102).
+ */
+describe('a string written in two pieces with a plus', () => {
+  it('folds a literal and a constant, as the same address written as a template does', () => {
+    expect(of('joinedConst')).toEqual({ value: '/api/v1', via: 'const', envRefs: [] });
+    expect(of('joinedTemplate')?.value).toBe('/api/v1');
+  });
+
+  it('folds two literals, which is the part that made this a bug rather than a limit', () => {
+    expect(of('joinedLiterals')?.value).toBe('/api/v1');
+  });
+
+  it('leaves a bare constant reading as it always did', () => {
+    expect(of('bareConst')?.value).toBe('v1');
+  });
+
+  it('folds a chain of them, since a plus nests to the left', () => {
+    expect(of('joinedThrice')?.value).toBe('/api/v1/orders');
+  });
+
+  it('folds a number, because that is what the language does with one', () => {
+    expect(of('joinedNumber')?.value).toBe('/api/v1');
+  });
+
+  // The discipline the template-literal path keeps: a piece that cannot be read
+  // leaves the whole string unread rather than half-read, because an address
+  // invented here becomes a confident edge that is simply wrong.
+  it('reads nothing at all when either half cannot be read', () => {
+    expect(of('joinedUnreadable')).toBeNull();
+  });
+
+  it('reads nothing when a plus is doing something other than joining text', () => {
+    expect(of('joinedBoolean')).toBeNull();
   });
 });

@@ -6,7 +6,9 @@
  * "this annotation is a lie" is on the line the annotation is written. All
  * three are the same report; none of them decides anything.
  */
+import { resolve } from 'node:path';
 import type { ContractFinding } from '@flowatlas/contracts';
+import { partialReadNotice } from '../partial-read.js';
 import { moreRows, renderTable, section } from '../format/table.js';
 import type { MarkerIssue } from './markers.js';
 import type { DoctorReport } from './schema.js';
@@ -108,13 +110,21 @@ const unresolvedSection = (
 ): string[] => {
   const { unresolved } = report;
   if (unresolved.status === 'skipped') return [];
-  if (unresolved.byReason.length === 0) return ['unresolved: none'];
+  // In the words the build summary uses, and only where it says something: a
+  // project whose every body was read has no gap to size.
+  const { found, read } = unresolved.waysIn;
+  const ways =
+    read === found
+      ? []
+      : [`  ways in: ${found} found, ${read} with a handler that was read, ${found - read} without`];
+  if (unresolved.byReason.length === 0) return ['unresolved: none', ...ways];
 
   const lines: string[] = [
     `unresolved: ${unresolved.total} to act on over ${unresolved.rows} row${unresolved.rows === 1 ? '' : 's'}` +
       (unresolved.info.rows === 0
         ? ''
         : `, and ${unresolved.info.sites} place${unresolved.info.sites === 1 ? '' : 's'} static reading cannot see, folded into ${unresolved.info.rows}`),
+    ...ways,
   ];
   // Said on a line of its own, in the words the build summary uses: these are
   // sites where nothing joins, not sites where something was missed.
@@ -245,9 +255,47 @@ const baselineSection = (report: DoctorReport): string[] => {
   return lines;
 };
 
+/**
+ * Types this run could not resolve, from the folded report (R129).
+ *
+ * The group is the only place the count survives folding, and it is the count of
+ * *sites* rather than of rows, because a row here may stand for four hundred
+ * places and the number worth saying is how much of the source went unread.
+ */
+const unresolvedTypes = (report: DoctorReport): number =>
+  report.unresolved.status === 'skipped'
+    ? 0
+    : (report.unresolved.byReason.find((group) => group.reason === 'type-unresolved')?.sites ?? 0);
+
+/**
+ * The one sentence, at the head of the report (R129).
+ *
+ * At the head rather than beside the rows, and once rather than per row, because
+ * hundreds of `type-unresolved` rows already imply it and a reader either infers
+ * a partial read from them or does not. By the time somebody reaches the rows
+ * they have already read the summary line as a measurement.
+ *
+ * `rootDir` is what makes it possible to answer honestly: `repoDirs` is spelled
+ * relative to the project so a row can be printed as a path somebody can open,
+ * and resolving it is the difference between establishing that nothing is
+ * installed and assuming it. Without a root, nothing is claimed.
+ */
+const partialReadHead = (
+  report: DoctorReport,
+  repoDirs: ReadonlyMap<string, string>,
+  rootDir: string | undefined,
+): string[] => {
+  if (rootDir === undefined || repoDirs.size === 0) return [];
+  const notice = partialReadNotice(
+    [...repoDirs.entries()].map(([name, dir]) => ({ name, dir: resolve(rootDir, dir) })),
+    unresolvedTypes(report),
+  );
+  return notice === undefined ? [] : [notice, ''];
+};
+
 export const renderDoctorText = (
   report: DoctorReport,
-  options: { file?: string; repoDirs?: ReadonlyMap<string, string> } = {},
+  options: { file?: string; repoDirs?: ReadonlyMap<string, string>; rootDir?: string } = {},
 ): string => {
   const blocks = [
     unresolvedSection(report, options.repoDirs ?? NO_REPOS, options.file),
@@ -264,7 +312,13 @@ export const renderDoctorText = (
         : []
       : ['verdict:', ...report.verdict.reasons.map((reason) => `  ${reason}`)];
 
-  return `${[summaryLine(report), '', ...blocks.flatMap((block) => [...block, '']), ...verdict]
+  return `${[
+    ...partialReadHead(report, options.repoDirs ?? NO_REPOS, options.rootDir),
+    summaryLine(report),
+    '',
+    ...blocks.flatMap((block) => [...block, '']),
+    ...verdict,
+  ]
     .join('\n')
     .replace(/\n+$/, '')}\n`;
 };

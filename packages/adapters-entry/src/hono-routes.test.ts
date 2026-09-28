@@ -74,7 +74,9 @@ const extract = (worker: string, files: Record<string, string> = {}): Read => {
 const ids = (read: Read): string[] => read.entries.map((entry) => entry.id).sort();
 
 const middlewareOf = (read: Read, id: string): string[] =>
-  (read.entries.find((entry) => entry.id === id)?.meta?.['middleware'] as string[] | undefined) ?? [];
+  (read.entries.find((entry) => entry.id === id)?.wrapping ?? [])
+    .filter((one) => one.layer === 'middleware')
+    .map((one) => one.label);
 
 describe('routes declared by calling the application', () => {
   it('runs where the framework is a dependency', () => {
@@ -138,7 +140,7 @@ describe('routes declared by calling the application', () => {
     expect(handler !== undefined && isFunctionHandler(handler) && handler.functionName).toBe(
       'receive',
     );
-    expect(read.entries[0]?.meta?.['middleware']).toEqual(['withNest']);
+    expect(read.entries[0]?.wrapping?.map((one) => one.label)).toEqual(['withNest']);
   });
 
   it('keeps a route whose handler is written in place, and points at that function', () => {
@@ -272,7 +274,12 @@ describe('routes declared by calling the application', () => {
       app.use('*', log);
     `, { '/src/log.ts': 'export const log = (c: unknown) => c;' });
     expect(read.entries).toEqual([]);
-    expect(read.unresolved).toEqual([]);
+    // Not a route and not reported as one. The one row is the reader saying it
+    // read no route in this repository at all, which it must say however
+    // ordinary the reason (R84), and which is informational rather than
+    // something to act on.
+    expect(read.unresolved.map((row) => row.reason)).toEqual(['entry-http-routes-unmatched']);
+    expect(read.unresolved[0]?.level).toBe('info');
   });
 
   it('says nothing about a value read off the request, which is the same shape', () => {
@@ -295,7 +302,10 @@ describe('routes declared by calling the application', () => {
       app.get(at('stats'), (c) => c.text('x'));
     `);
     expect(read.entries).toEqual([]);
-    expect(read.unresolved.map((row) => row.reason)).toEqual(['route-path-dynamic']);
+    expect(read.unresolved.map((row) => row.reason).sort()).toEqual([
+      'entry-http-routes-unmatched',
+      'route-path-dynamic',
+    ]);
   });
 });
 
@@ -344,7 +354,7 @@ describe('an application that is not served where it is declared', () => {
       },
     );
     expect(ids(read)).toEqual(['entry:api:http:POST:/internal/reload']);
-    expect(read.unresolved.map((row) => row.reason)).toContain('route-path-dynamic');
+    expect(read.unresolved.map((row) => row.reason)).toContain('route-mount-unread');
   });
 
   it('takes such a route as declared where nothing in the repository shifts a base', () => {

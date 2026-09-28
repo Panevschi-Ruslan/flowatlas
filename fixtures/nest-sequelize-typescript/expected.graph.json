@@ -1,0 +1,656 @@
+{
+  "schemaVersion": 5,
+  "repo": "nest-sequelize-typescript",
+  "generatedAt": "2026-09-27T09:26:49.598Z",
+  "nodes": [
+    {
+      "id": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:12:12",
+      "type": "db_query",
+      "label": "read documents",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 12,
+      "meta": {
+        "op": "read",
+        "table": "documents",
+        "tables": [
+          "documents"
+        ],
+        "package": "sequelize-typescript",
+        "method": "findByPk",
+        "receiver": "Document",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:20:12",
+      "type": "db_query",
+      "label": "read documents",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 20,
+      "meta": {
+        "op": "read",
+        "table": "documents",
+        "tables": [
+          "documents"
+        ],
+        "package": "sequelize",
+        "method": "findAll",
+        "receiver": "Document.scope('withOwner')",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:25:12",
+      "type": "db_query",
+      "label": "read documents",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 25,
+      "meta": {
+        "op": "read",
+        "table": "documents",
+        "tables": [
+          "documents"
+        ],
+        "package": "sequelize",
+        "method": "findOne",
+        "receiver": "Document.unscoped().scope('withOwner')",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:29:12",
+      "type": "db_query",
+      "label": "write documents",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 29,
+      "meta": {
+        "op": "write",
+        "table": "documents",
+        "tables": [
+          "documents"
+        ],
+        "package": "sequelize-typescript",
+        "method": "create",
+        "receiver": "Document",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:35:23",
+      "type": "db_query",
+      "label": "read documents",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 35,
+      "meta": {
+        "op": "read",
+        "table": "documents",
+        "tables": [
+          "documents"
+        ],
+        "package": "sequelize-typescript",
+        "method": "findByPk",
+        "receiver": "Document",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:36:12",
+      "type": "db_query",
+      "label": "write documents",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 36,
+      "meta": {
+        "op": "write",
+        "table": "documents",
+        "tables": [
+          "documents"
+        ],
+        "package": "sequelize-typescript",
+        "method": "update",
+        "receiver": "doc",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:40:12",
+      "type": "db_query",
+      "label": "delete documents",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 40,
+      "meta": {
+        "op": "delete",
+        "table": "documents",
+        "tables": [
+          "documents"
+        ],
+        "package": "sequelize-typescript",
+        "method": "destroy",
+        "receiver": "Document",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:46:12",
+      "type": "db_query",
+      "label": "read revision",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 46,
+      "meta": {
+        "op": "read",
+        "table": "revision",
+        "tables": [
+          "revision"
+        ],
+        "package": "sequelize-typescript",
+        "method": "findAll",
+        "receiver": "Revision",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:52:23",
+      "type": "db_query",
+      "label": "read documents",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 52,
+      "meta": {
+        "op": "read",
+        "table": "documents",
+        "tables": [
+          "documents"
+        ],
+        "package": "sequelize-typescript",
+        "method": "findByPk",
+        "receiver": "Document",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:60:12",
+      "type": "db_query",
+      "label": "read ?",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 60,
+      "meta": {
+        "op": "read",
+        "table": null,
+        "tables": [],
+        "package": "sequelize",
+        "method": "count",
+        "receiver": "connection.models[name]!",
+        "source": "none"
+      }
+    },
+    {
+      "id": "entry:nest-sequelize-typescript:http:DELETE:/documents",
+      "type": "entry",
+      "label": "DELETE /documents",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/documents",
+        "rawPath": "/documents",
+        "controller": "DocumentsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-sequelize-typescript:http:GET:/documents",
+      "type": "entry",
+      "label": "GET /documents",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/documents",
+        "rawPath": "/documents",
+        "controller": "DocumentsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-sequelize-typescript:http:POST:/documents",
+      "type": "entry",
+      "label": "POST /documents",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/documents",
+        "rawPath": "/documents",
+        "controller": "DocumentsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-sequelize-typescript#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "DocumentsController"
+        ],
+        "providers": [
+          "DocumentsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-sequelize-typescript#src/documents/documents.controller.ts:DocumentsController",
+      "type": "provider",
+      "label": "DocumentsController",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-sequelize-typescript#src/documents/documents.controller.ts:DocumentsController.create",
+      "type": "method",
+      "label": "DocumentsController.create",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.controller.ts",
+      "line": 14
+    },
+    {
+      "id": "nest-sequelize-typescript#src/documents/documents.controller.ts:DocumentsController.findAll",
+      "type": "method",
+      "label": "DocumentsController.findAll",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.controller.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-sequelize-typescript#src/documents/documents.controller.ts:DocumentsController.remove",
+      "type": "method",
+      "label": "DocumentsController.remove",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.controller.ts",
+      "line": 19
+    },
+    {
+      "id": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService",
+      "type": "provider",
+      "label": "DocumentsService",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.countOf",
+      "type": "method",
+      "label": "DocumentsService.countOf",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 59
+    },
+    {
+      "id": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.create",
+      "type": "method",
+      "label": "DocumentsService.create",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 28
+    },
+    {
+      "id": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.everything",
+      "type": "method",
+      "label": "DocumentsService.everything",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 24
+    },
+    {
+      "id": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.findOne",
+      "type": "method",
+      "label": "DocumentsService.findOne",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 11
+    },
+    {
+      "id": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.refresh",
+      "type": "method",
+      "label": "DocumentsService.refresh",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 51
+    },
+    {
+      "id": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.remove",
+      "type": "method",
+      "label": "DocumentsService.remove",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 39
+    },
+    {
+      "id": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.rename",
+      "type": "method",
+      "label": "DocumentsService.rename",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 34
+    },
+    {
+      "id": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.revisions",
+      "type": "method",
+      "label": "DocumentsService.revisions",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 45
+    },
+    {
+      "id": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.withOwner",
+      "type": "method",
+      "label": "DocumentsService.withOwner",
+      "repo": "nest-sequelize-typescript",
+      "file": "src/documents/documents.service.ts",
+      "line": 19
+    },
+    {
+      "id": "repo:nest-sequelize-typescript",
+      "type": "repo",
+      "label": "nest-sequelize-typescript",
+      "repo": "nest-sequelize-typescript",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 6,
+          "skippedExternalCalls": {
+            "sequelize": 14,
+            "sequelize-typescript.scope": 1,
+            "sequelize.scope": 1,
+            "sequelize-typescript.unscoped": 1,
+            "sequelize-typescript.reload": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:nest-sequelize-typescript#documents",
+      "type": "table",
+      "label": "documents",
+      "repo": "nest-sequelize-typescript"
+    },
+    {
+      "id": "table:nest-sequelize-typescript#revision",
+      "type": "table",
+      "label": "revision",
+      "repo": "nest-sequelize-typescript"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:12:12",
+      "to": "table:nest-sequelize-typescript#documents",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 12
+    },
+    {
+      "from": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:20:12",
+      "to": "table:nest-sequelize-typescript#documents",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 20
+    },
+    {
+      "from": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:25:12",
+      "to": "table:nest-sequelize-typescript#documents",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 25
+    },
+    {
+      "from": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:29:12",
+      "to": "table:nest-sequelize-typescript#documents",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 29
+    },
+    {
+      "from": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:35:23",
+      "to": "table:nest-sequelize-typescript#documents",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 35
+    },
+    {
+      "from": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:36:12",
+      "to": "table:nest-sequelize-typescript#documents",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 36
+    },
+    {
+      "from": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:40:12",
+      "to": "table:nest-sequelize-typescript#documents",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 40
+    },
+    {
+      "from": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:46:12",
+      "to": "table:nest-sequelize-typescript#revision",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 46
+    },
+    {
+      "from": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:52:23",
+      "to": "table:nest-sequelize-typescript#documents",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 52
+    },
+    {
+      "from": "entry:nest-sequelize-typescript:http:DELETE:/documents",
+      "to": "nest-sequelize-typescript#src/documents/documents.controller.ts:DocumentsController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/documents/documents.controller.ts",
+      "line": 19,
+      "params": [],
+      "returns": "number"
+    },
+    {
+      "from": "entry:nest-sequelize-typescript:http:GET:/documents",
+      "to": "nest-sequelize-typescript#src/documents/documents.controller.ts:DocumentsController.findAll",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/documents/documents.controller.ts",
+      "line": 9,
+      "params": [],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "entry:nest-sequelize-typescript:http:POST:/documents",
+      "to": "nest-sequelize-typescript#src/documents/documents.controller.ts:DocumentsController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/documents/documents.controller.ts",
+      "line": 14,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-sequelize-typescript#src/documents/documents.controller.ts:DocumentsController",
+      "to": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/documents/documents.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-sequelize-typescript#src/documents/documents.controller.ts:DocumentsController.create",
+      "to": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/documents/documents.controller.ts",
+      "line": 16,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-sequelize-typescript#src/documents/documents.controller.ts:DocumentsController.findAll",
+      "to": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.withOwner",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/documents/documents.controller.ts",
+      "line": 11,
+      "params": [],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "nest-sequelize-typescript#src/documents/documents.controller.ts:DocumentsController.remove",
+      "to": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.remove",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/documents/documents.controller.ts",
+      "line": 21,
+      "params": [
+        "string"
+      ],
+      "returns": "number"
+    },
+    {
+      "from": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.countOf",
+      "to": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:60:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/documents/documents.service.ts",
+      "line": 60
+    },
+    {
+      "from": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.create",
+      "to": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:29:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 29
+    },
+    {
+      "from": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.everything",
+      "to": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:25:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 25
+    },
+    {
+      "from": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.findOne",
+      "to": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:12:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 12
+    },
+    {
+      "from": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.refresh",
+      "to": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:52:23",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 52
+    },
+    {
+      "from": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.remove",
+      "to": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:40:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 40
+    },
+    {
+      "from": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.rename",
+      "to": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:35:23",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 35
+    },
+    {
+      "from": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.rename",
+      "to": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:36:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 36
+    },
+    {
+      "from": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.revisions",
+      "to": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:46:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 46
+    },
+    {
+      "from": "nest-sequelize-typescript#src/documents/documents.service.ts:DocumentsService.withOwner",
+      "to": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:20:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/documents/documents.service.ts",
+      "line": 20
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/documents/documents.service.ts",
+      "line": 60,
+      "reason": "dynamic-table-name",
+      "hint": "The table connection.models[name]!.count touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.",
+      "symbol": "connection.models[name]!.count"
+    }
+  ]
+}

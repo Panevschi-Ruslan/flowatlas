@@ -1,0 +1,211 @@
+{
+  "schemaVersion": 5,
+  "repo": "koa-plugin-registry",
+  "generatedAt": "2026-09-27T12:39:40.343Z",
+  "nodes": [
+    {
+      "id": "entry:koa-plugin-registry:http:GET:/auth/passkey",
+      "type": "entry",
+      "label": "GET /auth/passkey",
+      "repo": "koa-plugin-registry",
+      "file": "src/plugins/passkeys/server/auth/passkeys.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/auth/passkey",
+        "rawPath": "/auth/passkey",
+        "adapter": "koa-routes",
+        "registration": "router.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:koa-plugin-registry:http:POST:/api/documents.info",
+      "type": "entry",
+      "label": "POST /api/documents.info",
+      "repo": "koa-plugin-registry",
+      "file": "src/routes/documents.routes.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/documents.info",
+        "rawPath": "/api/documents.info",
+        "adapter": "koa-routes",
+        "registration": "router.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:koa-plugin-registry:http:POST:/api/passkeys.list",
+      "type": "entry",
+      "label": "POST /api/passkeys.list",
+      "repo": "koa-plugin-registry",
+      "file": "src/plugins/passkeys/server/api/passkeys.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/passkeys.list",
+        "rawPath": "/api/passkeys.list",
+        "adapter": "koa-routes",
+        "registration": "router.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:koa-plugin-registry:http:POST:/api/passkeys.update",
+      "type": "entry",
+      "label": "POST /api/passkeys.update",
+      "repo": "koa-plugin-registry",
+      "file": "src/plugins/passkeys/server/api/passkeys.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/passkeys.update",
+        "rawPath": "/api/passkeys.update",
+        "adapter": "koa-routes",
+        "registration": "router.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:koa-plugin-registry:http:POST:/api/webhooks.create",
+      "type": "entry",
+      "label": "POST /api/webhooks.create",
+      "repo": "koa-plugin-registry",
+      "file": "src/plugins/webhooks/server/index.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/webhooks.create",
+        "rawPath": "/api/webhooks.create",
+        "adapter": "koa-routes",
+        "registration": "router.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "koa-plugin-registry#src/plugins/passkeys/server/api/passkeys.ts:POST passkeys.list@13",
+      "type": "function",
+      "label": "POST passkeys.list@13",
+      "repo": "koa-plugin-registry",
+      "file": "src/plugins/passkeys/server/api/passkeys.ts",
+      "line": 13
+    },
+    {
+      "id": "koa-plugin-registry#src/plugins/passkeys/server/api/passkeys.ts:POST passkeys.update@17",
+      "type": "function",
+      "label": "POST passkeys.update@17",
+      "repo": "koa-plugin-registry",
+      "file": "src/plugins/passkeys/server/api/passkeys.ts",
+      "line": 17
+    },
+    {
+      "id": "koa-plugin-registry#src/plugins/passkeys/server/auth/passkeys.ts:GET /passkey@6",
+      "type": "function",
+      "label": "GET /passkey@6",
+      "repo": "koa-plugin-registry",
+      "file": "src/plugins/passkeys/server/auth/passkeys.ts",
+      "line": 6
+    },
+    {
+      "id": "koa-plugin-registry#src/plugins/webhooks/server/index.ts:POST webhooks.create@12",
+      "type": "function",
+      "label": "POST webhooks.create@12",
+      "repo": "koa-plugin-registry",
+      "file": "src/plugins/webhooks/server/index.ts",
+      "line": 12
+    },
+    {
+      "id": "koa-plugin-registry#src/routes/documents.routes.ts:POST documents.info@6",
+      "type": "function",
+      "label": "POST documents.info@6",
+      "repo": "koa-plugin-registry",
+      "file": "src/routes/documents.routes.ts",
+      "line": 6
+    },
+    {
+      "id": "repo:koa-plugin-registry",
+      "type": "repo",
+      "label": "koa-plugin-registry",
+      "repo": "koa-plugin-registry",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "koa-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:koa-plugin-registry:http:GET:/auth/passkey",
+      "to": "koa-plugin-registry#src/plugins/passkeys/server/auth/passkeys.ts:GET /passkey@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/plugins/passkeys/server/auth/passkeys.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:koa-plugin-registry:http:POST:/api/documents.info",
+      "to": "koa-plugin-registry#src/routes/documents.routes.ts:POST documents.info@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/documents.routes.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:koa-plugin-registry:http:POST:/api/passkeys.list",
+      "to": "koa-plugin-registry#src/plugins/passkeys/server/api/passkeys.ts:POST passkeys.list@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/plugins/passkeys/server/api/passkeys.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:koa-plugin-registry:http:POST:/api/passkeys.update",
+      "to": "koa-plugin-registry#src/plugins/passkeys/server/api/passkeys.ts:POST passkeys.update@17",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/plugins/passkeys/server/api/passkeys.ts",
+      "line": 17
+    },
+    {
+      "from": "entry:koa-plugin-registry:http:POST:/api/webhooks.create",
+      "to": "koa-plugin-registry#src/plugins/webhooks/server/index.ts:POST webhooks.create@12",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/plugins/webhooks/server/index.ts",
+      "line": 12
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/routes/api.ts",
+      "line": 24,
+      "reason": "route-registry-unread",
+      "message": "router.use mounts every application in hostHooks('api').value at /, and nothing found here puts one into that collection, so however many routes it installs are missing.",
+      "hint": "Members added by a loader at run time cannot be enumerated from the source. Put the applications in a list, or register each of them on the application they are mounted on with a literal path.",
+      "symbol": "hostHooks('api').value",
+      "adapter": "koa-routes"
+    }
+  ]
+}

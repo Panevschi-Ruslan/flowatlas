@@ -51,7 +51,11 @@ export const lookupOf = (graph: ProjectGraph): GraphLookup => {
     node: (id) => nodes.get(id),
     edgesFrom: (id, types) => filtered(out.get(id) ?? [], types),
     edgesTo: (id, types) => filtered(into.get(id) ?? [], types),
-    type: (id): TypeEntry | undefined => graph.types[id],
+    // Own keys only: a type reference is read out of an edge of the same graph
+    // file, so this is a table asked about a word that came from somewhere else,
+    // and an object literal answers `constructor` with the language's own (R130).
+    type: (id): TypeEntry | undefined =>
+      Object.hasOwn(graph.types, id) ? graph.types[id] : undefined,
     allEdges: () => graph.edges,
     nodesByType: (type, kind) => {
       const found = byType.get(type) ?? [];

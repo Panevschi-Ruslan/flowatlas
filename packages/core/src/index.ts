@@ -48,9 +48,16 @@ export {
 export type { HttpMethod, SiteLeafType } from './ids.js';
 
 export { ENTRY_KINDS, NODE_TYPES, isEntryKind } from './model/nodes.js';
+export { wayInBodyRead } from './model/way-in.js';
 export type { EntryKind, GraphNode, NodeType } from './model/nodes.js';
 
-export { CONFIDENCE_LEVELS, CONFIDENCE_RANK, EDGE_TYPES, strongerConfidence } from './model/edges.js';
+export {
+  CONFIDENCE_LEVELS,
+  CONFIDENCE_RANK,
+  DECLARED_CONFIDENCE,
+  EDGE_TYPES,
+  strongerConfidence,
+} from './model/edges.js';
 export type { Confidence, EdgeType, GraphEdge } from './model/edges.js';
 
 export { TYPE_KINDS } from './model/types.js';
@@ -95,6 +102,8 @@ export {
   DEFAULT_OUTPUT,
   DEFAULT_TYPE_MAX_DEPTH,
   adapterForceSchema,
+  localBaseClassNames,
+  localBaseTableProperty,
   customBrokerSchema,
   customProducerSchema,
   customSubscriberSchema,
@@ -103,6 +112,8 @@ export {
   entryHttpMountSchema,
   entryHttpRouteObjectSchema,
   entryHttpSchema,
+  entryProcedureMountSchema,
+  entryProcedureSchema,
   entryRegistrySchema,
   findConfig,
   flowatlasConfigSchema,
@@ -111,11 +122,15 @@ export {
   serviceConfigSchema,
 } from './config.js';
 export type {
+  LocalBaseClass,
   CustomBrokerConfig,
+  CustomConsumerConfig,
   CustomProducerConfig,
   CustomSubscriberConfig,
   EntryHttpConfig,
   EntryHttpDescription,
+  EntryProcedureConfig,
+  EntryProcedureDescription,
   EntryRegistryConfig,
   FlowatlasConfig,
   LoadConfigOptions,
@@ -124,15 +139,32 @@ export type {
 } from './config.js';
 
 export {
-  LOG_LEVELS,
+  applicationOfFile,
+  applicationsIn,
+  applicationsServing,
+  recordApplications,
+  ROOT_APPLICATION,
+} from './adapters/applications.js';
+export type { ApplicationKeys, ApplicationMap } from './adapters/applications.js';
+export { LOG_LEVELS, createLogger, silentLogger } from './adapters/context.js';
+export type { ExtractContext, LogLevel, Logger } from './adapters/context.js';
+export {
   allDependencies,
-  createLogger,
   hasAnyDependency,
   hasDependency,
   readPackageJson,
-  silentLogger,
-} from './adapters/context.js';
-export type { ExtractContext, LogLevel, Logger, PackageJson } from './adapters/context.js';
+  readResolvedPackageJson,
+  suppliedWith,
+} from './adapters/manifest.js';
+export type { PackageJson } from './adapters/manifest.js';
+
+export { addEntryWrapping, addWrappingEdges, WRAPPING_LAYERS, WRAPPING_SCOPES } from './adapters/wrapping.js';
+export type {
+  AppliedWrapping,
+  EntryWrapping,
+  WrappingLayer,
+  WrappingScope,
+} from './adapters/wrapping.js';
 
 export { isFunctionHandler, isInlineHandler } from './adapters/entry.js';
 export type {
@@ -143,7 +175,7 @@ export type {
   InlineHandler,
   MethodHandler,
 } from './adapters/entry.js';
-export { classifyDbCall, operationOf } from './adapters/db.js';
+export { classifyDbCall, isUniversalMethod, operationOf } from './adapters/db.js';
 export type {
   DataNameHints,
   DbAdapter,
@@ -170,6 +202,8 @@ export {
 } from './origin.js';
 export type { BodyRead, Origin, ResolveOriginOptions, TypeOrigin } from './origin.js';
 export type { BrokerAdapter, CallPattern, ChannelKind } from './adapters/broker.js';
+export { locatedExpressions } from './adapters/locator.js';
+export type { IsOperation, LocatorContext, LocatorSite, NameLocator } from './adapters/locator.js';
 export type { FrontendAdapter, FrontendExtractOptions } from './adapters/frontend.js';
 
 export { ADAPTER_SLOTS, AdapterRegistry, noAdapters } from './adapters/registry.js';
@@ -185,8 +219,49 @@ export {
   siteOf,
 } from './nodes.js';
 
-export { createProject, findTsconfig, listRepoSources, TSCONFIG_CANDIDATES } from './project.js';
-export type { CreateProjectOptions } from './project.js';
+export {
+  DECLARED_IN,
+  DECLARED_LINE,
+  declaredAt,
+  exportSiteIn,
+  reachHere,
+  reachMeta,
+  reachOf,
+  reachedAt,
+  sameLocation,
+} from './location.js';
+export type { Location, Reach } from './location.js';
+
+export {
+  isServiceSource,
+  serviceExtent,
+  serviceSourceDirs,
+  workspaceGlobs,
+  workspacePackages,
+  workspaceRootOf,
+} from './workspace.js';
+export type { ExtentPackage, WorkspacePackage } from './workspace.js';
+
+export {
+  countSources,
+  createProject,
+  findTsconfig,
+  listRepoSources,
+  reportSkippedTestDirectories,
+  reportUnreadableSources,
+  SKIPPED_TEST_DIRECTORY_REASON,
+  skippedTestDirectories,
+  TSCONFIG_CANDIDATES,
+  UNREADABLE_FILE_REASON,
+} from './project.js';
+export type {
+  CreateProjectOptions,
+  RepoStats,
+  SourceCounts,
+  UnreadableSourceContext,
+} from './project.js';
+
+export { isTestDirectory, isTestFile } from './test-files.js';
 
 export { namesGivenTo, takesNames } from './markers.js';
 export type { MarkerNames, RecordedMarker, RefusedArg } from './markers.js';
@@ -195,13 +270,24 @@ export { definePass } from './passes.js';
 export type { ExtractorPass } from './passes.js';
 
 export { buildClassIndex, ClassIndex } from './class-index.js';
-export { functionAt, inlineFunction, memberFunction, moduleFunctions, namedFunction } from './functions.js';
+export {
+  functionAt,
+  inlineFunction,
+  memberFunction,
+  moduleFunctions,
+  namedFunction,
+  placedFunction,
+  placeOf,
+} from './functions.js';
+export { suppliedTypes } from './supplied.js';
+export type { SuppliedTypes } from './supplied.js';
 export type { NamedFunction } from './functions.js';
 export type { BuildClassIndexOptions, IndexedClass } from './class-index.js';
 
 export {
   declarationOf,
   evaluateExpression,
+  isRunTimeValue,
   literalUnionOf,
   resolvedValue,
   stableKey,
@@ -259,7 +345,7 @@ export type {
 export { isLibFile, TypeCollector } from './types/collector.js';
 export type { TypeCollectorOptions } from './types/collector.js';
 export { mergeFieldMeta } from './types/field-meta.js';
-export type { FieldDeclaration, FieldMetaReader, FieldMetaResult } from './types/field-meta.js';
+export type { FieldDeclaration, FieldMetaReader, FieldMetaResult, UnreadAnnotation } from './types/field-meta.js';
 export { DEFAULT_HASH_DEPTH, normalizeStructure, structuralHash } from './types/structural-hash.js';
 export type { StructuralHashOptions } from './types/structural-hash.js';
 export {
@@ -279,6 +365,7 @@ export {
   constantMethodResult,
   constantPropertyValue,
   deref,
+  dispatchOf,
   finiteLookups,
   MOST_CHOICES,
   foldedChoices,
@@ -297,9 +384,20 @@ export {
 } from './trace.js';
 export type {
   CallFrame,
+  Dispatch,
   FiniteLookup,
+  Forwarded,
   ForwardedCall,
   RootSettingOptions,
   SettingAddress,
   SplitAddress,
 } from './trace.js';
+
+export {
+  isPlatformProvided,
+  isPlatformRequest,
+  PLATFORM_FETCH,
+  requestBodyOf,
+  requestVerbOf,
+} from './platform-fetch.js';
+export type { OptionsRequestShape } from './platform-fetch.js';

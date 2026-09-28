@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "repo": "nest-rabbitmq",
-  "generatedAt": "2026-09-09T22:29:16.127Z",
+  "generatedAt": "2026-09-27T19:38:18.540Z",
   "nodes": [
     {
       "id": "channel:order.cancelled",
@@ -58,7 +58,7 @@
         "kind": "message",
         "adapter": "nestjs-rabbitmq",
         "decorator": "RabbitSubscribe",
-        "entryId": null
+        "entryId": "entry:nest-rabbitmq:event:order.created"
       }
     },
     {
@@ -73,7 +73,7 @@
         "kind": "message",
         "adapter": "nestjs-rabbitmq",
         "decorator": "RabbitSubscribe",
-        "entryId": null
+        "entryId": "entry:nest-rabbitmq:event:order.refunded"
       }
     },
     {
@@ -105,6 +105,32 @@
       }
     },
     {
+      "id": "entry:nest-rabbitmq:event:order.created",
+      "type": "entry",
+      "label": "event order.created",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "pattern": "order.created",
+        "adapter": "nestjs-rabbitmq"
+      }
+    },
+    {
+      "id": "entry:nest-rabbitmq:event:order.refunded",
+      "type": "entry",
+      "label": "event order.refunded",
+      "repo": "nest-rabbitmq",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 33,
+      "kind": "event",
+      "meta": {
+        "pattern": "order.refunded",
+        "adapter": "nestjs-rabbitmq"
+      }
+    },
+    {
       "id": "nest-rabbitmq#node_modules/@golevelup/nestjs-rabbitmq:AmqpConnection",
       "type": "provider",
       "label": "AmqpConnection",
@@ -125,6 +151,18 @@
       "kind": "external",
       "meta": {
         "package": "@golevelup/nestjs-rabbitmq",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-rabbitmq#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "nest-rabbitmq",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
         "external": true
       }
     },
@@ -322,9 +360,12 @@
       "meta": {
         "stats": {
           "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
           "classes": 4,
           "skippedExternalCalls": {
-            "@golevelup/nestjs-rabbitmq": 3
+            "@golevelup/nestjs-rabbitmq": 3,
+            "@nestjs/microservices": 1
           }
         },
         "bootstrap": "src/main.ts",
@@ -402,6 +443,37 @@
       "returns": "void"
     },
     {
+      "from": "entry:nest-rabbitmq:event:order.created",
+      "to": "nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderCreated",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 21,
+      "params": [
+        "type:nest-rabbitmq#OrderCreatedEvent",
+        "type:amqplib#ConsumeMessage"
+      ],
+      "returns": "void",
+      "meta": {
+        "body": "type:nest-rabbitmq#OrderCreatedEvent"
+      }
+    },
+    {
+      "from": "entry:nest-rabbitmq:event:order.refunded",
+      "to": "nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderRefunded",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.consumer.ts",
+      "line": 33,
+      "params": [
+        "type:nest-rabbitmq#OrderRefundedEvent"
+      ],
+      "returns": "void",
+      "meta": {
+        "body": "type:nest-rabbitmq#OrderRefundedEvent"
+      }
+    },
+    {
       "from": "nest-rabbitmq#src/app.module.ts:AppModule",
       "to": "nest-rabbitmq#node_modules/@golevelup/nestjs-rabbitmq:RabbitMQModule",
       "type": "imports",
@@ -430,6 +502,14 @@
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
       "line": 26
+    },
+    {
+      "from": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService",
+      "to": "nest-rabbitmq#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 27
     },
     {
       "from": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService.cancel",
@@ -583,15 +663,8 @@
   "unresolved": [
     {
       "file": "src/orders/orders.service.ts",
-      "line": 27,
-      "reason": "di-token-unknown",
-      "hint": "No module in this repository provides RMQ_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
-      "symbol": "OrdersService.constructor[1]"
-    },
-    {
-      "file": "src/orders/orders.service.ts",
       "line": 48,
-      "reason": "channel-const-unresolved",
+      "reason": "channel-dynamic",
       "hint": "The channel name cannot be read here. Annotate OrdersService.publishTo with the channel it uses.",
       "symbol": "OrdersService.publishTo -> routingKey"
     }

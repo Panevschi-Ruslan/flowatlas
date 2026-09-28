@@ -7,6 +7,7 @@ import {
   loadConfig,
   parseConfig,
   readPackageJson,
+  readResolvedPackageJson,
   type FlowatlasConfig,
   type ServiceConfig,
 } from '@flowatlas/core';
@@ -51,7 +52,15 @@ const openProject = (configPath: string): { config: FlowatlasConfig; existed: bo
   return { config: loaded.config, existed: true };
 };
 
-/** What a repository should be called and what it is, read from its manifest. */
+/**
+ * What a repository should be called and what it is, read from its manifest.
+ *
+ * The name is the package's own, always. The type is guessed from its own
+ * manifest first and only then from the workspace around it: a package that
+ * declares a framework is that framework, whatever the monorepo it sits in has
+ * in its tooling, while a leaf manifest that is a name and a version says
+ * nothing at all and the workspace is the only thing left to ask.
+ */
 const describe = (dir: string): { name: string; type: string } => {
   const pkg = readPackageJson(dir);
   if (pkg === undefined) {
@@ -61,7 +70,10 @@ const describe = (dir: string): { name: string; type: string } => {
       'Point at the root of a repository, the directory holding its package.json.',
     );
   }
-  return { name: suggestName(pkg, dir), type: guessType(pkg) };
+  const declared = guessType(pkg);
+  const type =
+    declared === UNKNOWN_TYPE ? guessType(readResolvedPackageJson(dir) ?? pkg) : declared;
+  return { name: suggestName(pkg, dir), type };
 };
 
 /**

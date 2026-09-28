@@ -78,8 +78,14 @@ were cut, rather than filling a context window.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `list_entries` | every way into the project: routes, bot commands, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix` |
+| `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix` |
 | `find_symbol` | fuzzy search over every node, by substring or camel-case initials | `query` (required), `types`, `service` |
+
+`kind` is one of `http`, `rpc`, `event`, `cron`, `bot_command`, `bot_callback`,
+`bot_event` and `scene_step`. `rpc` is a procedure — a tRPC one, say — whose
+address is the dotted path its callers write, `orders.list`, rather than a verb
+and a path. It has no path for `pathPrefix` to match, so a prefix leaves
+procedures out; narrow them with `service` and `kind` instead.
 
 `find_symbol` accepts initials: `osc` finds `OrdersService.create`. Start here
 when you know roughly what something is called.
@@ -100,6 +106,18 @@ POST /orders/12345
 POST /orders/:param
 entry:orders:http:POST:/orders/:param
 ```
+
+Two kinds of entry are best named by their id, which `list_entries` and
+`find_symbol` return. A procedure is `entry:api:rpc:orders.list`. And a service
+that creates more than one application puts the application in the id, because
+an address is only an address within one application:
+`entry:api@WorkerModule:http:GET:/health` beside
+`entry:api@ApiModule:http:GET:/health`. A name that matches both comes back as
+a choice rather than a guess.
+
+A procedure's callers are requests like any other, joined to it by that dotted
+path with a `hits` edge, so `who_calls` on a procedure reaches the code in
+another repository that asks for it.
 
 `impact` is the one to ask before changing something: it answers "what would
 have to be retested", including the services whose chains run into this one
@@ -177,6 +195,12 @@ same shell the client starts from.
 **A tool answers, but with nothing in it.** That is an answer: nothing reaches
 the symbol you named, or nothing handles the channel. `flowatlas doctor` says what
 could not be read and why, which is usually the next thing to look at.
+
+**A whole service answers nothing.** Run `flowatlas doctor`. If it exits 2, the
+graph is one nobody could report on — the last build failed, a service
+contributed no node, or most of a service's ways in were read no further than
+their addresses — and it says which. Every tool will answer truthfully about
+that graph, and the graph is not the project.
 
 **An answer looks cut off.** It was, and it says so. Raise `maxNodes`, or narrow
 with `service` and `depth`.

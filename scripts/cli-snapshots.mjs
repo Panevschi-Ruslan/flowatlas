@@ -131,6 +131,23 @@ const FOLDED_CASES = [
   ['expected.doctor.txt', (io) => runDoctorCommand({ config: foldedConfig }, io)],
 ];
 
+const hollowFixture = join(root, 'fixtures', 'next-hollow');
+const hollowConfig = join(hollowFixture, 'flowatlas.config.json');
+
+/**
+ * A graph nobody can be told is healthy, for two separate reasons (R94, R106).
+ *
+ * The whole project fails twice over: `widget` contributed nothing, and most of
+ * `shop`'s ways in were read no further than their addresses. Narrowed to
+ * `shop` it is the auditor's reproduction — the service that read nothing
+ * taken away — and it still exits 2, which it did not while the second reason
+ * was an ordinary row a baseline could accept.
+ */
+const HOLLOW_CASES = [
+  ['expected.doctor.txt', (io) => runDoctorCommand({ config: hollowConfig }, io)],
+  ['expected.doctor.shop.txt', (io) => runDoctorCommand({ config: hollowConfig, service: 'shop' }, io)],
+];
+
 const socketFixture = join(root, 'fixtures', 'socket-channels');
 const socketConfig = join(socketFixture, 'flowatlas.config.json');
 
@@ -158,6 +175,7 @@ const SUITES = [
   { dir: contractsFixture, owned: false, cases: CONTRACT_CASES },
   { dir: doctorFixture, owned: false, cases: DOCTOR_CASES },
   { dir: foldedFixture, owned: false, cases: FOLDED_CASES },
+  { dir: hollowFixture, owned: false, cases: HOLLOW_CASES },
   { dir: socketFixture, owned: false, cases: SOCKET_CASES },
 ];
 

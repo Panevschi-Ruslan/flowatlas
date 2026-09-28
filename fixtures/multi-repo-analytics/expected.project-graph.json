@@ -1,0 +1,2550 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T19:37:52.094Z",
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "admin#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "admin",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "admin#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "admin",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "admin#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "admin",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "SyncJob",
+          "OrdersClient"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "admin#src/clients/orders.client.ts:OrdersClient",
+      "type": "provider",
+      "label": "OrdersClient",
+      "repo": "admin",
+      "file": "src/clients/orders.client.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "admin#src/clients/orders.client.ts:OrdersClient.create",
+      "type": "method",
+      "label": "OrdersClient.create",
+      "repo": "admin",
+      "file": "src/clients/orders.client.ts",
+      "line": 13
+    },
+    {
+      "id": "admin#src/sync/sync.job.ts:SyncJob",
+      "type": "provider",
+      "label": "SyncJob",
+      "repo": "admin",
+      "file": "src/sync/sync.job.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "admin#src/sync/sync.job.ts:SyncJob.hourly",
+      "type": "method",
+      "label": "SyncJob.hourly",
+      "repo": "admin",
+      "file": "src/sync/sync.job.ts",
+      "line": 17
+    },
+    {
+      "id": "billing#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "billing",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "billing#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "billing",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "billing#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "billing",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
+      "id": "billing#node_modules/@nestjs/microservices:ClientsModule",
+      "type": "module",
+      "label": "ClientsModule",
+      "repo": "billing",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
+      "id": "billing#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "billing",
+      "file": "src/app.module.ts",
+      "line": 10,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "InvoicesController",
+          "OrdersConsumer",
+          "OrphanConsumer"
+        ],
+        "providers": [
+          "InvoicesService",
+          "OrdersClient"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "billing#src/clients/orders.client.ts:OrdersClient",
+      "type": "provider",
+      "label": "OrdersClient",
+      "repo": "billing",
+      "file": "src/clients/orders.client.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "billing#src/clients/orders.client.ts:OrdersClient.create",
+      "type": "method",
+      "label": "OrdersClient.create",
+      "repo": "billing",
+      "file": "src/clients/orders.client.ts",
+      "line": 13
+    },
+    {
+      "id": "billing#src/invoices/invoices.controller.ts:InvoicesController",
+      "type": "provider",
+      "label": "InvoicesController",
+      "repo": "billing",
+      "file": "src/invoices/invoices.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+      "type": "method",
+      "label": "InvoicesController.create",
+      "repo": "billing",
+      "file": "src/invoices/invoices.controller.ts",
+      "line": 10
+    },
+    {
+      "id": "billing#src/invoices/invoices.service.ts:InvoicesService",
+      "type": "provider",
+      "label": "InvoicesService",
+      "repo": "billing",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+      "type": "method",
+      "label": "InvoicesService.create",
+      "repo": "billing",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 8
+    },
+    {
+      "id": "billing#src/invoices/invoices.service.ts:InvoicesService.sync",
+      "type": "method",
+      "label": "InvoicesService.sync",
+      "repo": "billing",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 19
+    },
+    {
+      "id": "billing#src/invoices/orders.consumer.ts:OrdersConsumer",
+      "type": "provider",
+      "label": "OrdersConsumer",
+      "repo": "billing",
+      "file": "src/invoices/orders.consumer.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+      "type": "method",
+      "label": "OrdersConsumer.onOrderChanged",
+      "repo": "billing",
+      "file": "src/invoices/orders.consumer.ts",
+      "line": 10
+    },
+    {
+      "id": "billing#src/invoices/orphan.consumer.ts:OrphanConsumer",
+      "type": "provider",
+      "label": "OrphanConsumer",
+      "repo": "billing",
+      "file": "src/invoices/orphan.consumer.ts",
+      "line": 17,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "billing#src/invoices/orphan.consumer.ts:OrphanConsumer.onOrphan",
+      "type": "method",
+      "label": "OrphanConsumer.onOrphan",
+      "repo": "billing",
+      "file": "src/invoices/orphan.consumer.ts",
+      "line": 21
+    },
+    {
+      "id": "channel:audit.log",
+      "type": "channel",
+      "label": "audit.log",
+      "repo": "orders",
+      "file": "src/audit/audit.service.ts",
+      "line": 10,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:invoice.changed",
+      "type": "channel",
+      "label": "invoice.changed",
+      "repo": "orders",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 11,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:order.changed",
+      "type": "channel",
+      "label": "order.changed",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 55,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:orphan.in",
+      "type": "channel",
+      "label": "orphan.in",
+      "repo": "billing",
+      "file": "src/invoices/orphan.consumer.ts",
+      "line": 21,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:admin#ORDERS_URL",
+      "type": "config_key",
+      "label": "ORDERS_URL",
+      "repo": "admin",
+      "file": "src/clients/orders.client.ts",
+      "line": 14,
+      "meta": {
+        "key": "ORDERS_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:billing#ORDERS_URL",
+      "type": "config_key",
+      "label": "ORDERS_URL",
+      "repo": "billing",
+      "file": "src/clients/orders.client.ts",
+      "line": 14,
+      "meta": {
+        "key": "ORDERS_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:gateway#JWT_SECRET",
+      "type": "config_key",
+      "label": "JWT_SECRET",
+      "repo": "gateway",
+      "file": "src/auth/auth.guard.ts",
+      "line": 15,
+      "meta": {
+        "key": "JWT_SECRET",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:gateway#ORDERS_URL",
+      "type": "config_key",
+      "label": "ORDERS_URL",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 15,
+      "meta": {
+        "key": "ORDERS_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:orders#BILLING_URL",
+      "type": "config_key",
+      "label": "BILLING_URL",
+      "repo": "orders",
+      "file": "src/clients/billing.client.ts",
+      "line": 14,
+      "meta": {
+        "key": "BILLING_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:orders#GATEWAY_URL",
+      "type": "config_key",
+      "label": "GATEWAY_URL",
+      "repo": "orders",
+      "file": "src/clients/accounts.client.ts",
+      "line": 14,
+      "meta": {
+        "key": "GATEWAY_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:orders#ORDERS_DB_URL",
+      "type": "config_key",
+      "label": "ORDERS_DB_URL",
+      "repo": "orders",
+      "file": "src/orders/orders.repository.ts",
+      "line": 10,
+      "meta": {
+        "key": "ORDERS_DB_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "consumer:billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+      "type": "consumer",
+      "label": "OrdersConsumer.onOrderChanged",
+      "repo": "billing",
+      "file": "src/invoices/orders.consumer.ts",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:billing:event:order.changed"
+      }
+    },
+    {
+      "id": "consumer:billing#src/invoices/orphan.consumer.ts:OrphanConsumer.onOrphan",
+      "type": "consumer",
+      "label": "OrphanConsumer.onOrphan",
+      "repo": "billing",
+      "file": "src/invoices/orphan.consumer.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:billing:event:orphan.in"
+      }
+    },
+    {
+      "id": "consumer:orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+      "type": "consumer",
+      "label": "InvoicesConsumer.onInvoiceChanged",
+      "repo": "orders",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 11,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:orders:event:invoice.changed"
+      }
+    },
+    {
+      "id": "entry:admin:cron:SyncJob.hourly",
+      "type": "entry",
+      "label": "cron SyncJob.hourly",
+      "repo": "admin",
+      "file": "src/sync/sync.job.ts",
+      "line": 17,
+      "kind": "cron",
+      "meta": {
+        "expression": "0 * * * *",
+        "trigger": "Cron",
+        "adapter": "nestjs-schedule"
+      }
+    },
+    {
+      "id": "entry:billing:event:order.changed",
+      "type": "entry",
+      "label": "event order.changed",
+      "repo": "billing",
+      "file": "src/invoices/orders.consumer.ts",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "pattern": "order.changed",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "entry:billing:event:orphan.in",
+      "type": "entry",
+      "label": "event orphan.in",
+      "repo": "billing",
+      "file": "src/invoices/orphan.consumer.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "pattern": "orphan.in",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "type": "entry",
+      "label": "POST /invoices",
+      "repo": "billing",
+      "file": "src/invoices/invoices.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/invoices",
+        "rawPath": "/invoices",
+        "controller": "InvoicesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/accounts/:param",
+      "type": "entry",
+      "label": "GET /accounts/:param",
+      "repo": "gateway",
+      "file": "src/accounts/accounts.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/accounts/:param",
+        "rawPath": "/accounts/:id",
+        "controller": "AccountsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/internal/legacy",
+      "type": "entry",
+      "label": "GET /internal/legacy",
+      "repo": "gateway",
+      "file": "src/orders/legacy.controller.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/internal/legacy",
+        "rawPath": "/internal/legacy",
+        "controller": "LegacyController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "gateway",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:event:invoice.changed",
+      "type": "entry",
+      "label": "event invoice.changed",
+      "repo": "orders",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 11,
+      "kind": "event",
+      "meta": {
+        "pattern": "invoice.changed",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/recent",
+      "type": "entry",
+      "label": "GET /orders/recent",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/recent",
+        "rawPath": "/orders/recent",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/create",
+      "type": "entry",
+      "label": "POST /orders/create",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/create",
+        "rawPath": "/orders/create",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "gateway#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "gateway",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "gateway#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "gateway",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "gateway#src/accounts/accounts.controller.ts:AccountsController",
+      "type": "provider",
+      "label": "AccountsController",
+      "repo": "gateway",
+      "file": "src/accounts/accounts.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "gateway#src/accounts/accounts.controller.ts:AccountsController.findOne",
+      "type": "method",
+      "label": "AccountsController.findOne",
+      "repo": "gateway",
+      "file": "src/accounts/accounts.controller.ts",
+      "line": 10
+    },
+    {
+      "id": "gateway#src/accounts/accounts.service.ts:AccountsService",
+      "type": "provider",
+      "label": "AccountsService",
+      "repo": "gateway",
+      "file": "src/accounts/accounts.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "gateway#src/accounts/accounts.service.ts:AccountsService.find",
+      "type": "method",
+      "label": "AccountsService.find",
+      "repo": "gateway",
+      "file": "src/accounts/accounts.service.ts",
+      "line": 16
+    },
+    {
+      "id": "gateway#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "gateway",
+      "file": "src/app.module.ts",
+      "line": 10,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "AccountsController",
+          "LegacyController"
+        ],
+        "providers": [
+          "OrdersClient",
+          "AccountsService",
+          "AuthGuard"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "gateway#src/auth/auth.guard.ts:AuthGuard",
+      "type": "guard",
+      "label": "AuthGuard",
+      "repo": "gateway",
+      "file": "src/auth/auth.guard.ts",
+      "line": 10,
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "gateway#src/auth/auth.guard.ts:AuthGuard.canActivate",
+      "type": "method",
+      "label": "AuthGuard.canActivate",
+      "repo": "gateway",
+      "file": "src/auth/auth.guard.ts",
+      "line": 14
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient",
+      "type": "provider",
+      "label": "OrdersClient",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.create",
+      "type": "method",
+      "label": "OrdersClient.create",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 14
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.createDraft",
+      "type": "method",
+      "label": "OrdersClient.createDraft",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 19
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.recent",
+      "type": "method",
+      "label": "OrdersClient.recent",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 26
+    },
+    {
+      "id": "gateway#src/orders/legacy.controller.ts:LegacyController",
+      "type": "provider",
+      "label": "LegacyController",
+      "repo": "gateway",
+      "file": "src/orders/legacy.controller.ts",
+      "line": 10,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "gateway#src/orders/legacy.controller.ts:LegacyController.legacy",
+      "type": "method",
+      "label": "LegacyController.legacy",
+      "repo": "gateway",
+      "file": "src/orders/legacy.controller.ts",
+      "line": 12
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "gateway",
+      "file": "src/orders/orders.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "gateway",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12
+    },
+    {
+      "id": "http_out:admin#src/clients/orders.client.ts:14:12",
+      "type": "http_out",
+      "label": "POST /orders/create",
+      "repo": "admin",
+      "file": "src/clients/orders.client.ts",
+      "line": 14,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders/create",
+        "path": "/orders/create",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": null,
+        "bodyType": "{customerId:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "customerId"
+        ],
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:billing#src/clients/orders.client.ts:14:12",
+      "type": "http_out",
+      "label": "POST /orders/create",
+      "repo": "billing",
+      "file": "src/clients/orders.client.ts",
+      "line": 14,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders/create",
+        "path": "/orders/create",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": null,
+        "bodyType": "{orderId:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "orderId"
+        ],
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:15:12",
+      "type": "http_out",
+      "label": "POST /orders/create",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 15,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders/create",
+        "path": "/orders/create",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": null,
+        "bodyType": "{customerId:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "customerId"
+        ],
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:20:12",
+      "type": "http_out",
+      "label": "POST /orders/create",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 20,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders/create",
+        "path": "/orders/create",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": null,
+        "bodyType": "{customerId:string;draft:boolean}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "customerId",
+          "draft"
+        ],
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:27:12",
+      "type": "http_out",
+      "label": "GET /orders/recent",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 27,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/orders/recent",
+        "path": "/orders/recent",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:orders#src/clients/billing.client.ts:14:12",
+      "type": "http_out",
+      "label": "POST /invoices",
+      "repo": "orders",
+      "file": "src/clients/billing.client.ts",
+      "line": 14,
+      "meta": {
+        "method": "POST",
+        "url": "${BILLING_URL}/invoices",
+        "path": "/invoices",
+        "baseUrlEnv": "BILLING_URL",
+        "responseType": null,
+        "bodyType": "{orderId:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "orderId"
+        ],
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "http_out:orders#src/orders/orders.controller.ts:18:12",
+      "type": "http_out",
+      "label": "GET /accounts/current",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18,
+      "meta": {
+        "method": "GET",
+        "url": "${GATEWAY_URL}/accounts/current",
+        "path": "/accounts/current",
+        "baseUrlEnv": "GATEWAY_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "orders#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "orders",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "orders#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "orders",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "orders",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
+      "id": "orders#node_modules/@nestjs/microservices:ClientsModule",
+      "type": "module",
+      "label": "ClientsModule",
+      "repo": "orders",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
+      "id": "orders#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "orders",
+      "file": "src/app.module.ts",
+      "line": 20,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "InvoicesConsumer"
+        ],
+        "providers": [
+          "OrdersService",
+          "OrdersRepository",
+          "AccountsClient",
+          "BillingClient",
+          "AuditService",
+          "PricingService",
+          "DiscountService",
+          "UnusedService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "orders#src/audit/audit.service.ts:AuditService",
+      "type": "provider",
+      "label": "AuditService",
+      "repo": "orders",
+      "file": "src/audit/audit.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/audit/audit.service.ts:AuditService.record",
+      "type": "method",
+      "label": "AuditService.record",
+      "repo": "orders",
+      "file": "src/audit/audit.service.ts",
+      "line": 9
+    },
+    {
+      "id": "orders#src/clients/accounts.client.ts:AccountsClient",
+      "type": "provider",
+      "label": "AccountsClient",
+      "repo": "orders",
+      "file": "src/clients/accounts.client.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/clients/accounts.client.ts:AccountsClient.enrich",
+      "type": "method",
+      "label": "AccountsClient.enrich",
+      "repo": "orders",
+      "file": "src/clients/accounts.client.ts",
+      "line": 13
+    },
+    {
+      "id": "orders#src/clients/billing.client.ts:BillingClient",
+      "type": "provider",
+      "label": "BillingClient",
+      "repo": "orders",
+      "file": "src/clients/billing.client.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/clients/billing.client.ts:BillingClient.requestInvoice",
+      "type": "method",
+      "label": "BillingClient.requestInvoice",
+      "repo": "orders",
+      "file": "src/clients/billing.client.ts",
+      "line": 13
+    },
+    {
+      "id": "orders#src/invoices/invoices.consumer.ts:InvoicesConsumer",
+      "type": "provider",
+      "label": "InvoicesConsumer",
+      "repo": "orders",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+      "type": "method",
+      "label": "InvoicesConsumer.onInvoiceChanged",
+      "repo": "orders",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 11
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.recent",
+      "type": "method",
+      "label": "OrdersController.recent",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 16
+    },
+    {
+      "id": "orders#src/orders/orders.repository.ts:OrdersRepository",
+      "type": "provider",
+      "label": "OrdersRepository",
+      "repo": "orders",
+      "file": "src/orders/orders.repository.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.repository.ts:OrdersRepository.recent",
+      "type": "method",
+      "label": "OrdersRepository.recent",
+      "repo": "orders",
+      "file": "src/orders/orders.repository.ts",
+      "line": 13
+    },
+    {
+      "id": "orders#src/orders/orders.repository.ts:OrdersRepository.save",
+      "type": "method",
+      "label": "OrdersRepository.save",
+      "repo": "orders",
+      "file": "src/orders/orders.repository.ts",
+      "line": 9
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 19
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.expand",
+      "type": "method",
+      "label": "OrdersService.expand",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 44
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.normalise",
+      "type": "method",
+      "label": "OrdersService.normalise",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 40
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.recent",
+      "type": "method",
+      "label": "OrdersService.recent",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 27
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.sync",
+      "type": "method",
+      "label": "OrdersService.sync",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 54
+    },
+    {
+      "id": "orders#src/orders/unused.service.ts:UnusedService",
+      "type": "provider",
+      "label": "UnusedService",
+      "repo": "orders",
+      "file": "src/orders/unused.service.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/orders/unused.service.ts:UnusedService.describe",
+      "type": "method",
+      "label": "UnusedService.describe",
+      "repo": "orders",
+      "file": "src/orders/unused.service.ts",
+      "line": 11
+    },
+    {
+      "id": "orders#src/pricing/discount.service.ts:DiscountService",
+      "type": "provider",
+      "label": "DiscountService",
+      "repo": "orders",
+      "file": "src/pricing/discount.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/pricing/discount.service.ts:DiscountService.rate",
+      "type": "method",
+      "label": "DiscountService.rate",
+      "repo": "orders",
+      "file": "src/pricing/discount.service.ts",
+      "line": 13
+    },
+    {
+      "id": "orders#src/pricing/pricing.service.ts:PricingService",
+      "type": "provider",
+      "label": "PricingService",
+      "repo": "orders",
+      "file": "src/pricing/pricing.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/pricing/pricing.service.ts:PricingService.price",
+      "type": "method",
+      "label": "PricingService.price",
+      "repo": "orders",
+      "file": "src/pricing/pricing.service.ts",
+      "line": 19
+    },
+    {
+      "id": "producer:billing#src/invoices/invoices.service.ts:20:5",
+      "type": "producer",
+      "label": "event invoice.changed",
+      "repo": "billing",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:orders#src/audit/audit.service.ts:10:5",
+      "type": "producer",
+      "label": "event audit.log",
+      "repo": "orders",
+      "file": "src/audit/audit.service.ts",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:orders#src/orders/orders.service.ts:55:5",
+      "type": "producer",
+      "label": "event order.changed",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 55,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "@nestjs/axios": 1,
+            "@nestjs/config": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "nestjs-schedule"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:billing",
+      "type": "repo",
+      "label": "billing",
+      "repo": "billing",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 6,
+          "skippedExternalCalls": {
+            "@nestjs/axios": 1,
+            "@nestjs/config": 1,
+            "@nestjs/microservices": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "nestjs-microservice"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:gateway",
+      "type": "repo",
+      "label": "gateway",
+      "repo": "gateway",
+      "meta": {
+        "stats": {
+          "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
+          "classes": 7,
+          "skippedExternalCalls": {
+            "@nestjs/config": 4,
+            "@nestjs/common": 1,
+            "@nestjs/axios": 3
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 12,
+          "filesRead": 12,
+          "filesUnreadable": 0,
+          "classes": 11,
+          "skippedExternalCalls": {
+            "@nestjs/microservices": 2,
+            "@nestjs/axios": 2,
+            "@nestjs/config": 4
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "nestjs-microservice"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "templates": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:11:12",
+      "type": "ui_api_call",
+      "label": "POST /orders",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{customerId:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "customerId"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "provider",
+      "label": "OrdersApiService",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 9,
+      "kind": "injectable"
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+      "type": "method",
+      "label": "OrdersApiService.create",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 10,
+      "meta": {
+        "unreferenced": true
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "admin#src/clients/orders.client.ts:OrdersClient",
+      "to": "admin#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 9
+    },
+    {
+      "from": "admin#src/clients/orders.client.ts:OrdersClient",
+      "to": "admin#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 10
+    },
+    {
+      "from": "admin#src/clients/orders.client.ts:OrdersClient.create",
+      "to": "config_key:admin#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 14
+    },
+    {
+      "from": "admin#src/clients/orders.client.ts:OrdersClient.create",
+      "to": "http_out:admin#src/clients/orders.client.ts:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 14
+    },
+    {
+      "from": "admin#src/sync/sync.job.ts:SyncJob",
+      "to": "admin#src/clients/orders.client.ts:OrdersClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/sync/sync.job.ts",
+      "line": 15
+    },
+    {
+      "from": "admin#src/sync/sync.job.ts:SyncJob.hourly",
+      "to": "admin#src/clients/orders.client.ts:OrdersClient.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:axios#AxiosResponse<unknown>",
+      "file": "src/sync/sync.job.ts",
+      "line": 19
+    },
+    {
+      "from": "billing#src/app.module.ts:AppModule",
+      "to": "billing#node_modules/@nestjs/microservices:ClientsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 10,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "billing#src/clients/orders.client.ts:OrdersClient",
+      "to": "billing#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 9
+    },
+    {
+      "from": "billing#src/clients/orders.client.ts:OrdersClient",
+      "to": "billing#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 10
+    },
+    {
+      "from": "billing#src/clients/orders.client.ts:OrdersClient.create",
+      "to": "config_key:billing#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 14
+    },
+    {
+      "from": "billing#src/clients/orders.client.ts:OrdersClient.create",
+      "to": "http_out:billing#src/clients/orders.client.ts:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 14
+    },
+    {
+      "from": "billing#src/invoices/invoices.controller.ts:InvoicesController",
+      "to": "billing#src/invoices/invoices.service.ts:InvoicesService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/invoices/invoices.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+      "to": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/invoices/invoices.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "billing#src/invoices/invoices.service.ts:InvoicesService",
+      "to": "billing#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 6
+    },
+    {
+      "from": "billing#src/invoices/invoices.service.ts:InvoicesService.sync",
+      "to": "producer:billing#src/invoices/invoices.service.ts:20:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/invoices/invoices.service.ts",
+      "line": 20
+    },
+    {
+      "from": "billing#src/invoices/orders.consumer.ts:OrdersConsumer",
+      "to": "billing#src/invoices/invoices.service.ts:InvoicesService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/invoices/orders.consumer.ts",
+      "line": 8
+    },
+    {
+      "from": "billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+      "to": "billing#src/invoices/invoices.service.ts:InvoicesService.sync",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/invoices/orders.consumer.ts",
+      "line": 12
+    },
+    {
+      "from": "billing#src/invoices/orphan.consumer.ts:OrphanConsumer",
+      "to": "billing#src/clients/orders.client.ts:OrdersClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/invoices/orphan.consumer.ts",
+      "line": 19
+    },
+    {
+      "from": "billing#src/invoices/orphan.consumer.ts:OrphanConsumer.onOrphan",
+      "to": "billing#src/clients/orders.client.ts:OrdersClient.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:axios#AxiosResponse<unknown>",
+      "file": "src/invoices/orphan.consumer.ts",
+      "line": 23
+    },
+    {
+      "from": "channel:invoice.changed",
+      "to": "consumer:orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 11
+    },
+    {
+      "from": "channel:order.changed",
+      "to": "consumer:billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/invoices/orders.consumer.ts",
+      "line": 10
+    },
+    {
+      "from": "channel:orphan.in",
+      "to": "consumer:billing#src/invoices/orphan.consumer.ts:OrphanConsumer.onOrphan",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/invoices/orphan.consumer.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+      "to": "billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "void",
+      "file": "src/invoices/orders.consumer.ts",
+      "line": 10
+    },
+    {
+      "from": "consumer:billing#src/invoices/orphan.consumer.ts:OrphanConsumer.onOrphan",
+      "to": "billing#src/invoices/orphan.consumer.ts:OrphanConsumer.onOrphan",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "void",
+      "file": "src/invoices/orphan.consumer.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+      "to": "orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "void",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:admin:cron:SyncJob.hourly",
+      "to": "admin#src/sync/sync.job.ts:SyncJob.hourly",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/sync/sync.job.ts",
+      "line": 17
+    },
+    {
+      "from": "entry:billing:event:order.changed",
+      "to": "billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{orderId:string}"
+      ],
+      "returns": "void",
+      "file": "src/invoices/orders.consumer.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:billing:event:orphan.in",
+      "to": "billing#src/invoices/orphan.consumer.ts:OrphanConsumer.onOrphan",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{id:string}"
+      ],
+      "returns": "void",
+      "file": "src/invoices/orphan.consumer.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:billing:http:POST:/invoices",
+      "to": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{orderId:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/invoices/invoices.controller.ts",
+      "line": 10,
+      "meta": {
+        "body": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:gateway:http:GET:/accounts/:param",
+      "to": "gateway#src/accounts/accounts.controller.ts:AccountsController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/accounts/accounts.controller.ts",
+      "line": 10,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:gateway:http:GET:/internal/legacy",
+      "to": "gateway#src/orders/legacy.controller.ts:LegacyController.legacy",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "{ok:boolean}",
+      "file": "src/orders/legacy.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:gateway:http:POST:/orders",
+      "to": "gateway#src/auth/auth.guard.ts:AuthGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:gateway:http:POST:/orders",
+      "to": "gateway#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{customerId:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12,
+      "meta": {
+        "body": "{customerId:string}"
+      }
+    },
+    {
+      "from": "entry:orders:event:invoice.changed",
+      "to": "orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{orderId:string}"
+      ],
+      "returns": "void",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:orders:http:GET:/orders/recent",
+      "to": "orders#src/orders/orders.controller.ts:OrdersController.recent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/orders/orders.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:orders:http:POST:/orders/create",
+      "to": "orders#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{customerId:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "meta": {
+        "body": "{customerId:string}"
+      }
+    },
+    {
+      "from": "gateway#src/accounts/accounts.controller.ts:AccountsController",
+      "to": "gateway#src/accounts/accounts.service.ts:AccountsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/accounts/accounts.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "gateway#src/accounts/accounts.controller.ts:AccountsController.findOne",
+      "to": "gateway#src/accounts/accounts.service.ts:AccountsService.find",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/accounts/accounts.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "gateway#src/accounts/accounts.service.ts:AccountsService",
+      "to": "gateway#src/clients/orders.client.ts:OrdersClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/accounts/accounts.service.ts",
+      "line": 14
+    },
+    {
+      "from": "gateway#src/accounts/accounts.service.ts:AccountsService.find",
+      "to": "gateway#src/clients/orders.client.ts:OrdersClient.recent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:axios#AxiosResponse<unknown>",
+      "file": "src/accounts/accounts.service.ts",
+      "line": 17
+    },
+    {
+      "from": "gateway#src/auth/auth.guard.ts:AuthGuard",
+      "to": "gateway#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/auth/auth.guard.ts",
+      "line": 12
+    },
+    {
+      "from": "gateway#src/auth/auth.guard.ts:AuthGuard.canActivate",
+      "to": "config_key:gateway#JWT_SECRET",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/auth/auth.guard.ts",
+      "line": 15
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient",
+      "to": "gateway#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 9
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient",
+      "to": "gateway#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 10
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.create",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 15
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.create",
+      "to": "http_out:gateway#src/clients/orders.client.ts:15:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 15
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.createDraft",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 20
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.createDraft",
+      "to": "http_out:gateway#src/clients/orders.client.ts:20:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 20
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.recent",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 27
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.recent",
+      "to": "http_out:gateway#src/clients/orders.client.ts:27:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 27
+    },
+    {
+      "from": "gateway#src/orders/orders.controller.ts:OrdersController",
+      "to": "gateway#src/clients/orders.client.ts:OrdersClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "gateway#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "gateway#src/clients/orders.client.ts:OrdersClient.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:axios#AxiosResponse<unknown>",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14
+    },
+    {
+      "from": "http_out:admin#src/clients/orders.client.ts:14:12",
+      "to": "entry:orders:http:POST:/orders/create",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 14,
+      "params": [
+        "{customerId:string}"
+      ],
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:billing#src/clients/orders.client.ts:14:12",
+      "to": "entry:orders:http:POST:/orders/create",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 14,
+      "params": [
+        "{orderId:string}"
+      ],
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:15:12",
+      "to": "entry:orders:http:POST:/orders/create",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 15,
+      "params": [
+        "{customerId:string}"
+      ],
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:20:12",
+      "to": "entry:orders:http:POST:/orders/create",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 20,
+      "params": [
+        "{customerId:string;draft:boolean}"
+      ],
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:27:12",
+      "to": "entry:orders:http:GET:/orders/recent",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 27,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:orders#src/clients/billing.client.ts:14:12",
+      "to": "entry:billing:http:POST:/invoices",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/billing.client.ts",
+      "line": 14,
+      "params": [
+        "{orderId:string}"
+      ],
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "billing"
+      }
+    },
+    {
+      "from": "http_out:orders#src/orders/orders.controller.ts:18:12",
+      "to": "entry:gateway:http:GET:/accounts/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "from": "orders#src/app.module.ts:AppModule",
+      "to": "orders#node_modules/@nestjs/microservices:ClientsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 20,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "orders#src/audit/audit.service.ts:AuditService",
+      "to": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/audit/audit.service.ts",
+      "line": 7
+    },
+    {
+      "from": "orders#src/audit/audit.service.ts:AuditService.record",
+      "to": "producer:orders#src/audit/audit.service.ts:10:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/audit/audit.service.ts",
+      "line": 10
+    },
+    {
+      "from": "orders#src/clients/accounts.client.ts:AccountsClient",
+      "to": "orders#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/accounts.client.ts",
+      "line": 9
+    },
+    {
+      "from": "orders#src/clients/accounts.client.ts:AccountsClient",
+      "to": "orders#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/accounts.client.ts",
+      "line": 10
+    },
+    {
+      "from": "orders#src/clients/accounts.client.ts:AccountsClient.enrich",
+      "to": "config_key:orders#GATEWAY_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/accounts.client.ts",
+      "line": 14
+    },
+    {
+      "from": "orders#src/clients/billing.client.ts:BillingClient",
+      "to": "orders#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/billing.client.ts",
+      "line": 9
+    },
+    {
+      "from": "orders#src/clients/billing.client.ts:BillingClient",
+      "to": "orders#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/billing.client.ts",
+      "line": 10
+    },
+    {
+      "from": "orders#src/clients/billing.client.ts:BillingClient.requestInvoice",
+      "to": "config_key:orders#BILLING_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/billing.client.ts",
+      "line": 14
+    },
+    {
+      "from": "orders#src/clients/billing.client.ts:BillingClient.requestInvoice",
+      "to": "http_out:orders#src/clients/billing.client.ts:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/billing.client.ts",
+      "line": 14
+    },
+    {
+      "from": "orders#src/invoices/invoices.consumer.ts:InvoicesConsumer",
+      "to": "orders#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 9
+    },
+    {
+      "from": "orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.sync",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 13
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController",
+      "to": "orders#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.recent",
+      "to": "http_out:orders#src/orders/orders.controller.ts:18:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.recent",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.recent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18
+    },
+    {
+      "from": "orders#src/orders/orders.repository.ts:OrdersRepository",
+      "to": "orders#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 7
+    },
+    {
+      "from": "orders#src/orders/orders.repository.ts:OrdersRepository.recent",
+      "to": "config_key:orders#ORDERS_DB_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 14
+    },
+    {
+      "from": "orders#src/orders/orders.repository.ts:OrdersRepository.save",
+      "to": "config_key:orders#ORDERS_DB_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.repository.ts",
+      "line": 10
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService",
+      "to": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService",
+      "to": "orders#src/audit/audit.service.ts:AuditService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService",
+      "to": "orders#src/clients/accounts.client.ts:AccountsClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 13
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService",
+      "to": "orders#src/clients/billing.client.ts:BillingClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 14
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService",
+      "to": "orders#src/orders/orders.repository.ts:OrdersRepository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 12
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "to": "orders#src/audit/audit.service.ts:AuditService.record",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "to": "orders#src/clients/billing.client.ts:BillingClient.requestInvoice",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:axios#AxiosResponse<unknown>",
+      "file": "src/orders/orders.service.ts",
+      "line": 21
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "to": "orders#src/orders/orders.repository.ts:OrdersRepository.save",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.service.ts",
+      "line": 20
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.normalise",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.service.ts",
+      "line": 23
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.expand",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.normalise",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.service.ts",
+      "line": 45
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.normalise",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.expand",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.service.ts",
+      "line": 41
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.recent",
+      "to": "orders#src/clients/accounts.client.ts:AccountsClient.enrich",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "type:axios#AxiosResponse<unknown>",
+      "file": "src/orders/orders.service.ts",
+      "line": 29
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.recent",
+      "to": "orders#src/orders/orders.repository.ts:OrdersRepository.recent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown[]",
+      "file": "src/orders/orders.service.ts",
+      "line": 28
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.sync",
+      "to": "producer:orders#src/orders/orders.service.ts:55:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 55
+    },
+    {
+      "from": "orders#src/pricing/discount.service.ts:DiscountService",
+      "to": "orders#src/pricing/pricing.service.ts:PricingService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/pricing/discount.service.ts",
+      "line": 9
+    },
+    {
+      "from": "orders#src/pricing/pricing.service.ts:PricingService",
+      "to": "orders#src/pricing/discount.service.ts:DiscountService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/pricing/pricing.service.ts",
+      "line": 15
+    },
+    {
+      "from": "orders#src/pricing/pricing.service.ts:PricingService.price",
+      "to": "orders#src/pricing/discount.service.ts:DiscountService.rate",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "number",
+      "file": "src/pricing/pricing.service.ts",
+      "line": 20
+    },
+    {
+      "from": "producer:billing#src/invoices/invoices.service.ts:20:5",
+      "to": "channel:invoice.changed",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{orderId:string}"
+      ],
+      "file": "src/invoices/invoices.service.ts",
+      "line": 20
+    },
+    {
+      "from": "producer:orders#src/audit/audit.service.ts:10:5",
+      "to": "channel:audit.log",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{action:string;subject:string}"
+      ],
+      "file": "src/audit/audit.service.ts",
+      "line": 10
+    },
+    {
+      "from": "producer:orders#src/orders/orders.service.ts:55:5",
+      "to": "channel:order.changed",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{orderId:string}"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 55
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:11:12",
+      "to": "entry:gateway:http:POST:/orders",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 11,
+      "params": [
+        "{customerId:string}"
+      ],
+      "meta": {
+        "via": "unique-route",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:11:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 11
+    }
+  ],
+  "types": {
+    "type:@nestjs/common#ExecutionContext": {
+      "name": "ExecutionContext",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "87dd582cc69bf62e",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    },
+    "type:axios#AxiosResponse<unknown>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/orders/orders.repository.ts",
+      "line": 5,
+      "reason": "db-layer-unread",
+      "message": "OrdersRepository reads as a data layer, and nothing was read through it.",
+      "hint": "Add \"OrdersRepository\" to adapters.db.localBaseClasses in flowatlas.config.json, so calls through it are recorded as data access.",
+      "symbol": "OrdersRepository",
+      "adapter": "local-base",
+      "service": "orders"
+    },
+    {
+      "file": "src/orders/orders.repository.ts",
+      "line": 7,
+      "reason": "di-token-unknown",
+      "hint": "No module in this repository provides ORDERS_DB. Register it with { provide, useClass } or force the adapter that does.",
+      "symbol": "OrdersRepository.constructor[1]",
+      "service": "orders"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 20,
+      "reason": "db-receiver-name-only",
+      "hint": "this.repository is typed as OrdersRepository, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
+      "symbol": "this.repository.save",
+      "service": "orders"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 28,
+      "reason": "db-receiver-name-only",
+      "hint": "this.repository is typed as OrdersRepository, declared in this repository. Name its base class under adapters.db.localBaseClasses if it is a data layer.",
+      "symbol": "this.repository.recent",
+      "service": "orders"
+    }
+  ]
+}

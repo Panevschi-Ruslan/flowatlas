@@ -9,12 +9,16 @@ import {
   DEFAULT_OUTPUT,
   FlowatlasError,
   loadConfig,
+  allDependencies,
   parseRepoGraph,
   readPackageJson,
+  readResolvedPackageJson,
+  serviceSourceDirs,
   sitesIn,
   wasMissed,
   SCHEMA_VERSION,
   type FlowatlasConfig,
+  type PackageJson,
   type RepoGraph,
   type ServiceConfig,
   type Unresolved,
@@ -22,6 +26,7 @@ import {
 import { findTsconfig, listRepoSources } from '@flowatlas/extractor-nestjs';
 import { linkGraphs, writeGraphDb, type LinkResult, type ServiceReport } from '@flowatlas/linker';
 import type { Command } from 'commander';
+import { partialReadNotice } from '../partial-read.js';
 import {
   cachePathFor,
   emptyCache,
@@ -38,9 +43,20 @@ import {
   type FileStamp,
   type RepoCache,
 } from '../build/cache.js';
-import { adapterNames, createRegistry, EXTRACTORS, isFrontend } from '../build/extractor.js';
+import { isDeclared, readDeclaredService } from '../build/declared.js';
+import { surveyDependencies } from '../build/dependencies.js';
+import { readFailure } from '../build/failure.js';
+import { heapArgs, heapForReaders } from '../build/heap.js';
+import {
+  adapterNames,
+  createRegistry,
+  declinedNote,
+  EXTRACTORS,
+  isFrontend,
+} from '../build/extractor.js';
 import { noReaderNote } from '../stacks.js';
 import {
+  hashGraphFile,
   planRebuild,
   type RebuildPlan,
   type RepoSurvey,
@@ -49,12 +65,34 @@ import {
 import { isIncremental, type ServiceSession } from '../build/session.js';
 import { spliceRepoGraph } from '../build/splice.js';
 import { EXIT } from '../exit.js';
+import { waysInByService, waysInTotal } from '../doctor/ways-in.js';
 import { BUILD_STAMP, VERSION } from '../version.js';
 import { ownBin } from '../own-path.js';
 
 const run = promisify(execFile);
 
 const binPath = (): string => ownBin(import.meta.url);
+
+/**
+ * What is named as having read a declared service.
+ *
+ * Not `null`, which is this build's word for "no reader applies to this", and
+ * not the name of a framework, because none was involved. A document was read,
+ * completely, and saying so is what keeps a declared service out of the list of
+ * repositories the tool could not handle.
+ *
+ * Named after the format, because which document was believed is the fact a
+ * reader of the report is owed and `document` alone would not say it. The suffix
+ * is what the summary below recognises, so a kind added to the reader lookup
+ * needs nothing here.
+ */
+const DECLARED_SUFFIX = '-document';
+
+const declaredExtractor = (kind: string): string => `${kind}${DECLARED_SUFFIX}`;
+
+/** True for a service that was read out of a document, whatever format it was. */
+const wasDeclared = (extractor: string | null): boolean =>
+  extractor !== null && extractor.endsWith(DECLARED_SUFFIX);
 
 /** Where a repository's own graph lives, whoever wrote it. */
 export const serviceGraphPath = (repoDir: string): string =>
@@ -75,6 +113,15 @@ export interface BuildOptions {
   /** Names given to `--service`; every other repository comes from the cache. */
   service?: string[];
   timing?: boolean;
+  /**
+   * Heap limit for each repository read, in megabytes.
+   *
+   * Given to `--heap`, and it wins over anything this build would have worked out
+   * for itself. A repository is read in a process of its own and the whole of it
+   * is held in memory while it is read; the largest repository this tool is
+   * measured against needs three times the limit the runtime picks by default.
+   */
+  heap?: string | number;
   /** Repositories already parsed, when a watch is driving the build. */
   sessions?: ReadonlyMap<string, ServiceSession>;
 }
@@ -98,30 +145,82 @@ export interface BuildResult extends LinkResult {
   cachePath: string;
   /** True when at least one repository could not be read. */
   failed: boolean;
+  /**
+   * False when the failure left the last good graph where it was.
+   *
+   * A caller that prints `graphPath` has to know whether it is printing this
+   * build's answer or the previous one's, and so does anything that reads the
+   * file afterwards.
+   */
+  wrote: boolean;
+  /** Services that were read and put nothing in the graph, with why. */
+  readNothing: readonly ReadNothing[];
+  /** Adapters each service has only through a workspace member it reaches. */
+  armsLength: readonly ArmsLength[];
   plan: RebuildPlan;
+  /**
+   * Where each service's repository is, absolute.
+   *
+   * Carried because the summary has one question that only a path can answer -
+   * has anybody installed this repository (R129) - and because the alternative
+   * was to re-derive it from the output directory, which is a guess at an inverse
+   * the configuration never promised.
+   */
+  repoDirs: Readonly<Record<string, string>>;
   timing: BuildTiming;
   /** Why the cache was thrown away, when it was. */
   cacheProblem?: CacheProblem;
 }
 
-/** Runs a handful of jobs at a time, keeping the pool full. */
-const inPools = async <T, R>(
+/**
+ * Runs a handful of jobs at a time, keeping the pool full.
+ *
+ * A pool that fails stops before it returns. `Promise.all` settles on the first
+ * rejection and leaves every sibling running, so the caller got its failure
+ * while the jobs it had started carried on and wrote their results into the
+ * repositories, minutes of process lifetime after the call that started them
+ * had already failed. In a command that exits immediately nobody sees it; a
+ * watch, the server and any embedder call this repeatedly in one process, and
+ * there the next build races a writer it cannot see.
+ *
+ * So the first failure aborts the signal every job was handed, no further item
+ * is taken, and the pool returns only once every worker it started has stopped.
+ * What it throws is that first failure and not what a sibling said on its way
+ * down: the first one is the answer to the question the caller asked, and the
+ * rest are answers to the abort.
+ */
+export const inPools = async <T, R>(
   items: readonly T[],
   limit: number,
-  work: (item: T) => Promise<R>,
+  work: (item: T, signal: AbortSignal) => Promise<R>,
 ): Promise<R[]> => {
   const results: R[] = new Array(items.length);
+  const stop = new AbortController();
+  // Boxed rather than held bare, so that a job rejecting with `undefined` is
+  // still a job that failed.
+  let failure: { error: unknown } | undefined;
   let next = 0;
   const workers = Array.from({ length: Math.min(Math.max(limit, 1), items.length) }, async () => {
-    for (;;) {
+    while (failure === undefined) {
       const index = next;
       next += 1;
       const item = items[index];
       if (item === undefined) return;
-      results[index] = await work(item);
+      try {
+        results[index] = await work(item, stop.signal);
+      } catch (error) {
+        if (failure === undefined) {
+          failure = { error };
+          stop.abort();
+        }
+        return;
+      }
     }
   });
+  // No worker rejects any more, so this waits for all of them rather than for
+  // the first bad news.
   await Promise.all(workers);
+  if (failure !== undefined) throw failure.error;
   return results;
 };
 
@@ -163,7 +262,7 @@ export class BuildInputError extends FlowatlasError {
 const cacheExpectations = (config: FlowatlasConfig): CacheExpectations => {
   const extractors: Record<string, string> = {};
   for (const service of config.services) {
-    const name = EXTRACTORS[service.type];
+    const name = EXTRACTORS.get(service.type);
     if (name !== undefined) extractors[name] = BUILD_STAMP;
   }
   return {
@@ -186,12 +285,12 @@ interface SurveyOptions {
 /** Everything planning needs to know about one repository, read from disk. */
 const surveyService = (options: SurveyOptions): RepoSurvey => {
   const { service, repoDir, config, previous, session } = options;
-  const extractor = EXTRACTORS[service.type] ?? null;
+  const extractor = EXTRACTORS.get(service.type) ?? null;
   const tsconfig = findTsconfig(repoDir, service.tsconfig);
   const graphPath = serviceGraphPath(repoDir);
   // Listed from disk even when the repository is already open: a file created
   // since it was opened is exactly the change the survey must not miss.
-  const files = listRepoSources(repoDir);
+  const files = listRepoSources(repoDir, service.readTestDirectories);
 
   return {
     service: service.name,
@@ -199,15 +298,18 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
     extractor,
     incremental: isIncremental(service.type),
     adapters:
-      extractor === null ? [] : adapterNames(createRegistry(), readPackageJson(repoDir) ?? {}, config),
+      extractor === null
+        ? []
+        : adapterNames(createRegistry(), readResolvedPackageJson(repoDir) ?? {}, config),
     tsconfigHash: tsconfig === undefined ? hashText('') : hashFile(tsconfig),
     packageJsonHash: hashFile(join(repoDir, 'package.json')),
+    dependencies: surveyDependencies(repoDir),
     globalFiles: session?.globalFiles() ?? [],
     files: stampFiles(repoDir, files, previous?.files, {
       ...(options.trustTimestamps === undefined ? {} : { trustTimestamps: options.trustTimestamps }),
     }),
     graphPath,
-    graphHash: existsSync(graphPath) ? hashFile(graphPath) : null,
+    graphHash: existsSync(graphPath) ? hashGraphFile(graphPath) : null,
   };
 };
 
@@ -249,6 +351,135 @@ const reportOf = (
   durationMs,
 });
 
+/** A service that was read and whose repository is not in the graph. */
+export interface ReadNothing {
+  service: string;
+  /** The reader that was used, which is what makes this different to no reader. */
+  extractor: string;
+  /** The file a row about it points at: its manifest, or the document it declared. */
+  file: string;
+  /** Why, when it can be said from the manifest. */
+  note?: string;
+}
+
+/**
+ * Repositories that were read and contributed no node.
+ *
+ * Not the same thing as a repository with no reader, which the summary has named
+ * for some time, and not the same thing as a failure either: nothing went wrong,
+ * a reader ran to completion, and the part of the project it was pointed at is
+ * absent from the answer. That is the silent zero — `build` printed `0 nodes`,
+ * `doctor` read the empty graph and exited 0, and the sentence that explained it
+ * was written to a log at `-v` and dropped (R106).
+ */
+const readNothing = (
+  config: FlowatlasConfig,
+  repoDirOf: (service: ServiceConfig) => string,
+  extracted: readonly Extracted[],
+): ReadNothing[] =>
+  extracted.flatMap((item) => {
+    const { graph, report } = item;
+    if (graph === undefined || graph.nodes.length > 0 || report.extractor === null) return [];
+    const declared = isDeclared(item.service);
+    const note = declared
+      ? undefined
+      : declinedNote(item.service.type, readPackageJson(repoDirOf(item.service)) ?? {}, config);
+    return [
+      {
+        service: item.service.name,
+        extractor: report.extractor,
+        // A document's own path, where there is one: a declared service has no
+        // manifest, and pointing at one that is not there would send a reader
+        // looking for a file rather than at the file that came up empty.
+        file: declared ? report.repo : 'package.json',
+        ...(note === undefined ? {} : { note }),
+      },
+    ];
+  });
+
+/**
+ * The row that says a service is missing from the graph, in the graph.
+ *
+ * Put into the repository's own rows before the graphs are joined rather than
+ * onto the project afterwards, so that it travels the way every other row does:
+ * it is sorted with them, counted with them, written into the database with them
+ * and grouped by `doctor` with them. Appending it to a joined graph would have
+ * produced a row in the wrong order and a total that disagreed with the list it
+ * was a total of.
+ */
+const readNothingRow = (found: ReadNothing): Unresolved => ({
+  file: found.file,
+  line: 1,
+  reason: 'service-read-nothing',
+  service: found.service,
+  message:
+    `${found.service} was read by ${found.extractor} and contributed no node to the graph` +
+    (found.note === undefined ? '' : `: ${found.note}`),
+  hint:
+    'Nothing downstream of this service is in the graph, so every question asked about it will' +
+    ' answer nothing rather than answer wrongly. Check its type in flowatlas.config.json against' +
+    ' what its manifest declares, or write an adapter for the framework it is built on.',
+  symbol: found.service,
+});
+
+/** One adapter a service has only because a member it depends on declares it. */
+export interface ArmsLength {
+  service: string;
+  adapter: string;
+  /** The members whose manifest alone switches it on; empty when none does alone. */
+  through: readonly string[];
+}
+
+/**
+ * Frameworks a service was found to use at arm's length (R123).
+ *
+ * Detection reads the manifests of the workspace members a service reaches,
+ * because their sources are read as part of it; that is what turns tRPC on for
+ * an application whose procedures live in a package it depends on. It also
+ * turns React on for a NestJS API whose libraries render e-mail with it, and
+ * Nest's bootstrap check on a Next.js application whose shared types import
+ * `@nestjs/common`. All three are the same rule, and the rule cannot tell a
+ * framework a service is built on from one a library it uses is built on. So
+ * the difference is said rather than decided: the adapters that switch on only
+ * sideways, and the members that switch each one on, so a reader who sees a
+ * server with components in it knows where to look.
+ */
+const armsLengthOf = (
+  config: FlowatlasConfig,
+  repoDirOf: (service: ServiceConfig) => string,
+  extracted: readonly Extracted[],
+): ArmsLength[] => {
+  const registry = createRegistry();
+  return extracted.flatMap((item) => {
+    if (item.report.extractor === null || isDeclared(item.service)) return [];
+    const repoDir = repoDirOf(item.service);
+    const narrow = readResolvedPackageJson(repoDir, { sideways: false });
+    if (narrow === undefined) return [];
+    const along = new Set(adapterNames(registry, narrow, config));
+    const found = adapterNames(registry, readResolvedPackageJson(repoDir) ?? {}, config).filter(
+      (adapter) => !along.has(adapter),
+    );
+    if (found.length === 0) return [];
+    const members = serviceSourceDirs(repoDir)
+      .slice(1)
+      .map((dir) => readPackageJson(dir))
+      .filter((pkg): pkg is PackageJson => pkg !== undefined);
+    return found.map((adapter) => ({
+      service: item.service.name,
+      adapter,
+      through: members
+        .filter((member) =>
+          adapterNames(
+            registry,
+            { ...narrow, dependencies: { ...allDependencies(member), ...allDependencies(narrow) } },
+            config,
+          ).includes(adapter),
+        )
+        .map((member) => member.name ?? '(unnamed)'),
+    }));
+  });
+};
+
 const readGraph = async (path: string): Promise<RepoGraph> =>
   parseRepoGraph(JSON.parse(await readFile(path, 'utf8')));
 
@@ -272,30 +503,27 @@ const normalise = (graph: RepoGraph): RepoGraph =>
  * also mean a repository that cannot be read fails alone. A watch pays that
  * price once and then keeps the program, which is what `sessions` is for.
  */
-const extractApart = async (repoDir: string, configPath: string): Promise<RepoGraph> => {
+const extractApart = async (
+  repoDir: string,
+  configPath: string,
+  heapMb: number | undefined,
+  signal?: AbortSignal,
+): Promise<RepoGraph> => {
   const out = join(repoDir, DEFAULT_OUTPUT);
-  await run(process.execPath, [binPath(), 'extract', repoDir, '--config', configPath, '--out', out], {
+  // A separate process is also a process that can be stopped. When the build
+  // around it has already failed, the child is killed rather than left to write
+  // a graph for an answer nobody will receive. It writes by renaming a
+  // temporary into place, so it is either killed before that or has finished;
+  // there is no half-written graph to find.
+  // The heap limit goes on the runtime's own command line rather than into its
+  // environment, so that it is visible in the process list beside the read it
+  // belongs to and nothing a child of this one starts inherits it by accident.
+  const argv = [...heapArgs(heapMb), binPath(), 'extract', repoDir, '--config', configPath, '--out', out];
+  await run(process.execPath, argv, {
     maxBuffer: 64 * 1024 * 1024,
+    ...(signal === undefined ? {} : { signal }),
   });
   return readGraph(serviceGraphPath(repoDir));
-};
-
-/**
- * Why a repository could not be read, in words rather than in a command line.
- *
- * A child process that fails rejects with `Command failed: node … extract …`,
- * which names what was run and nothing about what went wrong. What went wrong
- * is on its stderr, and that is the only part worth reporting.
- */
-const reasonOf = (error: unknown): string => {
-  const message = error instanceof Error ? error.message : String(error);
-  const { stderr, code, signal } = error as { stderr?: unknown; code?: unknown; signal?: unknown };
-  const said = typeof stderr === 'string' ? stderr.trim() : '';
-  // Killed rather than failed: nothing was said because nothing got the chance.
-  // The signal is then the only fact there is, and it is the one worth having.
-  const how = typeof signal === 'string' && signal !== '' ? `killed by ${signal}` : `exit ${String(code ?? '?')}`;
-  if (said === '') return `${how}: ${message}`;
-  return `${how}\n${said.split('\n').filter((line) => line.trim() !== '').slice(-6).join('\n')}`;
 };
 
 /** The single entry a lone `flowatlas extract` leaves behind for the build. */
@@ -317,12 +545,74 @@ interface ExtractOneOptions {
   stamps?: Record<string, FileStamp>;
   /** Leave the browsers out, when only the servers changed. */
   skipFrontend?: boolean;
+  /** Directory the configuration file is in, for a document's path. */
+  rootDir: string;
+  /** Fixed timestamp, for reproducible output. */
+  builtAt?: string;
+  /** Heap limit for the process this read happens in, when one is being asked for. */
+  heapMb?: number | undefined;
+  /** Aborted when the build this read belongs to has already failed. */
+  signal?: AbortSignal;
 }
+
+/**
+ * A service read from its document rather than from its source.
+ *
+ * Reported as a service that was read, because it was — one file, completely,
+ * every time. What it is not is a service that was *checked*: the graph says so
+ * on every node and edge it contributes, and how much the document's word is
+ * currently worth is a question about today, which `doctor` asks when it runs
+ * rather than the build recording an answer that starts going stale at once.
+ *
+ * A failure here is a failure of the build rather than a repository that could
+ * not be opened. A repository that fails to parse leaves the rest of the
+ * project readable and is worth reporting as such; a document that cannot be
+ * read leaves a service with no routes at all, which is indistinguishable from
+ * a service that has none.
+ */
+const extractDeclared = async (options: ExtractOneOptions): Promise<Extracted> => {
+  const { service } = options;
+  const base = emptyReport(service, declaredExtractor((service.document as { kind: string }).kind));
+  const started = Date.now();
+  try {
+    const { graph, documentPath } = await readDeclaredService({
+      service,
+      rootDir: options.rootDir,
+      ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
+    });
+    return {
+      service,
+      graph,
+      report: {
+        ...base,
+        ...countsOf(graph),
+        repo: documentPath,
+        durationMs: Date.now() - started,
+      },
+    };
+  } catch (error) {
+    return {
+      service,
+      report: {
+        ...base,
+        skipped: 'extract-failed',
+        error: error instanceof Error ? error.message : String(error),
+        durationMs: Date.now() - started,
+      },
+    };
+  }
+};
 
 /** Reads one repository, or reuses what the last build left of it. */
 const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
   const { service, repoDir, plan, session, previous } = options;
-  const extractor = EXTRACTORS[service.type] ?? null;
+
+  // A service the configuration described rather than pointed at. There is no
+  // repository to survey, nothing to cache against and no extractor to choose:
+  // one file is read and it produces the same graph a repository would have.
+  if (isDeclared(service)) return await extractDeclared(options);
+
+  const extractor = EXTRACTORS.get(service.type) ?? null;
   const base = emptyReport(service, extractor);
 
   // Asked to leave the browsers out. It reads like a service with no extractor,
@@ -339,7 +629,13 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
   // than the project by exactly that much. Naming the framework turns a line
   // nobody can act on into one that says what would have to exist.
   if (extractor === null) {
-    const note = noReaderNote(readPackageJson(repoDir));
+    // What the repository itself declares first, and only then what the
+    // workspace around it declares. A package that gives its own framework away
+    // is that framework; one whose manifest is a name and a version is still
+    // worth naming from the workspace it belongs to, which is the only place a
+    // member of a monorepo says anything at all.
+    const note =
+      noReaderNote(readPackageJson(repoDir)) ?? noReaderNote(readResolvedPackageJson(repoDir));
     return {
       service,
       report: { ...base, skipped: 'no-extractor', ...(note === undefined ? {} : { error: note }) },
@@ -367,9 +663,15 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
   try {
     const graph =
       session === undefined
-        ? await extractApart(repoDir, options.configPath)
+        ? await extractApart(repoDir, options.configPath, options.heapMb, options.signal)
         : normalise(await extractWarm(session, plan, repoDir));
-    if (session !== undefined) await writeJson(serviceGraphPath(repoDir), graph);
+    // An open repository is read in this process and cannot be interrupted
+    // part-way, so a warm read finishes even when the build around it has
+    // already failed. What it must not do then is write: a graph left behind by
+    // a build that never returned is exactly what the next build trips over.
+    if (session !== undefined && options.signal?.aborted !== true) {
+      await writeJson(serviceGraphPath(repoDir), graph);
+    }
     const facts =
       session === undefined
         ? readRepoFacts(join(repoDir, DEFAULT_OUTPUT, 'cache.json'), service.name)
@@ -382,13 +684,20 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
     };
   } catch (error) {
     if (error instanceof BuildInputError) throw error;
-    const text = reasonOf(error);
+    // What the failure was, in this tool's words, rather than the tail of
+    // whatever the dead process happened to print last.
+    const failure = readFailure(error, {
+      repo: service.repo,
+      // A warm read happens in this process, which was never given a limit of
+      // its own; saying one would name a number that had nothing to do with it.
+      ...(session === undefined ? { heapMb: options.heapMb } : {}),
+    });
     return {
       service,
       report: {
         ...base,
         skipped: 'extract-failed',
-        error: text.split('\n').slice(-3).join(' ').slice(0, 300),
+        error: failure.error,
         durationMs: Date.now() - started,
       },
     };
@@ -524,7 +833,11 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   const cacheProblem = found !== null && 'problem' in found ? found.problem : undefined;
   const cache = found !== null && 'cache' in found ? found.cache : null;
 
-  const surveys = loaded.config.services.map((service) => {
+  // A declared service has no source to survey: there are no files to hash, no
+  // tsconfig to find and nothing for an incremental plan to decide. It is read
+  // in full on every build, which for one document costs nothing.
+  const readable = loaded.config.services.filter((service) => !isDeclared(service));
+  const surveys = readable.map((service) => {
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
     return surveyService({
@@ -550,7 +863,20 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
       ? Math.max(cpus().length - 1, 1)
       : Math.max(Number(options.concurrency), 1);
 
-  const extracted = await inPools(loaded.config.services, limit, (service) => {
+  /**
+   * How much heap each reader gets.
+   *
+   * Worked out once, from how many readers will actually run rather than from
+   * `--concurrency`: the pool takes the smaller of the limit and the number of
+   * repositories, and dividing a machine by eleven when one repository is being
+   * read is how a build that would have finished runs out of memory instead.
+   */
+  const heapMb = heapForReaders(
+    Math.min(limit, Math.max(loaded.config.services.length, 1)),
+    options.heap === undefined ? undefined : Math.max(Number(options.heap), 1),
+  );
+
+  const extracted = await inPools(loaded.config.services, limit, (service, signal) => {
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
     const surveyed = surveys.find((entry) => entry.service === service.name);
@@ -558,16 +884,32 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
       service,
       repoDir: loaded.repoDir(service),
       configPath: loaded.configPath,
+      rootDir: loaded.rootDir,
+      ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
+      heapMb,
       plan: plan[service.name] ?? { mode: 'full', reason: 'not planned' },
       ...(options.skipFrontend === undefined ? {} : { skipFrontend: options.skipFrontend }),
       ...(session === undefined ? {} : { session }),
       ...(previous === undefined ? {} : { previous }),
       ...(surveyed === undefined ? {} : { stamps: surveyed.files }),
+      signal,
     });
   });
   const extractedAt = Date.now();
 
-  const graphs = extracted.flatMap((item) => (item.graph === undefined ? [] : [item.graph]));
+  const silent = readNothing(loaded.config, (service) => loaded.repoDir(service), extracted);
+  const armsLength = armsLengthOf(loaded.config, (service) => loaded.repoDir(service), extracted);
+  const rowFor = new Map(silent.map((found) => [found.service, readNothingRow(found)]));
+  const graphs = extracted.flatMap((item) => {
+    if (item.graph === undefined) return [];
+    const row = rowFor.get(item.service.name);
+    // A copy rather than the graph itself, because the same object is what the
+    // cache counts and what was already written to the repository's own
+    // graph.json, and neither of those should gain a row that this build
+    // derived from the project rather than read from the repository.
+    if (row === undefined) return [item.graph];
+    return [{ ...item.graph, unresolved: [...item.graph.unresolved, row] }];
+  });
   const result = linkGraphs(graphs, loaded.config, {
     ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
     services: extracted.map((item) => item.report),
@@ -578,9 +920,30 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   const dbPath = join(outputDir, 'graph.db');
   const reportPath = join(outputDir, 'link-report.json');
 
-  await writeJson(graphPath, result.project);
-  await writeJson(reportPath, result.report);
-  writeGraphDb(result.project, result.report, dbPath, { flowatlasVersion: VERSION });
+  /**
+   * A build that failed does not leave a graph that reads as successful.
+   *
+   * A repository that could not be read contributes nothing, so the graph this
+   * build holds is the project minus that repository — and written over the last
+   * good one it is indistinguishable from a project that really is that small.
+   * That is how a crash in one dependency's type declarations came to be reported
+   * as `unresolved: total=0 … none`, exit 0: the build failed, overwrote a good
+   * graph with an empty one, and `doctor` gave the empty one a clean bill of
+   * health (R85).
+   *
+   * So a failed build leaves what is there alone. It is older than this build and
+   * it is true, which is the right way round; the failure is on stderr and in the
+   * exit code, where a caller has to deal with it rather than read past it. When
+   * there is nothing to keep, the partial answer is written after all — with the
+   * failure recorded against the service in the report beside it, which is what
+   * `doctor` reads to refuse it.
+   */
+  const keeping = failed(extracted) && existsSync(graphPath) && existsSync(dbPath);
+  if (!keeping) {
+    await writeJson(graphPath, result.project);
+    await writeJson(reportPath, result.report);
+    writeGraphDb(result.project, result.report, dbPath, { flowatlasVersion: VERSION });
+  }
 
   // Written even when it was ignored: `--no-cache` means read everything now,
   // not stay slow next time.
@@ -594,8 +957,14 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
     dbPath,
     reportPath,
     cachePath,
-    failed: extracted.some((item) => item.report.skipped === 'extract-failed'),
+    failed: failed(extracted),
+    wrote: !keeping,
+    readNothing: silent,
+    armsLength,
     plan,
+    repoDirs: Object.fromEntries(
+      loaded.config.services.map((service) => [service.name, loaded.repoDir(service)]),
+    ),
     timing: {
       hash: hashed - startedAt,
       extract: extractedAt - hashed,
@@ -607,6 +976,10 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
     ...(cacheProblem === undefined ? {} : { cacheProblem }),
   };
 };
+
+/** Whether any repository could not be read at all. */
+const failed = (extracted: readonly Extracted[]): boolean =>
+  extracted.some((item) => item.report.skipped === 'extract-failed');
 
 const filesRead = (plan: RebuildPlan): string[] =>
   Object.entries(plan)
@@ -631,10 +1004,11 @@ const nextCache = (
       adapters: survey.adapters,
       tsconfigHash: survey.tsconfigHash,
       packageJsonHash: survey.packageJsonHash,
+      dependencies: survey.dependencies,
       globalFiles: carried?.globalFiles ?? survey.globalFiles,
       files: carried?.files ?? survey.files,
       graphPath: survey.graphPath,
-      graphHash: hashFile(survey.graphPath),
+      graphHash: hashGraphFile(survey.graphPath),
       counts: countsOf(item.graph),
     };
   }
@@ -697,11 +1071,32 @@ export const summariseBuild = (result: BuildResult): string[] => {
     const where = row.service ?? '';
     unread.set(where, (unread.get(where) ?? 0) + (row.sites ?? 1));
   }
+  /**
+   * The one sentence, once (R129).
+   *
+   * The line below names the repositories and counts their sites, which is the
+   * residue R122 made worth naming. What it used to do as well was give advice -
+   * "install the dependencies of those repositories" - to every reader, including
+   * the one whose dependencies *are* installed and whose types are unresolved
+   * because something generates them. The advice now lives in the notice, which
+   * is `undefined` unless some repository here has no `node_modules` at all, so a
+   * reader is only told to install what has not been installed.
+   *
+   * A row with no service on it is left out rather than guessed at: there is
+   * nowhere on disk to ask about, and the whole point of the notice is that the
+   * state was established.
+   */
+  const partial = partialReadNotice(
+    [...unread.keys()]
+      .filter((name) => result.repoDirs[name] !== undefined)
+      .map((name) => ({ name, dir: result.repoDirs[name] ?? '' })),
+    [...unread.values()].reduce((total, sites) => total + sites, 0),
+  );
   if (unread.size > 0) {
     const named = [...unread.entries()].map(([name, count]) => `${name} (${count})`).join(', ');
     lines.push(
       `imports the checker could not resolve: ${named}` +
-        ' — install the dependencies of those repositories, or fix their tsconfig paths;' +
+        (partial === undefined ? ' — check their tsconfig paths;' : ';') +
         ' what a missing type was going to say is missing from this graph',
     );
   }
@@ -726,10 +1121,89 @@ export const summariseBuild = (result: BuildResult): string[] => {
     `routes: ${routes.total} total, ${routes.called} reached, ${routes.uncalled.length} never called` +
       (routes.duplicated.length === 0 ? '' : `, ${routes.duplicated.length} claimed by two handlers`),
   );
+  /**
+   * Ways in found, against ways in whose body was read.
+   *
+   * Two numbers, and only the second is coverage. The line above counts
+   * addresses: a route is there, it has a verb and a path, and something placed
+   * it — which is a fact about the file system and says nothing about whether
+   * anything behind the route was read. Where a handler is assembled by a helper
+   * the first number is the whole surface and the second is a fraction of it: one
+   * repository reported seventeen of seventeen where two of nine reached a body
+   * that calls anything, and there was no line anywhere that could have said so
+   * (R94). What counts as read is decided once, in `doctor/ways-in.ts`, because
+   * `doctor` decides on the same figure.
+   */
+  const handled = new Set(
+    result.project.edges.filter((edge) => edge.type === 'handles').map((edge) => edge.from),
+  );
+  const ways = waysInTotal(
+    waysInByService(
+      result.project.nodes.filter((node) => node.type === 'entry'),
+      (id) => handled.has(id),
+    ),
+  );
+  if (ways.found > 0) {
+    lines.push(
+      `ways in: ${ways.found} found, ${ways.read} with a handler that was read, ${ways.found - ways.read} without` +
+        ' — only the second number is coverage of what happens after the request arrives',
+    );
+  }
+  /**
+   * Services that were read and are not in the graph.
+   *
+   * Said in the summary with the reason, because the alternative is what this
+   * used to print: a line of zeroes among the services, indistinguishable from a
+   * repository that really has no routes in it (R106).
+   */
+  for (const found of result.readNothing) {
+    lines.push(
+      `${found.service} contributed no node: read by ${found.extractor}` +
+        (found.note === undefined ? '' : `, and ${found.note}`),
+    );
+  }
+  /**
+   * Frameworks found only through a member a service depends on (R123).
+   *
+   * One line per service, named with the members that switched each one on,
+   * because what an adapter finds there is found in a library's sources rather
+   * than the service's own, and that may or may not be what the service is.
+   */
+  const bySideways = new Map<string, string[]>();
+  for (const found of result.armsLength) {
+    const via = found.through.length === 0 ? '' : ` (through ${found.through.join(', ')})`;
+    bySideways.set(found.service, [...(bySideways.get(found.service) ?? []), `${found.adapter}${via}`]);
+  }
+  for (const [service, adapters] of bySideways) {
+    lines.push(`${service} found at arm's length: ${adapters.join('; ')}`);
+  }
+  if (!result.wrote) {
+    lines.push(
+      `a repository could not be read, so ${result.graphPath} was left as the last build wrote it` +
+        ' — nothing in it describes this build',
+    );
+  }
   lines.push(`types: ${report.types.total} (${report.types.sharedPackage} from shared packages)`);
+  /**
+   * The ends of this project nobody here can read.
+   *
+   * Said out loud in the build's own summary, every time, because a declared
+   * service is the one part of the graph that was believed rather than checked
+   * and the number of them is the size of what a reader is taking on trust.
+   */
+  const declared = report.services.filter((service) => wasDeclared(service.extractor));
+  if (declared.length > 0) {
+    lines.push(
+      `declared from a document: ${declared.map((service) => `${service.name} (${service.repo})`).join(', ')}` +
+        ' — nothing here checked any of it against the service it describes',
+    );
+  }
   // Rows and places differ wherever a reason was folded, and both are worth
   // saying: one is how long the list is, the other is what it covers.
   lines.push(unresolvedLine(result.project.unresolved, report.totals.unresolved));
+  // Beside that count, last, and never per row: it is the one thing a thousand
+  // rows already imply, and it is the line the eye lands on when a build ends.
+  if (partial !== undefined) lines.push(partial);
   return lines;
 };
 
@@ -769,6 +1243,7 @@ export const registerBuild = (program: Command): void => {
     .option('--no-cache', 'ignore the recorded file hashes and read everything')
     .option('--watch', 'keep reading, rebuilding after every change')
     .option('--timing', 'print how long each phase took, as JSON')
+    .option('--heap <megabytes>', 'heap limit for each repository read (default: a share of the machine)')
     .option('--skip-frontend', 'leave out the services a frontend extractor reads')
     .option('--json', 'print the report as JSON')
     .action(async (dir: string | undefined, options: BuildOptions & { watch?: boolean }) => {
@@ -803,7 +1278,9 @@ export const registerBuild = (program: Command): void => {
       if (options.timing === true) {
         process.stderr.write(`${JSON.stringify(result.timing)}\n`);
       }
-      if (result.failed) process.exitCode = 2;
+      // A repository that could not be read is a check that could not be run,
+      // which is the one thing exit 2 means everywhere in this command line.
+      if (result.failed) process.exitCode = EXIT.cannotRun;
     });
 };
 

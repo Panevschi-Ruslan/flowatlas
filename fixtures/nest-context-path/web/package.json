@@ -1,0 +1,8 @@
+{
+  "name": "nest-context-path-web",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "react": "^19.0.0"
+  }
+}

@@ -1,20 +1,13 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import type { Project, TypeChecker } from 'ts-morph';
 import type { GraphBuilder } from '../builder.js';
 import type { FlowatlasConfig, ServiceConfig } from '../config.js';
+import type { PackageJson } from './manifest.js';
 import type { DetectedAdapters } from './registry.js';
 
-/** The subset of a `package.json` this tool reads. */
-export interface PackageJson {
-  name?: string;
-  version?: string;
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
-  optionalDependencies?: Record<string, string>;
-  [key: string]: unknown;
-}
+// What a repository declares it depends on is answered in `manifest.js`, which
+// is where the shape of a manifest lives too. It is a question about the tree on
+// disk rather than about the session being assembled here, and answering it
+// means resolving a workspace, which is work enough to be its own module.
 
 export interface Logger {
   debug(message: string, meta?: unknown): void;
@@ -56,37 +49,6 @@ export const silentLogger: Logger = {
   info: () => undefined,
   warn: () => undefined,
   error: () => undefined,
-};
-
-/**
- * Reads a `package.json`, or returns undefined when there is none or it is not
- * valid JSON. Total on purpose: adapter detection must never crash on a repo
- * with an odd layout.
- */
-export const readPackageJson = (dir: string): PackageJson | undefined => {
-  try {
-    const parsed: unknown = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
-    return typeof parsed === 'object' && parsed !== null ? (parsed as PackageJson) : undefined;
-  } catch {
-    return undefined;
-  }
-};
-
-/** Every declared dependency, regardless of which section it sits in. */
-export const allDependencies = (pkg: PackageJson): Record<string, string> => ({
-  ...pkg.dependencies,
-  ...pkg.devDependencies,
-  ...pkg.peerDependencies,
-  ...pkg.optionalDependencies,
-});
-
-export const hasDependency = (pkg: PackageJson, name: string): boolean =>
-  Object.hasOwn(allDependencies(pkg), name);
-
-/** True when any of the names is a declared dependency. */
-export const hasAnyDependency = (pkg: PackageJson, names: readonly string[]): boolean => {
-  const deps = allDependencies(pkg);
-  return names.some((name) => Object.hasOwn(deps, name));
 };
 
 /**

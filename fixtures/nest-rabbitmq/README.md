@@ -53,13 +53,19 @@ shows that both arguments are resolved independently — the exchange through a
 
 | Handler | File:line | Channel | `meta.queue` | `meta.entryId` | Confidence |
 |---|---|---|---|---|---|
-| `@RabbitSubscribe({ exchange: 'orders-x', routingKey: 'order.created', queue: 'orders-created-q' })` | `src/orders/orders.consumer.ts:21` | `order.created` | `orders-created-q` | `null` | static |
-| `@RabbitSubscribe({ exchange: ORDERS_EXCHANGE, routingKey: RoutingKeys.ORDER_REFUNDED, queue: 'orders-refunded-q' })` | `src/orders/orders.consumer.ts:33` | `order.refunded` | `orders-refunded-q` | `null` | static |
+| `@RabbitSubscribe({ exchange: 'orders-x', routingKey: 'order.created', queue: 'orders-created-q' })` | `src/orders/orders.consumer.ts:21` | `order.created` | `orders-created-q` | `entry:nest-rabbitmq:event:order.created` | static |
+| `@RabbitSubscribe({ exchange: ORDERS_EXCHANGE, routingKey: RoutingKeys.ORDER_REFUNDED, queue: 'orders-refunded-q' })` | `src/orders/orders.consumer.ts:33` | `order.refunded` | `orders-refunded-q` | `entry:nest-rabbitmq:event:order.refunded` | static |
 | `@EventPattern('order.cancelled')` | `src/orders/orders.controller.ts:13` | `order.cancelled` | — | `entry:nest-rabbitmq:event:order.cancelled` | static |
 
-`@RabbitSubscribe` is not a P01 entry decorator, so those two consumers carry
-`meta.entryId: null`. `@EventPattern` is, so the third must point back at its
-entry rather than duplicating it (D1). Both cases in one fixture, on purpose.
+`@RabbitSubscribe` is not a P01 entry decorator, so the channel reader draws the
+way in for those two itself (R133); `@EventPattern` is one, so the third must
+point back at the entry P01 already made rather than duplicating it (D1). Both
+cases in one fixture, on purpose.
+
+The two `@RabbitSubscribe` edges carry two `params` — the message and the raw
+frame the library passes beside it — and a `meta.body` naming the first of them.
+Which parameter is the message is the description's statement, not a count of
+how many a handler declared.
 
 `order.created`, `order.refunded` and `order.cancelled` each end up with one
 `channel` node shared by the producer and the consumer in this repo.

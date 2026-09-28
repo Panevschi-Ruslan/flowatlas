@@ -36,18 +36,17 @@ const isExtractor = (name) => name.startsWith('@flowatlas/extractor-');
  * would arrive unnoticed. A pair goes stale the moment the chain is cut, and a
  * stale pair is reported too — an exemption nobody has removed is an exemption
  * nobody has re-read.
+ *
+ * The list is empty, and an empty list is the point: every chain that existed
+ * has been cut rather than written down. The last one was
+ * `extractor-react -> adapters-entry -> extractor-nestjs`, which stood only
+ * because `@flowatlas/adapters-entry` named the Nest extractor for
+ * `decoratorArgs`, `decoratorName`, `findDecorators`, `getDecorator`,
+ * `stableKey` and `stringListArg` — all six of which that package did nothing
+ * with but re-export from `@flowatlas/core` (R65). Importing them from where
+ * they are written removed the dependency and the exemption with it.
  */
-const ALLOWED = [
-  {
-    from: '@flowatlas/extractor-react',
-    to: '@flowatlas/extractor-nestjs',
-    why:
-      '@flowatlas/adapters-entry names the Nest extractor for `decoratorArgs`, ' +
-      '`findDecorators` and `stableKey`, all three of which that package only ' +
-      're-exports from @flowatlas/core. Cutting it is a change to adapters-entry ' +
-      'and was out of scope for R46, which cut the Angular chain.',
-  },
-];
+const ALLOWED = [];
 
 const manifests = new Map();
 for (const entry of readdirSync(PACKAGES, { withFileTypes: true })) {

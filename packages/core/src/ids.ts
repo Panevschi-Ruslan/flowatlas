@@ -8,6 +8,7 @@ import type { EntryKind } from './model/nodes.js';
  *            <repo>#<file>:<Class>
  *            <repo>#<file>:<fn>
  *   entry    entry:<service>:<kind>:<key>
+ *            entry:<service>@<application>:<kind>:<key>
  *   channel  channel:<name>              — never repo-prefixed
  *   type     type:<repo>#<TypeName>
  *
@@ -129,6 +130,21 @@ export const normalizeFilePath = (file: string, repoDir?: string): string => {
     // separator, and a path that keeps it is not repo-relative.
     if (base === '') out = out.replace(/^\/+/, '');
     else if (out === base || out.startsWith(`${base}/`)) out = out.slice(base.length + 1);
+    // A file the service reads that is not inside it — a handler body in a
+    // sibling workspace package — is still named relative to the service,
+    // because that is what every other path in its graph is relative to. It
+    // used to keep the absolute path it was found at, which put one machine's
+    // home directory into node ids: a scheduling app's graph carried fifty-eight of
+    // them. Climbing out of the service is a shorter and truer way to say the
+    // same thing, and it is the same on every machine.
+    else if (out.startsWith('/')) {
+      const from = base.split('/');
+      const to = out.split('/');
+      let shared = 0;
+      while (shared < from.length && shared < to.length && from[shared] === to[shared]) shared += 1;
+      const up = '../'.repeat(from.length - shared);
+      out = `${up}${to.slice(shared).join('/')}`;
+    }
   }
   out = out.replace(/\/{2,}/g, '/');
   while (out.startsWith('./')) out = out.slice(2);
@@ -154,9 +170,39 @@ export const makeSymbolId = (
   return `${r}#${f}:${s}${suffix}`;
 };
 
-/** `entry:<service>:<kind>:<key>` — the key is opaque and kind-specific. */
-export const makeEntryId = (service: string, kind: EntryKind, key: string): string =>
-  `entry:${required('service', service)}:${required('kind', kind)}:${required('key', key)}`;
+/**
+ * `entry:<service>:<kind>:<key>` — the key is opaque and kind-specific.
+ *
+ * An address is only an address within an application, so one service that
+ * creates two of them has two address spaces and `application` says which one
+ * this entry is in. Without it the second application's `/health` lands on the
+ * first's id, the builder keeps the node it already has, and the file that
+ * declared the loser contributes nothing at all — no node, no row, and every
+ * total still correct (R119).
+ *
+ * It qualifies the service rather than the key because the key is what the two
+ * sides of a join both spell: a caller naming a verb and a path reproduces the
+ * key, and it has nothing to say about which application answers. The one place
+ * that takes an id apart reads the key half by position, and that position does
+ * not move.
+ *
+ * Absent for a service that creates one application, or whose applications were
+ * not read: naming the only application there is adds a word to every id and no
+ * information, and an id that says nothing about applications is exactly the
+ * claim that this service has one address space.
+ */
+export const makeEntryId = (
+  service: string,
+  kind: EntryKind,
+  key: string,
+  application?: string,
+): string => {
+  const where =
+    application === undefined
+      ? required('service', service)
+      : `${required('service', service)}@${required('application', application)}`;
+  return `entry:${where}:${required('kind', kind)}:${required('key', key)}`;
+};
 
 /**
  * The `key` half of an HTTP entry id: `POST:/orders/:param`.

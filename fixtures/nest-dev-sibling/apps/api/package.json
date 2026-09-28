@@ -1,0 +1,13 @@
+{
+  "name": "@dev-sibling/api",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@dev-sibling/mailer": "workspace:*",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0"
+  },
+  "devDependencies": {
+    "@dev-sibling/e2e": "workspace:*"
+  }
+}

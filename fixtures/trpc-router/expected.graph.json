@@ -1,0 +1,392 @@
+{
+  "schemaVersion": 5,
+  "repo": "trpc-router",
+  "generatedAt": "2026-09-28T09:19:43.269Z",
+  "nodes": [
+    {
+      "id": "entry:trpc-router:http:ALL:/api/trpc/:param",
+      "type": "entry",
+      "label": "ALL /api/trpc/:param",
+      "repo": "trpc-router",
+      "file": "src/pages/api/trpc/[trpc].ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/trpc/:param",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "unread",
+        "handlerBodyRead": false
+      }
+    },
+    {
+      "id": "entry:trpc-router:http:ALL:/api/trpc/reports/:param",
+      "type": "entry",
+      "label": "ALL /api/trpc/reports/:param",
+      "repo": "trpc-router",
+      "file": "src/pages/api/trpc/reports/[trpc].ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/trpc/reports/:param",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "unread",
+        "handlerBodyRead": false
+      }
+    },
+    {
+      "id": "entry:trpc-router:rpc:orders.create",
+      "type": "entry",
+      "label": "rpc orders.create",
+      "repo": "trpc-router",
+      "file": "src/server/orders.ts",
+      "line": 14,
+      "kind": "rpc",
+      "meta": {
+        "key": "orders.create",
+        "adapter": "trpc-procedures",
+        "call": "mutation",
+        "registration": "router({ … })",
+        "input": "OrderBody",
+        "middlewareRead": true,
+        "handlerVia": "call",
+        "served": [
+          "src/pages/api/trpc/[trpc].ts"
+        ]
+      }
+    },
+    {
+      "id": "entry:trpc-router:rpc:orders.list",
+      "type": "entry",
+      "label": "rpc orders.list",
+      "repo": "trpc-router",
+      "file": "src/server/orders.ts",
+      "line": 11,
+      "kind": "rpc",
+      "meta": {
+        "key": "orders.list",
+        "adapter": "trpc-procedures",
+        "call": "query",
+        "registration": "router({ … })",
+        "input": "OrderQuery",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "served": [
+          "src/pages/api/trpc/[trpc].ts"
+        ]
+      }
+    },
+    {
+      "id": "entry:trpc-router:rpc:reportsRouter.daily",
+      "type": "entry",
+      "label": "rpc reportsRouter.daily",
+      "repo": "trpc-router",
+      "file": "src/server/reports.ts",
+      "line": 7,
+      "kind": "rpc",
+      "meta": {
+        "key": "reportsRouter.daily",
+        "adapter": "trpc-procedures",
+        "call": "query",
+        "registration": "router({ … })",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "served": [
+          "src/pages/api/trpc/[trpc].ts"
+        ]
+      }
+    },
+    {
+      "id": "repo:trpc-router",
+      "type": "repo",
+      "label": "trpc-router",
+      "repo": "trpc-router",
+      "meta": {
+        "stats": {
+          "files": 12,
+          "filesRead": 12,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@trpc/server": 9
+          },
+          "functions": 14,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes",
+            "trpc-procedures"
+          ]
+        }
+      }
+    },
+    {
+      "id": "trpc-router#src/client/orders-panel.ts:createOrderOf",
+      "type": "function",
+      "label": "createOrderOf",
+      "repo": "trpc-router",
+      "file": "src/client/orders-panel.ts",
+      "line": 22
+    },
+    {
+      "id": "trpc-router#src/client/orders-panel.ts:listOrdersFor",
+      "type": "function",
+      "label": "listOrdersFor",
+      "repo": "trpc-router",
+      "file": "src/client/orders-panel.ts",
+      "line": 19
+    },
+    {
+      "id": "trpc-router#src/server/orders-store.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "trpc-router",
+      "file": "src/server/orders-store.ts",
+      "line": 3
+    },
+    {
+      "id": "trpc-router#src/server/orders-store.ts:storeOrder",
+      "type": "function",
+      "label": "storeOrder",
+      "repo": "trpc-router",
+      "file": "src/server/orders-store.ts",
+      "line": 8
+    },
+    {
+      "id": "trpc-router#src/server/orders.ts:ordersRouter",
+      "type": "function",
+      "label": "ordersRouter",
+      "repo": "trpc-router",
+      "file": "src/server/orders.ts",
+      "line": 8
+    },
+    {
+      "id": "trpc-router#src/server/orders.ts:ordersRouter.mutation@14",
+      "type": "function",
+      "label": "ordersRouter.mutation@14",
+      "repo": "trpc-router",
+      "file": "src/server/orders.ts",
+      "line": 14
+    },
+    {
+      "id": "trpc-router#src/server/procedures.ts:isAdmin",
+      "type": "middleware",
+      "label": "isAdmin",
+      "repo": "trpc-router",
+      "file": "src/server/procedures.ts",
+      "line": 11,
+      "kind": "function"
+    },
+    {
+      "id": "trpc-router#src/server/procedures.ts:isSignedIn",
+      "type": "middleware",
+      "label": "isSignedIn",
+      "repo": "trpc-router",
+      "file": "src/server/procedures.ts",
+      "line": 9,
+      "kind": "function"
+    },
+    {
+      "id": "trpc-router#src/server/reports.ts:dailyTotals",
+      "type": "function",
+      "label": "dailyTotals",
+      "repo": "trpc-router",
+      "file": "src/server/reports.ts",
+      "line": 4
+    },
+    {
+      "id": "ui_api_call:trpc-router#src/client/orders-panel.ts:20:3",
+      "type": "ui_api_call",
+      "label": "rpc orders.list",
+      "repo": "trpc-router",
+      "file": "src/client/orders-panel.ts",
+      "line": 20,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.list",
+        "call": "query",
+        "operation": "query",
+        "client": "trpc-client",
+        "inputKeys": [
+          "customerId"
+        ]
+      }
+    },
+    {
+      "id": "ui_api_call:trpc-router#src/client/orders-panel.ts:23:3",
+      "type": "ui_api_call",
+      "label": "rpc orders.create",
+      "repo": "trpc-router",
+      "file": "src/client/orders-panel.ts",
+      "line": 23,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.create",
+        "call": "mutation",
+        "operation": "mutate",
+        "client": "trpc-client",
+        "inputKeys": [
+          "quantity",
+          "sku"
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:trpc-router:rpc:orders.create",
+      "to": "trpc-router#src/server/orders-store.ts:storeOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/orders-store.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:trpc-router:rpc:orders.create",
+      "to": "trpc-router#src/server/procedures.ts:isSignedIn",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/procedures.ts",
+      "line": 9,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "authedProcedure"
+      }
+    },
+    {
+      "from": "entry:trpc-router:rpc:orders.list",
+      "to": "trpc-router#src/server/orders-store.ts:listOrders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/orders-store.ts",
+      "line": 3
+    },
+    {
+      "from": "entry:trpc-router:rpc:reportsRouter.daily",
+      "to": "trpc-router#src/server/procedures.ts:isAdmin",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/procedures.ts",
+      "line": 11,
+      "meta": {
+        "order": 1,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "adminProcedure"
+      }
+    },
+    {
+      "from": "entry:trpc-router:rpc:reportsRouter.daily",
+      "to": "trpc-router#src/server/procedures.ts:isSignedIn",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/procedures.ts",
+      "line": 9,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "authedProcedure"
+      }
+    },
+    {
+      "from": "entry:trpc-router:rpc:reportsRouter.daily",
+      "to": "trpc-router#src/server/reports.ts:dailyTotals",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/reports.ts",
+      "line": 4
+    },
+    {
+      "from": "trpc-router#src/client/orders-panel.ts:createOrderOf",
+      "to": "ui_api_call:trpc-router#src/client/orders-panel.ts:23:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/client/orders-panel.ts",
+      "line": 23
+    },
+    {
+      "from": "trpc-router#src/client/orders-panel.ts:listOrdersFor",
+      "to": "ui_api_call:trpc-router#src/client/orders-panel.ts:20:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/client/orders-panel.ts",
+      "line": 20
+    },
+    {
+      "from": "trpc-router#src/server/orders.ts:ordersRouter",
+      "to": "trpc-router#src/server/orders-store.ts:storeOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server/orders.ts",
+      "line": 16
+    },
+    {
+      "from": "trpc-router#src/server/orders.ts:ordersRouter.mutation@14",
+      "to": "trpc-router#src/server/orders-store.ts:storeOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server/orders.ts",
+      "line": 16
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/pages/api/trpc/[trpc].ts",
+      "line": 4,
+      "reason": "route-handler-unread",
+      "message": "ALL /api/trpc/:param is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/trpc/:param.",
+      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
+      "symbol": "ALL /api/trpc/:param",
+      "adapter": "nextjs-routes"
+    },
+    {
+      "file": "src/pages/api/trpc/reports/[trpc].ts",
+      "line": 4,
+      "reason": "procedure-router-unread",
+      "message": "src/pages/api/trpc/reports/[trpc].ts serves reportsRouterFor('daily'), a tree of ways in that could not be followed from here, so nothing says which ways in this file answers.",
+      "hint": "Import the tree from a file inside this service, or add the package it comes from to sharedPackages, so the ways in it serves can be read.",
+      "symbol": "reportsRouterFor('daily')",
+      "adapter": "trpc-procedures"
+    },
+    {
+      "file": "src/pages/api/trpc/reports/[trpc].ts",
+      "line": 4,
+      "reason": "route-handler-unread",
+      "message": "ALL /api/trpc/reports/:param is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/trpc/reports/:param.",
+      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
+      "symbol": "ALL /api/trpc/reports/:param",
+      "adapter": "nextjs-routes"
+    },
+    {
+      "file": "src/server/reports-factory.ts",
+      "line": 14,
+      "reason": "procedure-key-dynamic",
+      "hint": "Write the key as a name or a string, so the way in under it can be named and joined to a caller.",
+      "symbol": "router({ … }).publicProcedure.query(() => [{ scope }])",
+      "adapter": "trpc-procedures"
+    },
+    {
+      "file": "src/server/root.ts",
+      "line": 18,
+      "reason": "procedure-branch-unread",
+      "message": "billing is billingRouter, a name this could follow to neither a way in nor a tree, so nothing under it was read.",
+      "hint": "Import the tree from a file inside this service, or add the package it comes from to sharedPackages, so the ways in it serves can be read.",
+      "symbol": "billing",
+      "adapter": "trpc-procedures"
+    }
+  ]
+}

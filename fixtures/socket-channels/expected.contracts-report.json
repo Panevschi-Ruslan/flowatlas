@@ -1,0 +1,148 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 5,
+  "generatedAt": "2026-09-28T07:40:05.711Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:web#src/app/orders-socket.service.ts:26:5",
+        "to": "consumer:api#src/orders/orders.gateway.ts:OrdersGateway.cancel",
+        "type": "emits"
+      },
+      "edgeKey": "producer:web#src/app/orders-socket.service.ts:26:5|emits|consumer:api#src/orders/orders.gateway.ts:OrdersGateway.cancel",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "web",
+        "typeId": "type:web#CancelOrder",
+        "symbol": "web#src/app/orders-socket.service.ts:OrdersSocketService.cancel"
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "type:api#CancelOrder",
+        "symbol": "api#src/orders/orders.gateway.ts:OrdersGateway.cancel"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:web#src/app/orders-socket.service.ts:46:5",
+        "to": "consumer:api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
+        "type": "emits"
+      },
+      "edgeKey": "producer:web#src/app/orders-socket.service.ts:46:5|emits|consumer:api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "web",
+        "typeId": "string",
+        "symbol": "web#src/app/orders-socket.service.ts:OrdersSocketService.requestSummary"
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "string",
+        "symbol": "api#src/orders/orders.gateway.ts:OrdersGateway.summarise"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:web#src/app/orders-socket.service.ts:46:5",
+        "to": "consumer:api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
+        "type": "emits"
+      },
+      "edgeKey": "producer:web#src/app/orders-socket.service.ts:46:5|emits|consumer:api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "api",
+        "typeId": "type:api#OrderSummary",
+        "symbol": "api#src/orders/orders.gateway.ts:OrdersGateway.summarise"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#OrderSummary",
+        "symbol": "web#src/app/orders-socket.service.ts:OrdersSocketService.requestSummary"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "channel:order:updated",
+        "to": "consumer:api#src/orders/audit.gateway.ts:AuditGateway.record",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:order:updated|consumes|consumer:api#src/orders/audit.gateway.ts:AuditGateway.record",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:order:updated is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:api#src/orders/orders.gateway.ts:31:5",
+        "to": "consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/orders/orders.gateway.ts:31:5|emits|consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:api#src/orders/orders.gateway.ts:54:5",
+        "to": "consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/orders/orders.gateway.ts:54:5|emits|consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:api#src/orders/orders.gateway.ts:54:5",
+        "to": "consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/orders/orders.gateway.ts:54:5|emits|consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:api#src/orders/orders.gateway.ts:66:5",
+        "to": "consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/orders/orders.gateway.ts:66:5|emits|consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    }
+  ],
+  "summary": {
+    "edges": 3,
+    "shared": 0,
+    "identical": 3,
+    "hash_differs": 0,
+    "unchecked": 5,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 5,
+  "repo": "react-no-tsconfig",
+  "generatedAt": "2026-09-27T09:26:59.804Z",
+  "nodes": [
+    {
+      "id": "react-no-tsconfig#src/OrdersPanel.tsx:OrdersPanel",
+      "type": "ui_component",
+      "label": "OrdersPanel",
+      "repo": "react-no-tsconfig",
+      "file": "src/OrdersPanel.tsx",
+      "line": 11,
+      "kind": "function"
+    },
+    {
+      "id": "react-no-tsconfig#src/api/orders.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "react-no-tsconfig",
+      "file": "src/api/orders.ts",
+      "line": 14
+    },
+    {
+      "id": "repo:react-no-tsconfig",
+      "type": "repo",
+      "label": "react-no-tsconfig",
+      "repo": "react-no-tsconfig",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 2,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_action:react-no-tsconfig#src/OrdersPanel.tsx:14:29",
+      "type": "ui_action",
+      "label": "onClick={() => listOrders()}",
+      "repo": "react-no-tsconfig",
+      "file": "src/OrdersPanel.tsx",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => listOrders()",
+        "component": "react-no-tsconfig#src/OrdersPanel.tsx:OrdersPanel",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:react-no-tsconfig#src/api/orders.ts:15:24",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "react-no-tsconfig",
+      "file": "src/api/orders.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "react-no-tsconfig#src/OrdersPanel.tsx:OrdersPanel",
+      "to": "react-no-tsconfig#src/api/orders.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/OrdersPanel.tsx",
+      "line": 14
+    },
+    {
+      "from": "react-no-tsconfig#src/api/orders.ts:listOrders",
+      "to": "ui_api_call:react-no-tsconfig#src/api/orders.ts:15:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api/orders.ts",
+      "line": 15
+    },
+    {
+      "from": "ui_action:react-no-tsconfig#src/OrdersPanel.tsx:14:29",
+      "to": "react-no-tsconfig#src/OrdersPanel.tsx:OrdersPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/OrdersPanel.tsx",
+      "line": 14
+    }
+  ],
+  "types": {},
+  "unresolved": []
+}

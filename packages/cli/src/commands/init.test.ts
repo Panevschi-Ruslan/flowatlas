@@ -86,6 +86,75 @@ describe('scanCandidates', () => {
     const { configDir } = makeWorkspace();
     expect(() => scanCandidates(join(configDir, 'nope'), configDir)).toThrow(FlowatlasError);
   });
+
+  /**
+   * R107: `init --dir .` on a video platform wrote one service and left out the Angular
+   * client that is half the repository. The two halves were declared all along,
+   * in `pnpm-workspace.yaml`, so what the command had to learn was to read it.
+   */
+  it('suggests one service per application of a workspace, and no libraries', () => {
+    const { root, configDir } = makeWorkspace();
+    const repo = makeRepo(root, 'product', {
+      name: 'product',
+      // At the root, where a repository with one deployable server usually keeps
+      // them. The server's own manifest declares nothing.
+      dependencies: { express: '4.19.0' },
+    });
+    writeFileSync(
+      join(repo, 'pnpm-workspace.yaml'),
+      ['packages:', '  - server', '  - client', "  - 'packages/*'", ''].join('\n'),
+    );
+    makeRepo(repo, 'server', { name: '@product/server', exports: { './*': './dist/*' } });
+    makeRepo(repo, 'client', {
+      name: '@product/client',
+      devDependencies: { '@angular/core': '17.0.0' },
+    });
+    makeRepo(repo, 'packages/models', { name: '@product/models', main: 'dist/index.js' });
+
+    const found = scanCandidates(root, configDir);
+    expect(found.map((c) => [c.name, c.repo, c.type])).toEqual([
+      ['client', '../product/client', 'angular'],
+      ['server', '../product/server', 'express'],
+    ]);
+  });
+
+  it('suggests a single-package repository exactly as it did before', () => {
+    const { root, configDir } = makeWorkspace();
+    makeRepo(root, 'orders', { name: 'orders', dependencies: { '@nestjs/core': '10.0.0' } });
+    makeRepo(root, 'notes', { name: 'notes', dependencies: { lodash: '4.0.0' } });
+
+    expect(scanCandidates(root, configDir).map((c) => [c.name, c.repo, c.type])).toEqual([
+      ['notes', '../notes', UNKNOWN_TYPE],
+      ['orders', '../orders', 'nestjs'],
+    ]);
+  });
+
+  // A repository of nothing but libraries still has code worth reading, and
+  // offering nothing at all would be a worse answer than offering the whole.
+  it('falls back to the whole repository when no member looks like an application', () => {
+    const { root, configDir } = makeWorkspace();
+    const repo = makeRepo(root, 'toolkit', {
+      name: 'toolkit',
+      workspaces: ['packages/*'],
+    });
+    makeRepo(repo, 'packages/parse', { name: '@toolkit/parse', main: 'dist/index.js' });
+
+    expect(scanCandidates(root, configDir).map((c) => c.repo)).toEqual(['../toolkit']);
+  });
+
+  it('tells two members of the same name apart by the scope they declared', () => {
+    const { root, configDir } = makeWorkspace();
+    const repo = makeRepo(root, 'product', { name: 'product', workspaces: ['apps/*'] });
+    makeRepo(repo, 'apps/shop', { name: '@shop/web', dependencies: { next: '15.0.0' } });
+    makeRepo(repo, 'apps/admin', { name: '@admin/web', dependencies: { next: '15.0.0' } });
+
+    // Sorted by name and then by where it is, so `apps/admin` comes first and
+    // keeps the plain suggestion; the second gets its scope back.
+    expect(scanCandidates(root, configDir).map((c) => [c.name, c.repo])).toEqual([
+      ['web', '../product/apps/admin'],
+      ['shop-web', '../product/apps/shop'],
+    ]);
+  });
 });
 
 describe('runInit', () => {
@@ -136,9 +205,10 @@ describe('runInit', () => {
     expect(result.config.adapters).toEqual({
       auto: true,
       force: {},
-      entry: { registries: [], http: [] },
+      entry: { registries: [], http: [], procedures: [] },
       broker: { custom: [] },
       db: { localBaseClasses: [] },
+      frontend: { localClientClasses: [] },
     });
 
     const loaded = loadConfig(out);

@@ -1,6 +1,12 @@
 import type { GraphNode } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
-import { callPerChoice, missingChoiceFinding } from './ui-link.js';
+import {
+  callPerChoice,
+  missingChoiceFinding,
+  resolveUiCall,
+  uiFindingFor,
+  type UiIndex,
+} from './ui-link.js';
 
 const call = (meta: Record<string, unknown>): GraphNode => ({
   id: 'ui_api_call:web#src/app/orders.client.ts:12:4',
@@ -51,5 +57,254 @@ describe('a call whose last segment is a closed set', () => {
       'POST /orders/:param/hold reaches no route, though /orders/:param/resume does',
     );
     expect(finding.reason).toBe('target-route-not-found');
+  });
+});
+
+/** A route of one service, in the shape the merged graph holds it. */
+const route = (repo: string, method: string, path: string): GraphNode => ({
+  id: `entry:${repo}:http:${method}:${path}`,
+  type: 'entry',
+  kind: 'http',
+  label: `${method} ${path}`,
+  repo,
+  meta: { method, path },
+});
+
+/**
+ * The four lookups, from a plain table of who serves what.
+ *
+ * Written out here rather than built from a project, because the question below
+ * is about the order the ways are tried in and about nothing else.
+ */
+const indexOf = (
+  routes: Record<string, readonly GraphNode[]>,
+  named: Record<string, string> = {},
+  claims: Record<string, readonly string[]> = {},
+): UiIndex => ({
+  routesOf: (service) => routes[service],
+  targetOf: (repo, env) => named[`${repo}\0${env}`],
+  claimantsOf: (env) => claims[env] ?? [],
+  services: () => Object.keys(routes).sort(),
+});
+
+/** A request written in a browser, relative unless a settings key is given. */
+const uiCall = (
+  repo: string,
+  method: string,
+  path: string,
+  meta: Record<string, unknown> = {},
+): GraphNode => ({
+  id: `ui_api_call:${repo}#src/app/panel.tsx:3:2`,
+  type: 'ui_api_call',
+  kind: 'http',
+  label: `${method} ${path}`,
+  repo,
+  meta: { method, path, ...meta },
+});
+
+/**
+ * Which service answers a request a browser made, and in what order that is
+ * decided (R93).
+ *
+ * The caller's own service used to be the one service struck out of the
+ * question, which is why every one of these is about where it sits in the order
+ * rather than about matching a path.
+ */
+describe('a request a browser makes of the service it was served from', () => {
+  it('reaches that service, and says the reading was of one repository', () => {
+    const outcome = resolveUiCall(
+      uiCall('web', 'POST', '/api/cancel'),
+      indexOf({ web: [route('web', 'POST', '/api/cancel')] }),
+    );
+    expect(outcome.kind).toBe('linked');
+    if (outcome.kind !== 'linked') return;
+    expect(outcome.via).toBe('same-service');
+    expect(outcome.targetService).toBe('web');
+  });
+
+  it('is preferred to a second service that happens to serve the same address', () => {
+    // Both could answer. The one the call was written in is not a guess, and
+    // guessing between the two would have made this ambiguous instead.
+    const outcome = resolveUiCall(
+      uiCall('web', 'GET', '/api/things'),
+      indexOf({
+        api: [route('api', 'GET', '/api/things')],
+        web: [route('web', 'GET', '/api/things')],
+      }),
+    );
+    expect(outcome.kind === 'linked' && outcome.via).toBe('same-service');
+    expect(outcome.kind === 'linked' && outcome.targetService).toBe('web');
+  });
+
+  it('gives way to what the configuration names outright', () => {
+    const outcome = resolveUiCall(
+      uiCall('web', 'GET', '/api/things', { baseUrlEnv: 'API_URL' }),
+      indexOf(
+        { api: [route('api', 'GET', '/api/things')], web: [route('web', 'GET', '/api/things')] },
+        { 'web\0API_URL': 'api' },
+      ),
+    );
+    expect(outcome.kind === 'linked' && outcome.via).toBe('api-target');
+    expect(outcome.kind === 'linked' && outcome.targetService).toBe('api');
+  });
+
+  it('gives way to the one service claiming the settings key as its base', () => {
+    const outcome = resolveUiCall(
+      uiCall('web', 'GET', '/api/things', { baseUrlEnv: 'API_URL' }),
+      indexOf(
+        { api: [route('api', 'GET', '/api/things')], web: [route('web', 'GET', '/api/things')] },
+        {},
+        { API_URL: ['api'] },
+      ),
+    );
+    expect(outcome.kind === 'linked' && outcome.via).toBe('base-url-env');
+  });
+
+  it('does not stop the search when its own service serves no such address', () => {
+    // A frontend that also serves routes may still be calling somebody else's,
+    // so a genuine cross-service request resolves exactly as it did before.
+    const outcome = resolveUiCall(
+      uiCall('web', 'GET', '/api/orders'),
+      indexOf({
+        api: [route('api', 'GET', '/api/orders')],
+        web: [route('web', 'GET', '/api/session')],
+      }),
+    );
+    expect(outcome.kind === 'linked' && outcome.via).toBe('unique-route');
+    expect(outcome.kind === 'linked' && outcome.targetService).toBe('api');
+  });
+
+  it('still says so when nothing anywhere serves the address', () => {
+    const outcome = resolveUiCall(
+      uiCall('web', 'POST', '/api/cancel'),
+      indexOf({ web: [route('web', 'GET', '/api/session')] }),
+    );
+    expect(outcome.kind).toBe('noRoute');
+    expect(uiFindingFor(outcome)?.message).toBe('no configured service serves POST /api/cancel');
+  });
+
+  it('names the verbs its own service does answer that path with', () => {
+    const outcome = resolveUiCall(
+      uiCall('web', 'POST', '/api/things'),
+      indexOf({ web: [route('web', 'GET', '/api/things'), route('web', 'DELETE', '/api/things')] }),
+    );
+    expect(outcome.kind === 'noRoute' && outcome.verbs).toEqual(['DELETE', 'GET']);
+    expect(uiFindingFor(outcome)?.hint).toContain('That path answers DELETE, GET.');
+  });
+
+  /**
+   * A browser asking a service that creates two applications (R119).
+   *
+   * The interesting half is that the service is still found. Asking for a single
+   * match struck a service whose own entries tie out of the search for who
+   * answers, and the request then came back as one no configured service serves —
+   * false, and pointing at the configuration rather than at the two applications.
+   */
+  describe('two applications of one service answering', () => {
+    const inApplication = (repo: string, path: string, application: string): GraphNode => ({
+      id: `entry:${repo}@${application}:http:GET:${path}`,
+      type: 'entry',
+      kind: 'http',
+      label: `GET ${path} (${application})`,
+      repo,
+      meta: { method: 'GET', path, application },
+    });
+
+    it('names the applications rather than blaming the configuration', () => {
+      const outcome = resolveUiCall(
+        uiCall('web', 'GET', '/health'),
+        indexOf({
+          api: [
+            inApplication('api', '/health', 'ApiModule'),
+            inApplication('api', '/health', 'WorkerModule'),
+          ],
+          web: [],
+        }),
+      );
+      expect(outcome.kind).toBe('ambiguous');
+      expect(uiFindingFor(outcome)?.reason).toBe('ambiguous-route-application');
+      expect(uiFindingFor(outcome)?.hint).not.toContain('apiTarget');
+    });
+
+    it('still points at the configuration when two services answer', () => {
+      const outcome = resolveUiCall(
+        uiCall('web', 'GET', '/health'),
+        indexOf({
+          api: [route('api', 'GET', '/health')],
+          legacy: [route('legacy', 'GET', '/health')],
+          web: [],
+        }),
+      );
+      expect(uiFindingFor(outcome)?.reason).toBe('ambiguous-route-target');
+      expect(uiFindingFor(outcome)?.hint).toContain('apiTarget');
+    });
+  });
+
+  it("finds a route of its own service behind that service's global prefix", () => {
+    // The browser is handed a base address that already ends in the prefix, so
+    // the path it writes is the path without it.
+    const prefixed = route('web', 'GET', '/api/things');
+    prefixed.meta = { ...prefixed.meta, globalPrefix: 'api' };
+    const outcome = resolveUiCall(uiCall('web', 'GET', '/things'), indexOf({ web: [prefixed] }));
+    expect(outcome.kind === 'linked' && outcome.via).toBe('same-service');
+  });
+});
+
+/**
+ * A request that no route read in full answers, beside a route whose address has
+ * a part nobody read (R137).
+ *
+ * A notification service's shape: every address begins with a mount the deployment sets, so each
+ * route is recorded as `/${…}v1/…`, and the client asks for `/v1/…` under a base
+ * that already carries the mount. Forty-two such requests were reported as ones
+ * no configured service serves.
+ */
+describe('a request behind the part of a route nobody read', () => {
+  const mounted = route('api', 'GET', '/${…}v1/agents/:param/bridge');
+
+  it('is still not joined', () => {
+    const outcome = resolveUiCall(
+      uiCall('cli', 'GET', '/v1/agents/:param/bridge'),
+      indexOf({ api: [mounted], cli: [] }),
+    );
+    expect(outcome.kind).toBe('noRoute');
+  });
+
+  it('names the route it would reach, rather than saying nothing serves it', () => {
+    const outcome = resolveUiCall(
+      uiCall('cli', 'GET', '/v1/agents/:param/bridge'),
+      indexOf({ api: [mounted], cli: [] }),
+    );
+    expect(outcome.kind === 'noRoute' && outcome.unread).toEqual(['api GET /${…}v1/agents/:param/bridge']);
+    const finding = uiFindingFor(outcome);
+    expect(finding?.reason).toBe('target-route-not-found');
+    expect(finding?.message).toBe(
+      'no configured service serves GET /v1/agents/:param/bridge at an address read in full, though ' +
+        'api GET /${…}v1/agents/:param/bridge answers it if the part of its address nobody read is left open',
+    );
+    expect(finding?.hint).toContain('not evidence that the route is missing');
+  });
+
+  it('says the same of a service the configuration named', () => {
+    const outcome = resolveUiCall(
+      uiCall('cli', 'GET', '/v1/agents/:param/bridge', { baseUrlEnv: 'NOVU_API_URL' }),
+      indexOf({ api: [mounted], cli: [] }, { 'cli\0NOVU_API_URL': 'api' }),
+    );
+    expect(uiFindingFor(outcome)?.message).toContain('target service api has no route GET');
+    expect(uiFindingFor(outcome)?.message).toContain('api GET /${…}v1/agents/:param/bridge answers it');
+  });
+
+  it('keeps the plain sentence where the read part already rules the route out', () => {
+    // By verb, by a literal segment, and by a route of which nothing but the
+    // hole was read, which would otherwise be named beside every request.
+    const outcome = resolveUiCall(
+      uiCall('cli', 'POST', '/v1/invoices'),
+      indexOf({
+        api: [mounted, route('api', 'GET', '/${…}v1/invoices'), route('api', 'POST', '/${…}')],
+        cli: [],
+      }),
+    );
+    expect(outcome.kind === 'noRoute' && outcome.unread).toEqual([]);
+    expect(uiFindingFor(outcome)?.message).toBe('no configured service serves POST /v1/invoices');
   });
 });

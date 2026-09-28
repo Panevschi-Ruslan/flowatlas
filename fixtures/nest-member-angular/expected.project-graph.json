@@ -1,0 +1,250 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-28T07:39:30.858Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./apps/api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#../../packages/mailer/src/index.ts:MailPreview",
+      "type": "provider",
+      "label": "MailPreview",
+      "repo": "api",
+      "file": "../../packages/mailer/src/index.ts",
+      "line": 5,
+      "kind": "injectable"
+    },
+    {
+      "id": "api#../../packages/mailer/src/index.ts:MailPreview.preview",
+      "type": "method",
+      "label": "MailPreview.preview",
+      "repo": "api",
+      "file": "../../packages/mailer/src/index.ts",
+      "line": 9
+    },
+    {
+      "id": "api#../../packages/sdk/src/index.ts:SdkClient",
+      "type": "provider",
+      "label": "SdkClient",
+      "repo": "api",
+      "file": "../../packages/sdk/src/index.ts",
+      "line": 5,
+      "kind": "injectable"
+    },
+    {
+      "id": "api#../../packages/sdk/src/index.ts:SdkClient.lookup",
+      "type": "method",
+      "label": "SdkClient.lookup",
+      "repo": "api",
+      "file": "../../packages/sdk/src/index.ts",
+      "line": 9
+    },
+    {
+      "id": "api#../../packages/widgets/src/status.service.ts:StatusService",
+      "type": "provider",
+      "label": "StatusService",
+      "repo": "api",
+      "file": "../../packages/widgets/src/status.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "api#../../packages/widgets/src/status.service.ts:StatusService.status",
+      "type": "method",
+      "label": "StatusService.status",
+      "repo": "api",
+      "file": "../../packages/widgets/src/status.service.ts",
+      "line": 9,
+      "meta": {
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "api#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "api",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 4,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.place",
+      "type": "method",
+      "label": "OrdersController.place",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13
+    },
+    {
+      "id": "entry:api:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {
+            "@angular/common": 4
+          },
+          "templates": 0
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "frontend": [
+            "angular"
+          ],
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:api#../../packages/widgets/src/status.service.ts:10:12",
+      "type": "ui_api_call",
+      "label": "GET /orders/:param/status",
+      "repo": "api",
+      "file": "../../packages/widgets/src/status.service.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/orders/:param/status",
+        "path": "/orders/:param/status",
+        "baseUrlEnv": null,
+        "responseType": "{id:string;status:string}",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "literal"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#../../packages/widgets/src/status.service.ts:StatusService",
+      "to": "api#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "../../packages/widgets/src/status.service.ts",
+      "line": 7
+    },
+    {
+      "from": "api#../../packages/widgets/src/status.service.ts:StatusService.status",
+      "to": "ui_api_call:api#../../packages/widgets/src/status.service.ts:10:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../../packages/widgets/src/status.service.ts",
+      "line": 10
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController.place",
+      "to": "api#../../packages/mailer/src/index.ts:MailPreview.preview",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{html:string}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController.place",
+      "to": "api#../../packages/sdk/src/index.ts:SdkClient.lookup",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{email:string}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17
+    },
+    {
+      "from": "entry:api:http:POST:/orders",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.place",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{id:string;email:string}"
+      ],
+      "returns": "{id:string;label:string}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "meta": {
+        "body": "{id:string;email:string}"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "service": "api",
+      "file": "../../packages/widgets/src/status.service.ts",
+      "line": 10,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /orders/:param/status",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /orders/:param/status */.",
+      "symbol": "ui_api_call:api#../../packages/widgets/src/status.service.ts:10:12"
+    }
+  ]
+}

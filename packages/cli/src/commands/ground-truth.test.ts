@@ -3,6 +3,7 @@ import { join, resolve, sep } from 'node:path';
 import type { GraphEdge, ProjectGraph, RepoGraph } from '@flowatlas/core';
 import type { LinkReport } from '@flowatlas/linker';
 import { beforeAll, afterAll, describe, expect, it } from 'vitest';
+import { resolveNode, resolveNodeId } from '../../../../scripts/fixture-nodes.mjs';
 import { buildProject } from './build.js';
 import { runExtract } from './extract.js';
 
@@ -20,6 +21,13 @@ import { runExtract } from './extract.js';
  * handles it, this request reaches it, and the chain ends at that table — and
  * says so in its own name, so that a failure names the fact that stopped being
  * true rather than a line number in a JSON file.
+ *
+ * Nor does anything here spell a coordinate out. A node id carries the line and
+ * the column the thing was written at, and that is deliberate, but an assertion
+ * that types one out is pinned to a fixture nobody can then add a line to. So
+ * every request, query, emit and click below is asked for by the method that
+ * contains it, through `scripts/fixture-nodes.mjs`, which answers with one node
+ * or with a failure naming the candidates.
  */
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
@@ -182,12 +190,16 @@ describe('a controller registered under two names, read from fixtures/ground-tru
 });
 
 describe('a request that is neither a GET nor a POST, read from fixtures/ground-truth', () => {
-  // client/src/orders/orders.client.ts:21 is
+  // `OrdersClient.rename` is
   // `this.http.patch(`${this.config.get('API_URL')}/orders/${id}`, { name })`.
-  const call = 'http_out:client#src/orders/orders.client.ts:21:12';
+  const call = (): string =>
+    resolveNodeId(groundTruth, {
+      type: 'http_out',
+      calledBy: 'client#src/orders/orders.client.ts:OrdersClient.rename',
+    });
 
   it('keeps the verb the call was written with', () => {
-    expect(metaOf(groundTruth, call)).toMatchObject({
+    expect(metaOf(groundTruth, call())).toMatchObject({
       method: 'PATCH',
       path: '/orders/:param',
       baseUrlEnv: 'API_URL',
@@ -195,8 +207,8 @@ describe('a request that is neither a GET nor a POST, read from fixtures/ground-
   });
 
   it('reaches the route that answers that verb, and says how it knew', () => {
-    expect(follows(groundTruth, call, 'http_calls')).toBe('entry:api:http:PATCH:/orders/:param');
-    expect(edgeBetween(groundTruth, call, 'entry:api:http:PATCH:/orders/:param')).toMatchObject({
+    expect(follows(groundTruth, call(), 'http_calls')).toBe('entry:api:http:PATCH:/orders/:param');
+    expect(edgeBetween(groundTruth, call(), 'entry:api:http:PATCH:/orders/:param')).toMatchObject({
       confidence: 'static',
       meta: { via: 'baseUrlEnv', targetService: 'api' },
     });
@@ -206,11 +218,15 @@ describe('a request that is neither a GET nor a POST, read from fixtures/ground-
 describe('a catch-all beside a route that spells its segment out, in fixtures/ground-truth', () => {
   // api/src/files/files.controller.ts declares `@Get('latest')` on line 13 and
   // `@Get('*')` on line 18. Both answer `GET /files/latest`; the router runs the
-  // one that spells the segment out.
-  const call = 'http_out:client#src/orders/orders.client.ts:26:12';
+  // one that spells the segment out. `OrdersClient.newest` asks for it.
+  const call = (): string =>
+    resolveNodeId(groundTruth, {
+      type: 'http_out',
+      calledBy: 'client#src/orders/orders.client.ts:OrdersClient.newest',
+    });
 
   it('chooses the route that spells the segment out over the one that swallows it', () => {
-    expect(follows(groundTruth, call, 'http_calls')).toBe('entry:api:http:GET:/files/latest');
+    expect(follows(groundTruth, call(), 'http_calls')).toBe('entry:api:http:GET:/files/latest');
   });
 
   it('leaves the catch-all reported as reached by nobody', () => {
@@ -219,20 +235,24 @@ describe('a catch-all beside a route that spells its segment out, in fixtures/gr
 });
 
 describe('a segment chosen from a table of names, in fixtures/ground-truth', () => {
-  // client/src/orders/orders.client.ts:35 asks for
+  // `OrdersClient.report` asks for
   // `${API_URL}/reports/${REPORT_PATHS[kind]}`. `api` does serve
   // `GET /reports/:kind`, and this call must still reach nothing: a route
   // declares a hole for values, not for a choice between names the caller keeps
   // in a table (R01, R05).
-  const call = 'http_out:client#src/orders/orders.client.ts:35:12';
+  const call = (): string =>
+    resolveNodeId(groundTruth, {
+      type: 'http_out',
+      calledBy: 'client#src/orders/orders.client.ts:OrdersClient.report',
+    });
 
   it('does not write the lookup down as a route parameter', () => {
-    expect(metaOf(groundTruth, call)).toMatchObject({ path: '/reports/${…}' });
+    expect(metaOf(groundTruth, call())).toMatchObject({ path: '/reports/${…}' });
   });
 
   it('reaches no route, though one looks as though it would answer', () => {
-    expect(follows(groundTruth, call, 'http_calls')).toBe(
-      `nothing: ${call} has no http_calls edge`,
+    expect(follows(groundTruth, call(), 'http_calls')).toBe(
+      `nothing: ${call()} has no http_calls edge`,
     );
     expect(groundTruthReport.routes.uncalled).toContain('entry:api:http:GET:/reports/:param');
   });
@@ -324,42 +344,54 @@ describe('the routes fixtures/multi-repo declares, read from its controllers', (
 
 describe('the chain fixtures/multi-repo exists to draw', () => {
   it('goes from the button in the browser to the table three repositories away', () => {
-    // Read from the source, in order: the template on
-    // web/src/app/checkout.component.ts:15, `checkout` on line 20,
-    // `OrdersApiService.order` on line 20 of orders-api.service.ts, its request
-    // on line 21, the gateway's `GET /orders/:id` on line 30 of its controller,
-    // `OrdersClient.fetchOne` on line 32, its request on line 33, orders'
-    // `GET /orders/:id` on line 25, `OrdersService.findOne` on line 25 of the
-    // service, and its `findOne` on the repository on line 26.
+    // Read from the source, in order: the template of `CheckoutComponent`, its
+    // `checkout` method, `OrdersApiService.order`, the request that method
+    // makes, the gateway's `GET /orders/:id`, `OrdersClient.fetchOne`, its
+    // request, orders' `GET /orders/:id`, `OrdersService.findOne`, and its
+    // `findOne` on the repository.
+    const click = resolveNodeId(multiRepo, {
+      type: 'ui_action',
+      handling: 'web#src/app/checkout.component.ts:CheckoutComponent.checkout',
+    });
+    const fromBrowser = resolveNodeId(multiRepo, {
+      type: 'ui_api_call',
+      calledBy: 'web#src/app/orders-api.service.ts:OrdersApiService.order',
+    });
+    const fromGateway = resolveNodeId(multiRepo, {
+      type: 'http_out',
+      calledBy: 'gateway#src/clients/orders.client.ts:OrdersClient.fetchOne',
+    });
+    const read = resolveNodeId(multiRepo, {
+      type: 'db_query',
+      calledBy: 'orders#src/orders/orders.service.ts:OrdersService.findOne',
+    });
+
     expect(
-      walkFrom(multiRepo, 'ui_action:web#src/app/checkout.component.ts:15:22', [
-        'handles',
-        'calls',
-        'hits',
-        'http_calls',
-        'queries',
-      ]),
+      walkFrom(multiRepo, click, ['handles', 'calls', 'hits', 'http_calls', 'queries']),
     ).toEqual([
       'handles web#src/app/checkout.component.ts:CheckoutComponent.checkout',
       'calls web#src/app/orders-api.service.ts:OrdersApiService.order',
-      'calls ui_api_call:web#src/app/orders-api.service.ts:21:12',
+      `calls ${fromBrowser}`,
       'hits entry:gateway:http:GET:/orders/:param',
       'handles gateway#src/orders/orders.controller.ts:OrdersController.findOne',
       'calls gateway#src/clients/orders.client.ts:OrdersClient.fetchOne',
-      'calls http_out:gateway#src/clients/orders.client.ts:33:12',
+      `calls ${fromGateway}`,
       'http_calls entry:orders:http:GET:/orders/:param',
       'handles orders#src/orders/orders.controller.ts:OrdersController.findOne',
       'calls orders#src/orders/orders.service.ts:OrdersService.findOne',
-      'calls db_query:orders#src/orders/orders.service.ts:26:23',
+      `calls ${read}`,
       'queries table:orders#Order',
     ]);
   });
 
   it('reads the request the gateway makes for one order as reaching the route orders serves', () => {
-    // gateway/src/clients/orders.client.ts:33 asks for
+    // `OrdersClient.fetchOne` in the gateway asks for
     // `${ORDERS_URL}/orders/${id}`; `flowatlas.config.json` gives `ORDERS_URL` to
     // `orders`, whose controller declares `@Get(':id')` under `@Controller('orders')`.
-    const call = 'http_out:gateway#src/clients/orders.client.ts:33:12';
+    const call = resolveNodeId(multiRepo, {
+      type: 'http_out',
+      calledBy: 'gateway#src/clients/orders.client.ts:OrdersClient.fetchOne',
+    });
     expect(metaOf(multiRepo, call)).toMatchObject({
       method: 'GET',
       path: '/orders/:param',
@@ -373,11 +405,14 @@ describe('the chain fixtures/multi-repo exists to draw', () => {
   });
 
   it('keeps both halves of an address a helper assembles', () => {
-    // web/src/app/orders-api.service.ts:61 passes `${id}/invoice` to `urlFor`,
-    // which writes `${environment.apiUrl}/orders/` in front of it. Reading only
-    // the key it is rooted at reported the request against `/`, which the
-    // gateway does not serve — a route that was never missing (R05).
-    const call = 'ui_api_call:web#src/app/orders-api.service.ts:61:12';
+    // `OrdersApiService.invoice` passes `${id}/invoice` to `urlFor`, which
+    // writes `${environment.apiUrl}/orders/` in front of it. Reading only the
+    // key it is rooted at reported the request against `/`, which the gateway
+    // does not serve — a route that was never missing (R05).
+    const call = resolveNodeId(multiRepo, {
+      type: 'ui_api_call',
+      calledBy: 'web#src/app/orders-api.service.ts:OrdersApiService.invoice',
+    });
     expect(metaOf(multiRepo, call)).toMatchObject({
       method: 'POST',
       path: '/orders/:param/invoice',
@@ -387,9 +422,9 @@ describe('the chain fixtures/multi-repo exists to draw', () => {
 
   it('ends at the table the entity names', () => {
     const findOne = 'orders#src/orders/orders.service.ts:OrdersService.findOne';
-    // orders/src/orders/orders.service.ts:26 is `this.orders.findOne(...)` on a
-    // `Repository<Order>`, and order.entity.ts declares `Order`.
-    const query = 'db_query:orders#src/orders/orders.service.ts:26:23';
+    // Its body is `this.orders.findOne(...)` on a `Repository<Order>`, and
+    // order.entity.ts declares `Order`.
+    const query = resolveNodeId(multiRepo, { type: 'db_query', calledBy: findOne });
     expect(follows(multiRepo, findOne, 'calls')).toBe(query);
     expect(metaOf(multiRepo, query)).toMatchObject({ op: 'read', table: 'Order' });
     expect(follows(multiRepo, query, 'queries')).toBe('table:orders#Order');
@@ -398,23 +433,33 @@ describe('the chain fixtures/multi-repo exists to draw', () => {
 
 describe('what fixtures/multi-repo deliberately does not join', () => {
   it('does not join a client asking for a route the service renamed', () => {
-    // gateway/src/clients/orders.client.ts:44 asks for
-    // `POST /orders/:param/cancel`; orders/src/orders/orders.controller.ts:42
+    // `OrdersClient.cancel` in the gateway asks for
+    // `POST /orders/:param/cancel`; orders/src/orders/orders.controller.ts
     // declares `POST /orders/:param/archive` and nothing else near it.
-    const call = 'http_out:gateway#src/clients/orders.client.ts:44:12';
-    expect(follows(multiRepo, call, 'http_calls')).toBe(
-      `nothing: ${call} has no http_calls edge`,
+    const call = resolveNode(multiRepo, {
+      type: 'http_out',
+      calledBy: 'gateway#src/clients/orders.client.ts:OrdersClient.cancel',
+    });
+    expect(follows(multiRepo, call.id, 'http_calls')).toBe(
+      `nothing: ${call.id} has no http_calls edge`,
     );
+    // Found where the request is rather than at a line typed out here, so that
+    // the row is matched to the call this test is about however the file moves.
     expect(
-      multiRepo.unresolved.find((row) => row.line === 44 && row.service === 'gateway')?.message,
+      multiRepo.unresolved.find(
+        (row) => row.service === call.repo && row.file === call.file && row.line === call.line,
+      )?.message,
     ).toBe('target service orders has no route POST /orders/:param/cancel');
   });
 
   it('does not join an address with two holes in a row to the route it resembles', () => {
-    // `${ORDERS_URL}/orders/${id}${suffix}` on line 59 could be one segment or
-    // four, and each hole is its own span nobody read. It used to collapse to
-    // `/orders/:param` and join (R01).
-    const call = 'http_out:gateway#src/clients/orders.client.ts:59:12';
+    // `OrdersClient.variant` writes `${ORDERS_URL}/orders/${id}${suffix}`,
+    // which could be one segment or four, and each hole is its own span nobody
+    // read. It used to collapse to `/orders/:param` and join (R01).
+    const call = resolveNodeId(multiRepo, {
+      type: 'http_out',
+      calledBy: 'gateway#src/clients/orders.client.ts:OrdersClient.variant',
+    });
     expect(metaOf(multiRepo, call)).toMatchObject({ path: '/orders/${…}${…}' });
     expect(follows(multiRepo, call, 'http_calls')).toBe(
       `nothing: ${call} has no http_calls edge`,
@@ -422,19 +467,24 @@ describe('what fixtures/multi-repo deliberately does not join', () => {
   });
 
   it('does not join an address whose hole runs into text', () => {
-    // web/src/app/orders-api.service.ts:48 asks for `${apiUrl}/orders/${id}-summary`.
+    // `OrdersApiService.summary` asks for `${apiUrl}/orders/${id}-summary`.
     // The segment could be `42-summary` or `latest-summary`; nothing here says
     // which, and it used to collapse to `/orders/:param` and join (R01).
-    const call = 'ui_api_call:web#src/app/orders-api.service.ts:48:12';
+    const call = resolveNodeId(multiRepo, {
+      type: 'ui_api_call',
+      calledBy: 'web#src/app/orders-api.service.ts:OrdersApiService.summary',
+    });
     expect(metaOf(multiRepo, call)).toMatchObject({ path: '/orders/${…}-summary' });
     expect(follows(multiRepo, call, 'hits')).toBe(`nothing: ${call} has no hits edge`);
   });
 
   it('does not choose between two services that both serve the route a browser asks for', () => {
-    // web/src/app/orders-api.service.ts:34 is rooted at `ordersUrl`, which
-    // `apiTarget` does not name, and `gateway` and `orders` both serve
-    // `GET /orders/:param`.
-    const call = 'ui_api_call:web#src/app/orders-api.service.ts:34:12';
+    // `OrdersApiService.mirror` is rooted at `ordersUrl`, which `apiTarget`
+    // does not name, and `gateway` and `orders` both serve `GET /orders/:param`.
+    const call = resolveNodeId(multiRepo, {
+      type: 'ui_api_call',
+      calledBy: 'web#src/app/orders-api.service.ts:OrdersApiService.mirror',
+    });
     expect(follows(multiRepo, call, 'hits')).toBe(`nothing: ${call} has no hits edge`);
   });
 });
@@ -445,12 +495,14 @@ describe('the channel both ends of fixtures/multi-repo meet on', () => {
   });
 
   it('joins the emit in orders to the handler in billing through it', () => {
-    // orders/src/orders/orders.service.ts:49 emits `order.created`;
-    // billing/src/invoices/invoices.consumer.ts:17 is
+    // `OrdersService.create` in orders emits `order.created`;
+    // billing/src/invoices/invoices.consumer.ts is
     // `@EventPattern('order.created')`.
-    expect(follows(multiRepo, 'producer:orders#src/orders/orders.service.ts:49:5', 'emits')).toBe(
-      'channel:order.created',
-    );
+    const emit = resolveNodeId(multiRepo, {
+      type: 'producer',
+      calledBy: 'orders#src/orders/orders.service.ts:OrdersService.create',
+    });
+    expect(follows(multiRepo, emit, 'emits')).toBe('channel:order.created');
     expect(allFollowing(multiRepo, 'channel:order.created', 'consumes')).toEqual([
       'consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated',
     ]);
@@ -463,54 +515,64 @@ describe('the channel both ends of fixtures/multi-repo meet on', () => {
 });
 
 describe('the leaves fixtures/nest-leaves writes down, read from its service', () => {
+  const METHOD = 'nest-leaves#src/orders/orders.service.ts:OrdersService';
+
+  /** What one method of the service leaves behind, of the kind named. */
+  const leaf = (type: string, method: string): Record<string, unknown> | string =>
+    metaOf(leaves, resolveNodeId(leaves, { type, calledBy: `${METHOD}.${method}` }));
+
+  /** What each method that touches the cache does to it, by the method's name. */
   const cacheOps = (): Record<string, unknown> =>
     Object.fromEntries(
-      leaves.nodes
-        .filter((node) => node.type === 'cache_op')
-        .map((node) => [
-          node.id.replace('cache_op:nest-leaves#src/orders/orders.service.ts:', 'line '),
-          `${String(node.meta?.['op'] ?? '?')} ${String(node.meta?.['keyPattern'] ?? '(none)')}`,
-        ]),
+      ['warm', 'byId', 'put', 'drop', 'dropComputed'].map((method) => {
+        const op = resolveNode(leaves, { type: 'cache_op', cachedBy: `${METHOD}.${method}` });
+        return [
+          method,
+          `${String(op.meta?.['op'] ?? '?')} ${String(op.meta?.['keyPattern'] ?? '(none)')}`,
+        ];
+      }),
     );
 
   it('keeps a literal key whole and marks the hole in a key that has one', () => {
-    // The five calls on the cache, at lines 19, 24, 28, 32 and 38 of
-    // orders.service.ts. `orders:${id}` keeps its prefix; `del(key)` has no
-    // literal part at all, so there is no pattern to write down.
+    // `orders:${id}` keeps its prefix; `del(key)` has no literal part at all,
+    // so there is no pattern to write down. Counted as well as named, so that a
+    // sixth call on the cache appearing from somewhere is still a failure.
+    expect(leaves.nodes.filter((node) => node.type === 'cache_op')).toHaveLength(5);
     expect(cacheOps()).toEqual({
-      'line 19:12': 'get orders:index',
-      'line 24:12': 'get orders:*',
-      'line 28:12': 'set orders:*',
-      'line 32:12': 'del orders:*',
-      'line 38:12': 'del (none)',
+      warm: 'get orders:index',
+      byId: 'get orders:*',
+      put: 'set orders:*',
+      drop: 'del orders:*',
+      dropComputed: 'del (none)',
     });
   });
 
   it('says which key it could not read rather than inventing one', () => {
-    // `this.cache.del(key)` on line 38.
+    // `dropComputed` is `this.cache.del(key)`.
+    const op = resolveNode(leaves, { type: 'cache_op', cachedBy: `${METHOD}.dropComputed` });
     expect(leaves.unresolved.filter((row) => row.reason === 'dynamic-cache-key')).toHaveLength(1);
-    expect(leaves.unresolved.find((row) => row.reason === 'dynamic-cache-key')?.line).toBe(38);
+    expect(leaves.unresolved.find((row) => row.reason === 'dynamic-cache-key')?.line).toBe(op.line);
   });
 
   it('roots an outgoing address at the setting it was built from', () => {
-    // Line 44: `this.http.get(`${this.config.get('ORDERS_URL')}/orders/${id}`)`.
-    expect(metaOf(leaves, 'http_out:nest-leaves#src/orders/orders.service.ts:44:12')).toMatchObject(
-      { method: 'GET', path: '/orders/:param', baseUrlEnv: 'ORDERS_URL' },
-    );
+    // `fetchOne` is `this.http.get(`${this.config.get('ORDERS_URL')}/orders/${id}`)`.
+    expect(leaf('http_out', 'fetchOne')).toMatchObject({
+      method: 'GET',
+      path: '/orders/:param',
+      baseUrlEnv: 'ORDERS_URL',
+    });
   });
 
   it('names the third party an absolute address goes to', () => {
-    // Line 54: `axios.post('https://api.stripe.com/v1/charges', …)`.
-    const call = 'http_out:nest-leaves#src/orders/orders.service.ts:54:12';
+    // `charge` is `axios.post('https://api.stripe.com/v1/charges', …)`.
+    const call = resolveNodeId(leaves, { type: 'http_out', calledBy: `${METHOD}.charge` });
     expect(metaOf(leaves, call)).toMatchObject({ method: 'POST', host: 'api.stripe.com' });
     expect(follows(leaves, call, 'calls')).toBe('external_api:api.stripe.com');
   });
 
   it('takes the verb of a platform request out of its options', () => {
-    // Line 65: `fetch('https://example.test/health', { method: 'HEAD' })`.
-    expect(metaOf(leaves, 'http_out:nest-leaves#src/orders/orders.service.ts:65:12')).toMatchObject(
-      { method: 'HEAD', host: 'example.test' },
-    );
+    // `ping` is `fetch('https://example.test/health', { method: 'HEAD' })`.
+    expect(leaf('http_out', 'ping')).toMatchObject({ method: 'HEAD', host: 'example.test' });
   });
 
   it('records every settings key the service reads and none it does not', () => {

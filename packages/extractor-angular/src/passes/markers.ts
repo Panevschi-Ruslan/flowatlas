@@ -1,4 +1,5 @@
 import {
+  applicationOfFile,
   makeChannelId,
   makeLeafId,
   makeSymbolId,
@@ -62,6 +63,7 @@ export const markersPass = definePass('markers', (ctx) => {
     // rooted at, and saying so is what lets the annotation reach a service.
     const bases = ctx.service.apiBaseEnv ?? [];
     const baseUrlEnv = bases.length === 1 ? (bases[0] as string) : null;
+    const application = applicationOfFile(ctx.meta, file);
 
     ctx.builder.addNode({
       id,
@@ -79,6 +81,10 @@ export const markersPass = definePass('markers', (ctx) => {
         responseType: null,
         bodyType: null,
         package: ANGULAR_HTTP,
+        // Which application this request is written in, where the service holds
+        // more than one; the other half of what an entry records about its own
+        // address (R132).
+        ...(application === undefined ? {} : { application }),
         via: 'marker',
       },
     });

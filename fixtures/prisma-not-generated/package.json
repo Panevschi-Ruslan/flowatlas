@@ -1,0 +1,10 @@
+{
+  "name": "@fixture/prisma-not-generated",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Workspace root: a service and the Prisma wrapper it declares, with no client generated.",
+  "workspaces": [
+    "api",
+    "packages/*"
+  ]
+}

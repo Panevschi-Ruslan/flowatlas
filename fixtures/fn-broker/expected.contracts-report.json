@@ -1,0 +1,153 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 5,
+  "generatedAt": "2026-09-27T17:30:46.718Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:api#src/orders/notify.ts:14:3",
+        "to": "consumer:worker#src/projections/declared-projections.service.ts:DeclaredProjections.onCreated",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/orders/notify.ts:14:3|emits|consumer:worker#src/projections/declared-projections.service.ts:DeclaredProjections.onCreated",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "api",
+        "typeId": "type:api#OrderEvent",
+        "symbol": "api#src/orders/notify.ts:notifyCreated"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "type:worker#OrderEvent",
+        "symbol": "worker#src/projections/declared-projections.service.ts:DeclaredProjections.onCreated"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:api#src/orders/notify.ts:14:3",
+        "to": "consumer:worker#src/projections/orders.service.ts:OrderProjections.onCreated",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/orders/notify.ts:14:3|emits|consumer:worker#src/projections/orders.service.ts:OrderProjections.onCreated",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "api",
+        "typeId": "type:api#OrderEvent",
+        "symbol": "api#src/orders/notify.ts:notifyCreated"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "type:worker#OrderEvent",
+        "symbol": "worker#src/projections/orders.service.ts:OrderProjections.onCreated"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:api#src/orders/notify.ts:23:5",
+        "to": "consumer:worker#src/projections/orders.service.ts:OrderProjections.onInvoiced",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/orders/notify.ts:23:5|emits|consumer:worker#src/projections/orders.service.ts:OrderProjections.onInvoiced",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "api",
+        "typeId": "type:api#OrderEvent",
+        "symbol": "api#src/orders/notify.ts:invoices.notifyInvoiced"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "type:worker#OrderEvent",
+        "symbol": "worker#src/projections/orders.service.ts:OrderProjections.onInvoiced"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:api#src/orders/orders.routes.ts:15:3",
+        "to": "consumer:worker#src/projections/orders.service.ts:OrderProjections.onCancelled",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/orders/orders.routes.ts:15:3|emits|consumer:worker#src/projections/orders.service.ts:OrderProjections.onCancelled",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "api",
+        "typeId": "{orderId:string;total:number}",
+        "symbol": "api#src/orders/orders.routes.ts:POST /:orderId/cancel@14"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "type:worker#OrderEvent",
+        "symbol": "worker#src/projections/orders.service.ts:OrderProjections.onCancelled"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:api#src/orders/orders.service.ts:16:5",
+        "to": "consumer:worker#src/projections/declared-projections.service.ts:DeclaredProjections.onCreated",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/orders/orders.service.ts:16:5|emits|consumer:worker#src/projections/declared-projections.service.ts:DeclaredProjections.onCreated",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "api",
+        "typeId": "type:api#OrderEvent",
+        "symbol": "api#src/orders/orders.service.ts:OrdersService.publishCreated"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "type:worker#OrderEvent",
+        "symbol": "worker#src/projections/declared-projections.service.ts:DeclaredProjections.onCreated"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:api#src/orders/orders.service.ts:16:5",
+        "to": "consumer:worker#src/projections/orders.service.ts:OrderProjections.onCreated",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/orders/orders.service.ts:16:5|emits|consumer:worker#src/projections/orders.service.ts:OrderProjections.onCreated",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "api",
+        "typeId": "type:api#OrderEvent",
+        "symbol": "api#src/orders/orders.service.ts:OrdersService.publishCreated"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "type:worker#OrderEvent",
+        "symbol": "worker#src/projections/orders.service.ts:OrderProjections.onCreated"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [],
+  "summary": {
+    "edges": 6,
+    "shared": 0,
+    "identical": 5,
+    "hash_differs": 1,
+    "unchecked": 0,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

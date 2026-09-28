@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "repo": "nest-broker-markers",
-  "generatedAt": "2026-09-21T15:21:52.051Z",
+  "generatedAt": "2026-09-27T09:26:35.433Z",
   "nodes": [
     {
       "id": "channel:order.archived",
@@ -800,6 +800,8 @@
       "meta": {
         "stats": {
           "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
           "classes": 5,
           "skippedExternalCalls": {}
         },

@@ -63,11 +63,65 @@ const bodyTypeOf = (handles: GraphEdge | undefined): string | undefined => {
 const handlesOf = (lookup: GraphLookup, entryId: string): GraphEdge[] =>
   lookup.edgesFrom(entryId, ['handles']).sort((a, b) => (a.to < b.to ? -1 : a.to > b.to ? 1 : 0));
 
-const party = (service: string, typeId: string | undefined, symbol: string): ContractParty => ({
-  service,
-  typeId: namesAShape(typeId) ? typeId : null,
-  symbol,
+/**
+ * The document an end was declared by, when nobody here could read its source.
+ *
+ * Read off the node rather than off the configuration, because by the time a
+ * boundary is being judged the configuration is two packages away and the fact
+ * is already on every node and edge the document produced. A service that was
+ * read carries nothing here and the key is left off the party entirely, so the
+ * absence of it means "read" rather than "not looked into".
+ */
+const declaredBy = (lookup: GraphLookup, id: string): string | undefined => {
+  const said = lookup.node(id)?.meta?.['declaredBy'];
+  return typeof said === 'string' ? said : undefined;
+};
+
+const party = (
+  lookup: GraphLookup,
+  service: string,
+  typeId: string | undefined,
+  symbol: string,
+): ContractParty => {
+  const document = declaredBy(lookup, symbol);
+  return {
+    service,
+    typeId: namesAShape(typeId) ? typeId : null,
+    symbol,
+    ...(document === undefined ? {} : { declaredBy: document }),
+  };
+};
+
+/**
+ * The two ends of an answer, whichever way the question was asked.
+ *
+ * A route and a request over a channel are answered the same way: the handler
+ * declares what it returns, and the edge that asked carries what the asker
+ * expects back as its `returns`. Read in one place so that the answer to a
+ * `client.send` is compared exactly as the answer to an `http.get` is, rather
+ * than by a second reading that could drift from the first (R151).
+ */
+const answer = (
+  lookup: GraphLookup,
+  handler: { service: string; handles: GraphEdge | undefined; symbol: string },
+  asker: { service: string; asked: GraphEdge; symbol: string },
+): { sender: ContractParty; receiver: ContractParty } => ({
+  sender: party(lookup, handler.service, handler.handles?.returns, handler.symbol),
+  receiver: party(lookup, asker.service, asker.asked.returns, asker.symbol),
 });
+
+/**
+ * The kind of publish that waits for an answer.
+ *
+ * Every reader of a transport writes it on the producer, whether the call is a
+ * request by its name — `client.send` — or by the callback it hands over. A
+ * publish of any other kind expects nothing back, so it has no answer to be
+ * compared or to be missing a type for.
+ */
+const REQUEST_KIND = 'rpc';
+
+const asksForAnswer = (lookup: GraphLookup, emit: GraphEdge): boolean =>
+  lookup.node(emit.from)?.kind === REQUEST_KIND;
 
 /**
  * Both halves of a request, whichever way the request was made.
@@ -94,6 +148,31 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
     symbols: [caller, handler],
   });
 
+  // A procedure asked for by its path. Neither direction has two shapes to
+  // compare: the input is on the entry by name only, and the answer is typed on
+  // the client by inference from the server's tree. Said per direction, so the
+  // report names what is missing on each rather than putting the handler's
+  // parameters — a context and an envelope — against what the caller sends.
+  if (typeof lookup.node(edge.from)?.meta?.['procedure'] === 'string') {
+    const input = lookup.node(edge.to)?.meta?.['input'];
+    const callerParty = party(lookup, callerService, undefined, caller);
+    const handlerParty = party(lookup, handlerService, undefined, handler);
+    return [
+      {
+        ...both('request', callerParty, handlerParty),
+        blocked: {
+          reason: 'procedure-input-by-name' as const,
+          subject: edge.to,
+          ...(typeof input === 'string' ? { detail: input } : {}),
+        },
+      },
+      {
+        ...both('response', handlerParty, callerParty),
+        blocked: { reason: 'procedure-output-inferred' as const, subject: edge.to },
+      },
+    ];
+  }
+
   if (handles.length > 1) {
     const blocked = {
       reason: 'ambiguous-handler' as const,
@@ -102,8 +181,8 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
     return (['request', 'response'] as const).map((direction) => ({
       ...both(
         direction,
-        party(callerService, undefined, caller),
-        party(handlerService, undefined, edge.to),
+        party(lookup, callerService, undefined, caller),
+        party(lookup, handlerService, undefined, edge.to),
       ),
       blocked,
     }));
@@ -115,18 +194,19 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
   const request = both(
     'request',
     {
-      ...party(callerService, edge.params?.[0], caller),
+      ...party(lookup, callerService, edge.params?.[0], caller),
       ...(readable
         ? { writes: written as string[], writesEvery: sender?.['bodyFrom'] === 'literal' }
         : {}),
     },
-    party(handlerService, bodyTypeOf(handles[0]), handler),
+    party(lookup, handlerService, bodyTypeOf(handles[0]), handler),
   );
-  const response = both(
-    'response',
-    party(handlerService, handles[0]?.returns, handler),
-    party(callerService, edge.returns, caller),
+  const replied = answer(
+    lookup,
+    { service: handlerService, handles: handles[0], symbol: handler },
+    { service: callerService, asked: edge, symbol: caller },
   );
+  const response = both('response', replied.sender, replied.receiver);
   return [request, response];
 };
 
@@ -167,8 +247,8 @@ const channelExchanges = (lookup: GraphLookup, channel: GraphNode): Exchange[] =
         edge: { from: side?.from ?? channel.id, to: side?.to ?? channel.id, type: side?.type ?? 'emits' },
         edgeKey: `${channel.id}|${emits.length === 0 ? 'consumes' : 'emits'}|${end}`,
         direction: 'payload',
-        sender: party(repoOf(lookup, end), undefined, end),
-        receiver: party(repoOf(lookup, end), undefined, end),
+        sender: party(lookup, repoOf(lookup, end), undefined, end),
+        receiver: party(lookup, repoOf(lookup, end), undefined, end),
         symbols: [],
         blocked: { reason, subject: channel.id },
       },
@@ -191,19 +271,23 @@ const channelExchanges = (lookup: GraphLookup, channel: GraphNode): Exchange[] =
         edge: shape,
         edgeKey,
         direction: 'payload',
-        sender: party(publisherService, emit.params?.[0], publisher),
-        receiver: party(handlerService, bodyTypeOf(handles) ?? handles?.params?.[0], handler),
+        sender: party(lookup, publisherService, emit.params?.[0], publisher),
+        receiver: party(lookup, handlerService, bodyTypeOf(handles) ?? handles?.params?.[0], handler),
         symbols: [publisher, handler],
       });
-      // A request and an answer, over a channel. Only some transports have one,
-      // and the publisher's own return type is what says so.
-      if (emit.returns !== undefined) {
+      // A request and an answer, over a channel. The kind of the publish says
+      // whether there is an answer at all; whether either end declares its type
+      // is the comparison's to say, in the words it says it for a route.
+      if (asksForAnswer(lookup, emit)) {
         found.push({
           edge: shape,
           edgeKey,
           direction: 'response',
-          sender: party(handlerService, handles?.returns, handler),
-          receiver: party(publisherService, emit.returns, publisher),
+          ...answer(
+            lookup,
+            { service: handlerService, handles, symbol: handler },
+            { service: publisherService, asked: emit, symbol: publisher },
+          ),
           symbols: [publisher, handler],
         });
       }

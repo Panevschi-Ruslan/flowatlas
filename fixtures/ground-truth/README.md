@@ -1,15 +1,21 @@
 # ground-truth fixture
 
 Two repositories holding the shapes the other fixtures never write down, and one
-thing none of them has: **no recorded graph**. Everything this fixture claims is
-in the table below, read off the source by hand, and asserted one property at a
-time in `packages/cli/src/commands/ground-truth.test.ts`.
+thing none of them has: **a recording is not its authority**. Everything this
+fixture claims is in the table below, read off the source by hand, and asserted
+one property at a time in `packages/cli/src/commands/ground-truth.test.ts`.
 
 That is the point of it (R09). A recorded graph proves the answer has not
 changed; it cannot tell a right answer from a wrong one, and if the recording was
-taken while the answer was wrong it preserves the mistake. So there is no
-`expected.graph.json` here and nothing to regenerate: to change what this fixture
-says, change what it says.
+taken while the answer was wrong it preserves the mistake. To change what this
+fixture says, change what it says.
+
+`expected.project-graph.json` and `expected.link-report.json` exist all the same,
+because the fixture gate holds every output a run writes (R138). They were taken
+only after both were read against the tables below, and they agree with them
+row for row. They say *that* something moved; the tables and the test say
+whether it moved the right way. A diff here is never accepted with `--update`
+until the tables have been checked against it.
 
 Built, from the repository root:
 

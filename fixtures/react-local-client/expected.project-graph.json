@@ -1,0 +1,338 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T09:26:58.220Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "functions": 2,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_action:web#src/screens/OrdersPanel.tsx:26:15",
+      "type": "ui_action",
+      "label": "onClick={load}",
+      "repo": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "load",
+        "component": "web#src/screens/OrdersPanel.tsx:OrdersPanel",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/screens/OrdersPanel.tsx:27:15",
+      "type": "ui_action",
+      "label": "onClick={() => create({ id: 'a', name: 'b' })}",
+      "repo": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 27,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => create({ id: 'a', name: 'b' })",
+        "component": "web#src/screens/OrdersPanel.tsx:OrdersPanel",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/screens/OrdersPanel.tsx:28:15",
+      "type": "ui_action",
+      "label": "onClick={invoice}",
+      "repo": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "invoice",
+        "component": "web#src/screens/OrdersPanel.tsx:OrdersPanel",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/screens/OrdersPanel.tsx:29:15",
+      "type": "ui_action",
+      "label": "onClick={summary}",
+      "repo": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 29,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "summary",
+        "component": "web#src/screens/OrdersPanel.tsx:OrdersPanel",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/api/transport.ts:12:24",
+      "type": "ui_api_call",
+      "label": "GET ?",
+      "repo": "web",
+      "file": "src/api/transport.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "package": null,
+        "client": "fetch",
+        "via": null
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/screens/OrdersPanel.tsx:15:22",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/screens/OrdersPanel.tsx:16:36",
+      "type": "ui_api_call",
+      "label": "POST /api/orders",
+      "repo": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "type:web#Order",
+        "bodyFrom": "literal",
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/screens/OrdersPanel.tsx:17:25",
+      "type": "ui_api_call",
+      "label": "PUT /api/invoices",
+      "repo": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "url": "/api/invoices",
+        "path": "/api/invoices",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{paid:boolean}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "paid"
+        ],
+        "package": null,
+        "client": "BillingClient",
+        "localClient": "declared",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "web#src/api/transport.ts:send",
+      "type": "function",
+      "label": "send",
+      "repo": "web",
+      "file": "src/api/transport.ts",
+      "line": 11
+    },
+    {
+      "id": "web#src/screens/OrdersPanel.tsx:OrdersPanel",
+      "type": "ui_component",
+      "label": "OrdersPanel",
+      "repo": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 14,
+      "kind": "function"
+    }
+  ],
+  "edges": [
+    {
+      "from": "ui_action:web#src/screens/OrdersPanel.tsx:26:15",
+      "to": "web#src/screens/OrdersPanel.tsx:OrdersPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 26
+    },
+    {
+      "from": "ui_action:web#src/screens/OrdersPanel.tsx:27:15",
+      "to": "web#src/screens/OrdersPanel.tsx:OrdersPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 27
+    },
+    {
+      "from": "ui_action:web#src/screens/OrdersPanel.tsx:28:15",
+      "to": "web#src/screens/OrdersPanel.tsx:OrdersPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 28
+    },
+    {
+      "from": "ui_action:web#src/screens/OrdersPanel.tsx:29:15",
+      "to": "web#src/screens/OrdersPanel.tsx:OrdersPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 29
+    },
+    {
+      "from": "web#src/api/transport.ts:send",
+      "to": "ui_api_call:web#src/api/transport.ts:12:24",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/api/transport.ts",
+      "line": 12
+    },
+    {
+      "from": "web#src/screens/OrdersPanel.tsx:OrdersPanel",
+      "to": "ui_api_call:web#src/screens/OrdersPanel.tsx:15:22",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 15
+    },
+    {
+      "from": "web#src/screens/OrdersPanel.tsx:OrdersPanel",
+      "to": "ui_api_call:web#src/screens/OrdersPanel.tsx:16:36",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 16
+    },
+    {
+      "from": "web#src/screens/OrdersPanel.tsx:OrdersPanel",
+      "to": "ui_api_call:web#src/screens/OrdersPanel.tsx:17:25",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 17
+    }
+  ],
+  "types": {
+    "type:web#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "web#src/api/client.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/api/transport.ts",
+      "line": 12,
+      "reason": "api-path-dynamic",
+      "hint": "The address is built at run time. Annotate the function with /** @flowatlas-calls METHOD /path */.",
+      "symbol": "fetch(path, { method, body: JSON.stringify(body) })",
+      "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 15,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/orders",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/orders */.",
+      "symbol": "ui_api_call:web#src/screens/OrdersPanel.tsx:15:22"
+    },
+    {
+      "service": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 16,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /api/orders",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /api/orders */.",
+      "symbol": "ui_api_call:web#src/screens/OrdersPanel.tsx:16:36"
+    },
+    {
+      "service": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 17,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves PUT /api/invoices",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls PUT /api/invoices */.",
+      "symbol": "ui_api_call:web#src/screens/OrdersPanel.tsx:17:25"
+    },
+    {
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 18,
+      "reason": "api-client-unread",
+      "hint": "ReportsClient declares get and this reader could not follow it to a request. Add \"ReportsClient\" to adapters.frontend.localClientClasses in flowatlas.config.json if it is a client of your own; nothing is needed if it is not.",
+      "symbol": "reports.get('/api/reports')",
+      "service": "web"
+    }
+  ]
+}

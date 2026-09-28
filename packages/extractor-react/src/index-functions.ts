@@ -1,3 +1,4 @@
+import { builtExportFunctions } from '@flowatlas/adapters-entry';
 import { makeSymbolId, moduleFunctions, normalizeFilePath, type NamedFunction } from '@flowatlas/core';
 import type { Project, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
@@ -75,20 +76,85 @@ const roleOf = (fn: NamedFunction): ReactRole => {
   return 'plain';
 };
 
+export interface ReactFunctionIndexOptions {
+  /** Service name, which every id in the graph is prefixed with. */
+  repo: string;
+  /** Absolute path of the repository root, which the paths in ids are relative to. */
+  repoDir: string;
+}
+
 /**
- * Every named function declared at the top of a module, with its role.
+ * What this repository's functions are, however a pass wants to ask.
  *
- * Only the top level, for the same reason the core's own reader gives: a
- * function declared inside another one is reachable only through the one
- * around it, and nothing in another file can name it.
+ * Filled from the top level of every module, for the same reason the core's own
+ * reader gives: a function declared inside another one is reachable only
+ * through the one around it, and nothing in another file can name it. The one
+ * exception is a function a pass hands back afterwards, which `adopt` takes,
+ * because a registration is the other way a function is reachable.
+ *
+ * Three questions are asked of it and each has its own map: a declaration, when
+ * a walk is standing on one; an id, when an adapter named a function; and a
+ * position, when what is in hand is a way in rather than a name.
  */
 export class ReactFunctionIndex {
   readonly #byDeclaration = new Map<NamedFunction['declaration'], IndexedFunction>();
   readonly #byId = new Map<string, IndexedFunction>();
+  readonly #byPosition = new Map<string, IndexedFunction>();
+  readonly #repo: string;
+  readonly #repoDir: string;
+
+  constructor(options: ReactFunctionIndexOptions) {
+    this.#repo = options.repo;
+    this.#repoDir = options.repoDir;
+  }
 
   add(indexed: IndexedFunction): void {
     this.#byDeclaration.set(indexed.fn.declaration, indexed);
     this.#byId.set(indexed.id, indexed);
+    // Where a declaration starts is the one thing an adapter and this index
+    // compute the same way from the same node, which is what `at` leans on.
+    // Two declarations can share a line — `export const a = f(), b = g()` — and
+    // the first is kept, because nothing distinguishes them afterwards and
+    // overwriting would make which one is found depend on the walk order.
+    const position = `${indexed.file}:${indexed.line}`;
+    if (!this.#byPosition.has(position)) this.#byPosition.set(position, indexed);
+  }
+
+  /**
+   * The function declared at a position, when this repository declares one.
+   *
+   * Asked by a pass that has an entry point in its hand rather than a name. An
+   * adapter records where the declaration it read starts, and that is the line
+   * this index recorded for the same declaration, so the position joins the two
+   * without either side having to agree on a vocabulary of names.
+   */
+  at(file: string, line: number | undefined): IndexedFunction | undefined {
+    return line === undefined ? undefined : this.#byPosition.get(`${file}:${line}`);
+  }
+
+  /**
+   * Indexes a function a pass found that the module walk could not see.
+   *
+   * A function written inside a registration is reachable only through the
+   * registration, so the walk over module declarations is right to leave it
+   * out; but once a pass holds one, everything downstream — the node, the id,
+   * the edges — asks this index for it. Adopting it here rather than letting
+   * the pass build an id keeps one answer to what a function's id is.
+   */
+  adopt(fn: NamedFunction): IndexedFunction {
+    const existing = this.#byDeclaration.get(fn.declaration);
+    if (existing !== undefined) return existing;
+    const file = normalizeFilePath(fn.declaration.getSourceFile().getFilePath(), this.#repoDir);
+    const indexed: IndexedFunction = {
+      id: makeSymbolId(this.#repo, file, fn.name),
+      name: fn.name,
+      role: roleOf(fn),
+      file,
+      line: fn.line,
+      fn,
+    };
+    this.add(indexed);
+    return indexed;
   }
 
   get(declaration: NamedFunction['declaration']): IndexedFunction | undefined {
@@ -112,6 +178,11 @@ export interface BuildFunctionIndexOptions {
   project: Project;
   repo: string;
   repoDir: string;
+  /**
+   * Which of the project's files are this framework's code, by absolute path.
+   * Every file when absent; see `extractReact` for the rule that fills it.
+   */
+  reads?: (file: string) => boolean;
 }
 
 /**
@@ -146,16 +217,45 @@ const defaultExportFunction = (sourceFile: SourceFile, file: string): NamedFunct
   return undefined;
 };
 
+/**
+ * The exports of a module whose values a call built, as functions of their own.
+ *
+ * `moduleFunctions` answers what a module *declares*, and by that reading
+ * `export const archiveOrder = client.schema(…).action(fn)` declares a value
+ * and no function at all. That is the right answer for the other readers, who
+ * would be guessing about a value whose type nobody checked, and it is the
+ * wrong answer here: this is how most of the React ecosystem writes a server
+ * action, a route guard or a wrapped screen, and every caller of one writes the
+ * exported name. A name that is called and has nothing behind it is a hole in
+ * the middle of the graph, so the guess is worth making in the reader that
+ * pays for it (R61).
+ *
+ * What counts as such an export, and what its declaration and its body are, is
+ * `builtExportFunctions`, which lives beside the adapters rather than here. The
+ * reason is R72: the adapter that reads a route file has to name the code
+ * behind a verb export, and the node it names is the one this index makes, so
+ * a second rule written here would be a rule that could disagree with it. The
+ * decision that the body is the whole initializer — which is why the export
+ * reaches whatever the function written inside the call reaches — is recorded
+ * there with the rest of the reading, as is the decision to ask the module's
+ * export table what it exports rather than to look for an `export` keyword on
+ * a declaration. That second decision is why a value bound to a local name and
+ * re-exported under another — `const handler = NextAuth(opts); export { handler
+ * as GET, handler as POST }` — now has a node here, and it is what lets the
+ * adapter reading that route point at one: both sides ask the same table, so
+ * neither can claim a function the other does not have (R74).
+ */
+
 export const buildReactFunctionIndex = (
   options: BuildFunctionIndexOptions,
 ): ReactFunctionIndex => {
-  const { project, repo, repoDir } = options;
-  const index = new ReactFunctionIndex();
+  const { project, repo, repoDir, reads = () => true } = options;
+  const index = new ReactFunctionIndex({ repo, repoDir });
 
   for (const sourceFile of project.getSourceFiles()) {
-    if (!isRepoFile(sourceFile)) continue;
+    if (!isRepoFile(sourceFile) || !reads(sourceFile.getFilePath())) continue;
     const file = normalizeFilePath(sourceFile.getFilePath(), repoDir);
-    const found = [...moduleFunctions(sourceFile)];
+    const found = [...moduleFunctions(sourceFile), ...builtExportFunctions(sourceFile)];
     const anonymous = defaultExportFunction(sourceFile, file);
     if (anonymous !== undefined) found.push(anonymous);
 

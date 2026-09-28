@@ -28,6 +28,12 @@ const write = (name: string, contents: string | Uint8Array): void => {
   writeFileSync(join(root, 'packages', 'core', 'src', name), contents);
 };
 
+/** A file anywhere in the tree, for the gate that reads more than one directory. */
+const writeAt = (contents: string, ...path: string[]): void => {
+  mkdirSync(join(root, ...path.slice(0, -1)), { recursive: true });
+  writeFileSync(join(root, ...path), contents);
+};
+
 const run = (only: string) =>
   spawnSync('bash', [SCRIPT, '--root', root, '--only', only], { encoding: 'utf8' });
 
@@ -53,6 +59,31 @@ describe('I2, the control character gate', () => {
     const result = run('I2');
     expect(result.status).toBe(1);
     expect(result.stdout).toContain('broken.ts');
+  });
+
+  /**
+   * The gate read one glob of `packages` and `.ts`/`.tsx` alone, and the file
+   * that carried two NUL bytes was `scripts/coverage/read-gate.mjs` - so `grep`
+   * went silent on the read gate itself and the gate written for exactly that
+   * said nothing. It reads every file in the tree now, in any language (R131).
+   */
+  it('fails on a raw NUL in a script, which is where the one that got in was', () => {
+    const nul = String.fromCharCode(0);
+    writeAt(`export const sep = "a${nul}b";\n`, 'scripts', 'coverage', 'read-gate.mjs');
+    const result = run('I2');
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain('read-gate.mjs');
+  });
+
+  /**
+   * The one kind of file in this repository that carries a control character on
+   * purpose: a snapshot of coloured terminal output, where the ESC byte is the
+   * thing being recorded. Named on the gate's exempt list with that reason, so
+   * that widening the gate did not land on it and get the gate narrowed again.
+   */
+  it('leaves a recording of coloured terminal output alone', () => {
+    writeAt(`\u001b[32mok\u001b[0m\n`, 'fixtures', 'expected.cli', 'flow.tree.ansi.txt');
+    expect(run('I2').status).toBe(0);
   });
 
   it('leaves a tab and a non-ASCII character alone', () => {

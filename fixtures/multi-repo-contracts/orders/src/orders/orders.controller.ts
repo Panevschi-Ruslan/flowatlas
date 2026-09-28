@@ -97,4 +97,18 @@ export class OrdersController {
   previewDraft(@Body() body: CreateDraftDto): Promise<CreateDraftDto> {
     return this.orders.previewDraft(body);
   }
+
+  /**
+   * The same strip, on a body that is a list rather than an object (R71).
+   *
+   * A whitelisting pipe given an array validates each element against the same
+   * class, so everything the three routes above lose is lost here too. The
+   * comparison reaches the element at path `[]` and not at `''`, which is the
+   * whole of the defect: this route used to produce no strip finding at all.
+   */
+  @Post('drafts/batch')
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  batchDrafts(@Body() body: CreateDraftDto[]): Promise<CreateDraftDto[]> {
+    return this.orders.storeDrafts(body);
+  }
 }

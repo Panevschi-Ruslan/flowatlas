@@ -34,8 +34,16 @@ export class OrdersController {
     void event.orderId;
   }
 
-  // A decorator with no arguments at all. Expected: unresolved
-  // `channel-dynamic`, and above all no crash (§10, last row).
+  // The other end of the job above, which addresses the channel by its name.
+  // This is the node the publish should have joined and could not, and it stays
+  // here with only one end so the difference is visible.
+  @EventPattern('order.checksum')
+  onChecksum(@Payload() event: OrderCreatedEvent): void {
+    void event.orderId;
+  }
+
+  // A decorator with no arguments at all. Expected: one row, the entry reader's
+  // `decorator-arg-dynamic`, no channel row beside it, and no crash (R148).
   @EventPattern()
   onAnything(@Payload() event: unknown): void {
     void event;
@@ -57,8 +65,8 @@ export class OrdersController {
     return { id: query.orderId, customerId: 'c-1', status: 'created', total: 0 };
   }
 
-  // rpc whose handler returns `any`. The consumer still exists; the return does
-  // not. Expected: unresolved `rpc-return-type-unknown`.
+  // rpc whose handler returns `any`. The consumer still exists, and the handles
+  // edge records `returns: "any"` as written: untyped, not unread, so no row (R148).
   @MessagePattern('get.order.raw')
   getOrderRaw(@Payload() query: OrderQuery): any {
     return { id: query.orderId };
