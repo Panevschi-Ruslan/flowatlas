@@ -6,6 +6,12 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+## [0.5.0][] - 2026-09-28
+
+`@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0. The graph's
+schema version moved, so a database built by 0.4 is refused with a message to
+rebuild: run `flowatlas build` once after upgrading.
+
 The tool read NestJS and Angular deeply and almost nothing else. It now reads
 the shapes most TypeScript is actually written in — a route registered by a
 call, a route that is the path of a file, a procedure in a tree, a component
@@ -993,7 +999,8 @@ could not read.
 
 The first published version of both `@flowatlas/cli` and `@flowatlas/markers`.
 
-[unreleased]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.4.1...HEAD
+[unreleased]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.2.0...v0.3.0
