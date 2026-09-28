@@ -19,4 +19,5 @@ also covers what a repository says when it finds a table nobody configured.
 | `bot.action('back_to_main', …)` in the same function | `bot_callback:back_to_main` handled by the function written in the registration, `action back_to_main@14`, which calls `OrdersService.find`; `meta.handlerVia` `inline` |
 | `this.bot.start(() => this.greet())` | `bot_command:start` handled by `Bot.greet`, exactly as before |
 | `bot.toString()`, `valueOf`, `constructor`, `hasOwnProperty`, `__proto__` in `prototype-names.ts` | no node and no unresolved row; the repository still reads. Before R130 closed it, the first of these made the entry id throw and the whole repository read as `extract-failed`, 0 nodes |
-| `summarise`, called only from a handler | a `function` node; every other module-level function in the repo is not one |
+| `summarise`, called only from a handler | a `function` node |
+| `registerMenuHandlers(this.bot, this.orders)` in `Bot.setup` | a `function` node, called by `Bot.setup` and calling `showMenu`, because it leads to `showMenu`, which a way in names (R156); every other module-level function in the repo is not one |
