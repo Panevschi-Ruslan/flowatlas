@@ -179,6 +179,41 @@ describe('TypeCollector', () => {
     expect(reported.map((row) => row.reason)).toContain('type-depth-exceeded');
     expect(reported.find((row) => row.reason === 'type-depth-exceeded')?.level).toBe('info');
   });
+
+  /**
+   * A reader that finds an annotation it cannot read has to be able to say so.
+   *
+   * `@Transform(fn)` rewrites a field with a function, and a reader could record
+   * that it was there and nothing else: the row P02 promises for it had nowhere
+   * to go, so the field was compared as its declared type in silence (R140).
+   */
+  it('writes the row a field reader hands back, at the annotation it names', () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const file = project.createSourceFile(
+      'dto.ts',
+      'export class Dto {\n  coupon!: string;\n}\nexport class Api { take(): Dto { return null as never } }',
+    );
+    const rows: Unresolved[] = [];
+    const reading = new TypeCollector({
+      builder: new GraphBuilder({ repo: 'orders' }),
+      repo: 'orders',
+      repoDir: '/',
+      fieldMetaReaders: [
+        {
+          name: 'test',
+          read: (property) => ({
+            unread: [{ at: property, reason: 'decorator-arg-dynamic', hint: 'unread', symbol: 'Dto.coupon' }],
+          }),
+        },
+      ],
+      report: (row) => rows.push(row),
+    });
+    const take = file.getClassOrThrow('Api').getMethodOrThrow('take');
+    reading.collectType(take.getReturnType(), take);
+    expect(rows).toEqual([
+      { file: 'dto.ts', line: 2, reason: 'decorator-arg-dynamic', hint: 'unread', symbol: 'Dto.coupon' },
+    ]);
+  });
 });
 
 describe('two declarations of one name', () => {
@@ -252,5 +287,65 @@ export class Api {
     // Without strict null checks the checker reads `string | null` as `string`.
     expect(collect(SOURCE, false)('partial')).toContain('note?:string|null');
     expect(collect(SOURCE, true)('partial')).toContain('note?:null|string');
+  });
+});
+
+describe('a generic used with nothing but type parameters', () => {
+  const SOURCE = `
+export interface Paginated<T> { items: T[]; total: number }
+export interface Pair<A, B> { left: A; right: B }
+export interface Order { id: string }
+export class Api {
+  wrap<T>(items: T[]): Paginated<T> { return null as never }
+  rename<U>(items: U[]): Paginated<U> { return null as never }
+  half<T>(): Pair<string, T> { return null as never }
+  known(): Paginated<Order> { return null as never }
+}
+`;
+  const setup = () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const file = project.createSourceFile('api.ts', SOURCE);
+    const builder = new GraphBuilder({ repo: 'orders', generatedAt: '2026-01-01T00:00:00.000Z' });
+    const rows: Unresolved[] = [];
+    const collector = new TypeCollector({ builder, repo: 'orders', report: (row) => rows.push(row) });
+    const returns = (name: string): string =>
+      collector.collectSignature(file.getClassOrThrow('Api').getMethodOrThrow(name)).returns;
+    const registry = () => {
+      collector.finalize();
+      return builder.build().types;
+    };
+    return { returns, registry, rows };
+  };
+
+  // Nothing is substituted, so there is no instantiation to register: an entry
+  // for `Paginated<T>` would be the template again under the name the site's
+  // parameter happens to have, and `Paginated<U>` a third copy of it (R148).
+  it('names the template, whatever the parameter is called at the site', () => {
+    const { returns } = setup();
+    expect(returns('wrap')).toBe('type:orders#Paginated');
+    expect(returns('rename')).toBe('type:orders#Paginated');
+  });
+
+  it('registers the template once and no instantiation beside it', () => {
+    const { returns, registry } = setup();
+    returns('wrap');
+    returns('rename');
+    const ids = Object.keys(registry()).filter((id) => id.includes('#Paginated'));
+    expect(ids).toEqual(['type:orders#Paginated']);
+  });
+
+  it('still says the argument was not known at the site', () => {
+    const { returns, rows } = setup();
+    returns('wrap');
+    expect(rows.map((row) => row.reason)).toContain('type-generic-uninstantiated');
+  });
+
+  it('keeps an instantiation that substitutes anything at all', () => {
+    const { returns, registry } = setup();
+    expect(returns('half')).toBe('type:orders#Pair<string,T>');
+    expect(returns('known')).toBe('type:orders#Paginated<type:orders#Order>');
+    const types = registry();
+    expect(types['type:orders#Pair<string,T>']?.kind).toBe('object');
+    expect(types['type:orders#Paginated']?.kind).toBe('generic');
   });
 });

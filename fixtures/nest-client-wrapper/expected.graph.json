@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "repo": "nest-client-wrapper",
-  "generatedAt": "2026-09-20T21:55:22.393Z",
+  "generatedAt": "2026-09-28T08:35:39.698Z",
   "nodes": [
     {
       "id": "config_key:nest-client-wrapper#BILLING_URL",
@@ -79,8 +79,7 @@
         "path": "/bot${…}/sendMessage",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": "RequestInit",
-        "bodyFrom": "type",
+        "bodyType": null,
         "host": "chat.example.test"
       }
     },
@@ -398,6 +397,8 @@
       "meta": {
         "stats": {
           "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
           "classes": 5,
           "skippedExternalCalls": {}
         },

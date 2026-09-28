@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 5,
+  "repo": "express-chained-app",
+  "generatedAt": "2026-09-27T09:26:18.366Z",
+  "nodes": [
+    {
+      "id": "entry:express-chained-app:http:GET:/api/v1/items",
+      "type": "entry",
+      "label": "GET /api/v1/items",
+      "repo": "express-chained-app",
+      "file": "src/items.routes.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/v1/items",
+        "rawPath": "/api/v1/items",
+        "adapter": "express-routes",
+        "registration": "itemsRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:express-chained-app:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "express-chained-app",
+      "file": "src/server.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "express-chained-app#src/items.controller.ts:listItems",
+      "type": "function",
+      "label": "listItems",
+      "repo": "express-chained-app",
+      "file": "src/items.controller.ts",
+      "line": 4
+    },
+    {
+      "id": "express-chained-app#src/server.ts:GET /health@21",
+      "type": "function",
+      "label": "GET /health@21",
+      "repo": "express-chained-app",
+      "file": "src/server.ts",
+      "line": 21
+    },
+    {
+      "id": "repo:express-chained-app",
+      "type": "repo",
+      "label": "express-chained-app",
+      "repo": "express-chained-app",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:express-chained-app:http:GET:/api/v1/items",
+      "to": "express-chained-app#src/items.controller.ts:listItems",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/items.controller.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:express-chained-app:http:GET:/health",
+      "to": "express-chained-app#src/server.ts:GET /health@21",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 21
+    }
+  ],
+  "types": {},
+  "unresolved": []
+}

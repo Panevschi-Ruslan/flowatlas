@@ -1,0 +1,114 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 5,
+  "generatedAt": "2026-09-27T18:05:04.491Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:web#src/app/peer-socket.service.ts:32:5",
+        "to": "consumer:api#src/live/peer-sockets.ts:PeerSockets.subscribe",
+        "type": "emits"
+      },
+      "edgeKey": "producer:web#src/app/peer-socket.service.ts:32:5|emits|consumer:api#src/live/peer-sockets.ts:PeerSockets.subscribe",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{videoId:string}",
+        "symbol": "web#src/app/peer-socket.service.ts:PeerSocketService.watch"
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "type:api#Subscription",
+        "symbol": "api#src/live/peer-sockets.ts:PeerSockets.subscribe"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:web#src/app/peer-socket.service.ts:36:5",
+        "to": "consumer:api#src/live/peer-sockets.ts:PeerSockets.unsubscribe",
+        "type": "emits"
+      },
+      "edgeKey": "producer:web#src/app/peer-socket.service.ts:36:5|emits|consumer:api#src/live/peer-sockets.ts:PeerSockets.unsubscribe",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{videoId:string}",
+        "symbol": "web#src/app/peer-socket.service.ts:PeerSocketService.unwatch"
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "type:api#Subscription",
+        "symbol": "api#src/live/peer-sockets.ts:PeerSockets.unsubscribe"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:api#src/live/peer-sockets.ts:62:7",
+        "to": "channel:new-notification",
+        "type": "emits"
+      },
+      "edgeKey": "channel:new-notification|emits|producer:api#src/live/peer-sockets.ts:62:7",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:new-notification is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:user-notifications/new-notification",
+        "to": "consumer:web#src/app/peer-socket.service.ts:PeerSocketService.notify",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:user-notifications/new-notification|consumes|consumer:web#src/app/peer-socket.service.ts:PeerSocketService.notify",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:user-notifications/new-notification is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:api#src/live/peer-sockets.ts:56:5",
+        "to": "consumer:web#src/app/peer-socket.service.ts:PeerSocketService.apply",
+        "type": "emits"
+      },
+      "edgeKey": "producer:api#src/live/peer-sockets.ts:56:5|emits|consumer:web#src/app/peer-socket.service.ts:PeerSocketService.apply",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/app/peer-socket.service.ts:PeerSocketService.apply declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:web#src/app/peer-socket.service.ts:40:5",
+        "to": "consumer:api#src/live/peer-sockets.ts:PeerSockets.pong",
+        "type": "emits"
+      },
+      "edgeKey": "producer:web#src/app/peer-socket.service.ts:40:5|emits|consumer:api#src/live/peer-sockets.ts:PeerSockets.pong",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/peer-socket.service.ts:PeerSocketService.ping declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 2,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 2,
+    "unchecked": 4,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

@@ -1,4 +1,5 @@
 import type { AdapterRegistry, EntryAdapter } from '@flowatlas/core';
+import { configuredProceduresAdapter } from './configured-procedures.js';
 import { configuredRoutesAdapter } from './configured-routes.js';
 import { entryRegistriesAdapter } from './entry-registries.js';
 import {
@@ -8,7 +9,9 @@ import {
   koaRoutesAdapter,
 } from './call-routes.js';
 import { nestjsHttpAdapter } from './nestjs-http.js';
+import { medusaRoutesAdapter } from './medusa-routes.js';
 import { nextjsRoutesAdapter } from './nextjs-routes.js';
+import { trpcProceduresAdapter } from './procedure-routers.js';
 import { nestjsMicroserviceAdapter } from './nestjs-microservice.js';
 import { nestjsScheduleAdapter } from './nestjs-schedule.js';
 import { nestjsTelegrafAdapter } from './nestjs-telegraf/index.js';
@@ -25,6 +28,7 @@ export const PACKAGE_NAME = '@flowatlas/adapters-entry';
 export const entryAdapters: readonly EntryAdapter[] = [
   nestjsHttpAdapter,
   nextjsRoutesAdapter,
+  medusaRoutesAdapter,
   honoRoutesAdapter,
   expressRoutesAdapter,
   fastifyRoutesAdapter,
@@ -33,14 +37,24 @@ export const entryAdapters: readonly EntryAdapter[] = [
   nestjsScheduleAdapter,
   nestjsTelegrafAdapter,
   telegrafCallsAdapter,
+  trpcProceduresAdapter,
   entryRegistriesAdapter,
   configuredRoutesAdapter,
+  configuredProceduresAdapter,
 ];
 
 export const registerEntryAdapters = (registry: AdapterRegistry): AdapterRegistry =>
   registry.registerAll('entry', entryAdapters);
 
 export { CONFIGURED_ROUTES, configuredRoutesAdapter } from './configured-routes.js';
+export {
+  CONFIGURED_PROCEDURES,
+  configuredProceduresAdapter,
+} from './configured-procedures.js';
+export type { ProcedureDialect, ProcedureMount } from './procedure-dialects.js';
+export { PROCEDURE_DIALECTS, TRPC, procedureDialectOf } from './procedure-dialects.js';
+export type { ProcedureRoutersOptions } from './procedure-routers.js';
+export { procedureRoutersAdapter, trpcProceduresAdapter } from './procedure-routers.js';
 export {
   callRoutesAdapter,
   expressRoutesAdapter,
@@ -58,11 +72,28 @@ export type {
 export { dialectOf, EXPRESS, FASTIFY, HONO, KOA, ROUTE_DIALECTS } from './route-dialects.js';
 export type { ActionBuilder } from './action-builders.js';
 export { ACTION_BUILDERS, NEXT_SAFE_ACTION, ZSA } from './action-builders.js';
-export { APP_PAGES, APP_ROUTER, PAGES_API, routePathOfFile } from './nextjs-paths.js';
-export type { FsRouter } from './nextjs-paths.js';
+export { APP_PAGES, APP_ROUTER, PAGES_API } from './nextjs-paths.js';
+export {
+  fsAddressSpace,
+  fsApplicationMap,
+  pathPatternTest,
+  readVerbFile,
+  routePathOfFile,
+  verbReading,
+} from './fs-routes.js';
+export type {
+  FsAddress,
+  FsAddressSpace,
+  FsRouter,
+  FsRouteVerb,
+  SegmentConvention,
+  VerbReading,
+} from './fs-routes.js';
+export { MEDUSA_API } from './medusa-routes.js';
 export {
   entryRegistriesAdapter,
   honoRoutesAdapter,
+  medusaRoutesAdapter,
   nestjsHttpAdapter,
   nestjsMicroserviceAdapter,
   nestjsScheduleAdapter,
@@ -95,6 +126,8 @@ export type {
   WizardChain,
 } from './nestjs-telegraf/index.js';
 export {
+  builtExportFunction,
+  builtExportFunctions,
   enclosingClass,
   enclosingHandler,
   handlerInside,
@@ -104,4 +137,5 @@ export {
   repoClasses,
   repoFunctionOf,
   repoSources,
+  unwrapValue,
 } from './shared.js';

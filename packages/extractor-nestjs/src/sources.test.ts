@@ -1,7 +1,13 @@
 import { resolve } from 'node:path';
 import { normalizeFilePath } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
-import { createProject, listRepoSources } from '@flowatlas/core';
+import {
+  countSources,
+  createProject,
+  listRepoSources,
+  UNREADABLE_FILE_REASON,
+} from '@flowatlas/core';
+import { extractRepo } from './extract-repo.js';
 
 const FIXTURES = resolve(import.meta.dirname, '../../../fixtures');
 
@@ -34,5 +40,40 @@ describe('listing the sources of a repository without parsing them', () => {
 
   it('is empty for a directory that holds nothing', () => {
     expect(listRepoSources(resolve(FIXTURES, 'nowhere-at-all'))).toEqual([]);
+  });
+});
+
+/**
+ * The count that used to say a file had been read when it had not.
+ *
+ * `unreadable-file` holds four sources, one of which is deliberate garbage. The
+ * single `files` count said four and was the only place that file appeared at
+ * all, so the figure that should have exposed the hole was the figure that hid
+ * it. Opened, read and the difference are written out separately now, and the
+ * difference has to agree with the rows: a subtraction nobody has to perform is
+ * a subtraction nobody gets wrong.
+ */
+describe('counting the sources a reading could and could not read', () => {
+  const rootDir = resolve(FIXTURES, 'unreadable-file');
+
+  it('separates the files opened from the files read', () => {
+    expect(countSources(createProject({ rootDir }))).toEqual({
+      files: 4,
+      filesRead: 3,
+      filesUnreadable: 1,
+    });
+  });
+
+  it('puts both figures on the repository node, one apart', async () => {
+    const graph = await extractRepo({ rootDir, repo: 'unreadable-file' });
+    const repoNode = graph.nodes.find((node) => node.type === 'repo');
+    const stats = repoNode?.meta?.['stats'] as Record<string, number> | undefined;
+    expect(stats?.['files']).toBe(4);
+    expect(stats?.['filesRead']).toBe(3);
+    expect(stats?.['filesUnreadable']).toBe(1);
+
+    const rows = graph.unresolved.filter((row) => row.reason === UNREADABLE_FILE_REASON);
+    expect(rows).toHaveLength(stats?.['filesUnreadable'] ?? -1);
+    expect(rows[0]?.file).toBe('src/orders/broken.ts');
   });
 });

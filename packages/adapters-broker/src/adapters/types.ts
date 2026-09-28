@@ -1,20 +1,55 @@
-import type { BrokerAdapter } from '@flowatlas/core';
-
-/** Where the channel a handler receives from is written. */
-export type ConsumerChannelSource = 'argument' | 'option' | 'class-decorator';
+import type { BrokerAdapter, NameLocator } from '@flowatlas/core';
 
 export interface ConsumerPattern {
   /** Decorator that marks the method as receiving. */
   decorator: string;
-  channelFrom: ConsumerChannelSource;
-  /** Argument holding the channel, for `argument`. */
-  argIndex?: number;
-  /** Property of the options object holding the channel, for `option`. */
-  optionKey?: string;
-  /** Decorator on the class that names the channel, for `class-decorator`. */
+  /**
+   * Decorator on the class the channel is read from instead of the method's own.
+   *
+   * A worker class is bound to one channel and its methods handle units of work
+   * within it, so the channel is stated once, above the class.
+   */
   classDecorator?: string;
+  /**
+   * Where that decorator writes the channel, tried in order.
+   *
+   * The same vocabulary a publishing call is described with, because a decorator
+   * is a call written with an `@` and a name in its options object is in the same
+   * place whichever of the two wrote it. It is what replaced three fields that
+   * each named one place — an argument, a key of an argument, the class's
+   * decorator — with one list that can name all three and say which to try first.
+   */
+  channel: readonly NameLocator[];
   /** Argument naming one unit of work, when the transport has them. */
   nameArgIndex?: number;
+  /**
+   * Which of the handler's parameters the payload arrives in. The first by
+   * default.
+   *
+   * A transport that hands a handler more than the message - the connection it
+   * arrived on, the raw frame - passes them in a fixed order, and the message
+   * is not always first.
+   */
+  payloadArg?: number;
+  /**
+   * A parameter decorator that marks the payload wherever it is written.
+   *
+   * Where a transport lets a handler name its parameters rather than order
+   * them, the decorator is the statement and the position is an accident of how
+   * the author wrote the list. Asked first, with `payloadArg` as the answer for
+   * a handler that declares its parameters plainly.
+   */
+  payloadDecorator?: string;
+  /**
+   * Where the payload sits inside that parameter. Empty - the default - is the
+   * whole of it.
+   *
+   * The receiving half of the same fact a publishing call states: a queue hands
+   * its handler the library's envelope and the message is one property in, so a
+   * handler taking the envelope on purpose is not a receiver missing every
+   * field of the message (R133).
+   */
+  payloadPath?: readonly string[];
   kind: string;
 }
 
@@ -30,10 +65,28 @@ export interface ConsumerPattern {
  * a decorator.
  */
 export interface SubscriberPattern {
-  /** Method that begins listening. */
-  method: string;
-  /** Argument naming the channel. */
+  /**
+   * Method that begins listening, in every spelling a client of it is written
+   * with.
+   *
+   * One verb is not one name. The same subscription is `psubscribe` in one
+   * client of a transport and `pSubscribe` in the next major version of
+   * another, and matching is exact, so a description holding one of the two
+   * read the other as nothing at all - not as a degraded answer, as a channel
+   * with one end, which joins nothing and says nothing about it (R135).
+   *
+   * So the spellings are stated here rather than known by the reader. A reader
+   * that ignored case would be a rule nobody wrote down, applying to every
+   * transport at once, including a bus a project wrote itself where `send` and
+   * `Send` may well be two different methods; here the description says which
+   * names mean the same call, and only the descriptions that need it pay for
+   * it. A single name is the shorthand and reads exactly as it always did.
+   */
+  method: string | readonly string[];
+  /** Shorthand for `channel: [{ kind: 'argument', index }]`, as on a publish. */
   channelArg: number;
+  /** Where the channel is written, when it is not one plain argument. */
+  channel?: readonly NameLocator[];
   /** Argument holding the handler, when the same call takes one. */
   handlerArg?: number;
   /** Method that registers a handler separately, e.g. an event listener. */
@@ -68,6 +121,43 @@ export interface ChannelPrefix {
   optionKey: string;
   /** What goes between the prefix and the name the call writes. */
   separator: string;
+  /**
+   * How a value of the transport carries its endpoint, for code that states it
+   * on the value rather than on a class.
+   *
+   * A server with no gateway says its namespace once, as the value `of(…)`
+   * returns, and every handler registered on that value and every publish made
+   * through it is addressed within it; a browser says it as the address its
+   * socket was opened on. Both are the same fact — this value is on that
+   * endpoint — and both ends of a channel have to arrive at it the same way or
+   * they land on two nodes with one end each (R102).
+   */
+  carriedBy?: EndpointCarrier;
+}
+
+/**
+ * The calls that give a transport's value its endpoint, and the one event that
+ * hands a connection over on it.
+ *
+ * Only a call or a property the transport itself declares is read: `to(room)`
+ * keeps the endpoint of whatever it was called on, and `sockets.get(id)` on a
+ * map says nothing about any endpoint, which is why the packages are part of the
+ * description rather than an afterthought.
+ */
+export interface EndpointCarrier {
+  /** Packages whose declarations are the transport's own. */
+  readonly packages: readonly string[];
+  /**
+   * Functions and methods that open or select an endpoint, by the name they
+   * are declared with. The first argument is the address; none is the root.
+   * Every other call or property of the transport keeps its receiver's.
+   */
+  readonly opens: readonly string[];
+  /**
+   * Events whose listener is handed a connection on the endpoint of the value
+   * the listener was registered on.
+   */
+  readonly connection: readonly string[];
 }
 
 export interface BrokerSpec extends BrokerAdapter {

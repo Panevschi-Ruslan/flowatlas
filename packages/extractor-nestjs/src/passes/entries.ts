@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import {
+  addEntryWrapping,
   functionAt,
   inlineFunction,
   isFunctionHandler,
@@ -96,6 +97,13 @@ export const entriesPass = definePass('entries', (ctx: NestExtractContext) => {
         kind: entry.kind,
         ...(entry.meta === undefined ? {} : { meta: { ...entry.meta, adapter: adapter.name } }),
       });
+
+      // Drawn here rather than in the adapter, and drawn from the same
+      // description whatever read it, so that a chain a registration named and
+      // a chain a decorator declared are one shape in the graph (R109).
+      if (entry.wrapping !== undefined) {
+        addEntryWrapping(ctx.builder, ctx.repo, entry.id, entry.wrapping);
+      }
 
       if (handler.id !== undefined && entry.handler !== undefined) {
         ctx.builder.addEdge({

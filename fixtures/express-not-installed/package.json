@@ -1,0 +1,9 @@
+{
+  "name": "express-not-installed",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "express": "^4.21.2",
+    "lru-cache": "^11.0.0"
+  }
+}

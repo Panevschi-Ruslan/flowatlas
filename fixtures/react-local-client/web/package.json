@@ -1,0 +1,8 @@
+{
+  "name": "react-local-client-web",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "react": "^19.0.0"
+  }
+}

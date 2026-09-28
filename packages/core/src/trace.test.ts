@@ -1,10 +1,13 @@
 import { Project, SyntaxKind, type CallExpression, type SourceFile } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
+import { UNREAD_SPAN } from './ids.js';
 import { resolveStaticString, settingKeyIn } from './static-string.js';
 import {
   constantMethodResult,
+  constantPropertyValue,
   literalChoices,
   returnedExpression,
+  rootSettingAddress,
   rootSettingKey,
 } from './trace.js';
 
@@ -94,6 +97,106 @@ describe('a settings value kept in a property', () => {
       class Service {
         constructor(private readonly given: string) {}
         list() { return http.get(\`\${this.given}/orders\`); }
+      }
+    `);
+    expect(read(file)?.envRefs).toEqual([]);
+  });
+});
+
+/**
+ * A `static` field is a property access on the identifier naming the class, so
+ * asking for a `this` receiver read every instance field and no static one.
+ * A video platform declares 63 of these, and they were the sole reason none of its 252
+ * browser requests joined a route (R103).
+ */
+describe('a settings value kept in a static property', () => {
+  it('is followed back to the settings, as the same value on the instance is', () => {
+    const file = parse(`
+      class Service {
+        private static BASE = environment.apiUrl;
+        list() { return http.get(\`\${Service.BASE}/orders\`); }
+      }
+    `);
+    expect(read(file)).toMatchObject({ value: '/orders', envRefs: ['apiUrl'] });
+  });
+
+  // Both halves of R103's shape at once: the field is reached through the class
+  // that names it, and its value is the settings key joined to a path with `+`.
+  // `rootSettingAddress` rather than the reader above, because the reader here
+  // is configured to ask only for the key, and the path the field already wrote
+  // is the half that was lost.
+  it('answers with the path the field wrote as well as the key, joined with a plus', () => {
+    const file = parse(`
+      class Service {
+        private static BASE = environment.apiUrl + '/orders';
+        one(id: string) { return http.get(\`\${Service.BASE}/\${id}\`); }
+      }
+    `);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({
+      key: 'apiUrl',
+      prefix: '/orders',
+    });
+  });
+
+  it('holds a piece of the field nobody can read as a hole rather than dropping it', () => {
+    const file = parse(`
+      declare const anything: string;
+      class Service {
+        private static BASE = environment.apiUrl + anything;
+        list() { return http.get(\`\${Service.BASE}/orders\`); }
+      }
+    `);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)[0]!;
+    // An address nothing can match, which is the point: dropping the hole would
+    // report this request against `/orders`, a route it may never reach.
+    expect(rootSettingAddress(opening, { readSetting })?.prefix).toBe(UNREAD_SPAN);
+  });
+
+  it('reads a piece of the path out of a static field as out of an instance one', () => {
+    const file = parse(`
+      class Service {
+        private static SEGMENT = '/orders' + '/pay';
+        private segment = '/orders/pay';
+        pay() { return http.get(Service.SEGMENT); }
+        payToo() { return http.get(this.segment); }
+      }
+    `);
+    const calls = file
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .filter((call) => call.getExpression().getText().endsWith('.get'));
+    expect(calls.map((call) => constantPropertyValue(call.getArguments()[0]!))).toEqual([
+      '/orders/pay',
+      '/orders/pay',
+    ]);
+  });
+
+  it('reads a non-empty fallback, and not an empty one, which says there is no value', () => {
+    const file = parse(`
+      declare const auth: { accountId(): string | null; base(): string | null };
+      class Service {
+        private get rid(): string { return auth.accountId() ?? ''; }
+        private get prefix(): string { return auth.base() || '/api'; }
+        one() { return http.get(this.rid); }
+        two() { return http.get(this.prefix); }
+      }
+    `);
+    const calls = file
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .filter((call) => call.getExpression().getText().endsWith('.get'));
+    // An id that may be missing is a hole in the path, never an empty segment
+    // (R165, found on a real admin client whose request lost a segment).
+    expect(calls.map((call) => constantPropertyValue(call.getArguments()[0]!))).toEqual([
+      null,
+      '/api',
+    ]);
+  });
+
+  it('says nothing when the receiver is an object rather than a class', () => {
+    const file = parse(`
+      declare const holder: { BASE: string };
+      class Service {
+        list() { return http.get(\`\${holder.BASE}/orders\`); }
       }
     `);
     expect(read(file)?.envRefs).toEqual([]);

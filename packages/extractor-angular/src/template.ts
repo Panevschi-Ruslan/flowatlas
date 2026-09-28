@@ -13,7 +13,11 @@ import {
   type AST,
   type TmplAstBoundAttribute,
   type TmplAstBoundEvent,
+  type TmplAstLetDeclaration,
+  type TmplAstNode,
+  type TmplAstReference,
   type TmplAstTextAttribute,
+  type TmplAstVariable,
 } from '@angular/compiler';
 
 /**
@@ -33,12 +37,27 @@ export type TemplateEventKind =
   | 'route'
   | 'custom';
 
-/** What the handler expression turned out to be. */
+/**
+ * What the handler expression turned out to be.
+ *
+ * `local` is the one kind that names something the template itself bound - a
+ * `let-` context field, a `#ref`, a `@for` item, an `@if` alias, an `@let`. It
+ * is kept apart from `member` because the two look identical in the expression
+ * and mean opposite things: a member is a property of the component, and a local
+ * is a name the component never declared and never should (R105).
+ */
 export type TemplateHandler =
   | { readonly kind: 'method'; readonly method: string; readonly args: string[] }
   | {
       readonly kind: 'member';
       readonly property: string;
+      readonly method: string;
+      readonly args: string[];
+    }
+  | {
+      readonly kind: 'local';
+      /** The name the template bound, which is the root of the call. */
+      readonly local: string;
       readonly method: string;
       readonly args: string[];
     }
@@ -76,21 +95,25 @@ export interface ParseTemplateOptions {
   onError?(message: string, line: number): void;
 }
 
-const KIND_BY_EVENT: Record<string, TemplateEventKind> = {
-  click: 'click',
-  submit: 'submit',
-  ngsubmit: 'submit',
-  change: 'change',
-  ngmodelchange: 'change',
-  input: 'input',
-};
+/**
+ * A `Map`, because the event name is whatever the template binds, and an object
+ * literal answers `(constructor)` with the language's own function (R130).
+ */
+const KIND_BY_EVENT: ReadonlyMap<string, TemplateEventKind> = new Map([
+  ['click', 'click'],
+  ['submit', 'submit'],
+  ['ngsubmit', 'submit'],
+  ['change', 'change'],
+  ['ngmodelchange', 'change'],
+  ['input', 'input'],
+]);
 
 const DEFAULT_PLACEHOLDER = ':param';
 
 const kindOf = (name: string): TemplateEventKind => {
   const lowered = name.toLowerCase();
   if (lowered.startsWith('keyup') || lowered.startsWith('keydown')) return 'keyup';
-  return KIND_BY_EVENT[lowered] ?? 'custom';
+  return KIND_BY_EVENT.get(lowered) ?? 'custom';
 };
 
 /**
@@ -102,7 +125,7 @@ const kindOf = (name: string): TemplateEventKind => {
  * object — is reported as written, because there is no method behind it to point
  * an edge at.
  */
-const handlersOf = (handler: AST): TemplateHandler[] => {
+const handlersOf = (handler: AST, locals: ReadonlySet<string>): TemplateHandler[] => {
   const root = handler instanceof ASTWithSource ? handler.ast : handler;
   const written = root instanceof Chain ? root.expressions : [root];
   const text = String((handler as { source?: string }).source ?? '');
@@ -119,19 +142,33 @@ const handlersOf = (handler: AST): TemplateHandler[] => {
     }
     const receiver = callee.receiver;
     // `ThisReceiver` is `this.submit()`, the plain implicit one is `submit()`.
-    if (receiver instanceof ThisReceiver || receiver instanceof ImplicitReceiver) {
+    // `this.` is the one spelling that cannot be a local: it is the component by
+    // definition, so a name reached through it is never shadowed by a template.
+    if (receiver instanceof ThisReceiver) {
       return { kind: 'method', method: callee.name, args: argsOf(expression) };
+    }
+    if (receiver instanceof ImplicitReceiver) {
+      return locals.has(callee.name)
+        ? { kind: 'local', local: callee.name, method: callee.name, args: argsOf(expression) }
+        : { kind: 'method', method: callee.name, args: argsOf(expression) };
     }
     if (
       (receiver instanceof PropertyRead || receiver instanceof SafePropertyRead) &&
       receiver.receiver instanceof ImplicitReceiver
     ) {
-      return {
-        kind: 'member',
-        property: receiver.name,
-        method: callee.name,
-        args: argsOf(expression),
-      };
+      return locals.has(receiver.name)
+        ? {
+            kind: 'local',
+            local: receiver.name,
+            method: callee.name,
+            args: argsOf(expression),
+          }
+        : {
+            kind: 'member',
+            property: receiver.name,
+            method: callee.name,
+            args: argsOf(expression),
+          };
     }
     return { kind: 'other', text };
   });
@@ -150,14 +187,57 @@ const routeOfExpression = (ast: AST, placeholder: string): string | null => {
   return parts.length === 0 ? null : parts.join('/').replace(/\/{2,}/g, '/');
 };
 
+/**
+ * Every name the template itself binds.
+ *
+ * Collected with the compiler's own walk rather than by looking for `let-`
+ * attributes: `let-hide="close"`, `#modal`, `@for (order of orders)`,
+ * `@if (user(); as person)` and `@let total = …` are five spellings of one fact,
+ * and each of them arrives here as the node kind the compiler already has a
+ * visit method for, so a sixth spelling costs nothing to follow.
+ *
+ * One set for the whole template rather than a scope per node. A local is in
+ * scope for the view that declares it, and an element's `#ref` is in scope for
+ * the whole of that view including the lines above it, so answering "is this
+ * name a local" needs the whole template read before the first binding is
+ * judged. The cost is that a name bound in one `<ng-template>` is treated as a
+ * local in the rest of the file too; the alternative was reporting a local as a
+ * method the component forgot to declare, which on a video platform was every one of
+ * the 35 rows that reason produced (R105).
+ */
+class LocalCollector extends TmplAstRecursiveVisitor {
+  readonly names = new Set<string>();
+
+  override visitVariable(variable: TmplAstVariable): void {
+    this.names.add(variable.name);
+  }
+
+  override visitReference(reference: TmplAstReference): void {
+    this.names.add(reference.name);
+  }
+
+  override visitLetDeclaration(declaration: TmplAstLetDeclaration): void {
+    this.names.add(declaration.name);
+    super.visitLetDeclaration(declaration);
+  }
+}
+
+const localsOf = (nodes: TmplAstNode[]): ReadonlySet<string> => {
+  const collector = new LocalCollector();
+  tmplAstVisitAll(collector, nodes);
+  return collector.names;
+};
+
 class EventCollector extends TmplAstRecursiveVisitor {
   readonly events: TemplateEvent[] = [];
   readonly #seen = new Set<string>();
   readonly #placeholder: string;
+  readonly #locals: ReadonlySet<string>;
 
-  constructor(placeholder: string) {
+  constructor(placeholder: string, locals: ReadonlySet<string>) {
     super();
     this.#placeholder = placeholder;
+    this.#locals = locals;
   }
 
   /**
@@ -177,7 +257,7 @@ class EventCollector extends TmplAstRecursiveVisitor {
       name: event.name,
       kind: kindOf(event.name),
       source: String((event.handler as { source?: string }).source ?? ''),
-      handlers: handlersOf(event.handler),
+      handlers: handlersOf(event.handler, this.#locals),
       line: event.sourceSpan.start.line,
       column: event.sourceSpan.start.col,
     });
@@ -226,7 +306,10 @@ export const parseAngularTemplate = (
   options: ParseTemplateOptions = {},
 ): TemplateEvent[] => {
   const parsed = parseTemplate(source, file, { preserveWhitespaces: false });
-  const collector = new EventCollector(options.placeholder ?? DEFAULT_PLACEHOLDER);
+  const collector = new EventCollector(
+    options.placeholder ?? DEFAULT_PLACEHOLDER,
+    localsOf(parsed.nodes),
+  );
   tmplAstVisitAll(collector, parsed.nodes);
 
   const startLine = options.startLine ?? 1;

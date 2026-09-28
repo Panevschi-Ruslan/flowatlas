@@ -1,0 +1,10 @@
+{
+  "name": "@next-monorepo/web",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@next-monorepo/orders-lib": "workspace:*",
+    "next": "^15.0.0",
+    "react": "^19.0.0"
+  }
+}

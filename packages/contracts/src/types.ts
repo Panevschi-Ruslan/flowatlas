@@ -19,8 +19,14 @@ import type { GraphEdge, GraphNode, TypeEntry } from '@flowatlas/core';
  * for. A reader that branches on the three older words would take a field
  * nobody could look for as a field nobody found, so the widening is a version
  * of its own rather than a quiet addition (R43).
+ *
+ * 4 — a party may carry `declaredBy`, naming the document a service whose
+ * source nobody here has was taken from. A reader that did not know about it
+ * would present a declared end exactly as it presents a read one, which is the
+ * single thing this way in must never be allowed to do, so the widening is a
+ * version rather than a quiet addition (P19).
  */
-export const CONTRACTS_FORMAT_VERSION = 3;
+export const CONTRACTS_FORMAT_VERSION = 4;
 
 /** How bad a finding is. */
 export const SEVERITIES = ['error', 'warning', 'info'] as const;
@@ -88,7 +94,11 @@ export type ContractStatus = (typeof CONTRACT_STATUSES)[number];
  *             which is a different sentence from the one below and used to be
  *             told in the same words (R43).
  * `unknown` — it writes something, documents of what it writes were read, and
- *             none of them declares this field.
+ *             none of them declares this field. A nested path means exactly
+ *             this too, and is walked key by key through the registry to
+ *             establish it; it used to be answered with this word without
+ *             anything having been compared, which is a fourth thing wearing a
+ *             third thing's name (R67).
  * `none`    — no write was found under the handler within the distance this
  *             walks. A preview endpoint genuinely writes nothing; so does a
  *             handler whose data layer the reader could not follow, and the
@@ -130,6 +140,17 @@ export interface ContractParty {
    * (R34).
    */
   writesEvery?: boolean;
+  /**
+   * The document this end was declared by, when nobody here could read it.
+   *
+   * A service may be configured as an OpenAPI document instead of a repository,
+   * for the ends of a project nobody can clone — a payment provider, another
+   * team's service, something written in another language. Everything about
+   * such an end is that document's word for it, and this names the file so that
+   * a reader of `contracts.json` knows which half was trusted without having to
+   * read the prose. Absent for every end that was read, which is most of them.
+   */
+  declaredBy?: string;
 }
 
 /** One disagreement between two shapes, as the comparator found it. */
@@ -199,6 +220,8 @@ export const UNCHECKED_REASONS = [
   'ambiguous-handler',
   'channel-without-producer',
   'channel-without-consumer',
+  'procedure-input-by-name',
+  'procedure-output-inferred',
 ] as const;
 
 export type UncheckedReason = (typeof UNCHECKED_REASONS)[number];

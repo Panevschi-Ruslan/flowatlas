@@ -1,0 +1,818 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T17:34:49.065Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/live/peer-sockets.ts:PeerSockets",
+      "type": "provider",
+      "label": "PeerSockets",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 18,
+      "kind": "injectable"
+    },
+    {
+      "id": "api#src/live/peer-sockets.ts:PeerSockets.init",
+      "type": "method",
+      "label": "PeerSockets.init",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 25
+    },
+    {
+      "id": "api#src/live/peer-sockets.ts:PeerSockets.pong",
+      "type": "method",
+      "label": "PeerSockets.pong",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 74
+    },
+    {
+      "id": "api#src/live/peer-sockets.ts:PeerSockets.remember",
+      "type": "method",
+      "label": "PeerSockets.remember",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 78
+    },
+    {
+      "id": "api#src/live/peer-sockets.ts:PeerSockets.sendNotification",
+      "type": "method",
+      "label": "PeerSockets.sendNotification",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 60
+    },
+    {
+      "id": "api#src/live/peer-sockets.ts:PeerSockets.sendState",
+      "type": "method",
+      "label": "PeerSockets.sendState",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 55
+    },
+    {
+      "id": "api#src/live/peer-sockets.ts:PeerSockets.subscribe",
+      "type": "method",
+      "label": "PeerSockets.subscribe",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 66
+    },
+    {
+      "id": "api#src/live/peer-sockets.ts:PeerSockets.unsubscribe",
+      "type": "method",
+      "label": "PeerSockets.unsubscribe",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 70
+    },
+    {
+      "id": "channel:live-videos/state-change",
+      "type": "channel",
+      "label": "live-videos/state-change",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 56,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "socketio"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:live-videos/subscribe",
+      "type": "channel",
+      "label": "live-videos/subscribe",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 43,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "socketio"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:live-videos/unsubscribe",
+      "type": "channel",
+      "label": "live-videos/unsubscribe",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 44,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "socketio"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:new-notification",
+      "type": "channel",
+      "label": "new-notification",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 62,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "socketio"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:ping-server",
+      "type": "channel",
+      "label": "ping-server",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 50,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "socketio"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:user-notifications/new-notification",
+      "type": "channel",
+      "label": "user-notifications/new-notification",
+      "repo": "web",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 25,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "socketio"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:api#src/live/peer-sockets.ts:PeerSockets.pong",
+      "type": "consumer",
+      "label": "PeerSockets.pong",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 50,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "decorator": "on",
+        "entryId": "entry:api:event:ping-server"
+      }
+    },
+    {
+      "id": "consumer:api#src/live/peer-sockets.ts:PeerSockets.subscribe",
+      "type": "consumer",
+      "label": "PeerSockets.subscribe",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 43,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "decorator": "on",
+        "entryId": "entry:api:event:live-videos/subscribe"
+      }
+    },
+    {
+      "id": "consumer:api#src/live/peer-sockets.ts:PeerSockets.unsubscribe",
+      "type": "consumer",
+      "label": "PeerSockets.unsubscribe",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 44,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "decorator": "on",
+        "entryId": "entry:api:event:live-videos/unsubscribe"
+      }
+    },
+    {
+      "id": "consumer:web#src/app/peer-socket.service.ts:PeerSocketService.apply",
+      "type": "consumer",
+      "label": "PeerSocketService.apply",
+      "repo": "web",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "decorator": "on",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:web#src/app/peer-socket.service.ts:PeerSocketService.notify",
+      "type": "consumer",
+      "label": "PeerSocketService.notify",
+      "repo": "web",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 25,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "decorator": "on",
+        "entryId": null
+      }
+    },
+    {
+      "id": "entry:api:event:live-videos/subscribe",
+      "type": "entry",
+      "label": "event live-videos/subscribe",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 43,
+      "kind": "event",
+      "meta": {
+        "pattern": "live-videos/subscribe",
+        "adapter": "socketio"
+      }
+    },
+    {
+      "id": "entry:api:event:live-videos/unsubscribe",
+      "type": "entry",
+      "label": "event live-videos/unsubscribe",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 44,
+      "kind": "event",
+      "meta": {
+        "pattern": "live-videos/unsubscribe",
+        "adapter": "socketio"
+      }
+    },
+    {
+      "id": "entry:api:event:ping-server",
+      "type": "entry",
+      "label": "event ping-server",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 50,
+      "kind": "event",
+      "meta": {
+        "pattern": "ping-server",
+        "adapter": "socketio"
+      }
+    },
+    {
+      "id": "producer:api#src/live/peer-sockets.ts:56:5",
+      "type": "producer",
+      "label": "event live-videos/state-change",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 56,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:api#src/live/peer-sockets.ts:62:7",
+      "type": "producer",
+      "label": "event new-notification",
+      "repo": "api",
+      "file": "src/live/peer-sockets.ts",
+      "line": 62,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:web#src/app/peer-socket.service.ts:32:5",
+      "type": "producer",
+      "label": "event live-videos/subscribe",
+      "repo": "web",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 32,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:web#src/app/peer-socket.service.ts:36:5",
+      "type": "producer",
+      "label": "event live-videos/unsubscribe",
+      "repo": "web",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 36,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "producer:web#src/app/peer-socket.service.ts:40:5",
+      "type": "producer",
+      "label": "event ping-server",
+      "repo": "web",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 40,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "socketio",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {
+            "socket.io": 13
+          }
+        },
+        "adapters": {
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "templates": 0,
+          "skippedExternalCalls": {
+            "socket.io-client": 5
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "web#src/app/peer-socket.service.ts:PeerSocketService",
+      "type": "provider",
+      "label": "PeerSocketService",
+      "repo": "web",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/peer-socket.service.ts:PeerSocketService.apply",
+      "type": "method",
+      "label": "PeerSocketService.apply",
+      "repo": "web",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 43
+    },
+    {
+      "id": "web#src/app/peer-socket.service.ts:PeerSocketService.connect",
+      "type": "method",
+      "label": "PeerSocketService.connect",
+      "repo": "web",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 23
+    },
+    {
+      "id": "web#src/app/peer-socket.service.ts:PeerSocketService.notify",
+      "type": "method",
+      "label": "PeerSocketService.notify",
+      "repo": "web",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 47
+    },
+    {
+      "id": "web#src/app/peer-socket.service.ts:PeerSocketService.ping",
+      "type": "method",
+      "label": "PeerSocketService.ping",
+      "repo": "web",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 39
+    },
+    {
+      "id": "web#src/app/peer-socket.service.ts:PeerSocketService.unwatch",
+      "type": "method",
+      "label": "PeerSocketService.unwatch",
+      "repo": "web",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 35
+    },
+    {
+      "id": "web#src/app/peer-socket.service.ts:PeerSocketService.watch",
+      "type": "method",
+      "label": "PeerSocketService.watch",
+      "repo": "web",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 31
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/live/peer-sockets.ts:PeerSockets.init",
+      "to": "api#src/live/peer-sockets.ts:PeerSockets.pong",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/live/peer-sockets.ts",
+      "line": 50
+    },
+    {
+      "from": "api#src/live/peer-sockets.ts:PeerSockets.init",
+      "to": "api#src/live/peer-sockets.ts:PeerSockets.remember",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number",
+        "type:socket.io#Socket"
+      ],
+      "returns": "void",
+      "file": "src/live/peer-sockets.ts",
+      "line": 34
+    },
+    {
+      "from": "api#src/live/peer-sockets.ts:PeerSockets.init",
+      "to": "api#src/live/peer-sockets.ts:PeerSockets.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:api#Subscription"
+      ],
+      "returns": "void",
+      "file": "src/live/peer-sockets.ts",
+      "line": 43
+    },
+    {
+      "from": "api#src/live/peer-sockets.ts:PeerSockets.init",
+      "to": "api#src/live/peer-sockets.ts:PeerSockets.unsubscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:api#Subscription"
+      ],
+      "returns": "void",
+      "file": "src/live/peer-sockets.ts",
+      "line": 44
+    },
+    {
+      "from": "api#src/live/peer-sockets.ts:PeerSockets.sendNotification",
+      "to": "producer:api#src/live/peer-sockets.ts:62:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/peer-sockets.ts",
+      "line": 62
+    },
+    {
+      "from": "api#src/live/peer-sockets.ts:PeerSockets.sendState",
+      "to": "producer:api#src/live/peer-sockets.ts:56:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/peer-sockets.ts",
+      "line": 56
+    },
+    {
+      "from": "channel:live-videos/state-change",
+      "to": "consumer:web#src/app/peer-socket.service.ts:PeerSocketService.apply",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 28
+    },
+    {
+      "from": "channel:live-videos/subscribe",
+      "to": "consumer:api#src/live/peer-sockets.ts:PeerSockets.subscribe",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/peer-sockets.ts",
+      "line": 43
+    },
+    {
+      "from": "channel:live-videos/unsubscribe",
+      "to": "consumer:api#src/live/peer-sockets.ts:PeerSockets.unsubscribe",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/peer-sockets.ts",
+      "line": 44
+    },
+    {
+      "from": "channel:ping-server",
+      "to": "consumer:api#src/live/peer-sockets.ts:PeerSockets.pong",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/peer-sockets.ts",
+      "line": 50
+    },
+    {
+      "from": "channel:user-notifications/new-notification",
+      "to": "consumer:web#src/app/peer-socket.service.ts:PeerSocketService.notify",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 25
+    },
+    {
+      "from": "consumer:api#src/live/peer-sockets.ts:PeerSockets.pong",
+      "to": "api#src/live/peer-sockets.ts:PeerSockets.pong",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/peer-sockets.ts",
+      "line": 50
+    },
+    {
+      "from": "consumer:api#src/live/peer-sockets.ts:PeerSockets.subscribe",
+      "to": "api#src/live/peer-sockets.ts:PeerSockets.subscribe",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/peer-sockets.ts",
+      "line": 43
+    },
+    {
+      "from": "consumer:api#src/live/peer-sockets.ts:PeerSockets.unsubscribe",
+      "to": "api#src/live/peer-sockets.ts:PeerSockets.unsubscribe",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/peer-sockets.ts",
+      "line": 44
+    },
+    {
+      "from": "consumer:web#src/app/peer-socket.service.ts:PeerSocketService.apply",
+      "to": "web#src/app/peer-socket.service.ts:PeerSocketService.apply",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 28
+    },
+    {
+      "from": "consumer:web#src/app/peer-socket.service.ts:PeerSocketService.notify",
+      "to": "web#src/app/peer-socket.service.ts:PeerSocketService.notify",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 25
+    },
+    {
+      "from": "entry:api:event:live-videos/subscribe",
+      "to": "api#src/live/peer-sockets.ts:PeerSockets.subscribe",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:api#Subscription"
+      ],
+      "returns": "void",
+      "file": "src/live/peer-sockets.ts",
+      "line": 43
+    },
+    {
+      "from": "entry:api:event:live-videos/unsubscribe",
+      "to": "api#src/live/peer-sockets.ts:PeerSockets.unsubscribe",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:api#Subscription"
+      ],
+      "returns": "void",
+      "file": "src/live/peer-sockets.ts",
+      "line": 44
+    },
+    {
+      "from": "entry:api:event:ping-server",
+      "to": "api#src/live/peer-sockets.ts:PeerSockets.pong",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/live/peer-sockets.ts",
+      "line": 50
+    },
+    {
+      "from": "producer:api#src/live/peer-sockets.ts:56:5",
+      "to": "channel:live-videos/state-change",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:api#LiveState"
+      ],
+      "file": "src/live/peer-sockets.ts",
+      "line": 56
+    },
+    {
+      "from": "producer:api#src/live/peer-sockets.ts:62:7",
+      "to": "channel:new-notification",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:api#Notification"
+      ],
+      "file": "src/live/peer-sockets.ts",
+      "line": 62
+    },
+    {
+      "from": "producer:web#src/app/peer-socket.service.ts:32:5",
+      "to": "channel:live-videos/subscribe",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{videoId:string}"
+      ],
+      "file": "src/app/peer-socket.service.ts",
+      "line": 32
+    },
+    {
+      "from": "producer:web#src/app/peer-socket.service.ts:36:5",
+      "to": "channel:live-videos/unsubscribe",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{videoId:string}"
+      ],
+      "file": "src/app/peer-socket.service.ts",
+      "line": 36
+    },
+    {
+      "from": "producer:web#src/app/peer-socket.service.ts:40:5",
+      "to": "channel:ping-server",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 40
+    },
+    {
+      "from": "web#src/app/peer-socket.service.ts:PeerSocketService.connect",
+      "to": "web#src/app/peer-socket.service.ts:PeerSocketService.apply",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 28
+    },
+    {
+      "from": "web#src/app/peer-socket.service.ts:PeerSocketService.connect",
+      "to": "web#src/app/peer-socket.service.ts:PeerSocketService.notify",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 25
+    },
+    {
+      "from": "web#src/app/peer-socket.service.ts:PeerSocketService.ping",
+      "to": "producer:web#src/app/peer-socket.service.ts:40:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 40
+    },
+    {
+      "from": "web#src/app/peer-socket.service.ts:PeerSocketService.unwatch",
+      "to": "producer:web#src/app/peer-socket.service.ts:36:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 36
+    },
+    {
+      "from": "web#src/app/peer-socket.service.ts:PeerSocketService.watch",
+      "to": "producer:web#src/app/peer-socket.service.ts:32:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/peer-socket.service.ts",
+      "line": 32
+    }
+  ],
+  "types": {
+    "type:api#LiveState": {
+      "name": "LiveState",
+      "kind": "object",
+      "declaredIn": "api#src/live/live-events.ts",
+      "structuralHash": "ff894460d9836233",
+      "fields": [
+        {
+          "name": "videoId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "state",
+          "type": "'ended'|'published'|'waiting'",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#Notification": {
+      "name": "Notification",
+      "kind": "object",
+      "declaredIn": "api#src/live/live-events.ts",
+      "structuralHash": "4596b774435c95c9",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#Subscription": {
+      "name": "Subscription",
+      "kind": "object",
+      "declaredIn": "api#src/live/live-events.ts",
+      "structuralHash": "2745156e3b4d5e8c",
+      "fields": [
+        {
+          "name": "videoId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:socket.io#Socket": {
+      "name": "Socket",
+      "kind": "external",
+      "declaredIn": "socket.io",
+      "structuralHash": "8cd62e474fef7cd7",
+      "meta": {
+        "declKind": "external",
+        "package": "socket.io"
+      }
+    }
+  },
+  "unresolved": []
+}

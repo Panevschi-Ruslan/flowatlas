@@ -18,8 +18,14 @@ import type { ReportJob } from './jobs';
  * `consumer` on `process`, the `consumes` edge between them, and the `method`
  * and `provider` nodes the `handles` edge needs — created by the consumer
  * emitter rather than found there.
+ *
+ * It is also the one processor here that names its queue in the options object
+ * rather than as a bare string, which is the other overload the real decorator
+ * takes. Before the channel side was described with locators the reader read the
+ * whole object and produced `channel:{"name":"reports"}` — a node nothing else
+ * could ever write (R86, R83).
  */
-@Processor('reports')
+@Processor({ name: 'reports' })
 export class ReportsProcessor extends WorkerHost {
   async process(job: Job<ReportJob>): Promise<void> {
     void job.data.reportId;

@@ -1,10 +1,10 @@
-125 nodes, 108 edges, 11 types, 14 unresolved
+126 nodes, 109 edges, 14 types, 13 unresolved
 
 nodes by type
   repo          4
   module        4
   entry         17
-  provider      17
+  provider      18
   method        47
   db_query      4
   table         1
@@ -21,12 +21,12 @@ nodes by type
 nodes by service
   billing  18
   gateway  43
-  orders   32
+  orders   33
   web      32
 
 edges by type
   imports       1
-  injects       15
+  injects       16
   calls         49
   handles       21
   queries       4
@@ -37,14 +37,13 @@ edges by type
   reads_config  4
 
 edges by confidence
-  static     98
+  static     99
   marker     5
   heuristic  5
 
 unresolved by reason, counted by site
   ambiguous-route-target  1
   api-path-dynamic        3
-  di-token-unknown        1
   dynamic-http-url        1
   route-unguarded         4
   target-route-not-found  3

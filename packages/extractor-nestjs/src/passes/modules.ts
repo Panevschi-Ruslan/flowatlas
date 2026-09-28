@@ -1,10 +1,11 @@
-import type { Expression, ObjectLiteralExpression } from 'ts-morph';
+import type { ClassDeclaration, Expression, ObjectLiteralExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
 import type { ModuleInfo, ModuleKind, ProviderRegistration } from '../modules-index.js';
 import { getDecorator, lineOf } from '@flowatlas/core';
 import { NEST_COMMON } from '../index-classes.js';
 import { isDynamicModuleExpression, resolveClassExpression } from '../util/resolve-class.js';
+import { tokenOf, tokensProvidedBy } from './module-tokens.js';
 import { definePass } from './types.js';
 
 const arrayProperty = (
@@ -25,12 +26,6 @@ const moduleOptions = (
   const [argument] = decorator?.getArguments() ?? [];
   return argument !== undefined && Node.isObjectLiteralExpression(argument) ? argument : undefined;
 };
-
-/** Token as written: a string literal keeps its value, anything else its text. */
-const tokenOf = (expr: Expression): string =>
-  Node.isStringLiteral(expr) || Node.isNoSubstitutionTemplateLiteral(expr)
-    ? expr.getLiteralValue()
-    : expr.getText();
 
 const PROVIDER_SHAPES = ['useClass', 'useValue', 'useFactory', 'useExisting'] as const;
 
@@ -99,9 +94,31 @@ export const modulesPass = definePass('modules', (ctx) => {
 
   for (const indexed of ctx.classes.withRole('module')) {
     const options = moduleOptions(indexed.declaration);
-    const controllers = arrayProperty(options, 'controllers')
-      .map((expr) => resolveClassExpression(expr))
-      .flatMap((ref) => (ref.kind === 'local' ? [ref.declaration] : []));
+    // Read one element at a time, and said out loud where an element could not
+    // be read. `controllers: [...controllers]` — a photo server's, a spread of an array
+    // assembled in another file — resolved to nothing and was dropped in
+    // silence, which cost little while membership was only metadata on a node.
+    // Since R119 it decides which application an address belongs to, so a module
+    // whose controller list nobody could read is a module whose addresses cannot
+    // be told from another application's, and that is worth a row.
+    const controllers: ClassDeclaration[] = [];
+    for (const expr of arrayProperty(options, 'controllers')) {
+      const ref = resolveClassExpression(expr);
+      if (ref.kind === 'local') {
+        controllers.push(ref.declaration);
+        continue;
+      }
+      // A controller from an installed package declares addresses this
+      // repository does not hold the source of; there is nothing here to mount.
+      if (ref.kind === 'external') continue;
+      ctx.report({
+        file: ctx.fileOf(expr),
+        line: lineOf(expr),
+        reason: 'module-controllers-unread',
+        hint: 'List the controller classes, or a name that leads to an array of them in this repository. Which application serves an address is read from the module that declares its controller.',
+        symbol: `${indexed.name} controllers ${ref.text}`,
+      });
+    }
 
     const providers = arrayProperty(options, 'providers')
       .map((expr) => readProvider(expr, ctx))
@@ -110,6 +127,7 @@ export const modulesPass = definePass('modules', (ctx) => {
     const exports = arrayProperty(options, 'exports').map((expr) => tokenOf(expr));
 
     const imports: ModuleInfo['imports'] = [];
+    const providedByImports: ProviderRegistration[] = [];
     for (const expr of arrayProperty(options, 'imports')) {
       const dynamic = isDynamicModuleExpression(expr);
       const ref = resolveClassExpression(expr);
@@ -124,6 +142,10 @@ export const modulesPass = definePass('modules', (ctx) => {
         continue;
       }
       if (ref.kind === 'external') {
+        // `ClientsModule.register([{ name: 'KAFKA_CLIENT' }])` provides that
+        // token as surely as `providers:` would (R150); which modules do, and
+        // where in their arguments, is described in module-tokens.ts.
+        providedByImports.push(...tokensProvidedBy(expr, ref, ctx));
         const node = ctx.ensureExternalClassNode({
           typeName: ref.typeName,
           package: ref.package,
@@ -151,6 +173,7 @@ export const modulesPass = definePass('modules', (ctx) => {
       declaration: indexed.declaration,
       controllers,
       providers,
+      providedByImports,
       exports,
       imports,
     });

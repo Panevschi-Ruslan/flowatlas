@@ -2,11 +2,27 @@ import { join, resolve } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { readGraphFile, resolveNodeId } from '../../../../scripts/fixture-nodes.mjs';
 import { createFlowatlasServer } from '../server.js';
 import type { FlowNode } from '../query/types.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
-const CONFIG = join(ROOT, 'fixtures', 'multi-repo', 'flowatlas.config.json');
+const FIXTURE = join(ROOT, 'fixtures', 'multi-repo');
+const CONFIG = join(FIXTURE, 'flowatlas.config.json');
+
+/**
+ * The graph the server is about to answer from, read as data.
+ *
+ * The questions below are about requests, and a request's id carries the line
+ * it was written at. Asking for it by the client method that makes it means
+ * adding a line to a fixture moves the snapshots, which are regenerated, and
+ * moves nothing here.
+ */
+const graph = readGraphFile(join(FIXTURE, '.flowatlas', 'project-graph.json'));
+
+/** The one request the named client method makes. */
+const requestIn = (method: string): string =>
+  resolveNodeId(graph, { type: 'http_out', calledBy: method });
 
 let client: Client;
 
@@ -187,7 +203,9 @@ describe('working backwards', () => {
     };
     walk(answer.callers);
     expect(seen).toContain('entry:orders:http:GET:/orders/:param');
-    expect(seen).toContain('http_out:gateway#src/clients/orders.client.ts:33:12');
+    expect(seen).toContain(
+      requestIn('gateway#src/clients/orders.client.ts:OrdersClient.fetchOne'),
+    );
   });
 
   it('names every entry that can reach a symbol, and whose they are', async () => {
@@ -277,7 +295,7 @@ describe('types', () => {
 describe('whether two services still agree', () => {
   it('says a shared declaration cannot drift', async () => {
     const answer = await call('check_contract', {
-      from: 'http_out:gateway#src/clients/orders.client.ts:33:12',
+      from: requestIn('gateway#src/clients/orders.client.ts:OrdersClient.fetchOne'),
       to: 'entry:orders:http:GET:/orders/:param',
     });
     expect(answer.response.status).toBe('shared');
@@ -286,7 +304,7 @@ describe('whether two services still agree', () => {
 
   it('says when each side declares its own shape and they differ', async () => {
     const answer = await call('check_contract', {
-      edge: 'http_out:gateway#src/clients/billing.client.ts:33:12 -http_calls-> entry:billing:http:POST:/invoices',
+      edge: `${requestIn('gateway#src/clients/billing.client.ts:BillingClient.requestInvoice')} -http_calls-> entry:billing:http:POST:/invoices`,
     });
     expect(answer.response.status).toBe('hash_differs');
     expect(answer.response.left).toBe('type:gateway#InvoiceDto');
@@ -296,7 +314,7 @@ describe('whether two services still agree', () => {
 
   it('says when a side named no type rather than pretending to check', async () => {
     const answer = await call('check_contract', {
-      from: 'http_out:gateway#src/clients/billing.client.ts:33:12',
+      from: requestIn('gateway#src/clients/billing.client.ts:BillingClient.requestInvoice'),
       to: 'entry:billing:http:POST:/invoices',
     });
     expect(answer.request.status).toBe('unchecked');

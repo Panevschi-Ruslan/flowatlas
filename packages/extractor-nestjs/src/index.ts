@@ -13,6 +13,7 @@ export {
   extractRepo,
   createRepoProject,
   BUILT_IN_PASSES,
+  CLOSING_PASSES,
   defaultOutputPath,
 } from './extract-repo.js';
 export type { ExtractRepoOptions } from './extract-repo.js';
@@ -116,6 +117,13 @@ export {
 } from './bootstrap.js';
 export type { BootstrapGlobal, BootstrapInfo, WrapperRef, WrappingLayer } from './bootstrap.js';
 
+export {
+  applicationFindings,
+  applicationMembership,
+  readApplicationRoots,
+} from './applications.js';
+export type { ApplicationRoot, ApplicationsRead, UnreadApplication } from './applications.js';
+
 export { collectWrapping } from './wrapping/collect.js';
 export { emptyCollection } from './wrapping/types.js';
 export type {
@@ -130,6 +138,7 @@ export type {
 export { definePass } from './passes/types.js';
 export type { NestExtractorPass } from './passes/types.js';
 export { modulesPass } from './passes/modules.js';
+export { applicationsPass } from './passes/applications.js';
 export { providersPass } from './passes/providers.js';
 export { entriesPass } from './passes/entries.js';
 export { diPass } from './passes/di.js';

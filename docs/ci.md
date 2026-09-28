@@ -12,6 +12,26 @@ fails a build on three things and nothing else:
 
 Everything else is printed and costs nothing.
 
+With one exception, which is not about how strict you asked it to be. Four
+graphs are refused with exit 2 — the code that has always meant "the check could
+not be run" — with or without `--strict`:
+
+- a graph that holds nothing;
+- a graph whose build recorded that a repository could not be read;
+- a graph a service was read into and contributed nothing to;
+- a graph where most of one service's ways in have no handler that was read.
+  The growth check sees a change only when the change adds a row, and a change
+  inside a body nobody read never does, so for that service the gate would be
+  blind rather than lax. It is decided service by service, so a service read end
+  to end cannot carry a hollow one past the check, and `doctor` prints the two
+  numbers, found and read, above the rows. A few unread handlers among many read
+  ones are ordinary rows.
+
+A job that treats 2 as a failure is treating it correctly: the reading is broken
+rather than the project, and 0 over one of those graphs is a clean bill of health
+on something nobody read. `--accept` refuses the same four, so a baseline can
+never be written over one.
+
 ## What to turn on first
 
 Almost no project can adopt all three on the first day, and one that fails on
@@ -122,11 +142,23 @@ flowatlas diff origin/main --fail-on-contract-break
 A pre-existing error is somebody else's problem and an excused one is nobody's,
 so neither stops the build.
 
-## Two things that will bite you otherwise
+## Three things that will bite you otherwise
 
 **Every repository needs its dependencies installed.** flowatlas reads types, and
-a repository with no `node_modules` resolves nothing, which looks exactly like a
-repository with nothing in it.
+a repository with no `node_modules` resolves nothing outside itself. It is still
+read — what its own source states is read, and marked `heuristic` — and the run
+says once, at the head of `doctor` and after `build`'s `unresolved` line, that
+the read was partial. But a CI job is the one place the install costs nothing,
+and a graph read with every type resolved is the one to gate on. Install without
+running scripts if you must, and know that a client a postinstall script
+generates is then absent either way.
 
 **`fetch-depth: 0`.** A shallow clone has no `origin/main` to compare against,
 and `diff` will tell you the ref was not found rather than guess.
+
+**A large monorepo wants a larger heap.** Each repository is read in a process
+of its own and held in memory while it is read. `build` asks for a share of the
+machine, divided by how many repositories it reads at once, and a read that
+still does not fit exits 2 naming the repository, the limit that did not hold and
+the flag that raises it. On a small runner, lower `--concurrency` so each read
+gets a larger share, or set `--heap` to what the runner can actually give.

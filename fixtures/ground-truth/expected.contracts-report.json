@@ -1,0 +1,84 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 5,
+  "generatedAt": "2026-09-27T17:30:49.188Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:client#src/orders/orders.client.ts:21:12",
+        "to": "entry:api:http:PATCH:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:client#src/orders/orders.client.ts:21:12|http_calls|entry:api:http:PATCH:/orders/:param",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "client",
+        "typeId": "{name:string}",
+        "symbol": "client#src/orders/orders.client.ts:OrdersClient.rename",
+        "writes": [
+          "name"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "{name:string}",
+        "symbol": "api#src/orders/orders.controller.ts:OrdersController.rename"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:client#src/orders/orders.client.ts:21:12",
+        "to": "entry:api:http:PATCH:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:client#src/orders/orders.client.ts:21:12|http_calls|entry:api:http:PATCH:/orders/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "client#src/orders/orders.client.ts:OrdersClient.rename declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "http_out:client#src/orders/orders.client.ts:26:12",
+        "to": "entry:api:http:GET:/files/latest",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:client#src/orders/orders.client.ts:26:12|http_calls|entry:api:http:GET:/files/latest",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "client#src/orders/orders.client.ts:OrdersClient.newest declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:client#src/orders/orders.client.ts:26:12",
+        "to": "entry:api:http:GET:/files/latest",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:client#src/orders/orders.client.ts:26:12|http_calls|entry:api:http:GET:/files/latest",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "client#src/orders/orders.client.ts:OrdersClient.newest declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 1,
+    "shared": 0,
+    "identical": 1,
+    "hash_differs": 0,
+    "unchecked": 3,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

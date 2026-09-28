@@ -1,6 +1,7 @@
+import type { FlowatlasConfig } from '../config.js';
 import { AdapterNotFoundError, FlowatlasError } from '../errors.js';
 import type { BrokerAdapter } from './broker.js';
-import type { PackageJson } from './context.js';
+import type { PackageJson } from './manifest.js';
 import type { DbAdapter } from './db.js';
 import type { EntryAdapter } from './entry.js';
 import type { FrontendAdapter } from './frontend.js';
@@ -23,6 +24,23 @@ export type DetectedAdapters = { readonly [S in AdapterSlot]: readonly SlotAdapt
 export type AdapterForce = { readonly [S in AdapterSlot]?: readonly string[] };
 
 type SlotMaps = { [S in AdapterSlot]: Map<string, SlotAdapters[S]> };
+
+/**
+ * How the registry asks an adapter whether it applies.
+ *
+ * One shape for all four slots, and the widest of the four: an adapter that
+ * only reads the manifest declares the first parameter and is assignable to
+ * this, so the registry can offer the configuration to every adapter without
+ * every slot having to name it. Written as a function taking the adapter rather
+ * than read off it, so the adapter is still the receiver of its own method.
+ */
+type Detects = (pkg: PackageJson, config?: FlowatlasConfig) => boolean;
+
+const applies = (
+  adapter: { detect: Detects },
+  pkg: PackageJson,
+  config: FlowatlasConfig | undefined,
+): boolean => adapter.detect(pkg, config);
 
 /**
  * Lookup table of the adapters this build knows about.
@@ -76,14 +94,22 @@ export class AdapterRegistry {
    * A slot named under `force` is taken verbatim from the list given, which is
    * how an override can remove a wrongly detected adapter and not only add one.
    * Every other slot is filled by asking each registered adapter whether it
-   * recognises the manifest.
+   * recognises the repository.
+   *
+   * `config` is what a repository is in the middle of being read *as*, and it
+   * is passed on to the adapters rather than consulted here: this class knows
+   * nothing about what is in it, and an adapter that runs descriptions the
+   * project wrote is the only one that can say whether any of them is about
+   * this repository. A caller with no configuration to hand omits it and every
+   * such adapter answers no, which is what it answered before there was
+   * anything to consult.
    */
-  detect(pkg: PackageJson, force: AdapterForce = {}): DetectedAdapters {
+  detect(pkg: PackageJson, force: AdapterForce = {}, config?: FlowatlasConfig): DetectedAdapters {
     return {
-      entry: this.#resolve('entry', pkg, force.entry),
-      db: this.#resolve('db', pkg, force.db),
-      broker: this.#resolve('broker', pkg, force.broker),
-      frontend: this.#resolve('frontend', pkg, force.frontend),
+      entry: this.#resolve('entry', pkg, force.entry, config),
+      db: this.#resolve('db', pkg, force.db, config),
+      broker: this.#resolve('broker', pkg, force.broker, config),
+      frontend: this.#resolve('frontend', pkg, force.frontend, config),
     };
   }
 
@@ -91,10 +117,11 @@ export class AdapterRegistry {
     slot: S,
     pkg: PackageJson,
     forced: readonly string[] | undefined,
+    config: FlowatlasConfig | undefined,
   ): readonly SlotAdapters[S][] {
     const registered = this.#slots[slot];
     if (forced === undefined) {
-      return [...registered.values()].filter((adapter) => adapter.detect(pkg));
+      return [...registered.values()].filter((adapter) => applies(adapter, pkg, config));
     }
     return forced.map((name) => {
       const adapter = registered.get(name);

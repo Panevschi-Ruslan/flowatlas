@@ -1,23 +1,43 @@
 import {
   hasAnyDependency,
   hasDependency,
-  HTTP_METHODS,
   makeEntryId,
   makeHttpEntryKey,
   namedFunction,
   normalizeFilePath,
+  originOfValue,
+  reachHere,
+  reachMeta,
+  reachOf,
+  type ApplicationMap,
   type EntryAdapter,
   type EntryHandler,
   type EntryNode,
+  type EntryWrapping,
   type ExtractContext,
   type NamedFunction,
+  type Reach,
 } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ActionBuilder } from './action-builders.js';
 import { ACTION_BUILDERS } from './action-builders.js';
-import { APP_ROUTER, PAGES_API, routePathOfFile } from './nextjs-paths.js';
-import { handlerOfFunction, inlineHandlerOf, repoFunctionOf, repoSources } from './shared.js';
+import {
+  fsAddressSpace,
+  fsApplicationMap,
+  pathPatternTest,
+  readVerbFile,
+  reportUnreadHandler,
+  type FsRouteVerb,
+} from './fs-routes.js';
+import { APP_ROUTER, PAGES_API } from './nextjs-paths.js';
+import {
+  handlerOfFunction,
+  inlineHandlerOf,
+  repoFunctionOf,
+  repoSources,
+  unwrapValue,
+} from './shared.js';
 
 /** The dependency that gives the framework away. */
 const PACKAGE = 'next';
@@ -48,32 +68,6 @@ const opensWith = (statements: readonly TsNode[], directive: string): boolean =>
 /** The named function a declaration stands for, wherever it was exported from. */
 const exportedFunction = (declaration: TsNode): NamedFunction | undefined =>
   namedFunction(declaration);
-
-/**
- * How far a matcher pattern reaches, as a test on a path.
- *
- * `undefined` means the pattern could not be read, which is the common case and
- * deliberately not the same as "it does not cover this route". The framework
- * accepts a full regular expression here, and repositories use one — the
- * canonical example in its own documentation is a negative lookahead. Claiming
- * a route is guarded because an expression nobody read might have matched it
- * would be the worst thing this tool could say.
- */
-const matcherTest = (pattern: string): ((path: string) => boolean) | undefined => {
-  if (!pattern.startsWith('/')) return undefined;
-  if (/[()|?!]/.test(pattern)) return undefined;
-  const expression = pattern
-    .split('/')
-    .map((segment) => {
-      if (segment === '') return '';
-      if (segment.startsWith(':')) return segment.endsWith('*') ? '.*' : '[^/]+';
-      if (segment === '*') return '.*';
-      return segment.replace(/[.+^${}[\]\\]/g, '\\$&');
-    })
-    .join('/');
-  const compiled = new RegExp(`^${expression}$`);
-  return (path) => compiled.test(path);
-};
 
 /** What `middleware.ts` guards, when the repository has one. */
 interface Middleware {
@@ -110,7 +104,7 @@ const readMiddleware = (ctx: ExtractContext): Middleware | undefined => {
         unread.push(pattern.getText());
         continue;
       }
-      const test = matcherTest(pattern.getLiteralValue());
+      const test = pathPatternTest(pattern.getLiteralValue());
       if (test === undefined) unread.push(pattern.getLiteralValue());
       else tests.push(test);
     }
@@ -122,6 +116,36 @@ const readMiddleware = (ctx: ExtractContext): Middleware | undefined => {
   }
   return undefined;
 };
+
+/** One way in, as every reader in this file describes it. */
+interface HttpEntryOptions {
+  method: string;
+  path: string;
+  /**
+   * Where the way in was found, and where its verb was written.
+   *
+   * One value rather than a `file` and a `line`, because the defect this replaced
+   * was a caller passing halves of two different answers: the file it was reading
+   * and the line the compiler gave for a verb another module declares (R99).
+   */
+  at: Reach;
+  handler?: NamedFunction;
+  via: string;
+  /**
+   * How the handler was named, where the shared verb reading said (R153). The
+   * older router has one reading only, so there it follows from the handler.
+   */
+  handlerVia?: FsRouteVerb['handlerVia'];
+  /** False when a handler was named and there is nothing behind the name. */
+  bodyRead?: boolean;
+  /**
+   * The application that serves it, where the service holds more than one.
+   *
+   * An address is an address within one application, and which one is part of
+   * the identity rather than of the path (R119, R125).
+   */
+  application?: string;
+}
 
 /**
  * Entry points a Next.js repository declares by where its files are.
@@ -136,9 +160,24 @@ const readMiddleware = (ctx: ExtractContext): Middleware | undefined => {
  * turns the import into a request, and there is no string anywhere to join on —
  * so the edge is the import, and this only has to say that the boundary exists.
  */
+/**
+ * Which applications this repository holds, read from where its route files are.
+ *
+ * One function and two callers, because two readings of the same directories
+ * would be two opinions about what an application is: the ids minted below, and
+ * whoever asks which application a file that declares no route belongs to —
+ * a component making a request (R132).
+ */
+const applicationsOf = (ctx: ExtractContext): ApplicationMap =>
+  fsApplicationMap(
+    [...repoSources(ctx)].map((source) => normalizeFilePath(source.getFilePath(), ctx.repoDir)),
+    [APP_ROUTER, PAGES_API],
+  );
+
 export const nextjsRoutesAdapter: EntryAdapter = {
   name: 'nextjs-routes',
   detect: (pkg) => hasDependency(pkg, PACKAGE),
+  applications: (ctx) => applicationsOf(ctx),
 
   extractEntries(ctx: ExtractContext): EntryNode[] {
     const entries: EntryNode[] = [];
@@ -165,70 +204,138 @@ export const nextjsRoutesAdapter: EntryAdapter = {
      */
     const middlewareRead = middleware === undefined || middleware.unread.length === 0;
 
-    /** What a route says about the guard in front of it. */
-    const gateOf = (path: string): Record<string, unknown> => {
-      if (middleware === undefined) return { middlewareRead };
-      if (middleware.covers === undefined) return { middlewareRead, middleware: [middleware.file] };
-      return middleware.covers(path)
-        ? { middlewareRead, middleware: [middleware.file] }
-        : { middlewareRead };
+    /**
+     * What stands in front of a route, described for the extractor to draw.
+     *
+     * The file is what there is to point at — one module guards the whole
+     * repository and the framework gives it no name of its own — and it is
+     * drawn as the same `guarded_by` edge a guard class gets, so that a route
+     * this file covers does not read as an unguarded route to everything that
+     * walks the graph (R109).
+     */
+    const gateOf = (path: string): readonly EntryWrapping[] => {
+      if (middleware === undefined) return [];
+      if (middleware.covers !== undefined && !middleware.covers(path)) return [];
+      return [
+        {
+          label: middleware.file,
+          layer: 'middleware',
+          scope: 'global',
+          source: 'middleware file',
+          file: middleware.file,
+          line: 1,
+          kind: 'file',
+        },
+      ];
     };
 
-    const httpEntry = (options: {
-      method: string;
-      path: string;
-      file: string;
-      line: number;
-      handler?: NamedFunction;
-      via: string;
-    }): void => {
+    const httpEntry = (options: HttpEntryOptions): void => {
       const key = makeHttpEntryKey(options.method, options.path);
-      const id = makeEntryId(ctx.repo, 'http', key);
+      const id = makeEntryId(ctx.repo, 'http', key, options.application);
       if (seen.has(id)) return;
       seen.add(id);
+      const gate = gateOf(options.path);
       entries.push({
         id,
         kind: 'http',
-        label: `${options.method} ${options.path}`,
+        label:
+          options.application === undefined
+            ? `${options.method} ${options.path}`
+            : `${options.method} ${options.path} (${options.application})`,
         key,
         ...(options.handler === undefined
           ? {}
           : { handler: handlerOfFunction(options.handler, ctx) }),
-        file: options.file,
-        line: options.line,
+        file: options.at.reached.file,
+        line: options.at.reached.line,
+        ...(gate.length > 0 ? { wrapping: gate } : {}),
         meta: {
           method: options.method,
           path: options.path,
           adapter: 'nextjs-routes',
           registration: options.via,
-          ...gateOf(options.path),
-          handlerVia: options.handler === undefined ? 'unread' : 'function',
+          // Only where there is more than one, which is where it says
+          // something: it is what tells a tie between two applications from a
+          // tie between two routes of one.
+          ...(options.application === undefined ? {} : { application: options.application }),
+          middlewareRead,
+          // The route file is what the node points at, because the address is
+          // read from where that file is and a node naming any other file would
+          // be a way in nothing serves. Where the verb was written is the other
+          // fact, and it is recorded rather than folded into the first one.
+          ...reachMeta(options.at),
+          handlerVia: options.handlerVia ?? (options.handler === undefined ? 'unread' : 'function'),
+          // Two different facts, and the second is the one a summary must not
+          // read off the first. `handlerVia` says whether a function was named;
+          // this says whether there is code behind the name. A route counted as
+          // covered because a name was found is how seventeen of seventeen came
+          // to stand for two of nine (R94).
+          ...(options.bodyRead === false ? { handlerBodyRead: false } : {}),
         },
       });
     };
 
+    // Which applications this repository holds, and what each address is
+    // qualified by. Read for the whole service before any of it is emitted,
+    // because whether an id names an application depends on how many
+    // applications there are — the one thing a single file cannot say (R125).
+    const space = fsAddressSpace(applicationsOf(ctx));
+
     for (const sourceFile of repoSources(ctx)) {
       const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);
-      const appPath = routePathOfFile(file, APP_ROUTER);
-      const pagesPath = routePathOfFile(file, PAGES_API);
+      const appAddress = space.addressOf(file, APP_ROUTER);
+      const pagesAddress = space.addressOf(file, PAGES_API);
 
-      if (appPath !== null) {
-        readAppRoute(ctx, sourceFile, file, appPath, httpEntry);
+      if (appAddress !== null) {
+        // The shared reading of a directory-addressed route file: the verbs it
+        // exports, what is behind each of them, and the rows for the ones with
+        // nothing behind them. Only what to do with each verb is this reader's
+        // own — the gate in front of it, and the name on the entry (R91).
+        readVerbFile(ctx, sourceFile, {
+          file,
+          path: appAddress.path,
+          adapter: 'nextjs-routes',
+          emit: (verb) => httpEntry({ ...verb, ...appAddress, via: 'app/route' }),
+        });
         continue;
       }
-      if (pagesPath !== null) {
+      if (pagesAddress !== null) {
         // The older router answers every verb from one handler: the file is one
         // way in, and which method arrives is the handler's own business.
         const [declaration] = sourceFile.getExportedDeclarations().get('default') ?? [];
         const handler = declaration === undefined ? undefined : exportedFunction(declaration);
+        const read = handler !== undefined;
+        // The declaration may be in another file entirely — one line forwarding
+        // another module's default is how a large repository keeps its addresses
+        // in the application and its bodies in a package — so the position is
+        // asked of the file being read rather than of what the compiler resolved.
+        const at =
+          declaration === undefined
+            ? reachHere(file, 1)
+            : reachOf(declaration, sourceFile, 'default', ctx.repoDir);
         httpEntry({
           method: 'ALL',
-          path: pagesPath,
-          file,
-          line: handler?.line ?? 1,
+          ...pagesAddress,
+          at,
           ...(handler === undefined ? {} : { handler }),
           via: 'pages/api',
+          bodyRead: read,
         });
+        // A file under the older router is a way in whether or not its default
+        // export is a function this can follow, and until now the second case
+        // was the first case with a quieter graph. Only one reading applies
+        // here — a function written in place — so a handler that was found is a
+        // handler that was read, and there is one case to report rather than two.
+        if (!read) {
+          reportUnreadHandler(ctx, {
+            file: at.reached.file,
+            line: at.reached.line,
+            label: `ALL ${pagesAddress.path}`,
+            path: pagesAddress.path,
+            why: 'none',
+            adapter: 'nextjs-routes',
+          });
+        }
         continue;
       }
 
@@ -253,54 +360,6 @@ export const nextjsRoutesAdapter: EntryAdapter = {
   },
 };
 
-/** The verbs a route file exports, each of them one way in. */
-const readAppRoute = (
-  ctx: ExtractContext,
-  sourceFile: SourceFile,
-  file: string,
-  path: string,
-  emit: (options: {
-    method: string;
-    path: string;
-    file: string;
-    line: number;
-    handler?: NamedFunction;
-    via: string;
-  }) => void,
-): void => {
-  // Asked of the compiler rather than of the statements, so that the three
-  // shapes a real repository writes all answer: a function declared here, a
-  // name re-exported under a verb's name, and a whole module re-exported from
-  // somewhere else. In the repository this was measured against, twenty-six of
-  // the five hundred and twenty route files are one of the last two.
-  const exported = sourceFile.getExportedDeclarations();
-  let found = 0;
-  for (const method of HTTP_METHODS) {
-    const [declaration] = exported.get(method) ?? [];
-    if (declaration === undefined) continue;
-    found += 1;
-    const handler = exportedFunction(declaration);
-    emit({
-      method,
-      path,
-      file,
-      line: declaration.getStartLineNumber(),
-      ...(handler === undefined ? {} : { handler }),
-      via: 'app/route',
-    });
-  }
-
-  if (found > 0) return;
-  ctx.builder.addUnresolved({
-    file,
-    line: 1,
-    reason: 'route-verb-unread',
-    message: `${file} is served at ${path} but exports no verb this could read.`,
-    hint: 'Export GET, POST and the rest by name; a verb assembled at run time cannot be joined to anything that asks for it.',
-    symbol: path,
-    adapter: 'nextjs-routes',
-  });
-};
 
 /**
  * The functions a module hands to the client as a boundary.
@@ -330,13 +389,14 @@ const readServerActions = (
    * One boundary, however it was written.
    *
    * Both spellings arrive here with the same four facts — the exported name,
-   * the line it is declared on, the code behind it and how confidently that
-   * could be named — so the node is built in one place and a reader comparing
-   * a built action with a declared one is comparing the same thing.
+   * where it was found and where it was written, the code behind it and how
+   * confidently that could be named — so the node is built in one place and a
+   * reader comparing a built action with a declared one is comparing the same
+   * thing.
    */
   const record = (options: {
     name: string;
-    line: number;
+    at: Reach;
     handler: EntryHandler | undefined;
     via: 'function' | 'inline';
     builder?: string;
@@ -351,10 +411,14 @@ const readServerActions = (
       label: `action ${options.name}`,
       key,
       ...(options.handler === undefined ? {} : { handler: options.handler }),
-      file,
-      line: options.line,
+      file: options.at.reached.file,
+      line: options.at.reached.line,
       meta: {
         action: options.name,
+        // The module the client imports is the boundary, so that is the file the
+        // node names; where the function itself was written is the second fact
+        // and is kept as one (R99).
+        ...reachMeta(options.at),
         adapter: 'nextjs-routes',
         registration: wholeModule ? "module 'use server'" : "function 'use server'",
         ...(options.builder === undefined ? {} : { builder: options.builder }),
@@ -381,14 +445,15 @@ const readServerActions = (
       // told about reads as a repository with no actions in it (R07).
       if (!wholeModule || !Node.isVariableDeclaration(declaration)) continue;
       const built = builtAction(declaration, builders);
+      const at = reachOf(declaration, sourceFile, name, ctx.repoDir);
       if (built === undefined) {
-        unreadable.push({ file, name, line: declaration.getStartLineNumber() });
+        unreadable.push({ file: at.reached.file, name, line: at.reached.line });
         continue;
       }
       const named = repoFunctionOf(built.action);
       record({
         name,
-        line: declaration.getStartLineNumber(),
+        at,
         handler:
           named === undefined
             ? inlineHandlerOf(built.action, `action ${name}`, ctx)
@@ -403,21 +468,14 @@ const readServerActions = (
     const marked = wholeModule || (Node.isBlock(fn.body) && opensWith(fn.body.getStatements(), USE_SERVER));
     if (!marked) continue;
 
-    record({ name, line: fn.line, handler: handlerOfFunction(fn, ctx), via: 'function' });
+    record({
+      name,
+      at: reachOf(fn.declaration, sourceFile, name, ctx.repoDir),
+      handler: handlerOfFunction(fn, ctx),
+      via: 'function',
+    });
   }
   return unreadable;
-};
-
-/** `(x)`, `x as T` and `await x` all stand for whatever is inside them. */
-const unwrapValue = (expr: TsNode): TsNode => {
-  if (
-    Node.isParenthesizedExpression(expr) ||
-    Node.isAsExpression(expr) ||
-    Node.isAwaitExpression(expr)
-  ) {
-    return unwrapValue(expr.getExpression());
-  }
-  return expr;
 };
 
 /** Whether an expression is a function, written here or named elsewhere. */
@@ -453,7 +511,7 @@ const builtAction = (
     if (!Node.isPropertyAccessExpression(callee)) return undefined;
     const method = callee.getName();
     for (const builder of builders) {
-      const position = builder.methods[method];
+      const position = builder.methods.get(method);
       if (position === undefined) continue;
       const argument = node.getArguments()[position];
       if (argument === undefined) continue;

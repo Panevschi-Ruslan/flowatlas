@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-28T08:36:17.272Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./apps/web",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "config_key:web#DELIVERIES_UPSTREAM_URL",
+      "type": "config_key",
+      "label": "DELIVERIES_UPSTREAM_URL",
+      "repo": "web",
+      "file": "../../packages/handlers/src/store.ts",
+      "line": 12,
+      "meta": {
+        "key": "DELIVERIES_UPSTREAM_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:web:http:ALL:/api/legacy",
+      "type": "entry",
+      "label": "ALL /api/legacy",
+      "repo": "web",
+      "file": "pages/api/legacy.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/legacy",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "declaredIn": "../../packages/handlers/src/legacy.ts",
+        "declaredLine": 26,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:web:http:GET:/api/invoices",
+      "type": "entry",
+      "label": "GET /api/invoices",
+      "repo": "web",
+      "file": "app/api/invoices/route.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/invoices",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "declaredIn": "lib/invoices.ts",
+        "declaredLine": 12,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:web:http:POST:/api/webhook",
+      "type": "entry",
+      "label": "POST /api/webhook",
+      "repo": "web",
+      "file": "app/api/webhook/route.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/webhook",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "declaredIn": "../../packages/handlers/src/index.ts",
+        "declaredLine": 20,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "http_out:web#../../packages/handlers/src/store.ts:15:24",
+      "type": "http_out",
+      "label": "POST /deliveries",
+      "repo": "web",
+      "file": "../../packages/handlers/src/store.ts",
+      "line": 15,
+      "meta": {
+        "method": "POST",
+        "url": "${DELIVERIES_UPSTREAM_URL}/deliveries",
+        "path": "/deliveries",
+        "baseUrlEnv": "DELIVERIES_UPSTREAM_URL",
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 4,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#../../packages/handlers/src/store.ts:15:24",
+      "type": "ui_api_call",
+      "label": "POST /deliveries",
+      "repo": "web",
+      "file": "../../packages/handlers/src/store.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${DELIVERIES_UPSTREAM_URL}/deliveries",
+        "path": "/deliveries",
+        "baseUrlEnv": "DELIVERIES_UPSTREAM_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env"
+      }
+    },
+    {
+      "id": "web#../../packages/handlers/src/index.ts:POST",
+      "type": "function",
+      "label": "POST",
+      "repo": "web",
+      "file": "../../packages/handlers/src/index.ts",
+      "line": 20
+    },
+    {
+      "id": "web#../../packages/handlers/src/legacy.ts:legacyHandler",
+      "type": "function",
+      "label": "legacyHandler",
+      "repo": "web",
+      "file": "../../packages/handlers/src/legacy.ts",
+      "line": 26
+    },
+    {
+      "id": "web#../../packages/handlers/src/store.ts:recordDelivery",
+      "type": "function",
+      "label": "recordDelivery",
+      "repo": "web",
+      "file": "../../packages/handlers/src/store.ts",
+      "line": 11
+    },
+    {
+      "id": "web#lib/invoices.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "web",
+      "file": "lib/invoices.ts",
+      "line": 12
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:web:http:ALL:/api/legacy",
+      "to": "web#../../packages/handlers/src/legacy.ts:legacyHandler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../../packages/handlers/src/legacy.ts",
+      "line": 26
+    },
+    {
+      "from": "entry:web:http:GET:/api/invoices",
+      "to": "web#lib/invoices.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "lib/invoices.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:web:http:POST:/api/webhook",
+      "to": "web#../../packages/handlers/src/index.ts:POST",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../../packages/handlers/src/index.ts",
+      "line": 20
+    },
+    {
+      "from": "web#../../packages/handlers/src/index.ts:POST",
+      "to": "web#../../packages/handlers/src/store.ts:recordDelivery",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../../packages/handlers/src/index.ts",
+      "line": 22
+    },
+    {
+      "from": "web#../../packages/handlers/src/store.ts:recordDelivery",
+      "to": "config_key:web#DELIVERIES_UPSTREAM_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "../../packages/handlers/src/store.ts",
+      "line": 12
+    },
+    {
+      "from": "web#../../packages/handlers/src/store.ts:recordDelivery",
+      "to": "http_out:web#../../packages/handlers/src/store.ts:15:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../../packages/handlers/src/store.ts",
+      "line": 15
+    },
+    {
+      "from": "web#../../packages/handlers/src/store.ts:recordDelivery",
+      "to": "ui_api_call:web#../../packages/handlers/src/store.ts:15:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../../packages/handlers/src/store.ts",
+      "line": 15
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "../../packages/handlers/src/legacy.ts",
+      "line": 30,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "legacyHandler -> response.json",
+      "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "../../packages/handlers/src/store.ts",
+      "line": 15,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /deliveries",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /deliveries */.",
+      "symbol": "ui_api_call:web#../../packages/handlers/src/store.ts:15:24"
+    },
+    {
+      "service": "web",
+      "file": "../../packages/handlers/src/store.ts",
+      "line": 15,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares DELIVERIES_UPSTREAM_URL",
+      "hint": "Add DELIVERIES_UPSTREAM_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:web#../../packages/handlers/src/store.ts:15:24"
+    }
+  ]
+}

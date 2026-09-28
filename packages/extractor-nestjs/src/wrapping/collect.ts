@@ -20,19 +20,25 @@ import type {
   WrappingCollection,
 } from './types.js';
 
+/*
+ * Both tables are `Map`s because both are asked about a name the source wrote -
+ * a decorator inside `applyDecorators`, a provider's token - and an object
+ * literal answers `toString` with the language's own function (R130).
+ */
+
 /** Decorator that attaches a wrapper, and the layer it belongs to. */
-const DECORATOR_LAYERS: Record<string, WrappingLayer> = {
-  UseGuards: 'guard',
-  UseInterceptors: 'interceptor',
-  UsePipes: 'pipe',
-};
+const DECORATOR_LAYERS: ReadonlyMap<string, WrappingLayer> = new Map([
+  ['UseGuards', 'guard'],
+  ['UseInterceptors', 'interceptor'],
+  ['UsePipes', 'pipe'],
+]);
 
 /** Provider token that registers a wrapper for the whole application. */
-const TOKEN_LAYERS: Record<string, WrappingLayer> = {
-  APP_GUARD: 'guard',
-  APP_INTERCEPTOR: 'interceptor',
-  APP_PIPE: 'pipe',
-};
+const TOKEN_LAYERS: ReadonlyMap<string, WrappingLayer> = new Map([
+  ['APP_GUARD', 'guard'],
+  ['APP_INTERCEPTOR', 'interceptor'],
+  ['APP_PIPE', 'pipe'],
+]);
 
 const ROLE_OF_LAYER: Record<WrappingLayer, ClassRole> = {
   middleware: 'middleware',
@@ -204,7 +210,7 @@ const composedWrappers = (decorator: Decorator): Array<{ name: string; args: TsN
   for (const argument of answer.getArguments()) {
     if (!Node.isCallExpression(argument)) continue;
     const inner = argument.getExpression();
-    if (!Node.isIdentifier(inner) || !Object.hasOwn(DECORATOR_LAYERS, inner.getText())) continue;
+    if (!Node.isIdentifier(inner) || !DECORATOR_LAYERS.has(inner.getText())) continue;
     out.push({ name: inner.getText(), args: argument.getArguments() });
   }
   return out;
@@ -234,7 +240,7 @@ export const collectWrapping = (ctx: NestExtractContext): WrappingCollection => 
   // Registered while the modules load, so before anything the entry file does.
   for (const info of ctx.modules.all()) {
     for (const provider of info.providers) {
-      const layer = TOKEN_LAYERS[provider.token];
+      const layer = TOKEN_LAYERS.get(provider.token);
       if (layer === undefined) continue;
       const ref: ClassRef | undefined =
         provider.declaration === undefined
@@ -315,7 +321,7 @@ export const collectWrapping = (ctx: NestExtractContext): WrappingCollection => 
         ...(scope === 'method' ? { method: holder as MethodDeclaration } : {}),
       });
     };
-    for (const [name, layer] of Object.entries(DECORATOR_LAYERS)) {
+    for (const [name, layer] of DECORATOR_LAYERS) {
       for (const decorator of findDecorators(holder, { names: [name], fromModules: NEST_COMMON })) {
         for (const argument of decorator.getArguments()) apply(name, layer, argument, argument, name);
       }
@@ -326,7 +332,7 @@ export const collectWrapping = (ctx: NestExtractContext): WrappingCollection => 
     // on, since that is where the route takes it on.
     for (const decorator of holder.getDecorators()) {
       for (const inner of composedWrappers(decorator)) {
-        const layer = DECORATOR_LAYERS[inner.name];
+        const layer = DECORATOR_LAYERS.get(inner.name);
         if (layer === undefined) continue;
         for (const argument of inner.args) {
           apply(inner.name, layer, argument, decorator, `${decoratorName(decorator)}:${inner.name}`);

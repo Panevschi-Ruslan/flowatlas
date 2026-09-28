@@ -32,6 +32,7 @@ else, so that at least one boundary in the fixture cannot drift.
 | `CreateOrderDto` on `POST /orders/legacy` | the same drift, `@ContractIgnore`d: listed under `ignored`, never counted |
 | `OrderCreatedEvent` on `channel:order.created` | `missing_required customerId`: a channel has no compiler between its ends |
 | `GetOrderQuery` on `channel:orders.get` | `missing_required includeItems`, `extra_field includeRefunds` |
+| `OrderDto` answered on `channel:orders.get` | `missing_required status`: the reply of a request is a response, compared as a route's is (R151) |
 | `CreateOrderDto` / `OrderDto` from `web` | the same two halves, from a browser |
 | `WireDto` on `POST /wire` | **no error at all** — one field per rule about what JSON does to a shape |
 | `WireBrokenDto` on `POST /wire/broken` | three errors the rules must not hide, one of them a value the receiver has never heard of |
@@ -113,6 +114,13 @@ and nothing else, and differ only in what the handler behind each one does:
 | `store` | writes `DraftSchema`, which declares `note` | `note` stripped, `impact: stored` |
 | `tag` | writes the same document, which declares no `colour` | `colour` stripped, `impact: unknown` |
 | `preview` | reaches no write at all | `note` stripped, `impact: none`, counted rather than listed |
+| `batch` | takes `CreateDraftDto[]` and writes the same document | `[].note` stripped, `impact: stored` |
+
+`batch` is the fourth because a body that is an array is compared at path `[]`
+and never at `''`, and stripping used to be read only at `''` (R71). Every field
+a whitelisting pipe removed from a list body was therefore lost in silence. The
+row reads exactly like `store`'s one array deep, which is the claim: the element
+is the body as far as the pipe is concerned, and `stripImpact` walks the marker.
 
 The join is the entity the write names, recorded in the registry by the write
 itself — not the field's spelling, and not the schema happening to be on a

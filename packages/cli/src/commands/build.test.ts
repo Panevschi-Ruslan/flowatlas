@@ -1,11 +1,14 @@
+import { execFile } from 'node:child_process';
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { promisify } from 'node:util';
 import type { Unresolved } from '@flowatlas/core';
 import { openGraphDb } from '@flowatlas/linker';
 import { afterAll, describe, expect, it } from 'vitest';
-import { loadBuildCache } from '../build/cache.js';
-import { buildProject, summariseBuild, summariseRebuild, unresolvedLine } from './build.js';
+import { resolveNodeId } from '../../../../scripts/fixture-nodes.mjs';
+import { CACHE_VERSION, loadBuildCache } from '../build/cache.js';
+import { buildProject, inPools, summariseBuild, summariseRebuild, unresolvedLine } from './build.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
 const FIXTURES = join(ROOT, 'fixtures');
@@ -25,14 +28,45 @@ const scratch = mkdtempSync(join(tmpdir(), 'flowatlas-build-'));
  * Beside the fixtures rather than in a temporary directory, so the copy still
  * resolves the type stubs hoisted there.
  */
-const FIXTURE = join(mkdtempSync(join(FIXTURES, '.scratch-build-')), 'multi-repo');
-cpSync(join(FIXTURES, 'multi-repo'), FIXTURE, {
-  recursive: true,
-  filter: (from) => !from.endsWith('/.flowatlas'),
-});
+const copyOfMultiRepo = (): string => {
+  const dir = join(mkdtempSync(join(FIXTURES, '.scratch-build-')), 'multi-repo');
+  cpSync(join(FIXTURES, 'multi-repo'), dir, {
+    recursive: true,
+    filter: (from) => !from.endsWith('/.flowatlas'),
+  });
+  return dir;
+};
+
+const FIXTURE = copyOfMultiRepo();
 
 /**
- * Both trees, with retries.
+ * A second copy, for the tests whose build is meant to fail.
+ *
+ * A build used to wait on its extraction pool with `Promise.all`, which settles
+ * on the first rejection and leaves every sibling running. The test below
+ * deletes a graph the build would have reused, so the build refuses in about
+ * two milliseconds — and the extraction of `orders` it had already started went
+ * on for most of a second and then wrote `orders/.flowatlas/graph.json`, long
+ * after the test that caused it had finished. Measured rather than guessed: the
+ * graph was rewritten roughly 720ms after the refusal, with nothing else
+ * running.
+ *
+ * Every repository graph carries a `generatedAt`, so that late write is a
+ * different file whatever the source says, and the next build over the same
+ * repository answered `full (graph changed outside the build)` — correctly,
+ * because something did change it. Whether it landed before or after the next
+ * test recorded the graph's hash was a race, which is why the rebuild summary
+ * below reddened about one run in many and passed on its own every time.
+ *
+ * The pool now stops what it started before it returns, and the two tests below
+ * are what hold that. The separate tree stays: they are the tests that would
+ * spread the damage if it ever came back, and a copy of the fixture costs one
+ * directory.
+ */
+const DOOMED_FIXTURE = copyOfMultiRepo();
+
+/**
+ * Every tree this file made, with retries.
  *
  * A recursive delete walks the tree and removes as it goes, so a directory it
  * has already emptied and is about to remove can acquire a file again before it
@@ -45,7 +79,9 @@ cpSync(join(FIXTURES, 'multi-repo'), FIXTURE, {
  */
 afterAll(() => {
   rmSync(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
-  rmSync(resolve(FIXTURE, '..'), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  for (const tree of [FIXTURE, DOOMED_FIXTURE]) {
+    rmSync(resolve(tree, '..'), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  }
 });
 
 /** A configuration in its own directory, pointing at the fixture repositories. */
@@ -60,12 +96,15 @@ const configFor = (name: string, services: unknown[]): string => {
   return path;
 };
 
-const service = (name: string, over: Record<string, unknown> = {}) => ({
+const serviceIn = (root: string, name: string, over: Record<string, unknown> = {}) => ({
   name,
-  repo: join(FIXTURE, name),
+  repo: join(root, name),
   type: 'nestjs',
   ...over,
 });
+
+const service = (name: string, over: Record<string, unknown> = {}) =>
+  serviceIn(FIXTURE, name, over);
 
 /** The browser of the fixture, configured the way its README describes. */
 const web = (over: Record<string, unknown> = {}) => ({
@@ -77,6 +116,11 @@ const web = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+const sleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
 /** A directory that looks like a repository but cannot be read. */
 const brokenRepo = (): string => {
   const dir = join(scratch, 'broken-repo');
@@ -86,6 +130,64 @@ const brokenRepo = (): string => {
   writeFileSync(join(dir, 'src', 'main.ts'), 'export const nothing = 1;\n');
   return dir;
 };
+
+describe('the pool the repositories are read in', () => {
+  it('keeps the pool full while nothing fails', async () => {
+    const seen: number[] = [];
+    const results = await inPools([1, 2, 3, 4, 5], 2, async (item) => {
+      seen.push(item);
+      await sleep(1);
+      return item * 2;
+    });
+    expect(results).toEqual([2, 4, 6, 8, 10]);
+    expect(seen.sort()).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it('waits for the jobs it started before it rejects', async () => {
+    let running = 0;
+    const promise = inPools(['fails', 'slow'], 2, async (item) => {
+      running += 1;
+      if (item === 'fails') {
+        running -= 1;
+        throw new Error('first');
+      }
+      await sleep(50);
+      running -= 1;
+    });
+
+    await expect(promise).rejects.toThrow('first');
+    // Read the instant the rejection arrives: a pool that returned early would
+    // still have the slow job in flight here, which is the writer that used to
+    // outlive the build.
+    expect(running).toBe(0);
+  });
+
+  it('throws the first failure, not what a sibling said on its way down', async () => {
+    const promise = inPools(['first', 'second'], 2, async (item) => {
+      if (item === 'first') throw new Error('the one the caller asked about');
+      await sleep(20);
+      throw new Error('the one the abort caused');
+    });
+    await expect(promise).rejects.toThrow('the one the caller asked about');
+  });
+
+  it('starts nothing new once one job has failed, and tells the rest to stop', async () => {
+    const started: string[] = [];
+    let aborted = false;
+    const promise = inPools(['bad', 'slow', 'never'], 2, async (item, signal) => {
+      started.push(item);
+      if (item === 'bad') throw new Error('no');
+      signal.addEventListener('abort', () => {
+        aborted = true;
+      });
+      await sleep(20);
+    });
+
+    await expect(promise).rejects.toThrow('no');
+    expect(started).toEqual(['bad', 'slow']);
+    expect(aborted).toBe(true);
+  });
+});
 
 describe('the line the summary ends on', () => {
   const row = (over: Partial<Unresolved> = {}): Unresolved => ({
@@ -172,9 +274,16 @@ describe('building a project', () => {
     ]);
     const result = await buildProject({ config, builtAt: FIXED });
 
+    // The click the whole chain starts at, asked for by the method it reaches
+    // rather than by the line the template happens to sit on.
+    const click = resolveNodeId(result.project, {
+      type: 'ui_action',
+      handling: 'web#src/app/checkout.component.ts:CheckoutComponent.checkout',
+    });
+
     const db = openGraphDb(result.dbPath);
     const walk = db.traverse({
-      from: 'ui_action:web#src/app/checkout.component.ts:15:22',
+      from: click,
       direction: 'out',
       maxDepth: 12,
       maxNodes: 60,
@@ -184,21 +293,35 @@ describe('building a project', () => {
     expect(walk.rows.map((row) => row.id)).toContain('table:orders#Order');
   }, 120_000);
 
+  /**
+   * The second service is typed with a word the language puts on every object.
+   * The table that says which reader reads which type is asked with the `type`
+   * out of a configuration file, and while it was an object literal it answered
+   * `constructor` with a function - so a typo would have been planned, cached and
+   * reported as a repository with a reader, and whatever that function returned
+   * would have been its extractor's name. It is a `Map` now and the answer is the
+   * same as for `svelte`: no reader, no nodes (R134).
+   */
   it('leaves a service no extractor can read out, without failing', async () => {
     const config = configFor('unknown-type', [
       service('orders', { baseUrlEnv: ['ORDERS_URL'] }),
       { name: 'landing', repo: join(FIXTURE, 'web'), type: 'svelte' },
+      { name: 'mistyped', repo: join(FIXTURE, 'web'), type: 'constructor' },
     ]);
     const result = await buildProject({ config, builtAt: FIXED });
 
     expect(result.failed).toBe(false);
-    expect(result.report.services.find((item) => item.name === 'landing')).toMatchObject({
-      skipped: 'no-extractor',
-      extractor: null,
-    });
-    expect(result.project.services.find((item) => item.name === 'landing')?.skipped).toBe(
-      'no-extractor',
-    );
+    for (const name of ['landing', 'mistyped']) {
+      expect(result.report.services.find((item) => item.name === name), name).toMatchObject({
+        skipped: 'no-extractor',
+        extractor: null,
+        nodes: 0,
+      });
+      expect(result.project.services.find((item) => item.name === name)?.skipped, name).toBe(
+        'no-extractor',
+      );
+    }
+    expect(result.project.nodes.filter((node) => node.repo === 'mistyped')).toEqual([]);
   }, 120_000);
 
   it('leaves the browsers out when asked, and says that is why', async () => {
@@ -232,6 +355,85 @@ describe('building a project', () => {
     expect(result.report.services.find((item) => item.name === 'orders')?.nodes).toBeGreaterThan(0);
     expect(result.project.nodes.some((node) => node.repo === 'orders')).toBe(true);
   }, 120_000);
+
+  it('leaves the last good graph alone when a repository could not be read', async () => {
+    const good = [service('orders', { baseUrlEnv: ['ORDERS_URL'] })];
+    const broken = [...good, { name: 'broken', repo: brokenRepo(), type: 'nestjs' }];
+    // One configuration for both builds, so both write to one output directory:
+    // the whole question is what the second build does to what the first wrote.
+    const dir = join(scratch, 'kept');
+    mkdirSync(dir, { recursive: true });
+    const configPath = join(dir, 'flowatlas.config.json');
+    const write = (services: unknown[]): void =>
+      writeFileSync(
+        configPath,
+        JSON.stringify({ services, sharedPackages: ['@fx/contracts'], output: '.flowatlas' }, null, 2),
+      );
+
+    write(good);
+    const first = await buildProject({ config: configPath, builtAt: FIXED });
+    expect(first.wrote).toBe(true);
+    const before = readFileSync(first.graphPath, 'utf8');
+    expect(JSON.parse(before).nodes.length).toBeGreaterThan(0);
+
+    write(broken);
+    const second = await buildProject({ config: configPath, builtAt: FIXED, cache: false });
+    expect(second.failed).toBe(true);
+    expect(second.wrote).toBe(false);
+    // The point of the whole ticket: the graph on disk is the good one, not this
+    // build's smaller answer, and not an empty file with a clean bill of health
+    // waiting to be read off it.
+    expect(readFileSync(first.graphPath, 'utf8')).toBe(before);
+    expect(summariseBuild(second).join('\n')).toContain('was left as the last build wrote it');
+
+    // And with nothing to keep, the partial answer is written, because something
+    // has to explain the failure to whatever reads the output next.
+    rmSync(second.graphPath, { force: true });
+    const third = await buildProject({ config: configPath, builtAt: FIXED, cache: false });
+    expect(third.failed).toBe(true);
+    expect(third.wrote).toBe(true);
+    expect(readFileSync(third.graphPath, 'utf8')).not.toBe(before);
+  }, 240_000);
+
+  it('names a service that was read and contributed nothing, and says why', async () => {
+    const config = join(FIXTURES, 'next-hollow', 'flowatlas.config.json');
+    const result = await buildProject({ config, builtAt: FIXED, cache: false });
+
+    expect(result.readNothing.map((found) => found.service)).toEqual(['widget']);
+    const summary = summariseBuild(result).join('\n');
+    expect(summary).toContain('widget contributed no node');
+    expect(summary).toContain('no frontend adapter recognises it');
+    // A row as well as a line, so the fact reaches `doctor` rather than only the
+    // terminal the build was run in.
+    expect(
+      result.project.unresolved.filter((row) => row.reason === 'service-read-nothing'),
+    ).toHaveLength(1);
+  }, 240_000);
+
+  it('counts ways in apart from ways in whose body was read', async () => {
+    const config = join(FIXTURES, 'next-hollow', 'flowatlas.config.json');
+    const result = await buildProject({ config, builtAt: FIXED, cache: false });
+
+    // Seven ways in: one declares its handler in place, one is built by a
+    // factory this repository declares and is read through it (R153). Every
+    // other spelling in that fixture is a way in with nothing behind it, and
+    // each one is a row (R94).
+    expect(summariseBuild(result).join('\n')).toContain(
+      'ways in: 7 found, 2 with a handler that was read, 5 without',
+    );
+    const unread = result.project.unresolved.filter((row) => row.reason === 'route-handler-unread');
+    expect(unread).toHaveLength(5);
+    expect(unread.map((row) => row.symbol)).not.toContain('GET /api/products');
+    const products = result.project.nodes.find((node) => node.id === 'entry:shop:http:GET:/api/products');
+    expect(products?.meta?.['handlerVia']).toBe('call');
+    expect(result.project.edges).toContainEqual(
+      expect.objectContaining({
+        from: 'entry:shop:http:GET:/api/products',
+        to: 'shop#lib/products.ts:handlerBuilder',
+        type: 'handles',
+      }),
+    );
+  }, 240_000);
 
   it('writes the graph, the report and a database that agree with each other', async () => {
     const config = configFor('artefacts', [service('orders', { baseUrlEnv: ['ORDERS_URL'] })]);
@@ -296,7 +498,7 @@ describe('building a project a second time', () => {
     const result = await buildProject({ config, builtAt: FIXED, cache: false });
 
     expect(result.plan['orders']).toEqual({ mode: 'full', reason: 'cache ignored' });
-    expect(loadBuildCache(result.cachePath)).toHaveProperty('cache.cacheVersion', 1);
+    expect(loadBuildCache(result.cachePath)).toHaveProperty('cache.cacheVersion', CACHE_VERSION);
   }, 240_000);
 
   it('reads everything again, saying so, when the cache is not a cache any more', async () => {
@@ -308,7 +510,7 @@ describe('building a project a second time', () => {
     expect(result.cacheProblem).toBe('corrupt');
     expect(result.plan['orders']?.mode).toBe('full');
     expect(summariseBuild(result)[0]).toBe('cache-invalid:corrupt');
-    expect(loadBuildCache(result.cachePath)).toHaveProperty('cache.cacheVersion', 1);
+    expect(loadBuildCache(result.cachePath)).toHaveProperty('cache.cacheVersion', CACHE_VERSION);
   }, 240_000);
 
   it('reads everything again when the tool that wrote the cache was another one', async () => {
@@ -354,13 +556,62 @@ describe('building only some of the repositories', () => {
     expect(JSON.stringify(single.project)).toBe(JSON.stringify(whole.project));
   }, 240_000);
 
+  // On its own tree, because a build that refuses used to leave the extraction
+  // it had already started running, and that extraction rewrote a repository
+  // graph some later test was entitled to find unchanged. See `DOOMED_FIXTURE`.
   it('refuses when a repository it would have reused has never been read', async () => {
-    const config = configFor('no-graph', services);
-    rmSync(join(FIXTURE, 'gateway', '.flowatlas'), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+    const doomed = [
+      serviceIn(DOOMED_FIXTURE, 'gateway'),
+      serviceIn(DOOMED_FIXTURE, 'orders', { baseUrlEnv: ['ORDERS_URL'] }),
+    ];
+    // A graph to reuse has to exist before one can be taken away; on a tree
+    // nothing has been built in, every skipped repository is missing one and
+    // the message could name any of them.
+    await buildProject({ config: configFor('no-graph-first', doomed), builtAt: FIXED });
+
+    const config = configFor('no-graph', doomed);
+    rmSync(join(DOOMED_FIXTURE, 'gateway', '.flowatlas'), {
+      recursive: true,
+      force: true,
+      maxRetries: 10,
+      retryDelay: 100,
+    });
+
+    const graphPath = join(DOOMED_FIXTURE, 'orders', '.flowatlas', 'graph.json');
+    const before = readFileSync(graphPath, 'utf8');
 
     await expect(
       buildProject({ config, builtAt: FIXED, service: ['orders'] }),
     ).rejects.toThrow(/missing graph for gateway/);
+
+    // The refusal costs two milliseconds and the extraction of `orders` it had
+    // already started costs most of a second, so a build that returned without
+    // waiting left a writer behind. A second of quiet is several times what
+    // that writer was measured to need, and the graph has to be the same file
+    // at the end of it: whatever the build did with the extraction it started,
+    // it did before it answered.
+    await sleep(1_000);
+    expect(readFileSync(graphPath, 'utf8')).toBe(before);
+  }, 240_000);
+
+  // Two builds in one process, which is what a watch, the server and any
+  // embedder do. The first refuses; the second must see the tree the first one
+  // found, not a version of it some orphan of the first one rewrote.
+  it('leaves the next build in the same process nothing to trip over', async () => {
+    const doomed = [
+      serviceIn(DOOMED_FIXTURE, 'gateway'),
+      serviceIn(DOOMED_FIXTURE, 'orders', { baseUrlEnv: ['ORDERS_URL'] }),
+    ];
+    const result = await buildProject({
+      config: configFor('no-graph-first', doomed),
+      builtAt: FIXED,
+    });
+
+    // `gateway` is read in full because the test above deleted its graph, which
+    // is the point: the refusing build only ever had a reason to touch
+    // `orders`, and `orders` is where a late write would show, as a graph whose
+    // `generatedAt` no longer matches the hash the first build recorded.
+    expect(result.plan['orders']).toEqual({ mode: 'skip', reason: '0 files changed' });
   }, 240_000);
 
   it('refuses a name no service has, and lists the ones that do', async () => {
@@ -369,6 +620,68 @@ describe('building only some of the repositories', () => {
       /no service named "nope"/,
     );
   }, 60_000);
+});
+
+/**
+ * What a build says when a reader runs out of memory, and what it costs.
+ *
+ * Both halves of R98. The first is a sentence: heap exhaustion happens inside
+ * the process reading one repository, it ends in a stack trace rather than a
+ * complaint, and what used to reach the summary was three addresses inside a
+ * dynamic library. The second is a number: the largest fixture builds under a
+ * heap small enough that doubling what the tool uses would redden this.
+ */
+describe('a repository that does not fit in memory', () => {
+  const runCli = promisify(execFile);
+  const CLI = join(ROOT, 'packages', 'cli', 'bin', 'flowatlas.js');
+
+  it('says so in its own words, naming the repository and the way out', async () => {
+    const config = configFor('tiny-heap', [serviceIn(DOOMED_FIXTURE, 'orders')]);
+    // Small enough that reading four files does not fit, and large enough that
+    // the runtime still starts: 64 MB was measured to fail on this fixture and
+    // 160 MB to pass.
+    const result = await buildProject({ config, builtAt: FIXED, heap: 64, cache: false });
+
+    expect(result.failed).toBe(true);
+    const [orders] = result.report.services;
+    expect(orders?.skipped).toBe('extract-failed');
+    expect(orders?.error).toContain('ran out of memory reading');
+    expect(orders?.error).toContain('orders');
+    expect(orders?.error).toContain('under a limit of 64 MB');
+    expect(orders?.error).toContain('--heap 128');
+    // The words that used to arrive instead of any of that.
+    expect(orders?.error).not.toMatch(/libnode|dyld|0x[0-9a-f]{6}/);
+    expect(summariseBuild(result).join('\n')).toContain('ran out of memory reading');
+  }, 240_000);
+
+  /**
+   * The number to regress against.
+   *
+   * Measured on 2026-09-27: the four repositories of `multi-repo`, the largest
+   * fixture here, build to completion with an old-space limit of 128 MB and peak
+   * at 0.31 GB of resident memory for the whole process tree. The limit asserted
+   * is twice what was needed, so this is quiet about ordinary drift and loud
+   * about the kind of change that took the tool from 1.4 GB on one real
+   * repository to more than 10 on another.
+   *
+   * A limit rather than a measurement on purpose: peak resident memory depends
+   * on what else the machine is doing, and a test that reads it would be a test
+   * that reddens for reasons nobody can act on.
+   */
+  it('builds the largest fixture under a heap of 256 MB', async () => {
+    const tree = copyOfMultiRepo();
+    try {
+      // On the environment, so the reader processes inherit it: the flag this
+      // build would otherwise choose for itself stands aside for one that was
+      // asked for, and this asserts the whole tree fits and not just the parent.
+      await runCli(process.execPath, [CLI, 'build', tree, '--out', join(tree, '..', 'out')], {
+        env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=256' },
+        maxBuffer: 64 * 1024 * 1024,
+      });
+    } finally {
+      rmSync(resolve(tree, '..'), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+    }
+  }, 240_000);
 });
 
 describe('the line a rebuild prints', () => {

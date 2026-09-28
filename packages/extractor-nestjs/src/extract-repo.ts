@@ -1,11 +1,14 @@
 import { join } from 'node:path';
 import {
   AdapterRegistry,
+  countSources,
   createProject,
   GraphBuilder,
   normalizeFilePath,
   parseConfig,
-  readPackageJson,
+  readResolvedPackageJson,
+  reportSkippedTestDirectories,
+  reportUnreadableSources,
   silentLogger,
   type ExtractContext,
   type FlowatlasConfig,
@@ -15,12 +18,14 @@ import {
   type ServiceConfig,
 } from '@flowatlas/core';
 import type { Project } from 'ts-morph';
-import { findBootstrapFile, readBootstrap } from './bootstrap.js';
+import { addressingFindings, findBootstrapFile, readBootstrap } from './bootstrap.js';
 import { createNestContext, type NestStats } from './context.js';
 import { buildClassIndex } from './index-classes.js';
+import { applicationsPass } from './passes/applications.js';
 import { callsPass } from './passes/calls.js';
 import { diPass } from './passes/di.js';
 import { entriesPass } from './passes/entries.js';
+import { heldCallsPass } from './passes/held-calls.js';
 import { modulesPass } from './passes/modules.js';
 import { providersPass } from './passes/providers.js';
 import { typesPass } from './passes/types-pass.js';
@@ -61,10 +66,13 @@ export interface ExtractRepoOptions {
  *
  * The order is not arbitrary: roles are settled before any node is created,
  * injection is resolved before calls are followed, and the wrapping chain is
- * drawn last because matching middleware to routes needs the routes.
+ * drawn last because matching middleware to routes needs the routes. Which
+ * applications exist is settled between the modules and the entries, because it
+ * is read out of the modules and it decides what an address is an address of.
  */
 export const BUILT_IN_PASSES: readonly NestExtractorPass[] = [
   modulesPass,
+  applicationsPass,
   wrappingCollectPass,
   providersPass,
   entriesPass,
@@ -74,12 +82,22 @@ export const BUILT_IN_PASSES: readonly NestExtractorPass[] = [
   wrappingEdgesPass,
 ];
 
+/**
+ * The steps that run after every other one, the caller's extra steps included.
+ *
+ * What they read is what the others made: calls into a function are drawn once
+ * every reader that can make that function a node has had its turn (R156).
+ */
+export const CLOSING_PASSES: readonly NestExtractorPass[] = [heldCallsPass];
+
 /** Parses a repository, honouring the tsconfig the caller or the service names. */
 export const createRepoProject = (options: ExtractRepoOptions): Project => {
   const tsconfig = options.tsconfig ?? options.service?.tsconfig;
+  const readTestDirectories = options.service?.readTestDirectories;
   return createProject({
     rootDir: options.rootDir,
     ...(tsconfig === undefined ? {} : { tsconfig }),
+    ...(readTestDirectories === undefined ? {} : { readTestDirectories }),
   });
 };
 
@@ -97,7 +115,7 @@ const foldStats = (existing: unknown, mine: NestStats): Record<string, unknown> 
   const prior = existing as Record<string, unknown>;
   const skippedExternalCalls = { ...((prior['skippedExternalCalls'] ?? {}) as Record<string, number>) };
   for (const [pkg, count] of Object.entries(mine.skippedExternalCalls)) {
-    skippedExternalCalls[pkg] = (skippedExternalCalls[pkg] ?? 0) + count;
+    skippedExternalCalls[pkg] = (Object.hasOwn(skippedExternalCalls, pkg) ? (skippedExternalCalls[pkg] ?? 0) : 0) + count;
   }
   return { ...mine, ...prior, skippedExternalCalls };
 };
@@ -121,19 +139,36 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const service = options.service ?? defaultService(repo, rootDir);
 
   const project = options.project ?? createRepoProject(options);
-  const pkg: PackageJson = readPackageJson(rootDir) ?? {};
+  // The manifest that answers what this repository can import, which on a
+  // package inside a workspace is not the leaf manifest alone. Everything below
+  // gates on it, so widening it here is what lets an adapter stay a statement
+  // about one package name.
+  const pkg: PackageJson = readResolvedPackageJson(rootDir) ?? {};
 
   const registry = options.registry ?? new AdapterRegistry();
-  const adapters = registry.detect(pkg, config.adapters.auto ? config.adapters.force : {});
+  // Detection is handed the configuration as well as the manifest. A manifest
+  // answers for an adapter that stands for a package, and cannot answer for one
+  // that runs descriptions the project wrote: those are in the configuration,
+  // which this function read a few lines above and which used to stop here.
+  // Without it such an adapter recognises nothing and has to be named under
+  // `adapters.force.entry` to run at all.
+  const adapters = registry.detect(
+    pkg,
+    config.adapters.auto ? config.adapters.force : {},
+    config,
+  );
 
   const classes = buildClassIndex({ project, repo, repoDir: rootDir });
 
   const bootstrapPath = findBootstrapFile(rootDir, options.bootstrap ?? service.bootstrap);
-  const bootstrap = readBootstrap(
+  const bootstrap = readBootstrap({
     project,
-    bootstrapPath,
-    bootstrapPath === undefined ? undefined : normalizeFilePath(bootstrapPath, rootDir),
-  );
+    rootDir,
+    ...(bootstrapPath === undefined ? {} : { absolutePath: bootstrapPath }),
+    ...(bootstrapPath === undefined
+      ? {}
+      : { relativePath: normalizeFilePath(bootstrapPath, rootDir) }),
+  });
 
   const builder = new GraphBuilder({
     repo,
@@ -153,8 +188,36 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     logger,
     meta: {
       ...(bootstrap.globalPrefix === undefined ? {} : { globalPrefix: bootstrap.globalPrefix }),
+      // Handed to the entry adapters as data rather than as a type they would
+      // have to import from this package, which is what keeps an adapter for one
+      // framework free of every other reader.
+      ...(bootstrap.versioning === undefined ? {} : { versioning: bootstrap.versioning }),
+      // The part in front of every address, where it is read from settings, and
+      // what the committed environment files say of them (R144).
+      ...(bootstrap.mount === undefined ? {} : { mount: bootstrap.mount }),
+      // `applications` is added to this record by the pass of that name, which
+      // cannot answer until the modules have been read. Everything else here is
+      // known before any pass runs.
     },
   };
+
+  // Before the passes, because these rows are about lines that decide every
+  // address in the service, and a reader who sees four hundred short paths
+  // deserves to meet the reason at the top of the list rather than to work it
+  // out (R89).
+  for (const row of addressingFindings(bootstrap)) builder.addUnresolved(row);
+
+  // Before any pass runs, because a file the parser could not read is a hole in
+  // everything that follows and the rest of this function has no way of
+  // noticing it: a source with a syntax error is still a source file the
+  // project opened, and simply holds nothing any walk can find. Written here
+  // rather than after the halves have run so that it is recorded even if a pass
+  // throws on the wreckage. The counts taken here answer the same question and
+  // go on the repository node, so the rows and the figure beside them cannot
+  // disagree about how many files were read.
+  reportUnreadableSources(base);
+  reportSkippedTestDirectories(base);
+  const sources = countSources(project);
 
   // The other half of the same directory. A repository built on a file-system
   // router is a browser and a server at once: its route handlers sit beside the
@@ -189,11 +252,11 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     base,
     classes,
     bootstrap,
+    sources,
     ...(options.typesDepth === undefined ? {} : { maxDepth: options.typesDepth }),
   });
-  ctx.stats.files = project.getSourceFiles().length;
 
-  const passes = [...BUILT_IN_PASSES, ...(options.extraPasses ?? [])].filter(
+  const passes = [...BUILT_IN_PASSES, ...(options.extraPasses ?? []), ...CLOSING_PASSES].filter(
     (pass) => options.noTypes !== true || pass.name !== 'types',
   );
   for (const pass of passes) {

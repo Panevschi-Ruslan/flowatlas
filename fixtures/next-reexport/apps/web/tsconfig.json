@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": false,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": [],
+    "baseUrl": ".",
+    "paths": {
+      "@next-reexport/handlers": ["../../packages/handlers/src/index.ts"],
+      "@next-reexport/handlers/legacy": ["../../packages/handlers/src/legacy.ts"]
+    }
+  },
+  "include": ["app", "lib", "pages"]
+}

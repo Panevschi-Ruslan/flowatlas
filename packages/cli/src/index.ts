@@ -82,7 +82,7 @@ export {
   stampFiles,
 } from './build/cache.js';
 export type { BuildCache, FileStamp, RepoCache } from './build/cache.js';
-export { planRebuild } from './build/incremental.js';
+export { hashGraphFile, planRebuild } from './build/incremental.js';
 export type {
   IncrementalExtractor,
   PartialExtract,

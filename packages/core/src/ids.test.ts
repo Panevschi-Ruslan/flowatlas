@@ -58,8 +58,18 @@ describe('normalizeFilePath', () => {
     expect(normalizeFilePath('/repos/orders/src/app.ts', '/repos/orders/')).toBe('src/app.ts');
   });
 
-  it('leaves a path outside the repo alone', () => {
-    expect(normalizeFilePath('/elsewhere/app.ts', '/repos/orders')).toBe('/elsewhere/app.ts');
+  it('climbs out of the repo for a path beside it', () => {
+    // A file of a workspace package the service reads. Naming it relative to the
+    // service keeps one machine's absolute paths out of the graph's ids.
+    expect(normalizeFilePath('/repos/packages/lib/x.ts', '/repos/orders')).toBe(
+      '../packages/lib/x.ts',
+    );
+  });
+
+  it('climbs all the way out for a path that shares nothing', () => {
+    expect(normalizeFilePath('/elsewhere/app.ts', '/repos/orders')).toBe(
+      '../../elsewhere/app.ts',
+    );
   });
 
   it('strips a leading ./ and collapses repeated slashes', () => {
@@ -89,6 +99,25 @@ describe('id constructors', () => {
     expect(makeEntryId('bot', 'bot_callback', 'order_confirm')).toBe(
       'entry:bot:bot_callback:order_confirm',
     );
+  });
+
+  // An address is only an address within an application (R119). One service that
+  // creates two of them has two address spaces, and the qualifier is absent for
+  // the one that creates a single application, because naming the only
+  // application there is adds a word and no information.
+  it('carries the application when one was named', () => {
+    expect(makeEntryId('orders', 'http', makeHttpEntryKey('GET', '/health'), 'WorkerModule')).toBe(
+      'entry:orders@WorkerModule:http:GET:/health',
+    );
+  });
+
+  it('leaves the key half in the position anything reading it expects', () => {
+    const id = makeEntryId('orders', 'http', makeHttpEntryKey('GET', '/health'), 'WorkerModule');
+    expect(id.split(':').slice(3).join(':')).toBe('GET:/health');
+  });
+
+  it('rejects an empty application rather than minting a bare separator', () => {
+    expect(() => makeEntryId('orders', 'http', 'GET:/health', '')).toThrow(InvalidIdError);
   });
 
   it('upper-cases the method in an HTTP entry key', () => {

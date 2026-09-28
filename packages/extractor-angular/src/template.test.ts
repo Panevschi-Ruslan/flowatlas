@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseAngularTemplate, type TemplateEvent } from './template.js';
+import { parseAngularTemplate, type TemplateEvent, type TemplateHandler } from './template.js';
 
 const TEMPLATE = `<div>
   <button (click)="submit()">go</button>
@@ -113,5 +113,55 @@ describe('reading the triggers out of a template', () => {
     });
     expect(found).toEqual([]);
     expect(problems[0]).toContain('1: Unexpected closing tag');
+  });
+});
+
+/**
+ * The five ways a template binds a name of its own.
+ *
+ * All five look exactly like a call on the component, which is why every one of
+ * them was reported as a method somebody had deleted (R105).
+ */
+const LOCALS = `<div>
+  <ng-template #modal let-hide="close">
+    <button (click)="hide()">close</button>
+  </ng-template>
+  <button (click)="modal.open()">open</button>
+  <ul *ngFor="let order of orders"><li (click)="order.pick()">pick</li></ul>
+  @for (row of rows; track row.id) { <b (click)="row.drop()">drop</b> }
+  @if (user(); as person) { <i (click)="person.rename()">rename</i> }
+  @let total = 1;
+  <s (click)="total.toFixed()">total</s>
+  <button (click)="save()">save</button>
+</div>`;
+
+describe('a name the template bound is not a member of the component', () => {
+  const bound = parseAngularTemplate(LOCALS, 'modal.component.html');
+  const handlerOf = (source: string): TemplateHandler => {
+    const found = bound.find((event) => event.source === source);
+    if (found?.handlers[0] === undefined) throw new Error(`no handler for ${source}`);
+    return found.handlers[0];
+  };
+
+  it('reads a let- context field as a local, not as a method of the component', () => {
+    expect(handlerOf('hide()')).toEqual({ kind: 'local', local: 'hide', method: 'hide', args: [] });
+  });
+
+  it('reads a template reference as a local', () => {
+    expect(handlerOf('modal.open()')).toMatchObject({ kind: 'local', local: 'modal' });
+  });
+
+  it('reads the item of a loop as a local, both spellings', () => {
+    expect(handlerOf('order.pick()')).toMatchObject({ kind: 'local', local: 'order' });
+    expect(handlerOf('row.drop()')).toMatchObject({ kind: 'local', local: 'row' });
+  });
+
+  it('reads an @if alias and an @let as locals', () => {
+    expect(handlerOf('person.rename()')).toMatchObject({ kind: 'local', local: 'person' });
+    expect(handlerOf('total.toFixed()')).toMatchObject({ kind: 'local', local: 'total' });
+  });
+
+  it('still reads a bare call as a method of the component', () => {
+    expect(handlerOf('save()')).toEqual({ kind: 'method', method: 'save', args: [] });
   });
 });

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "repo": "nest-drizzle",
-  "generatedAt": "2026-09-24T16:07:04.085Z",
+  "generatedAt": "2026-09-27T09:26:38.024Z",
   "nodes": [
     {
       "id": "db_query:nest-drizzle#src/orders/orders.service.ts:14:12",
@@ -312,6 +312,8 @@
       "meta": {
         "stats": {
           "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
           "classes": 3,
           "skippedExternalCalls": {
             "drizzle-orm": 18,

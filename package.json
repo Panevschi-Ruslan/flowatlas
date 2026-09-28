@@ -14,12 +14,17 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "invariants": "bash scripts/invariants.sh",
-    "fixtures:check": "node scripts/fixtures-check.mjs && node scripts/mcp-snapshots.mjs && node scripts/cli-snapshots.mjs",
+    "fixtures:check": "node scripts/fixtures-check.mjs && node scripts/mcp-snapshots.mjs && node scripts/cli-snapshots.mjs && node --test scripts/coverage/counting-rule.test.mjs scripts/coverage/read-gate.test.mjs && node scripts/coverage/read-gate.mjs && node scripts/docs/fixtures-page.mjs --check",
     "flowatlas": "node packages/cli/bin/flowatlas.js",
     "mcp:snapshots": "node scripts/mcp-snapshots.mjs",
     "cli:snapshots": "node scripts/cli-snapshots.mjs",
     "check": "pnpm clean && pnpm -r build && pnpm -r typecheck && pnpm fixtures:run && pnpm -r test && pnpm invariants && pnpm fixtures:check",
     "fixtures:run": "node scripts/fixtures-run.mjs",
+    "coverage": "node scripts/coverage/run.mjs",
+    "coverage:deps": "node scripts/coverage/run.mjs --install",
+    "coverage:render": "node scripts/coverage/run.mjs --render",
+    "coverage:gate": "node scripts/coverage/read-gate.mjs",
+    "coverage:pin": "node scripts/coverage/run.mjs --pin",
     "clean": "node scripts/clean.mjs"
   },
   "devDependencies": {

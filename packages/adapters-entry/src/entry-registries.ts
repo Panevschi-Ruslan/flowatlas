@@ -212,6 +212,16 @@ export const entryRegistriesAdapter: EntryAdapter = {
   name: ADAPTER,
   // A table the project dispatches from by hand; no request pipeline wraps it.
   outsideApplication: true,
+  // The manifest alone, and deliberately: an entry adapter is offered the
+  // configuration too, and the adapter that runs HTTP descriptions uses it to
+  // turn itself on where one of them names a dependency of this repository. A
+  // registry description names no dependency and is not going to, for the
+  // reasons written beside `entryRegistrySchema`; where it says it applies is
+  // `receiver`, a name in source that detection runs too early to look for. So
+  // this reads what it can answer from — the libraries whose handlers are
+  // installed by call — and a repository on none of them says so with
+  // `adapters.force.entry`. Detecting on the presence of a description instead
+  // would put this adapter's name on every repository node of the project.
   detect: (pkg) => hasAnyDependency(pkg, REGISTERED_BY_CALL),
   extractEntries: (ctx: ExtractContext) => {
     const registries = ctx.config.adapters.entry.registries;

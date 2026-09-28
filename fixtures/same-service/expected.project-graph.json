@@ -1,0 +1,470 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-28T08:36:25.894Z",
+  "services": [
+    {
+      "name": "site",
+      "repo": ".",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:site:http:GET:/api/things",
+      "type": "entry",
+      "label": "GET /api/things",
+      "repo": "site",
+      "file": "app/api/things/route.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/things",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:site:http:POST:/api/things",
+      "type": "entry",
+      "label": "POST /api/things",
+      "repo": "site",
+      "file": "app/api/things/route.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/things",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "http_out:site#lib/things-client.ts:10:24",
+      "type": "http_out",
+      "label": "GET /api/things",
+      "repo": "site",
+      "file": "lib/things-client.ts",
+      "line": 10,
+      "meta": {
+        "method": "GET",
+        "url": "/api/things",
+        "path": "/api/things",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:site#lib/things-client.ts:15:24",
+      "type": "http_out",
+      "label": "POST /api/things",
+      "repo": "site",
+      "file": "lib/things-client.ts",
+      "line": 15,
+      "meta": {
+        "method": "POST",
+        "url": "/api/things",
+        "path": "/api/things",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:site#lib/things-client.ts:21:24",
+      "type": "http_out",
+      "label": "DELETE /api/things/:param",
+      "repo": "site",
+      "file": "lib/things-client.ts",
+      "line": 21,
+      "meta": {
+        "method": "DELETE",
+        "url": "/api/things/${…}",
+        "path": "/api/things/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "repo:site",
+      "type": "repo",
+      "label": "site",
+      "repo": "site",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 8,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "site#app/api/things/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "site",
+      "file": "app/api/things/route.ts",
+      "line": 4
+    },
+    {
+      "id": "site#app/api/things/route.ts:POST",
+      "type": "function",
+      "label": "POST",
+      "repo": "site",
+      "file": "app/api/things/route.ts",
+      "line": 8
+    },
+    {
+      "id": "site#app/things/page.tsx:ThingsPage",
+      "type": "ui_component",
+      "label": "ThingsPage",
+      "repo": "site",
+      "file": "app/things/page.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "route": "/things"
+      }
+    },
+    {
+      "id": "site#lib/things-client.ts:createThing",
+      "type": "function",
+      "label": "createThing",
+      "repo": "site",
+      "file": "lib/things-client.ts",
+      "line": 14
+    },
+    {
+      "id": "site#lib/things-client.ts:deleteThing",
+      "type": "function",
+      "label": "deleteThing",
+      "repo": "site",
+      "file": "lib/things-client.ts",
+      "line": 20
+    },
+    {
+      "id": "site#lib/things-client.ts:listThings",
+      "type": "function",
+      "label": "listThings",
+      "repo": "site",
+      "file": "lib/things-client.ts",
+      "line": 9
+    },
+    {
+      "id": "site#lib/things-store.ts:listThings",
+      "type": "function",
+      "label": "listThings",
+      "repo": "site",
+      "file": "lib/things-store.ts",
+      "line": 4
+    },
+    {
+      "id": "site#lib/things-store.ts:saveThing",
+      "type": "function",
+      "label": "saveThing",
+      "repo": "site",
+      "file": "lib/things-store.ts",
+      "line": 6
+    },
+    {
+      "id": "ui_action:site#app/things/page.tsx:10:29",
+      "type": "ui_action",
+      "label": "onClick={() => createThing('new')}",
+      "repo": "site",
+      "file": "app/things/page.tsx",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => createThing('new')",
+        "component": "site#app/things/page.tsx:ThingsPage",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:site#app/things/page.tsx:13:29",
+      "type": "ui_action",
+      "label": "onClick={() => deleteThing('1')}",
+      "repo": "site",
+      "file": "app/things/page.tsx",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => deleteThing('1')",
+        "component": "site#app/things/page.tsx:ThingsPage",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:site#app/things/page.tsx:7:29",
+      "type": "ui_action",
+      "label": "onClick={() => listThings()}",
+      "repo": "site",
+      "file": "app/things/page.tsx",
+      "line": 7,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => listThings()",
+        "component": "site#app/things/page.tsx:ThingsPage",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:site#lib/things-client.ts:10:24",
+      "type": "ui_api_call",
+      "label": "GET /api/things",
+      "repo": "site",
+      "file": "lib/things-client.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/things",
+        "path": "/api/things",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "targetService": "site"
+      }
+    },
+    {
+      "id": "ui_api_call:site#lib/things-client.ts:15:24",
+      "type": "ui_api_call",
+      "label": "POST /api/things",
+      "repo": "site",
+      "file": "lib/things-client.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/things",
+        "path": "/api/things",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{name:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "targetService": "site"
+      }
+    },
+    {
+      "id": "ui_api_call:site#lib/things-client.ts:21:24",
+      "type": "ui_api_call",
+      "label": "DELETE /api/things/:param",
+      "repo": "site",
+      "file": "lib/things-client.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "/api/things/:param",
+        "path": "/api/things/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:site:http:GET:/api/things",
+      "to": "site#app/api/things/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/things/route.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:site:http:POST:/api/things",
+      "to": "site#app/api/things/route.ts:POST",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/things/route.ts",
+      "line": 8
+    },
+    {
+      "from": "site#app/api/things/route.ts:GET",
+      "to": "site#lib/things-store.ts:listThings",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/things/route.ts",
+      "line": 5
+    },
+    {
+      "from": "site#app/api/things/route.ts:POST",
+      "to": "site#lib/things-store.ts:saveThing",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/things/route.ts",
+      "line": 9
+    },
+    {
+      "from": "site#app/things/page.tsx:ThingsPage",
+      "to": "site#lib/things-client.ts:createThing",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/things/page.tsx",
+      "line": 10
+    },
+    {
+      "from": "site#app/things/page.tsx:ThingsPage",
+      "to": "site#lib/things-client.ts:deleteThing",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/things/page.tsx",
+      "line": 13
+    },
+    {
+      "from": "site#app/things/page.tsx:ThingsPage",
+      "to": "site#lib/things-client.ts:listThings",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/things/page.tsx",
+      "line": 7
+    },
+    {
+      "from": "site#lib/things-client.ts:createThing",
+      "to": "http_out:site#lib/things-client.ts:15:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/things-client.ts",
+      "line": 15
+    },
+    {
+      "from": "site#lib/things-client.ts:createThing",
+      "to": "ui_api_call:site#lib/things-client.ts:15:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/things-client.ts",
+      "line": 15
+    },
+    {
+      "from": "site#lib/things-client.ts:deleteThing",
+      "to": "http_out:site#lib/things-client.ts:21:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/things-client.ts",
+      "line": 21
+    },
+    {
+      "from": "site#lib/things-client.ts:deleteThing",
+      "to": "ui_api_call:site#lib/things-client.ts:21:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/things-client.ts",
+      "line": 21
+    },
+    {
+      "from": "site#lib/things-client.ts:listThings",
+      "to": "http_out:site#lib/things-client.ts:10:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/things-client.ts",
+      "line": 10
+    },
+    {
+      "from": "site#lib/things-client.ts:listThings",
+      "to": "ui_api_call:site#lib/things-client.ts:10:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/things-client.ts",
+      "line": 10
+    },
+    {
+      "from": "ui_action:site#app/things/page.tsx:10:29",
+      "to": "site#app/things/page.tsx:ThingsPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/things/page.tsx",
+      "line": 10
+    },
+    {
+      "from": "ui_action:site#app/things/page.tsx:13:29",
+      "to": "site#app/things/page.tsx:ThingsPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/things/page.tsx",
+      "line": 13
+    },
+    {
+      "from": "ui_action:site#app/things/page.tsx:7:29",
+      "to": "site#app/things/page.tsx:ThingsPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/things/page.tsx",
+      "line": 7
+    },
+    {
+      "from": "ui_api_call:site#lib/things-client.ts:10:24",
+      "to": "entry:site:http:GET:/api/things",
+      "type": "hits",
+      "confidence": "static",
+      "file": "lib/things-client.ts",
+      "line": 10,
+      "meta": {
+        "via": "same-service",
+        "targetService": "site"
+      }
+    },
+    {
+      "from": "ui_api_call:site#lib/things-client.ts:15:24",
+      "to": "entry:site:http:POST:/api/things",
+      "type": "hits",
+      "confidence": "static",
+      "file": "lib/things-client.ts",
+      "line": 15,
+      "params": [
+        "{name:string}"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "site"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "service": "site",
+      "file": "lib/things-client.ts",
+      "line": 21,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves DELETE /api/things/:param",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls DELETE /api/things/:param */.",
+      "symbol": "ui_api_call:site#lib/things-client.ts:21:24"
+    }
+  ]
+}

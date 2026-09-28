@@ -1,0 +1,11 @@
+{
+  "name": "trpc-join-api",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@trpc/react-query": "^11.0.0",
+    "@trpc/server": "^11.0.0",
+    "next": "^15.0.0",
+    "react": "^19.0.0"
+  }
+}

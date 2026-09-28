@@ -63,6 +63,13 @@ const idOf = (ref: string): string | undefined => {
  * as a form or a stream, records that as its type. Comparing it against the
  * shape the handler declares would report every one of them as a mismatch,
  * when what actually happened is that the shape was lost a line earlier.
+ *
+ * On a channel it is the receiving end that can be the one that lost it, because
+ * nothing between a publish and a handler parses anything: `receive(message:
+ * string)` with a `JSON.parse` on the next line. Until a subscription had an
+ * entry that half was invisible, because nothing had read the handler's parameter
+ * at all (R126), and reading it and then calling it a mismatch would have traded
+ * one wrong answer for a louder one.
  */
 const TRANSPORT_BODIES = new Set([
   'string',
@@ -159,12 +166,42 @@ const judge = (lookup: GraphLookup, exchange: Exchange, options: CheckOptions): 
       blocked: { reason: 'no-type-on-receiver', subject: exchange.receiver.symbol },
     };
   }
-  if (exchange.direction === 'request' && sentRef !== wantRef && isTransportBody(sentRef)) {
-    return {
-      status: 'unchecked',
-      ...nothing,
-      blocked: { reason: 'body-already-serialised', subject: exchange.sender.symbol, detail: sentRef },
-    };
+  // The end that holds the wire form, where nothing turned it back into a shape
+  // on the way. Which end that can be is not the same on the two kinds of
+  // boundary, and the difference is who deserialises.
+  //
+  // On a request it is the sender's: the caller serialised before the call, while
+  // the handler's declared type is a claim about what the framework handed it
+  // already parsed. A handler that declares `string` for a JSON body is making a
+  // mistake, and that mismatch is worth reporting rather than excusing.
+  //
+  // On a channel nothing parses in between. A handler is handed the published
+  // value, so one declaring `string` is not disagreeing about a shape - it is the
+  // place the shape was lost, usually with a `JSON.parse` on the next line. That
+  // only became reachable once a subscription had an entry and its parameter was
+  // read at all (R126), and calling it a mismatch would have traded a row that
+  // said too little for one that says something false.
+  //
+  // Neither on a response, and neither when the two agree: two ends that both say
+  // `string` have the same contract and it is text.
+  if (sentRef !== wantRef) {
+    const lost =
+      exchange.direction === 'request' && isTransportBody(sentRef)
+        ? { party: exchange.sender, ref: sentRef }
+        : exchange.direction === 'payload' && isTransportBody(wantRef)
+          ? { party: exchange.receiver, ref: wantRef }
+          : undefined;
+    if (lost !== undefined) {
+      return {
+        status: 'unchecked',
+        ...nothing,
+        blocked: {
+          reason: 'body-already-serialised',
+          subject: lost.party.symbol,
+          detail: lost.ref,
+        },
+      };
+    }
   }
 
   const sentId = idOf(sentRef);
@@ -333,10 +370,33 @@ const findingOf = (
       // what R34 is about.
       observed: exchange.direction !== 'request' || exchange.sender.writes !== undefined,
       everyCall: exchange.direction !== 'request' || exchange.sender.writesEvery !== false,
-    }) + (unreached === null ? '' : `; nothing in the project calls ${unreached}`),
+    }) +
+    (unreached === null ? '' : `; nothing in the project calls ${unreached}`) +
+    declaredNote(exchange),
   ignored: ignoredBy !== null,
   ignoredBy,
 });
+
+/**
+ * The clause that says one end of this was believed rather than read.
+ *
+ * On the sentence rather than only in the JSON, because the sentence is what
+ * reaches a person: it is what the terminal prints, what the document holds and
+ * what an agent is handed, and a reader deciding whether to act on a finding
+ * needs to know that half of it is a third party's description of itself.
+ * Without it a declared end reads exactly like a read one, which is the one
+ * thing this must never do — the tool would be presenting an unverifiable claim
+ * in the voice it uses for what it has checked.
+ *
+ * Both ends, when both were declared, because two documents disagreeing with
+ * each other is a statement about two documents and about nothing else.
+ */
+const declaredNote = (exchange: Exchange): string => {
+  const ends = [exchange.sender, exchange.receiver]
+    .filter((end) => end.declaredBy !== undefined)
+    .map((end) => `${end.service} was declared by ${end.declaredBy as string}, not read`);
+  return ends.length === 0 ? '' : `; ${[...new Set(ends)].join('; ')}`;
+};
 
 
 
@@ -394,6 +454,66 @@ const writesReachedBy = (
   return { any, documents };
 };
 
+/** A key of some shape, with the reference to whatever is under it. */
+interface Key {
+  name: string;
+  type: TypeRefAst;
+}
+
+const keysOfEntry = (entry: TypeEntry): Key[] =>
+  (entry.fields ?? []).map((each) => ({ name: each.name, type: parse(each.type) }));
+
+/**
+ * The keys one step down a path, or nothing when there is no reading them.
+ *
+ * An array is unwrapped rather than refused: a path through `items[].name` is
+ * about the element, and the document written is the element's shape. A shape
+ * written inline in the reference answers for itself; a reference to a
+ * declaration is looked up; anything else — a union, a primitive, a generic
+ * nobody instantiated — is a shape this cannot descend into, which is a
+ * different answer from a shape that does not have the key.
+ */
+const keysUnder = (
+  ref: TypeRefAst,
+  typeOf: (id: string) => TypeEntry | undefined,
+): Key[] | undefined => {
+  let ast = ref;
+  while (ast.kind === 'array') ast = ast.element;
+  if (ast.kind === 'object') return ast.fields.map((each) => ({ name: each.name, type: each.type }));
+  if (ast.kind !== 'id' || ast.args !== undefined) return undefined;
+  const entry = typeOf(ast.id);
+  return entry === undefined ? undefined : keysOfEntry(entry);
+};
+
+/** Index and element markers, which name no key of anything. */
+const NOT_A_KEY = /(\[[^\]]*\])+$/;
+
+const segmentsOf = (field: string): string[] =>
+  field
+    .split('.')
+    .map((segment) => segment.replace(NOT_A_KEY, ''))
+    .filter((segment) => segment !== '');
+
+/** What one document has to say about one path: three answers, not two. */
+type Declares = 'declares' | 'absent' | 'unreadable';
+
+const declaresPath = (
+  document: TypeEntry,
+  segments: readonly string[],
+  typeOf: (id: string) => TypeEntry | undefined,
+): Declares => {
+  let keys = keysOfEntry(document);
+  for (let at = 0; at < segments.length; at += 1) {
+    const key = keys.find((each) => each.name === segments[at]);
+    if (key === undefined) return 'absent';
+    if (at === segments.length - 1) return 'declares';
+    const next = keysUnder(key.type, typeOf);
+    if (next === undefined) return 'unreadable';
+    keys = next;
+  }
+  return 'absent';
+};
+
 /**
  * What a field the receiver strips off the body actually costs.
  *
@@ -406,26 +526,37 @@ const writesReachedBy = (
  * Neither test is a name heuristic. `_id` and `createdAt` need no special case:
  * they fail the second test on their own, because the handler does not read
  * them off the body.
+ *
+ * A nested path is walked rather than refused (R67). It used to answer
+ * `unknown`, which is the word for "the documents were read and none of them
+ * declares it" and was being used for "nobody compared this against anything" —
+ * a fourth thing wearing a third thing's word. The choice was between giving
+ * that fourth thing a word of its own and making it stop existing, and it stops
+ * existing here: the segments are the keys of one shape after another, and the
+ * registry holds every shape a key names. When that was written no row in the
+ * corpus reached it, because a whitelisting pipe was only read as stripping at
+ * the empty path; the day it would be needed was named as an array body, whose
+ * paths read `[].name`. R71 was that day: an array body is compared at `[]`, the
+ * markers are dropped by `segmentsOf`, and the walk was waiting and correct.
  */
-const stripImpact = (
+export const stripImpact = (
   writes: { any: boolean; documents: TypeEntry[] },
   field: string,
+  typeOf: (id: string) => TypeEntry | undefined,
 ): StripImpact => {
   if (!writes.any) return 'none';
-  // Only a key of the body itself. A nested path's last segment is not a
-  // top-level field of the document: `options.name` matched against a document
-  // with a `name` said the sender believed it had saved something, about a
-  // different field entirely.
-  if (field.includes('.') || field.includes('[')) return 'unknown';
   // Something is written and no shape of it was read, so there is nothing to
   // look the field up in. Answering `unknown` here said "nothing it writes
   // declares this field", which is a claim nobody was in a position to make
   // (R43).
   if (writes.documents.length === 0) return 'unread';
-  const stored = writes.documents.some((entry) =>
-    (entry.fields ?? []).some((each) => each.name === field),
-  );
-  return stored ? 'stored' : 'unknown';
+  const segments = segmentsOf(field);
+  const answers = writes.documents.map((document) => declaresPath(document, segments, typeOf));
+  if (answers.includes('declares')) return 'stored';
+  // Every document ran out into a shape that could not be read before the path
+  // ended, so nothing here has looked at the key at all — which is the same
+  // position as having read no document, and says so in the same word.
+  return answers.every((answer) => answer === 'unreadable') ? 'unread' : 'unknown';
 };
 
 /**
@@ -518,7 +649,7 @@ export const checkContracts = (
           // Only a strip has anything to lose, and only the receiving end of a
           // request has a handler to ask about it.
           diff.rule === 'whitelist-strip' && exchange.direction === 'request'
-            ? stripImpact(writesOf(exchange.edge.to), diff.path)
+            ? stripImpact(writesOf(exchange.edge.to), diff.path, (id) => lookup.type(id))
             : undefined,
         ),
       );

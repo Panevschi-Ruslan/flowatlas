@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T09:26:56.734Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./apps/web",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "config_key:web#ORDERS_UPSTREAM_URL",
+      "type": "config_key",
+      "label": "ORDERS_UPSTREAM_URL",
+      "repo": "web",
+      "file": "../../packages/orders-lib/src/store.ts",
+      "line": 14,
+      "meta": {
+        "key": "ORDERS_UPSTREAM_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:web:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "web",
+      "file": "app/api/orders/route.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:web:http:POST:/api/orders",
+      "type": "entry",
+      "label": "POST /api/orders",
+      "repo": "web",
+      "file": "app/api/orders/route.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/orders",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "http_out:web#../../packages/orders-lib/src/store.ts:16:24",
+      "type": "http_out",
+      "label": "GET /orders",
+      "repo": "web",
+      "file": "../../packages/orders-lib/src/store.ts",
+      "line": 16,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_UPSTREAM_URL}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "ORDERS_UPSTREAM_URL",
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 6,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#../../packages/orders-lib/src/store.ts:16:24",
+      "type": "ui_api_call",
+      "label": "GET /orders",
+      "repo": "web",
+      "file": "../../packages/orders-lib/src/store.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_UPSTREAM_URL}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "ORDERS_UPSTREAM_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env"
+      }
+    },
+    {
+      "id": "web#../../packages/orders-lib/src/index.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "web",
+      "file": "../../packages/orders-lib/src/index.ts",
+      "line": 11
+    },
+    {
+      "id": "web#../../packages/orders-lib/src/index.ts:saveOrder",
+      "type": "function",
+      "label": "saveOrder",
+      "repo": "web",
+      "file": "../../packages/orders-lib/src/index.ts",
+      "line": 13
+    },
+    {
+      "id": "web#../../packages/orders-lib/src/store.ts:readOrders",
+      "type": "function",
+      "label": "readOrders",
+      "repo": "web",
+      "file": "../../packages/orders-lib/src/store.ts",
+      "line": 13
+    },
+    {
+      "id": "web#../../packages/orders-lib/src/store.ts:writeOrder",
+      "type": "function",
+      "label": "writeOrder",
+      "repo": "web",
+      "file": "../../packages/orders-lib/src/store.ts",
+      "line": 20
+    },
+    {
+      "id": "web#app/api/orders/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "web",
+      "file": "app/api/orders/route.ts",
+      "line": 7
+    },
+    {
+      "id": "web#app/api/orders/route.ts:POST",
+      "type": "function",
+      "label": "POST",
+      "repo": "web",
+      "file": "app/api/orders/route.ts",
+      "line": 12
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:web:http:GET:/api/orders",
+      "to": "web#app/api/orders/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:web:http:POST:/api/orders",
+      "to": "web#app/api/orders/route.ts:POST",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 12
+    },
+    {
+      "from": "web#../../packages/orders-lib/src/index.ts:listOrders",
+      "to": "web#../../packages/orders-lib/src/store.ts:readOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../../packages/orders-lib/src/index.ts",
+      "line": 11
+    },
+    {
+      "from": "web#../../packages/orders-lib/src/index.ts:saveOrder",
+      "to": "web#../../packages/orders-lib/src/store.ts:writeOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../../packages/orders-lib/src/index.ts",
+      "line": 13
+    },
+    {
+      "from": "web#../../packages/orders-lib/src/store.ts:readOrders",
+      "to": "config_key:web#ORDERS_UPSTREAM_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "../../packages/orders-lib/src/store.ts",
+      "line": 14
+    },
+    {
+      "from": "web#../../packages/orders-lib/src/store.ts:readOrders",
+      "to": "http_out:web#../../packages/orders-lib/src/store.ts:16:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../../packages/orders-lib/src/store.ts",
+      "line": 16
+    },
+    {
+      "from": "web#../../packages/orders-lib/src/store.ts:readOrders",
+      "to": "ui_api_call:web#../../packages/orders-lib/src/store.ts:16:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../../packages/orders-lib/src/store.ts",
+      "line": 16
+    },
+    {
+      "from": "web#app/api/orders/route.ts:GET",
+      "to": "web#../../packages/orders-lib/src/index.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 8
+    },
+    {
+      "from": "web#app/api/orders/route.ts:POST",
+      "to": "web#../../packages/orders-lib/src/index.ts:saveOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 14
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "../../packages/orders-lib/src/store.ts",
+      "line": 16,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /orders",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /orders */.",
+      "symbol": "ui_api_call:web#../../packages/orders-lib/src/store.ts:16:24"
+    },
+    {
+      "service": "web",
+      "file": "../../packages/orders-lib/src/store.ts",
+      "line": 16,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares ORDERS_UPSTREAM_URL",
+      "hint": "Add ORDERS_UPSTREAM_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:web#../../packages/orders-lib/src/store.ts:16:24"
+    }
+  ]
+}

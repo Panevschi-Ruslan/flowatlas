@@ -1,0 +1,11 @@
+{
+  "name": "@member-dev-react/mailer",
+  "version": "0.0.0",
+  "private": true,
+  "description": "What the API runs. React is a devDependency, for the preview its own tests render, and is never installed for the API that depends on this package.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "devDependencies": {
+    "react": "^19.0.0"
+  }
+}

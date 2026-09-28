@@ -1,5 +1,48 @@
-import { hasAnyDependency, type DbAdapter, type DbDescriptor } from '@flowatlas/core';
+import {
+  allDependencies,
+  hasAnyDependency,
+  type DbAdapter,
+  type DbDescriptor,
+  type PackageJson,
+} from '@flowatlas/core';
+import type { SourceFile } from 'ts-morph';
+import { isGeneratedPrismaClient, prismaTableOf } from '../leaves/prisma-schema.js';
 import type { TableLocator } from './table.js';
+
+/**
+ * How one library's table name is read.
+ *
+ * `locators` say where the name is written, tried in order; the first that
+ * yields one wins.
+ *
+ * `entityInTypeArgs` says whether the receiver's first type argument names the
+ * stored thing, so that a locator finding nothing may fall back to it. It is
+ * true of every library whose receiver is a model or a repository of one thing —
+ * an injected `Model<OrderDocument>` names an order and the fallback is the
+ * answer. It is false of a connection parameterised by the whole schema:
+ * `Kysely<DB>` says which database, and `DB` is not a table. Reading it as one
+ * is worse than saying nothing, because a name that looks like an answer is not
+ * checked again.
+ */
+export interface TableReading {
+  locators: readonly TableLocator[];
+  entityInTypeArgs: boolean;
+  /**
+   * Methods that take a statement as text instead of naming a table, and the
+   * argument the text is in.
+   *
+   * `knex.raw(sql)` is knex's way out of its own builder, and what it touches is
+   * written in the SQL rather than anywhere a locator looks. Its text is read by
+   * the same reader a driver's query string is, so a statement means the same
+   * thing whichever library it was handed to (R155).
+   *
+   * Such a call is a statement only where it is used on its own. Handed to a
+   * call of the same library - `.where(knex.raw('…'))` - it is a fragment of
+   * that call's query, and a text no verb opens is a fragment wherever it is
+   * kept. A `Map` because it is asked about every method name a program calls.
+   */
+  statements?: ReadonlyMap<string, number>;
+}
 
 /**
  * What each data layer's methods do.
@@ -15,9 +58,29 @@ import type { TableLocator } from './table.js';
  * The last resort, and the only place a guess is made from a name. It lives here
  * rather than in the core because a list of library names and project
  * conventions is precisely the knowledge the core must not hold.
+ *
+ * `store` is not among the receiver names, and that is a measurement rather than
+ * a taste. Across the eight repositories the coverage harness reads, a receiver
+ * whose name ends in `store` produced 97 rows and not one of them was a data
+ * layer: they were arrays, maps, mutex registries, a plugin registry, a browser
+ * object store, a framework's cookie store, and the state stores three of those
+ * repositories keep their screens in. On six of the eight nothing else moved when
+ * it went. On a scheduling app something did, and it was the point: `tables` went from 1
+ * to 0 and the queries that name a table from 4 to 0, because the one table
+ * A scheduling app was reported to have was the name of a React state type on a zustand
+ * store — minted at heuristic confidence for an undescribed package, with the
+ * receiver's name as the only reason to think it was data (R112). So what the
+ * word did was ask a reader to describe things that store nothing, and once,
+ * name one of them as a table.
+ *
+ * It stays among the *type* names, where a class called `OrderStore` is an
+ * ordinary name for a real data layer and where the evidence is the class rather
+ * than the word at the end of a variable. Trimming it there was measured too and
+ * costs four rows on a wiki app that tell a reader to name a base class, while
+ * changing no query and no table anywhere.
  */
 export const dataNameHints = {
-  receiver: /(repository|repo|db|prisma|knex|dao|store)$/i,
+  receiver: /(repository|repo|db|prisma|knex|dao)$/i,
   type: /(repository|repo|model|collection|dao|store|table|entitymanager|queryrunner|knex|prisma|db)$/i,
 };
 
@@ -143,6 +206,8 @@ const localBaseDescriptor: DbDescriptor = {
 /** The driver, used directly rather than through a mapper. */
 const mongodbDescriptor: DbDescriptor = {
   package: 'mongodb',
+  // The collection is named in the chain, where `tableReadings` says (R165).
+  tableOverride: { kind: 'string-arg', index: 0 },
   operations: {
     find: READ,
     findOne: READ,
@@ -267,6 +332,35 @@ const sequelizeDescriptor: DbDescriptor = {
 };
 
 /**
+ * The typed query builder whose every query starts by naming its table.
+ *
+ * `selectFrom`, `insertInto`, `updateTable` and `deleteFrom` are the four ways
+ * in, and each one takes the table as its first argument, so the name is read
+ * from exactly where the author wrote it. Everything else in a query —
+ * `where`, `set`, `values`, `returning`, `execute` — is chained onto one of
+ * them and describes what that one query will ask for, which is why listing it
+ * here would report one visit to the database as half a dozen.
+ *
+ * The receiver is `Kysely<Schema>`, and the schema is the whole database rather
+ * than one table, which is the reason this library needs `entityInTypeArgs`
+ * turned off below: on a photo server, where every one of 579 queries is written this
+ * way, the type argument was read as an entity and put the name of the schema
+ * type on 407 nodes as though it were a table.
+ */
+const kyselyDescriptor: DbDescriptor = {
+  package: 'kysely',
+  tableOverride: NAMED_IN_ARGUMENT,
+  operations: {
+    selectFrom: READ,
+    insertInto: WRITE,
+    replaceInto: WRITE,
+    mergeInto: WRITE,
+    updateTable: WRITE,
+    deleteFrom: DELETE,
+  },
+};
+
+/**
  * The query builder that starts from the table: `knex('orders')` makes a
  * builder for one table, and every method chained onto it is about that table.
  *
@@ -299,12 +393,140 @@ const knexDescriptor: DbDescriptor = {
 };
 
 /**
- * Where each library keeps the expression that names the table.
+ * A call that hands out another library's data layer.
+ *
+ * An ORM that builds its SQL with a query builder will hand the builder over:
+ * `manager.getKnex()` returns a knex instance, and from that call on every query
+ * is knex's own — a table, a chain, an operation along it — which the knex
+ * descriptor already reads. What was missing is the one step between them, and
+ * it is a fact about the ORM rather than about knex or about any reader: calling
+ * `method` on something `holders` declare yields what `yields` names. So it is a
+ * record here, and the reader asks it rather than knowing it.
+ *
+ * `holders` are written the way a module is imported, because that is how the
+ * source states a manager's type when nothing is installed to resolve it: a
+ * package, or a path inside one that re-exports it. A framework that hands its
+ * users the ORM under its own name — `@medusajs/framework/mikro-orm/postgresql`
+ * is `@mikro-orm/postgresql` — is a path inside that framework, and naming the
+ * path rather than the framework keeps every other module of it out: the
+ * framework's `utils` holds no manager (R149).
+ */
+export interface Handover {
+  /** The method that hands the data layer over: `getKnex` in `manager.getKnex()`. */
+  method: string;
+  /** Modules that declare, or re-export, what the method is called on. */
+  holders: readonly string[];
+  /** The library the returned value belongs to, and the type it is known by there. */
+  yields: { package: string; type: string };
+}
+
+/**
+ * Whether a module is a package or a path inside it.
+ *
+ * `@mikro-orm/postgresql` is inside `@mikro-orm/postgresql`, and so is
+ * `@mikro-orm/postgresql/dist/index`; `@mikro-orm/postgresql-extra` is not, which
+ * is why the test is against the name and a slash rather than the name alone.
+ */
+export const isWithin = (module: string, pkg: string): boolean =>
+  module === pkg || module.startsWith(`${pkg}/`);
+
+/**
+ * MikroORM's SQL manager, and everywhere it is imported from.
+ *
+ * The manager is declared in `@mikro-orm/knex` and every SQL driver package
+ * re-exports it, which is how an application imports it: from the driver it
+ * runs. Its connection has a `getKnex()` too, and is declared in the same
+ * packages, so the one record covers both.
+ */
+const MIKRO_ORM_SQL: readonly string[] = [
+  '@mikro-orm/knex',
+  '@mikro-orm/postgresql',
+  '@mikro-orm/mysql',
+  '@mikro-orm/mariadb',
+  '@mikro-orm/sqlite',
+  '@mikro-orm/better-sqlite',
+  '@mikro-orm/libsql',
+  '@mikro-orm/mssql',
+  // The same packages under a framework's name, as its modules import them.
+  '@medusajs/framework/mikro-orm/knex',
+  '@medusajs/framework/mikro-orm/postgresql',
+  '@medusajs/deps/mikro-orm/knex',
+  '@medusajs/deps/mikro-orm/postgresql',
+];
+
+export const handovers: readonly Handover[] = [
+  { method: 'getKnex', holders: MIKRO_ORM_SQL, yields: { package: 'knex', type: 'Knex' } },
+];
+
+/**
+ * A call that hands a client back to a callback it runs (R157).
+ *
+ * `prisma.$transaction(async (tx) => { await tx.order.update(…) })` runs the
+ * callback with a client of its own - the same delegates, inside one transaction
+ * - and writes no type for `tx`; the library's generic types carry it, and with
+ * the client never generated they carry nothing. What the call says is enough:
+ * calling `method` on a client of `package` hands parameter `parameter` of the
+ * function at argument `callback` a client of that same library. So `tx` is read
+ * as the client it was handed by, and nothing else is: a callback of any other
+ * method, or of this method on anything that is not such a client, is left as it
+ * was.
+ */
+export interface ClientCallback {
+  /** The library whose client makes the call. */
+  package: string;
+  /** The method that runs the callback: `$transaction`. */
+  method: string;
+  /** Which argument is the callback. */
+  callback: number;
+  /** Which of the callback's parameters is handed the client. */
+  parameter: number;
+}
+
+export const clientCallbacks: readonly ClientCallback[] = [
+  { package: '@prisma/client', method: '$transaction', callback: 0, parameter: 0 },
+];
+
+/**
+ * The libraries a manifest reaches through a package that hands them over.
+ *
+ * A project that queries knex only through its ORM does not declare knex: it is
+ * the ORM's dependency, installed beside it and never named, so the knex reader
+ * is never chosen by the manifest and a call the checker traces into `knex` has
+ * no descriptor to be read with.
+ *
+ * This is deliberately not detection. Detecting knex in every project that
+ * declares a MikroORM driver, or a framework that re-exports one, would also say
+ * knex *applies* there - and a project that never calls `getKnex()` would then
+ * carry a row saying the knex reader found nothing (it did, on the fixture of a
+ * framework's file router, which queries nothing at all). What a holder in the
+ * manifest earns is only that the library it hands over can be read when a call
+ * is traced to it, which is a statement about calls rather than about the
+ * project.
+ */
+export const handedOverIn = (pkg: PackageJson): Set<string> => {
+  const declared = Object.keys(allDependencies(pkg));
+  const libraries = new Set<string>();
+  for (const handover of handovers) {
+    if (handover.holders.some((holder) => declared.some((name) => isWithin(holder, name)))) {
+      libraries.add(handover.yields.package);
+    }
+  }
+  return libraries;
+};
+
+/**
+ * How each library's table name is found, when its types do not carry it.
  *
  * Beside the descriptors rather than inside them, because `DbDescriptor` is the
  * core's type and the core is not allowed to learn a fourth way of finding a
  * name. Keyed by the package the descriptor is chosen by, so a library either
  * has both records or neither.
+ *
+ * Both facts about reading a name live in one record per library, rather than in
+ * two records that could disagree: where the name is written, and whether the
+ * receiver's type argument may answer when it is not written anywhere. Kysely is
+ * the library that made the second fact necessary and is the only one that
+ * answers no to it.
  *
  * Drizzle has two locators because it writes the table in two places: in the
  * call itself when it writes (`db.insert(orders)`) and in a `from` elsewhere in
@@ -318,19 +540,113 @@ const knexDescriptor: DbDescriptor = {
  * *column* in the call the chain started from. Asking the root first reported
  * `id` as a table on most of a real repository's queries, so the `from` is
  * asked first and the root is the fallback.
+ *
+ * A `Map`, like `descriptorAliases` below and for its reason: both are keyed by a
+ * package name, and a bare object indexed by a name out of somebody else's source
+ * answers for `constructor` and `toString` as readily as for `knex` (R130).
  */
-export const tableLocators: Record<string, readonly TableLocator[]> = {
-  'drizzle-orm': [
-    { kind: 'argument', index: 0 },
-    { kind: 'chain-call', method: 'from', index: 0 },
+export const tableReadings: ReadonlyMap<string, TableReading> = new Map([
+  [
+    'drizzle-orm',
+    {
+      locators: [
+        { kind: 'argument', index: 0 },
+        { kind: 'chain-call', method: 'from', index: 0 },
+      ],
+      entityInTypeArgs: true,
+    },
   ],
-  mongoose: [{ kind: 'receiver' }],
-  sequelize: [{ kind: 'receiver' }],
-  knex: [
-    { kind: 'chain-call', method: 'from', index: 0 },
-    { kind: 'chain-root-argument', index: 0 },
+  ['mongoose', { locators: [{ kind: 'receiver' }], entityInTypeArgs: true }],
+  [
+    'sequelize',
+    {
+      // The receiver first, because a model named outright is the clearest
+      // statement of which table is meant; its declared type second, for an
+      // instance, where the expression is a variable and the class behind it is
+      // the only thing that states a table.
+      locators: [{ kind: 'receiver' }, { kind: 'receiver-type' }],
+      entityInTypeArgs: true,
+    },
   ],
-};
+  [
+    'knex',
+    {
+      locators: [
+        { kind: 'chain-call', method: 'from', index: 0 },
+        { kind: 'chain-root-argument', index: 0 },
+      ],
+      entityInTypeArgs: true,
+      statements: new Map([['raw', 0]]),
+    },
+  ],
+  ['kysely', { locators: [{ kind: 'argument', index: 0 }], entityInTypeArgs: false }],
+  [
+    'mongodb',
+    {
+      // The driver names the collection once, in the call that hands it out:
+      // `db.collection('orders').find()`, or a constant bound to that call. Its
+      // type argument is the shape of a document and never a name - reading it
+      // made a table called `Document` of every untyped collection (R165).
+      locators: [{ kind: 'chain-call', method: 'collection', index: 0 }],
+      entityInTypeArgs: false,
+    },
+  ],
+]);
+
+/**
+ * Packages that hand out another library's data layer under their own name.
+ *
+ * A descriptor is chosen by the package that declares the receiver's type, and
+ * that is not always the package the descriptor was written for. The mapper a
+ * project actually imports may be a thin layer over the library the descriptor
+ * describes: `sequelize-typescript` declares the `Model` that a decorated model
+ * class extends, while every method on it, and every word of the descriptor, is
+ * `sequelize`'s. On a wiki app that one row is the difference between reading the
+ * data layer and dropping every call to it.
+ *
+ * A record rather than a second descriptor, because the two packages are not two
+ * libraries to describe; they are one library reached under two names.
+ *
+ * A `Map` because the key is a package name read out of an import in somebody
+ * else's repository, and a bare object indexed by a word from source text
+ * answers for `constructor` and `toString` too (R130).
+ */
+export const descriptorAliases: ReadonlyMap<string, string> = new Map([
+  ['sequelize-typescript', 'sequelize'],
+]);
+
+/**
+ * Modules a repository generates, and the package whose client each one is.
+ *
+ * A generated client is the library's own client written into the repository
+ * rather than installed beside it: Prisma writes `PrismaClient` to wherever the
+ * schema's generator says, and a scheduling app says `./generated/prisma`. A clone whose
+ * install ran no scripts has an import of that path and no file behind it, so
+ * the checker cannot say what came out of it - and the schema can, because it is
+ * the schema that names the directory (R146).
+ *
+ * A record per generator, keyed by the package whose descriptor then reads the
+ * call, so a second generating library is a row here and not a branch in the
+ * reader that follows imports.
+ */
+export const generatedModules: readonly {
+  readonly package: string;
+  readonly generates: (from: SourceFile, target: string) => boolean;
+}[] = [{ package: '@prisma/client', generates: isGeneratedPrismaClient }];
+
+/**
+ * Libraries whose calls name a model, and how the model's table is read.
+ *
+ * `prisma.booking.findMany()` names the delegate, and the table is what the
+ * schema maps the model to: the model's own name unless `@@map` says otherwise.
+ * Asked with the file the client was imported or constructed in, since that is
+ * the file the schema governs. A library with no entry here keeps the name the
+ * call wrote, and so does a Prisma call where no schema is readable.
+ *
+ * A `Map`, for the reason every table keyed by a package name here is one (R130).
+ */
+export const schemaTables: ReadonlyMap<string, (from: SourceFile, name: string) => string | undefined> =
+  new Map([['@prisma/client', prismaTableOf]]);
 
 export const dbAdapters: readonly DbAdapter[] = [
   {
@@ -375,6 +691,13 @@ export const dbAdapters: readonly DbAdapter[] = [
     descriptor: knexDescriptor,
   },
   {
+    name: 'kysely',
+    // `nestjs-kysely` is how a Nest application is handed the connection, and a
+    // repository that imports only the wrapper still queries kysely.
+    detect: (pkg) => hasAnyDependency(pkg, ['kysely', 'nestjs-kysely']),
+    descriptor: kyselyDescriptor,
+  },
+  {
     name: 'local-base',
     // Always available: whether it applies is decided by the configuration
     // naming a base class, not by any dependency.
@@ -386,6 +709,7 @@ export const dbAdapters: readonly DbAdapter[] = [
 export {
   drizzleDescriptor,
   knexDescriptor,
+  kyselyDescriptor,
   localBaseDescriptor,
   mongodbDescriptor,
   mongooseDescriptor,

@@ -5,7 +5,7 @@
  * would notice, then what it breaks, then what changed shape, then the
  * arithmetic. Everything that could be a floor rather than a total says so.
  */
-import type { GraphNode } from '@flowatlas/core';
+import type { Confidence, GraphNode } from '@flowatlas/core';
 import type { ContractFinding } from '@flowatlas/contracts';
 import type { BlastEntry, BlastRow, DiffReport, TypeChange } from '@flowatlas/linker';
 import { groupEntries, reachableSummary } from '../query/callers.js';
@@ -22,6 +22,23 @@ const DEFAULTS = { maxRows: 50 };
 const escape = (text: string): string => text.replace(/\|/g, '\\|');
 
 const row = (cells: readonly string[]): string => `| ${cells.join(' | ')} |`;
+
+/**
+ * What to add after the level, in the confidence column of a way in.
+ *
+ * The column carries the weakest hop on the way to an entry, and the level
+ * alone does not say why a reviewer should care, so each one names the kind of
+ * path it stands for. A total record rather than a branch on `static`: the day
+ * `declared` arrived, the branch read it as "declared (heuristic path)" — a
+ * document's word for itself reported as somebody's guess — and nothing failed.
+ */
+const PATH_NOTE: Record<Confidence, string> = {
+  static: '',
+  marker: ' (asserted path)',
+  declared: ' (via a declared service)',
+  heuristic: ' (heuristic path)',
+  runtime: ' (observed path)',
+};
 
 const code = (text: string): string => `\`${escape(text)}\``;
 
@@ -114,7 +131,7 @@ const impactLines = (report: DiffReport, options: Required<Pick<DiffMarkdownOpti
           code(entry.id),
           entry.service,
           entry.kind,
-          entry.confidence === 'static' ? 'static' : `${entry.confidence} (heuristic path)`,
+          `${entry.confidence}${PATH_NOTE[entry.confidence]}`,
         ]),
       );
     }

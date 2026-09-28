@@ -82,6 +82,19 @@
       }
     },
     {
+      "id": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "service": "orders",
+      "label": "ClientProxy",
+      "inDegree": 2,
+      "callerServices": [
+        "orders"
+      ],
+      "byEdgeType": {
+        "injects": 2
+      }
+    },
+    {
       "id": "orders#src/orders/orders.service.ts:OrdersService",
       "type": "provider",
       "service": "orders",
@@ -119,20 +132,7 @@
       "byEdgeType": {
         "injects": 1
       }
-    },
-    {
-      "id": "admin#node_modules/@nestjs/config:ConfigService",
-      "type": "provider",
-      "service": "admin",
-      "label": "ConfigService",
-      "inDegree": 1,
-      "callerServices": [
-        "admin"
-      ],
-      "byEdgeType": {
-        "injects": 1
-      }
     }
   ],
-  "ranked": 57
+  "ranked": 59
 }

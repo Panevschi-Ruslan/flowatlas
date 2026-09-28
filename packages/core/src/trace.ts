@@ -3,6 +3,7 @@ import type {
   Identifier,
   ObjectLiteralExpression,
   ParameterDeclaration,
+  PropertyAccessExpression,
   Symbol as TsSymbol,
   TemplateExpression,
   Node as TsNode,
@@ -18,7 +19,12 @@ import {
 } from './di/member-call.js';
 import { holeIn, UNREAD_SPAN } from './ids.js';
 import { writtenObjectLiteral } from './origin.js';
-import { evaluateExpression, literalUnionOf } from './static-value.js';
+import {
+  declarationOf,
+  evaluateExpression,
+  literalUnionOf,
+  type StaticValue,
+} from './static-value.js';
 
 /** How far back a value is followed before the answer stops being trustworthy. */
 const BUDGET = 8;
@@ -87,6 +93,34 @@ const classChain = (declaration: ClassNode | undefined, depth = 4): ClassNode[] 
     current = current.getBaseClass();
   }
   return chain;
+};
+
+/**
+ * The class whose own field a property access reads, when it reads one.
+ *
+ * Two spellings say the same thing to anybody looking for what a class wrote
+ * down: `this.base`, read from inside the class, and `ItemsService.BASE` — a
+ * static field, which the syntax makes a property access on the identifier
+ * naming the class. Insisting on a `this` receiver read the first and lost the
+ * second entirely, so a service keeping its base address in a `static` field had
+ * no address at all and none of its requests could be joined to a route (R103).
+ *
+ * `self` is the class the trace is standing in, which is the answer for `this`
+ * when the code being read was written somewhere else. It has nothing to say
+ * about a static field, whose receiver names its own class outright.
+ */
+const fieldOwnerOf = (
+  access: PropertyAccessExpression,
+  self?: ClassNode,
+): ClassNode | undefined => {
+  const receiver = unwrap(access.getExpression());
+  if (receiver.getKind() === SyntaxKind.ThisKeyword) return self ?? enclosingClass(access);
+  if (!Node.isIdentifier(receiver)) return undefined;
+  // The alias is followed because the class is nearly always imported where it
+  // is read, and the import is not the declaration.
+  const declaration = declarationOf(receiver);
+  if (declaration === undefined || !Node.isClassDeclaration(declaration)) return undefined;
+  return declaration;
 };
 
 /** Everywhere `new C(...)` appears for this class. */
@@ -457,19 +491,20 @@ const readString = (value: TsNode, scope: Scope, budget: number): string | null 
   }
 
   // `private uploadPath = '/admin/upload'` — a piece of the path kept in a
-  // property, which is a constant wearing a field's clothes. Only when every
-  // assignment agrees: one that is decided at run time is a hole.
-  if (
-    Node.isPropertyAccessExpression(node) &&
-    node.getExpression().getKind() === SyntaxKind.ThisKeyword
-  ) {
-    const values = new Set<string>();
-    for (const assigned of assignmentsTo(node.getName(), scope.self ?? enclosingClass(node))) {
-      const value = readString(assigned, scope, budget - 1);
-      if (value === null || ABSOLUTE.test(value)) return null;
-      values.add(value);
+  // property, which is a constant wearing a field's clothes, whether the field
+  // belongs to the instance or to the class. Only when every assignment agrees:
+  // one that is decided at run time is a hole.
+  if (Node.isPropertyAccessExpression(node)) {
+    const owner = fieldOwnerOf(node, scope.self);
+    if (owner !== undefined) {
+      const values = new Set<string>();
+      for (const assigned of assignmentsTo(node.getName(), owner)) {
+        const value = readString(assigned, scope, budget - 1);
+        if (value === null || ABSOLUTE.test(value)) return null;
+        values.add(value);
+      }
+      return values.size === 1 ? (([...values][0] as string) ?? null) : null;
     }
-    return values.size === 1 ? (([...values][0] as string) ?? null) : null;
   }
 
   const remembered = rememberedProperty(node, scope, budget);
@@ -482,14 +517,48 @@ const readString = (value: TsNode, scope: Scope, budget: number): string | null 
 const ABSOLUTE = /^[a-z][a-z0-9+.-]*:\/\//i;
 
 /**
+ * What an expression is worth when nothing overrides it.
+ *
+ * `options.baseUrl || '/api'` is a value with a default written beside it, and
+ * the default is what every caller who passed nothing gets. Read the left where
+ * it can be read — a truthy left is the whole answer — and the right where it
+ * cannot, which is exactly the order {@link addressOf} takes those two operators
+ * in. Anything else is itself.
+ */
+const defaulted = (node: TsNode): StaticValue => {
+  const direct = evaluateExpression(node);
+  if (direct.resolved) return direct;
+  if (!Node.isBinaryExpression(node)) return direct;
+  const operator = node.getOperatorToken().getKind();
+  if (operator !== SyntaxKind.BarBarToken && operator !== SyntaxKind.QuestionQuestionToken) {
+    return direct;
+  }
+  const fallback = defaulted(node.getRight());
+  // An empty fallback is not a value: `accountId() ?? ''` says there is no id,
+  // not that the id is empty, and folding it into an address wrote
+  // `/accounts//settings` where the source has `/accounts/${id}/settings` - an
+  // address nothing serves, joined to a catch-all instead of its route. The
+  // expression stays unread, which is the hole it was before.
+  return fallback.resolved && fallback.value === '' ? direct : fallback;
+};
+
+/**
  * The constant a property always holds, when it always holds the same.
  *
  * `private uploadPath = '/admin/upload'` is a piece of every address the service
  * writes, kept in a field because it is written in several methods. Reading it
- * is the difference between a path and a hole where its middle should be.
+ * is the difference between a path and a hole where its middle should be. A
+ * `static` field is the same fact about the class rather than the instance, and
+ * is read the same way.
  *
  * A value naming a host is refused. That is a base address rather than a piece
  * of a path, and where it came from is a question for the settings trace.
+ *
+ * `this.baseUrl = options.baseUrl || '/api'` is read as `/api`. That is the same
+ * fold {@link addressOf} already makes over `??` and `||` — the left where it can
+ * be read, the right where it cannot — and the two disagreeing about the same
+ * expression was the whole of the difference between a field holding a path and a
+ * field holding a hole (R114).
  */
 export const constantPropertyValue = (
   node: TsNode,
@@ -497,10 +566,11 @@ export const constantPropertyValue = (
 ): string | null => {
   const access = unwrap(node);
   if (!Node.isPropertyAccessExpression(access)) return null;
-  if (access.getExpression().getKind() !== SyntaxKind.ThisKeyword) return null;
+  const owner = fieldOwnerOf(access);
+  if (owner === undefined) return null;
   const values = new Set<string>();
-  for (const assigned of assignmentsTo(access.getName(), enclosingClass(access))) {
-    const value = evaluateExpression(assigned);
+  for (const assigned of assignmentsTo(access.getName(), owner)) {
+    const value = defaulted(assigned);
     if (!value.resolved || typeof value.value !== 'string') return null;
     // A caller reading the opening of an address may ask for the host too:
     // where there is no setting behind it, the host written down is the answer.
@@ -719,6 +789,23 @@ const sharedStart = (a: string, b: string): string => {
   return cut < 0 ? '' : a.slice(0, cut + 1);
 };
 
+/**
+ * Why this reads strings at all, when `evaluateExpression` already does.
+ *
+ * The two are not the same question and both have to exist. `evaluateExpression`
+ * asks what an expression's value is where it stands, and answers only where
+ * there is one whole answer. This asks what address a request reaches, which is
+ * a settings key nothing here can know the value of, followed by a path that may
+ * have holes in it — and it answers by walking out through parameters, call
+ * frames and the class a `this` turns out to be. Neither can be written in terms
+ * of the other.
+ *
+ * What they must not do is disagree about the same expression, which is what
+ * happened with `+`: this folded it and the evaluator did not, so `'/api/' + V`
+ * was an address here and nothing at all one call away (R102). Anything either
+ * of them learns about what a string says belongs in the evaluator, which this
+ * calls, rather than beside it.
+ */
 const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress | null => {
   if (budget <= 0) return null;
   const node = unwrap(value);
@@ -822,27 +909,29 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
     return null;
   }
 
-  // `this.baseUrl` — either assigned somewhere in the class, or handed to the
-  // constructor, in which case the answer is at every `new C(...)`.
-  if (
-    Node.isPropertyAccessExpression(node) &&
-    node.getExpression().getKind() === SyntaxKind.ThisKeyword
-  ) {
-    const owner = scope.self ?? enclosingClass(node);
-    const name = node.getName();
-    for (const assigned of assignmentsTo(name, owner)) {
-      const found = addressOf(assigned, scope, budget - 1);
-      if (found !== null) return found;
+  // `this.baseUrl` or `OrdersService.BASE` — a field of the class, either
+  // assigned somewhere in it or handed to the constructor, in which case the
+  // answer is at every `new C(...)`. Only an instance field can come from a
+  // constructor parameter, and asking for one where there is none costs a lookup
+  // that finds nothing.
+  if (Node.isPropertyAccessExpression(node)) {
+    const owner = fieldOwnerOf(node, scope.self);
+    if (owner !== undefined) {
+      const name = node.getName();
+      for (const assigned of assignmentsTo(name, owner)) {
+        const found = addressOf(assigned, scope, budget - 1);
+        if (found !== null) return found;
+      }
+      const parameter = parameterPropertyOf(name, owner);
+      if (parameter === undefined) return null;
+      for (const site of instantiationsOf(parameter.classNode)) {
+        const argument = site.asKind(SyntaxKind.NewExpression)?.getArguments()[parameter.index];
+        if (argument === undefined) continue;
+        const found = addressOf(argument, scope, budget - 1);
+        if (found !== null) return found;
+      }
+      return null;
     }
-    const parameter = parameterPropertyOf(name, owner);
-    if (parameter === undefined) return null;
-    for (const site of instantiationsOf(parameter.classNode)) {
-      const argument = site.asKind(SyntaxKind.NewExpression)?.getArguments()[parameter.index];
-      if (argument === undefined) continue;
-      const found = addressOf(argument, scope, budget - 1);
-      if (found !== null) return found;
-    }
-    return null;
   }
 
   if (Node.isIdentifier(node)) {
@@ -1103,10 +1192,96 @@ const methodHolding = (parameter: ParameterDeclaration): ClassMethod | undefined
 };
 
 /**
- * Everywhere a method is called, as a call expression.
+ * Where a call written against a method's name lands, as far as the source says.
+ *
+ * - `runs`: the name resolves to this method and nothing else - `this.m()` in
+ *   its own class, `super.m()` in a subclass that does not override it, a
+ *   receiver typed as the class itself.
+ * - `undecided`: the name resolves to something this method implements or
+ *   overrides - an interface member, a member of a type literal, a method of a
+ *   class it extends, called on a receiver that may be of this class - or to a
+ *   union holding it. One of the implementations runs, and which one is
+ *   decided at run time.
+ * - `elsewhere`: the name resolves to another method altogether: the same
+ *   method of a sibling that implements the same interface, a subclass's
+ *   override of it, the method it overrides called through `super`, or one it
+ *   overrides called on a receiver whose class is not this one's lineage.
+ */
+export type Dispatch = 'runs' | 'undecided' | 'elsewhere';
+
+/** The holders a member of which a method may be answering for. */
+const isAbstractHolder = (node: TsNode | undefined): boolean =>
+  node !== undefined && (Node.isInterfaceDeclaration(node) || Node.isTypeLiteral(node));
+
+/**
+ * Which method a call runs, asked of the one the reference was found from.
+ *
+ * `findReferences` of a method that implements an interface takes in the
+ * interface member, and through it every other implementation of that member
+ * and every call written against any of them. Each of those is a reference in
+ * the compiler's sense and none of them is a call of this method: a request
+ * forwarded along them was attributed to a sibling's `this.deleteEvent(...)`,
+ * and the implementation's own request went missing (R158). What the name at
+ * the call resolves to is the answer, because that is what the language
+ * dispatches through.
+ */
+export const dispatchOf = (call: CallExpression, method: ClassMethod): Dispatch => {
+  const callee = unwrap(call.getExpression());
+  // A method named bare, not through a receiver, is the method it names.
+  if (!Node.isPropertyAccessExpression(callee)) return 'runs';
+  const declarations = callee.getNameNode().getSymbol()?.getDeclarations() ?? [];
+  if (declarations.length === 0) return 'undecided';
+
+  const owner = method.getParent();
+  const name = method.getName();
+  // An overloaded method is several declarations of one method.
+  const isOwn = (declaration: TsNode): boolean =>
+    declaration === method ||
+    (Node.isMethodDeclaration(declaration) &&
+      declaration.getParent() === owner &&
+      declaration.getName() === name);
+  if (declarations.every(isOwn)) return 'runs';
+  // `super.m()` is bound where it is written: it runs the method it names and
+  // never an override of it.
+  if (callee.getExpression().getKind() === SyntaxKind.SuperKeyword) return 'elsewhere';
+
+  const lineage = Node.isClassDeclaration(owner) ? classChain(owner, BUDGET) : [];
+  const ancestors = lineage.slice(1);
+  // A receiver whose class is written down, and is neither this method's class
+  // nor one it extends, holds an instance that cannot be of this class: a
+  // sibling calling the method both inherit runs the inherited one, not this
+  // override of it.
+  const receiverClass = callee
+    .getExpression()
+    .getType()
+    .getSymbol()
+    ?.getDeclarations()
+    .find((declaration) => Node.isClassDeclaration(declaration));
+  const couldBeThisClass =
+    receiverClass === undefined || lineage.some((member) => member === receiverClass);
+  const above = (declaration: TsNode): boolean => {
+    const holder = declaration.getParent();
+    if (isAbstractHolder(holder)) return true;
+    return (
+      couldBeThisClass &&
+      holder !== undefined &&
+      Node.isClassDeclaration(holder) &&
+      ancestors.includes(holder)
+    );
+  };
+  return declarations.some((declaration) => isOwn(declaration) || above(declaration))
+    ? 'undecided'
+    : 'elsewhere';
+};
+
+/**
+ * Everywhere a method may be called, as a call expression.
  *
  * A reference that is not the callee — the method passed as a value, or named
- * in a type — is not a call and is left out.
+ * in a type — is not a call and is left out. Neither is a call that dispatches
+ * to another method altogether (R158); a call that may land here and may land
+ * in a sibling stays, and `dispatchOf` tells the two apart for a caller that
+ * needs to.
  */
 export const callSitesOf = (method: ClassMethod): CallExpression[] => {
   const sites: CallExpression[] = [];
@@ -1119,6 +1294,7 @@ export const callSitesOf = (method: ClassMethod): CallExpression[] => {
     if (call === undefined || !Node.isCallExpression(call) || call.getExpression() !== access) {
       continue;
     }
+    if (dispatchOf(call, method) === 'elsewhere') continue;
     const key = `${call.getSourceFile().getFilePath()}:${call.getStart()}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -1438,6 +1614,19 @@ export interface ForwardedCall {
   argument: TsNode;
 }
 
+/** Who supplies a parameter, and whether anybody else may. */
+export interface Forwarded {
+  /** The calls known to run the method, each with what it passed. */
+  calls: ForwardedCall[];
+  /**
+   * True when some call may run the method and may run another implementation
+   * of it instead. What such a call passes cannot be attributed, so the value
+   * is also decided somewhere nobody can name, and the method's own reading of
+   * it is still an answer.
+   */
+  undecided: boolean;
+}
+
 /**
  * Finds who supplies what reaches a function as a parameter.
  *
@@ -1447,37 +1636,39 @@ export interface ForwardedCall {
  * caller, which is the difference between a wrapper and a dead end. A caller
  * that is itself forwarding is followed further, so a client layered on a
  * transport still lands on the service that wanted the data.
+ *
+ * Only a call that runs this method is a caller of it (R158). A sibling's
+ * `this.deleteEvent(...)` is a call of the sibling's method, and is not
+ * followed; a call through the interface both implement may run either, and is
+ * not followed either, but it is said to be there.
  */
-export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): ForwardedCall[] => {
-  if (budget <= 0) return [];
+export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forwarded => {
+  const out: Forwarded = { calls: [], undecided: false };
+  if (budget <= 0) return out;
   const method = methodHolding(parameter);
-  if (method === undefined) return [];
+  if (method === undefined) return out;
   const index = parametersOf(method).findIndex((item) => item === parameter);
-  if (index < 0) return [];
+  if (index < 0) return out;
 
-  const out: ForwardedCall[] = [];
-  const seen = new Set<string>();
-  for (const reference of method.findReferencesAsNodes()) {
-    const parent = reference.getParent();
-    const call =
-      parent !== undefined && Node.isPropertyAccessExpression(parent) ? parent.getParent() : parent;
-    if (call === undefined || !Node.isCallExpression(call)) continue;
+  for (const call of callSitesOf(method)) {
     const argument = call.getArguments()[index];
     if (argument === undefined) continue;
-
-    const key = `${call.getSourceFile().getFilePath()}:${call.getStart()}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
+    if (dispatchOf(call, method) === 'undecided') {
+      out.undecided = true;
+      continue;
+    }
 
     // A caller that is itself forwarding is not where the address is decided.
     // If nothing calls it either, the whole chain is unused and this hop stands
     // for nobody, so it is dropped rather than recorded as a request.
     const further = parameterBehind(argument, budget);
     if (further !== undefined) {
-      out.push(...forwardedFrom(further, budget - 1));
+      const outer = forwardedFrom(further, budget - 1);
+      out.calls.push(...outer.calls);
+      out.undecided ||= outer.undecided;
       continue;
     }
-    out.push({ site: call, argument });
+    out.calls.push({ site: call, argument });
   }
   return out;
 };

@@ -2,11 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { OnModuleInit } from '@nestjs/common';
 
 import { EventBus } from '../bus/event-bus.service';
-
-interface OrderEvent {
-  readonly orderId: string;
-  readonly total: number;
-}
+import type { OrderEvent } from './order-event';
 
 /**
  * The other end of the three channels, in a repository that has never seen the

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 3,
-  "builtAt": "2026-09-21T14:45:43.587Z",
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T19:38:38.565Z",
   "services": [
     {
       "name": "api",
@@ -227,7 +227,20 @@
         "kind": "event",
         "adapter": "house-bus",
         "decorator": "pSubscribe",
-        "entryId": null
+        "entryId": "entry:api:event:depot:*:events"
+      }
+    },
+    {
+      "id": "entry:api:event:depot:*:events",
+      "type": "entry",
+      "label": "event depot:*:events",
+      "repo": "api",
+      "file": "src/events/event-bus.service.ts",
+      "line": 30,
+      "kind": "event",
+      "meta": {
+        "pattern": "depot:*:events",
+        "adapter": "house-bus"
       }
     },
     {
@@ -291,6 +304,8 @@
       "meta": {
         "stats": {
           "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
           "classes": 7,
           "skippedExternalCalls": {
             "rxjs": 3
@@ -312,6 +327,8 @@
       "meta": {
         "stats": {
           "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
           "classes": 9,
           "templates": 1,
           "skippedExternalCalls": {
@@ -896,6 +913,18 @@
       "line": 30
     },
     {
+      "from": "entry:api:event:depot:*:events",
+      "to": "api#src/events/event-bus.service.ts:EventBus.receive",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/events/event-bus.service.ts",
+      "line": 30
+    },
+    {
       "from": "entry:api:http:GET:/depots/:param/events",
       "to": "api#src/orders/events.controller.ts:EventsController.stream",
       "type": "handles",
@@ -1198,7 +1227,7 @@
     {
       "file": "src/events/event-bus.service.ts",
       "line": 41,
-      "reason": "channel-const-unresolved",
+      "reason": "channel-dynamic",
       "hint": "The channel name cannot be read here. Annotate EventBus.listenTo with the channel it uses.",
       "symbol": "EventBus.listenTo -> pattern",
       "service": "api"

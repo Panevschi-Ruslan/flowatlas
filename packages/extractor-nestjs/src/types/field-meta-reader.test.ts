@@ -90,6 +90,24 @@ describe('reading validation and serialisation annotations', () => {
     expect(read('coupon').meta).toMatchObject({ transform: true });
   });
 
+  /**
+   * What the rewrite does is a function, and nothing reads a function. The
+   * field is still compared as its declared type, so the row saying the wire
+   * shape was not read is the whole of the honesty here (P02 section 10, R140).
+   */
+  it('says the rewrite itself was not read, at the annotation', () => {
+    const [row, ...rest] = read('coupon').unread ?? [];
+    expect(rest).toEqual([]);
+    expect(row).toMatchObject({ reason: 'decorator-arg-dynamic', symbol: 'Dto.coupon' });
+    expect(row?.at.getText()).toBe('@Transform(({ value }: any) => String(value))');
+  });
+
+  it('says nothing is unread where every argument was read', () => {
+    for (const name of ['customerId', 'note', 'items', 'secret', 'quantity', 'unrelated', 'plain']) {
+      expect(read(name).unread).toBeUndefined();
+    }
+  });
+
   it('records the class a nested field is deserialised into', () => {
     const result = read('items');
     expect(result.meta).toMatchObject({ validateNested: true });

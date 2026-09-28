@@ -1,10 +1,15 @@
 import { join } from 'node:path';
 import {
   AdapterRegistry,
+  countSources,
   GraphBuilder,
   parseConfig,
-  readPackageJson,
+  readResolvedPackageJson,
+  recordApplications,
+  reportSkippedTestDirectories,
+  reportUnreadableSources,
   silentLogger,
+  suppliedWith,
   type ExtractContext,
   type FlowatlasConfig,
   type FrontendExtractOptions,
@@ -14,12 +19,14 @@ import {
   type ServiceConfig,
 } from '@flowatlas/core';
 import { createReactContext } from './context.js';
+import { declaresReact } from './framework.js';
 import { buildReactFunctionIndex } from './index-functions.js';
 import { actionsPass } from './passes/actions.js';
 import { callsPass } from './passes/calls.js';
 import { entriesPass } from './passes/entries.js';
 import { functionsPass } from './passes/functions.js';
 import { httpPass } from './passes/http.js';
+import { proceduresPass } from './passes/procedures.js';
 import { routesPass } from './passes/routes.js';
 import type { ReactExtractorPass } from './passes/types.js';
 import { createReactProject } from './project.js';
@@ -50,8 +57,10 @@ export interface ExtractRepoOptions {
  * routes have something to write their address on; the routes settle which
  * components are screens before any other pass reads that fact; the calls are
  * drawn before the requests, so that a request attributed to a caller lands on
- * a node the walk has already created; and the ways in are read last, because
- * the edge from a component to a server action needs the component to exist.
+ * a node the walk has already created; a procedure asked for by its path is a
+ * request of the same standing and goes beside them; and the ways in are read
+ * last, because the edge from a component to a server action needs the
+ * component to exist.
  */
 export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   functionsPass,
@@ -59,6 +68,7 @@ export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   callsPass,
   actionsPass,
   httpPass,
+  proceduresPass,
   entriesPass,
 ];
 
@@ -70,17 +80,39 @@ export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
  * a privileged path into the tool.
  */
 export const extractReact = (base: ExtractContext, options: FrontendExtractOptions = {}): void => {
+  // Which files are React's to read. Detection said the framework is somewhere
+  // in what this service can import; that switches the reader on and says
+  // nothing about which files are written for it. A server whose mail library
+  // renders with React runs React in that library alone, and its own handlers,
+  // the transports they call and a provider shipped for other people's
+  // applications are not pages whatever they contain. So the reader walks a file
+  // only when the framework is supplied to the package holding it: by the
+  // service, which supplies it to everything it reaches; by a member that
+  // installs it, to itself; or, for a peer, by a dependent that is supplied.
+  // The rule and its argument are `suppliedWith` in the core, asked with this
+  // adapter's own description of the framework (R145).
+  //
+  // Everything the passes read comes through this index - components, hooks,
+  // requests, the calls between them, the screens a route names - so a file left
+  // out here is left out of the whole reading and not of one pass.
   const functions = buildReactFunctionIndex({
     project: base.project,
     repo: base.repo,
     repoDir: base.repoDir,
+    reads: suppliedWith(base.repoDir, declaresReact),
   });
   const ctx = createReactContext({
     base,
     functions,
+    sources: countSources(base.project),
     ...(options.typesDepth === undefined ? {} : { maxDepth: options.typesDepth }),
   });
-  ctx.stats.files = base.project.getSourceFiles().length;
+
+  // Which applications this service holds, asked of the entry adapters before
+  // any pass runs. The request pass records which application a call site is
+  // in, and the answer has to be the one the ids carry rather than a second
+  // reading of the same directories (R132).
+  recordApplications(base);
 
   for (const pass of BUILT_IN_PASSES) {
     base.logger.debug(`pass ${pass.name}`);
@@ -133,8 +165,15 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const project = createReactProject({
     rootDir,
     ...(tsconfig === undefined ? {} : { tsconfig }),
+    ...(service.readTestDirectories === undefined
+      ? {}
+      : { readTestDirectories: service.readTestDirectories }),
   });
-  const pkg: PackageJson = readPackageJson(rootDir) ?? {};
+  // The manifest that answers what this repository can import, which on a
+  // package inside a workspace is not the leaf manifest alone. Everything below
+  // gates on it, so widening it here is what lets an adapter stay a statement
+  // about one package name.
+  const pkg: PackageJson = readResolvedPackageJson(rootDir) ?? {};
 
   const registry = options.registry ?? new AdapterRegistry();
   const adapters = registry.detect(pkg, config.adapters.auto ? config.adapters.force : {});
@@ -155,7 +194,20 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     builder,
     adapters,
     logger,
+    // Where an adapter leaves what the rest of the reading needs from it. Empty
+    // here because nothing is known before the adapters are asked; the
+    // applications go in before the passes run.
+    meta: {},
   };
+
+  // Before any adapter runs, because a file the parser could not read is a hole
+  // in everything that follows and nothing downstream can notice it: a source
+  // with a syntax error is still a source file the project opened, and simply
+  // holds nothing any pass can find. The wording lives in the core, so this
+  // reader and its siblings say the same thing about the same event, and so
+  // does the count of them the repository node carries.
+  reportUnreadableSources(base);
+  reportSkippedTestDirectories(base);
 
   // Every adapter goes through the registry, this one included: a repository no
   // frontend adapter recognises is read by none of them.

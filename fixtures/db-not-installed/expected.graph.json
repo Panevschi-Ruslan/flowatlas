@@ -1,0 +1,366 @@
+{
+  "schemaVersion": 5,
+  "repo": "db-not-installed",
+  "generatedAt": "2026-09-27T12:34:20.363Z",
+  "nodes": [
+    {
+      "id": "db-not-installed#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "db-not-installed",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "AssetsService",
+          "DocumentsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "db-not-installed#src/assets/assets.service.ts:AssetsService",
+      "type": "provider",
+      "label": "AssetsService",
+      "repo": "db-not-installed",
+      "file": "src/assets/assets.service.ts",
+      "line": 15,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "db-not-installed#src/assets/assets.service.ts:AssetsService.create",
+      "type": "method",
+      "label": "AssetsService.create",
+      "repo": "db-not-installed",
+      "file": "src/assets/assets.service.ts",
+      "line": 23
+    },
+    {
+      "id": "db-not-installed#src/assets/assets.service.ts:AssetsService.findAll",
+      "type": "method",
+      "label": "AssetsService.findAll",
+      "repo": "db-not-installed",
+      "file": "src/assets/assets.service.ts",
+      "line": 19
+    },
+    {
+      "id": "db-not-installed#src/assets/assets.service.ts:AssetsService.remove",
+      "type": "method",
+      "label": "AssetsService.remove",
+      "repo": "db-not-installed",
+      "file": "src/assets/assets.service.ts",
+      "line": 27
+    },
+    {
+      "id": "db-not-installed#src/assets/with-faces.ts:withFaces",
+      "type": "function",
+      "label": "withFaces",
+      "repo": "db-not-installed",
+      "file": "src/assets/with-faces.ts",
+      "line": 15
+    },
+    {
+      "id": "db-not-installed#src/documents/documents.service.ts:DocumentsService",
+      "type": "provider",
+      "label": "DocumentsService",
+      "repo": "db-not-installed",
+      "file": "src/documents/documents.service.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "db-not-installed#src/documents/documents.service.ts:DocumentsService.create",
+      "type": "method",
+      "label": "DocumentsService.create",
+      "repo": "db-not-installed",
+      "file": "src/documents/documents.service.ts",
+      "line": 17
+    },
+    {
+      "id": "db-not-installed#src/documents/documents.service.ts:DocumentsService.findAll",
+      "type": "method",
+      "label": "DocumentsService.findAll",
+      "repo": "db-not-installed",
+      "file": "src/documents/documents.service.ts",
+      "line": 13
+    },
+    {
+      "id": "db_query:db-not-installed#src/assets/assets.service.ts:20:12",
+      "type": "db_query",
+      "label": "read asset",
+      "repo": "db-not-installed",
+      "file": "src/assets/assets.service.ts",
+      "line": 20,
+      "meta": {
+        "op": "read",
+        "table": "asset",
+        "tables": [
+          "asset"
+        ],
+        "package": "kysely",
+        "method": "selectFrom",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:db-not-installed#src/assets/assets.service.ts:24:12",
+      "type": "db_query",
+      "label": "write asset",
+      "repo": "db-not-installed",
+      "file": "src/assets/assets.service.ts",
+      "line": 24,
+      "meta": {
+        "op": "write",
+        "table": "asset",
+        "tables": [
+          "asset"
+        ],
+        "package": "kysely",
+        "method": "insertInto",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:db-not-installed#src/assets/assets.service.ts:28:12",
+      "type": "db_query",
+      "label": "delete asset_face",
+      "repo": "db-not-installed",
+      "file": "src/assets/assets.service.ts",
+      "line": 28,
+      "meta": {
+        "op": "delete",
+        "table": "asset_face",
+        "tables": [
+          "asset_face"
+        ],
+        "package": "kysely",
+        "method": "deleteFrom",
+        "receiver": "this.db",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:db-not-installed#src/assets/with-faces.ts:16:3",
+      "type": "db_query",
+      "label": "read asset_face",
+      "repo": "db-not-installed",
+      "file": "src/assets/with-faces.ts",
+      "line": 16,
+      "meta": {
+        "op": "read",
+        "table": "asset_face",
+        "tables": [
+          "asset_face"
+        ],
+        "package": "kysely",
+        "method": "selectFrom",
+        "receiver": "eb",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:db-not-installed#src/documents/documents.service.ts:14:12",
+      "type": "db_query",
+      "label": "read documents",
+      "repo": "db-not-installed",
+      "file": "src/documents/documents.service.ts",
+      "line": 14,
+      "meta": {
+        "op": "read",
+        "table": "documents",
+        "tables": [
+          "documents"
+        ],
+        "package": "sequelize-typescript",
+        "method": "findAll",
+        "receiver": "Document",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:db-not-installed#src/documents/documents.service.ts:18:12",
+      "type": "db_query",
+      "label": "write documents",
+      "repo": "db-not-installed",
+      "file": "src/documents/documents.service.ts",
+      "line": 18,
+      "meta": {
+        "op": "write",
+        "table": "documents",
+        "tables": [
+          "documents"
+        ],
+        "package": "sequelize-typescript",
+        "method": "create",
+        "receiver": "Document",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "repo:db-not-installed",
+      "type": "repo",
+      "label": "db-not-installed",
+      "repo": "db-not-installed",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:db-not-installed#asset",
+      "type": "table",
+      "label": "asset",
+      "repo": "db-not-installed"
+    },
+    {
+      "id": "table:db-not-installed#asset_face",
+      "type": "table",
+      "label": "asset_face",
+      "repo": "db-not-installed"
+    },
+    {
+      "id": "table:db-not-installed#documents",
+      "type": "table",
+      "label": "documents",
+      "repo": "db-not-installed"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db-not-installed#src/assets/assets.service.ts:AssetsService.create",
+      "to": "db_query:db-not-installed#src/assets/assets.service.ts:24:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/assets/assets.service.ts",
+      "line": 24
+    },
+    {
+      "from": "db-not-installed#src/assets/assets.service.ts:AssetsService.findAll",
+      "to": "db_query:db-not-installed#src/assets/assets.service.ts:20:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/assets/assets.service.ts",
+      "line": 20
+    },
+    {
+      "from": "db-not-installed#src/assets/assets.service.ts:AssetsService.remove",
+      "to": "db_query:db-not-installed#src/assets/assets.service.ts:28:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/assets/assets.service.ts",
+      "line": 28
+    },
+    {
+      "from": "db-not-installed#src/assets/with-faces.ts:withFaces",
+      "to": "db_query:db-not-installed#src/assets/with-faces.ts:16:3",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/assets/with-faces.ts",
+      "line": 16
+    },
+    {
+      "from": "db-not-installed#src/documents/documents.service.ts:DocumentsService.create",
+      "to": "db_query:db-not-installed#src/documents/documents.service.ts:18:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/documents/documents.service.ts",
+      "line": 18
+    },
+    {
+      "from": "db-not-installed#src/documents/documents.service.ts:DocumentsService.findAll",
+      "to": "db_query:db-not-installed#src/documents/documents.service.ts:14:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/documents/documents.service.ts",
+      "line": 14
+    },
+    {
+      "from": "db_query:db-not-installed#src/assets/assets.service.ts:20:12",
+      "to": "table:db-not-installed#asset",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/assets/assets.service.ts",
+      "line": 20
+    },
+    {
+      "from": "db_query:db-not-installed#src/assets/assets.service.ts:24:12",
+      "to": "table:db-not-installed#asset",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/assets/assets.service.ts",
+      "line": 24
+    },
+    {
+      "from": "db_query:db-not-installed#src/assets/assets.service.ts:28:12",
+      "to": "table:db-not-installed#asset_face",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/assets/assets.service.ts",
+      "line": 28
+    },
+    {
+      "from": "db_query:db-not-installed#src/assets/with-faces.ts:16:3",
+      "to": "table:db-not-installed#asset_face",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/assets/with-faces.ts",
+      "line": 16
+    },
+    {
+      "from": "db_query:db-not-installed#src/documents/documents.service.ts:14:12",
+      "to": "table:db-not-installed#documents",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/documents/documents.service.ts",
+      "line": 14
+    },
+    {
+      "from": "db_query:db-not-installed#src/documents/documents.service.ts:18:12",
+      "to": "table:db-not-installed#documents",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/documents/documents.service.ts",
+      "line": 18
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/assets/assets.service.ts",
+      "line": 17,
+      "reason": "di-type-unresolved",
+      "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
+      "symbol": "AssetsService.constructor[0]"
+    },
+    {
+      "file": "src/assets/assets.service.ts",
+      "line": 20,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "AssetsService.findAll -> this.db.selectFrom('asset').selectAll().execute",
+      "sites": 8
+    }
+  ]
+}

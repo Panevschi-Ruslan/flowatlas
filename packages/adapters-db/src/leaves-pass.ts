@@ -1,6 +1,10 @@
 import {
+  applicationOfFile,
+  localBaseClassNames,
+  localBaseTableProperty,
   classifyDbCall,
   declaredParameterType,
+  isUniversalMethod,
   narrowUnionByLiteral,
   writtenBodyOutward,
   writtenKeysOf,
@@ -9,6 +13,7 @@ import {
   makeLeafId,
   makeTableId,
   operationOf,
+  packageNameOf,
   resolveTypeOrigin,
   type DbDescriptor,
   type NamedFunction,
@@ -35,12 +40,27 @@ import type {
   ParameterDeclaration,
   SourceFile,
 } from 'ts-morph';
-import { Node, SyntaxKind } from 'ts-morph';
-import { dataNameHints, tableLocators } from './descriptors/index.js';
+import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
+import {
+  dataNameHints,
+  dbAdapters,
+  descriptorAliases,
+  handedOverIn,
+  clientCallbacks,
+  handovers,
+  schemaTables,
+  tableReadings,
+  type TableReading,
+} from './descriptors/index.js';
 import { locateTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
+import { hostCallOf } from './leaves/fragment.js';
+import { namesNoTable, readSqlArgument, type SqlArgument } from './leaves/sql-argument.js';
+import { handedBackBy } from './leaves/handed-back.js';
+import { handedOverOrigin, unconfirmedHandover } from './leaves/handover.js';
 import { dataLayerOf } from './leaves/silence.js';
-import { analyzeUrl, routePathOf, type UrlInfo } from './leaves/url.js';
+import { statedOrigin } from './leaves/stated.js';
+import { analyzeUrl, composeAddress } from './leaves/url.js';
 import {
   deref,
   forwardedFrom,
@@ -55,43 +75,56 @@ import { sqlOperation, sqlTables } from './sql.js';
 /** Cache libraries, and what each of their methods does to a key. */
 const CACHE_PACKAGES = ['ioredis', 'cache-manager', '@nestjs/cache-manager', 'redis'];
 
-const CACHE_OPS: Record<string, 'get' | 'set' | 'del' | 'other'> = {
-  get: 'get',
-  mget: 'get',
-  getdel: 'get',
-  hget: 'get',
-  hgetall: 'get',
-  exists: 'get',
-  ttl: 'get',
-  set: 'set',
-  mset: 'set',
-  setex: 'set',
-  psetex: 'set',
-  setnx: 'set',
-  hset: 'set',
-  expire: 'set',
-  wrap: 'set',
-  del: 'del',
-  unlink: 'del',
-  hdel: 'del',
-  reset: 'del',
-  flushall: 'del',
-};
+/**
+ * A `Map` rather than an object literal, and so is every table below keyed by a
+ * name read out of source text.
+ *
+ * `descriptor.operations[method]` was an object, and `value.toString()` on a
+ * receiver of a described package found `Object.prototype.toString` - a
+ * `db_query` node labelled `function toString() { [native code] }`, two of them
+ * in a notification service's graph, a node minted from a value nobody wrote (R122). The house
+ * style is object lookup for dispatch and it is the right one; the cost of it is
+ * this single hazard, and a `Map` has no prototype chain to fall through. Every
+ * word a program contains can be asked of these, so none of them may answer for
+ * a word only the language put there (R130).
+ */
+const CACHE_OPS: ReadonlyMap<string, 'get' | 'set' | 'del' | 'other'> = new Map([
+  ['get', 'get'],
+  ['mget', 'get'],
+  ['getdel', 'get'],
+  ['hget', 'get'],
+  ['hgetall', 'get'],
+  ['exists', 'get'],
+  ['ttl', 'get'],
+  ['set', 'set'],
+  ['mset', 'set'],
+  ['setex', 'set'],
+  ['psetex', 'set'],
+  ['setnx', 'set'],
+  ['hset', 'set'],
+  ['expire', 'set'],
+  ['wrap', 'set'],
+  ['del', 'del'],
+  ['unlink', 'del'],
+  ['hdel', 'del'],
+  ['reset', 'del'],
+  ['flushall', 'del'],
+]);
 
 const HTTP_PACKAGES = ['axios', '@nestjs/axios'];
 
-const HTTP_METHODS: Record<string, string> = {
-  get: 'GET',
-  post: 'POST',
-  put: 'PUT',
-  patch: 'PATCH',
-  delete: 'DELETE',
-  head: 'HEAD',
-  options: 'OPTIONS',
-  request: 'ALL',
-  axios: 'ALL',
-  fetch: 'GET',
-};
+const HTTP_METHODS: ReadonlyMap<string, string> = new Map([
+  ['get', 'GET'],
+  ['post', 'POST'],
+  ['put', 'PUT'],
+  ['patch', 'PATCH'],
+  ['delete', 'DELETE'],
+  ['head', 'HEAD'],
+  ['options', 'OPTIONS'],
+  ['request', 'ALL'],
+  ['axios', 'ALL'],
+  ['fetch', 'GET'],
+]);
 
 /** A local binding that holds the platform's fetch, alone or as a fallback. */
 const isFetchAlias = (callee: TsNode): boolean => {
@@ -104,6 +137,45 @@ const isFetchAlias = (callee: TsNode): boolean => {
   if (operator !== SyntaxKind.QuestionQuestionToken && operator !== SyntaxKind.BarBarToken) return false;
   return isFetch(held.getRight()) || isFetch(held.getLeft());
 };
+
+/**
+ * The verb a request's settings object writes outright, `{ method: 'PUT' }`.
+ *
+ * `settled` asks for a verb nothing can replace. `{ method: 'GET', ...init }`
+ * writes a default the spread overrides, which is how a shared client sends
+ * whatever its callers ask for, so it states no verb of its own.
+ */
+const verbInSettings = (settings: TsNode | undefined, settled = false): string | undefined => {
+  if (settings === undefined || !Node.isObjectLiteralExpression(settings)) return undefined;
+  const property = settings.getProperty('method');
+  if (property === undefined || !Node.isPropertyAssignment(property)) return undefined;
+  if (settled) {
+    const written = settings.getProperties();
+    const spreadAfter = written
+      .slice(written.indexOf(property) + 1)
+      .some((item) => Node.isSpreadAssignment(item));
+    if (spreadAfter) return undefined;
+  }
+  const initializer = property.getInitializer();
+  const value = initializer === undefined ? undefined : evaluateExpression(initializer);
+  return value?.resolved === true && typeof value.value === 'string'
+    ? value.value.toUpperCase()
+    : undefined;
+};
+
+/** How one request is recorded, beyond where and by whom. */
+interface RecordOptions {
+  /** The address's fixed half, when a caller supplied the rest. */
+  split?: SplitAddress;
+  /** The settings of a `new Request(url, init)` the call was handed. */
+  init?: TsNode;
+  /**
+   * Whether the site's second argument belongs to this request, as its
+   * settings or its body. It does not when the site is a caller credited with a
+   * request whose own settings were already read.
+   */
+  readsSite?: boolean;
+}
 
 /**
  * The address and options a `Request` was built with, when the call is handed one.
@@ -126,7 +198,7 @@ const returnsResponse = (node: TsNode): boolean =>
     .some((signature) => /^(Promise<Response>|Response)$/.test(signature.getReturnType().getText()));
 
 /** Verbs a request can carry, for reading one out of an argument. */
-const KNOWN_VERBS = new Set(Object.values(HTTP_METHODS));
+const KNOWN_VERBS = new Set(HTTP_METHODS.values());
 
 
 interface Site {
@@ -167,14 +239,178 @@ const siteOf = (ctx: NestExtractContext, node: TsNode, file: string): Site => {
  * `orderCache` whose type comes from a database package proves everything.
  */
 export const extractLeaves = (ctx: NestExtractContext): void => {
-  const localBaseClasses = ctx.config.adapters.db.localBaseClasses;
+  const configuredBases = ctx.config.adapters.db.localBaseClasses;
+  const localBaseClasses = localBaseClassNames(configuredBases);
   const byPackage = new Map<string, DbDescriptor>();
   for (const adapter of ctx.adapters.db) byPackage.set(adapter.descriptor.package, adapter.descriptor);
+  // A library the project reaches only through a package that hands it over is
+  // readable without being detected: the knex a MikroORM manager returns is read
+  // wherever a call is traced to it, and nothing is said about a project that
+  // never makes one (R149).
+  for (const library of handedOverIn(ctx.pkg)) {
+    if (byPackage.has(library)) continue;
+    const adapter = dbAdapters.find((candidate) => candidate.descriptor.package === library);
+    if (adapter !== undefined) byPackage.set(library, adapter.descriptor);
+  }
+
+  /**
+   * Where a library writes the name of its table, and for a repository base the
+   * configuration names, where its subclasses do (R165).
+   *
+   * A base of the project's own has no description to carry the fact, so the
+   * configuration states it: the property each subclass sets to its table. With
+   * it, a call through `menuItemRepository` reads the table the class it is typed
+   * as states; without it, the base is read as before and the row that says the
+   * table is unread names the key that would read it.
+   */
+  /**
+   * What to say about a query whose table was not read.
+   *
+   * Through a repository base the configuration names, the table is the one the
+   * receiver's class states, and the only thing missing is which property says
+   * it; naming the call directly is not advice anybody could take there.
+   */
+  const unreadTableHint = (
+    receiver: string,
+    method: string,
+    origin: TypeOrigin | null,
+    call: TsNode,
+  ): string => {
+    const base =
+      origin?.package?.startsWith('local:') === true
+        ? origin.package.slice(6)
+        : unnamedBaseAround(call);
+    if (base !== undefined && localBaseTableProperty(configuredBases, base) === undefined) {
+      return `${receiver}.${method} goes through ${base}, whose classes name their table somewhere the configuration has not said. Write the base as { "name": "${base}", "tableProperty": "<property>" } under adapters.db.localBaseClasses, naming the property each class sets to its table.`;
+    }
+    return `The table ${receiver}.${method} touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.`;
+  };
+
+  /**
+   * The configured repository base a call is written inside, when that base
+   * says which property its classes name their table in.
+   */
+  const configuredBaseAround = (call: TsNode): string | undefined => {
+    const holder = classAround(call);
+    // A class that states its table is not generic: a query in it that still
+    // has none is a real gap, and gets the ordinary row.
+    const key = tablePropertyAbove(holder);
+    if (
+      holder !== undefined &&
+      key !== undefined &&
+      locateTable(call as CallExpression, [{ kind: 'receiver-type-property', key }], {
+        typeDeclaration: holder,
+      }) !== null
+    ) {
+      return undefined;
+    }
+    let current = holder;
+    for (let depth = 0; current !== undefined && depth < 8; depth += 1) {
+      const name = current.getName();
+      if (name !== undefined && localBaseTableProperty(configuredBases, name) !== undefined) return name;
+      current = current.getBaseClass();
+    }
+    return undefined;
+  };
+
+  /** A base configured without `tableProperty` that a call is written inside. */
+  const unnamedBaseAround = (call: TsNode): string | undefined => {
+    const holder = call.getFirstAncestor((node) => Node.isClassDeclaration(node));
+    let current = holder !== undefined && Node.isClassDeclaration(holder) ? holder : undefined;
+    for (let depth = 0; current !== undefined && depth < 8; depth += 1) {
+      const name = current.getName();
+      if (name !== undefined && localBaseClasses.includes(name)) {
+        return localBaseTableProperty(configuredBases, name) === undefined ? name : undefined;
+      }
+      current = current.getBaseClass();
+    }
+    return undefined;
+  };
+
+  /** The class a call is written in, when it is written in one. */
+  const classAround = (call: TsNode): ClassDeclaration | undefined => {
+    const holder = call.getFirstAncestor((node) => Node.isClassDeclaration(node));
+    return holder !== undefined && Node.isClassDeclaration(holder) ? holder : undefined;
+  };
+
+  /** The property the configured base a class extends names its table in. */
+  const tablePropertyAbove = (holder: ClassDeclaration | undefined): string | undefined => {
+    let current = holder;
+    for (let depth = 0; current !== undefined && depth < 8; depth += 1) {
+      const name = current.getName();
+      const key = name === undefined ? undefined : localBaseTableProperty(configuredBases, name);
+      if (key !== undefined) return key;
+      current = current.getBaseClass();
+    }
+    return undefined;
+  };
+
+  /** Whether an expression is reached from `this`, through calls, accesses and awaits. */
+  const madeThroughThis = (expression: TsNode): boolean => {
+    let current: TsNode | undefined = expression;
+    for (let depth = 0; current !== undefined && depth < 24; depth += 1) {
+      if (Node.isThisExpression(current)) return true;
+      // `const c = await this.coll(); c.findOne(…)`: a constant bound once, with
+      // no type of its own stated, stands for what it was bound to.
+      if (Node.isIdentifier(current)) {
+        const declaration: TsNode | undefined = current.getSymbol()?.getDeclarations()[0];
+        if (
+          declaration === undefined ||
+          !Node.isVariableDeclaration(declaration) ||
+          declaration.getTypeNode() !== undefined ||
+          declaration.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Const
+        ) {
+          return false;
+        }
+        current = declaration.getInitializer();
+        continue;
+      }
+      if (
+        Node.isCallExpression(current) ||
+        Node.isPropertyAccessExpression(current) ||
+        Node.isParenthesizedExpression(current) ||
+        Node.isAwaitExpression(current) ||
+        Node.isNonNullExpression(current) ||
+        Node.isAsExpression(current)
+      ) {
+        current = current.getExpression();
+        continue;
+      }
+      return false;
+    }
+    return false;
+  };
+
+  /** The table the class a `this` query is written in states, when it states one. */
+  const ownTableOf = (call: CallExpression, receiver: TsNode): string | null => {
+    if (!madeThroughThis(receiver)) return null;
+    const holder = classAround(call);
+    const key = tablePropertyAbove(holder);
+    if (holder === undefined || key === undefined) return null;
+    return locateTable(call, [{ kind: 'receiver-type-property', key }], { typeDeclaration: holder });
+  };
+
+  const readingFor = (
+    descriptor: DbDescriptor | undefined,
+    origin: TypeOrigin | null,
+  ): TableReading | undefined => {
+    if (descriptor === undefined) return undefined;
+    if (descriptor.package !== 'local') return tableReadings.get(descriptor.package);
+    const base = origin?.package?.startsWith('local:') === true ? origin.package.slice(6) : undefined;
+    const key = base === undefined ? undefined : localBaseTableProperty(configuredBases, base);
+    return key === undefined
+      ? undefined
+      : { locators: [{ kind: 'receiver-type-property', key }], entityInTypeArgs: false };
+  };
 
   const descriptorFor = (origin: TypeOrigin | null): DbDescriptor | undefined => {
     if (origin?.package == null) return undefined;
     if (origin.package.startsWith('local:')) return byPackage.get('local');
-    return byPackage.get(origin.package);
+    // The package that declares the receiver's type is not always the package
+    // the descriptor was written for; one library reached under two names is an
+    // alias rather than a second description of it.
+    const described = descriptorAliases.get(origin.package) ?? origin.package;
+    return byPackage.get(described);
   };
 
   /**
@@ -190,7 +426,11 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    */
   const withoutOverride = new Map<string, DbDescriptor>();
   for (const [name, descriptor] of byPackage) {
-    if (tableLocators[name] === undefined) continue;
+    // Only where the type argument is the stored thing. A connection
+    // parameterised by the whole schema has nothing to fall back to, and
+    // falling back put the name of a schema type on 407 of a photo server's nodes as
+    // though it were a table.
+    if (tableReadings.get(name)?.entityInTypeArgs !== true) continue;
     const { tableOverride: _dropped, ...rest } = descriptor;
     withoutOverride.set(name, rest);
   }
@@ -204,7 +444,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    * enough to be worth checking. The two are compared once the walk is over,
    * because a class is only unread after every call on it has been seen.
    */
-  const dataLayers = new Map<string, { file: string; line: number; chain: readonly string[] }>();
+  const dataLayers = new Map<
+    string,
+    { file: string; line: number; chain: readonly string[]; workspacePackage?: string }
+  >();
   const readAsData = new Set<string>();
 
   /**
@@ -214,6 +457,24 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    * the count is the set of nodes itself and cannot drift from it (R49).
    */
   const emitted = new Set<string>();
+
+  /**
+   * The package of this project's own that declares something, when it is not
+   * this repository.
+   *
+   * The same line `repoFiles` draws — a file under `node_modules` is somebody
+   * else's, a file outside this repository's directory is another repository's —
+   * asked of a declaration rather than of a file being walked. A workspace
+   * reaches its own packages through links, so a wrapper's declaration arrives
+   * with no `node_modules` in its path and reads as local; this is what tells the
+   * row it belongs to a sibling, and which one (R97).
+   */
+  const workspacePackageOf = (declaration: TsNode | undefined): string | undefined => {
+    if (declaration === undefined) return undefined;
+    const path = declaration.getSourceFile().getFilePath();
+    if (path.startsWith(`${ctx.repoDir}/`) || path.includes('/node_modules/')) return undefined;
+    return packageNameOf(path) ?? undefined;
+  };
 
   // Answered once per class rather than once per call: a repository asks this
   // of the same few classes thousands of times, and every answer costs a walk
@@ -238,10 +499,12 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (layer === undefined || name === undefined) return undefined;
     if (!dataLayers.has(name)) {
       const source = layer.base.getSourceFile();
+      const workspacePackage = workspacePackageOf(layer.base);
       dataLayers.set(name, {
         file: ctx.fileOf(layer.base),
         line: source.getLineAndColumnAtPos(layer.base.getStart()).line,
         chain: layer.chain,
+        ...(workspacePackage === undefined ? {} : { workspacePackage }),
       });
     }
     return name;
@@ -292,21 +555,200 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     });
   };
 
+  /**
+   * Whether the type an entity name would be read from is declared by a package.
+   *
+   * The core states the rule — a type argument is the stored entity only when
+   * this repository declares it — and this answers it, because answering needs
+   * the checker and the core is not given one. A workspace package reached
+   * through a link has no `node_modules` in the path of its own sources, so a
+   * monorepo's shared entities still read as declarations of the project.
+   *
+   * Undefined where there is nothing to judge: no type argument, or one the
+   * checker gives no declaration for. Undefined leaves the name alone, so this
+   * only ever takes a name away, never invents one.
+   */
+  const entityFromPackage = (origin: TypeOrigin | null): boolean | undefined => {
+    const [first] = origin?.typeArgs ?? [];
+    if (first === undefined) return undefined;
+    const declaration = (first.getSymbol() ?? first.getAliasSymbol())?.getDeclarations()[0];
+    if (declaration === undefined) return undefined;
+    return declaration.getSourceFile().getFilePath().includes('/node_modules/');
+  };
+
+  /**
+   * Where a receiver's type comes from: the checker's answer, and the source's
+   * own when the checker gave nothing a descriptor could be found for.
+   *
+   * One place, because both calls that classify a receiver ask the same question
+   * and a second copy of the order they are asked in is a second answer waiting
+   * to differ. The checker always wins where it answers: an installed repository
+   * reads exactly as it did, and the fallback costs it nothing.
+   *
+   * `resolved` is handed back beside the answer because two different questions
+   * are asked of an origin. Which library to read the call with is answered by
+   * either of them; whether the receiver is a data layer of this repository -
+   * the class a reader would name in the configuration - is a fact about what
+   * the checker found here, and a stated origin is by definition a type this
+   * repository does not declare.
+   */
+  const originOf = (
+    receiver: TsNode,
+  ): {
+    origin: TypeOrigin | null;
+    resolved: TypeOrigin | null;
+    fromSource: boolean;
+    statedIn?: SourceFile;
+  } => {
+    const resolved = resolveTypeOrigin(receiver, { localBaseClasses });
+    if (descriptorFor(resolved) !== undefined) return { origin: resolved, resolved, fromSource: false };
+    const stated = statedOrigin(receiver);
+    // Only a library somebody has described. Where nobody has, nothing is known
+    // about the receiver's methods either, so reading its type off the source
+    // would change no answer and would only make a row say something new about
+    // a call it still could not read.
+    if (stated !== null && descriptorFor(stated) !== undefined) {
+      return { origin: stated, resolved, fromSource: true, statedIn: stated.statedIn };
+    }
+    // The receiver was handed over by a call the descriptors record, which is
+    // the step the checker would have taken had it had the types (R149).
+    const handed = handedOverOrigin(receiver, handovers);
+    if (handed !== null && descriptorFor(handed) !== undefined) {
+      return { origin: handed, resolved, fromSource: true };
+    }
+    // A library whose calls name the table as a property of the client holds the
+    // client one step further out: in `prisma.booking.findMany()` the receiver is
+    // `prisma.booking`, a delegate whose type exists only in the generated client,
+    // and what the source states a type for is `prisma`. Asked only where the
+    // descriptor that answers says the table is that property, so no other
+    // library's receiver is ever read from the value it was reached through
+    // (R146).
+    const client = Node.isPropertyAccessExpression(receiver) ? statedOrigin(receiver.getExpression()) : null;
+    if (client !== null && descriptorFor(client)?.tableOverride?.kind === 'receiver-prop') {
+      return { origin: client, resolved, fromSource: true, statedIn: client.statedIn };
+    }
+    // The same step, where the client was handed to a callback by a call a
+    // record describes: `tx` of `prisma.$transaction(async (tx) => …)` is read
+    // as the client the transaction was opened on, and only when that client is
+    // the recorded library's (R157).
+    const handedBack = Node.isPropertyAccessExpression(receiver)
+      ? handedBackBy(receiver.getExpression(), clientCallbacks)
+      : undefined;
+    if (handedBack !== undefined) {
+      const opener = clientOriginOf(handedBack.holder);
+      if (opener !== null && descriptorFor(opener.origin)?.package === handedBack.record.package) {
+        return {
+          origin: opener.origin,
+          resolved,
+          fromSource: true,
+          ...(opener.statedIn === undefined ? {} : { statedIn: opener.statedIn }),
+        };
+      }
+    }
+    return { origin: resolved, resolved, fromSource: false };
+  };
+
+  /**
+   * What a value that is itself a client comes from: the checker's answer where
+   * a descriptor knows it, and what the source states where it does not. Asked
+   * of the value a transaction was opened on, which is a client rather than a
+   * delegate of one.
+   */
+  const clientOriginOf = (
+    value: TsNode,
+  ): { origin: TypeOrigin; statedIn?: SourceFile } | null => {
+    const resolved = resolveTypeOrigin(value, { localBaseClasses });
+    if (resolved !== null && descriptorFor(resolved) !== undefined) return { origin: resolved };
+    const stated = statedOrigin(value);
+    return stated !== null && descriptorFor(stated) !== undefined
+      ? { origin: stated, statedIn: stated.statedIn }
+      : null;
+  };
+
+  /**
+   * The table a call names by a property of its receiver, as the library's
+   * schema maps it.
+   *
+   * `prisma.user` is the delegate of `model User`, and the table is `users` when
+   * the model says `@@map("users")`. The schema asked is the one governing the
+   * file the client was stated in - the wrapper, where a schema sits beside the
+   * client it generates - or, for a client the checker resolved, the file the
+   * call is in. Where no schema is readable the call's own word stands.
+   */
+  const tableOfProperty = (
+    descriptor: DbDescriptor | undefined,
+    name: string,
+    anchor: SourceFile,
+  ): string => {
+    if (descriptor === undefined) return name;
+    return schemaTables.get(descriptor.package)?.(anchor, name) ?? name;
+  };
+
+  /** Whether a call is made on something the same library declares. */
+  const madeOn = (call: CallExpression, pkg: string): boolean => {
+    const callee = call.getExpression();
+    const target = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
+    return descriptorFor(originOf(target).origin)?.package === pkg;
+  };
+
+  /**
+   * What a call that takes its statement as text is: a statement to read, a
+   * fragment of some other query, or not such a call at all (undefined).
+   *
+   * Where the call sits decides first. Handed to a call of the same library -
+   * `.where(knex.raw('…'))`, `.update({ at: knex.raw('now()') })` - it is part of
+   * that call's query, which is read on its own chain, and counting it again
+   * would report one visit to the database as two. That holds even when the
+   * fragment is a whole sub-select: it runs inside the query that took it.
+   *
+   * Where the call sits cannot say what a value kept in a variable becomes, so
+   * the text decides next. A text no verb opens - `lower(email)`, `"${alias}".id`
+   * - is not a statement wherever it is kept, and is counted, as a method that
+   * touches no data is.
+   *
+   * What is left is a statement, read as a driver's query string is: one that
+   * names no table is counted there, for every driver alike (R162), and one
+   * whose text is computed gets the row that reader writes for computed SQL.
+   */
+  const statementOf = (
+    call: CallExpression,
+    method: string,
+    descriptor: DbDescriptor,
+    reading: TableReading | undefined,
+  ): 'fragment' | { sql: SqlArgument; descriptor: DbDescriptor } | undefined => {
+    const index = reading?.statements?.get(method);
+    if (index === undefined) return undefined;
+    const host = hostCallOf(call);
+    if (host !== undefined && madeOn(host, descriptor.package)) return 'fragment';
+    const sql = readSqlArgument(call.getArguments()[index]);
+    if (sql.text !== null && sqlOperation(sql.text) === null) return 'fragment';
+    return { sql, descriptor: { ...descriptor, tableOverride: { kind: 'sql-parse', argIndex: index } } };
+  };
+
+  /**
+   * Whether a call is the first link of a chain: made on a builder or a name,
+   * not on what an earlier link of the same chain returned.
+   */
+  const isFirstLink = (receiver: TsNode): boolean => {
+    const at = Node.isParenthesizedExpression(receiver) ? receiver.getExpression() : receiver;
+    return !(Node.isCallExpression(at) && Node.isPropertyAccessExpression(at.getExpression()));
+  };
+
   const emitDb = (call: CallExpression, scope: Scope): boolean => {
     const { id: holderId, file, owner } = scope;
     const callee = call.getExpression();
     if (!Node.isPropertyAccessExpression(callee)) return false;
     const receiver = callee.getExpression();
     const method = callee.getName();
-    const origin = resolveTypeOrigin(receiver, { localBaseClasses });
+    const { origin, resolved, fromSource, statedIn } = originOf(receiver);
     const descriptor = descriptorFor(origin);
 
     // A data layer is something a class depends on. A call on `this` is a class
     // reaching into itself, which says nothing about whether what it stores can
     // be seen from outside.
     const layer =
-      origin?.isLocal === true && !Node.isThisExpression(receiver)
-        ? dataLayerNameOf(origin.declaration)
+      resolved?.isLocal === true && !Node.isThisExpression(receiver)
+        ? dataLayerNameOf(resolved.declaration)
         : undefined;
 
     // A repository base named in the configuration only applies to what extends it.
@@ -314,33 +756,74 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       return false;
     }
 
+    const reading = readingFor(descriptor, origin);
+
+    // A method that takes its statement as text, when the library has one: the
+    // call is read as a driver's query is, or not read as a query at all.
+    const statement =
+      descriptor === undefined ? undefined : statementOf(call, method, descriptor, reading);
+    if (statement === 'fragment') {
+      ctx.countExternalCall(`${origin?.package ?? descriptor?.package ?? 'unknown'}.${method}`);
+      return true;
+    }
+
     let parsedTables: string[] | undefined;
     let parsedOp: 'read' | 'write' | 'delete' | null | undefined;
-    if (descriptor?.tableOverride?.kind === 'sql-parse') {
-      const argument = call.getArguments()[descriptor.tableOverride.argIndex];
-      const value = argument === undefined ? undefined : evaluateExpression(argument);
-      if (value?.resolved === true && typeof value.value === 'string') {
-        parsedTables = sqlTables(value.value);
-        parsedOp = sqlOperation(value.value);
-      } else {
-        parsedTables = [];
-        parsedOp = null;
-      }
+    const sql =
+      statement?.sql ??
+      (descriptor?.tableOverride?.kind === 'sql-parse'
+        ? readSqlArgument(call.getArguments()[descriptor.tableOverride.argIndex])
+        : undefined);
+    if (sql !== undefined && namesNoTable(sql)) {
+      // `SELECT 1`, `BEGIN`: read in full, and nothing in it to look for. Not a
+      // query site, and not a failure either (R162).
+      ctx.countExternalCall(`${origin?.package ?? descriptor?.package ?? 'unknown'}.${method}`);
+      return true;
+    }
+    if (sql !== undefined) {
+      // Only a whole statement is read. One whose tables are decided at run time
+      // names none, and says so in the row the core writes for it.
+      const whole = sql.complete ? sql.text : null;
+      parsedTables = whole === null ? [] : sqlTables(whole);
+      parsedOp = whole === null ? null : sqlOperation(whole);
     }
 
     // A library whose table is in an expression rather than in the types. The
     // locators say where to look; what comes back is either the name or the
     // fact that it was decided at run time, which is reported below rather than
-    // guessed at.
-    const locators = descriptor === undefined ? undefined : tableLocators[descriptor.package];
-    const located =
-      locators === undefined || descriptor === undefined
+    // guessed at. A statement names its tables in its text, and no locator is
+    // asked.
+    const locatedInCall =
+      reading === undefined || descriptor === undefined || statement !== undefined
         ? null
-        : locateTable(call, locators, (name) => operationOf(descriptor, name) !== null);
+        : locateTable(call, reading.locators, {
+            isOperation: (name) => operationOf(descriptor, name) !== null,
+            ...(origin?.declaration === undefined ? {} : { typeDeclaration: origin.declaration }),
+          });
+    // Inside a class of a configured base, a query made through `this` whose
+    // chain names nothing is on the class's own table: `this.coll().find()` in
+    // `MenuRepository` is a query on what `MenuRepository` sets its table
+    // property to. The chain is asked first, so a collection named outright
+    // still wins (R165).
+    const located =
+      locatedInCall ?? (reading === undefined || statement !== undefined ? null : ownTableOf(call, receiver));
+    // A repository base whose classes state their table is read from what they
+    // state, ahead of its type argument, exactly as a described library whose
+    // table is in an argument is (R165).
+    const stated =
+      descriptor?.package === 'local' && reading !== undefined
+        ? { ...descriptor, tableOverride: { kind: 'string-arg', index: 0 } as const }
+        : descriptor;
     const effective =
-      locators === undefined || located !== null
-        ? descriptor
-        : (withoutOverride.get(descriptor?.package ?? '') ?? descriptor);
+      statement !== undefined
+        ? statement.descriptor
+        : reading === undefined || located !== null
+          ? stated
+          : (withoutOverride.get(descriptor?.package ?? '') ?? stated);
+
+    const fromPackage = entityFromPackage(origin);
+    const workspacePackage =
+      origin?.isLocal === true ? workspacePackageOf(origin.declaration) : undefined;
 
     const classification = classifyDbCall({
       method,
@@ -348,18 +831,63 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       ...(effective === undefined ? {} : { descriptor: effective }),
       receiverText: receiver.getText(),
       nameHints: dataNameHints,
+      ...(fromSource ? { originFromSource: true } : {}),
+      ...(fromPackage === undefined ? {} : { entityFromPackage: fromPackage }),
+      ...(workspacePackage === undefined ? {} : { workspacePackage }),
       ...(parsedTables === undefined ? {} : { sqlTables: parsedTables }),
       ...(parsedOp === undefined ? {} : { sqlOp: parsedOp }),
-      ...(Node.isPropertyAccessExpression(receiver) ? { receiverProp: receiver.getName() } : {}),
+      ...(Node.isPropertyAccessExpression(receiver)
+        ? {
+            receiverProp: tableOfProperty(
+              descriptor,
+              receiver.getName(),
+              statedIn ?? call.getSourceFile(),
+            ),
+          }
+        : {}),
       ...(located === null ? {} : { stringArg: located }),
     });
-    if (classification === null) return false;
+    if (classification === null) {
+      // A described handover made on something whose type the source erased:
+      // not read, and said once per query, at the chain's first link (R163).
+      const unstated =
+        descriptor === undefined && isFirstLink(receiver)
+          ? unconfirmedHandover(receiver, handovers)
+          : undefined;
+      if (unstated === undefined) return false;
+      ctx.report({
+        file,
+        line: siteOf(ctx, call, file).line,
+        reason: 'db-handover-unstated',
+        hint: `\`${unstated.method}()\` is called on a value whose type is not stated, so whether it hands over ${unstated.yields.package} cannot be told. State the type of what it is called on, with an annotation or a cast, and the query is read.`,
+        symbol: `${receiver.getText().slice(0, 60)}.${method}`,
+      });
+      return true;
+    }
+    const site = siteOf(ctx, call, file);
+
+    /** The row a classification asked for, wherever in this function it asked. */
+    const reportUnresolved = (unresolved: { reason: string; hint: string }): void => {
+      ctx.report({
+        file,
+        line: site.line,
+        reason: unresolved.reason,
+        hint: unresolved.hint,
+        symbol: `${receiver.getText().slice(0, 60)}.${method}`,
+      });
+    };
+
+    // Nothing to draw, which is not the same as nothing to say. A method a
+    // described package does not use to touch data is counted and forgotten; a
+    // receiver that only looked like a data layer because of its name gets the
+    // row it always got, and no longer has to mint a node to carry it (R83).
     if (!classification.emit) {
-      ctx.countExternalCall(`${classification.package ?? 'unknown'}.${method}`);
+      if (classification.unresolved === undefined) {
+        ctx.countExternalCall(`${classification.package ?? 'unknown'}.${method}`);
+      } else reportUnresolved(classification.unresolved);
       return true;
     }
 
-    const site = siteOf(ctx, call, file);
     const id = makeLeafId('db_query', ctx.repo, file, site.line, site.column);
 
     // One node per visit to the database, and one count per node.
@@ -388,7 +916,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (ownLayer !== undefined) readAsData.add(ownLayer);
     // Only for a write: a read cannot lose what a sender believed it saved, and
     // collecting a type nobody will ask about is a type in everybody's registry.
-    const entityArg = classification.op === 'write' ? origin?.typeArgs[0] : undefined;
+    //
+    // And only where the type argument is the thing being stored. A connection
+    // parameterised by the whole schema would otherwise register the schema as
+    // the shape of every row written through it, which is the same fabrication
+    // as reading it as a table, hidden in another field.
+    const entityArg =
+      classification.op === 'write' && reading?.entityInTypeArgs !== false
+        ? origin?.typeArgs[0]
+        : undefined;
     const entityTypeId = entityArg === undefined ? undefined : ctx.types.collectType(entityArg, call);
     ctx.builder.addNode({
       id,
@@ -445,30 +981,39 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       });
     }
 
-    if (classification.unresolved !== undefined) {
-      ctx.report({
-        file,
-        line: site.line,
-        reason: classification.unresolved.reason,
-        hint: classification.unresolved.hint,
-        symbol: `${receiver.getText().slice(0, 60)}.${method}`,
-      });
-    }
+    if (classification.unresolved !== undefined) reportUnresolved(classification.unresolved);
 
-    // A builder whose table was decided at run time. The query itself is still
-    // in the graph — losing the whole call because one of its two facts could
-    // not be read is what a tool that stays silent about what it did not
-    // understand does — and the row says which fact is missing, so a reader can
-    // see the difference between a table nothing touches and a table nothing
-    // could name.
+    // A query in the graph whose table is not. The query itself stays — losing
+    // the whole call because one of its two facts could not be read is what a
+    // tool that stays silent about what it did not understand does — and the row
+    // says which fact is missing, so a reader can see the difference between a
+    // table nothing touches and a table nothing could name.
     // Once per query, not once per link: the chain was settled above, so this
     // is reached by the one call the node was recorded for.
-    if (locators !== undefined && classification.table === null) {
+    //
+    // Every such query and not only a builder's. A described library that keeps
+    // its entity in a type argument loses the name too — when the argument is
+    // the generic parameter of a data layer written generically, and now also
+    // when it resolves to a declaration in `node_modules` rather than in this
+    // repository (R83) — and said nothing at all about it. A node with no table
+    // and no row is the one shape this pass must not produce, because it is
+    // invisible to `doctor` and therefore to everybody. Guarded on there being
+    // no row already, so the queries that carry their own reason keep it.
+    if (classification.table === null && classification.unresolved === undefined) {
+      // Inside a configured base whose classes state their table, a query has
+      // no one table: it runs for every class extending the base, and each call
+      // through one of them is recorded with that class's table. That is the
+      // reader describing a fact, not a gap anybody can close (R165).
+      const generic = configuredBaseAround(call);
       ctx.report({
         file,
         line: site.line,
         reason: 'dynamic-table-name',
-        hint: `The table ${receiver.getText().slice(0, 40)}.${method} touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.`,
+        ...(generic === undefined ? {} : { level: 'info' as const }),
+        hint:
+          generic === undefined
+            ? unreadTableHint(receiver.getText().slice(0, 40), method, origin, call)
+            : `${generic} declares this query for every class that extends it; the table is each class's own, and is recorded at each call made through one of them.`,
         symbol: `${receiver.getText().slice(0, 60)}.${method}`,
       });
     }
@@ -483,7 +1028,14 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (origin?.package == null || !CACHE_PACKAGES.includes(origin.package)) return false;
 
     const method = callee.getName();
-    const op = CACHE_OPS[method.toLowerCase()] ?? 'other';
+    // The receiver says the call reaches the library; it does not say the method
+    // does. `cache.hasOwnProperty('status')` was recorded as a cache operation on
+    // the key `status`, because an unrecognised method is ordinary here - a client
+    // declares hundreds of commands and `other` is the honest answer for the ones
+    // no table names. A name the language gives every value is the one case where
+    // it is not (R130).
+    if (isUniversalMethod(method)) return false;
+    const op = CACHE_OPS.get(method.toLowerCase()) ?? 'other';
     const [keyArg] = call.getArguments();
     const key = keyArg === undefined ? undefined : evaluateExpression(keyArg);
 
@@ -527,25 +1079,6 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       });
     }
     return true;
-  };
-
-  /**
-   * Puts an address back together from its two halves.
-   *
-   * The client knew the base and the caller knew the path; neither knew the
-   * whole address, and the request is only useful once they are joined.
-   */
-  const compose = (info: UrlInfo, split?: SplitAddress): UrlInfo => {
-    if (split === undefined) return info;
-    if (info.host !== null) return info;
-    const path = info.path === null ? null : routePathOf(split.before + info.path + split.after);
-    const env = split.baseUrlEnv ?? info.baseUrlEnv;
-    return {
-      url: path === null ? info.url : `${env === null ? '' : `\${${env}}`}${path}`,
-      path,
-      baseUrlEnv: env,
-      host: null,
-    };
   };
 
   /**
@@ -614,7 +1147,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     if (Node.isPropertyAccessExpression(callee)) {
       const origin = resolveTypeOrigin(callee.getExpression());
       if (origin?.package == null || !HTTP_PACKAGES.includes(origin.package)) return null;
-      const method = HTTP_METHODS[callee.getName().toLowerCase()];
+      const method = HTTP_METHODS.get(callee.getName().toLowerCase());
       return method === undefined ? null : { method, urlIndex: 0 };
     }
     // `this.getFetcher()(url, init)` — a client that picks its own transport at
@@ -626,12 +1159,41 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return null;
   };
 
+  /**
+   * The verb a request states itself, where it is made: `fetch(url, { method:
+   * 'PUT' })`, or a client method named for its verb, `axios.delete(url)`.
+   *
+   * When a caller is credited with the request, this is still its verb (R161):
+   * the caller only filled in part of the address. `settings` says the verb was
+   * read out of the request's own settings, which also carry its body, so the
+   * caller's second argument is neither.
+   */
+  const statedVerbOf = (
+    call: CallExpression,
+    recognised: string,
+    init: TsNode | undefined,
+  ): { verb: string; settings: boolean } | undefined => {
+    if (recognised === 'GET') {
+      const settings = init === undefined ? call.getArguments()[1] : deref(init);
+      const stated = verbInSettings(settings, true);
+      if (stated !== undefined) return { verb: stated, settings: true };
+    }
+    const callee = call.getExpression();
+    if (!Node.isPropertyAccessExpression(callee)) return undefined;
+    // `get` is a verb and `request` is not: only a name that is its own verb
+    // states one, and `fetch` only defaults to GET.
+    const name = callee.getName().toLowerCase();
+    return HTTP_METHODS.get(name) === name.toUpperCase()
+      ? { verb: recognised, settings: false }
+      : undefined;
+  };
+
   /** The verb a wrapper's own name gives away, for a request made through one. */
   const verbOfSite = (site: TsNode): string | undefined => {
     if (!Node.isCallExpression(site)) return undefined;
     const callee = site.getExpression();
     if (!Node.isPropertyAccessExpression(callee)) return undefined;
-    return HTTP_METHODS[callee.getName().toLowerCase()];
+    return HTTP_METHODS.get(callee.getName().toLowerCase());
   };
 
   /** The method node a call sits inside, when it sits inside one this repo owns. */
@@ -664,10 +1226,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     urlArg: TsNode,
     method: string,
     owner: Holder,
-    split?: SplitAddress,
-    init?: TsNode,
+    options: RecordOptions = {},
   ): void => {
-    const info = compose(analyzeUrl(urlArg), split);
+    const { split, init, readsSite = true } = options;
+    const info = composeAddress(analyzeUrl(urlArg), split);
 
     // A second argument can carry the method for a generic request.
     let verb = method;
@@ -676,26 +1238,23 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // are not the keys of anything sent, and recording them as such would let
     // `method` and `headers` stand for what a call puts on the wire.
     let secondIsSettings = false;
-    if (verb === 'GET') {
-      const optionsArg = init === undefined ? site.getArguments()[1] : deref(init);
-      if (optionsArg !== undefined && Node.isObjectLiteralExpression(optionsArg)) {
-        const property = optionsArg.getProperty('method');
-        if (property !== undefined && Node.isPropertyAssignment(property)) {
-          const initializer = property.getInitializer();
-          const value = initializer === undefined ? undefined : evaluateExpression(initializer);
-          if (value?.resolved === true && typeof value.value === 'string') {
-            verb = value.value.toUpperCase();
-            secondIsSettings = init === undefined;
-          }
-        }
+    if (verb === 'GET' && readsSite) {
+      const stated = verbInSettings(init === undefined ? site.getArguments()[1] : deref(init));
+      if (stated !== undefined) {
+        verb = stated;
+        secondIsSettings = init === undefined;
       }
     }
 
     const [typeArgument] = site.getTypeArguments();
     const responseType =
       typeArgument === undefined ? null : ctx.types.collectType(typeArgument.getType(), site);
-    const bodyArgument = init === undefined ? site.getArguments()[1] : undefined;
-    const declaredBodyWide = declaredParameterType(site, 1, ctx.checker);
+    // The second argument is a body only when it is nothing else. A settings
+    // object declares the settings' type, and `RequestInit` read as the body of
+    // `fetch(url, { method: 'PUT' })` named a type nothing sends.
+    const bodyAtSite = readsSite && init === undefined && !secondIsSettings;
+    const bodyArgument = bodyAtSite ? site.getArguments()[1] : undefined;
+    const declaredBodyWide = bodyAtSite ? declaredParameterType(site, 1, ctx.checker) : undefined;
     const declaredBody =
       declaredBodyWide !== undefined && bodyArgument !== undefined
         ? narrowUnionByLiteral(declaredBodyWide, bodyArgument)
@@ -726,6 +1285,11 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
 
     const place = siteOf(ctx, site, owner.file);
     const id = makeLeafId('http_out', ctx.repo, owner.file, place.line, place.column);
+    // Which application this request is written in, asked of the file through
+    // the one function every browser reader asks too, so the two halves' readings
+    // of one call cannot disagree about it (R136). A map keyed by declaration
+    // answers nothing, and the request then carries nothing, as it did.
+    const application = applicationOfFile(ctx.meta, owner.file);
     ctx.builder.addNode({
       id,
       type: 'http_out',
@@ -743,6 +1307,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         ...(bodyType === null ? {} : { bodyFrom }),
         ...(bodyKeys === undefined ? {} : { bodyKeys }),
         ...(info.host === null ? {} : { host: info.host }),
+        ...(application === undefined ? {} : { application }),
       },
     });
     owner.ensure();
@@ -800,19 +1365,33 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     const split = isReadable(urlArg) ? undefined : splitAtParameterIn(urlArg, settingReader);
     if (split !== undefined) {
       const verbSource = verbParameterOf(call);
+      const stated = statedVerbOf(call, recognised.method, request?.init);
+      const forwarded = forwardedFrom(split.parameter);
       let recorded = 0;
-      for (const hop of forwardedFrom(split.parameter)) {
+      for (const hop of forwarded.calls) {
         const owner = ownerOf(hop.site);
         if (owner === undefined || !Node.isCallExpression(hop.site)) continue;
+        // What the request states is the request's; a caller's name or
+        // argument only stands in for a verb the request leaves open.
         const verb =
-          verbOfSite(hop.site) ?? verbFromSite(hop.site, verbSource) ?? recognised.method;
-        recordHttp(hop.site, hop.argument, verb, owner, split);
+          stated?.verb ??
+          verbOfSite(hop.site) ??
+          verbFromSite(hop.site, verbSource) ??
+          recognised.method;
+        recordHttp(hop.site, hop.argument, verb, owner, {
+          split,
+          readsSite: stated?.settings !== true,
+        });
         recorded += 1;
       }
-      if (recorded > 0) return true;
+      // A call through an interface this method implements may run it and may
+      // run a sibling, so what it passes is nobody's to attribute (R158). The
+      // request is still made from somewhere, and the one written here is the
+      // answer for it.
+      if (recorded > 0 && !forwarded.undecided) return true;
     }
 
-    recordHttp(call, urlArg, recognised.method, holder, undefined, request?.init);
+    recordHttp(call, urlArg, recognised.method, holder, { init: request?.init });
     return true;
   };
 
@@ -891,7 +1470,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         if (!Node.isCallExpression(node)) return;
         const callee = node.getExpression();
         if (!Node.isPropertyAccessExpression(callee)) return;
-        const origin = resolveTypeOrigin(callee.getExpression(), { localBaseClasses });
+        const { origin } = originOf(callee.getExpression());
         const descriptor = descriptorFor(origin);
         if (descriptor === undefined || operationOf(descriptor, callee.getName()) === null) return;
         const site = siteOf(ctx, node, file);
@@ -942,7 +1521,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       file: seen.file,
       line: seen.line,
       reason: 'db-layer-unread',
-      message: `${name} reads as a data layer, and nothing was read through it.`,
+      message:
+        seen.workspacePackage === undefined
+          ? `${name} reads as a data layer, and nothing was read through it.`
+          : `${name}, which the workspace package ${seen.workspacePackage} declares, reads as a data layer, and nothing was read through it.`,
       hint: named
         ? `${name} is already named under adapters.db.localBaseClasses, so the methods called on it are not among the operations of the local-base descriptor.`
         : `Add ${JSON.stringify(name)} to adapters.db.localBaseClasses in flowatlas.config.json, so calls through it are recorded as data access.`,

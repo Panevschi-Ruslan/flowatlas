@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-28T08:35:54.925Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./apps/api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#../../packages/mailer/src/index.ts:sendReceipt",
+      "type": "function",
+      "label": "sendReceipt",
+      "repo": "api",
+      "file": "../../packages/mailer/src/index.ts",
+      "line": 2
+    },
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 4,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.place",
+      "type": "method",
+      "label": "OrdersController.place",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 7
+    },
+    {
+      "id": "config_key:api#MAIL_RELAY_URL",
+      "type": "config_key",
+      "label": "MAIL_RELAY_URL",
+      "repo": "api",
+      "file": "../../packages/mailer/src/index.ts",
+      "line": 3,
+      "meta": {
+        "key": "MAIL_RELAY_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "http_out:api#../../packages/mailer/src/index.ts:3:9",
+      "type": "http_out",
+      "label": "POST /send",
+      "repo": "api",
+      "file": "../../packages/mailer/src/index.ts",
+      "line": 3,
+      "meta": {
+        "method": "POST",
+        "url": "${MAIL_RELAY_URL}/send",
+        "path": "/send",
+        "baseUrlEnv": "MAIL_RELAY_URL",
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#../../packages/mailer/src/index.ts:sendReceipt",
+      "to": "config_key:api#MAIL_RELAY_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "../../packages/mailer/src/index.ts",
+      "line": 3
+    },
+    {
+      "from": "api#../../packages/mailer/src/index.ts:sendReceipt",
+      "to": "http_out:api#../../packages/mailer/src/index.ts:3:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../../packages/mailer/src/index.ts",
+      "line": 3
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController.place",
+      "to": "api#../../packages/mailer/src/index.ts:sendReceipt",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:api:http:POST:/orders",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.place",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{id:string;email:string}"
+      ],
+      "returns": "{id:string}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 7,
+      "meta": {
+        "body": "{id:string;email:string}"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "service": "api",
+      "file": "../../packages/mailer/src/index.ts",
+      "line": 3,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares MAIL_RELAY_URL",
+      "hint": "Add MAIL_RELAY_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:api#../../packages/mailer/src/index.ts:3:9"
+    }
+  ]
+}

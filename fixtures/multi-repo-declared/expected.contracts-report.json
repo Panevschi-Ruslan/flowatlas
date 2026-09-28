@@ -1,0 +1,562 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 5,
+  "generatedAt": "2026-09-27T17:30:55.895Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:api#src/billing/billing.client.ts:30:12",
+        "to": "entry:billing:http:POST:/invoices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:api#src/billing/billing.client.ts:30:12|http_calls|entry:billing:http:POST:/invoices",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "api",
+        "typeId": "type:api#CreateInvoiceDto",
+        "symbol": "api#src/billing/billing.client.ts:BillingClient.create"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#CreateInvoice",
+        "symbol": "billing#contracts/billing.json:createInvoice",
+        "declaredBy": "contracts/billing.json"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:api#src/billing/billing.client.ts:30:12",
+            "to": "entry:billing:http:POST:/invoices",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:api#src/billing/billing.client.ts:30:12|http_calls|entry:billing:http:POST:/invoices",
+          "direction": "request",
+          "sender": {
+            "service": "api",
+            "typeId": "type:api#CreateInvoiceDto",
+            "symbol": "api#src/billing/billing.client.ts:BillingClient.create"
+          },
+          "receiver": {
+            "service": "billing",
+            "typeId": "type:billing#CreateInvoice",
+            "symbol": "billing#contracts/billing.json:createInvoice",
+            "declaredBy": "contracts/billing.json"
+          },
+          "typeId": "type:billing#CreateInvoice",
+          "field": "currency",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver billing requires `currency: string`; sender api does not send it; billing was declared by contracts/billing.json, not read",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "http_out:api#src/billing/billing.client.ts:30:12",
+            "to": "entry:billing:http:POST:/invoices",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:api#src/billing/billing.client.ts:30:12|http_calls|entry:billing:http:POST:/invoices",
+          "direction": "request",
+          "sender": {
+            "service": "api",
+            "typeId": "type:api#CreateInvoiceDto",
+            "symbol": "api#src/billing/billing.client.ts:BillingClient.create"
+          },
+          "receiver": {
+            "service": "billing",
+            "typeId": "type:billing#CreateInvoice",
+            "symbol": "billing#contracts/billing.json:createInvoice",
+            "declaredBy": "contracts/billing.json"
+          },
+          "typeId": "type:billing#CreateInvoice",
+          "field": "note",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`note` may be left out by sender api and is required by receiver billing; the sender marks it optional by question; billing was declared by contracts/billing.json, not read",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:api#src/billing/billing.client.ts:30:12",
+            "to": "entry:billing:http:POST:/invoices",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:api#src/billing/billing.client.ts:30:12|http_calls|entry:billing:http:POST:/invoices",
+          "direction": "request",
+          "sender": {
+            "service": "api",
+            "typeId": "type:api#CreateInvoiceDto",
+            "symbol": "api#src/billing/billing.client.ts:BillingClient.create"
+          },
+          "receiver": {
+            "service": "billing",
+            "typeId": "type:billing#CreateInvoice",
+            "symbol": "billing#contracts/billing.json:createInvoice",
+            "declaredBy": "contracts/billing.json"
+          },
+          "typeId": "type:billing#CreateInvoice",
+          "field": "traceId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "the type sender api declares permits `traceId: string`; receiver billing declares no such field; billing was declared by contracts/billing.json, not read",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:api#src/billing/billing.client.ts:30:12",
+        "to": "entry:billing:http:POST:/invoices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:api#src/billing/billing.client.ts:30:12|http_calls|entry:billing:http:POST:/invoices",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#Invoice",
+        "symbol": "billing#contracts/billing.json:createInvoice",
+        "declaredBy": "contracts/billing.json"
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "type:api#InvoiceDto",
+        "symbol": "api#src/billing/billing.client.ts:BillingClient.create"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:api#src/billing/billing.client.ts:30:12",
+            "to": "entry:billing:http:POST:/invoices",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:api#src/billing/billing.client.ts:30:12|http_calls|entry:billing:http:POST:/invoices",
+          "direction": "response",
+          "sender": {
+            "service": "billing",
+            "typeId": "type:billing#Invoice",
+            "symbol": "billing#contracts/billing.json:createInvoice",
+            "declaredBy": "contracts/billing.json"
+          },
+          "receiver": {
+            "service": "api",
+            "typeId": "type:api#InvoiceDto",
+            "symbol": "api#src/billing/billing.client.ts:BillingClient.create"
+          },
+          "typeId": "type:api#InvoiceDto",
+          "field": "state",
+          "expected": null,
+          "actual": "type:billing#InvoiceState",
+          "rule": null,
+          "message": "sender billing sends `state: type:billing#InvoiceState`; receiver api declares no such field; billing was declared by contracts/billing.json, not read",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:api#src/billing/billing.client.ts:30:12",
+            "to": "entry:billing:http:POST:/invoices",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:api#src/billing/billing.client.ts:30:12|http_calls|entry:billing:http:POST:/invoices",
+          "direction": "response",
+          "sender": {
+            "service": "billing",
+            "typeId": "type:billing#Invoice",
+            "symbol": "billing#contracts/billing.json:createInvoice",
+            "declaredBy": "contracts/billing.json"
+          },
+          "receiver": {
+            "service": "api",
+            "typeId": "type:api#InvoiceDto",
+            "symbol": "api#src/billing/billing.client.ts:BillingClient.create"
+          },
+          "typeId": "type:api#InvoiceDto",
+          "field": "total",
+          "expected": "string",
+          "actual": "number",
+          "rule": null,
+          "message": "sender billing sends `total` as `number`; receiver api declares it `string`; billing was declared by contracts/billing.json, not read",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:api#src/billing/billing.client.ts:35:12",
+        "to": "entry:billing:http:GET:/invoices/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:api#src/billing/billing.client.ts:35:12|http_calls|entry:billing:http:GET:/invoices/:param",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#Invoice",
+        "symbol": "billing#contracts/billing.json:getInvoice",
+        "declaredBy": "contracts/billing.json"
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "type:api#InvoiceDto",
+        "symbol": "api#src/billing/billing.client.ts:BillingClient.fetchOne"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:api#src/billing/billing.client.ts:35:12",
+            "to": "entry:billing:http:GET:/invoices/:param",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:api#src/billing/billing.client.ts:35:12|http_calls|entry:billing:http:GET:/invoices/:param",
+          "direction": "response",
+          "sender": {
+            "service": "billing",
+            "typeId": "type:billing#Invoice",
+            "symbol": "billing#contracts/billing.json:getInvoice",
+            "declaredBy": "contracts/billing.json"
+          },
+          "receiver": {
+            "service": "api",
+            "typeId": "type:api#InvoiceDto",
+            "symbol": "api#src/billing/billing.client.ts:BillingClient.fetchOne"
+          },
+          "typeId": "type:api#InvoiceDto",
+          "field": "state",
+          "expected": null,
+          "actual": "type:billing#InvoiceState",
+          "rule": null,
+          "message": "sender billing sends `state: type:billing#InvoiceState`; receiver api declares no such field; billing was declared by contracts/billing.json, not read",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:api#src/billing/billing.client.ts:35:12",
+            "to": "entry:billing:http:GET:/invoices/:param",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:api#src/billing/billing.client.ts:35:12|http_calls|entry:billing:http:GET:/invoices/:param",
+          "direction": "response",
+          "sender": {
+            "service": "billing",
+            "typeId": "type:billing#Invoice",
+            "symbol": "billing#contracts/billing.json:getInvoice",
+            "declaredBy": "contracts/billing.json"
+          },
+          "receiver": {
+            "service": "api",
+            "typeId": "type:api#InvoiceDto",
+            "symbol": "api#src/billing/billing.client.ts:BillingClient.fetchOne"
+          },
+          "typeId": "type:api#InvoiceDto",
+          "field": "total",
+          "expected": "string",
+          "actual": "number",
+          "rule": null,
+          "message": "sender billing sends `total` as `number`; receiver api declares it `string`; billing was declared by contracts/billing.json, not read",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:api#src/billing/billing.client.ts:46:12",
+        "to": "entry:billing:http:GET:/customers/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:api#src/billing/billing.client.ts:46:12|http_calls|entry:billing:http:GET:/customers/:param",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#CustomerRef",
+        "symbol": "billing#contracts/billing.json:getCustomer",
+        "declaredBy": "contracts/billing.json"
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "type:api#CustomerRefDto",
+        "symbol": "api#src/billing/billing.client.ts:BillingClient.customer"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "http_out:api#src/billing/billing.client.ts:30:12",
+        "to": "entry:billing:http:POST:/invoices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:api#src/billing/billing.client.ts:30:12|http_calls|entry:billing:http:POST:/invoices",
+      "direction": "request",
+      "sender": {
+        "service": "api",
+        "typeId": "type:api#CreateInvoiceDto",
+        "symbol": "api#src/billing/billing.client.ts:BillingClient.create"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#CreateInvoice",
+        "symbol": "billing#contracts/billing.json:createInvoice",
+        "declaredBy": "contracts/billing.json"
+      },
+      "typeId": "type:billing#CreateInvoice",
+      "field": "currency",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver billing requires `currency: string`; sender api does not send it; billing was declared by contracts/billing.json, not read",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "http_out:api#src/billing/billing.client.ts:30:12",
+        "to": "entry:billing:http:POST:/invoices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:api#src/billing/billing.client.ts:30:12|http_calls|entry:billing:http:POST:/invoices",
+      "direction": "request",
+      "sender": {
+        "service": "api",
+        "typeId": "type:api#CreateInvoiceDto",
+        "symbol": "api#src/billing/billing.client.ts:BillingClient.create"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#CreateInvoice",
+        "symbol": "billing#contracts/billing.json:createInvoice",
+        "declaredBy": "contracts/billing.json"
+      },
+      "typeId": "type:billing#CreateInvoice",
+      "field": "note",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`note` may be left out by sender api and is required by receiver billing; the sender marks it optional by question; billing was declared by contracts/billing.json, not read",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:api#src/billing/billing.client.ts:30:12",
+        "to": "entry:billing:http:POST:/invoices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:api#src/billing/billing.client.ts:30:12|http_calls|entry:billing:http:POST:/invoices",
+      "direction": "request",
+      "sender": {
+        "service": "api",
+        "typeId": "type:api#CreateInvoiceDto",
+        "symbol": "api#src/billing/billing.client.ts:BillingClient.create"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#CreateInvoice",
+        "symbol": "billing#contracts/billing.json:createInvoice",
+        "declaredBy": "contracts/billing.json"
+      },
+      "typeId": "type:billing#CreateInvoice",
+      "field": "traceId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "the type sender api declares permits `traceId: string`; receiver billing declares no such field; billing was declared by contracts/billing.json, not read",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:api#src/billing/billing.client.ts:30:12",
+        "to": "entry:billing:http:POST:/invoices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:api#src/billing/billing.client.ts:30:12|http_calls|entry:billing:http:POST:/invoices",
+      "direction": "response",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#Invoice",
+        "symbol": "billing#contracts/billing.json:createInvoice",
+        "declaredBy": "contracts/billing.json"
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "type:api#InvoiceDto",
+        "symbol": "api#src/billing/billing.client.ts:BillingClient.create"
+      },
+      "typeId": "type:api#InvoiceDto",
+      "field": "state",
+      "expected": null,
+      "actual": "type:billing#InvoiceState",
+      "rule": null,
+      "message": "sender billing sends `state: type:billing#InvoiceState`; receiver api declares no such field; billing was declared by contracts/billing.json, not read",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:api#src/billing/billing.client.ts:30:12",
+        "to": "entry:billing:http:POST:/invoices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:api#src/billing/billing.client.ts:30:12|http_calls|entry:billing:http:POST:/invoices",
+      "direction": "response",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#Invoice",
+        "symbol": "billing#contracts/billing.json:createInvoice",
+        "declaredBy": "contracts/billing.json"
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "type:api#InvoiceDto",
+        "symbol": "api#src/billing/billing.client.ts:BillingClient.create"
+      },
+      "typeId": "type:api#InvoiceDto",
+      "field": "total",
+      "expected": "string",
+      "actual": "number",
+      "rule": null,
+      "message": "sender billing sends `total` as `number`; receiver api declares it `string`; billing was declared by contracts/billing.json, not read",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:api#src/billing/billing.client.ts:35:12",
+        "to": "entry:billing:http:GET:/invoices/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:api#src/billing/billing.client.ts:35:12|http_calls|entry:billing:http:GET:/invoices/:param",
+      "direction": "response",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#Invoice",
+        "symbol": "billing#contracts/billing.json:getInvoice",
+        "declaredBy": "contracts/billing.json"
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "type:api#InvoiceDto",
+        "symbol": "api#src/billing/billing.client.ts:BillingClient.fetchOne"
+      },
+      "typeId": "type:api#InvoiceDto",
+      "field": "state",
+      "expected": null,
+      "actual": "type:billing#InvoiceState",
+      "rule": null,
+      "message": "sender billing sends `state: type:billing#InvoiceState`; receiver api declares no such field; billing was declared by contracts/billing.json, not read",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:api#src/billing/billing.client.ts:35:12",
+        "to": "entry:billing:http:GET:/invoices/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:api#src/billing/billing.client.ts:35:12|http_calls|entry:billing:http:GET:/invoices/:param",
+      "direction": "response",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#Invoice",
+        "symbol": "billing#contracts/billing.json:getInvoice",
+        "declaredBy": "contracts/billing.json"
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "type:api#InvoiceDto",
+        "symbol": "api#src/billing/billing.client.ts:BillingClient.fetchOne"
+      },
+      "typeId": "type:api#InvoiceDto",
+      "field": "total",
+      "expected": "string",
+      "actual": "number",
+      "rule": null,
+      "message": "sender billing sends `total` as `number`; receiver api declares it `string`; billing was declared by contracts/billing.json, not read",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:api#src/billing/billing.client.ts:35:12",
+        "to": "entry:billing:http:GET:/invoices/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:api#src/billing/billing.client.ts:35:12|http_calls|entry:billing:http:GET:/invoices/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "api#src/billing/billing.client.ts:BillingClient.fetchOne declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:api#src/billing/billing.client.ts:46:12",
+        "to": "entry:billing:http:GET:/customers/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:api#src/billing/billing.client.ts:46:12|http_calls|entry:billing:http:GET:/customers/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "api#src/billing/billing.client.ts:BillingClient.customer declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 4,
+    "shared": 0,
+    "identical": 1,
+    "hash_differs": 3,
+    "unchecked": 2,
+    "errors": 3,
+    "warnings": 1,
+    "infos": 3,
+    "ignored": 0
+  }
+}

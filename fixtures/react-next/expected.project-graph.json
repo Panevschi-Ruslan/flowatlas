@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 3,
-  "builtAt": "2026-09-25T10:21:16.835Z",
+  "schemaVersion": 5,
+  "builtAt": "2026-09-28T09:19:35.952Z",
   "services": [
     {
       "name": "shop",
@@ -106,9 +106,6 @@
         "adapter": "nextjs-routes",
         "registration": "pages/api",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
         "handlerVia": "function"
       }
     },
@@ -118,7 +115,7 @@
       "label": "GET /api/invoices",
       "repo": "shop",
       "file": "app/api/(admin)/invoices/route.ts",
-      "line": 10,
+      "line": 18,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -126,9 +123,6 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
         "handlerVia": "function"
       }
     },
@@ -146,9 +140,6 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
         "handlerVia": "function"
       }
     },
@@ -166,9 +157,23 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/reports",
+      "type": "entry",
+      "label": "GET /api/reports",
+      "repo": "shop",
+      "file": "app/api/reports/route.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/reports",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
         "handlerVia": "function"
       }
     },
@@ -186,9 +191,40 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/invoices",
+      "type": "entry",
+      "label": "POST /api/invoices",
+      "repo": "shop",
+      "file": "app/api/(admin)/invoices/route.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/invoices",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/jobs",
+      "type": "entry",
+      "label": "POST /api/jobs",
+      "repo": "shop",
+      "file": "app/api/jobs/route.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/jobs",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
         "handlerVia": "function"
       }
     },
@@ -206,9 +242,40 @@
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "middlewareRead": true,
-        "middleware": [
-          "middleware.ts"
-        ],
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/reports",
+      "type": "entry",
+      "label": "POST /api/reports",
+      "repo": "shop",
+      "file": "app/api/reports/route.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/reports",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:http:PUT:/api/orders/:param",
+      "type": "entry",
+      "label": "PUT /api/orders/:param",
+      "repo": "shop",
+      "file": "app/api/orders/[id]/route.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/api/orders/:param",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
         "handlerVia": "function"
       }
     },
@@ -251,12 +318,14 @@
       "repo": "shop",
       "meta": {
         "stats": {
-          "files": 9,
+          "files": 13,
+          "filesRead": 13,
+          "filesUnreadable": 0,
           "classes": 0,
           "skippedExternalCalls": {
             "@prisma/client": 8
           },
-          "functions": 16,
+          "functions": 20,
           "components": 1,
           "hooks": 0
         },
@@ -278,6 +347,8 @@
       "meta": {
         "stats": {
           "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
           "functions": 8,
           "components": 2,
           "hooks": 2,
@@ -313,7 +384,23 @@
       "label": "GET",
       "repo": "shop",
       "file": "app/api/(admin)/invoices/route.ts",
-      "line": 10
+      "line": 18
+    },
+    {
+      "id": "shop#app/api/jobs/route.ts:POST",
+      "type": "function",
+      "label": "POST",
+      "repo": "shop",
+      "file": "app/api/jobs/route.ts",
+      "line": 14
+    },
+    {
+      "id": "shop#app/api/jobs/route.ts:serveJob@14",
+      "type": "function",
+      "label": "serveJob@14",
+      "repo": "shop",
+      "file": "app/api/jobs/route.ts",
+      "line": 14
     },
     {
       "id": "shop#app/api/orders/[id]/route.ts:GET",
@@ -346,6 +433,14 @@
       "repo": "shop",
       "file": "app/api/orders/route.ts",
       "line": 9
+    },
+    {
+      "id": "shop#app/api/reports/route.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "app/api/reports/route.ts",
+      "line": 14
     },
     {
       "id": "shop#app/orders/page.tsx:OrdersPage",
@@ -406,6 +501,31 @@
       "repo": "shop",
       "file": "lib/orders-store.ts",
       "line": 25
+    },
+    {
+      "id": "shop#lib/serve-job.ts:serveJob",
+      "type": "function",
+      "label": "serveJob",
+      "repo": "shop",
+      "file": "lib/serve-job.ts",
+      "line": 12
+    },
+    {
+      "id": "shop#lib/with-admin.ts:withAdmin",
+      "type": "function",
+      "label": "withAdmin",
+      "repo": "shop",
+      "file": "lib/with-admin.ts",
+      "line": 11
+    },
+    {
+      "id": "shop#middleware.ts:middleware.ts",
+      "type": "middleware",
+      "label": "middleware.ts",
+      "repo": "shop",
+      "file": "middleware.ts",
+      "line": 1,
+      "kind": "file"
     },
     {
       "id": "shop#pages/api/legacy-orders.ts:handler",
@@ -691,6 +811,20 @@
     },
     {
       "from": "entry:shop:http:ALL:/api/legacy-orders",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
+    },
+    {
+      "from": "entry:shop:http:ALL:/api/legacy-orders",
       "to": "shop#pages/api/legacy-orders.ts:handler",
       "type": "handles",
       "confidence": "static",
@@ -703,7 +837,21 @@
       "type": "handles",
       "confidence": "static",
       "file": "app/api/(admin)/invoices/route.ts",
-      "line": 10
+      "line": 18
+    },
+    {
+      "from": "entry:shop:http:GET:/api/invoices",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
     },
     {
       "from": "entry:shop:http:GET:/api/orders",
@@ -714,12 +862,62 @@
       "line": 4
     },
     {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
+    },
+    {
       "from": "entry:shop:http:GET:/api/orders/:param",
       "to": "shop#app/api/orders/[id]/route.ts:GET",
       "type": "handles",
       "confidence": "static",
       "file": "app/api/orders/[id]/route.ts",
       "line": 4
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders/:param",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/reports",
+      "to": "shop#app/api/reports/route.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/reports/route.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:shop:http:GET:/api/reports",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
     },
     {
       "from": "entry:shop:http:PATCH:/api/orders/:param",
@@ -730,12 +928,128 @@
       "line": 10
     },
     {
+      "from": "entry:shop:http:PATCH:/api/orders/:param",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/invoices",
+      "to": "shop#app/api/(admin)/invoices/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/(admin)/invoices/route.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:shop:http:POST:/api/invoices",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/jobs",
+      "to": "shop#app/api/jobs/route.ts:POST",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/jobs/route.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:shop:http:POST:/api/jobs",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
+    },
+    {
       "from": "entry:shop:http:POST:/api/orders",
       "to": "shop#app/api/orders/route.ts:POST",
       "type": "handles",
       "confidence": "static",
       "file": "app/api/orders/route.ts",
       "line": 9
+    },
+    {
+      "from": "entry:shop:http:POST:/api/orders",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/reports",
+      "to": "shop#app/api/reports/route.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/reports/route.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:shop:http:POST:/api/reports",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
+    },
+    {
+      "from": "entry:shop:http:PUT:/api/orders/:param",
+      "to": "shop#app/api/orders/[id]/route.ts:PATCH",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/orders/[id]/route.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:shop:http:PUT:/api/orders/:param",
+      "to": "shop#middleware.ts:middleware.ts",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "middleware.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "middleware file"
+      }
     },
     {
       "from": "entry:shop:rpc:action:app/actions/orders.ts#archiveOrder",
@@ -775,7 +1089,39 @@
       "type": "calls",
       "confidence": "static",
       "file": "app/api/(admin)/invoices/route.ts",
-      "line": 11
+      "line": 18
+    },
+    {
+      "from": "shop#app/api/(admin)/invoices/route.ts:GET",
+      "to": "shop#lib/with-admin.ts:withAdmin",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/(admin)/invoices/route.ts",
+      "line": 18
+    },
+    {
+      "from": "shop#app/api/jobs/route.ts:POST",
+      "to": "shop#lib/orders-store.ts:saveOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/jobs/route.ts",
+      "line": 15
+    },
+    {
+      "from": "shop#app/api/jobs/route.ts:POST",
+      "to": "shop#lib/serve-job.ts:serveJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/jobs/route.ts",
+      "line": 14
+    },
+    {
+      "from": "shop#app/api/jobs/route.ts:serveJob@14",
+      "to": "shop#lib/orders-store.ts:saveOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/jobs/route.ts",
+      "line": 15
     },
     {
       "from": "shop#app/api/orders/[id]/route.ts:GET",
@@ -808,6 +1154,22 @@
       "confidence": "static",
       "file": "app/api/orders/route.ts",
       "line": 11
+    },
+    {
+      "from": "shop#app/api/reports/route.ts:handler",
+      "to": "shop#lib/invoices-store.ts:listInvoices",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/reports/route.ts",
+      "line": 14
+    },
+    {
+      "from": "shop#app/api/reports/route.ts:handler",
+      "to": "shop#lib/with-admin.ts:withAdmin",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/reports/route.ts",
+      "line": 14
     },
     {
       "from": "shop#app/orders/page.tsx:OrdersPage",

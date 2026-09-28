@@ -5,22 +5,25 @@ import {
   type GraphNode,
   type NamedFunction,
   type NodeType,
+  type RepoStats,
+  type SourceCounts,
   type Unresolved,
 } from '@flowatlas/core';
 import type { IndexedFunction, ReactFunctionIndex, ReactRole } from './index-functions.js';
 
-export interface ReactStats {
-  files: number;
+/**
+ * What this reader counted, on top of what every reader counts.
+ *
+ * The shared part is {@link RepoStats}: the files opened, the files read and
+ * the difference, plus the tally of calls into installed packages. The three
+ * counts below are this reader's own, and a reader that counts something new
+ * adds it here rather than to the shape everyone shares.
+ */
+export interface ReactStats extends RepoStats {
   /** Functions declared at the top of a module, whatever their role. */
   functions: number;
   components: number;
   hooks: number;
-  /**
-   * Calls whose receiver is declared in an installed package, counted per
-   * package. They are not edges and not unresolved rows: most of them are the
-   * framework doing its own work, and counting them keeps that visible.
-   */
-  skippedExternalCalls: Record<string, number>;
 }
 
 /**
@@ -68,16 +71,18 @@ export interface ReactExtractContext extends ExtractContext {
 export interface CreateContextOptions {
   base: ExtractContext;
   functions: ReactFunctionIndex;
+  /** What the parser made of the repository's sources, counted before any pass ran. */
+  sources: SourceCounts;
   /** How deep anonymous shapes are written out. Defaults to the configured value. */
   maxDepth?: number;
 }
 
 export const createReactContext = (options: CreateContextOptions): ReactExtractContext => {
-  const { base, functions } = options;
+  const { base, functions, sources } = options;
   const { builder, repo, repoDir } = base;
 
   const stats: ReactStats = {
-    files: 0,
+    ...sources,
     functions: functions.size,
     components: 0,
     hooks: 0,
@@ -132,7 +137,7 @@ export const createReactContext = (options: CreateContextOptions): ReactExtractC
     },
 
     countExternalCall: (pkg) => {
-      stats.skippedExternalCalls[pkg] = (stats.skippedExternalCalls[pkg] ?? 0) + 1;
+      stats.skippedExternalCalls[pkg] = (Object.hasOwn(stats.skippedExternalCalls, pkg) ? (stats.skippedExternalCalls[pkg] ?? 0) : 0) + 1;
     },
   };
 };

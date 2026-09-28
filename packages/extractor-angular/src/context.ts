@@ -9,22 +9,24 @@ import {
   type ExtractContext,
   type GraphNode,
   type NodeType,
+  type RepoStats,
+  type SourceCounts,
   type Unresolved,
 } from '@flowatlas/core';
 import type { ClassDeclaration } from 'ts-morph';
 import type { AngularClassIndex, AngularRole, IndexedClass } from './index-classes.js';
 
-export interface AngularStats {
-  files: number;
+/**
+ * What this reader counted, on top of what every reader counts.
+ *
+ * The shared part is {@link RepoStats}: the files opened, the files read and
+ * the difference, plus the tally of calls into installed packages. The classes
+ * and the templates are this reader's own.
+ */
+export interface AngularStats extends RepoStats {
   classes: number;
   /** Templates read, whether written inline or in a file of their own. */
   templates: number;
-  /**
-   * Calls whose receiver is declared in an installed package, counted per
-   * package. They are not edges and not unresolved rows: most of them are the
-   * framework doing its own work, and counting them keeps that visible.
-   */
-  skippedExternalCalls: Record<string, number>;
 }
 
 /** Node type and `kind` implied by a class's role. */
@@ -59,6 +61,12 @@ export interface RouteEntry {
  */
 export interface AngularExtractContext extends ExtractContext {
   readonly classes: AngularClassIndex;
+  /**
+   * Whether a file, by absolute path, is this framework's code: the predicate
+   * the class index was built with, for the one reading that walks the
+   * project's files itself rather than the index (the route configurations).
+   */
+  reads(file: string): boolean;
   readonly di: DiMap;
   readonly stats: AngularStats;
   readonly modules: ModuleMembership;
@@ -90,17 +98,21 @@ export interface AngularExtractContext extends ExtractContext {
 export interface CreateContextOptions {
   base: ExtractContext;
   classes: AngularClassIndex;
+  /** Which files are this framework's code; every file when absent. */
+  reads?: (file: string) => boolean;
+  /** What the parser made of the repository's sources, counted before any pass ran. */
+  sources: SourceCounts;
   /** How deep anonymous shapes are written out. Defaults to the configured value. */
   maxDepth?: number;
 }
 
 export const createAngularContext = (options: CreateContextOptions): AngularExtractContext => {
-  const { base, classes } = options;
+  const { base, classes, sources, reads = () => true } = options;
   const { builder, repo, repoDir } = base;
   const di = new DiMap();
   const membership = new Map<ClassDeclaration, string>();
   const stats: AngularStats = {
-    files: 0,
+    ...sources,
     classes: classes.size,
     templates: 0,
     skippedExternalCalls: {},
@@ -152,6 +164,7 @@ export const createAngularContext = (options: CreateContextOptions): AngularExtr
   return {
     ...base,
     classes,
+    reads,
     di,
     stats,
     routes: [],
@@ -214,7 +227,7 @@ export const createAngularContext = (options: CreateContextOptions): AngularExtr
     },
 
     countExternalCall: (pkg) => {
-      stats.skippedExternalCalls[pkg] = (stats.skippedExternalCalls[pkg] ?? 0) + 1;
+      stats.skippedExternalCalls[pkg] = (Object.hasOwn(stats.skippedExternalCalls, pkg) ? (stats.skippedExternalCalls[pkg] ?? 0) : 0) + 1;
     },
   };
 };

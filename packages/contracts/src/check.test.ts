@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { bySeverity, checkContracts, errorsOf } from './check.js';
-import type { TypeRegistry } from '@flowatlas/core';
+import { bySeverity, checkContracts, errorsOf, stripImpact } from './check.js';
+import type { TypeEntry, TypeRegistry } from '@flowatlas/core';
 import type { ContractReport } from './types.js';
 import { edge, field, graphOf, node, object } from './test-graph.js';
 
@@ -172,6 +172,24 @@ describe('what stops the check before it starts', () => {
     expect(reasonOf(boundary(['string'], 'type:api#Body'))).toEqual(['body-already-serialised']);
   });
 
+  it('compares two ends that both say text, because that is their contract', () => {
+    expect(reasonOf(boundary(['string'], 'string'))).toEqual([]);
+  });
+
+  /**
+   * A handler on a *request* that declares the wire form is making a mistake
+   * rather than recording a limit: the framework parses the body before the
+   * handler is called, so its declared type is a claim about the parsed value.
+   * The channel case is the other way round and is asserted below.
+   */
+  it('still calls a handler declaring text for a parsed body a mismatch', () => {
+    const report = checkContracts(boundary(['type:caller#Body'], 'string'), {
+      generatedAt: FIXED,
+    });
+    expect(report.unchecked.filter((row) => row.direction === 'request')).toEqual([]);
+    expect(report.findings.some((finding) => finding.kind === 'type_mismatch')).toBe(true);
+  });
+
   it('says so when a referenced type is not in the registry', () => {
     expect(reasonOf(boundary(['type:caller#Gone'], 'type:api#Body'))).toEqual(['type-missing']);
   });
@@ -251,6 +269,109 @@ describe('a message on a channel', () => {
     const graph = channel();
     graph.edges = graph.edges.filter((row) => row.type !== 'emits');
     expect(checkContracts(graph).unchecked[0]?.reason).toBe('channel-without-producer');
+  });
+
+  /**
+   * Nothing parses between a publish and a handler, so a handler declaring the
+   * wire form is the place the shape was lost rather than an end that disagrees
+   * about it - `receive(message: string)` with a `JSON.parse` on the next line is
+   * how a redis subscription is written. It became reachable only once a handler
+   * registered by a call had an entry and its parameter was read at all (R126),
+   * and calling it a mismatch would trade a row that said too little for one that
+   * says something false.
+   */
+  it('says the shape was lost when the handler declares the wire form', () => {
+    const graph = channel();
+    graph.edges = graph.edges.map((row) =>
+      row.from === 'entry:billing:event:order.created' ? { ...row, params: ['string'] } : row,
+    );
+    const report = checkContracts(graph, { generatedAt: FIXED });
+    expect(report.unchecked.map((row) => row.reason)).toEqual(['body-already-serialised']);
+    expect(report.unchecked[0]?.message).toContain('billing#Consumer.on has string');
+    expect(report.findings).toEqual([]);
+  });
+});
+
+/**
+ * A request over a channel, and the answer that comes back on it (R151).
+ *
+ * The answer is a response like the answer to a route: the handler sends what
+ * it declares it returns, and the asker receives what its edge says it expects.
+ * The same pair of `Answer` shapes a route disagrees about must be disagreed
+ * about here in the same words, or the two readings have drifted apart.
+ */
+describe('the answer to a request over a channel', () => {
+  const asked = (kind: string, returns?: string, answers?: string): ReturnType<typeof graphOf> =>
+    graphOf({
+      nodes: [
+        node('caller#Client.ask', 'method', 'caller'),
+        node('producer:caller#1', 'producer', 'caller', { kind }),
+        node('channel:orders.get', 'channel', 'caller'),
+        node('consumer:api#1', 'consumer', 'api', { meta: { entryId: 'entry:api:rpc:orders.get' } }),
+        node('api#Rpc.get', 'method', 'api'),
+        node('entry:api:rpc:orders.get', 'entry', 'api', { kind: 'rpc' }),
+      ],
+      edges: [
+        edge('caller#Client.ask', 'calls', 'producer:caller#1'),
+        edge('producer:caller#1', 'emits', 'channel:orders.get', {
+          params: ['type:caller#Body'],
+          ...(returns === undefined ? {} : { returns }),
+        }),
+        edge('channel:orders.get', 'consumes', 'consumer:api#1'),
+        edge('consumer:api#1', 'handles', 'api#Rpc.get'),
+        edge('entry:api:rpc:orders.get', 'handles', 'api#Rpc.get', {
+          params: ['type:api#Body'],
+          ...(answers === undefined ? {} : { returns: answers }),
+        }),
+      ],
+      types: registry,
+    });
+
+  const routeAnswer = (): string[] =>
+    request()
+      .findings.filter((finding) => finding.direction === 'response')
+      .map((finding) => finding.message);
+
+  it('is compared as the answer to a route is, in the same words', () => {
+    const report = checkContracts(asked('rpc', 'type:caller#Answer', 'type:api#Answer'), {
+      generatedAt: FIXED,
+    });
+    const row = report.edges.find((found) => found.direction === 'response');
+    expect(row?.sender.symbol).toBe('api#Rpc.get');
+    expect(row?.receiver.symbol).toBe('caller#Client.ask');
+    expect(row?.edgeKey).toBe('producer:caller#1|emits|consumer:api#1');
+    const said = report.findings
+      .filter((finding) => finding.direction === 'response')
+      .map((finding) => finding.message);
+    expect(said).toHaveLength(1);
+    expect(said).toEqual(routeAnswer());
+  });
+
+  it('says the asker declares nothing when the reply is read untyped', () => {
+    const report = checkContracts(asked('rpc', 'any', 'type:api#Answer'), { generatedAt: FIXED });
+    const row = report.unchecked.find((found) => found.direction === 'response');
+    expect(row?.reason).toBe('no-type-on-receiver');
+    expect(row?.message).toContain('caller#Client.ask');
+  });
+
+  it('says so when no reply type was recorded at all, rather than leaving the answer out', () => {
+    const report = checkContracts(asked('rpc', undefined, 'type:api#Answer'), { generatedAt: FIXED });
+    expect(report.unchecked.find((found) => found.direction === 'response')?.reason).toBe(
+      'no-type-on-receiver',
+    );
+  });
+
+  it('says the handler declares nothing when it answers with nothing typed', () => {
+    const report = checkContracts(asked('rpc', 'type:caller#Answer', 'any'), { generatedAt: FIXED });
+    const row = report.unchecked.find((found) => found.direction === 'response');
+    expect(row?.reason).toBe('no-type-on-sender');
+    expect(row?.message).toContain('api#Rpc.get');
+  });
+
+  it('gives a publish that expects nothing back no answer, compared or unchecked', () => {
+    const report = checkContracts(asked('event', undefined, 'type:api#Answer'), { generatedAt: FIXED });
+    expect(report.edges.map((row) => row.direction)).toEqual(['payload']);
+    expect(report.unchecked).toEqual([]);
   });
 });
 
@@ -403,7 +524,17 @@ describe('a field a whitelisting validation pipe removes', () => {
     'type:api#PatchDto': object('PatchDto', [validated('name', ['IsString']), validated('price')]),
   };
 
-  const patch = (pipe: Record<string, unknown> | null): ContractReport =>
+  /**
+   * The same route, with the body optionally wrapped in a list.
+   *
+   * `wrap` is how R71 is asked about: a whitelisting pipe handed an array
+   * validates each element against the same class, so wrapping both refs must
+   * change where the findings are and nothing else about them.
+   */
+  const patch = (
+    pipe: Record<string, unknown> | null,
+    wrap: (ref: string) => string = (ref) => ref,
+  ): ContractReport =>
     checkContracts(
       graphOf({
         nodes: [
@@ -418,10 +549,12 @@ describe('a field a whitelisting validation pipe removes', () => {
         ],
         edges: [
           edge('caller#Client.patch', 'calls', 'http_out:caller#1'),
-          edge('http_out:caller#1', 'http_calls', 'entry:api:http:PATCH:/items', { params: ['type:caller#Patch'] }),
+          edge('http_out:caller#1', 'http_calls', 'entry:api:http:PATCH:/items', {
+            params: [wrap('type:caller#Patch')],
+          }),
           edge('entry:api:http:PATCH:/items', 'handles', 'api#Controller.patch', {
-            params: ['type:api#PatchDto'],
-            meta: { body: 'type:api#PatchDto' },
+            params: [wrap('type:api#PatchDto')],
+            meta: { body: wrap('type:api#PatchDto') },
           }),
           edge('entry:api:http:PATCH:/items', 'guarded_by', 'api#main.ts:ValidationPipe(x)', {
             meta: { layer: 'pipe', scope: 'global' },
@@ -472,6 +605,20 @@ describe('a field a whitelisting validation pipe removes', () => {
       { generatedAt: FIXED },
     );
     expect(custom.findings.filter((finding) => finding.rule === 'whitelist-strip')).toEqual([]);
+  });
+
+  it('finds the same fields when the body is a list of that shape (R71)', () => {
+    // A `Dto[]` body is compared once as its element, at path `[]` rather than
+    // at the empty path, and stripping used to be read only at the empty one.
+    // Every field the pipe removes from an array body was therefore lost in
+    // silence by the check that exists to notice exactly that.
+    const stripped = patch({ whitelist: true }, (ref) => `${ref}[]`).findings.filter(
+      (finding) => finding.rule === 'whitelist-strip',
+    );
+    expect(stripped.map((finding) => [finding.field, finding.severity, finding.impact])).toEqual([
+      ['[].note', 'info', 'none'],
+      ['[].price', 'info', 'none'],
+    ]);
   });
 
   it('says nothing of the kind when the pipe does not whitelist', () => {
@@ -690,5 +837,124 @@ describe('a stripped field, by what it can lose', () => {
       (finding) => finding.rule !== 'whitelist-strip',
     );
     expect(others.every((finding) => finding.impact === undefined)).toBe(true);
+  });
+});
+
+/**
+ * A nested path, which used to be a fourth answer wearing a third one's word.
+ *
+ * `options.name` answered `unknown` — "the documents were read and none of
+ * them declares it" — without anything having been compared at all. Nothing in
+ * the fixture corpus is in that case, because a whitelisting pipe is only read
+ * as stripping at the top of a body, so the case was made to stop existing
+ * rather than given a word of its own and a format version with it (R67).
+ *
+ * `stripImpact` is exercised directly because the comparison produces only one
+ * shape of nested strip on its own — an array body's `[].name`, which R71 made
+ * reachable and which is asserted above through `checkContracts`. The deeper
+ * paths below are still unreachable that way, and code nobody can reach in a
+ * test is code nobody has checked.
+ */
+describe('what a nested path is compared against', () => {
+  const registry: TypeRegistry = {
+    'type:api#Options': object('Options', [field('name', 'string')]),
+    'type:api#ItemSchema': object('ItemSchema', [field('options', 'type:api#Options')]),
+    'type:api#ListSchema': object('ListSchema', [field('options', 'type:api#Options[]')]),
+    'type:api#OpaqueSchema': object('OpaqueSchema', [field('options', 'Record<string, unknown>')]),
+    'type:api#OtherSchema': object('OtherSchema', [field('name', 'string')]),
+  };
+  const typeOf = (id: string) => registry[id];
+  const writing = (...ids: string[]) => ({
+    any: true,
+    documents: ids.map((id) => registry[id] as TypeEntry),
+  });
+
+  it('is stored when the document declares every key of the path', () => {
+    expect(stripImpact(writing('type:api#ItemSchema'), 'options.name', typeOf)).toBe('stored');
+  });
+
+  it('is unknown when the document has the path opened and not the key at the end', () => {
+    expect(stripImpact(writing('type:api#ItemSchema'), 'options.colour', typeOf)).toBe('unknown');
+  });
+
+  it('is unknown when nothing written has the first key either', () => {
+    expect(stripImpact(writing('type:api#OtherSchema'), 'options.name', typeOf)).toBe('unknown');
+  });
+
+  it('reads through an array, because the element is what is written', () => {
+    expect(stripImpact(writing('type:api#ListSchema'), 'options[].name', typeOf)).toBe('stored');
+  });
+
+  it('is unread when the path runs into a shape nothing here can open', () => {
+    // A document that declares the key as a bag says nothing about what is in
+    // it, and saying "none of them declares it" of a bag would be the same
+    // claim R43 was raised about.
+    expect(stripImpact(writing('type:api#OpaqueSchema'), 'options.name', typeOf)).toBe('unread');
+  });
+
+  it('answers stored when any one of several documents declares the path', () => {
+    expect(
+      stripImpact(writing('type:api#OtherSchema', 'type:api#ItemSchema'), 'options.name', typeOf),
+    ).toBe('stored');
+  });
+
+  it('still answers a top-level key the way it always did', () => {
+    expect(stripImpact(writing('type:api#OtherSchema'), 'name', typeOf)).toBe('stored');
+    expect(stripImpact(writing('type:api#OtherSchema'), 'course', typeOf)).toBe('unknown');
+    expect(stripImpact({ any: true, documents: [] }, 'course', typeOf)).toBe('unread');
+    expect(stripImpact({ any: false, documents: [] }, 'course', typeOf)).toBe('none');
+  });
+});
+
+describe('a procedure asked for by its path', () => {
+  /**
+   * Typed on both sides on purpose. The handler's parameter is the envelope a
+   * procedure body is handed — a context and the input — and the caller's type
+   * is the input alone, so comparing the two would report a missing field on
+   * every procedure ever written, and comparing anything the client inferred
+   * from the server's own tree would agree with itself.
+   */
+  const report = checkContracts(
+    graphOf({
+      nodes: [
+        node('web#Orders', 'ui_component', 'web'),
+        node('ui_api_call:web#src/Orders.tsx:4:5', 'ui_api_call', 'web', {
+          kind: 'rpc',
+          meta: { procedure: 'orders.list', call: 'query' },
+        }),
+        node('entry:api:rpc:orders.list', 'entry', 'api', {
+          kind: 'rpc',
+          meta: { key: 'orders.list', call: 'query', input: 'OrderQuery' },
+        }),
+        node('api#listOrders', 'function', 'api'),
+      ],
+      edges: [
+        edge('web#Orders', 'calls', 'ui_api_call:web#src/Orders.tsx:4:5'),
+        edge('ui_api_call:web#src/Orders.tsx:4:5', 'hits', 'entry:api:rpc:orders.list', {
+          params: ['type:caller#Body'],
+          returns: 'type:api#Answer',
+        }),
+        edge('entry:api:rpc:orders.list', 'handles', 'api#listOrders', {
+          params: ['type:api#Body'],
+          returns: 'type:api#Answer',
+        }),
+      ],
+      types: registry,
+    }),
+    { generatedAt: FIXED },
+  );
+
+  it('compares neither direction and says why for each', () => {
+    expect(report.summary).toMatchObject({ edges: 0, unchecked: 2, identical: 0, errors: 0 });
+    expect(report.findings).toEqual([]);
+    expect(report.unchecked.map((row) => [row.direction, row.reason])).toEqual([
+      ['request', 'procedure-input-by-name'],
+      ['response', 'procedure-output-inferred'],
+    ]);
+  });
+
+  it('names the input the server declared, as the server wrote it', () => {
+    const request = report.unchecked.find((row) => row.direction === 'request');
+    expect(request?.message).toContain('takes OrderQuery');
   });
 });

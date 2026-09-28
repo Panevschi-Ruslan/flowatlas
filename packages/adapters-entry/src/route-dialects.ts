@@ -35,15 +35,18 @@ import { entryHttpSchema } from '@flowatlas/core';
  * middleware, that a call with one argument is a setting being read rather
  * than a route, that an argument is a path when its type is a string however
  * it is written, and that a single function handed to a single-argument
- * wrapper is still the handler. None of those is a fact about a framework, so
- * none of them is a field.
+ * wrapper is still the handler, whether it is written there or named. None of
+ * those is a fact about a framework, so none of them is a field — and the last
+ * could not be one if it were, because the wrapper is usually the repository's
+ * own (`asyncMiddleware`, in a video platform) and there is no package to name.
  *
- * The second did not fit and is named here rather than worked around: a
- * description cannot turn its own reader on. Detection is handed a manifest
- * and nothing else, so a framework nobody shipped an adapter for is read only
- * where `adapters.force.entry` names the described reader. That is a fact
- * about the adapter interface rather than about any framework, and the honest
- * fix is to let detection see the configuration.
+ * The second is the one field-shaped thing in a description that is not about
+ * reading a route at all: `packages`. It earns its place twice over, because it
+ * is also what lets a description turn its own reader on. Detection is handed
+ * the configuration as well as the manifest, so a framework nobody shipped an
+ * adapter for is recognised exactly where its description says it lives, and
+ * `adapters.force.entry` is back to being an override for when detection
+ * guessed wrong rather than the only way in (R66).
  */
 
 /** A type whose values declare routes, or hold middleware for the ones that do. */
@@ -119,15 +122,64 @@ export interface RouteObjectShape {
   readonly handlerKey: string;
 }
 
-export interface RouteDialect {
+/**
+ * An export that makes an application, where its name is not the type's.
+ *
+ * `import express from 'express'; const app = express()` states that `app` is an
+ * Express application whether or not the types are installed, and the one thing
+ * the line does not state is that the default export of `express` makes an
+ * `Express`. That is a fact about a published package, so it is written here,
+ * once, and the reader that recognises an application with nothing installed
+ * asks this rather than knowing four frameworks' default exports itself (R142).
+ *
+ * An export named after one of the dialect's own `appTypes` needs no row -
+ * `new Hono()` and `Router()` already say what they make - so the rows are the
+ * renamed ones, which in practice is a default export.
+ */
+export interface AppMaker {
+  readonly package: string;
+  /** The name the package exports it under; `default` for its default export. */
+  readonly export: string;
+  /** The application type in `appTypes` a call of it, or `new`, makes. */
+  readonly typeName: string;
+}
+
+/**
+ * What a dialect says about recognising an application from the source alone.
+ *
+ * Two fields and neither is about reading a route, which is why they are kept
+ * apart from the rest: they are read only where the checker could not resolve a
+ * type at all, and a repository with its dependencies installed never asks them.
+ */
+export interface StatedApps {
+  /** Exports that make an application under a name that is not its type's. */
+  readonly makers: readonly AppMaker[];
+  /**
+   * Methods, beyond the ones the description already names, that hand back the
+   * application they are called on. `express().disable('x-powered-by')` is how
+   * A video platform declares its application; with types installed the checker says
+   * `disable` answers with the application, and with none only this can.
+   */
+  readonly chainable: readonly string[];
+}
+
+const NOTHING_STATED: StatedApps = { makers: [], chainable: [] };
+
+export interface RouteDialect extends StatedApps {
   /** The adapter's name, as it appears in `meta.adapter` and in every row. */
   readonly name: string;
   /** Dependencies any one of which means this framework is in use. */
   readonly packages: readonly string[];
   /** Types whose values declare routes, or carry middleware for ones that do. */
   readonly appTypes: readonly AppType[];
-  /** Method name to the verb it answers. */
-  readonly verbs: Readonly<Record<string, string>>;
+  /**
+   * Method name to the verb it answers.
+   *
+   * A `Map`, because it is asked about every method called on an application,
+   * and an object answered `app.__defineGetter__('/x', f)` with the language's
+   * own function: a route with no method, and the id threw (R130).
+   */
+  readonly verbs: ReadonlyMap<string, string>;
   /** A method taking the verb as its first argument. Hono's `on`, and nobody else's. */
   readonly verbArgument?: string;
   /** A method returning the same application with a prefix in front of it. */
@@ -208,7 +260,11 @@ const middlewareOf = (
  * because that is what the reader has always called them. Translating once,
  * here, is cheaper than either half changing its vocabulary.
  */
-export const dialectOf = (config: EntryHttpConfig): RouteDialect => ({
+export const dialectOf = (
+  config: EntryHttpConfig,
+  stated: StatedApps = NOTHING_STATED,
+): RouteDialect => ({
+  ...stated,
   name: config.name,
   packages: config.packages,
   appTypes: config.appTypes.flatMap((group) =>
@@ -216,7 +272,7 @@ export const dialectOf = (config: EntryHttpConfig): RouteDialect => ({
       group.typeNames.map((typeName) => ({ package: pkg, typeName })),
     ),
   ),
-  verbs: config.verbs ?? COMMON_VERBS,
+  verbs: new Map(Object.entries(config.verbs ?? COMMON_VERBS)),
   ...(config.verbArgument === undefined ? {} : { verbArgument: config.verbArgument }),
   ...(config.prefixMethod === undefined ? {} : { prefixMethod: config.prefixMethod }),
   ...(config.prefixMutates ? { prefixMutates: true } : {}),
@@ -237,9 +293,15 @@ export const dialectOf = (config: EntryHttpConfig): RouteDialect => ({
  * that skipped validation could quietly use a field spelled a way the schema
  * rejects, and the first person to copy it into their own configuration would
  * be told their file was invalid while the same words worked inside the tool.
+ *
+ * `stated` is the one part that does not go through the schema, and it is the
+ * `MOUNT_HELPERS` situation again: a field the schema does not have yet belongs
+ * to a change in core that registers it, and until then a description written
+ * in configuration recognises an application from the source by its annotation
+ * and by an export named after one of its types, and by nothing renamed.
  */
-const described = (description: EntryHttpDescription): RouteDialect =>
-  dialectOf(entryHttpSchema.parse(description));
+const described = (description: EntryHttpDescription, stated?: StatedApps): RouteDialect =>
+  dialectOf(entryHttpSchema.parse(description), stated);
 
 /**
  * Express, and the shape the description was written to fit.
@@ -280,6 +342,12 @@ export const EXPRESS: RouteDialect = described({
   // argument is an application. Nothing but the type can say.
   mount: { method: 'use', appArg: -1, pathArg: 0 },
   middleware: { method: 'use', scoped: true },
+}, {
+  // `express()` makes the application; `Router()` and `express.Router()` need
+  // no row, because `Router` is already one of the types above.
+  makers: [{ package: 'express', export: 'default', typeName: 'Express' }],
+  // The settings methods, each of which answers with the application.
+  chainable: ['disable', 'enable', 'set', 'engine', 'param'],
 });
 
 /**
@@ -308,6 +376,13 @@ export const FASTIFY: RouteDialect = described({
     optionKeys: ['preHandler', 'onRequest', 'preValidation', 'preParsing'],
   },
   routeObject: { method: 'route', verbKey: 'method', pathKey: 'url', handlerKey: 'handler' },
+}, {
+  // `Fastify()` from the default export, and `fastify()` from the named one.
+  makers: [
+    { package: 'fastify', export: 'default', typeName: 'FastifyInstance' },
+    { package: 'fastify', export: 'fastify', typeName: 'FastifyInstance' },
+  ],
+  chainable: [],
 });
 
 /**
@@ -340,6 +415,14 @@ export const KOA: RouteDialect = described({
   prefixOption: 'prefix',
   mount: { method: 'use', appArg: -1, pathArg: 0, through: ['routes', 'allowedMethods'] },
   middleware: { method: 'use', scoped: true },
+}, {
+  // `new Koa()` and `new Router()`, each a default export named by the importer.
+  makers: [
+    { package: 'koa', export: 'default', typeName: 'Application' },
+    { package: 'koa-router', export: 'default', typeName: 'Router' },
+    { package: '@koa/router', export: 'default', typeName: 'Router' },
+  ],
+  chainable: [],
 });
 
 /**
@@ -373,6 +456,61 @@ export const HONO: RouteDialect = described({
   mount: { method: 'route', appArg: 1, pathArg: 0 },
   middleware: { method: 'use', scoped: true },
 });
+
+/**
+ * A helper package that mounts one application inside another.
+ *
+ * `app.use(mount('/api', api))` — `koa-mount` takes a prefix and an application
+ * and hands back middleware, so what `use` receives is not an application and
+ * the framework's own row cannot say where anything went. The reader already
+ * finds the application among such a call's arguments and records it as mounted
+ * with no readable path, which stopped a wrong address being published and left
+ * the right one unread: on a wiki app, 253 routes at an address nothing serves
+ * became 233 rows saying the address could not be told (R84, R110).
+ *
+ * The prefix is in the call. What is not in the call is which argument it is,
+ * and that is a fact about one published package rather than about anything the
+ * reader could work out — so it is written down once, here, and `koa-mount`
+ * becomes one record instead of a condition inside the reader. A helper nobody
+ * described is not a special case: it keeps the row it already had.
+ *
+ * Keyed by the package the helper is imported from, and not by the name it is
+ * imported under, because the name belongs to the importer: a wiki app writes
+ * `import mount from 'koa-mount'` and the next repository may write anything.
+ */
+export interface MountHelper {
+  /** Which argument is the application; negative counts from the end. */
+  readonly appAt: number;
+  /**
+   * Which argument spells the prefix.
+   *
+   * When the helper is called with the application alone — `mount(routes)`, which
+   * A wiki app also writes — this position holds the application itself, and the
+   * mount is at its parent's base, which is what the helper does with it.
+   */
+  readonly pathAt: number;
+}
+
+/**
+ * Every mount helper described, by the package it comes from.
+ *
+ * A map rather than a list of rows with a package field on each, because the
+ * reader asks exactly one question of it — what does this package mean — and a
+ * lookup is that question. It sits beside the dialects rather than inside one
+ * because a helper is not part of any framework's calling convention: it is a
+ * third-party module that happens to take an application, and `koa-mount` is
+ * no more a fact about Koa than `express-session` is about Express.
+ *
+ * Not yet something a person can write in configuration. The dialects above go
+ * in through `entryHttpSchema` so that what ships is proof the description can
+ * say what a real framework needs, and a helper field on that schema belongs to
+ * the same change in core that registers it; this row is the description, and
+ * the schema that publishes it is the ticket after this one.
+ */
+export const MOUNT_HELPERS: ReadonlyMap<string, MountHelper> = new Map([
+  // `mount(prefix, app)` and `mount(app)`: the application is last either way.
+  ['koa-mount', { appAt: -1, pathAt: 0 }],
+]);
 
 /** Every framework that registers a route by calling the application. */
 export const ROUTE_DIALECTS: readonly RouteDialect[] = [EXPRESS, FASTIFY, KOA, HONO];

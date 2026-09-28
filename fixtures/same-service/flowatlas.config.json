@@ -1,0 +1,10 @@
+{
+  "services": [
+    {
+      "name": "site",
+      "repo": ".",
+      "type": "nextjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

@@ -1,0 +1,343 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-28T11:19:34.780Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/fixtures/catalogue.ts:catalogue",
+      "type": "function",
+      "label": "catalogue",
+      "repo": "api",
+      "file": "src/fixtures/catalogue.ts",
+      "line": 7
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "method",
+      "label": "OrdersController.findAll",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "method",
+      "label": "OrdersService.findAll",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 10
+    },
+    {
+      "id": "db_query:api#src/fixtures/catalogue.ts:8:3",
+      "type": "db_query",
+      "label": "read catalogue",
+      "repo": "api",
+      "file": "src/fixtures/catalogue.ts",
+      "line": 8,
+      "meta": {
+        "op": "read",
+        "table": "catalogue",
+        "tables": [
+          "catalogue"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:api#src/orders/orders.service.ts:11:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 11,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "pg",
+        "method": "query",
+        "receiver": "this.pool",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:api#catalogue",
+      "type": "table",
+      "label": "catalogue",
+      "repo": "api"
+    },
+    {
+      "id": "table:api#orders",
+      "type": "table",
+      "label": "orders",
+      "repo": "api"
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/fixtures/catalogue.ts:catalogue",
+      "to": "db_query:api#src/fixtures/catalogue.ts:8:3",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/fixtures/catalogue.ts",
+      "line": 8
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController",
+      "to": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "api#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController.findAll",
+      "to": "api#src/orders/orders.service.ts:OrdersService.findAll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.create",
+      "to": "api#src/fixtures/catalogue.ts:catalogue",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 17
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.findAll",
+      "to": "db_query:api#src/orders/orders.service.ts:11:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 11
+    },
+    {
+      "from": "db_query:api#src/fixtures/catalogue.ts:8:3",
+      "to": "table:api#catalogue",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/fixtures/catalogue.ts",
+      "line": 8
+    },
+    {
+      "from": "db_query:api#src/orders/orders.service.ts:11:12",
+      "to": "table:api#orders",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:api:http:GET:/orders",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.findAll",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:api:http:POST:/orders",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/e2e/client.ts",
+      "line": 1,
+      "reason": "test-directory-skipped",
+      "level": "info",
+      "sites": 1,
+      "message": "1 source file(s) under src/e2e/ were not read: a directory named `e2e` is taken to hold tests",
+      "hint": "If it holds code the application runs, add \"src/e2e\" to readTestDirectories in this service's entry in flowatlas.config.json.",
+      "symbol": "src/e2e",
+      "service": "api"
+    },
+    {
+      "service": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "reason": "route-unguarded",
+      "message": "GET /orders has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "GET /orders"
+    },
+    {
+      "service": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "reason": "route-unguarded",
+      "message": "POST /orders has no guard in front of it and reaches catalogue.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "POST /orders"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 11,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "OrdersService.findAll -> this.pool.query",
+      "service": "api"
+    },
+    {
+      "file": "src/test/clock.ts",
+      "line": 1,
+      "reason": "test-directory-skipped",
+      "level": "info",
+      "sites": 2,
+      "message": "2 source file(s) under src/test/ were not read: a directory named `test` is taken to hold tests",
+      "hint": "If it holds code the application runs, add \"src/test\" to readTestDirectories in this service's entry in flowatlas.config.json.",
+      "symbol": "src/test",
+      "service": "api"
+    }
+  ]
+}

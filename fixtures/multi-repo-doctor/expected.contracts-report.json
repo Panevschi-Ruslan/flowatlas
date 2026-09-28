@@ -1,0 +1,609 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 5,
+  "generatedAt": "2026-09-27T17:30:56.546Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:102:12",
+        "to": "entry:orders:http:POST:/orders/legacy",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:102:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replayLegacy"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:102:12",
+            "to": "entry:orders:http:POST:/orders/legacy",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:102:12|http_calls|entry:orders:http:POST:/orders/legacy",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CreateOrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replayLegacy"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateOrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+          },
+          "typeId": "type:orders#CreateOrderDto",
+          "field": "channel",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:102:12",
+        "to": "entry:orders:http:POST:/orders/legacy",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:102:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#OrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replayLegacy"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:31:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:31:12|http_calls|entry:orders:http:POST:/orders",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:31:12",
+            "to": "entry:orders:http:POST:/orders",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:31:12|http_calls|entry:orders:http:POST:/orders",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CreateOrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateOrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+          },
+          "typeId": "type:orders#CreateOrderDto",
+          "field": "channel",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:31:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:31:12|http_calls|entry:orders:http:POST:/orders",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#OrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:78:12",
+        "to": "entry:orders:http:POST:/orders/legacy",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:78:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:78:12",
+            "to": "entry:orders:http:POST:/orders/legacy",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:78:12|http_calls|entry:orders:http:POST:/orders/legacy",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CreateOrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateOrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+          },
+          "typeId": "type:orders#CreateOrderDto",
+          "field": "channel",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+          "ignored": true,
+          "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:78:12",
+        "to": "entry:orders:http:POST:/orders/legacy",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:78:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#OrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:96:12",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:96:12|http_calls|entry:orders:http:GET:/orders/:param",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replay"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "string",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:96:12",
+            "to": "entry:orders:http:GET:/orders/:param",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:96:12|http_calls|entry:orders:http:GET:/orders/:param",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CreateOrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replay"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "string",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+          },
+          "typeId": "string",
+          "field": "",
+          "expected": "string",
+          "actual": "type:gateway#CreateOrderDto",
+          "rule": null,
+          "message": "sender gateway sends `type:gateway#CreateOrderDto` where receiver orders expects `string`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:96:12",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:96:12|http_calls|entry:orders:http:GET:/orders/:param",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#OrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replay"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:96:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:96:12|http_calls|entry:orders:http:POST:/orders",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replay"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:96:12",
+            "to": "entry:orders:http:POST:/orders",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:96:12|http_calls|entry:orders:http:POST:/orders",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "type:gateway#CreateOrderDto",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replay"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#CreateOrderDto",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+          },
+          "typeId": "type:orders#CreateOrderDto",
+          "field": "channel",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:96:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:96:12|http_calls|entry:orders:http:POST:/orders",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#OrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replay"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:47:5",
+        "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/orders.service.ts:47:5|emits|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "{id:string;total:number}",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.create"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#OrderCreatedEvent",
+        "symbol": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:102:12",
+        "to": "entry:orders:http:POST:/orders/legacy",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:102:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replayLegacy"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+      },
+      "typeId": "type:orders#CreateOrderDto",
+      "field": "channel",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:31:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:31:12|http_calls|entry:orders:http:POST:/orders",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "typeId": "type:orders#CreateOrderDto",
+      "field": "channel",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:96:12",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:96:12|http_calls|entry:orders:http:GET:/orders/:param",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replay"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "string",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+      },
+      "typeId": "string",
+      "field": "",
+      "expected": "string",
+      "actual": "type:gateway#CreateOrderDto",
+      "rule": null,
+      "message": "sender gateway sends `type:gateway#CreateOrderDto` where receiver orders expects `string`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:96:12",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:96:12|http_calls|entry:orders:http:POST:/orders",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.replay"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "typeId": "type:orders#CreateOrderDto",
+      "field": "channel",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:78:12",
+        "to": "entry:orders:http:POST:/orders/legacy",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:78:12|http_calls|entry:orders:http:POST:/orders/legacy",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:gateway#CreateOrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#CreateOrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.legacy"
+      },
+      "typeId": "type:orders#CreateOrderDto",
+      "field": "channel",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+      "ignored": true,
+      "ignoredBy": "gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+    }
+  ],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:55:0",
+        "to": "channel:order.audited",
+        "type": "emits"
+      },
+      "edgeKey": "channel:order.audited|emits|producer:orders#src/orders/orders.service.ts:55:0",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:order.audited is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:89:0",
+        "to": "channel:order.held",
+        "type": "emits"
+      },
+      "edgeKey": "channel:order.held|emits|producer:orders#src/orders/orders.service.ts:89:0",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:order.held is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:89:0",
+        "to": "channel:order.released",
+        "type": "emits"
+      },
+      "edgeKey": "channel:order.released|emits|producer:orders#src/orders/orders.service.ts:89:0",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:order.released is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:111:0",
+        "to": "consumer:billing#src/invoices/invoices.service.ts:InvoicesService.onOrderRefunded",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/orders.service.ts:111:0|emits|consumer:billing#src/invoices/invoices.service.ts:InvoicesService.onOrderRefunded",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/orders/orders.service.ts:OrdersService.refund declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 11,
+    "shared": 0,
+    "identical": 5,
+    "hash_differs": 6,
+    "unchecked": 4,
+    "errors": 4,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 1
+  }
+}
