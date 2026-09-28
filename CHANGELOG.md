@@ -278,7 +278,11 @@ README says what it exists to prove.
   `this` (`const c = await this.coll(); c.find(…)`) is on the class's own table.
   A query written inside the base runs for every subclass and is an `info` row
   saying so (`nest-mongo-tables`).
-
+- **The project site says what the tool reads, and lists every fixture.** The
+  landing page names every framework, data layer and broker it reads, grouped
+  by area, and a new page, `fixtures.html`, lists each fixture with the sentence
+  from its README saying what it proves. That page is generated from the
+  fixtures, and `pnpm check` fails when it is out of date.
 
 ### Changed
 

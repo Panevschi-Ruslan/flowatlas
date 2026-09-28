@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>flowatlas walkthrough</title>
-<meta name="description" content="Ten recorded steps taking flowatlas from an empty directory to one graph across four repositories.">
+<meta name="description" content="flowatlas reads several TypeScript repositories — NestJS, Next.js, Express, React, Angular, tRPC and more — and joins them into one graph. Ten recorded steps from an empty directory to that graph.">
 <meta property="og:title" content="flowatlas walkthrough">
 <meta property="og:description" content="One map of a project that lives in several repositories. Ten recorded steps.">
 <meta property="og:image" content="https://github.com/Panevschi-Ruslan/flowatlas/raw/main/docs/media/10-visualise.png">
@@ -143,6 +143,12 @@ h1 {
   margin: 0 0 10px;
 }
 .pair table { width: 100%; min-width: 0; }
+.covers { margin: 52px 0 0; }
+.covers .eyebrow { margin-bottom: 0; }
+.covers .pair { gap: 26px 48px; }
+.covers ul { margin: 0; padding: 0 0 0 1.1em; }
+.covers li { margin: 0 0 6px; }
+.covers li::marker { color: var(--accent); }
 .pair td:last-child {
   text-align: right; white-space: nowrap; font-family: var(--mono);
   font-size: 13.5px; font-variant-numeric: tabular-nums;
@@ -257,9 +263,10 @@ footer {
     repositories with the compiler's own checker, <em>without running them</em>,
     and joins them into one graph you can query — from a terminal or from a
     coding agent. It knows NestJS and Angular, React and Next.js, Express,
-    Fastify and Koa, Telegraf and Hono, TypeORM, Prisma, Drizzle, Mongoose,
-    Sequelize, Knex, Mongo, Redis, Kafka, RabbitMQ and socket.io &mdash; and it
-    can join to a service it cannot read at all, from its OpenAPI document.</p>
+    Fastify, Koa and Hono, Medusa, tRPC and Telegraf; TypeORM, Prisma, Drizzle,
+    Mongoose, Sequelize, Kysely, Knex, MongoDB and node-postgres; Redis, Kafka,
+    RabbitMQ, BullMQ and socket.io &mdash; and it can join to a service it
+    cannot read at all, from its OpenAPI or AsyncAPI document.</p>
   <p class="sub">A request made in one service is matched to the route that
     answers it in another, a message published in one to whatever handles it, a
     button in a browser to the endpoint it calls. <code>madge</code>,
@@ -277,6 +284,65 @@ flowatlas build          <span class="c"># read them all and join them</span></c
     <li>What does the browser call that the server no longer serves?</li>
   </ul>
 </header>
+
+<section class="covers">
+  <p class="eyebrow">what it reads</p>
+  <div class="pair">
+    <div>
+      <h3>ways in</h3>
+      <ul>
+        <li>NestJS controllers, message handlers and schedules, with their guards and pipes</li>
+        <li>Express, Fastify, Koa and Hono, where a route is registered by a call</li>
+        <li>Next.js and Medusa, where a route is the path of a file</li>
+        <li>tRPC procedures, and Telegraf bot commands, callbacks and events</li>
+      </ul>
+    </div>
+    <div>
+      <h3>browsers</h3>
+      <ul>
+        <li>Angular templates, services and router, lazy routes included</li>
+        <li>React components and hooks</li>
+        <li><code>fetch</code>, <code>axios</code>, a wrapper or a client class of your own &mdash; each joined to the route that answers it</li>
+      </ul>
+    </div>
+    <div>
+      <h3>data</h3>
+      <ul>
+        <li>TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Kysely, Knex, MongoDB and node-postgres</li>
+        <li>read with nothing installed, even a Prisma client that was never generated</li>
+        <li>a repository base of your own, with the table each class states</li>
+        <li>Redis and cache-manager, and every settings key a request depends on</li>
+      </ul>
+    </div>
+    <div>
+      <h3>messages</h3>
+      <ul>
+        <li>Kafka, RabbitMQ, BullMQ, Redis pub/sub and socket.io, from both ends</li>
+        <li>an in-house bus, described in the configuration</li>
+        <li>the payload and the reply of a request, compared across the boundary</li>
+      </ul>
+    </div>
+    <div>
+      <h3>across repositories</h3>
+      <ul>
+        <li>a monorepo's services with the workspace packages they use, on a fresh clone</li>
+        <li>a service you have no source for, from its OpenAPI or AsyncAPI document</li>
+        <li>every contract compared where one repository meets another</li>
+      </ul>
+    </div>
+    <div>
+      <h3>what it cannot read</h3>
+      <ul>
+        <li>a row saying why, and the one change that would read it</li>
+        <li>an address or a table decided at run time is reported, never guessed</li>
+        <li>test code left out, and every test directory named so you can see it</li>
+      </ul>
+    </div>
+  </div>
+  <p class="fig-note">Every shape above is held by a fixture &mdash; a small
+    repository written to prove it, compared on every push. The
+    <a href="fixtures.html">fixtures page</a> lists all of them.</p>
+</section>
 
 <section class="figures">
   <p class="eyebrow">measured on a real project</p>

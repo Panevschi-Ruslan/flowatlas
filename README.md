@@ -799,7 +799,7 @@ Or one at a time:
 pnpm -r build
 pnpm -r typecheck
 pnpm fixtures:run     # run the tool over every fixture
-pnpm -r test          # 2,469 tests
+pnpm -r test          # 2,480 tests
 pnpm invariants       # rules no test can express
 pnpm fixtures:check   # extraction, server and terminal snapshots, and the read gate
 ```
