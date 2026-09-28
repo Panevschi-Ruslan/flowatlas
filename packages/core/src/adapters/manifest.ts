@@ -1,4 +1,4 @@
-import { serviceSourceDirs, workspaceMemberDirs, workspaceRootsAbove } from '../workspace.js';
+import { extentDeclared, serviceExtent, workspaceMemberDirs, workspaceRootsAbove } from '../workspace.js';
 import { readPackageJson, type PackageJson } from '../package-json.js';
 
 /**
@@ -90,7 +90,7 @@ export const hasAnyDependency = (pkg: PackageJson, names: readonly string[]): bo
  * and an adapter that gated on the narrow manifest was switched off while its
  * own framework's code was being read - which is how three quarters of one real
  * repository's ways in came to be served by a package the detection could not
- * see. `serviceSourceDirs` is the one answer to "what is read as part of this",
+ * see. `serviceExtent` is the one answer to "what is read as part of this",
  * and this asks it rather than compiling a second set of globs: that seam is the
  * one R115 closed, and reopening it here would be reopening it.
  *
@@ -102,9 +102,19 @@ export const hasAnyDependency = (pkg: PackageJson, names: readonly string[]): bo
  */
 const manifestChain = (dir: string, sideways: boolean): readonly PackageJson[] => {
   const above = [...workspaceRootsAbove(dir)].reverse();
-  return [...above, ...workspaceMemberDirs(dir), ...(sideways ? serviceSourceDirs(dir) : [])]
+  const around = [...above, ...workspaceMemberDirs(dir)]
     .map(readPackageJson)
     .filter((pkg): pkg is PackageJson => pkg !== undefined);
+  if (!sideways) return around;
+  // A member is read the way the extent reads it, and by the same function: what
+  // it declares only for its own build and tests is never installed for the
+  // service, so it can no more switch an adapter on here than take a package
+  // into the extent there (R143, R145). The service's own manifest is not in
+  // this list; it is folded in last, whole, by the caller.
+  const members = serviceExtent(dir)
+    .filter((pkg) => pkg.role === 'member')
+    .map((pkg) => extentDeclared(readPackageJson(pkg.dir), 'member'));
+  return [...around, ...members];
 };
 
 /**
@@ -145,4 +155,94 @@ export const readResolvedPackageJson = (
     if (Object.keys(merged).length > 0) widened[section] = merged;
   }
   return { ...own, ...widened };
+};
+
+// ------------------------------------------------------------ what a file runs
+
+/**
+ * Which files of a service a framework is supplied to (R145).
+ *
+ * Detection answers whether a framework is anywhere in what a service can
+ * import, and on a server whose library renders e-mail with a browser framework
+ * the answer is yes. That is true and it is not enough to read by: a reader
+ * handed the whole service then reads a request made from a request handler as
+ * one made from a page, and a provider written for somebody else's application
+ * as one of this service's components. What decides it is a fact about the
+ * package a file is in, which the manifests already state: **a file is read as
+ * the framework's code when the framework is supplied to the package that holds
+ * it.** Three ways a package is supplied, one rule:
+ *
+ * - **The service supplies it**, when the service's own manifest or its
+ *   workspace declares the framework - the list `readResolvedPackageJson` gives
+ *   with `sideways: false`, the one R123 already uses to tell a service's own
+ *   frameworks from those found at arm's length. Then every file the service
+ *   reads is supplied: an application bundles what it reaches, and a helper in a
+ *   member it depends on runs in the same page as the screen that calls it.
+ * - **A member supplies it to itself**, when the framework is in a section the
+ *   extent follows for a member (`EXTENT_SECTIONS`) and that is not a peer. It
+ *   supplies nothing to what it depends on in turn: a template library that
+ *   calls a transport package does not make the transport a page.
+ * - **A peer is supplied by whoever depends on the package.** That is what a
+ *   peer dependency says: the package works with the framework that its
+ *   dependent brings. So a member whose framework is only a peer is supplied
+ *   when a package of the extent that declares it is supplied, and not when the
+ *   one depending on it is a server that brings none.
+ *
+ * A devDependency supplies nothing, for the reason the extent gives: it is never
+ * installed for anybody who depends on the member. The owner of a file is the
+ * nearest package of the extent that contains it, so a member nested inside the
+ * service's directory answers for its own files.
+ *
+ * A directory with no manifest of its own is not divided at all, because there is
+ * no package to ask: every file is read, as it always was.
+ *
+ * `declares` is the adapter's own detection, asked of a manifest cut down to the
+ * sections in question, so the framework is described once, by its adapter, and
+ * nothing here names it.
+ */
+export const suppliedWith = (
+  dir: string,
+  declares: (pkg: PackageJson) => boolean,
+): ((file: string) => boolean) => {
+  // A directory with no manifest of its own has no packages to tell apart: the
+  // reader was chosen for it by configuration rather than by what it declares,
+  // and it reads what it was pointed at.
+  const narrow = readResolvedPackageJson(dir, { sideways: false });
+  if (narrow === undefined || declares(narrow)) return () => true;
+
+  const extent = serviceExtent(dir);
+  const manifests = new Map(extent.map((pkg) => [pkg.dir, readPackageJson(pkg.dir)]));
+  const brings = (at: string): boolean => {
+    const own = { ...extentDeclared(manifests.get(at), 'member') };
+    delete own.peerDependencies;
+    return declares(own);
+  };
+  const expects = (at: string): boolean => {
+    const peers = extentDeclared(manifests.get(at), 'member').peerDependencies;
+    return peers !== undefined && declares({ peerDependencies: peers });
+  };
+
+  const supplied = new Set(
+    extent.filter((pkg) => pkg.role === 'member' && brings(pkg.dir)).map((pkg) => pkg.dir),
+  );
+  // A peer is satisfied by a dependent that is itself supplied, and a package
+  // supplied that way can satisfy a peer of its own in turn, so this runs until
+  // nothing more is supplied.
+  for (let grew = true; grew; ) {
+    grew = false;
+    for (const pkg of extent) {
+      if (pkg.role !== 'member' || supplied.has(pkg.dir) || !expects(pkg.dir)) continue;
+      if (extent.some((other) => supplied.has(other.dir) && other.declares.includes(pkg.dir))) {
+        supplied.add(pkg.dir);
+        grew = true;
+      }
+    }
+  }
+
+  const nearestFirst = extent.map((pkg) => pkg.dir).sort((a, b) => b.length - a.length);
+  return (file) => {
+    const path = file.replace(/\\/g, '/');
+    const owner = nearestFirst.find((at) => path.startsWith(`${at}/`));
+    return owner !== undefined && supplied.has(owner);
+  };
 };

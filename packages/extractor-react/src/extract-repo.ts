@@ -8,6 +8,7 @@ import {
   recordApplications,
   reportUnreadableSources,
   silentLogger,
+  suppliedWith,
   type ExtractContext,
   type FlowatlasConfig,
   type FrontendExtractOptions,
@@ -17,6 +18,7 @@ import {
   type ServiceConfig,
 } from '@flowatlas/core';
 import { createReactContext } from './context.js';
+import { declaresReact } from './framework.js';
 import { buildReactFunctionIndex } from './index-functions.js';
 import { actionsPass } from './passes/actions.js';
 import { callsPass } from './passes/calls.js';
@@ -77,10 +79,26 @@ export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
  * a privileged path into the tool.
  */
 export const extractReact = (base: ExtractContext, options: FrontendExtractOptions = {}): void => {
+  // Which files are React's to read. Detection said the framework is somewhere
+  // in what this service can import; that switches the reader on and says
+  // nothing about which files are written for it. A server whose mail library
+  // renders with React runs React in that library alone, and its own handlers,
+  // the transports they call and a provider shipped for other people's
+  // applications are not pages whatever they contain. So the reader walks a file
+  // only when the framework is supplied to the package holding it: by the
+  // service, which supplies it to everything it reaches; by a member that
+  // installs it, to itself; or, for a peer, by a dependent that is supplied.
+  // The rule and its argument are `suppliedWith` in the core, asked with this
+  // adapter's own description of the framework (R145).
+  //
+  // Everything the passes read comes through this index - components, hooks,
+  // requests, the calls between them, the screens a route names - so a file left
+  // out here is left out of the whole reading and not of one pass.
   const functions = buildReactFunctionIndex({
     project: base.project,
     repo: base.repo,
     repoDir: base.repoDir,
+    reads: suppliedWith(base.repoDir, declaresReact),
   });
   const ctx = createReactContext({
     base,

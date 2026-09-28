@@ -1,0 +1,13 @@
+{
+  "name": "@rendered-mail/mail",
+  "version": "0.0.0",
+  "private": true,
+  "description": "E-mail templates the API renders. React is installed with this package, so what it renders is React the service runs.",
+  "type": "module",
+  "main": "./src/index.tsx",
+  "dependencies": {
+    "@rendered-mail/ui": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

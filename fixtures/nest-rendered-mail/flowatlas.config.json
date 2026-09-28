@@ -1,0 +1,10 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./apps/api",
+      "type": "nestjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
-import { readPackageJson } from './package-json.js';
+import { readPackageJson, type PackageJson } from './package-json.js';
 
 /**
  * What a monorepo says about itself, and what that makes a service.
@@ -339,8 +339,6 @@ export const workspaceRootOf = (dir: string): string | undefined => {
   return workspaceRootsAbove(member).find((root) => workspaceMemberDirs(root).includes(member));
 };
 
-/** Answers already worked out, so every reader that asks pays for one walk. */
-const dirsByService = new Map<string, readonly string[]>();
 
 type DependencySection =
   | 'dependencies'
@@ -383,6 +381,89 @@ const EXTENT_SECTIONS: Readonly<Record<'service' | 'member', readonly Dependency
 };
 
 /**
+ * What one manifest declares, read the way the extent reads it.
+ *
+ * The one place `EXTENT_SECTIONS` is applied. The extent's walk asks it of every
+ * manifest it reaches, and so does the widening in `adapters/manifest.ts` when it
+ * folds a member's dependencies into what the service can import: a member's
+ * devDependencies were never installed for the service, so they neither take a
+ * package into its extent nor switch an adapter on for it, and both of those are
+ * this one function (R145).
+ */
+export const extentDeclared = (
+  pkg: PackageJson | undefined,
+  role: 'service' | 'member',
+): PackageJson => {
+  const kept: PackageJson = {};
+  for (const section of EXTENT_SECTIONS[role]) {
+    const declared = pkg?.[section];
+    if (declared !== undefined) kept[section] = declared;
+  }
+  return kept;
+};
+
+/** One package of a service's extent, and the packages of it that it declares. */
+export interface ExtentPackage {
+  /** Absolute directory of the package. */
+  readonly dir: string;
+  /** `service` for the package being read, `member` for everything it reaches. */
+  readonly role: 'service' | 'member';
+  /** The directories of the other packages of the extent its manifest declares. */
+  readonly declares: readonly string[];
+}
+
+/** Answers already worked out, so every reader that asks pays for one walk. */
+const extentByService = new Map<string, readonly ExtentPackage[]>();
+
+/**
+ * The packages a service is made of, each with the members it declares.
+ *
+ * The walk behind {@link serviceSourceDirs}, kept with its edges because one
+ * question needs them: a peer dependency is supplied by whoever depends on the
+ * package, so which of a service's packages run a framework depends on who
+ * declares whom (see `suppliedWith` in `adapters/manifest.ts`). Unlike the list
+ * of directories, this includes a member nested inside the service's own
+ * directory, because it is still a package with a manifest of its own.
+ */
+export const serviceExtent = (repoDir: string): readonly ExtentPackage[] => {
+  const own = resolve(repoDir);
+  const cached = extentByService.get(own);
+  if (cached !== undefined) return cached;
+
+  const root = workspaceRootOf(own);
+  const found: ExtentPackage[] = [];
+  if (root === undefined) {
+    found.push({ dir: own, role: 'service', declares: [] });
+  } else {
+    const byName = new Map(workspacePackages(root).map((pkg) => [pkg.name, pkg.dir]));
+    const seen = new Set<string>([own]);
+    const queue = [own];
+    while (queue.length > 0) {
+      const at = queue.shift() as string;
+      const role = at === own ? 'service' : 'member';
+      const declares: string[] = [];
+      for (const name of Object.keys(allDeclared(extentDeclared(readPackageJson(at), role)))) {
+        const dir = byName.get(name);
+        // A package the service is inside of would bring the whole repository
+        // with it, and the answer to "what is this service" would be "all of it".
+        if (dir === undefined || own === dir || own.startsWith(`${dir}/`)) continue;
+        declares.push(dir);
+        if (seen.has(dir)) continue;
+        seen.add(dir);
+        queue.push(dir);
+      }
+      found.push({ dir: at, role, declares });
+    }
+  }
+  extentByService.set(own, found);
+  return found;
+};
+
+/** Every name one manifest declares, in whichever of its sections. */
+const allDeclared = (pkg: PackageJson): Record<string, string> =>
+  Object.assign({}, ...Object.values(pkg)) as Record<string, string>;
+
+/**
  * The directories one service's code lives in: its own, then what it declares.
  *
  * The first entry is always the service's own directory, and it is the one every
@@ -399,45 +480,15 @@ const EXTENT_SECTIONS: Readonly<Record<'service' | 'member', readonly Dependency
  * own child — is left out, because taking it in would quietly turn one service
  * into the whole repository. And a directory that is not a workspace member gets
  * nothing but itself, so pointing the tool at a bare directory, or at a monorepo
- * root, reads exactly what it read before.
+ * root, reads exactly what it read before. A member nested inside the service's
+ * own directory adds no directory, because its files are already under the first
+ * one, though what it declares still belongs to the service.
  */
 export const serviceSourceDirs = (repoDir: string): readonly string[] => {
-  const own = resolve(repoDir);
-  const cached = dirsByService.get(own);
-  if (cached !== undefined) return cached;
-
-  const root = workspaceRootOf(own);
-  const dirs: string[] = [own];
-  if (root !== undefined) {
-    const byName = new Map(workspacePackages(root).map((pkg) => [pkg.name, pkg.dir]));
-    const seen = new Set<string>([own]);
-    const queue = [own];
-    while (queue.length > 0) {
-      const at = queue.shift() as string;
-      const pkg = readPackageJson(at);
-      const sections = EXTENT_SECTIONS[at === own ? 'service' : 'member'];
-      const declared = Object.assign({}, ...sections.map((section) => pkg?.[section])) as Record<
-        string,
-        string
-      >;
-      for (const name of Object.keys(declared)) {
-        const dir = byName.get(name);
-        if (dir === undefined || seen.has(dir)) continue;
-        // A package the service is inside of would bring the whole repository
-        // with it, and the answer to "what is this service" would be "all of it".
-        if (own === dir || own.startsWith(`${dir}/`)) continue;
-        seen.add(dir);
-        // Nested inside the service already: nothing to add, but its own
-        // dependencies still belong to the service.
-        if (!dir.startsWith(`${own}/`)) dirs.push(dir);
-        queue.push(dir);
-      }
-    }
-  }
-  const answer = [dirs[0] as string, ...dirs.slice(1).sort()];
-  dirsByService.set(own, answer);
-  return answer;
+  const [own, ...members] = serviceExtent(repoDir).map((pkg) => pkg.dir) as [string, ...string[]];
+  return [own, ...members.filter((dir) => !dir.startsWith(`${own}/`)).sort()];
 };
+
 
 /** Whether a file belongs to one of a service's own directories. */
 export const isServiceSource = (file: string, repoDir: string): boolean => {
