@@ -32,7 +32,7 @@ import { scopesOf, type Holder, type PassContext, type Scope } from '@flowatlas/
 import type { CallExpression, ClassDeclaration, MethodDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { brokerAdapters, createCustomBrokerAdapter, type BrokerSpec, type ConsumerPattern } from './adapters/index.js';
-import { hasAcknowledgement, methodMatches, receiverIsFrom, targetOfHandler } from './call-site.js';
+import { hasAcknowledgement, methodMatches, receiverIsFrom, replyAt, targetOfHandler } from './call-site.js';
 import { payloadParameter, typeAtPath } from './payload.js';
 import { isResolved, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
 import { endpointShapingAt, isUnreadable, unreadableEndpointRow, type EndpointShaping } from './endpoint.js';
@@ -303,10 +303,16 @@ export const extractBrokers = (ctx: PassContext): void => {
 
     // A call that hands over somewhere to send the answer is a request, not a
     // publish, and the graph should not call the two the same thing.
-    const kind =
-      spec.acknowledgedKind !== undefined && hasAcknowledgement(args)
-        ? spec.acknowledgedKind
-        : (pattern.kind ?? 'event');
+    const acknowledgedKind =
+      spec.acknowledgedKind !== undefined && hasAcknowledgement(args) ? spec.acknowledgedKind : undefined;
+    const kind = acknowledgedKind ?? pattern.kind ?? 'event';
+    // A request has an answer, and the answer is a second shape crossing the
+    // same boundary: recorded as the edge's `returns`, the field a call to a
+    // route carries its expected answer in, so that one comparison reads both.
+    // A publish expects nothing back and is given nothing here (R151).
+    const reply = kind === 'rpc' ? replyAt(call, acknowledgedKind !== undefined) : undefined;
+    const replyType =
+      reply === undefined ? undefined : ctx.types.collectType(ctx.types.unwrapAsync(reply), call);
 
     const producerId = makeLeafId('producer', ctx.repo, file, line, column);
     const channelName = names[0] ?? null;
@@ -372,6 +378,7 @@ export const extractBrokers = (ctx: PassContext): void => {
         file,
         line,
         ...(payloadType === undefined ? {} : { params: [payloadType] }),
+        ...(replyType === undefined ? {} : { returns: replyType }),
       });
     }
     if (payloadType === undefined) {

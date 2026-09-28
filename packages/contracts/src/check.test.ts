@@ -292,6 +292,89 @@ describe('a message on a channel', () => {
   });
 });
 
+/**
+ * A request over a channel, and the answer that comes back on it (R151).
+ *
+ * The answer is a response like the answer to a route: the handler sends what
+ * it declares it returns, and the asker receives what its edge says it expects.
+ * The same pair of `Answer` shapes a route disagrees about must be disagreed
+ * about here in the same words, or the two readings have drifted apart.
+ */
+describe('the answer to a request over a channel', () => {
+  const asked = (kind: string, returns?: string, answers?: string): ReturnType<typeof graphOf> =>
+    graphOf({
+      nodes: [
+        node('caller#Client.ask', 'method', 'caller'),
+        node('producer:caller#1', 'producer', 'caller', { kind }),
+        node('channel:orders.get', 'channel', 'caller'),
+        node('consumer:api#1', 'consumer', 'api', { meta: { entryId: 'entry:api:rpc:orders.get' } }),
+        node('api#Rpc.get', 'method', 'api'),
+        node('entry:api:rpc:orders.get', 'entry', 'api', { kind: 'rpc' }),
+      ],
+      edges: [
+        edge('caller#Client.ask', 'calls', 'producer:caller#1'),
+        edge('producer:caller#1', 'emits', 'channel:orders.get', {
+          params: ['type:caller#Body'],
+          ...(returns === undefined ? {} : { returns }),
+        }),
+        edge('channel:orders.get', 'consumes', 'consumer:api#1'),
+        edge('consumer:api#1', 'handles', 'api#Rpc.get'),
+        edge('entry:api:rpc:orders.get', 'handles', 'api#Rpc.get', {
+          params: ['type:api#Body'],
+          ...(answers === undefined ? {} : { returns: answers }),
+        }),
+      ],
+      types: registry,
+    });
+
+  const routeAnswer = (): string[] =>
+    request()
+      .findings.filter((finding) => finding.direction === 'response')
+      .map((finding) => finding.message);
+
+  it('is compared as the answer to a route is, in the same words', () => {
+    const report = checkContracts(asked('rpc', 'type:caller#Answer', 'type:api#Answer'), {
+      generatedAt: FIXED,
+    });
+    const row = report.edges.find((found) => found.direction === 'response');
+    expect(row?.sender.symbol).toBe('api#Rpc.get');
+    expect(row?.receiver.symbol).toBe('caller#Client.ask');
+    expect(row?.edgeKey).toBe('producer:caller#1|emits|consumer:api#1');
+    const said = report.findings
+      .filter((finding) => finding.direction === 'response')
+      .map((finding) => finding.message);
+    expect(said).toHaveLength(1);
+    expect(said).toEqual(routeAnswer());
+  });
+
+  it('says the asker declares nothing when the reply is read untyped', () => {
+    const report = checkContracts(asked('rpc', 'any', 'type:api#Answer'), { generatedAt: FIXED });
+    const row = report.unchecked.find((found) => found.direction === 'response');
+    expect(row?.reason).toBe('no-type-on-receiver');
+    expect(row?.message).toContain('caller#Client.ask');
+  });
+
+  it('says so when no reply type was recorded at all, rather than leaving the answer out', () => {
+    const report = checkContracts(asked('rpc', undefined, 'type:api#Answer'), { generatedAt: FIXED });
+    expect(report.unchecked.find((found) => found.direction === 'response')?.reason).toBe(
+      'no-type-on-receiver',
+    );
+  });
+
+  it('says the handler declares nothing when it answers with nothing typed', () => {
+    const report = checkContracts(asked('rpc', 'type:caller#Answer', 'any'), { generatedAt: FIXED });
+    const row = report.unchecked.find((found) => found.direction === 'response');
+    expect(row?.reason).toBe('no-type-on-sender');
+    expect(row?.message).toContain('api#Rpc.get');
+  });
+
+  it('gives a publish that expects nothing back no answer, compared or unchecked', () => {
+    const report = checkContracts(asked('event', undefined, 'type:api#Answer'), { generatedAt: FIXED });
+    expect(report.edges.map((row) => row.direction)).toEqual(['payload']);
+    expect(report.unchecked).toEqual([]);
+  });
+});
+
 describe('the two short-circuits', () => {
   const pair = (sent: string, expected: string, types: TypeRegistry = registry) =>
     checkContracts(

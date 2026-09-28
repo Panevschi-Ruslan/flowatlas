@@ -1709,6 +1709,60 @@
     },
     {
       "edge": {
+        "from": "producer:billing#src/invoices/orders.rpc.client.ts:15:12",
+        "to": "consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+        "type": "emits"
+      },
+      "edgeKey": "producer:billing#src/invoices/orders.rpc.client.ts:15:12|emits|consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#OrderDto",
+        "symbol": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient.ask"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "producer:billing#src/invoices/orders.rpc.client.ts:15:12",
+            "to": "consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+            "type": "emits"
+          },
+          "edgeKey": "producer:billing#src/invoices/orders.rpc.client.ts:15:12|emits|consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+          "direction": "response",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#OrderDto",
+            "symbol": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get"
+          },
+          "receiver": {
+            "service": "billing",
+            "typeId": "type:billing#OrderDto",
+            "symbol": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient.ask"
+          },
+          "typeId": "type:billing#OrderDto",
+          "field": "status",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver billing requires `status: string`; sender orders does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "date-string:placedAt"
+      ]
+    },
+    {
+      "edge": {
         "from": "producer:orders#src/orders/orders.service.ts:69:5",
         "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
         "type": "emits"
@@ -2201,6 +2255,35 @@
       "actual": null,
       "rule": null,
       "message": "receiver orders requires `includeItems: boolean`; sender billing does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "producer:billing#src/invoices/orders.rpc.client.ts:15:12",
+        "to": "consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+        "type": "emits"
+      },
+      "edgeKey": "producer:billing#src/invoices/orders.rpc.client.ts:15:12|emits|consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+      "direction": "response",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderDto",
+        "symbol": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#OrderDto",
+        "symbol": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient.ask"
+      },
+      "typeId": "type:billing#OrderDto",
+      "field": "status",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver billing requires `status: string`; sender orders does not send it",
       "ignored": false,
       "ignoredBy": null
     },
@@ -3055,12 +3138,12 @@
     }
   ],
   "summary": {
-    "edges": 32,
+    "edges": 33,
     "shared": 2,
     "identical": 8,
-    "hash_differs": 22,
+    "hash_differs": 23,
     "unchecked": 6,
-    "errors": 14,
+    "errors": 15,
     "warnings": 6,
     "infos": 12,
     "ignored": 4

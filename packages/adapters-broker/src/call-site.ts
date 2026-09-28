@@ -1,5 +1,5 @@
 import { methodNamedOn, resolveTypeOrigin, type ClassMethod, type TypeOrigin } from '@flowatlas/core';
-import type { ClassDeclaration, Node as TsNode } from 'ts-morph';
+import type { CallExpression, ClassDeclaration, Node as TsNode, Type } from 'ts-morph';
 import { Node } from 'ts-morph';
 
 /**
@@ -72,6 +72,22 @@ export const hasAcknowledgement = (args: readonly TsNode[]): boolean => {
   if (last === undefined) return false;
   if (Node.isArrowFunction(last) || Node.isFunctionExpression(last)) return true;
   return last.getType().getCallSignatures().length > 0;
+};
+
+/**
+ * The type the answer to a request arrives as, where the request was made.
+ *
+ * Two places, and the call says which: a request that hands over a callback is
+ * answered through it, so the answer is what the callback is given; any other
+ * request is answered by what the call returns — `client.send<Order>(…)` is an
+ * `Observable<Order>`, which the reader unwraps like any other delivery. A
+ * callback declaring no parameter reads no answer, and says so by giving none.
+ */
+export const replyAt = (call: CallExpression, acknowledged: boolean): Type | undefined => {
+  if (!acknowledged) return call.getReturnType();
+  const last = call.getArguments().at(-1);
+  const [signature] = last?.getType().getCallSignatures() ?? [];
+  return signature?.getParameters()[0]?.getTypeAtLocation(call);
 };
 
 /**

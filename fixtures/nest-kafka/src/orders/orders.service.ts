@@ -123,9 +123,9 @@ export class OrdersService {
     this.client.emit(...args);
   }
 
-  // `send` rather than `emit`: `meta.kind: "rpc"`. The return type is the type
-  // argument of the call, unwrapped from `Observable<Order>` by `firstValueFrom`.
-  // Expected: `returns: type:nest-kafka#Order`.
+  // `send` rather than `emit`: `meta.kind: "rpc"`. The reply is the call's own
+  // `Observable<Order>`, unwrapped. Expected: the `emits` edge carries
+  // `returns: type:nest-kafka#Order`, compared with the handler's (R151).
   getOrder(query: OrderQuery): Promise<Order> {
     return firstValueFrom(this.client.send<Order, OrderQuery>('get.order', query));
   }

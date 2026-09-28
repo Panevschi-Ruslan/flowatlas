@@ -93,6 +93,37 @@ const party = (
 };
 
 /**
+ * The two ends of an answer, whichever way the question was asked.
+ *
+ * A route and a request over a channel are answered the same way: the handler
+ * declares what it returns, and the edge that asked carries what the asker
+ * expects back as its `returns`. Read in one place so that the answer to a
+ * `client.send` is compared exactly as the answer to an `http.get` is, rather
+ * than by a second reading that could drift from the first (R151).
+ */
+const answer = (
+  lookup: GraphLookup,
+  handler: { service: string; handles: GraphEdge | undefined; symbol: string },
+  asker: { service: string; asked: GraphEdge; symbol: string },
+): { sender: ContractParty; receiver: ContractParty } => ({
+  sender: party(lookup, handler.service, handler.handles?.returns, handler.symbol),
+  receiver: party(lookup, asker.service, asker.asked.returns, asker.symbol),
+});
+
+/**
+ * The kind of publish that waits for an answer.
+ *
+ * Every reader of a transport writes it on the producer, whether the call is a
+ * request by its name — `client.send` — or by the callback it hands over. A
+ * publish of any other kind expects nothing back, so it has no answer to be
+ * compared or to be missing a type for.
+ */
+const REQUEST_KIND = 'rpc';
+
+const asksForAnswer = (lookup: GraphLookup, emit: GraphEdge): boolean =>
+  lookup.node(emit.from)?.kind === REQUEST_KIND;
+
+/**
  * Both halves of a request, whichever way the request was made.
  *
  * A call between services and a request from a browser differ in what wrote
@@ -170,11 +201,12 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
     },
     party(lookup, handlerService, bodyTypeOf(handles[0]), handler),
   );
-  const response = both(
-    'response',
-    party(lookup, handlerService, handles[0]?.returns, handler),
-    party(lookup, callerService, edge.returns, caller),
+  const replied = answer(
+    lookup,
+    { service: handlerService, handles: handles[0], symbol: handler },
+    { service: callerService, asked: edge, symbol: caller },
   );
+  const response = both('response', replied.sender, replied.receiver);
   return [request, response];
 };
 
@@ -243,15 +275,19 @@ const channelExchanges = (lookup: GraphLookup, channel: GraphNode): Exchange[] =
         receiver: party(lookup, handlerService, bodyTypeOf(handles) ?? handles?.params?.[0], handler),
         symbols: [publisher, handler],
       });
-      // A request and an answer, over a channel. Only some transports have one,
-      // and the publisher's own return type is what says so.
-      if (emit.returns !== undefined) {
+      // A request and an answer, over a channel. The kind of the publish says
+      // whether there is an answer at all; whether either end declares its type
+      // is the comparison's to say, in the words it says it for a route.
+      if (asksForAnswer(lookup, emit)) {
         found.push({
           edge: shape,
           edgeKey,
           direction: 'response',
-          sender: party(lookup, handlerService, handles?.returns, handler),
-          receiver: party(lookup, publisherService, emit.returns, publisher),
+          ...answer(
+            lookup,
+            { service: handlerService, handles, symbol: handler },
+            { service: publisherService, asked: emit, symbol: publisher },
+          ),
           symbols: [publisher, handler],
         });
       }

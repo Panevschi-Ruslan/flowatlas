@@ -110,6 +110,18 @@
       "reason": "no-type-on-receiver",
       "message": "consumer:web#src/app/orders-socket.service.ts:OrdersSocketService.apply declares no type for what it expects",
       "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:web#src/app/orders-socket.service.ts:46:5",
+        "to": "consumer:api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
+        "type": "emits"
+      },
+      "edgeKey": "producer:web#src/app/orders-socket.service.ts:46:5|emits|consumer:api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/orders-socket.service.ts:OrdersSocketService.requestSummary declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     }
   ],
   "summary": {
@@ -117,7 +129,7 @@
     "shared": 0,
     "identical": 2,
     "hash_differs": 0,
-    "unchecked": 5,
+    "unchecked": 6,
     "errors": 0,
     "warnings": 0,
     "infos": 0,

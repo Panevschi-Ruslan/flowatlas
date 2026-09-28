@@ -1,4 +1,4 @@
-contracts: edges=32 shared=2 identical=8 drift=22 unchecked=6 errors=14 warnings=6 infos=12 ignored=4
+contracts: edges=33 shared=2 identical=8 drift=23 unchecked=6 errors=15 warnings=6 infos=12 ignored=4
 
 findings:
   severity  kind                  between           direction  field            what
@@ -13,6 +13,7 @@ findings:
   error     type_mismatch         gateway → orders  request    next.next.next   sender gateway sends `next.next.next` as `DeepL3`; receiver orders declares it `DeepL3`; their shapes differ below the depth this run compared; raise --depth to see which field
   error     missing_required      gateway → orders  request    id               receiver orders requires `id: string`; sender gateway does not send it
   error     missing_required      billing → orders  payload    includeItems     receiver orders requires `includeItems: boolean`; sender billing does not send it
+  error     missing_required      orders → billing  response   status           receiver billing requires `status: string`; sender orders does not send it
   error     missing_required      orders → billing  payload    customerId       receiver billing requires `customerId: string`; sender orders does not send it
   error     missing_required      web → orders      request    shipTo.postcode  receiver orders requires `shipTo.postcode: string`; sender web does not send it
   error     type_mismatch         orders → web      response   total            sender orders sends `total` as `number`; receiver web declares it `string`

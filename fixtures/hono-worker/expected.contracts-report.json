@@ -52,7 +52,7 @@
       "direction": "response",
       "reason": "no-type-on-receiver",
       "message": "web#src/app/orders-api.service.ts:OrdersApiService.list declares no type for what it expects",
-      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`."
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     }
   ],
   "summary": {

@@ -32,6 +32,7 @@ else, so that at least one boundary in the fixture cannot drift.
 | `CreateOrderDto` on `POST /orders/legacy` | the same drift, `@ContractIgnore`d: listed under `ignored`, never counted |
 | `OrderCreatedEvent` on `channel:order.created` | `missing_required customerId`: a channel has no compiler between its ends |
 | `GetOrderQuery` on `channel:orders.get` | `missing_required includeItems`, `extra_field includeRefunds` |
+| `OrderDto` answered on `channel:orders.get` | `missing_required status`: the reply of a request is a response, compared as a route's is (R151) |
 | `CreateOrderDto` / `OrderDto` from `web` | the same two halves, from a browser |
 | `WireDto` on `POST /wire` | **no error at all** — one field per rule about what JSON does to a shape |
 | `WireBrokenDto` on `POST /wire/broken` | three errors the rules must not hide, one of them a value the receiver has never heard of |

@@ -120,6 +120,27 @@ describe('what has drifted, on a channel', () => {
     ]);
   });
 
+  it('reports the answer an rpc caller reads, as it reports the answer to a route', () => {
+    expect(facts(about('type:orders#OrderDto', 'type:billing#OrderDto'))).toEqual([
+      'error missing_required status',
+    ]);
+    const answer = report.edges.find(
+      (row) => row.sender.typeId === 'type:orders#OrderDto' && row.receiver.typeId === 'type:billing#OrderDto',
+    );
+    expect(answer?.direction).toBe('response');
+    expect(answer?.edgeKey).toMatch(/^producer:billing#.*\|emits\|consumer:orders#/);
+  });
+
+  it('gives an event no answer to compare', () => {
+    // `orders` publishes `order.created` and asks nothing: the one answer it
+    // sends is to `billing`'s request, whose key starts at billing's producer.
+    const published = report.edges.filter((row) => row.edgeKey.startsWith('producer:orders#'));
+    expect(published.map((row) => row.direction)).toEqual(['payload']);
+    expect(
+      report.unchecked.filter((row) => row.direction === 'response' && row.edgeKey.startsWith('producer:orders#')),
+    ).toEqual([]);
+  });
+
   it('keys a channel contract by the two ends and not by the channel between them', () => {
     const found = report.edges.find((row) => row.direction === 'payload' && row.sender.service === 'orders');
     expect(found?.edgeKey).toMatch(/^producer:orders#.*\|emits\|consumer:billing#/);

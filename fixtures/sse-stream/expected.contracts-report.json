@@ -40,7 +40,7 @@
       "direction": "response",
       "reason": "no-type-on-receiver",
       "message": "web#src/app/live-events.service.ts:LiveEventsService.open declares no type for what it expects",
-      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`."
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     },
     {
       "edge": {
@@ -64,7 +64,7 @@
       "direction": "response",
       "reason": "no-type-on-receiver",
       "message": "web#src/app/live-events.service.ts:LiveEventsService.openWithToken declares no type for what it expects",
-      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`."
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     },
     {
       "edge": {
@@ -112,7 +112,7 @@
       "direction": "response",
       "reason": "no-type-on-receiver",
       "message": "web#src/app/remembered-stream.service.ts:OrderTrackStreamService.track declares no type for what it expects",
-      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`."
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     },
     {
       "edge": {
@@ -136,7 +136,7 @@
       "direction": "response",
       "reason": "no-type-on-receiver",
       "message": "web#src/app/stream-wrapper.service.ts:WatchService.watch declares no type for what it expects",
-      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`."
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     }
   ],
   "summary": {

@@ -16,7 +16,7 @@ export type {
   EndpointCarrier,
   SubscriberPattern,
 } from './adapters/index.js';
-export { hasAcknowledgement, methodMatches, receiverIsFrom, targetOfHandler } from './call-site.js';
+export { hasAcknowledgement, methodMatches, receiverIsFrom, replyAt, targetOfHandler } from './call-site.js';
 export { isResolved, resolveChannelName, shapeChannelNames, trimEndpoint } from './channel-name.js';
 export type {
   ChannelResolution,

@@ -1351,6 +1351,7 @@
       "params": [
         "type:nest-kafka#OrderQuery"
       ],
+      "returns": "type:nest-kafka#Order",
       "file": "src/orders/orders.service.ts",
       "line": 130
     },
@@ -1362,6 +1363,7 @@
       "params": [
         "type:nest-kafka#OrderQuery"
       ],
+      "returns": "any",
       "file": "src/orders/orders.service.ts",
       "line": 136
     },
