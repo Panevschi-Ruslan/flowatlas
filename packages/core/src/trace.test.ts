@@ -173,9 +173,9 @@ describe('a settings value kept in a static property', () => {
 
   it('reads a non-empty fallback, and not an empty one, which says there is no value', () => {
     const file = parse(`
-      declare const auth: { restaurantId(): string | null; base(): string | null };
+      declare const auth: { accountId(): string | null; base(): string | null };
       class Service {
-        private get rid(): string { return auth.restaurantId() ?? ''; }
+        private get rid(): string { return auth.accountId() ?? ''; }
         private get prefix(): string { return auth.base() || '/api'; }
         one() { return http.get(this.rid); }
         two() { return http.get(this.prefix); }
@@ -185,7 +185,7 @@ describe('a settings value kept in a static property', () => {
       .getDescendantsOfKind(SyntaxKind.CallExpression)
       .filter((call) => call.getExpression().getText().endsWith('.get'));
     // An id that may be missing is a hole in the path, never an empty segment
-    // (R165, found on a real admin client whose request lost its restaurant).
+    // (R165, found on a real admin client whose request lost a segment).
     expect(calls.map((call) => constantPropertyValue(call.getArguments()[0]!))).toEqual([
       null,
       '/api',

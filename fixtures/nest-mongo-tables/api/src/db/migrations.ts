@@ -4,9 +4,9 @@ import type { Db } from 'mongodb';
 /** Migrations written against the driver directly, the way most are. */
 @Injectable()
 export class Migrations {
-  // The collection is named in the chain: `floor_decorations`, delete.
+  // The collection is named in the chain: `archived_orders`, delete.
   dropDecorations(db: Db): Promise<boolean> {
-    return db.collection('floor_decorations').drop();
+    return db.collection('archived_orders').drop();
   }
 
   // The collection is kept in a constant first: `users`, write.

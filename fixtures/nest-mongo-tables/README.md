@@ -5,7 +5,7 @@ on the repository classes a project writes over it (R165).
 
 | Call | Expected table | Why |
 |---|---|---|
-| `db.collection('floor_decorations').drop()` | `floor_decorations`, delete | named in the chain, by the `mongodb` description's `chain-call` rule |
+| `db.collection('archived_orders').drop()` | `archived_orders`, delete | named in the chain, by the `mongodb` description's `chain-call` rule |
 | `const users = db.collection('users'); users.updateMany(…)` | `users`, write | a `const` bound to a link of the chain is still that link |
 | `db.collection(name).deleteOne(…)` | none; one `dynamic-table-name` row | decided at run time |
 | `this.orders.findAll()` on `OrdersRepository` | `orders`, read | `collectionName = ORDERS_COLLECTION`, a constant, read because the configuration names `BaseRepository` with `"tableProperty": "collectionName"` |

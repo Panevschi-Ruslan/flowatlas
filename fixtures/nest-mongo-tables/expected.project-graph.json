@@ -315,19 +315,19 @@
     {
       "id": "db_query:api#src/db/migrations.ts:9:12",
       "type": "db_query",
-      "label": "delete floor_decorations",
+      "label": "delete archived_orders",
       "repo": "api",
       "file": "src/db/migrations.ts",
       "line": 9,
       "meta": {
         "op": "delete",
-        "table": "floor_decorations",
+        "table": "archived_orders",
         "tables": [
-          "floor_decorations"
+          "archived_orders"
         ],
         "package": "mongodb",
         "method": "drop",
-        "receiver": "db.collection('floor_decorations')",
+        "receiver": "db.collection('archived_orders')",
         "source": "string-arg"
       }
     },
@@ -460,9 +460,9 @@
       "repo": "api"
     },
     {
-      "id": "table:api#floor_decorations",
+      "id": "table:api#archived_orders",
       "type": "table",
-      "label": "floor_decorations",
+      "label": "archived_orders",
       "repo": "api"
     },
     {
@@ -703,7 +703,7 @@
     },
     {
       "from": "db_query:api#src/db/migrations.ts:9:12",
-      "to": "table:api#floor_decorations",
+      "to": "table:api#archived_orders",
       "type": "queries",
       "confidence": "static",
       "file": "src/db/migrations.ts",
