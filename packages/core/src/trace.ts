@@ -1186,10 +1186,96 @@ const methodHolding = (parameter: ParameterDeclaration): ClassMethod | undefined
 };
 
 /**
- * Everywhere a method is called, as a call expression.
+ * Where a call written against a method's name lands, as far as the source says.
+ *
+ * - `runs`: the name resolves to this method and nothing else - `this.m()` in
+ *   its own class, `super.m()` in a subclass that does not override it, a
+ *   receiver typed as the class itself.
+ * - `undecided`: the name resolves to something this method implements or
+ *   overrides - an interface member, a member of a type literal, a method of a
+ *   class it extends, called on a receiver that may be of this class - or to a
+ *   union holding it. One of the implementations runs, and which one is
+ *   decided at run time.
+ * - `elsewhere`: the name resolves to another method altogether: the same
+ *   method of a sibling that implements the same interface, a subclass's
+ *   override of it, the method it overrides called through `super`, or one it
+ *   overrides called on a receiver whose class is not this one's lineage.
+ */
+export type Dispatch = 'runs' | 'undecided' | 'elsewhere';
+
+/** The holders a member of which a method may be answering for. */
+const isAbstractHolder = (node: TsNode | undefined): boolean =>
+  node !== undefined && (Node.isInterfaceDeclaration(node) || Node.isTypeLiteral(node));
+
+/**
+ * Which method a call runs, asked of the one the reference was found from.
+ *
+ * `findReferences` of a method that implements an interface takes in the
+ * interface member, and through it every other implementation of that member
+ * and every call written against any of them. Each of those is a reference in
+ * the compiler's sense and none of them is a call of this method: a request
+ * forwarded along them was attributed to a sibling's `this.deleteEvent(...)`,
+ * and the implementation's own request went missing (R158). What the name at
+ * the call resolves to is the answer, because that is what the language
+ * dispatches through.
+ */
+export const dispatchOf = (call: CallExpression, method: ClassMethod): Dispatch => {
+  const callee = unwrap(call.getExpression());
+  // A method named bare, not through a receiver, is the method it names.
+  if (!Node.isPropertyAccessExpression(callee)) return 'runs';
+  const declarations = callee.getNameNode().getSymbol()?.getDeclarations() ?? [];
+  if (declarations.length === 0) return 'undecided';
+
+  const owner = method.getParent();
+  const name = method.getName();
+  // An overloaded method is several declarations of one method.
+  const isOwn = (declaration: TsNode): boolean =>
+    declaration === method ||
+    (Node.isMethodDeclaration(declaration) &&
+      declaration.getParent() === owner &&
+      declaration.getName() === name);
+  if (declarations.every(isOwn)) return 'runs';
+  // `super.m()` is bound where it is written: it runs the method it names and
+  // never an override of it.
+  if (callee.getExpression().getKind() === SyntaxKind.SuperKeyword) return 'elsewhere';
+
+  const lineage = Node.isClassDeclaration(owner) ? classChain(owner, BUDGET) : [];
+  const ancestors = lineage.slice(1);
+  // A receiver whose class is written down, and is neither this method's class
+  // nor one it extends, holds an instance that cannot be of this class: a
+  // sibling calling the method both inherit runs the inherited one, not this
+  // override of it.
+  const receiverClass = callee
+    .getExpression()
+    .getType()
+    .getSymbol()
+    ?.getDeclarations()
+    .find((declaration) => Node.isClassDeclaration(declaration));
+  const couldBeThisClass =
+    receiverClass === undefined || lineage.some((member) => member === receiverClass);
+  const above = (declaration: TsNode): boolean => {
+    const holder = declaration.getParent();
+    if (isAbstractHolder(holder)) return true;
+    return (
+      couldBeThisClass &&
+      holder !== undefined &&
+      Node.isClassDeclaration(holder) &&
+      ancestors.includes(holder)
+    );
+  };
+  return declarations.some((declaration) => isOwn(declaration) || above(declaration))
+    ? 'undecided'
+    : 'elsewhere';
+};
+
+/**
+ * Everywhere a method may be called, as a call expression.
  *
  * A reference that is not the callee — the method passed as a value, or named
- * in a type — is not a call and is left out.
+ * in a type — is not a call and is left out. Neither is a call that dispatches
+ * to another method altogether (R158); a call that may land here and may land
+ * in a sibling stays, and `dispatchOf` tells the two apart for a caller that
+ * needs to.
  */
 export const callSitesOf = (method: ClassMethod): CallExpression[] => {
   const sites: CallExpression[] = [];
@@ -1202,6 +1288,7 @@ export const callSitesOf = (method: ClassMethod): CallExpression[] => {
     if (call === undefined || !Node.isCallExpression(call) || call.getExpression() !== access) {
       continue;
     }
+    if (dispatchOf(call, method) === 'elsewhere') continue;
     const key = `${call.getSourceFile().getFilePath()}:${call.getStart()}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -1521,6 +1608,19 @@ export interface ForwardedCall {
   argument: TsNode;
 }
 
+/** Who supplies a parameter, and whether anybody else may. */
+export interface Forwarded {
+  /** The calls known to run the method, each with what it passed. */
+  calls: ForwardedCall[];
+  /**
+   * True when some call may run the method and may run another implementation
+   * of it instead. What such a call passes cannot be attributed, so the value
+   * is also decided somewhere nobody can name, and the method's own reading of
+   * it is still an answer.
+   */
+  undecided: boolean;
+}
+
 /**
  * Finds who supplies what reaches a function as a parameter.
  *
@@ -1530,37 +1630,39 @@ export interface ForwardedCall {
  * caller, which is the difference between a wrapper and a dead end. A caller
  * that is itself forwarding is followed further, so a client layered on a
  * transport still lands on the service that wanted the data.
+ *
+ * Only a call that runs this method is a caller of it (R158). A sibling's
+ * `this.deleteEvent(...)` is a call of the sibling's method, and is not
+ * followed; a call through the interface both implement may run either, and is
+ * not followed either, but it is said to be there.
  */
-export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): ForwardedCall[] => {
-  if (budget <= 0) return [];
+export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forwarded => {
+  const out: Forwarded = { calls: [], undecided: false };
+  if (budget <= 0) return out;
   const method = methodHolding(parameter);
-  if (method === undefined) return [];
+  if (method === undefined) return out;
   const index = parametersOf(method).findIndex((item) => item === parameter);
-  if (index < 0) return [];
+  if (index < 0) return out;
 
-  const out: ForwardedCall[] = [];
-  const seen = new Set<string>();
-  for (const reference of method.findReferencesAsNodes()) {
-    const parent = reference.getParent();
-    const call =
-      parent !== undefined && Node.isPropertyAccessExpression(parent) ? parent.getParent() : parent;
-    if (call === undefined || !Node.isCallExpression(call)) continue;
+  for (const call of callSitesOf(method)) {
     const argument = call.getArguments()[index];
     if (argument === undefined) continue;
-
-    const key = `${call.getSourceFile().getFilePath()}:${call.getStart()}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
+    if (dispatchOf(call, method) === 'undecided') {
+      out.undecided = true;
+      continue;
+    }
 
     // A caller that is itself forwarding is not where the address is decided.
     // If nothing calls it either, the whole chain is unused and this hop stands
     // for nobody, so it is dropped rather than recorded as a request.
     const further = parameterBehind(argument, budget);
     if (further !== undefined) {
-      out.push(...forwardedFrom(further, budget - 1));
+      const outer = forwardedFrom(further, budget - 1);
+      out.calls.push(...outer.calls);
+      out.undecided ||= outer.undecided;
       continue;
     }
-    out.push({ site: call, argument });
+    out.calls.push({ site: call, argument });
   }
   return out;
 };

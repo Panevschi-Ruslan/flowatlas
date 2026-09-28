@@ -347,6 +347,7 @@ export {
   constantMethodResult,
   constantPropertyValue,
   deref,
+  dispatchOf,
   finiteLookups,
   MOST_CHOICES,
   foldedChoices,
@@ -365,7 +366,9 @@ export {
 } from './trace.js';
 export type {
   CallFrame,
+  Dispatch,
   FiniteLookup,
+  Forwarded,
   ForwardedCall,
   RootSettingOptions,
   SettingAddress,
