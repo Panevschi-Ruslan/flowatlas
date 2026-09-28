@@ -30,12 +30,19 @@ read gate, run over the fixtures (see below).
 
 ## What it measures, and against what
 
-The targets are listed in
-[`scripts/coverage/targets.json`](../scripts/coverage/targets.json). Each is a
-record: the repository, the commit it is pinned at, the directories inside the
-clone to read, and a sentence saying what the target is for, which is printed at
-the head of its report. A number without a commit means nothing next month, so
-the commit is in the list and in every report.
+The targets are listed in `scripts/coverage/targets.local.json`, which is
+gitignored: they are other people's repositories, and this project does not name
+them. Copy
+[`scripts/coverage/targets.example.json`](../scripts/coverage/targets.example.json)
+to that path and list your own. Each target is a record: the repository, the
+commit it is pinned at, the directories inside the clone to read, and a sentence
+saying what the target is for, which is printed at the head of its report. A
+number without a commit means nothing next month, so the commit is in the list
+and in every report.
+
+A target may also carry `exempt` and `baseline`, the same entries the fixtures
+keep in `read-gate.mjs`: one file or subtree of that repository, one family, and
+a `why`. They live with the target because they name files of it.
 
 Nothing in that list says how a repository should be read. Each entry names
 directories, and `flowatlas link` decides the type of each one by reading its
@@ -61,9 +68,9 @@ that its figures are a floor: what it still reads is what the repository's own
 source states.
 
 **With dependencies installed** the checker can follow a type into a package,
-and the answers differ a great deal. Each state gets its own committed report,
-`<target>.md` and `<target>.with-deps.md` under `scripts/coverage/reports/`, so
-neither hides behind the other.
+and the answers differ a great deal. Each state gets its own report,
+`<target>.md` and `<target>.with-deps.md` under `scripts/coverage/reports/`
+(gitignored, for the same reason as the list), so neither hides behind the other.
 
 Dependencies are installed with `--ignore-scripts`. Running strangers'
 postinstall hooks on a developer's machine is not worth a coverage number, and
@@ -187,7 +194,7 @@ edge kind (`calls`, `injects`, `imports`, `reads_config`, `emits`, `consumes`,
 to no family or that the table has never heard of. One reason speaks for every
 family: `file-not-parsed`, because a file the parser could not read was read by
 no reader at all. Before R160 anything said about a file spoke for all of its
-families, and about 174 of cal.com's data files passed on a call between two of
+families, and about 174 of one target's data files passed on a call between two of
 their functions.
 
 That is all it asks. A reader that saw a file and could say nothing useful about
@@ -257,8 +264,8 @@ a reason beside it:
 
 ## Reading it as a diff
 
-The reports are committed so that an improvement is reviewable. They are written
-for that:
+The reports stay on the machine that measured, and are written so that two runs
+compare as a diff (`git diff --no-index`, or any diff tool):
 
 - no timestamp, and no run-to-run identifiers;
 - rows ordered by name, never by size, so one row growing does not reorder a
@@ -285,7 +292,7 @@ would be worse than no harness at all.
 
 Clones live in `.coverage-cache/` at the root of the checkout, which is
 gitignored. A second run re-uses them, so only the first is slow. Everything in
-it is derived from `targets.json`, and it is safe to delete at any time:
+it is derived from `targets.local.json`, and it is safe to delete at any time:
 
 ```sh
 rm -rf .coverage-cache
@@ -298,6 +305,6 @@ pnpm coverage:pin
 ```
 
 resolves each repository's default branch to a commit and writes it back into
-`targets.json`. Do it deliberately and in its own commit: re-pinning and
+`targets.local.json`. Do it deliberately and on its own: re-pinning and
 re-measuring at once produces a diff in which nobody can tell which numbers moved
 because the tool changed and which moved because somebody else's repository did.

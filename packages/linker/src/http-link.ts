@@ -165,7 +165,7 @@ const UNREAD_NAMED = 3;
 /**
  * A request that no route read in full answers, beside a route that may be it.
  *
- * Not the plain sentence, because that one would be false. On novu every one of
+ * Not the plain sentence, because that one would be false. On a notification service every one of
  * its 456 addresses begins with a mount the deployment sets, `${CONTEXT_PATH}v`,
  * so each was recorded as `/${…}v1/…`, and a request for `/v1/agents` was
  * reported as asking for something nobody serves about an address the graph

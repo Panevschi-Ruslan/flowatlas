@@ -199,7 +199,7 @@ describe('matchRoute', () => {
 
       // Before specificity and not after it. The other application spelling the
       // address out more fully says nothing about where this request goes, and
-      // preferring it is how 35 of 36 joins on payload named the wrong program.
+      // preferring it is how 35 of 36 joins on a CMS monorepo named the wrong program.
       it('prefers its own catch-all to another application spelled-out route', () => {
         const mixed = [
           inApplication('/api/posts', '.'),

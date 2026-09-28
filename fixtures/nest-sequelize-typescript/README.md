@@ -36,6 +36,6 @@ hands the same model back, so `NARROWING_CALLS` reads through it.
 `tableName` wins over `modelName` where both are stated, as it does for `init`,
 because the table is what a reader looking at the database would see.
 
-The model class is called `Document` on purpose: outline's is, and a class that
+The model class is called `Document` on purpose: a wiki app's is, and a class that
 shares its name with one of the language's own global interfaces is where a
 reader that takes the first declaration a name has goes wrong.

@@ -88,7 +88,7 @@ describe('scanCandidates', () => {
   });
 
   /**
-   * R107: `init --dir .` on PeerTube wrote one service and left out the Angular
+   * R107: `init --dir .` on a video platform wrote one service and left out the Angular
    * client that is half the repository. The two halves were declared all along,
    * in `pnpm-workspace.yaml`, so what the command had to learn was to read it.
    */

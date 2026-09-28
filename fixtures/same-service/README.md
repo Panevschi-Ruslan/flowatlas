@@ -8,7 +8,7 @@ join could not see. A relative `fetch('/api/things')` names no service and has
 no base-address setting behind it, so nothing in the configuration could say
 where it goes; the only reading available is that it goes to the service it was
 written in — and that service was the one struck out of the search (R93). On
-cal.com that lost every one of thirty-two requests its browser makes and
+A scheduling app that lost every one of thirty-two requests its browser makes and
 produced twenty-three rows saying no configured service serves an address
 sitting in the same graph.
 

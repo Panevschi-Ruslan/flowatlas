@@ -71,7 +71,7 @@ describe('reading the global prefix', () => {
   });
 
   it('finds it in the helper the entry file hands the application to', () => {
-    // immich's shape: the entry file forks a worker, the worker calls a helper,
+    // A photo server's shape: the entry file forks a worker, the worker calls a helper,
     // and the helper is where the prefix is. Following calls out of the entry
     // file reaches none of it, so the repository is searched instead.
     const info = read({
@@ -151,7 +151,7 @@ describe('reading how the service versions its routes', () => {
   });
 
   it('keeps the readable options when one beside them cannot be read', () => {
-    // novu's shape: the prefix is a template rooted at a setting, while the
+    // A notification service's shape: the prefix is a template rooted at a setting, while the
     // default version that decides where 356 routes answer is a literal beside
     // it. Evaluating the object whole threw away both.
     const info = read({
@@ -205,7 +205,7 @@ describe('a mount read from settings', () => {
     });
   });
 
-  it("follows novu's shape: a function reading settings through a name for the settings object", () => {
+  it("follows a notification service's shape: a function reading settings through a name for the settings object", () => {
     const info = read({
       'src/main.ts': VERSIONED,
       'src/config.ts': `

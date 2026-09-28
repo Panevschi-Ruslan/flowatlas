@@ -75,7 +75,7 @@ const leadingTo = (scopes: readonly Scope[], hops: ReadonlyMap<Scope, Hop[]>, he
  *
  * Code joined to code is not on the list. A helper the call walk followed into
  * from a handler is a node, and it holds nothing; counting it would make every
- * function that calls `exists()` lead somewhere. On peertube that made 594
+ * function that calls `exists()` lead somewhere. On a video platform that made 594
  * functions nodes rather than 151, most of them validators no entry point
  * reaches.
  */
@@ -114,7 +114,7 @@ const holding = (builder: GraphBuilder): Set<string> => {
  * request, a query, a configuration read, a publish - and those read every
  * module-level function whether anything reaches it or not, because unreached is
  * not unwritten. So a function could hold a request and be in the graph with no
- * call into it and none out of it: novu's `streamTarballToParser` held the
+ * call into it and none out of it: a notification service's `streamTarballToParser` held the
  * request to GitHub and called `assertPublicRepository`, which held another, and
  * the only reader that drew that call was the browser reader, walking server code
  * it had no business reading (R145).

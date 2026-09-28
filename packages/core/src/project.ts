@@ -696,7 +696,7 @@ export const createProject = (options: CreateProjectOptions): Project => {
   //
   // Listed rather than globbed, and that is not a style choice. A glob makes the
   // parser walk the directory tree under it, and the tree it walks is the one it
-  // already holds — which includes any directory the tsconfig named. cal.com's
+  // already holds — which includes any directory the tsconfig named. A scheduling app's
   // `apps/web` compiles a declaration file from a package that was deleted, so
   // `packages/app-store` holds a child that exists only in the tsconfig, and a
   // glob over that package walked into it and stopped the whole reading with

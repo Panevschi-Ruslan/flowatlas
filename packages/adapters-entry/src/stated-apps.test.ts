@@ -86,7 +86,7 @@ describe('an application recognised from the source when its type is not install
   });
 
   it('reads a router destructured out of an options object whose type is written', () => {
-    // PeerTube's `setupUploadResumableRoutes`, the one file its fresh clone still
+    // A video platform's `setupUploadResumableRoutes`, the one file its fresh clone still
     // left unread once applications were recognised from the source.
     const entries = read(
       expressRoutesAdapter,

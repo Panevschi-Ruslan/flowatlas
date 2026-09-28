@@ -2,7 +2,7 @@
 
 A tRPC server whose procedures reach the database through `ctx`, with nothing
 annotated and nothing installed: no `@trpc/server`, no generated
-`@prisma/client`. That is a fresh clone of cal.com in miniature, and the shapes
+`@prisma/client`. That is a fresh clone of a scheduling app in miniature, and the shapes
 here are the ones its last read-gate files were written in (R157).
 
 What `ctx` is, is written once: `initTRPC.context<typeof createContextInner>()`

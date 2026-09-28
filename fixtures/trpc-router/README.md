@@ -27,7 +27,7 @@ named function, so `handlerVia` is `call` and the edge goes to `storeOrder`.
 shorthand property's name node carries the *member's* symbol rather than the
 value's, so following it the ordinary way leads back into the literal it was
 written in. The address came out as `daily`, which is not a string any caller
-writes. cal.com has one such member and nine ways in hang under it. Its two
+writes. A scheduling app has one such member and nine ways in hang under it. Its two
 guards, `isSignedIn` and `isAdmin`, are inherited through two procedure
 definitions built on each other, which is the other half of the same walk.
 

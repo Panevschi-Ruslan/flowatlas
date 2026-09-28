@@ -29,7 +29,7 @@ are not raised for a wrapper that was handed a function.
 exactly as the orders route is - a call handed a configuration object - but the
 function called, `productsHandler`, is `handlerBuilder` of `lib/products.ts`
 under another name, so the handler it returns is written in a body this
-repository holds. That is payload's shape, `export const GET = REST_GET(config)`
+repository holds. That is a CMS monorepo's shape, `export const GET = REST_GET(config)`
 with `REST_GET` a second name for `handlerBuilder`, and it is read as the entry of
 a registration built by a factory is: the factory at the end of the names is the
 handler, with `handlerVia: call`, and no row. Before R153 it was read as the orders route is,

@@ -12,9 +12,9 @@
  * They used to be two lists. The tool skipped `.spec`, `.test` and `.e2e-spec`
  * before the extension and no directory at all; the counting rule skipped
  * `.test.` and `.spec.` anywhere in a name and a list of directories. Neither
- * matched cal.com's `*.integration-test.ts`, so the rule counted six files of
+ * matched a scheduling app's `*.integration-test.ts`, so the rule counted six files of
  * database set-up the tool read with no function to hang a query on, and the
- * read gate reported them as unread. The tool, for its part, read cal.com's
+ * read gate reported them as unread. The tool, for its part, read a scheduling app's
  * whole `playwright/` directory, which the rule had never counted.
  *
  * So one definition, in two parts, and nothing else decides:

@@ -202,7 +202,7 @@ const routeOfExpression = (ast: AST, placeholder: string): string | null => {
  * name a local" needs the whole template read before the first binding is
  * judged. The cost is that a name bound in one `<ng-template>` is treated as a
  * local in the rest of the file too; the alternative was reporting a local as a
- * method the component forgot to declare, which on PeerTube was every one of
+ * method the component forgot to declare, which on a video platform was every one of
  * the 35 rows that reason produced (R105).
  */
 class LocalCollector extends TmplAstRecursiveVisitor {

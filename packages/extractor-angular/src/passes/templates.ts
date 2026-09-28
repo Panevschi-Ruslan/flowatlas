@@ -224,7 +224,7 @@ export const templatesPass = definePass('templates', (ctx) => {
 
     // A name the template bound is not a member of anything. Looking for it on
     // the component finds nothing, and saying so accused every `let-` context
-    // field and every `#ref` on PeerTube of being a method somebody had
+    // field and every `#ref` on a video platform of being a method somebody had
     // deleted - 35 rows, all of them wrong (R105). It is the nothing-to-point-at
     // case, and the row says which local it was so a reader recognises it
     // without opening the template.

@@ -7,7 +7,7 @@ import { readPackageJson, type PackageJson } from './package-json.js';
  *
  * Until this module existed, a service was a directory with a manifest, and the
  * reading of it stopped at that directory's edge. Two measurements said the same
- * thing from opposite ends. Pointed at cal.com's `apps/web`, the tool found all
+ * thing from opposite ends. Pointed at a scheduling app's `apps/web`, the tool found all
  * eighty-four of its routes and not one node outside `apps/web`, because the
  * bodies those routes call live in `packages/features` and `packages/lib` and
  * were opened only so that types would resolve; pointed at the monorepo root it
@@ -328,7 +328,7 @@ export const workspaceRootsAbove = (dir: string): readonly string[] => {
  * The workspace `dir` is a package of, when it is a package of one.
  *
  * The nearest root that lists it, so a workspace nested inside another —
- * PeerTube's `client`, which declares members of its own — answers for its own
+ * A video platform's `client`, which declares members of its own — answers for its own
  * members and the outer one answers for the rest. A directory that is itself the
  * root of a workspace is not a member of it, which is what keeps a monorepo read
  * as a whole from acquiring an extent: its globs already cover everything under

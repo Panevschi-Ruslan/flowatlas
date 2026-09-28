@@ -1,6 +1,6 @@
 # nest-mount-empty
 
-`nest-context-path` with the environment files novu commits: every one of them
+`nest-context-path` with the environment files a notification service commits: every one of them
 leaves the mount empty (R144).
 
 `api` versions by URI with `prefix: \`${CONTEXT_PATH}v\``, and `CONTEXT_PATH` is

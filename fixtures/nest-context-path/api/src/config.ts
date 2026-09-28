@@ -1,7 +1,7 @@
 /**
  * Where a deployment mounts this service, which only the deployment knows.
  *
- * novu's shape: every committed settings file leaves it empty, and an
+ * A notification service's shape: every committed settings file leaves it empty, and an
  * installation behind a proxy sets it. Nothing static settles it, so the part of
  * every address it decides is read as a hole.
  */

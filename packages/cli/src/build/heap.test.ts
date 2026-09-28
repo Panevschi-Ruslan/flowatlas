@@ -8,7 +8,7 @@ const machine = { totalBytes: 36 * GB, ownLimitBytes: 4288 * 1024 * 1024 };
 
 describe('how much heap a reader is given', () => {
   it('raises the limit far enough for the largest repository measured', () => {
-    // payload with its dependencies installed peaks at 10.0 GB of resident
+    // A CMS monorepo with its dependencies installed peaks at 10.0 GB of resident
     // memory and dies under 8192 MB. One reader on this machine has to be given
     // more than that or the tool goes on dying of its own default.
     const heap = heapMbFor({ ...machine, readers: 1 });

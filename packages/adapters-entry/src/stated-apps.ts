@@ -9,7 +9,7 @@ import { packageOfSpecifier } from './shared.js';
  *
  * A fresh clone has no `node_modules`, so `express` has no types, `const app =
  * express()` is `any`, and a reader that knows an application by its type knows
- * nothing at all: PeerTube's fresh clone placed no address, and medusa's two
+ * nothing at all: a video platform's fresh clone placed no address, and a commerce monorepo's two
  * Express-served files were excused from the read gate for exactly this (R142).
  * The facts the reading needs were never missing. They are written in the
  * repository being read, in plain sight, whether or not anything is installed:
@@ -153,7 +153,7 @@ const madeBy = (exported: Imported | undefined, dialect: RouteDialect): AppType 
  *
  * The same three places R122 reads - a parameter, a property, a variable - and
  * a fourth R122 did not need: a name destructured out of an object whose type
- * is written as a literal. PeerTube hands a router to a helper as
+ * is written as a literal. A video platform hands a router to a helper as
  * `options: { router: express.Router, … }` and reads it back with `const {
  * router } = options`; the annotation is there, one member down. A lookup
  * rather than a run of conditions, so a fifth is a row. A class is not among
@@ -201,7 +201,7 @@ const destructuredType = (element: TsNode): TsNode | undefined => {
  * The value a declaration was written with, wherever one can carry a value.
  *
  * A parameter's default is one of them: `init(app: Koa = new Koa())` is how
- * outline declares the application every one of its routes is served on.
+ * A wiki app declares the application every one of its routes is served on.
  */
 const valueOf = (declaration: TsNode): TsNode | undefined =>
   Node.isVariableDeclaration(declaration) ||

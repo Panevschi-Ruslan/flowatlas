@@ -53,7 +53,7 @@ const DYNAMIC_PATH_HINT =
  * What to do about a route on an application whose base could not be read.
  *
  * Two sentences rather than one, because the old single sentence told a great
- * many people to do what they had already done: outline mounts its applications
+ * many people to do what they had already done: a wiki app mounts its applications
  * at literal paths, through a helper, and was asked to mount them at literal
  * paths. Where the helper is known the row names it, which is the one fact that
  * turns the row into something somebody can act on; where the application
@@ -396,7 +396,7 @@ const mountedApp = (
  * and hands back middleware, so the argument of `use` is not an application and
  * `mountedApp` above says nothing was mounted. The line then read as an ordinary
  * middleware install: the prefix was dropped, and every route under it kept the
- * address it is written at. On outline that was 253 of 257 routes recorded at an
+ * address it is written at. On a wiki app that was 253 of 257 routes recorded at an
  * address nothing serves, with no row anywhere to say so (R84).
  *
  * Two answers, and which one a repository gets is decided by a record rather
@@ -446,7 +446,7 @@ const helperMount = (
     if (declaration !== undefined) {
       const spelled = argumentAt(args, described.pathAt);
       // A helper handed the application alone puts it at its parent's base:
-      // `mount(routes)`, which outline writes beside four mounts that name a
+      // `mount(routes)`, which a wiki app writes beside four mounts that name a
       // prefix. The application sitting in the prefix's position is how that is
       // spelled, and it is an answer rather than an absence.
       const at = spelled === undefined || spelled === written ? '' : stringArg(spelled);
@@ -541,7 +541,7 @@ const assignedApps = (declaration: TsNode, dialect: RouteDialect): TsNode[] => {
  *
  * A parameter's default is one of them, and it is the one that earns this its own
  * function. `export default function init(app: Koa = new Koa(), server?: Server)`
- * is how outline's web service declares the application every one of its routes
+ * is how a wiki app's web service declares the application every one of its routes
  * is served on: the service is started through a map of dynamic imports, so no
  * call to `init` can be followed from here, and the default is the only statement
  * in the repository about what `app` is.
@@ -581,7 +581,7 @@ const passesThrough = (method: string, dialect: RouteDialect): boolean =>
  * The methods above are the ones a description names, and no description can
  * name them all: `const app = express().disable('x-powered-by')` is the ordinary
  * declaration of an application with one setting turned off, and `disable` is not
- * a mount, an install or a verb. PeerTube writes that line once, and every one of
+ * a mount, an install or a verb. A video platform writes that line once, and every one of
  * its 344 routes was then declared on something the reader could not place, under
  * a hint telling whoever read the report to mount the application at a literal
  * path — which the line below it already did (R101).
@@ -934,7 +934,7 @@ class Applications {
    *
    * Asked only once a route has turned out to be unplaceable, and answered by
    * walking the mounts upwards, because the mount that defeated the reading is
-   * rarely the one written on the application the route is declared on: outline
+   * rarely the one written on the application the route is declared on: a wiki app
    * mounts a router on an application and that application through the helper,
    * two files apart. The first helper found on the way up is the one to name —
    * there is no second address to be had by looking further, and naming the
@@ -1145,7 +1145,7 @@ interface Answer {
  * and `useCollection('users')`, which take a value and return middleware, are
  * not mistaken for it.
  *
- * The named form is the one that was missing, and it is how PeerTube writes
+ * The named form is the one that was missing, and it is how a video platform writes
  * nearly every route it has: `asyncMiddleware(getVideo)`, and
  * `asyncRetryTransactionMiddleware(addVideo)` where a route writes. Of its three
  * hundred and forty-six registrations, two hundred and ninety-one were one of
@@ -1154,7 +1154,7 @@ interface Answer {
  *
  * Not a field of a dialect, and it is worth saying why when everything else
  * about reading a route is one. The wrappers are the repository's own -
- * `asyncMiddleware` is declared in PeerTube's `core/middlewares/async.ts` - so
+ * `asyncMiddleware` is declared in a video platform's `core/middlewares/async.ts` - so
  * there is no package a shipped row could name, and what makes the argument the
  * handler is nothing a framework says: it is the only thing handed over. That is
  * the rule `route-dialects.ts` lists among what every reader does the same way,
@@ -1185,7 +1185,7 @@ const throughWrapper = (argument: TsNode | undefined): TsNode | undefined => {
  * answer over to, and only for that — see `handlerReturned`; a call to a
  * function of this repository is read as that function having built the answer
  * — see `builtByFactory`, which the file-system routers ask as well. A call
- * handed work keeps no handler here: eight of PeerTube's registrations are
+ * handed work keeps no handler here: eight of a video platform's registrations are
  * `listFactory(res => res.locals.account)`, a factory or a wrapper the source
  * does not say which, and no handler is the honest answer to that.
  *
@@ -1384,7 +1384,7 @@ export interface CallRoutesOptions {
    * written only for a framework somebody described, on the argument that a
    * repository depending on a framework and declaring no route on it is an
    * ordinary thing — a library, a worker, a service whose routes live
-   * elsewhere. True, and it left medusa measured at 769 of 791 source files
+   * elsewhere. True, and it left a commerce monorepo measured at 769 of 791 source files
    * producing no node with nothing anywhere saying so, because a file-system
    * router reads exactly like a library from in here (R84). The reader cannot
    * tell those two apart, and the one it must not do is stay quiet about which

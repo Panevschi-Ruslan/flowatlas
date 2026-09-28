@@ -10,7 +10,7 @@ import { trimEndpoint, type ChannelShaping } from './channel-name.js';
  *
  * Both ends of a socket have to answer this the same way, or the same event
  * lands on two nodes with one end each and joins nothing — invisibly, because
- * each half looks fine alone. That is how PeerTube read before this: the browser
+ * each half looks fine alone. That is how a video platform read before this: the browser
  * named `live-videos/subscribe` from the address it opened, and the server named
  * a bare `subscribe` because its namespace was the value `io.of('/live-videos')`
  * returned and nothing read it (R102). So the question is asked here, once, by

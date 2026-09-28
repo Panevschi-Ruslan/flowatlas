@@ -584,7 +584,7 @@ describe('annotations that name where a call goes', () => {
 
 /**
  * A call between services to a route whose address opens with a mount read from
- * settings (R144). novu's shape: every route is recorded as `/${…}v1/…`.
+ * settings (R144). A notification service's shape: every route is recorded as `/${…}v1/…`.
  */
 describe('a call to a route behind a mount read from settings', () => {
   const mountedGraph = (setIn: string[]) => {

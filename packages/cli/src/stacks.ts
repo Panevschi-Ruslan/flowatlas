@@ -14,7 +14,7 @@ import { halfOf, rowsInHalf, type ReaderRow } from './readers.js';
  * That fact is declared once, in `readers.ts`, beside the reader it follows
  * from; this file asks that table and restates nothing out of it, which is what
  * it used to do (R118). And it is asked rather than left to the order of the
- * rows, which is what it used to be: outline declares Koa and React in one
+ * rows, which is what it used to be: a wiki app declares Koa and React in one
  * directory and React sat above Koa for a reason that had nothing to do with
  * either, so its data layer, its channels and the bodies behind its routes -
  * 1,197 query sites, 33 channels and 249 handlers of 257 - turned on which of the
@@ -113,7 +113,7 @@ const importableByName = (pkg: PackageJson): boolean => {
  * imported is not a library that forgot to say what it needs; it is an
  * application whose dependencies are kept in the workspace root, which is how a
  * repository with one deployable server and a pile of small packages beside it
- * is usually arranged. PeerTube is that repository: `server/package.json` names
+ * is usually arranged. A video platform is that repository: `server/package.json` names
  * a package, a version and an export map of subpaths, and the hundred and
  * thirteen dependencies the server actually has — Express among them — are at
  * the root. Read on its own it gave nothing away, which is why the coverage
@@ -123,12 +123,12 @@ const importableByName = (pkg: PackageJson): boolean => {
  * safe. A member that declares even one dependency has said what it is built on
  * and is taken at its word, so a library with a single dependency does not
  * inherit a framework it never asked for; and one that can be imported by name is
- * a library whatever else is true of it. Every other member of PeerTube's
+ * a library whatever else is true of it. Every other member of a video platform's
  * workspace fails one test or the other, so this claims the root's manifest for
  * exactly the directory it belongs to.
  *
  * Widening every member's manifest instead has been measured and it is wrong
- * here. `packages/medusa` declares Express, the monorepo root carries React in
+ * here. A commerce monorepo's server package declares Express, its root carries React in
  * its tooling, and the table this reads ranked React above Express because a
  * repository that declares both is usually the browser half; such a member read
  * from a widened manifest is handed to the browser reader and loses every query

@@ -65,9 +65,9 @@ export interface TableReading {
  * layer: they were arrays, maps, mutex registries, a plugin registry, a browser
  * object store, a framework's cookie store, and the state stores three of those
  * repositories keep their screens in. On six of the eight nothing else moved when
- * it went. On cal.com something did, and it was the point: `tables` went from 1
+ * it went. On a scheduling app something did, and it was the point: `tables` went from 1
  * to 0 and the queries that name a table from 4 to 0, because the one table
- * cal.com was reported to have was the name of a React state type on a zustand
+ * A scheduling app was reported to have was the name of a React state type on a zustand
  * store — minted at heuristic confidence for an undescribed package, with the
  * receiver's name as the only reason to think it was data (R112). So what the
  * word did was ask a reader to describe things that store nothing, and once,
@@ -76,7 +76,7 @@ export interface TableReading {
  * It stays among the *type* names, where a class called `OrderStore` is an
  * ordinary name for a real data layer and where the evidence is the class rather
  * than the word at the end of a variable. Trimming it there was measured too and
- * costs four rows on outline that tell a reader to name a base class, while
+ * costs four rows on a wiki app that tell a reader to name a base class, while
  * changing no query and no table anywhere.
  */
 export const dataNameHints = {
@@ -341,7 +341,7 @@ const sequelizeDescriptor: DbDescriptor = {
  *
  * The receiver is `Kysely<Schema>`, and the schema is the whole database rather
  * than one table, which is the reason this library needs `entityInTypeArgs`
- * turned off below: on immich, where every one of 579 queries is written this
+ * turned off below: on a photo server, where every one of 579 queries is written this
  * way, the type argument was read as an entity and put the name of the schema
  * type on 407 nodes as though it were a table.
  */
@@ -588,7 +588,7 @@ export const tableReadings: ReadonlyMap<string, TableReading> = new Map([
  * project actually imports may be a thin layer over the library the descriptor
  * describes: `sequelize-typescript` declares the `Model` that a decorated model
  * class extends, while every method on it, and every word of the descriptor, is
- * `sequelize`'s. On outline that one row is the difference between reading the
+ * `sequelize`'s. On a wiki app that one row is the difference between reading the
  * data layer and dropping every call to it.
  *
  * A record rather than a second descriptor, because the two packages are not two
@@ -607,7 +607,7 @@ export const descriptorAliases: ReadonlyMap<string, string> = new Map([
  *
  * A generated client is the library's own client written into the repository
  * rather than installed beside it: Prisma writes `PrismaClient` to wherever the
- * schema's generator says, and cal.com says `./generated/prisma`. A clone whose
+ * schema's generator says, and a scheduling app says `./generated/prisma`. A clone whose
  * install ran no scripts has an import of that path and no file behind it, so
  * the checker cannot say what came out of it - and the schema can, because it is
  * the schema that names the directory (R146).

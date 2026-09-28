@@ -61,6 +61,6 @@ only once a leaf is found in it.
 The operation a call performs is read by looking its method name up in the
 descriptor's table, and an object literal indexed by a word from source text
 answers `toString` with `Object.prototype.toString`. It did: two `db_query` nodes
-labelled `function toString() { [native code] }` were in novu's graph, minted
+labelled `function toString() { [native code] }` were in a notification service's graph, minted
 from a value nobody wrote and indistinguishable in a count from a real query
 (R122, R130).

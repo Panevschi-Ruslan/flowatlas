@@ -3,7 +3,7 @@ import { prisma, readonlyPrisma, type Order } from '@acme/db';
 
 /**
  * Every query goes through a workspace package rather than the library, which is
- * how cal.com reaches its database and how a great many monorepos do.
+ * how a scheduling app reaches its database and how a great many monorepos do.
  *
  * No file here imports `@prisma/client`, and nothing names the wrapper as a data
  * layer. What makes the queries readable is that the wrapper hands on the

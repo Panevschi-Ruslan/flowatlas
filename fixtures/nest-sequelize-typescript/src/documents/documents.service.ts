@@ -12,7 +12,7 @@ export class DocumentsService {
     return Document.findByPk(id);
   }
 
-  // The scoped call, which is the shape nearly every query in outline takes. The
+  // The scoped call, which is the shape nearly every query in a wiki app takes. The
   // scope retypes the receiver to sequelize's own `ModelStatic`, so this one was
   // always recognised as data access; what could not be read was the table,
   // because the receiver is a call rather than a name.

@@ -131,7 +131,7 @@ const isNamedType = (type: Type): boolean => {
  * instead — which is the right question when choosing between two members of an
  * intersection, because a workspace package is a package — answers `true` for
  * every file in every repository, since a repository has a manifest of its own.
- * The alias rule that used it therefore never fired, and outline's sockets stayed
+ * The alias rule that used it therefore never fired, and a wiki app's sockets stayed
  * hidden behind their own alias with the guard in place and a passing test
  * beside it.
  */

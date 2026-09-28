@@ -106,7 +106,7 @@ describe('a settings value kept in a property', () => {
 /**
  * A `static` field is a property access on the identifier naming the class, so
  * asking for a `this` receiver read every instance field and no static one.
- * PeerTube declares 63 of these, and they were the sole reason none of its 252
+ * A video platform declares 63 of these, and they were the sole reason none of its 252
  * browser requests joined a route (R103).
  */
 describe('a settings value kept in a static property', () => {

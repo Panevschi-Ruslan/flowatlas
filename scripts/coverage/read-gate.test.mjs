@@ -382,3 +382,41 @@ describe('a fixture that keeps only a project graph (R160)', () => {
     }
   });
 });
+
+describe('a target that brings its own exemptions and baseline', () => {
+  // A measured target's entries live in its record in the local target list,
+  // not in this file, and reach the gate as arguments.
+  const empty = { nodes: [], edges: [], unresolved: [] };
+  const measure = (options) =>
+    readGate({
+      where: 'some-target',
+      state: 'fresh',
+      perFile: sites('apps/api/src/health.ts'),
+      graph: empty,
+      toPath: clonePaths(SERVICES),
+      ...options,
+    });
+
+  it('fails the file with no entry for it', () => {
+    assert.deepEqual(unread(measure({})), ['apps/api/src/health.ts']);
+  });
+
+  it('excuses the file its exemption names, for that family only', () => {
+    const exempt = [{ path: 'apps/api/src/health.ts', family: 'routes', why: 'a test server' }];
+    const result = measure({ exempt });
+    assert.deepEqual(unread(result), []);
+    assert.deepEqual(result.stale, []);
+    const other = measure({ exempt: [{ ...exempt[0], family: 'data' }] });
+    assert.deepEqual(unread(other), ['apps/api/src/health.ts']);
+    assert.equal(other.stale.length, 1);
+  });
+
+  it('reports a baselined file as known rather than missing', () => {
+    const baseline = [
+      { path: 'apps/api/src/health.ts', family: 'routes', state: 'fresh', why: 'known', ticket: 'R0' },
+    ];
+    const result = measure({ baseline });
+    assert.deepEqual(unread(result), []);
+    assert.equal(result.known.length, 1);
+  });
+});

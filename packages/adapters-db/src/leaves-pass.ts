@@ -80,7 +80,7 @@ const CACHE_PACKAGES = ['ioredis', 'cache-manager', '@nestjs/cache-manager', 're
  * `descriptor.operations[method]` was an object, and `value.toString()` on a
  * receiver of a described package found `Object.prototype.toString` - a
  * `db_query` node labelled `function toString() { [native code] }`, two of them
- * in novu's graph, a node minted from a value nobody wrote (R122). The house
+ * in a notification service's graph, a node minted from a value nobody wrote (R122). The house
  * style is object lookup for dispatch and it is the right one; the cost of it is
  * this single hazard, and a `Map` has no prototype chain to fall through. Every
  * word a program contains can be asked of these, so none of them may answer for
@@ -275,7 +275,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   for (const [name, descriptor] of byPackage) {
     // Only where the type argument is the stored thing. A connection
     // parameterised by the whole schema has nothing to fall back to, and
-    // falling back put the name of a schema type on 407 of immich's nodes as
+    // falling back put the name of a schema type on 407 of a photo server's nodes as
     // though it were a table.
     if (tableReadings.get(name)?.entityInTypeArgs !== true) continue;
     const { tableOverride: _dropped, ...rest } = descriptor;

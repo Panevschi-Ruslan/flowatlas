@@ -45,7 +45,7 @@ export const fileOfNode = (node: { getSourceFile(): SourceFile }, ctx: ExtractCo
  *
  * `@nestjs/common/decorators` is `@nestjs/common`: a subpath import of a package
  * is an import of that package, and a reader that matched the specifier exactly
- * skipped every controller written the second way. On novu that was 21 routes in
+ * skipped every controller written the second way. On a notification service that was 21 routes in
  * 3 files, dropped with no row to say so, while the classes and the methods
  * around them were read normally — so nothing in the output even hinted that a
  * file had been half read (R84).
@@ -288,7 +288,7 @@ export const handsOverWork = (argument: TsNode): boolean => {
  * accepted here because the alternative is no body at all (R137, R153).
  *
  * The function called is what decides it, not what it was handed. Asking only
- * the arguments is how payload's two hundred and fifty-nine routes read as
+ * the arguments is how a CMS monorepo's two hundred and fifty-nine routes read as
  * "nothing declared in this repository was handed to that call" while the
  * function they call, `handlerBuilder`, is declared in the repository and is a
  * body anybody can open (R153).
@@ -317,7 +317,7 @@ const FACTORY_ALIAS_DEPTH = 4;
  * The function of this repository a called name stands for, through the names
  * it was bound to.
  *
- * payload's `REST_GET` is `GET` re-exported under another name, and `GET` is
+ * A CMS monorepo's `REST_GET` is `GET` re-exported under another name, and `GET` is
  * `export const GET = handlerBuilder`: a name bound to a name, which is how one
  * factory is handed out under five verbs. `repoFunctionOf` stops at the first
  * binding, because a `const` whose value is a name is not a function declared

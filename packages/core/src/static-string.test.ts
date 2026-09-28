@@ -180,7 +180,7 @@ describe('a query string at the end of a string', () => {
 /**
  * Two strings added together are one string, and the checker will not say so:
  * the type of a `+` is the widened `string` even where both operands are
- * literals. Refusing it cost PeerTube 290 of its 344 routes, from the single
+ * literals. Refusing it cost a video platform 290 of its 344 routes, from the single
  * mount written `app.use('/api/' + API_VERSION, apiRouter)` (R102).
  */
 describe('a string written in two pieces with a plus', () => {

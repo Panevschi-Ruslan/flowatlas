@@ -119,7 +119,7 @@ const withDistinctNames = (candidates: readonly Candidate[]): Candidate[] => {
  * The services one directory holds, which is not always one.
  *
  * A directory with a manifest used to be a service, exactly one, and R107 is
- * what that cost. Run against PeerTube, `init` wrote a single service and
+ * what that cost. Run against a video platform, `init` wrote a single service and
  * silently left out the Angular client that is half the repository, because the
  * client is a directory below the one the manifest was in. Both halves are
  * declared, in `pnpm-workspace.yaml`, and had been all along.
@@ -132,7 +132,7 @@ const withDistinctNames = (candidates: readonly Candidate[]): Candidate[] => {
  * worth reading and offering nothing at all would be a worse answer than
  * offering the whole of it.
  *
- * A member that is itself the root of a nested workspace — PeerTube's `client`
+ * A member that is itself the root of a nested workspace — a video platform's `client`
  * declares members of its own — is read as the application it is, because the
  * question asked of it is whether it looks like one and not what is beneath it.
  */
@@ -152,7 +152,7 @@ const servicesIn = (absPath: string, configDir: string, pkg: PackageJson): Candi
 
   if (workspaceGlobs(absPath).length === 0) {
     // A directory scanned on its own may still be a member of a workspace
-    // somewhere above it — `init --dir peertube` finds `server` and `client` as
+    // somewhere above it — `init --dir a video platform` finds `server` and `client` as
     // ordinary subdirectories — and a member's type is read the same way whether
     // the scan arrived from above it or beside it. Anything else would make the
     // suggestion depend on where the person happened to stand.
@@ -168,7 +168,7 @@ const servicesIn = (absPath: string, configDir: string, pkg: PackageJson): Candi
   }
   // A workspace whose members include applications is a workspace and not one of
   // them: offering the root as well would read every application twice, once on
-  // its own and once as part of the whole. PeerTube is the case — its root
+  // its own and once as part of the whole. A video platform is the case — its root
   // declares Express because that is where the server's dependencies are kept,
   // so the root looks exactly like the server it is not.
   return found.length === 0 ? [asOne(absPath, pkg)] : found;

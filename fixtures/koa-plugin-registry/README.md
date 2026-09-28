@@ -28,7 +28,7 @@ The reader beside this one places a route by following the mount that moved the
 application it is declared on, and there was no mount here to follow. Worse than
 none: `hook.value` resolves to the *type* the collection is declared with, so the
 mount was recorded against a property of an interface, nothing was ever mounted,
-and every plugin route kept the address it is written at. On outline that was
+and every plugin route kept the address it is written at. On a wiki app that was
 `POST /passkeys.list` for what the service serves at `POST /api/passkeys.list` —
 7 of 26 browser requests unable to join, and 46 files under `plugins/*/server/api`
 producing nothing and saying nothing (R121, from R114).

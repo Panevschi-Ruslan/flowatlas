@@ -134,7 +134,7 @@ export const normalizeFilePath = (file: string, repoDir?: string): string => {
     // sibling workspace package — is still named relative to the service,
     // because that is what every other path in its graph is relative to. It
     // used to keep the absolute path it was found at, which put one machine's
-    // home directory into node ids: cal.com's graph carried fifty-eight of
+    // home directory into node ids: a scheduling app's graph carried fifty-eight of
     // them. Climbing out of the service is a shorter and truer way to say the
     // same thing, and it is the same on every machine.
     else if (out.startsWith('/')) {

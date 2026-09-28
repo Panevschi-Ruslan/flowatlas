@@ -1,5 +1,5 @@
 /**
- * novu's `github-skill-bundle.ts` in miniature (R156): module-level functions,
+ * A notification service's `github-skill-bundle.ts` in miniature (R156): module-level functions,
  * no class, no provider, and no entry point naming any of them.
  */
 

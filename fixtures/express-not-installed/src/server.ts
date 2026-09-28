@@ -4,7 +4,7 @@ import { serve } from './admin';
 import { videosRouter } from './videos.routes';
 
 /**
- * PeerTube's declaration of its one application, with nothing installed.
+ * A video platform's declaration of its one application, with nothing installed.
  *
  * `express` has no types here, so `app` is `any` to the checker. What the source
  * states is enough: the default export of `express` makes an application, and
@@ -19,7 +19,7 @@ app.use('/admin', serve());
 // A setting read, not a route: one argument.
 app.get('trust proxy');
 
-// medusa's `GET /health`, written in place.
+// A commerce monorepo's `GET /health`, written in place.
 app.get('/health', (_req, res) => {
   res.json({ ok: true });
 });

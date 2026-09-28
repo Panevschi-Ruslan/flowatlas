@@ -254,7 +254,7 @@ describe('a request a browser makes of the service it was served from', () => {
  * A request that no route read in full answers, beside a route whose address has
  * a part nobody read (R137).
  *
- * novu's shape: every address begins with a mount the deployment sets, so each
+ * A notification service's shape: every address begins with a mount the deployment sets, so each
  * route is recorded as `/${…}v1/…`, and the client asks for `/v1/…` under a base
  * that already carries the mount. Forty-two such requests were reported as ones
  * no configured service serves.

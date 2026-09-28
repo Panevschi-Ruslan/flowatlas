@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Measure this tool against eight real repositories, repeatably.
+ * Measure this tool against real repositories, repeatably.
  *
  *   node scripts/coverage/run.mjs                 # every target, fresh clones
- *   node scripts/coverage/run.mjs --target immich # one of them
+ *   node scripts/coverage/run.mjs --target <name> # one of them
  *   node scripts/coverage/run.mjs --install       # with dependencies installed
  *   node scripts/coverage/run.mjs --render        # re-write reports from the cache
  *   node scripts/coverage/run.mjs --pin           # re-pin the list to today
@@ -11,8 +11,9 @@
  * This is not part of `pnpm check`. It clones the internet and takes minutes.
  * It is run deliberately - before a release, and after any change to a reader -
  * and it writes one report per target per state into `scripts/coverage/reports`,
- * which are committed, so an improvement in coverage arrives as a diff somebody
- * can read rather than as a claim somebody has to believe.
+ * written so that two runs compare as a diff somebody can read rather than as a
+ * claim somebody has to believe. The targets and the reports stay local: they
+ * name other people's repositories, which this project does not.
  *
  * ## Both states are real, and they are different questions
  *
@@ -74,7 +75,15 @@ import { renderReport } from './report.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CLI = join(ROOT, 'packages', 'cli', 'bin', 'flowatlas.js');
-const TARGETS = join(ROOT, 'scripts', 'coverage', 'targets.json');
+/**
+ * The repositories to measure, kept out of version control.
+ *
+ * They are other people's repositories, so this project does not name them:
+ * the list, with each target's exemptions and baseline, lives in a local file
+ * that is gitignored, and `targets.example.json` shows its shape.
+ */
+const TARGETS = join(ROOT, 'scripts', 'coverage', 'targets.local.json');
+const TARGETS_EXAMPLE = join(ROOT, 'scripts', 'coverage', 'targets.example.json');
 const REPORTS = join(ROOT, 'scripts', 'coverage', 'reports');
 
 /**
@@ -178,7 +187,7 @@ const run = (argv, { cwd, timeoutMs = 20 * 60 * 1000, env = {} }) =>
  * `time` appends its report to the child's standard error, so the last lines of
  * that stream are a page of resource counters rather than the message anybody
  * wants. Cutting from the line where the timer starts leaves what the tool
- * actually said, which on two of these eight targets is the entire result.
+ * actually said, which on a target that crashes is the entire result.
  */
 const withoutTiming = (text) => {
   const lines = text.split('\n');
@@ -201,7 +210,7 @@ const SAYS_WHY = [
   // The one reason that does not survive being quoted back: a reader that ran
   // out of heap dies inside a child process, and the line that says so is
   // thirty frames above the tail of the stack trace the parent repeats. Without
-  // this, payload's report carried three addresses in a dynamic library and not
+  // this, a CMS monorepo's report carried three addresses in a dynamic library and not
   // the words "heap out of memory".
   /FATAL ERROR|out of memory|Allocation failed/i,
 ];
@@ -295,9 +304,9 @@ const INSTALLERS = [
     lockfile: 'yarn.lock',
     // Yarn 2 and later have no `--ignore-scripts`; the same thing is spelled
     // `--mode=skip-build`, and passing the old flag is a syntax error that ends
-    // the install in a sixth of a second. It did, on outline, and the report
+    // the install in a sixth of a second. It did, on a wiki app, and the report
     // dutifully recorded a repository with no dependencies as a repository with
-    // dependencies installed. A version of Yarn is not a fact about outline, so
+    // dependencies installed. A version of Yarn is not a fact about a wiki app, so
     // it is detected rather than written down beside the target.
     beside: '.yarnrc.yml',
     argv: ['yarn', 'install', '--mode=skip-build'],
@@ -404,7 +413,7 @@ const install = async (cloneDir, target, log) => {
  * The extent is the correction to a fraction that had stopped being one. A
  * service is an application together with the workspace packages it declares, so
  * the tool's figures reach into those packages; the rule counted the read
- * directory alone and cal.com came out at `444 of 80`. A ratio above one is two
+ * directory alone and a scheduling app came out at `444 of 80`. A ratio above one is two
  * questions divided by each other. Both halves now ask about the same files.
  *
  * The file list comes from git rather than from a directory walk, so an
@@ -480,7 +489,7 @@ const flowatlas = (args, cwd, timeoutMs) => run([process.execPath, CLI, ...args]
  * Apply the target's declared types over the ones `link` guessed.
  *
  * What `link` guessed is kept beside what was set, and both go in the report.
- * That matters: outline declares Koa and React in one manifest, `link` answers
+ * That matters: a wiki app declares Koa and React in one manifest, `link` answers
  * `react` because React is the more common of the two, and the whole Koa half
  * of the repository then reads as a repository with no routes. Overwriting the
  * type quietly would hide that; printing both says what a stranger gets and
@@ -531,7 +540,7 @@ const measure = async (target, cloneDir, state, log, timeoutMs) => {
 
   // Without `--json`, because the figures are read from the artefacts anyway
   // and the summary is where a repository that could not be read says why. Under
-  // `--json` that sentence is not printed at all, and novu's crash - the one
+  // `--json` that sentence is not printed at all, and a notification service's crash - the one
   // thing its report exists to carry - arrived as an empty message.
   const built = await flowatlas(['build', '--config', config], workspace, timeoutMs);
   log(`build exit ${built.code}${built.signal ? ` (${built.signal})` : ''} in ${built.seconds.toFixed(1)} s`);
@@ -596,11 +605,19 @@ const measure = async (target, cloneDir, state, log, timeoutMs) => {
 const gate = (target, state, services, perFile, graph) => {
   if (graph === undefined) return undefined;
   const toPath = clonePaths(services);
-  // The state goes in because the baseline is keyed on it: outline is 45 files
+  // The state goes in because the baseline is keyed on it: a wiki app is 45 files
   // unread on a fresh clone and none with its dependencies installed, and one
   // number covering both would be stale in whichever of the two it was not
   // measured in (R124).
-  return readGate({ where: target.name, state, perFile, graph, toPath });
+  return readGate({
+    where: target.name,
+    state,
+    perFile,
+    graph,
+    toPath,
+    exempt: target.exempt ?? [],
+    baseline: target.baseline ?? [],
+  });
 };
 
 /**
@@ -658,7 +675,7 @@ const publish = (target, state, workspace, result) => {
  * Re-write the reports from measurements already in the cache.
  *
  * The counting rule and the wording of a report change far more often than the
- * eight repositories do, and rebuilding five gigabytes of somebody else's
+ * repositories do, and rebuilding five gigabytes of somebody else's
  * source to find out whether a regular expression now counts four more routes
  * is a poor trade. Ground truth is counted again, because that is what changed;
  * nothing is cloned, installed, cleaned or built.
@@ -857,6 +874,13 @@ const refuseIfStale = () => {
 
 const main = async () => {
   const options = parseArgs(process.argv.slice(2));
+  if (!existsSync(TARGETS)) {
+    throw new UsageError(
+      `no targets: ${relative(ROOT, TARGETS)} does not exist. Copy ` +
+        `${relative(ROOT, TARGETS_EXAMPLE)} to it and list the repositories to measure; ` +
+        'the file is gitignored.',
+    );
+  }
   const list = JSON.parse(readFileSync(TARGETS, 'utf8'));
   if (options.pin) return pin(list);
 

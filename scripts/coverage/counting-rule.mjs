@@ -21,7 +21,7 @@
  * match `SKIPPED_FILES`, and which is not a test. What a test is comes from
  * `isTestFile` in `@flowatlas/core`, the definition the tool reads by, and from
  * nowhere else: a rule that counted a test the tool never opens would expect
- * nodes from it, and that is how six of cal.com's `*.integration-test.ts` files
+ * nodes from it, and that is how six of a scheduling app's `*.integration-test.ts` files
  * came to fail the read gate (R157). Nothing is read that git does not carry, so a build
  * directory somebody left behind and an installed dependency are both invisible
  * whatever state the clone is in, and the same file list is counted whether the
@@ -45,8 +45,8 @@
  * address in the directory name is counted at all.
  *
  * A probe reads **code, not comments**. A comment is somebody describing a
- * declaration, not making one: cal.com's `getMetadataHelpers.ts` shows its
- * caller's `prisma.team.update(…)` in a doc comment, and medusa's
+ * declaration, not making one: a scheduling app's `getMetadataHelpers.ts` shows its
+ * caller's `prisma.team.update(…)` in a doc comment, and a commerce monorepo's
  * `create-pg-connection.ts` says "a new knex (pg in the future) connection" above
  * a function that runs no query. Both were counted, and each needed somebody to
  * read the file and write an excuse for it (R157). So every file of code has its
@@ -155,18 +155,18 @@ export const PROBES = [
     // `router`, which is what keeps `map.get(key)` and `this.http.post(url)`
     // out of a figure that would otherwise be nonsense. The run before the
     // suffix may be empty, because the receiver is very often called exactly
-    // `router`; requiring at least one character in front of it scored outline
+    // `router`; requiring at least one character in front of it scored a wiki app
     // at zero when it registers two hundred and twenty-eight routes that way.
     //
     // A registration is told from a lookup by its arguments. `app.get(Token)`
     // is how a NestJS application asks its own container for a provider, and
-    // counting it gave immich seven routes it does not have. Two shapes are a
+    // counting it gave a photo server seven routes it does not have. Two shapes are a
     // registration and nothing else is: an address written down as text - a
     // string, a bare path, or a list of them in one call, which is one
     // declaration and is counted once - or any first argument followed by a
     // comma, because a route always has a handler after its address and a
     // lookup never has a second argument at all. The second shape is not
-    // decoration: four of outline's routes are registered at `config.id`, and a
+    // decoration: four of a wiki app's routes are registered at `config.id`, and a
     // rule that demanded a literal would have called them something else.
     // The whitespace is permissive because the address is very often on the
     // line after the call.
@@ -178,15 +178,15 @@ export const PROBES = [
     family: 'routes',
     scope: 'line',
     // A file-system router keeps the address in the directory name and the verb
-    // in the name of an export. Next.js, Medusa and Payload all spell it this
-    // way, which is why one probe covers three of the eight targets.
+    // in the name of an export. Next.js and Medusa both spell it this way,
+    // which is why one probe covers both.
     //
     // In a file a router serves, and in no other. Such a router knows its files
     // by name - `route.*` for the Next.js App Router and Medusa, `+server.*` for
     // SvelteKit - so a verb exported anywhere else is a function called `GET`
-    // that a route file imports and wraps, and not a way in. cal.com's
+    // that a route file imports and wraps, and not a way in. A scheduling app's
     // `tasker/api/cron.ts` is served from `apps/web/app/api/tasks/cron/route.ts`;
-    // payload's `routes/rest/index.ts` builds the handlers its route files
+    // a CMS monorepo's `routes/rest/index.ts` builds the handlers its route files
     // export. Counting those put one way in into the denominator twice, at the
     // file that is served and at the file its handler came from (R157).
     what: 'an exported handler named for an HTTP verb, in a file a router serves',

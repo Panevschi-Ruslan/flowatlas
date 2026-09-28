@@ -41,7 +41,7 @@ spells `{ baseUrl: '/auth' }` beside its body, and the route it means is mounted
 at `/auth` by `app.ts` — so the call's own word is the true one, and the address
 recorded is `POST /auth/passkeys.generateRegistrationOptions`, which joins. Under
 the client's default it was `POST /api/passkeys.generateRegistrationOptions`, an
-address nothing in this repository serves and nothing said so. That is outline's
+address nothing in this repository serves and nothing said so. That is a wiki app's
 last three unjoined browser requests exactly: the route side had already been
 placed at `/auth/…` and the two halves disagreed by precisely the base the call
 overrides.

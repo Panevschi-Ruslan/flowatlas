@@ -1,7 +1,7 @@
 import { IRouter, Request, Response, Router } from 'express';
 
 /**
- * medusa's admin bundler in miniature: a `Router()` at module scope, handed back
+ * A commerce monorepo's admin bundler in miniature: a `Router()` at module scope, handed back
  * by a function the application mounts.
  */
 const router = Router();

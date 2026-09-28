@@ -18,7 +18,7 @@ import { isSourceFile, measureSites, withoutComments } from './counting-rule.mjs
 const sitesIn = (path, text) => measureSites([[path, text]]).perFile.get(path) ?? {};
 
 describe('a probe reads code, not comments', () => {
-  it('does not count a call shown in a doc comment (cal.com getMetadataHelpers.ts)', () => {
+  it('does not count a call shown in a doc comment (getMetadataHelpers.ts, from a scheduling app)', () => {
     const text = [
       '/**',
       ' * The caller writes:',
@@ -74,7 +74,7 @@ describe('a verb exported where a router serves it', () => {
     assert.deepEqual(sitesIn('src/routes/health/+server.ts', handler), { routes: 1 });
   });
 
-  it('does not count one a route file imports (cal.com tasker/api/cron.ts)', () => {
+  it('does not count one a route file imports (tasker/api/cron.ts, from a scheduling app)', () => {
     assert.deepEqual(sitesIn('packages/features/tasker/api/cron.ts', handler), {});
     assert.deepEqual(sitesIn('templates/ecommerce/src/app/(app)/next/exit-preview/GET.ts', handler), {});
     assert.deepEqual(sitesIn('src/router.ts', handler), {});

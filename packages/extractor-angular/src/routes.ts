@@ -38,7 +38,7 @@ const CHILD_CALLS = new Set(['forChild']);
  * The properties a route configuration is written with.
  *
  * A description of the shape rather than a parser for it. `Routes` is a type
- * annotation, and an annotation is optional in the language: PeerTube writes 21
+ * annotation, and an annotation is optional in the language: a video platform writes 21
  * of its 31 route files as `export default [ … ]` with no annotation anywhere,
  * and asking for one found none of them (R104). What identifies a route array is
  * what a route array holds, and that is written down here once.
@@ -91,7 +91,7 @@ const ROUTE_MARKS = new Set([
  *
  * Deeper than the six a nesting of `children` ever needs, because a loader and a
  * spread each cost a step too: `/admin/settings/plugins/list-installed` on
- * PeerTube is a root, a `loadChildren`, a `children`, a spread, another
+ * A video platform is a root, a `loadChildren`, a `children`, a spread, another
  * `children` and a leaf. What the limit is really for is a configuration that
  * loads itself, where the prefix grows on every turn and nothing else would stop.
  */

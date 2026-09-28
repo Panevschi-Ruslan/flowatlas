@@ -49,7 +49,7 @@ describe('operationOf', () => {
   });
 
   // Both are methods real code calls on a real value, and a record written as an
-  // object literal answers them with the language's own. novu carried two query
+  // object literal answers them with the language's own. A notification service carried two query
   // nodes labelled with the text of a native function until this was own-keys.
   it('says nothing about a name the language answers for every object', () => {
     expect(operationOf(descriptor, 'toString')).toBeNull();
@@ -74,7 +74,7 @@ describe('classifying a call', () => {
    * here can read, so the row is the whole answer.
    *
    * `Kysely<DB>` is a connection typed by the whole schema, and reading its type
-   * argument gave immich two table nodes with 407 `queries` edges pointing at
+   * argument gave a photo server two table nodes with 407 `queries` edges pointing at
    * them, beside 407 rows saying the package was not understood (R83).
    */
   it('names no table when the package is not described, and says so', () => {
@@ -92,7 +92,7 @@ describe('classifying a call', () => {
   /**
    * The row does not depend on the type argument being a table.
    *
-   * PeerTube's model base is parameterised by a generic helper of the ORM's own
+   * A video platform's model base is parameterised by a generic helper of the ORM's own
    * typings, which is a name and is not a table. Reading this row's condition off
    * the table would have thrown away 1,949 of them the moment the name stopped
    * being one (R83).
@@ -112,7 +112,7 @@ describe('classifying a call', () => {
    * A described library still only names a table the repository declares.
    *
    * A base class of one's own over an ORM's `Model` is parameterised by the
-   * ORM's own helper, and following that argument named 1,898 of PeerTube's
+   * ORM's own helper, and following that argument named 1,898 of a video platform's
    * 1,958 queries after a type in `node_modules`: one table node standing for a
    * hundred real tables (R83).
    */
@@ -140,7 +140,7 @@ describe('classifying a call', () => {
   /**
    * A name is not evidence, so the row stands alone.
    *
-   * 463 of the 1,153 nodes this minted on immich were the job queue, the event
+   * 463 of the 1,153 nodes this minted on a photo server were the job queue, the event
    * bus, the filesystem, ffmpeg and child_process, because that repository names
    * every adapter `Repository` (R83).
    */

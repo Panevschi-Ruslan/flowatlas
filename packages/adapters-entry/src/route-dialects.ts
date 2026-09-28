@@ -38,7 +38,7 @@ import { entryHttpSchema } from '@flowatlas/core';
  * wrapper is still the handler, whether it is written there or named. None of
  * those is a fact about a framework, so none of them is a field — and the last
  * could not be one if it were, because the wrapper is usually the repository's
- * own (`asyncMiddleware`, in PeerTube) and there is no package to name.
+ * own (`asyncMiddleware`, in a video platform) and there is no package to name.
  *
  * The second is the one field-shaped thing in a description that is not about
  * reading a route at all: `packages`. It earns its place twice over, because it
@@ -157,7 +157,7 @@ export interface StatedApps {
   /**
    * Methods, beyond the ones the description already names, that hand back the
    * application they are called on. `express().disable('x-powered-by')` is how
-   * PeerTube declares its application; with types installed the checker says
+   * A video platform declares its application; with types installed the checker says
    * `disable` answers with the application, and with none only this can.
    */
   readonly chainable: readonly string[];
@@ -465,7 +465,7 @@ export const HONO: RouteDialect = described({
  * the framework's own row cannot say where anything went. The reader already
  * finds the application among such a call's arguments and records it as mounted
  * with no readable path, which stopped a wrong address being published and left
- * the right one unread: on outline, 253 routes at an address nothing serves
+ * the right one unread: on a wiki app, 253 routes at an address nothing serves
  * became 233 rows saying the address could not be told (R84, R110).
  *
  * The prefix is in the call. What is not in the call is which argument it is,
@@ -475,7 +475,7 @@ export const HONO: RouteDialect = described({
  * described is not a special case: it keeps the row it already had.
  *
  * Keyed by the package the helper is imported from, and not by the name it is
- * imported under, because the name belongs to the importer: outline writes
+ * imported under, because the name belongs to the importer: a wiki app writes
  * `import mount from 'koa-mount'` and the next repository may write anything.
  */
 export interface MountHelper {
@@ -485,7 +485,7 @@ export interface MountHelper {
    * Which argument spells the prefix.
    *
    * When the helper is called with the application alone — `mount(routes)`, which
-   * outline also writes — this position holds the application itself, and the
+   * A wiki app also writes — this position holds the application itself, and the
    * mount is at its parent's base, which is what the helper does with it.
    */
   readonly pathAt: number;

@@ -544,7 +544,7 @@ const callHandedWork = (body: TsNode): boolean =>
  * A value a call built is read one of three ways, and which is decided by the
  * call. Handed work, the call is a wrapper round a handler written or named in
  * it, and the node the index gave the export is the answer. Handed only values,
- * by a function this repository declares - payload's `REST_GET(config)` - the
+ * by a function this repository declares - a CMS monorepo's `REST_GET(config)` - the
  * handler is what that factory returns and its body is the factory's, so the
  * factory is the answer: the reading a registration gets from the same shared
  * `builtByFactory` (R137, R153). Handed only values by a package, nothing

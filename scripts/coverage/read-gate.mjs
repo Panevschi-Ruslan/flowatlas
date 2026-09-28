@@ -105,7 +105,7 @@ const FIXTURES = join(ROOT, 'fixtures');
  * finish. Anything else said about a file - a call, an injection, a config read,
  * a row about a receiver's type - says a reader was there and nothing about
  * whether the reader of *this* family was. Before R160 it spoke for every family
- * of the file, and about 174 of cal.com's data files passed on calls alone.
+ * of the file, and about 174 of a scheduling app's data files passed on calls alone.
  *
  * `edges` and `reasons` are the whole of that judgement, one row per family, and
  * a kind or a reason written under no family speaks for nothing. A reason is an
@@ -273,55 +273,11 @@ export const EXEMPT = [
       'output; a table would be a guess wearing a node. One descriptor turns all of ' +
       'them into tables at once, and then this entry goes.',
   },
-  // Medusa has none left. R137 decided three and a fourth, over `models`, went in
-  // R149: the family has table nodes now that the inventory, pricing and product
-  // repositories' knex queries are read. `packages/medusa-test-utils/**` over
-  // `routes` went in R154: its one file with a site, `bootstrap-app.ts`, carries
-  // `calls` and `reads_config` edges, which count for the file once an edge's
-  // site is read relative to the service that drew it rather than to the clone.
-  // Still no entry is minted for its `/health`, which is what the exemption
-  // defended. Since R160 neither edge speaks for routes, so the file was red
-  // again, and R163 decided it by reading the file: the entry below. The last two
-  // went in R157. `create-pg-connection.ts` over `data`: its one site was words in
-  // a doc comment, and the counting rule no longer reads comments.
-  // `packages/medusa/src/migration-scripts/**` over `data`: each query there is
-  // written in a function handed to `createStep`, which had no holder, so the
-  // file said nothing; it is a body now, and each `knex(table)` on
-  // `container.resolve(PG_CONNECTION)` - typed `any`, so still unread - carries
-  // the `db-receiver-name-only` row that says so, which is the honest output the
-  // exemption stood in for.
-  //
-  // Payload's two were decided in R147 by reading the file rather than the
-  // count. The first, `templates/ecommerce/.../exit-preview/GET.ts` over
-  // `routes`, went in R157: it is a copy of the `route.ts` beside it under a
-  // name Next.js does not serve, and the probe for an exported verb now counts
-  // only the files a router serves - which is the sentence that exemption said.
-  {
-    where: 'medusa',
-    path: 'packages/medusa-test-utils/src/medusa-test-runner-utils/bootstrap-app.ts',
-    family: 'routes',
-    why:
-      'The one site is `app.get("/health")` on an express app this test-support ' +
-      'package builds to host medusa during integration tests. The service read is ' +
-      '`packages/medusa`, which never serves that address, so an entry here would ' +
-      'claim a way in the application does not have. Not read as test code either: ' +
-      'the package is named by a hyphenated word, and matching directories that ' +
-      'way would drop real packages such as an `ab-test` service. Decided in R163 ' +
-      'for this one file and family; any other route in the package is still gated.',
-  },
-  {
-    where: 'payload',
-    path: '(anywhere)',
-    family: 'models',
-    why:
-      'The two sites are `interface CollectionModel extends Model<any>` and ' +
-      '`interface GlobalModel extends Model<Document>` in ' +
-      '`packages/db-mongodb/src/types.ts`: the Mongoose type every collection’s ' +
-      'model is given, which declares no table. Payload declares its collections as ' +
-      'configuration objects that a database adapter turns into tables when it ' +
-      'starts, which the counting rule has no probe for, so the family’s real ' +
-      'denominator here is zero and this gate cannot see it (`BLIND`, R117).',
-  },
+  // A measured target's exemptions are not here. They name files of a
+  // repository this project does not own, so they live with the target itself,
+  // under `exempt` in the local target list (`targets.local.json`), and reach
+  // `readGate` from its record. The rule is the same: one file or subtree, one
+  // family, and a `why`.
 ];
 
 /**
@@ -404,7 +360,7 @@ export const BLIND = [
  * else.
  *
  * `where` and `state` name the measurement, because a target reads differently
- * with its dependencies installed: outline is 45 files on a fresh clone and 0
+ * with its dependencies installed: a wiki app is 45 files on a fresh clone and 0
  * with them, so a baseline that ignored the state would be stale in one of the
  * two by construction. `family`, `path` and `files` are the claim - this many
  * files, under this subtree, in this one family. `path` takes the same
@@ -429,17 +385,8 @@ export const BLIND = [
  * nobody has seen.
  */
 export const BASELINE = [
-  // outline's forty-five known unread files on a fresh clone - eleven under
-  // `plugins/**` and thirty-four under `server/routes/**`, its whole route surface
-  // - were here until R142. They were never a convention without a reader, as the
-  // entries claimed: the Koa reader knew an application only by its type, which a
-  // fresh clone does not have, and now reads one from what the source states.
-  // outline's fresh read equals its installed read, so nothing is baselined.
-  // Medusa once had three known-red files here (R137), and each went when its
-  // cause did: the service's `start.ts` and the admin bundler's `serve.ts` when
-  // R142 read an Express application from what the source states, and the
-  // inventory module's repository when R141 let a declared package's own `paths`
-  // resolve its own imports. Nothing of Medusa's is baselined now.
+  // Empty. A measured target's known red lives with the target, under
+  // `baseline` in the local target list, for the reason its exemptions do.
 ];
 
 const exemptionKey = (entry) => `${entry.where} ${entry.path} ${entry.family}`;
@@ -448,8 +395,8 @@ const exemptionKey = (entry) => `${entry.where} ${entry.path} ${entry.family}`;
 const covers = (entry, path) =>
   entry.path.endsWith('/**') ? path.startsWith(entry.path.slice(0, -2)) : entry.path === path;
 
-const exemptionFor = (where, path, family) =>
-  EXEMPT.find((entry) => entry.where === where && entry.family === family && covers(entry, path));
+const exemptionFor = (entries, where, path, family) =>
+  entries.find((entry) => entry.where === where && entry.family === family && covers(entry, path));
 
 /**
  * The baseline entries that belong to one measurement.
@@ -460,8 +407,8 @@ const exemptionFor = (where, path, family) =>
  * baseline that silently applied to both states of a target would be an excuse
  * doing twice the work it was reviewed for.
  */
-const baselineFor = (where, state) =>
-  BASELINE.filter((entry) => entry.where === where && (entry.state ?? null) === state);
+const baselineFor = (entries, where, state) =>
+  entries.filter((entry) => entry.where === where && (entry.state ?? null) === state);
 
 /**
  * The translation from a path as the graph spells it to a path as the counting
@@ -641,8 +588,8 @@ const readingOf = (graph, toPath) => {
  * difference, so the fix is to read the diff and change one number rather than to
  * work out which number was meant.
  */
-const againstBaseline = (where, state, missing) => {
-  const entries = baselineFor(where, state);
+const againstBaseline = (baseline, where, state, missing) => {
+  const entries = baselineFor(baseline, where, state);
   if (entries.length === 0) return { missing, known: [], drift: [] };
   const counted = new Map(entries.map((entry) => [entry, 0]));
   const unexplained = [];
@@ -673,7 +620,18 @@ const againstBaseline = (where, state, missing) => {
  * in the assertion looks at it: what a file is allowed to yield does not depend
  * on whether anybody ran an install.
  */
-export const readGate = ({ where, state = null, perFile, graph, toPath }) => {
+export const readGate = ({
+  where,
+  state = null,
+  perFile,
+  graph,
+  toPath,
+  exempt = [],
+  baseline = [],
+}) => {
+  // A target brings its own entries, from its record; a fixture's are above.
+  const exemptions = [...EXEMPT, ...exempt.map((entry) => ({ ...entry, where }))];
+  const baselined = [...BASELINE, ...baseline.map((entry) => ({ ...entry, where }))];
   const { answered, unplaced, documentOnly } = readingOf(graph, toPath);
   const missing = [];
   const used = new Set();
@@ -687,7 +645,7 @@ export const readGate = ({ where, state = null, perFile, graph, toPath }) => {
       const gated = FAMILY.get(family);
       if (gated === undefined || !gated.perFile) continue;
       if (spoken.has(family)) continue;
-      const exemption = exemptionFor(where, path, family);
+      const exemption = exemptionFor(exemptions, where, path, family);
       if (exemption !== undefined) {
         used.add(exemptionKey(exemption));
         continue;
@@ -700,7 +658,7 @@ export const readGate = ({ where, state = null, perFile, graph, toPath }) => {
   for (const [family, gated] of FAMILY) {
     if (gated.perFile || (total.get(family) ?? 0) === 0) continue;
     if (gated.types.some((type) => present.has(type))) continue;
-    const exemption = exemptionFor(where, '(anywhere)', family);
+    const exemption = exemptionFor(exemptions, where, '(anywhere)', family);
     if (exemption !== undefined) {
       used.add(exemptionKey(exemption));
       continue;
@@ -710,10 +668,10 @@ export const readGate = ({ where, state = null, perFile, graph, toPath }) => {
   missing.sort((a, b) =>
     a.path === b.path ? (a.family < b.family ? -1 : 1) : a.path < b.path ? -1 : 1,
   );
-  const stale = EXEMPT.filter(
+  const stale = exemptions.filter(
     (entry) => entry.where === where && !used.has(exemptionKey(entry)),
   );
-  const split = againstBaseline(where, state, missing);
+  const split = againstBaseline(baselined, where, state, missing);
   return {
     where,
     state,

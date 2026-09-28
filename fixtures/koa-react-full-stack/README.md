@@ -17,7 +17,7 @@ R88. `guessType` used to answer with the first row of the reader table (`READERS
 in `packages/cli/src/readers.ts`, once `TYPE_SIGNATURES` in `stacks.ts`) whose
 dependency a manifest declared, and `react` sat above `koa` for a reason that had
 nothing to do with either of them. So a repository shaped like this one — which
-is the shape of outline, and of most repositories that ship a browser with the
+is the shape of a wiki app, and of most repositories that ship a browser with the
 server it talks to — was offered `react` by `init` and `link`, read by the reader
 that opens `.tsx` and nothing else, and came back with its screens, its requests,
 and none of the routes those requests reach.

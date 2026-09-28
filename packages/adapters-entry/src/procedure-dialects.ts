@@ -110,7 +110,7 @@ const described = (description: EntryProcedureDescription): ProcedureDialect =>
  * almost never the library's: `initTRPC.create()` hands back an object, the
  * project takes it apart — `export const router = t.router` — and every router
  * in the repository is then assembled by a function of the project's own, in the
- * project's own file, with the project's own type. cal.com does exactly this,
+ * project's own file, with the project's own type. A scheduling app does exactly this,
  * and a row naming `@trpc/server#TRPCRouterBuilder` would have matched none of
  * its thirty-three routers. Matching on the name is what actually finds them.
  *
@@ -135,7 +135,7 @@ const described = (description: EntryProcedureDescription): ProcedureDialect =>
  * and start every guarded chain from that name.
  *
  * `mounts` exists for the sentence in the ticket rather than for an address.
- * Twenty-nine three-line files under `pages/api` are what serves cal.com's tree,
+ * Twenty-nine three-line files under `pages/api` are what serves a scheduling app's tree,
  * and the address a caller actually writes is the procedure's path, not the URL
  * of whichever of those files the client's link happens to pick. So the mount is
  * not read for a path; it is read so that a file which serves a tree nobody
@@ -162,11 +162,11 @@ export const TRPC: ProcedureDialect = described({
   // `initTRPC.context<Context>().create()` is where a project writes what every
   // procedure's `ctx` is, and it is the only place: a handler written
   // `async ({ ctx }) => …` states nothing, and with nothing installed the
-  // checker has no tRPC to carry the type across. cal.com's three read-gate
+  // checker has no tRPC to carry the type across. A scheduling app's three read-gate
   // files that query through `ctx.prisma` were unread for exactly that (R157).
   context: { method: 'context', key: 'ctx' },
   mounts: [
-    // The Next.js adapter, and the one cal.com wraps under the same name. The
+    // The Next.js adapter, and the one a scheduling app wraps under the same name. The
     // library's own spelling hands it an options object; a project's wrapper
     // usually takes the tree alone, so both are accepted on one row.
     { call: 'createNextApiHandler', treeKey: 'router' },

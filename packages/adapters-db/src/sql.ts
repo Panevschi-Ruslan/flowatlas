@@ -30,7 +30,7 @@ export const sqlOperation = (sql: string): DbOp | null => {
  * Every one of them, not only the first. The clause used to be taken as the
  * text up to the first `select`, which is inside the first definition, so the
  * second name of `WITH a AS (SELECT …), b AS (…)` and a name written with its
- * columns - `WITH input_pairs(product_id, option_id) AS (VALUES …)`, as medusa
+ * columns - `WITH input_pairs(product_id, option_id) AS (VALUES …)`, as a commerce monorepo
  * writes one - were read as tables (R155).
  */
 const COMMON_TABLE =

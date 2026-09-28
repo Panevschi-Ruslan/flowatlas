@@ -9,7 +9,7 @@ is the same everywhere it appears. A class wrapping `fetch` behind `get` and
 `post` is not: it exists in exactly one repository, under a name nobody else
 uses, and it is how most front ends are actually written. Before this fixture,
 a repository putting every request through such a class produced no request at
-all and no row saying why. outline is the measured case: ninety-seven call
+all and no row saying why. A wiki app is the measured case: ninety-seven call
 sites, two request nodes, and both of those were incidental bare `fetch` calls
 somewhere else.
 

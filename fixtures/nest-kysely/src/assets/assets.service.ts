@@ -64,11 +64,11 @@ export class AssetsService {
   }
 
   // A read whose source is another query rather than a stored table. Real, and
-  // unreadable on purpose: immich builds a fifth of its reads this way.
+  // unreadable on purpose: a photo server builds a fifth of its reads this way.
   // Expected: the query is still a node, with no table and a
   // `dynamic-table-name` row saying why. In particular the name of the schema
   // type must not appear as a table here, which is what the tool did before the
-  // descriptor existed — on immich it put `DB` on 407 nodes.
+  // descriptor existed — on a photo server it put `DB` on 407 nodes.
   fromSubquery(): Promise<unknown[]> {
     return this.db
       .selectFrom((eb) => eb.selectFrom('asset').selectAll().as('recent'))

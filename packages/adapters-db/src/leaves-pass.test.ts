@@ -159,7 +159,7 @@ describe('a chain that carries two operations', () => {
  * program wrote them or not. A lookup written as an object literal answers for
  * those, and one did: `value.toString()` on a receiver of a described package
  * found `Object.prototype.toString`, and two `db_query` nodes labelled
- * `function toString() { [native code] }` went into novu's graph (R122).
+ * `function toString() { [native code] }` went into a notification service's graph (R122).
  *
  * Asserted as "no node anywhere names this file" rather than as "no `db_query`
  * for this call", because the failure is a node minted from a value nobody read
@@ -266,7 +266,7 @@ describe('a pg statement that names no table', () => {
  * provider's `deleteEvent` take in the interface member and, through it, the
  * other provider's calls, so basecamp's request was forwarded to zoho's
  * `this.deleteEvent('stale')` and to the manager's call through the interface,
- * and basecamp's own request went missing. On cal.com that was seven `GET ?`
+ * and basecamp's own request went missing. On a scheduling app that was seven `GET ?`
  * rows at the wrong calendars and no `PUT .../trashed.json` at all.
  */
 describe('a parameter forwarded through an interface method', () => {

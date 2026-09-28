@@ -104,7 +104,7 @@ export interface DbCallInput {
    * an installed package rather than by the repository being read.
    *
    * A type argument is the stored entity only when the repository declares it.
-   * PeerTube puts a base class of its own over the ORM's `Model` and
+   * A video platform puts a base class of its own over the ORM's `Model` and
    * parameterises it with `AttributesOnly<…>`, a generic helper out of the ORM's
    * own typings, so walking to the first type argument named 1,898 of that
    * repository's 1,958 queries after a mapped type in `node_modules`: one table
@@ -197,7 +197,7 @@ export const isUniversalMethod = (name: string): boolean => UNIVERSAL_METHODS.ha
  * Own keys only, which is not pedantry. A record written as an object literal
  * answers `toString` and `constructor` with the language's own, and those are
  * method names real code calls: `value.toString()` on a receiver a described
- * package declares was read as an operation whose name is a function, and novu
+ * package declares was read as an operation whose name is a function, and a notification service
  * carried two query nodes labelled with the text of a native function because of
  * it. A lookup that can be asked about any word a program contains has to be
  * asked about that word only.
@@ -372,7 +372,7 @@ export const classifyDbCall = (input: DbCallInput): DbClassification | null => {
   // repository does not declare still answers it. A receiver typed
   // `Model<AttributesOnly<Video>>` is as much a data layer as one typed
   // `Repo<Order>`; the difference between them is only which of the two names a
-  // table, and reading this question off the table would have dropped PeerTube's
+  // table, and reading this question off the table would have dropped a video platform's
   // 1,949 rows the moment the name stopped being one (R83).
   const hints = input.nameHints ?? {};
   const lastSegment = (input.receiverText ?? '').split('.').pop() ?? '';
@@ -385,7 +385,7 @@ export const classifyDbCall = (input: DbCallInput): DbClassification | null => {
       // The type argument is not a table, and this row is the proof: a package
       // nobody has described is a package whose type parameters nobody here can
       // read. `Kysely<DB>` is a connection typed by the whole schema and the
-      // table is a string argument, so taking the type argument gave immich two
+      // table is a string argument, so taking the type argument gave a photo server two
       // table nodes — `DB` and `MapDB` — with 407 `queries` edges pointing at
       // them, beside these 407 rows saying the package was not understood. A
       // reader that has decided a value is unreadable does not then name a node
@@ -421,14 +421,14 @@ export const classifyDbCall = (input: DbCallInput): DbClassification | null => {
       //
       // This branch has already established that nothing but the spelling of the
       // receiver suggested data: no descriptor, no package-declared type
-      // carrying an entity, nothing the checker would vouch for. immich names
+      // carrying an entity, nothing the checker would vouch for. A photo server names
       // every adapter `Repository`, and 463 of the 1,153 `db_query` nodes this
       // minted there were the job queue, the event bus, the filesystem, ffmpeg
-      // and child_process. On cal.com the only four nodes that named a table
+      // and child_process. On a scheduling app the only four nodes that named a table
       // named a component's state store, while the real queries named none (R83).
       //
       // A missing answer is a gap; a confident wrong one is a lie the rest of
-      // the tool reasons from — `dead` called every real immich event orphaned
+      // the tool reasons from — `dead` called every real a photo server event orphaned
       // and `hotspots` ranked the event bus as a database. So the row stands
       // alone: it still says which receiver looked like data and what a reader
       // would have to write to make it certain, and naming the base class under

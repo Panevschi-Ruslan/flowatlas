@@ -302,7 +302,7 @@ const propertyIn = (argument: Node, name: string): Node | undefined => {
  * The options are read one property at a time rather than by evaluating the
  * object, because one property nobody can read makes the whole object
  * unresolved and here that would throw away the two that were perfectly
- * legible. novu's is exactly that shape: the type is an enum member of an
+ * legible. A notification service's is exactly that shape: the type is an enum member of an
  * installed package and the prefix is a template rooted at a setting, while
  * `defaultVersion: '1'` — the value that decides where three hundred and fifty
  * six routes are served — is a string literal sitting beside them.
@@ -441,11 +441,11 @@ export const repoSourcesOf = function* (
  * change of mind about this file's oldest rule. Reading only the named file was right
  * about *what creates the application* — a search for that picks the wrong one
  * of several silently — and simply wrong about *where the address is decided*,
- * because the two are routinely different files. immich sets its prefix in
- * `app.common.ts`, called from a worker its supervisor forks by path, and novu
+ * because the two are routinely different files. A photo server sets its prefix in
+ * `app.common.ts`, called from a worker its supervisor forks by path, and a notification service
  * enables versioning in `bootstrap.ts`, reached through a dynamic import inside
  * a callback. Neither is reachable by following calls out of `main.ts`, so
- * following calls would have fixed neither, and all 292 of immich's routes were
+ * following calls would have fixed neither, and all 292 of a photo server's routes were
  * recorded without the `/api` every one of them answers on.
  *
  * What keeps the old objection answered is that nothing is guessed. Every
@@ -555,7 +555,7 @@ const emptyInfo = (): BootstrapInfo => ({
 /**
  * # A mount read from settings (R144)
  *
- * novu writes its versioning prefix as `${CONTEXT_PATH}v`, where `CONTEXT_PATH`
+ * A notification service writes its versioning prefix as `${CONTEXT_PATH}v`, where `CONTEXT_PATH`
  * is what `getContextPath()` makes of two settings, and every committed
  * environment file leaves both empty. The address is recorded with a hole in
  * front, as R89 says it must be, and nothing joins to it. What is established

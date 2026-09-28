@@ -13,7 +13,7 @@ import { runExtract } from './extract.js';
  *
  * Asserted end to end rather than on `guessType` alone, because R88 was not a
  * wrong word in a file - it was a wrong word in a file that nothing downstream
- * questioned. outline typed `react` by `link` produced 3,391 nodes, no channel
+ * questioned. A wiki app typed `react` by `link` produced 3,391 nodes, no channel
  * and no route, and every gate was happy: the graph was not empty, the reader
  * did not fail, and the only thing wrong with it was everything it did not
  * contain. So the assertions here are on the routes and on the requests that

@@ -97,7 +97,7 @@ const found = new WeakMap<Project, Map<string, PrismaSchema | null>>();
  * The schema that governs a file: the nearest one at or above its directory.
  *
  * Asked of the file a client is imported or constructed in, never of the file
- * a call is written in, because that is where the schema belongs: cal.com's
+ * a call is written in, because that is where the schema belongs: a scheduling app's
  * calls are in `apps/web` and its schema is beside the wrapper in
  * `packages/prisma`. The ascent stops at the checkout, so a schema of some
  * other repository above this one is never read as this one's.

@@ -8,7 +8,7 @@ import { Order } from './entities.js';
  * descriptor's table of operations, and the name comes out of the source. Asked
  * about `toString`, an object literal answers with `Object.prototype.toString` -
  * and a `db_query` node was minted for it, labelled
- * `function toString() { [native code] }`, twice in novu's graph (R122). The
+ * `function toString() { [native code] }`, twice in a notification service's graph (R122). The
  * graph must hold no node for any line of this file.
  *
  * Module-level functions on purpose: a body earns a node only once a leaf is

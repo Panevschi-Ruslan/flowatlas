@@ -42,7 +42,7 @@ const label = (node: TsNode | undefined): string =>
  *
  * A function written in place has no name, and it used to be labelled with the
  * first forty characters of its text - `async ({ ctx, input, next }) => { // End`
- * on cal.com - which named nothing and matched nothing. It is named instead the
+ * on a scheduling app - which named nothing and matched nothing. It is named instead the
  * way the walk over bodies names it (`placedFunction`), so the node drawn in
  * front of the way in and the node its queries hang off are one node (R157).
  */
@@ -72,7 +72,7 @@ const siteOf = (node: TsNode, ctx: ExtractContext): Site => ({
  * answer without failing: `{ loggedInViewerRouter }` declares a member *and*
  * refers to an import, the name node carries the member's symbol, and following
  * it leads back to the literal it was written in rather than to the tree it
- * names. Nine of cal.com's ways in lost their address that way, and the checker
+ * names. Nine of a scheduling app's ways in lost their address that way, and the checker
  * has a question for precisely this case.
  */
 const symbolOf = (expr: TsNode): TsSymbol | undefined => {
@@ -324,7 +324,7 @@ interface Tree {
  * The key a property is written under, or nothing when it is computed.
  *
  * A shorthand property — `{ loggedInViewerRouter }` — is a key as much as a
- * written one, and cal.com's own root uses both spellings in one literal.
+ * written one, and a scheduling app's own root uses both spellings in one literal.
  */
 const memberOf = (property: TsNode, ctx: ExtractContext): Member | undefined => {
   if (Node.isShorthandPropertyAssignment(property)) {
@@ -550,7 +550,7 @@ const MOST_ROOT_STEPS = 32;
  * not a context.
  *
  * Remembered per value, because every chain of a repository ends at the same
- * root and cal.com has several hundred of them.
+ * root and a scheduling app has several hundred of them.
  */
 const contextWrittenFor = (
   receiver: TsNode,
@@ -722,7 +722,7 @@ export interface ProcedureRoutersOptions {
  *
  * Not an HTTP address, and that is a decision rather than an omission. Such a
  * tree is served over HTTP, but *at which URL* is a property of the link the
- * client was configured with rather than of anything in the tree: cal.com hangs
+ * client was configured with rather than of anything in the tree: a scheduling app hangs
  * twenty-nine slices of one tree at twenty-nine different paths and its client
  * still names every one of them `viewer.<slice>.<procedure>`. Publishing a URL
  * would be publishing a guess, and a wrong address is worse than none. The
@@ -828,7 +828,7 @@ export const procedureRoutersAdapter = (
      *
      * `served` accumulates down the path rather than being the root's alone,
      * because a repository may hang the whole tree in one file and each of its
-     * branches in a file of its own — cal.com mounts twenty-nine — and a way in
+     * branches in a file of its own — a scheduling app mounts twenty-nine — and a way in
      * really is answered at all of them.
      */
     const walk = (

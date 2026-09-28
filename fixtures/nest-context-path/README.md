@@ -2,7 +2,7 @@
 
 A NestJS service whose every address begins with a mount the deployment sets,
 and a browser that asks for those addresses under a base already carrying it.
-novu's shape, in miniature (R137).
+A notification service's shape, in miniature (R137).
 
 `api` versions by URI with `prefix: \`${CONTEXT_PATH}v\``, where `CONTEXT_PATH`
 comes from a setting that no source settles. So its two routes are recorded as
@@ -18,7 +18,7 @@ What the snapshot holds:
   retry R114 declined in `packages/linker/src/ui-link.ts`.
 - **Two rows that name the route behind the hole.** Before R137 they said
   "no configured service serves GET /v1/orders" about an address the graph holds
-  as `/${…}v1/orders` — on novu, forty-two times. They keep the reason
+  as `/${…}v1/orders` — on a notification service, forty-two times. They keep the reason
   `target-route-not-found`, because the request still reaches no route, and now
   say which route answers it once the unread part is left open.
 - **One plain row.** `/v1/invoices` is served by nothing whatever the hole holds,

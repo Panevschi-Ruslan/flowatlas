@@ -1,6 +1,6 @@
 # koa-mount-helper fixture
 
-Koa applications mounted inside another by a helper, which is how outline mounts
+Koa applications mounted inside another by a helper, which is how a wiki app mounts
 five of them.
 
 Type-checked, never executed:
@@ -27,13 +27,13 @@ an application, and the one thing that separates a mount from a middleware
 install on this framework's row is whether what is handed over is an application.
 So the line read as an install, the prefix was dropped, and every route on `api`
 kept the address it is written at: `POST /documents.info` for what the service
-serves at `POST /api/documents.info`. On outline that was 253 of its 257 routes,
+serves at `POST /api/documents.info`. On a wiki app that was 253 of its 257 routes,
 with no row anywhere to say so (R84).
 
 The first fix was to stop publishing the address: such a mount became a mount
 with no readable path, which put the routes under it through the sentence the
 reader already had — *mounted somewhere this cannot read*. That is a missing
-address instead of a wrong one, and it cost outline 224 addresses.
+address instead of a wrong one, and it cost a wiki app 224 addresses.
 
 ## How it is described (R110)
 
@@ -51,10 +51,10 @@ Two positions and no condition. `mount(prefix, app)` and `mount(app)` are both
 covered by them, because the application is the last argument either way and the
 prefix's position holding the application *is* the answer for the second form:
 the helper mounts it at its parent's base. Both forms are written here, because
-outline writes both.
+A wiki app writes both.
 
 Keyed by the package and not by the name, because the name belongs to the
-importer: outline writes `import mount from 'koa-mount'`, and the next repository
+importer: a wiki app writes `import mount from 'koa-mount'`, and the next repository
 may write anything.
 
 ## What is read
@@ -67,15 +67,15 @@ may write anything.
 | `pagesRouter.get('/pages.list', …)` under `mount(pages)` | `GET /pages.list` |
 | `adminRouter.get('/users.list', …)` under `underFlag(admin)` | a row: mounted somewhere this cannot read |
 
-## The application is a parameter, as outline's is
+## The application is a parameter, as a wiki app's is
 
-The prefix on its own places nothing. `init(app: Koa = new Koa())` is how outline's
+The prefix on its own places nothing. `init(app: Koa = new Koa())` is how a wiki app's
 web service declares the application all five mounts hang from, and the reader
 walked a `const`'s value and a property's and not a parameter's — so the mount was
 followed to an application whose own base was unknowable, and every route under it
 stayed unplaceable with the prefix in hand.
 
-outline starts its services through a map of dynamic imports, so no call to that
+A wiki app starts its services through a map of dynamic imports, so no call to that
 function can be followed from anywhere in the repository: the default is the only
 statement there is about what `app` is, and it is the same kind of statement a
 `const` makes. It is also strictly better evidence than what the reader did
@@ -96,7 +96,7 @@ found among the arguments, the mount has no path, and the route under it is
 reported rather than recorded at an address nothing serves.
 
 What changed for it is the row's hint. It used to ask the reader to mount the
-application at a literal path, which is what outline had done all along; it now
+application at a literal path, which is what a wiki app had done all along; it now
 names the call the path is inside, because that is the one fact that makes the
 row something to act on.
 

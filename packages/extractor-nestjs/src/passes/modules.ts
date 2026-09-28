@@ -95,7 +95,7 @@ export const modulesPass = definePass('modules', (ctx) => {
   for (const indexed of ctx.classes.withRole('module')) {
     const options = moduleOptions(indexed.declaration);
     // Read one element at a time, and said out loud where an element could not
-    // be read. `controllers: [...controllers]` — immich's, a spread of an array
+    // be read. `controllers: [...controllers]` — a photo server's, a spread of an array
     // assembled in another file — resolved to nothing and was dropped in
     // silence, which cost little while membership was only metadata on a node.
     // Since R119 it decides which application an address belongs to, so a module

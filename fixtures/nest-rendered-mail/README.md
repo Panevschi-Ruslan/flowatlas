@@ -1,7 +1,7 @@
 # nest-rendered-mail
 
 A NestJS API that really does run React, in one package of it and nowhere else
-(R145). novu's shape in miniature: its API renders e-mail through a template
+(R145). A notification service's shape in miniature: its API renders e-mail through a template
 library built on React, and once React is detected the browser reader used to
 read the whole service - so the API's own end-to-end helper, the transport it
 hands messages to, and an SDK's provider for other people's applications were all

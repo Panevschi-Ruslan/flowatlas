@@ -74,7 +74,7 @@ const NAMING_DECORATORS: ReadonlyMap<string, number> = new Map([['Table', 0]]);
  * these calls — sequelize's `scope` returns the library's own `ModelStatic`,
  * which is what makes the call recognisable as data access at all — but a scope
  * is a filter over one model and never another table. Walking through the call
- * to what it was made on is what reads the name; on outline, where nearly every
+ * to what it was made on is what reads the name; on a wiki app, where nearly every
  * query is scoped, it is the difference between 91 unreadable tables and none.
  *
  * A list rather than a rule, because "a call whose receiver names the table" is

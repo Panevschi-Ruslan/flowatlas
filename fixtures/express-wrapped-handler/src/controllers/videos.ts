@@ -4,10 +4,10 @@ import { countRates, loadVideo, saveVideo } from '../lib/videos';
 import { asyncMiddleware, asyncRetryTransactionMiddleware } from '../middlewares/async';
 
 /**
- * The four shapes PeerTube writes a route in, one registration each.
+ * The four shapes a video platform writes a route in, one registration each.
  *
  * Every handler is declared below the registrations, as a function declaration,
- * because that is where PeerTube's controllers keep them: the router at the top
+ * because that is where a video platform's controllers keep them: the router at the top
  * of the file reads as a table of contents.
  */
 export const videosRouter = Router();
@@ -15,7 +15,7 @@ export const videosRouter = Router();
 const authenticate = (_req: Request, _res: Response, next: NextFunction): void => next();
 
 // A named handler handed to a wrapper, behind middleware that is wrapped too.
-// Two hundred and twenty-four of PeerTube's registrations are this one.
+// Two hundred and twenty-four of a video platform's registrations are this one.
 videosRouter.get('/:id', authenticate, asyncMiddleware(videosGetValidator), asyncMiddleware(getVideo));
 
 // The same through the other wrapper; sixty-seven of them.

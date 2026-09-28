@@ -111,7 +111,7 @@ export const WALKED_ROLES: ReadonlySet<string> = new Set([
  * in the project already — the checker had resolved into them so that types would
  * come out — and this test then threw every one of them away, because they were
  * not under the directory the manifest was in. The result was a graph with all
- * eighty-four of cal.com's routes in it and not one of the functions they call:
+ * eighty-four of a scheduling app's routes in it and not one of the functions they call:
  * boundaries or bodies, never both. What a service is includes the packages it
  * declares (see `serviceSourceDirs`), so what its own files are does too.
  *

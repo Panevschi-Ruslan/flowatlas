@@ -60,7 +60,7 @@ const withoutApplication = (id) => id.replace(/^(entry:[^:@]+)@[^:]*:/, '$1:');
 /**
  * Addresses counted by their first segment, with the small ones folded.
  *
- * This is the smallest thing that makes a lost prefix visible. All of immich's
+ * This is the smallest thing that makes a lost prefix visible. All of a photo server's
  * two hundred and ninety-two paths gaining an `/api` moved no figure in any
  * report, because no report printed any part of an address; printing every path
  * would swamp the diff and make every new route a changed file. One row per
@@ -100,7 +100,7 @@ const addressShapes = (nodes) => {
  * `addresses` is how many distinct addresses the tool placed an entry point at.
  * The other three count **handlers**, because that is what the counting rule
  * counts: a decorator, a registration call or an exported verb is a thing
- * somebody wrote, and two of them may land on one address. immich declares
+ * somebody wrote, and two of them may land on one address. A photo server declares
  * eleven of its routes twice, once in the application and once in a maintenance
  * worker, so its three hundred and three declarations sit at two hundred and
  * ninety-two addresses and both figures are true. Comparing addresses against a
@@ -109,12 +109,12 @@ const addressShapes = (nodes) => {
  *
  * `duplicated` and `shapes` are here for a class of regression the first version
  * of this file could not show at all: a route collapsing onto another one's
- * address, and a global prefix silently dropped. Fourteen of novu's routes were
+ * address, and a global prefix silently dropped. Fourteen of a notification service's routes were
  * claimed by two handlers each and every figure in its report stayed put.
  *
  * `withBody` is a declaration whose handler the tool actually found; `reaching`
  * is one whose handler goes on to call, query, request, publish, cache or read
- * a setting. A report that printed only `addresses` would say cal.com is
+ * a setting. A report that printed only `addresses` would say a scheduling app is
  * covered, when the tool has placed eighty-four addresses and read the code
  * behind about half of them. That is the defect this harness exists to show.
  */
@@ -138,7 +138,7 @@ const routes = (graph, index) => {
   // One spelling, and this reads that one. A guard declared by a decorator and
   // a middleware chain installed by a call are both `guarded_by` edges, so the
   // obvious question gets the true answer — which it did not before R109, when
-  // middleware was a list on the route and this figure reported outline as
+  // middleware was a list on the route and this figure reported a wiki app as
   // having nothing in front of any of its two hundred and fifty-seven routes
   // while it has something in front of two hundred and fifty-five of them.
   const guarded = handled.filter((edge) => outCount(index, edge.from, 'guarded_by') > 0);
@@ -151,8 +151,8 @@ const routes = (graph, index) => {
   // That qualifier is new and it is the whole of what R119 changed here. Two
   // things used to land in this figure and the graph could not tell them apart:
   // a route wrongly collapsed onto another one's address, which is what fourteen
-  // of novu's were, and two applications of one service each serving the same
-  // address, which is what eleven of immich's are - a controller mounted in the
+  // of a notification service's were, and two applications of one service each serving the same
+  // address, which is what eleven of a photo server's are - a controller mounted in the
   // application and again in a maintenance worker. Now an entry id carries the
   // application that serves it, so the second kind is two addresses and is not
   // counted here at all.

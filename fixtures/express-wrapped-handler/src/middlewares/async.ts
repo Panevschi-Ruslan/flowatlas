@@ -9,7 +9,7 @@ type PromiseHandler = (
 /**
  * Catches a rejected promise and hands it to `next`.
  *
- * PeerTube's, nearly word for word. It takes a handler or a list of them and
+ * A video platform's, nearly word for word. It takes a handler or a list of them and
  * returns one handler, so whatever it is handed is the code that answers.
  */
 export function asyncMiddleware(fun: PromiseHandler | PromiseHandler[]): RequestHandler {

@@ -1,7 +1,7 @@
 # nest-held-calls
 
 A NestJS service whose work is done by module-level functions: no class, no
-provider, and no entry point naming any of them (R156). novu's
+provider, and no entry point naming any of them (R156). A notification service's
 `apps/api/src/app/agents/management/skills/github-skill-bundle.ts` in miniature,
 where `streamTarballToParser` makes the request to GitHub and calls
 `assertPublicRepository`, which makes another.

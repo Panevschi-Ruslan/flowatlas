@@ -2,7 +2,7 @@ import Router from '@koa/router';
 import type { Context } from 'koa';
 
 /**
- * Routes written with no prefix of their own, as outline's are.
+ * Routes written with no prefix of their own, as a wiki app's are.
  *
  * Every address in this file is the one the router declares. Where it is served
  * depends entirely on the mount two files up, and if that mount cannot be read

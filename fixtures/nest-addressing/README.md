@@ -8,13 +8,13 @@ Two facts decide every route's address here, and neither of them is in
 
 - **`setGlobalPrefix('api')`**, called from `src/setup.ts`. That is how a
   repository with more than one worker and a test suite shares one copy of its
-  configuration, and it is what immich does — its prefix is set in
+  configuration, and it is what a photo server does — its prefix is set in
   `app.common.ts`, called from a worker its supervisor forks by path. Reading
-  only the entry file recorded all 292 of immich's routes without the `/api`
+  only the entry file recorded all 292 of a photo server's routes without the `/api`
   every one of them answers on.
 - **`enableVersioning({ type: URI, prefix: 'v', defaultVersion: '1' })`**, in
   the same helper. Under URI versioning the version is part of the address, and
-  novu's is: 59 of its entries carried a version in their metadata and not one
+  A notification service's is: 59 of its entries carried a version in their metadata and not one
   of their paths, keys or ids carried a `/v1`.
 
 So the reader looks for those two calls anywhere in the repository once the entry
@@ -27,7 +27,7 @@ The four controllers are the four things that go wrong:
 
 - `topics.v1` and `topics.v2` serve the same two paths at two versions. Without
   the version in the address they collapse onto one entry each and the tool
-  reports a route claimed by two handlers. On novu that was fourteen warnings
+  reports a route claimed by two handlers. On a notification service that was fourteen warnings
   and every one of them false — which is the sharpest thing to test here,
   because a missing version does not merely lose information, it makes two
   different routes look like one.

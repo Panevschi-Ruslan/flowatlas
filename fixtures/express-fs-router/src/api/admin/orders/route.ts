@@ -7,7 +7,7 @@ import type { Request, Response } from 'express';
  * is turned on — and there is not one application value anywhere for it to read a
  * route off. It came away with nothing, which is also what a repository that
  * merely depends on Express looks like from in here, and it used to say nothing
- * about which of the two this was. On medusa that was 769 of 791 source files
+ * about which of the two this was. On a commerce monorepo that was 769 of 791 source files
  * producing no node, in silence (R84).
  *
  * The reader for this convention is a separate ticket. What this fixture holds it

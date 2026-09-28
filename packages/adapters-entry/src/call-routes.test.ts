@@ -293,7 +293,7 @@ describe('express routes', () => {
     // `express().disable(…)` hands the application back, so this is the ordinary
     // declaration of one with a setting turned off. The reader followed only the
     // methods a row names, so `app` had no base it could tell and every route in
-    // the repository was reported as unplaceable — 344 of them on PeerTube, from
+    // the repository was reported as unplaceable — 344 of them on a video platform, from
     // one line written once (R101).
     expect(ids(read)).toEqual(['entry:api:http:GET:/api/v1/books', 'entry:api:http:GET:/health']);
     expect(read.unresolved).toEqual([]);
@@ -448,7 +448,7 @@ describe('express routes', () => {
     expect(entry?.handler).toBeDefined();
   });
 
-  // PeerTube's shape, 291 of its 346 registrations (R137).
+  // A video platform's shape, 291 of its 346 registrations (R137).
   it('reads a named function a wrapper is given as the handler', () => {
     const read = express(`
       import express from 'express';
@@ -814,7 +814,7 @@ describe('koa routes', () => {
         `,
       },
     );
-    // outline's shape exactly: the service is started through a map of dynamic
+    // A wiki app's shape exactly: the service is started through a map of dynamic
     // imports, so no call to `init` can be followed, and the default is the only
     // statement in the repository about what `app` is. Reading the prefix and not
     // the parameter leaves the route as unplaceable as it was before (R110).
@@ -841,7 +841,7 @@ describe('koa routes', () => {
         `,
       },
     );
-    // `mount(routes)`, which outline writes beside four that name a prefix. The
+    // `mount(routes)`, which a wiki app writes beside four that name a prefix. The
     // application standing in the prefix's position is the answer rather than an
     // absence: the helper serves it at the base of what it is installed on.
     expect(ids(read)).toEqual(['entry:api:http:POST:/documents.info']);
@@ -878,7 +878,7 @@ describe('koa routes', () => {
  * A way in registered once, over a collection.
  *
  * Written against Koa because that is the framework the shape was measured on —
- * outline mounts every plugin's API router with one line — and the mechanism is
+ * A wiki app mounts every plugin's API router with one line — and the mechanism is
  * not Koa's: it is a list nobody can enumerate without following where the list
  * came from (R121).
  */

@@ -218,7 +218,7 @@ const byBaseUrlEnv = (ask: Ask): UiOutcome | undefined => {
  * This is what a relative `fetch('/api/thing')` means, and until R93 it was the
  * one service excluded from the question. Nothing names a service in such a
  * call, so neither of the two ways above fires and this is the only reading
- * available — no line of configuration could have supplied one. On cal.com that
+ * available — no line of configuration could have supplied one. On a scheduling app that
  * cost thirty-two requests every edge they had, and produced twenty-three rows
  * saying no configured service serves an address sitting in the same graph.
  *

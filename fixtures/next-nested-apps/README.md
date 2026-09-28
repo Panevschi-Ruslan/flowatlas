@@ -7,7 +7,7 @@ its address is exactly what the framework serves: `/api/orders`. Under
 `examples/blog/src/app` there is a second application, complete and separate,
 which declares `/api/orders` of its own and an `/api/posts` besides.
 
-This is payload's shape, at the scale a fixture can hold: thirty-nine
+This is a CMS monorepo's shape, at the scale a fixture can hold: thirty-nine
 applications under `test/`, `templates/` and `examples/`, each with an
 `api/[...slug]/route.ts` in it. Reading the router root wherever it occurred and
 nothing in front of it made every one of those declarations claim the same

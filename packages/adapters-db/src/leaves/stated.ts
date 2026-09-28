@@ -24,7 +24,7 @@ import { generatedModules } from '../descriptors/index.js';
  * A fresh clone has no `node_modules`, so the checker resolves nothing that
  * comes out of a package, and the reader used to stop there: measured over all
  * eight coverage targets, an uninstalled repository had no data layer at all -
- * immich's 579 query sites read as 0 - and what stood in their place was rows.
+ * A photo server's 579 query sites read as 0 - and what stood in their place was rows.
  * Most of that is honest, because a table name is usually a fact about a type
  * that a package declares. Part of it is not, and this is the part: the two
  * facts this reading needs are written in the repository being read, in plain
@@ -52,8 +52,8 @@ import { generatedModules } from '../descriptors/index.js';
  * and `heuristic` is where this tool puts a reading of shape.
  *
  * A name is followed through the import that binds it rather than through the
- * checker, for the same reason (R146). cal.com imports its Prisma client from
- * its own workspace package, `import prisma from '@calcom/prisma'`, and nothing
+ * checker, for the same reason (R146). A scheduling app imports its Prisma client from
+ * its own workspace package, `import prisma from '@acme/prisma'`, and nothing
  * links that package on a clone nobody installed - so the checker has no
  * declaration for `prisma` at all, although the file that declares it is in the
  * project. The workspace's manifests say which directory the package is, the
@@ -388,9 +388,9 @@ const workspaceRootAbove = (dir: string): string | undefined => {
  * The file a workspace package's module is, when the checker could not find it.
  *
  * A workspace reaches its own packages through links the package manager makes,
- * and a clone nobody installed has none: `import prisma from '@calcom/prisma'`
+ * and a clone nobody installed has none: `import prisma from '@acme/prisma'`
  * resolves to nothing although `packages/prisma/index.ts` is in the project. The
- * workspace root's globs say which directory is `@calcom/prisma`, and its
+ * workspace root's globs say which directory is `@acme/prisma`, and its
  * manifest says which file is its entry; both are statements of the repository,
  * read the way the extent already reads them. Only a file already in the project
  * is answered, so this opens nothing the reading had not opened.
@@ -409,7 +409,7 @@ const workspaceEntry = (specifier: string, from: SourceFile): SourceFile | undef
   }
   const dir = byName.get(pkg);
   if (dir === undefined) return undefined;
-  // A subpath names a module inside the package - `@calcom/prisma/client` is
+  // A subpath names a module inside the package - `@acme/prisma/client` is
   // `packages/prisma/client` - and never the package's entry, which is a
   // different module exporting different names.
   const subpath = specifier.slice(pkg.length + 1);
@@ -547,8 +547,8 @@ const followName = (name: TsNode, hops = 0): Step => {
 /**
  * The declaration a dynamically imported value is, when a variable holds one.
  *
- * `const prisma = (await import('@calcom/prisma')).default` is an import written
- * as an expression - cal.com defers loading its client this way in the handlers
+ * `const prisma = (await import('@acme/prisma')).default` is an import written
+ * as an expression - a scheduling app defers loading its client this way in the handlers
  * that need it cold - and it names a module and an export exactly as the
  * statement form does. It is followed the same way, and to a declaration only:
  * a value is never read by the package it came from.
@@ -623,7 +623,7 @@ const dynamicallyImported = (holder: TsNode): TsNode | undefined => {
 /**
  * The declaration a binding destructured from a dynamic import is.
  *
- * `const { default: prisma } = await import('@calcom/prisma')` is the third
+ * `const { default: prisma } = await import('@acme/prisma')` is the third
  * spelling of the same statement: the pattern's key is the export's name, and
  * the module is the one the awaited call loads. Asked before the value's type,
  * which on a clone nobody installed is a module the checker could not find.

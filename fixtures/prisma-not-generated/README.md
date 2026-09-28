@@ -5,7 +5,7 @@ installed with `--ignore-scripts` is: `prisma generate` runs from a postinstall
 hook, so `packages/db/generated/prisma` does not exist, and nothing links
 `@acme/db` into `api` either. There is no `node_modules/@prisma/client`
 anywhere above this fixture. The checker resolves no `PrismaClient` and no
-delegate type, which is how cal.com's 239 files of Prisma calls went unread
+delegate type, which is how a scheduling app's 239 files of Prisma calls went unread
 (R97, R146).
 
 What the source states is enough. The call names the model and the operation;

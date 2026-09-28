@@ -28,7 +28,7 @@ away with nothing.
 Coming away with nothing looked exactly like a repository that merely depends on
 Express — a library, a worker, a service whose routes live elsewhere — and the row
 that says so was written only for a framework somebody had described in
-configuration. So nothing was said. On medusa that is 769 of 791 source files
+configuration. So nothing was said. On a commerce monorepo that is 769 of 791 source files
 producing no node, in silence.
 
 The reader cannot tell a file-system router from a library. What it can do is say

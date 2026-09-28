@@ -29,14 +29,14 @@ reported as unreadable (R83):
 - `table:nest-unknown-orm#Order` — the first type argument of an undescribed
   package, which nothing says is the stored entity.
 - `table:nest-unknown-orm#DB` — a connection typed by the whole schema. This is
-  the shape that gave immich two table nodes, `DB` and `MapDB`, with 407
+  the shape that gave a photo server two table nodes, `DB` and `MapDB`, with 407
   `queries` edges pointing at them and 407 rows beside them saying the package
   was not understood.
 - `table:nest-unknown-orm#AttributesOnly` — a generic helper out of the
-  library's own typings. This is the shape that put 1,898 of PeerTube's 1,958
+  library's own typings. This is the shape that put 1,898 of a video platform's 1,958
   queries on one table node, so that `impact AttributesOnly` returned the whole
   server.
 
-And the last two used to mint a `db_query` on the strength of a name. immich
+And the last two used to mint a `db_query` on the strength of a name. A photo server
 names every adapter `Repository`, and 463 of the 1,153 nodes that produced there
 were the job queue, the event bus, the filesystem, ffmpeg and child_process.

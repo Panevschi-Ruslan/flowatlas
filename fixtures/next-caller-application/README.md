@@ -63,7 +63,7 @@ else, because no route of *that* application spells anything out. Before R132
 the question was asked of the whole service, so the routes the other two
 applications spell out answered it — and a request that reached the only route
 its own program has was reported as one a renamed route is hiding from. That
-sentence was 35 of the 36 joins R125 cost on payload.
+sentence was 35 of the 36 joins R125 cost on a CMS monorepo.
 
 The row is still written where it is true: `examples/blog` spells `/api/orders`
 out and answers `/api/posts` with a catch-all, so the request for `/api/posts`

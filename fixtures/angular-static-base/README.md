@@ -25,7 +25,7 @@ The two are one fixture because they are one line of ordinary code, and because
 each hid the other: fixing only the receiver reads a field holding nothing, and
 fixing only the fold reads a field nobody reaches.
 
-Measured against PeerTube, which declares 63 such fields, these two readings
+Measured against a video platform, which declares 63 such fields, these two readings
 were the sole reason **none** of its 252 browser requests joined a route.
 
 Extracted, from the repository root:

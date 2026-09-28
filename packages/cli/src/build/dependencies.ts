@@ -9,7 +9,7 @@ import { hashFile, type DependencyState } from './cache.js';
  * The plan keyed on source hashes, the configuration and the tool's own version,
  * and it did not notice `node_modules` appearing. So the ordinary sequence —
  * clone, build, install, build — printed `cached (0 files changed)` the second
- * time and served the first graph. Measured on novu: installing moves entries
+ * time and served the first graph. Measured on a notification service: installing moves entries
  * from 415 to 420, `http_out` from 8 to 71, `guarded_by` from 336 to 663 and
  * `external_api` from 1 to 7, and the second build kept the smaller answer
  * without a word (R92).

@@ -7,7 +7,7 @@ connection's type argument is the whole schema rather than one table.
 
 That second fact is why the `kysely` record says `entityInTypeArgs: false`. A
 type argument read as an entity is a name that looks like an answer and is not:
-on immich, where all 579 queries are written this way, `DB` was reported as the
+on a photo server, where all 579 queries are written this way, `DB` was reported as the
 table of 407 of them.
 
 | Call site | Expected table | Op | Where the name is |

@@ -3,7 +3,7 @@ import Koa from 'koa';
 import type { Context } from 'koa';
 
 /**
- * An application the helper is handed on its own, which outline also writes.
+ * An application the helper is handed on its own, which a wiki app also writes.
  *
  * `mount(pages)` has no prefix argument at all: the helper mounts the
  * application at its parent's base. The described row says argument 0 spells the

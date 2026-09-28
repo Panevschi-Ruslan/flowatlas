@@ -55,9 +55,13 @@ fixtures/multi-repo/.build-lock/
 # Terminal recordings the demo driver keeps; the GIFs it renders are committed.
 .demo-casts/
 
-# Clones of the eight repositories the coverage harness measures against, and
+# Clones of the repositories the coverage harness measures against, and
 # the configurations it builds them with. Several gigabytes of somebody else's
-# source; everything in it is derived from scripts/coverage/targets.json and it
+# source; everything in it is derived from scripts/coverage/targets.local.json and it
 # is safe to delete at any time. The reports it writes are committed.
 /.coverage-cache/
 
+
+# Coverage harness: the repositories measured, and the reports written about them, stay local.
+scripts/coverage/targets.local.json
+scripts/coverage/reports/

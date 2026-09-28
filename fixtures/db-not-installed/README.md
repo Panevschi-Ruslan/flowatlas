@@ -4,7 +4,7 @@ A repository whose data libraries are declared and **not installed**, which is
 what a stranger's clone is. There is no `node_modules` beside this fixture, so
 `kysely` and `sequelize-typescript` resolve to nothing and the checker will not
 say what any receiver is - the state all eight coverage targets were measured in
-for R122, where 579 query sites on immich read as 0.
+for R122, where 579 query sites on a photo server read as 0.
 
 What the source still says is the point. An annotation names the type, an import
 names the package, and a class of this repository states its table in a
@@ -21,7 +21,7 @@ facts the descriptor was missing.
 | `Document.create(…)` | `documents` | write | the same class |
 
 Two shapes and one mechanism. A receiver is an annotated value - a constructor
-parameter property, or a parameter of a function, which is how immich writes 28
+parameter property, or a parameter of a function, which is how a photo server writes 28
 of its query sites - or it is a class of this repository whose base comes out of
 a package, which is how most repositories declare a model. The walk up the bases
 is two hops here, and the first of them is a relative import, which resolves

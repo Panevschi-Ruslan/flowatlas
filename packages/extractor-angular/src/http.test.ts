@@ -316,7 +316,7 @@ export abstract class BaseApi {
  * The address kept in a `static` field, which is how a great many real services
  * are written and which read as no address at all. A static field is a property
  * access on the identifier naming the class rather than on `this` (R103), and
- * the `+` such a field is usually assembled with was not folded (R102). PeerTube
+ * the `+` such a field is usually assembled with was not folded (R102). A video platform
  * declares 63 of them, and between the two nothing it asked for joined a route.
  */
 describe('an address a static field holds', () => {

@@ -12,7 +12,7 @@ Type-checked, never executed:
 There are no stubs under `node_modules`, deliberately: this is the state a fresh
 clone is in, where the checker can resolve nothing outside the repository and the
 import statement is the only evidence of where a decorator came from. It is also
-the state the coverage harness measures novu in.
+the state the coverage harness measures a notification service in.
 
 ## What each controller is for
 
@@ -29,7 +29,7 @@ The module specifier was matched exactly, so `@nestjs/common/decorators` was not
 the reader could see, and the loop reached a `continue` before anything was
 written down. Everything else about the file was read normally — the class, the
 methods, the providers it injects — so the output showed a controller with no
-routes and nothing anywhere said a route had been dropped. On novu that was 21
+routes and nothing anywhere said a route had been dropped. On a notification service that was 21
 routes in 3 files.
 
 The alias is the same failure one level down: the table of verbs is keyed by the

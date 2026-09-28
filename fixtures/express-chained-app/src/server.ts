@@ -3,7 +3,7 @@ import express from 'express';
 import { itemsRouter } from './items.routes';
 
 /**
- * An application declared by a chain, which PeerTube writes once and pays for
+ * An application declared by a chain, which a video platform writes once and pays for
  * everywhere.
  *
  * `express().disable('x-powered-by')` hands back the application, so this is the

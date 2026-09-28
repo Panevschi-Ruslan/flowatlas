@@ -4,7 +4,7 @@ import { readFailure } from './failure.js';
 /**
  * What a reader that exhausted its heap leaves behind, as it was observed.
  *
- * Copied from a real run of `payloadcms/payload` with its dependencies
+ * Copied from a real run of one measured CMS monorepo with its dependencies
  * installed: the words that say what happened are in the middle, and the last
  * lines — the ones a tail takes — are addresses inside a dynamic library.
  */

@@ -1,7 +1,7 @@
 # express-wrapped-handler fixture
 
 A named handler handed to a wrapper the repository declares itself, which is
-how PeerTube writes nearly every route it has.
+how a video platform writes nearly every route it has.
 
 Type-checked, never executed:
 
@@ -13,14 +13,14 @@ Type-checked, never executed:
 
 ## The shapes
 
-`src/middlewares/async.ts` is PeerTube's `asyncMiddleware` and
+`src/middlewares/async.ts` is a video platform's `asyncMiddleware` and
 `asyncRetryTransactionMiddleware`, nearly word for word: each takes a handler
 and returns one that catches its rejection. `src/controllers/videos.ts`
-registers one route in each shape PeerTube wraps a handler in, and the plain
+registers one route in each shape a video platform wraps a handler in, and the plain
 form beside them, with the count of its 346
 registrations in that shape:
 
-| Registration | PeerTube | Entry | `handlerVia` | `handles` |
+| Registration | a video platform | Entry | `handlerVia` | `handles` |
 |---|---|---|---|---|
 | `get('/:id', authenticate, asyncMiddleware(videosGetValidator), asyncMiddleware(getVideo))` | 224 | `GET /api/v1/videos/:param` | `function` | `getVideo` |
 | `post('/', asyncRetryTransactionMiddleware(addVideo))` | 67 | `POST /api/v1/videos` | `function` | `addVideo` |
@@ -39,7 +39,7 @@ function written in place — `asyncHandler(async (req, res) => …)`. A functio
 named by reference was not looked at, so the first three routes above had no
 `handles` edge and were folded into one `route-handler-anonymous` row saying
 they answer with a function written in the declaration, which none of them
-does. On PeerTube with its dependencies installed that was 305 of 346
+does. On a video platform with its dependencies installed that was 305 of 346
 registrations, and 42 of its 343 declarations had a body.
 
 Now the wrapper stands for what it was handed when that is a function this
@@ -56,7 +56,7 @@ Two routes keep no handler, and stay in the folded row, on purpose.
 `asyncMiddleware(listFactory((req) => …))` hands the factory a function, and
 from the call alone a factory handed a function cannot be told from a second
 wrapper handed the handler. Looking one level further would take the function
-written in place for the handler, and on PeerTube that function picks an
+written in place for the handler, and on a video platform that function picks an
 account and answers nothing — which a first draft of this change did, eight
 times. Pointing at `listFactory` instead would be right here and wrong for a
 wrapper, where it would name one shared function as the body of every route.

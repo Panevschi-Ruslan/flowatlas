@@ -3,7 +3,7 @@ import { Controller, Get } from '@nestjs/common';
 /**
  * One controller, mounted in both applications, and therefore two addresses.
  *
- * This is immich's shape: a controller the application and a maintenance worker
+ * This is a photo server's shape: a controller the application and a maintenance worker
  * both mount. It really is registered twice and really does answer in two
  * places, so it is two entries with one handler each — not one entry with two
  * handlers, which is the reading `routes.duplicated` is now free to mean.

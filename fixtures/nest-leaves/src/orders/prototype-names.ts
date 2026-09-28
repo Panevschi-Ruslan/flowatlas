@@ -10,7 +10,7 @@ import { Redis } from 'ioredis';
  * from the source up in a table, and a table written as an object literal
  * answers `constructor`, `toString`, `valueOf` and `hasOwnProperty` with the
  * language's own values. One such lookup put two `db_query` nodes labelled
- * `function toString() { [native code] }` into novu's graph - a node minted from
+ * `function toString() { [native code] }` into a notification service's graph - a node minted from
  * a value nobody wrote, indistinguishable in a count from a real query (R122) -
  * and the same hazard was still open in the cache and verb tables (R130).
  *

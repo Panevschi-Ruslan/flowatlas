@@ -7,7 +7,7 @@ import { getHeapStatistics } from 'node:v8';
  * A repository is read in a process of its own, and that process gets whatever
  * heap the runtime picked for itself from the machine it is on — about 4 GB on a
  * 36 GB laptop, whatever the size of the repository. The largest target this
- * tool is measured against needs more than twice that: `payloadcms/payload`
+ * tool is measured against needs more than twice that: a CMS monorepo
  * with its dependencies installed peaks at 10.0 GB of resident memory and
  * finishes under a 12 GB old-space limit, and dies under an 8 GB one. So the
  * default is not a limit anybody chose for this work; it is the limit nobody

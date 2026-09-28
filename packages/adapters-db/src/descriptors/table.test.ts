@@ -363,7 +363,7 @@ db.selectFrom(ASSET).selectAll().execute();`;
   });
 
   it('answers with nothing when the query selects from a subquery', () => {
-    // Real, and unreadable on purpose: immich builds a fifth of its reads this
+    // Real, and unreadable on purpose: a photo server builds a fifth of its reads this
     // way, and there is no stored table named in the call at all.
     const source = `db.selectFrom((eb) => eb.selectFrom('asset').as('t')).selectAll().execute();`;
     expect(table(source, 'selectFrom', KYSELY)).toBeNull();

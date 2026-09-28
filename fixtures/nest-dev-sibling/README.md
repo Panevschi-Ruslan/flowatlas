@@ -6,9 +6,9 @@ A NestJS API whose extent must stop at the line the package manager draws
 `apps/api` answers `POST /orders`, and the work behind it is one package away in
 `@dev-sibling/mailer`, a runtime dependency. The mailer has a devDependency of
 its own: `@dev-sibling/preview`, a browser tool for looking at its messages while
-they are written, built on React. That is novu's shape in miniature - its API
-reached the `novu` command-line tool, and that tool's browser interface, only as
-a devDependency of `@novu/notifications`, and gained two hundred UI components
+they are written, built on React. That is a notification service's shape in miniature - its API
+reached its own command-line tool, and that tool's browser interface, only as
+a devDependency of its notifications package, and gained two hundred UI components
 and a React reading it does not run.
 
 What a service's extent takes in, by whose manifest it is:

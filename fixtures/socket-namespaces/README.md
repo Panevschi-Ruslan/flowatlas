@@ -10,7 +10,7 @@ there is no class that states anything: the server is an Express-shaped
 application holding `socket.io`, and the namespace is the **value**
 `io.of('/live-videos')` returns. Every handler registered on a connection that
 namespace hands over, and every publish made through it, is addressed within it.
-The shape is PeerTube's, which is where it was found (R102, criterion 3).
+The shape is a video platform's, which is where it was found (R102, criterion 3).
 
 Type-checked, never executed:
 
@@ -73,5 +73,5 @@ the function that opens an endpoint, with the address as its first argument.
 namespace that socket was opened on is not something the value says: the map is
 not the transport, and following what was put into it would be a guess about
 somebody's bookkeeping. So the publish stays on the root, as it was, and
-`user-notifications/new-notification` keeps one end. This is PeerTube's
+`user-notifications/new-notification` keeps one end. This is a video platform's
 notification socket exactly, and it is the known remainder.

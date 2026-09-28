@@ -14,7 +14,7 @@ of them — an API and a worker — and they overlap in the way that matters:
   contributed no node and no row at all. Nothing in any total moved: the count of
   addresses was right, the count of handlers was right, and what was missing was
   a file.
-- `src/shared/status.controller.ts` is mounted in both, which is immich's shape —
+- `src/shared/status.controller.ts` is mounted in both, which is a photo server's shape —
   a controller the application and a maintenance worker both register. It really
   does answer in two places, so it is two entries with one handler each rather
   than one entry with two, which is what lets `routes.duplicated` mean "two
@@ -28,7 +28,7 @@ metadata; now it decides whether an address can be told from another
 application's, so the module's line gets a row and the route's id carries no
 application. It is the honest answer rather than a good one — a second
 application serving `/legacy` would collide with it exactly as before — and it is
-immich's real shape, where `controllers: [...controllers]` leaves 292 of its 303
+A photo server's real shape, where `controllers: [...controllers]` leaves 292 of its 303
 addresses in no application anybody could name.
 
 The two applications are found by walking the repository for `NestFactory`, not

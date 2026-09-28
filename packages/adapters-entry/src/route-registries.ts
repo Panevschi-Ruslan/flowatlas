@@ -16,7 +16,7 @@ import { arrayElements, unwrapValue } from './shared.js';
  * is no mount here to follow: the argument of `use` is not an application but a
  * property of a binding the framework — or a loop — will hand one member of a
  * list. So the plugin routers were mounted nowhere, kept the addresses they are
- * written at, and outline recorded `POST /passkeys.list` for what it serves at
+ * written at, and a wiki app recorded `POST /passkeys.list` for what it serves at
  * `POST /api/passkeys.list`, with nothing anywhere saying so.
  *
  * What is described here is the *collection*, in two halves, because they are
@@ -24,7 +24,7 @@ import { arrayElements, unwrapValue } from './shared.js';
  *
  * - **where the member came from** — `registryOf` walks back from the mount's
  *   argument to the expression being iterated, and records which keys were read
- *   off a member on the way. The keys matter as much as the collection: outline
+ *   off a member on the way. The keys matter as much as the collection: a wiki app
  *   holds routers at `hook.value` and `{ router, id }` pairs at
  *   `hook.value.router`, in the same registry under different kinds, and the path
  *   the mount itself reads is what tells the two apart. Nothing here reads the

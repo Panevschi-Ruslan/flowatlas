@@ -678,7 +678,7 @@ describe('data access', () => {
    * can read, so the query stays and names nothing.
    *
    * It used to name its first type argument. `Kysely<DB>` is a connection typed
-   * by the whole schema, and that gave immich two table nodes with 407 `queries`
+   * by the whole schema, and that gave a photo server two table nodes with 407 `queries`
    * edges pointing at them, beside 407 rows saying the package was not
    * understood (R83).
    */

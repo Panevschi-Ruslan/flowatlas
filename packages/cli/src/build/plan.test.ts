@@ -171,7 +171,7 @@ describe('planning what to re-read', () => {
    *
    * Over the plan rather than over a real install, which is the point: what a
    * checker can resolve is not observable from a file list, so the plan has to be
-   * told, and being told is the thing worth testing. Measured on novu, the build
+   * told, and being told is the thing worth testing. Measured on a notification service, the build
    * this replaces said `cached (0 files changed)` across an install that moved
    * entries from 415 to 420 and `http_out` from 8 to 71 (R92).
    */

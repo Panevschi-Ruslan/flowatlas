@@ -1,7 +1,7 @@
 # express-chained-app fixture
 
-An application declared by a chain, which is how PeerTube declares its one
-application and what cost PeerTube every route it has.
+An application declared by a chain, which is how a video platform declares its one
+application and what cost a video platform every route it has.
 
 Type-checked, never executed:
 
@@ -32,7 +32,7 @@ that could be told, and every route in the repository was reported as *mounted
 somewhere this cannot read* — with a hint asking whoever read the report to mount
 the application at a literal path, which the next line already did.
 
-On PeerTube that was 344 routes, from one line written once.
+On a video platform that was 344 routes, from one line written once.
 
 ## What is read now
 

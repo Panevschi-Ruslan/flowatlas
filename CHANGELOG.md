@@ -222,9 +222,12 @@ README says what it exists to prove.
   framework's types, and the rule cannot tell the two apart
   (`next-sibling-nest-types`).
 - **A harness that measures the tool against repositories nobody here wrote**,
-  listed in `scripts/coverage/targets.json` and pinned at a commit, read fresh
-  and with dependencies installed, counted by one rule written once, with a
-  report per target and state committed so an improvement arrives as a diff.
+  listed in a local, gitignored `scripts/coverage/targets.local.json` (shape in
+  `targets.example.json`) and pinned at a commit, read fresh and with
+  dependencies installed, counted by one rule written once, with a report per
+  target and state written to be compared as a diff. The list, each target's
+  exemptions and the reports stay on the machine that measures: they name other
+  people's repositories, which this project does not.
   Its read gate — a file with a route, a screen, a click or a query in it must
   yield a node or a row naming the file — also runs over every fixture as the
   last step of `pnpm fixtures:check`. `docs/coverage.md` describes it.
@@ -543,7 +546,7 @@ README says what it exists to prove.
   harness counts by too: a name with a `test`, `spec` or `e2e` part
   (`*.integration-test.ts` and `*.e2e.ts` included), or a directory only tests
   live in (`__tests__`, `playwright`, `e2e` and a few more). The tool read
-  cal.com's whole `playwright/` directory before (`trpc-inferred-context`,
+  A scheduling app's whole `playwright/` directory before (`trpc-inferred-context`,
   `nest-rendered-mail`).
 - A write records the document it stores whether or not the entity's name had a
   wrapper suffix to strip. `Repository<OrderEntity>` recorded it and

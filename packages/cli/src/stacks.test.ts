@@ -73,7 +73,7 @@ describe('the stack a repository is built on', () => {
   });
 
   /**
-   * R88: outline is Koa and React in one directory, and which reader it got was
+   * R88: a wiki app is Koa and React in one directory, and which reader it got was
    * decided by which of the two rows somebody had typed first. The server type
    * is the answer for every pairing of the two halves, because its reader reads
    * both halves and the browser reader reads one.
@@ -137,7 +137,7 @@ describe('the stack a repository is built on', () => {
 describe('the stack one member of a workspace is built on', () => {
   const root = { dependencies: { express: '4.19.0', '@types/node': '22.0.0' } };
 
-  // PeerTube's `server/package.json` names a package, a version and an export
+  // A video platform's `server/package.json` names a package, a version and an export
   // map of subpaths, and nothing else at all; the hundred and thirteen
   // dependencies the server has are at the workspace root. Read on its own it
   // gave nothing away, which is why the coverage harness had to be told it is an

@@ -125,7 +125,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    * A client holds a base and nearly every call takes it; a call may write its
    * own — `client.post('/passkeys.register', body, { baseUrl: '/auth' })` — and
    * until this was read the request was recorded under the client's default and
-   * landed at an address nothing serves. On outline it is the last three browser
+   * landed at an address nothing serves. On a wiki app it is the last three browser
    * requests that do not join, and the route side of those three is already
    * right, so the two halves disagree by exactly the base the call overrides
    * (R114, R121, R128).
@@ -352,7 +352,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    * about every class with a `get`, and it is a reading rather than a guess at
    * names. A store called as `documents.get(id)` is handed an identifier, and
    * nothing about it is a request; a client called as `api.post('/documents.info')`
-   * is handed a path, written in full, at the call site. Measured on outline, the
+   * is handed a path, written in full, at the call site. Measured on a wiki app, the
    * question is worth asking: two hundred and twenty sites answer the verb test,
    * and one of them writes an address.
    *

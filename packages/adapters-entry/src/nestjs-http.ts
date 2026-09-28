@@ -255,7 +255,7 @@ const versionsOf = (node: { getDecorators(): Decorator[] }): Versions | undefine
  * there the version is worth recording and worth nothing to a path. Getting this
  * wrong in the other direction is not a lost detail: two controllers for one
  * resource at two versions land on one id, and the tool then reports a route
- * claimed by two handlers, which on novu was fourteen warnings and all of them
+ * claimed by two handlers, which on a notification service was fourteen warnings and all of them
  * false (R89).
  */
 const servedAt = (
@@ -304,7 +304,7 @@ export const nestjsHttpAdapter: EntryAdapter = {
     // application and both files contribute a node.
     const applications = applicationsIn(ctx.meta);
     // A route that names no version of its own is served at the default one, and
-    // that is not a detail: on novu it is 356 of 415 routes, every one of which
+    // that is not a detail: on a notification service it is 356 of 415 routes, every one of which
     // was recorded at an address the framework never answers on.
     const defaultVersions: Versions | undefined =
       versioning?.defaultVersion === undefined ? undefined : [versioning.defaultVersion];

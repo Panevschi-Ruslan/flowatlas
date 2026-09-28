@@ -20,7 +20,7 @@ export const reportOpened = (id: string): Promise<unknown> =>
 /**
  * A call that spells its own base, and one that spells one nobody can read.
  *
- * The first is outline's shape exactly: the route this means is mounted
+ * The first is a wiki app's shape exactly: the route this means is mounted
  * somewhere else, the call says which base it wants, and recording it under the
  * client's `/api` put it at an address nothing serves (R128). The second writes
  * the same option with a value nothing static settles — so the address keeps the

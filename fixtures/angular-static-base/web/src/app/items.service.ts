@@ -19,7 +19,7 @@ import { environment } from '../environments/environment';
  *   than a limit: the checker itself gives no value for a `+`, whose type is the
  *   widened `string` however literal its operands (R102).
  *
- * PeerTube declares 63 such fields, and between the two readings none of its 252
+ * A video platform declares 63 such fields, and between the two readings none of its 252
  * browser requests joined a route.
  */
 @Injectable({ providedIn: 'root' })

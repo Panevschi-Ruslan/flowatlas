@@ -5,7 +5,7 @@ not itself a Nest application (R143).
 
 `apps/web` answers `GET /api/bookings` from an App Router route. The route calls
 `@sibling-types/platform-types`, a workspace member that declares
-`@nestjs/common` because its classes carry Nest decorators - cal.com's
+`@nestjs/common` because its classes carry Nest decorators - a scheduling app's
 `packages/platform/types` is the real case.
 
 Since R123 the manifest every adapter gates on is widened sideways along the
