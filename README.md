@@ -894,8 +894,9 @@ GitHub Pages serves at <https://panevschi-ruslan.github.io/flowatlas/>.
 configuration key. `docs/mcp.md` is the graph server. `docs/ci.md` is how to run
 it in a build. `docs/coverage.md` is how this tool is measured against
 repositories nobody here wrote, by one counting rule; the list of repositories and
-the reports stay on the machine that measures. `PUBLISHING.md` is
-the release runbook. `scripts/demo/record.sh` remakes every recording in the
+the reports stay on the machine that measures. The [fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
+lists every fixture and what it proves, generated from their READMEs.
+`PUBLISHING.md` is the release runbook. `scripts/demo/record.sh` remakes every recording in the
 walkthrough from `fixtures/multi-repo`.
 
 ### The rules the code is held to
