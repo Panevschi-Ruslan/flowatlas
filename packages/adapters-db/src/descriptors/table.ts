@@ -93,10 +93,28 @@ const NARROWING_CALLS = new Set(['scope', 'unscoped', 'schema', 'withSchema']);
  */
 const ALIASED = /^(\S+)\s+as\s+\S+$/i;
 
+/**
+ * The table an alias object names, when it names exactly one.
+ *
+ * `knex({ il: 'inventory_level' })` is `knex('inventory_level as il')` written
+ * as an object: the key is the alias and the value is the table. One entry only,
+ * because an object of several is several tables, and a string value only,
+ * because an object whose value is an expression - drizzle's `select({ id:
+ * users.id })` - is a list of columns and names no table at all (R149).
+ */
+const aliasedTable = (value: unknown): string | null => {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return null;
+  const entries = Object.values(value);
+  const [only] = entries;
+  return entries.length === 1 && typeof only === 'string' && only !== '' ? only : null;
+};
+
 const stringOf = (node: TsNode | undefined): string | null => {
   if (node === undefined) return null;
   const value = evaluateExpression(node);
-  if (value.resolved !== true || typeof value.value !== 'string' || value.value === '') return null;
+  if (value.resolved !== true) return null;
+  if (typeof value.value !== 'string') return aliasedTable(value.value);
+  if (value.value === '') return null;
   return ALIASED.exec(value.value)?.[1] ?? value.value;
 };
 

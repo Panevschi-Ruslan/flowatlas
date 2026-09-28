@@ -97,6 +97,13 @@ describe('finding the table a drizzle call touches', () => {
     expect(table(`${schema}db.select().from(orders).limit(1);`, 'select', DRIZZLE)).toBe('orders');
   });
 
+  it('reads no table out of the columns a select is handed', () => {
+    // One entry, like a knex alias object, but its value is a column rather than
+    // a string, so the from is what names the table.
+    const source = `${schema}db.select({ id: orders }).from(orders).limit(1);`;
+    expect(table(source, 'select', DRIZZLE)).toBe('orders');
+  });
+
   it('finds the from however long the chain after it is', () => {
     const source = `${schema}db.select().from(orders).where(1).where(2).limit(1);`;
     expect(table(source, 'select', DRIZZLE)).toBe('orders');
@@ -150,6 +157,24 @@ describe('finding the table a knex chain started from', () => {
     expect(table(`knexdb.select('id').from('sessions as s').first();`, 'first', KNEX)).toBe(
       'sessions',
     );
+  });
+
+  it('reads the table out of an alias written as an object', () => {
+    // `{ il: 'inventory_level' }` is `'inventory_level as il'`: the key is the
+    // alias, the value the table. How the inventory repository of a real
+    // repository writes every one of its queries (R149).
+    expect(table(`knex({ il: 'inventory_level' }).select('id');`, 'select', KNEX)).toBe(
+      'inventory_level',
+    );
+    expect(table(`knexdb.select('id').from({ r: 'reservation' }).first();`, 'first', KNEX)).toBe(
+      'reservation',
+    );
+  });
+
+  it('reads no table out of an object that names several, or names none', () => {
+    expect(table(`knex({ a: 'orders', b: 'users' }).select('id');`, 'select', KNEX)).toBeNull();
+    expect(table(`knex({}).select('id');`, 'select', KNEX)).toBeNull();
+    expect(table(`knex({ n: 1 }).select('id');`, 'select', KNEX)).toBeNull();
   });
 
   it('answers with nothing when the chain starts from an operation rather than a table', () => {

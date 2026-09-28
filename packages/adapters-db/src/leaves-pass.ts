@@ -39,9 +39,17 @@ import type {
   SourceFile,
 } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
-import { dataNameHints, descriptorAliases, tableReadings } from './descriptors/index.js';
+import {
+  dataNameHints,
+  dbAdapters,
+  descriptorAliases,
+  handedOverIn,
+  handovers,
+  tableReadings,
+} from './descriptors/index.js';
 import { locateTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
+import { handedOverOrigin } from './leaves/handover.js';
 import { dataLayerOf } from './leaves/silence.js';
 import { statedOrigin } from './leaves/stated.js';
 import { analyzeUrl, routePathOf, type UrlInfo } from './leaves/url.js';
@@ -187,6 +195,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   const localBaseClasses = ctx.config.adapters.db.localBaseClasses;
   const byPackage = new Map<string, DbDescriptor>();
   for (const adapter of ctx.adapters.db) byPackage.set(adapter.descriptor.package, adapter.descriptor);
+  // A library the project reaches only through a package that hands it over is
+  // readable without being detected: the knex a MikroORM manager returns is read
+  // wherever a call is traced to it, and nothing is said about a project that
+  // never makes one (R149).
+  for (const library of handedOverIn(ctx.pkg)) {
+    if (byPackage.has(library)) continue;
+    const adapter = dbAdapters.find((candidate) => candidate.descriptor.package === library);
+    if (adapter !== undefined) byPackage.set(library, adapter.descriptor);
+  }
 
   const descriptorFor = (origin: TypeOrigin | null): DbDescriptor | undefined => {
     if (origin?.package == null) return undefined;
@@ -387,10 +404,16 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // about the receiver's methods either, so reading its type off the source
     // would change no answer and would only make a row say something new about
     // a call it still could not read.
-    if (stated === null || descriptorFor(stated) === undefined) {
-      return { origin: resolved, resolved, fromSource: false };
+    if (stated !== null && descriptorFor(stated) !== undefined) {
+      return { origin: stated, resolved, fromSource: true };
     }
-    return { origin: stated, resolved, fromSource: true };
+    // The receiver was handed over by a call the descriptors record, which is
+    // the step the checker would have taken had it had the types (R149).
+    const handed = handedOverOrigin(receiver, handovers);
+    if (handed !== null && descriptorFor(handed) !== undefined) {
+      return { origin: handed, resolved, fromSource: true };
+    }
+    return { origin: resolved, resolved, fromSource: false };
   };
 
   const emitDb = (call: CallExpression, scope: Scope): boolean => {

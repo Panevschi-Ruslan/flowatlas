@@ -1,0 +1,371 @@
+{
+  "schemaVersion": 5,
+  "repo": "nest-mikro-orm-knex",
+  "generatedAt": "2026-09-28T06:32:18.751Z",
+  "nodes": [
+    {
+      "id": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:24:12",
+      "type": "db_query",
+      "label": "read inventory_level",
+      "repo": "nest-mikro-orm-knex",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 24,
+      "meta": {
+        "op": "read",
+        "table": "inventory_level",
+        "tables": [
+          "inventory_level"
+        ],
+        "package": "knex",
+        "method": "select",
+        "receiver": "super\n      .getActiveManager<SqlEntityManager>()\n      .getKnex()({ il: 'invent",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:34:12",
+      "type": "db_query",
+      "label": "read inventory_level",
+      "repo": "nest-mikro-orm-knex",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 34,
+      "meta": {
+        "op": "read",
+        "table": "inventory_level",
+        "tables": [
+          "inventory_level"
+        ],
+        "package": "knex",
+        "method": "select",
+        "receiver": "knex('inventory_level')",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:43:12",
+      "type": "db_query",
+      "label": "read reservation_item",
+      "repo": "nest-mikro-orm-knex",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 43,
+      "meta": {
+        "op": "read",
+        "table": "reservation_item",
+        "tables": [
+          "reservation_item"
+        ],
+        "package": "knex",
+        "method": "first",
+        "receiver": "knex\n      .select('location_id')\n      .from('reservation_item')\n      .where('",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:53:12",
+      "type": "db_query",
+      "label": "write inventory_level",
+      "repo": "nest-mikro-orm-knex",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 53,
+      "meta": {
+        "op": "write",
+        "table": "inventory_level",
+        "tables": [
+          "inventory_level"
+        ],
+        "package": "knex",
+        "method": "update",
+        "receiver": "this.em\n      .getKnex()('inventory_level')\n      .where('inventory_item_id', it",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:65:10",
+      "type": "db_query",
+      "label": "read reservation_item",
+      "repo": "nest-mikro-orm-knex",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 65,
+      "meta": {
+        "op": "read",
+        "table": "reservation_item",
+        "tables": [
+          "reservation_item"
+        ],
+        "package": "knex",
+        "method": "select",
+        "receiver": "knex",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "nest-mikro-orm-knex#node_modules/@mikro-orm/knex:SqlEntityManager",
+      "type": "provider",
+      "label": "SqlEntityManager",
+      "repo": "nest-mikro-orm-knex",
+      "file": "node_modules/@mikro-orm/knex",
+      "kind": "external",
+      "meta": {
+        "package": "@mikro-orm/knex",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-mikro-orm-knex#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-mikro-orm-knex",
+      "file": "src/app.module.ts",
+      "line": 4,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "InventoryLevelRepository"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:InventoryLevelRepository",
+      "type": "provider",
+      "label": "InventoryLevelRepository",
+      "repo": "nest-mikro-orm-knex",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 14,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:InventoryLevelRepository.adjust",
+      "type": "method",
+      "label": "InventoryLevelRepository.adjust",
+      "repo": "nest-mikro-orm-knex",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 52
+    },
+    {
+      "id": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:InventoryLevelRepository.reservation",
+      "type": "method",
+      "label": "InventoryLevelRepository.reservation",
+      "repo": "nest-mikro-orm-knex",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 40
+    },
+    {
+      "id": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:InventoryLevelRepository.reserved",
+      "type": "method",
+      "label": "InventoryLevelRepository.reserved",
+      "repo": "nest-mikro-orm-knex",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 23
+    },
+    {
+      "id": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:InventoryLevelRepository.stocked",
+      "type": "method",
+      "label": "InventoryLevelRepository.stocked",
+      "repo": "nest-mikro-orm-knex",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 32
+    },
+    {
+      "id": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:reservedLocations",
+      "type": "function",
+      "label": "reservedLocations",
+      "repo": "nest-mikro-orm-knex",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 62
+    },
+    {
+      "id": "nest-mikro-orm-knex#src/inventory/manager-base.ts:ManagerBase",
+      "type": "provider",
+      "label": "ManagerBase",
+      "repo": "nest-mikro-orm-knex",
+      "file": "src/inventory/manager-base.ts",
+      "line": 8,
+      "kind": "injectable"
+    },
+    {
+      "id": "nest-mikro-orm-knex#src/inventory/manager-base.ts:ManagerBase.getActiveManager",
+      "type": "method",
+      "label": "ManagerBase.getActiveManager",
+      "repo": "nest-mikro-orm-knex",
+      "file": "src/inventory/manager-base.ts",
+      "line": 11
+    },
+    {
+      "id": "repo:nest-mikro-orm-knex",
+      "type": "repo",
+      "label": "nest-mikro-orm-knex",
+      "repo": "nest-mikro-orm-knex",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "knex": 10,
+            "@mikro-orm/knex": 5,
+            "knex.where": 4,
+            "knex.from": 2
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:nest-mikro-orm-knex#inventory_level",
+      "type": "table",
+      "label": "inventory_level",
+      "repo": "nest-mikro-orm-knex"
+    },
+    {
+      "id": "table:nest-mikro-orm-knex#reservation_item",
+      "type": "table",
+      "label": "reservation_item",
+      "repo": "nest-mikro-orm-knex"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:24:12",
+      "to": "table:nest-mikro-orm-knex#inventory_level",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 24
+    },
+    {
+      "from": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:34:12",
+      "to": "table:nest-mikro-orm-knex#inventory_level",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 34
+    },
+    {
+      "from": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:43:12",
+      "to": "table:nest-mikro-orm-knex#reservation_item",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 43
+    },
+    {
+      "from": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:53:12",
+      "to": "table:nest-mikro-orm-knex#inventory_level",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 53
+    },
+    {
+      "from": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:65:10",
+      "to": "table:nest-mikro-orm-knex#reservation_item",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 65
+    },
+    {
+      "from": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:InventoryLevelRepository",
+      "to": "nest-mikro-orm-knex#node_modules/@mikro-orm/knex:SqlEntityManager",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 16
+    },
+    {
+      "from": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:InventoryLevelRepository.adjust",
+      "to": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:53:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 53
+    },
+    {
+      "from": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:InventoryLevelRepository.reservation",
+      "to": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:43:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 43
+    },
+    {
+      "from": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:InventoryLevelRepository.reservation",
+      "to": "nest-mikro-orm-knex#src/inventory/manager-base.ts:ManagerBase.getActiveManager",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 41,
+      "params": [],
+      "returns": "TManager"
+    },
+    {
+      "from": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:InventoryLevelRepository.reserved",
+      "to": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:24:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 24
+    },
+    {
+      "from": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:InventoryLevelRepository.reserved",
+      "to": "nest-mikro-orm-knex#src/inventory/manager-base.ts:ManagerBase.getActiveManager",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 24,
+      "meta": {
+        "via": "super"
+      },
+      "params": [],
+      "returns": "TManager"
+    },
+    {
+      "from": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:InventoryLevelRepository.stocked",
+      "to": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:34:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 34
+    },
+    {
+      "from": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:InventoryLevelRepository.stocked",
+      "to": "nest-mikro-orm-knex#src/inventory/manager-base.ts:ManagerBase.getActiveManager",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 33,
+      "params": [],
+      "returns": "TManager"
+    },
+    {
+      "from": "nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:reservedLocations",
+      "to": "db_query:nest-mikro-orm-knex#src/inventory/inventory-level.repository.ts:65:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/inventory/inventory-level.repository.ts",
+      "line": 65
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/inventory/manager-base.ts",
+      "line": 11,
+      "reason": "type-generic-uninstantiated",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "TManager",
+      "level": "info"
+    }
+  ]
+}

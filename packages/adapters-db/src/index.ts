@@ -13,6 +13,7 @@ export {
   dbAdapters,
   descriptorAliases,
   drizzleDescriptor,
+  handovers,
   knexDescriptor,
   kyselyDescriptor,
   localBaseDescriptor,
@@ -24,7 +25,7 @@ export {
   tableReadings,
   typeormDescriptor,
 } from './descriptors/index.js';
-export type { TableReading } from './descriptors/index.js';
+export type { Handover, TableReading } from './descriptors/index.js';
 export { locateTable } from './descriptors/table.js';
 export type { TableLocator } from './descriptors/table.js';
 export { sqlOperation, sqlTables } from './sql.js';

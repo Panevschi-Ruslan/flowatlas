@@ -93,8 +93,15 @@ const nameNodeOf = (written: TsNode | undefined): TsNode | undefined => {
   return written.getFirstDescendantByKind(SyntaxKind.Identifier);
 };
 
-/** The package a name was imported from in the file that uses it, if it was. */
-const importedFrom = (name: TsNode): string | undefined => {
+/**
+ * The module a name was imported from in the file that uses it, as written.
+ *
+ * Whole, rather than cut down to its package, for a reader that needs to tell
+ * two modules of one package apart: a framework that re-exports an ORM under
+ * `framework/orm` and its own helpers under `framework/utils` is one package
+ * and two different answers (R149).
+ */
+export const moduleImportedFrom = (name: TsNode): string | undefined => {
   const spelling = name.getText();
   for (const statement of name.getSourceFile().getImportDeclarations()) {
     const bound =
@@ -103,10 +110,25 @@ const importedFrom = (name: TsNode): string | undefined => {
       statement
         .getNamedImports()
         .some((specifier) => (specifier.getAliasNode() ?? specifier.getNameNode()).getText() === spelling);
-    if (bound) return packageOfSpecifier(statement.getModuleSpecifierValue());
+    if (bound) return statement.getModuleSpecifierValue();
   }
   return undefined;
 };
+
+/** The package a name was imported from in the file that uses it, if it was. */
+const importedFrom = (name: TsNode): string | undefined => {
+  const module = moduleImportedFrom(name);
+  return module === undefined ? undefined : packageOfSpecifier(module);
+};
+
+/**
+ * The name a declaration states its type by, when it states one.
+ *
+ * `STATED_TYPE` read for one declaration, for a reader that asks the same
+ * question of a value `statedOrigin` is not handed.
+ */
+export const statedTypeName = (declaration: TsNode): TsNode | undefined =>
+  nameNodeOf(STATED_TYPE[declaration.getKind()]?.(declaration));
 
 /**
  * The class a name stands for, when it stands for one of this repository's.
