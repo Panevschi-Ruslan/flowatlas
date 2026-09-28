@@ -1,6 +1,8 @@
 import {
+  declarationOf,
   evaluateExpression,
   foldedChoices,
+  isRunTimeValue,
   MOST_CHOICES,
   packageNameOf,
   stableKey,
@@ -49,13 +51,6 @@ const isConfigRead = (node: TsNode): boolean => {
   if (!CONFIG_METHODS.has(callee.getName())) return false;
   const receiver = callee.getExpression().getText().split('.').pop() ?? '';
   return /config(service)?$/i.test(receiver) || /env$/i.test(receiver);
-};
-
-const declarationOf = (node: TsNode): TsNode | undefined => {
-  if (!Node.isIdentifier(node) && !Node.isPropertyAccessExpression(node)) return undefined;
-  const symbol = node.getSymbol();
-  if (symbol === undefined) return undefined;
-  return (symbol.getAliasedSymbol() ?? symbol).getDeclarations()[0];
 };
 
 /** Which shared package a declaration came from, when it came from one. */
@@ -122,6 +117,33 @@ const patternOf = (template: TsNode): string => {
       })
       .join('')
   );
+};
+
+/**
+ * Whether a record read at a call site is an address or a payload.
+ *
+ * A transport's message pattern is a flat record of scalars, written the same
+ * way at both ends and carrying nothing. Anything nested inside it is data being
+ * carried, and the address is then a property of it rather than the whole of it.
+ *
+ * The distinction is the whole of one instance of R83. A job handed over as
+ * `{ name, data }` was stringified into its own channel, so the graph held
+ * `channel:{"data":{},"name":"IntegrityChecksumFiles"}` beside the
+ * `channel:IntegrityChecksumFiles` the consumers produced: two nodes for one
+ * channel, and the one the publish pointed at was a node nothing else in any
+ * repository could ever write. Which property of such a record holds the address
+ * is a convention of whoever wrote the queue, and guessing at it is how a tool
+ * silently joins two services that never talk. So the record is refused, the
+ * call site is reported, and the producer stays in the graph with no channel —
+ * which is exactly what it is.
+ *
+ * An empty record is refused for the same reason from the other end: `{}` names
+ * nothing, and nothing joins on it.
+ */
+const isAddress = (value: object): boolean => {
+  if (Array.isArray(value)) return false;
+  const values = Object.values(value);
+  return values.length > 0 && values.every((each) => each === null || typeof each !== 'object');
 };
 
 /**
@@ -214,16 +236,22 @@ export const resolveChannelName = (
       // below wrote the whole array out as one channel's name.
       return { unresolved: 'channel-dynamic', text };
     }
-    if (typeof value.value === 'object' && value.value !== null) {
-      // An object pattern addresses a channel too; its stable text is the name.
+    // An object pattern addresses a channel too; its stable text is the name.
+    // The framework's own transport layer matches `client.send({ cmd: 'sum' })`
+    // against `@MessagePattern({ cmd: 'sum' })`, so both ends write the same
+    // record and meet on one node — which is the only thing a channel is for.
+    if (typeof value.value === 'object' && value.value !== null && isAddress(value.value)) {
       const key = stableKey(value.value);
       return { name: key, names: [key], via: 'pattern' };
     }
   }
 
-  // An identifier that names something the checker could not follow is worth
-  // telling apart from an expression that was never going to be constant.
-  if (Node.isIdentifier(expr) || Node.isPropertyAccessExpression(expr)) {
+  // A name of a constant the checker could not follow is worth telling apart
+  // from a value decided at run time. A parameter or a `let` is a name too, and
+  // reporting one as an unreadable constant sent the reader off to move a
+  // constant that does not exist (R140); which names hold a run-time value is
+  // the core's answer, not this reader's.
+  if ((Node.isIdentifier(expr) || Node.isPropertyAccessExpression(expr)) && !isRunTimeValue(value)) {
     return { unresolved: 'channel-const-unresolved', text };
   }
   return { unresolved: 'channel-dynamic', text };

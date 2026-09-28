@@ -12,6 +12,25 @@ address, only functions calling functions.
 `shop` is both a browser and a server. Its routes are declared by where its
 files are — `app/api/orders/[id]/route.ts` exporting `GET` and `PATCH` is two
 ways in at `/api/orders/:param` — and nothing in any of those files says so.
+One of them, `app/api/(admin)/invoices/route.ts`, exports its verb as the value
+a wrapper handed back rather than as a function the module declares, which is
+how the ecosystem's larger repositories write every handler they have. The way
+in was read from the start; what it took until R72 to read was the code behind
+it, so a flow that reached that route used to stop at the boundary.
+Three more of its route files are there for the three other spellings a verb is
+written in, each of which read as a way in with nothing behind it until R74.
+`app/api/orders/[id]/route.ts` exports `PUT` as the name `PATCH`, which is how a
+repository keeps an old spelling working; `app/api/(admin)/invoices/route.ts`
+does the same with `POST = GET`, where the verb named is itself a built export,
+so the alias is followed and then read again. `app/api/reports/route.ts` binds
+the built value to a local name and exports it under two verbs at once, which is
+the shape that decided the question the ticket asked: the fix is to ask the
+module's export table what it exports rather than to index a local nobody
+exports. And `app/api/jobs/route.ts` takes its verb out of the object a library
+handed back, `export const { POST } = serveJob(…)`, where the name is a binding
+element and not a declaration at all. All four point at the code the call
+wraps, so a flow through them reaches the data layer.
+
 It also holds the two things that have no equivalent anywhere else the tool
 reads:
 

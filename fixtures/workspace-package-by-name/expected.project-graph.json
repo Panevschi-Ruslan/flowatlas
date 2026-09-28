@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-28T06:47:45.660Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#../packages/stock/src/levels/format.ts:LevelFormat",
+      "type": "provider",
+      "label": "LevelFormat",
+      "repo": "api",
+      "file": "../packages/stock/src/levels/format.ts",
+      "line": 1,
+      "kind": "injectable"
+    },
+    {
+      "id": "api#../packages/stock/src/levels/format.ts:LevelFormat.format",
+      "type": "method",
+      "label": "LevelFormat.format",
+      "repo": "api",
+      "file": "../packages/stock/src/levels/format.ts",
+      "line": 2
+    },
+    {
+      "id": "api#../packages/stock/src/levels/levels.ts:StockLevels",
+      "type": "provider",
+      "label": "StockLevels",
+      "repo": "api",
+      "file": "../packages/stock/src/levels/levels.ts",
+      "line": 1,
+      "kind": "injectable"
+    },
+    {
+      "id": "api#../packages/stock/src/levels/levels.ts:StockLevels.count",
+      "type": "method",
+      "label": "StockLevels.count",
+      "repo": "api",
+      "file": "../packages/stock/src/levels/levels.ts",
+      "line": 2
+    },
+    {
+      "id": "api#../packages/stock/src/services/stock.ts:StockService",
+      "type": "provider",
+      "label": "StockService",
+      "repo": "api",
+      "file": "../packages/stock/src/services/stock.ts",
+      "line": 3,
+      "kind": "injectable"
+    },
+    {
+      "id": "api#../packages/stock/src/services/stock.ts:StockService.available",
+      "type": "method",
+      "label": "StockService.available",
+      "repo": "api",
+      "file": "../packages/stock/src/services/stock.ts",
+      "line": 6
+    },
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 4,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "StockController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/stock/stock.controller.ts:StockController",
+      "type": "provider",
+      "label": "StockController",
+      "repo": "api",
+      "file": "src/stock/stock.controller.ts",
+      "line": 10,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/stock/stock.controller.ts:StockController.available",
+      "type": "method",
+      "label": "StockController.available",
+      "repo": "api",
+      "file": "src/stock/stock.controller.ts",
+      "line": 16
+    },
+    {
+      "id": "entry:api:http:GET:/stock/:param",
+      "type": "entry",
+      "label": "GET /stock/:param",
+      "repo": "api",
+      "file": "src/stock/stock.controller.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/stock/:param",
+        "rawPath": "/stock/:sku",
+        "controller": "StockController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#../packages/stock/src/services/stock.ts:StockService.available",
+      "to": "api#../packages/stock/src/levels/levels.ts:StockLevels.count",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "../packages/stock/src/services/stock.ts",
+      "line": 7
+    },
+    {
+      "from": "api#src/stock/stock.controller.ts:StockController.available",
+      "to": "api#../packages/stock/src/levels/format.ts:LevelFormat.format",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "string",
+      "file": "src/stock/stock.controller.ts",
+      "line": 19
+    },
+    {
+      "from": "api#src/stock/stock.controller.ts:StockController.available",
+      "to": "api#../packages/stock/src/services/stock.ts:StockService.available",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/stock/stock.controller.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:api:http:GET:/stock/:param",
+      "to": "api#src/stock/stock.controller.ts:StockController.available",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/stock/stock.controller.ts",
+      "line": 16,
+      "meta": {
+        "params": "{sku:string}"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/stock/stock.controller.ts",
+      "line": 18,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "StockController.available -> this.ledger.record",
+      "service": "api"
+    }
+  ]
+}

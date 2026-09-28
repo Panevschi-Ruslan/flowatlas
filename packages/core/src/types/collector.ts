@@ -8,7 +8,7 @@ import type { Unresolved } from '../model/graph.js';
 import type { TypeEntry, TypeField, TypeKind, TypeRegistry } from '../model/types.js';
 import { mergeFieldMeta, type FieldDeclaration, type FieldMetaReader } from './field-meta.js';
 import { DEFAULT_HASH_DEPTH, structuralHash } from './structural-hash.js';
-import { formatTypeRef, parseTypeRef, type TypeRef } from './type-ref.js';
+import { formatFieldKey, formatTypeRef, parseTypeRef, type TypeRef } from './type-ref.js';
 
 export interface TypeCollectorOptions {
   builder: GraphBuilder;
@@ -416,7 +416,20 @@ export class TypeCollector {
     if (owner === undefined) this.#idOwner.set(baseId, declarationFile);
     else if (owner !== declarationFile) baseId = `${baseId}@${declarationFile}`;
 
-    const args = type.getTypeArguments().map((argument) => this.collectType(argument, site, depth));
+    const typeArguments = type.getTypeArguments();
+    const args = typeArguments.map((argument) => this.collectType(argument, site, depth));
+
+    // A generic used with nothing but type parameters substitutes nothing, so
+    // there is no instantiation to register: an entry for `Paginated<T>` would
+    // be the template again, spelled with whatever the site's parameter happens
+    // to be called, and `Paginated<U>` a third copy of the same declaration. The
+    // reference names the template, and the row each parameter already wrote
+    // says that the argument was not known here (R148). Anything substituted
+    // at all - `Pair<string, T>` - is still an instantiation of its own.
+    if (!external && args.length > 0 && typeArguments.every((argument) => argument.isTypeParameter())) {
+      return this.#registerTemplate(baseId, symbol, declaration, declaredIn, site, depth);
+    }
+
     const id = args.length === 0 ? baseId : `${baseId}<${args.join(',')}>`;
 
     if (this.#started.has(id)) return id;
@@ -436,7 +449,7 @@ export class TypeCollector {
     // The template of a generic is worth registering too: a reader asking what
     // the type is called wants the declaration, not only one instantiation.
     if (args.length > 0) {
-      this.#registerTemplate(symbol, declaration, scope, declaredIn, site, depth);
+      this.#registerTemplate(baseId, symbol, declaration, declaredIn, site, depth);
     }
 
     const entry = this.#buildEntry(type, declaration, name, declaredIn, site, depth, args);
@@ -444,17 +457,21 @@ export class TypeCollector {
     return id;
   }
 
+  /**
+   * The declaration of a generic, under the id its instantiations are built on,
+   * so that a second declaration of the same name in another file keeps its
+   * own template rather than being answered with the first one's.
+   */
   #registerTemplate(
+    id: TypeRef,
     symbol: TsSymbol,
     declaration: TsNode,
-    scope: string,
     declaredIn: string,
     site: TsNode,
     depth: number,
-  ): void {
+  ): TypeRef {
     const name = symbol.getName();
-    const id = makeTypeId(scope, name);
-    if (this.#started.has(id)) return;
+    if (this.#started.has(id)) return id;
     this.#started.add(id);
     const declared = symbol.getDeclaredType();
     const entry = this.#buildEntry(declared, declaration, name, declaredIn, site, depth, []);
@@ -467,6 +484,7 @@ export class TypeCollector {
       ...entry,
       ...(typeParams.length > 0 ? { kind: 'generic' as const, typeParams } : {}),
     });
+    return id;
   }
 
   #buildEntry(
@@ -572,6 +590,9 @@ export class TypeCollector {
       const fromReaders = mergeFieldMeta(
         declared === undefined ? [] : this.#readers.map((reader) => reader.read(declared)),
       );
+      for (const { at, reason, hint, symbol } of fromReaders.unread) {
+        this.#report({ file: this.#fileOf(at), line: at.getStartLineNumber(), reason, hint, symbol });
+      }
 
       const optional = questionToken || mapped || undefinedUnion || fromReaders.optional === true;
       const optionalBy = questionToken
@@ -613,8 +634,12 @@ export class TypeCollector {
     }
     const fields = this.#fieldsOf(type, site, depth);
     if (fields.length === 0) return 'object';
+    // Through the writer's own key rule rather than by writing the name out,
+    // because this is the other half of the same writer: a shape assembled here
+    // is parsed by everything downstream, and a key spelled two ways in one
+    // release is a reference one of them cannot read (R85).
     return `{${fields
-      .map((field) => `${field.name}${field.optional ? '?' : ''}:${field.type}`)
+      .map((field) => `${formatFieldKey(field.name)}${field.optional ? '?' : ''}:${field.type}`)
       .join(';')}}`;
   }
 

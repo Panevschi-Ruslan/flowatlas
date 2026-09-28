@@ -31,7 +31,7 @@ unresolved: 26 to act on over 31 rows, and 5 places static reading cannot see, f
   di-token-unknown: 2 rows
     No module in this repository provides the token these constructors ask for. Register it with { provide, useClass }, or force the adapter that does.
       orders/src/orders/orders.service.ts:24  OrdersService.constructor[0]
-        ↳ No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.
+        ↳ No module in this repository provides LEDGER_CLIENT. Register it with { provide, useClass } or force the adapter that does.
       orders/src/orders/orders.service.ts:35  OrdersService.constructor[1]
         ↳ No module in this repository provides AUDIT_CLIENT. Register it with { provide, useClass } or force the adapter that does.
   dynamic-http-url: 2 rows
@@ -87,6 +87,7 @@ contracts: 4 errors, 1 excused, 4 boundary directions nothing could be compared 
   missing_required  gateway → orders  request    channel       receiver orders requires `channel: string`; sender gateway does not send it
 
 baseline: ok (26 accepted, 26 now, +0)
+  accepted against graph schema 3, and this graph is 5; the counts are still comparable, but a schema change can move them on its own
 
 verdict:
   7 annotations the graph contradicts

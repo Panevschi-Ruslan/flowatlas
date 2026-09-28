@@ -1,0 +1,34 @@
+{
+  "$comment": "The repositories the tool is measured against. Copy this file to targets.local.json, which is gitignored, and list your own: this project does not name other people's repositories. This file is data: a record per target, no code. `commit` is the pinned revision every run clones; `node scripts/coverage/run.mjs --pin` resolves today's default branch and writes it back here, and that is the only thing allowed to change it. `read` lists the directories inside the clone that are linked into the project - one entry becomes one service, and by default that service's type is whatever `flowatlas link` decides from its manifest. `types` overrides that for one directory, and it is the only judgement this file is allowed to carry: choosing a service's type is configuration a real user writes, which `init` invites them to, and where `link` guesses wrong the report prints both what it guessed and what was set, so the wrong guess stays visible instead of being papered over. It is not licence to tune anything else: the counting rule behind every denominator lives in counting-rule.mjs and takes no argument from here. `why` is what the target is for; it is printed in the report so a number arrives with the reason somebody chose to measure it. `exempt` and `baseline` are optional: a file or subtree (`dir/**`) of the target and one family, with a `why` somebody is willing to defend, read by the gate exactly like the fixtures' entries in read-gate.mjs.",
+  "targets": [
+    {
+      "name": "example-api",
+      "repository": "your-org/your-api",
+      "commit": null,
+      "read": [
+        "."
+      ],
+      "why": "what this target is here to measure"
+    },
+    {
+      "name": "example-monorepo",
+      "repository": "your-org/your-monorepo",
+      "commit": null,
+      "read": [
+        "apps/web",
+        "apps/api"
+      ],
+      "types": {
+        "apps/api": "nestjs"
+      },
+      "why": "two services in one workspace",
+      "exempt": [
+        {
+          "path": "packages/test-utils/src/server.ts",
+          "family": "routes",
+          "why": "a server built only to host the app in tests; the service never serves it"
+        }
+      ]
+    }
+  ]
+}

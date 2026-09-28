@@ -16,7 +16,7 @@
         "controller": "OrdersController",
         "adapter": "nestjs-http"
       },
-      "code": "  @Get(':id')\n  findOne(@Param('id') id: string): { data: unknown } {\n    return this.orders.fetchOne(id);\n  }"
+      "code": "  @Get(':id')\n  findOne(@Param('id') id: string) {\n    return this.orders.fetchOne(id);\n  }"
     },
     "children": [
       {
@@ -26,7 +26,7 @@
           "label": "OrdersController.findOne",
           "loc": "src/orders/orders.controller.ts:30",
           "service": "gateway",
-          "code": "  @Get(':id')\n  findOne(@Param('id') id: string): { data: unknown } {\n    return this.orders.fetchOne(id);\n  }"
+          "code": "  @Get(':id')\n  findOne(@Param('id') id: string) {\n    return this.orders.fetchOne(id);\n  }"
         },
         "edge": {
           "type": "handles",
@@ -34,7 +34,7 @@
           "params": [
             "string"
           ],
-          "returns": "{data:unknown}"
+          "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
         },
         "children": [
           {
@@ -44,7 +44,7 @@
               "label": "OrdersClient.fetchOne",
               "loc": "src/clients/orders.client.ts:32",
               "service": "gateway",
-              "code": "  fetchOne(id: string): { data: unknown } {\n    return this.http.get<OrderDto>(`${this.config.get('ORDERS_URL')}/orders/${id}`);\n  }"
+              "code": "  fetchOne(id: string) {\n    return this.http.get<OrderDto>(`${this.config.get('ORDERS_URL')}/orders/${id}`);\n  }"
             },
             "edge": {
               "type": "calls",
@@ -52,7 +52,7 @@
               "params": [
                 "string"
               ],
-              "returns": "{data:unknown}"
+              "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
             },
             "children": [
               {

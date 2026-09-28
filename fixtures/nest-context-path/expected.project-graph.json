@@ -1,0 +1,333 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T18:47:30.932Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.list",
+      "type": "method",
+      "label": "OrdersController.list",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.one",
+      "type": "method",
+      "label": "OrdersController.one",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11
+    },
+    {
+      "id": "entry:api:http:GET:/${…}v1/orders",
+      "type": "entry",
+      "label": "GET /${…}v1/orders",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/${…}v1/orders",
+        "rawPath": "/${…}v1/orders",
+        "version": "1",
+        "mount": {
+          "settings": [
+            "API_CONTEXT_PATH"
+          ],
+          "setIn": [],
+          "envFiles": 0,
+          "at": "src/main.ts:11"
+        },
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/${…}v1/orders/:param",
+      "type": "entry",
+      "label": "GET /${…}v1/orders/:param",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/${…}v1/orders/:param",
+        "rawPath": "/${…}v1/orders/:id",
+        "version": "1",
+        "mount": {
+          "settings": [
+            "API_CONTEXT_PATH"
+          ],
+          "setIn": [],
+          "envFiles": 0,
+          "at": "src/main.ts:11"
+        },
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "functions": 3,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/orders.ts:10:61",
+      "type": "ui_api_call",
+      "label": "GET /v1/orders/:param",
+      "repo": "web",
+      "file": "src/orders.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/v1/orders/:param",
+        "path": "/v1/orders/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/orders.ts:12:54",
+      "type": "ui_api_call",
+      "label": "GET /v1/invoices",
+      "repo": "web",
+      "file": "src/orders.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/v1/invoices",
+        "path": "/v1/invoices",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/orders.ts:8:52",
+      "type": "ui_api_call",
+      "label": "GET /v1/orders",
+      "repo": "web",
+      "file": "src/orders.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/v1/orders",
+        "path": "/v1/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "web#src/orders.ts:listInvoices",
+      "type": "function",
+      "label": "listInvoices",
+      "repo": "web",
+      "file": "src/orders.ts",
+      "line": 12
+    },
+    {
+      "id": "web#src/orders.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "web",
+      "file": "src/orders.ts",
+      "line": 8
+    },
+    {
+      "id": "web#src/orders.ts:readOrder",
+      "type": "function",
+      "label": "readOrder",
+      "repo": "web",
+      "file": "src/orders.ts",
+      "line": 10
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:api:http:GET:/${…}v1/orders",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:api:http:GET:/${…}v1/orders/:param",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.one",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "web#src/orders.ts:listInvoices",
+      "to": "ui_api_call:web#src/orders.ts:12:54",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders.ts",
+      "line": 12
+    },
+    {
+      "from": "web#src/orders.ts:listOrders",
+      "to": "ui_api_call:web#src/orders.ts:8:52",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders.ts",
+      "line": 8
+    },
+    {
+      "from": "web#src/orders.ts:readOrder",
+      "to": "ui_api_call:web#src/orders.ts:10:61",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders.ts",
+      "line": 10
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/main.ts",
+      "line": 9,
+      "reason": "route-path-dynamic",
+      "message": "the versioning could not be read in full, so every versioned address carries a hole where the version belongs: app.enableVersioning({ type: VersioningType.URI, prefix: `${CONTEXT_PATH}v`, defaultVersio",
+      "hint": "Give type, prefix and defaultVersion literal values. Under URI versioning all three are part of every address this service answers on.",
+      "symbol": "enableVersioning",
+      "adapter": "nestjs-http",
+      "service": "api"
+    },
+    {
+      "service": "web",
+      "file": "src/orders.ts",
+      "line": 8,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /v1/orders at an address read in full, though api GET /${…}v1/orders answers it if the part of its address nobody read is left open",
+      "hint": "This is not evidence that the route is missing. Part of the route’s address could not be read — a prefix or a version assembled from a setting, usually, with a row of its own where it is built — and until that part is read no request can be joined to it.",
+      "symbol": "ui_api_call:web#src/orders.ts:8:52"
+    },
+    {
+      "service": "web",
+      "file": "src/orders.ts",
+      "line": 10,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /v1/orders/:param at an address read in full, though api GET /${…}v1/orders/:param answers it if the part of its address nobody read is left open",
+      "hint": "This is not evidence that the route is missing. Part of the route’s address could not be read — a prefix or a version assembled from a setting, usually, with a row of its own where it is built — and until that part is read no request can be joined to it.",
+      "symbol": "ui_api_call:web#src/orders.ts:10:61"
+    },
+    {
+      "service": "web",
+      "file": "src/orders.ts",
+      "line": 12,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /v1/invoices",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /v1/invoices */.",
+      "symbol": "ui_api_call:web#src/orders.ts:12:54"
+    }
+  ]
+}

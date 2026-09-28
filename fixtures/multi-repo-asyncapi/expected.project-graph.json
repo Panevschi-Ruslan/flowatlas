@@ -1,0 +1,624 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T12:32:27.400Z",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "billing",
+      "repo": "./contracts",
+      "type": "declared",
+      "extractor": "asyncapi-document"
+    },
+    {
+      "name": "analytics",
+      "repo": "./contracts",
+      "type": "declared",
+      "extractor": "asyncapi-document"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+      "type": "method",
+      "label": "recordOrderCreated",
+      "repo": "analytics",
+      "file": "contracts/analytics.asyncapi.json",
+      "meta": {
+        "declaredBy": "contracts/analytics.asyncapi.json",
+        "summary": "Count an order"
+      }
+    },
+    {
+      "id": "billing#contracts/billing.asyncapi.json:issueInvoice",
+      "type": "method",
+      "label": "issueInvoice",
+      "repo": "billing",
+      "file": "contracts/billing.asyncapi.json",
+      "meta": {
+        "declaredBy": "contracts/billing.asyncapi.json"
+      }
+    },
+    {
+      "id": "billing#contracts/billing.asyncapi.json:onOrderCreated",
+      "type": "method",
+      "label": "onOrderCreated",
+      "repo": "billing",
+      "file": "contracts/billing.asyncapi.json",
+      "meta": {
+        "declaredBy": "contracts/billing.asyncapi.json",
+        "summary": "Raise an invoice for a new order"
+      }
+    },
+    {
+      "id": "channel:invoice.issued",
+      "type": "channel",
+      "label": "invoice.issued",
+      "repo": "orders",
+      "file": "src/orders/invoice.consumer.ts",
+      "line": 16,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "asyncapi",
+          "nestjs-kafka"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:orders.created",
+      "type": "channel",
+      "label": "orders.created",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 18,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "asyncapi",
+          "house-bus"
+        ],
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "consumer:analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+      "type": "consumer",
+      "label": "recordOrderCreated",
+      "kind": "message",
+      "repo": "analytics",
+      "file": "contracts/analytics.asyncapi.json",
+      "meta": {
+        "kind": "message",
+        "adapter": "asyncapi",
+        "entryId": "entry:analytics:event:orders.created",
+        "declaredBy": "contracts/analytics.asyncapi.json"
+      }
+    },
+    {
+      "id": "consumer:billing#contracts/billing.asyncapi.json:onOrderCreated",
+      "type": "consumer",
+      "label": "onOrderCreated",
+      "kind": "message",
+      "repo": "billing",
+      "file": "contracts/billing.asyncapi.json",
+      "meta": {
+        "kind": "message",
+        "adapter": "asyncapi",
+        "entryId": "entry:billing:event:orders.created",
+        "declaredBy": "contracts/billing.asyncapi.json"
+      }
+    },
+    {
+      "id": "consumer:orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued",
+      "type": "consumer",
+      "label": "InvoiceConsumer.issued",
+      "repo": "orders",
+      "file": "src/orders/invoice.consumer.ts",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:orders:event:invoice.issued"
+      }
+    },
+    {
+      "id": "entry:analytics:event:orders.created",
+      "type": "entry",
+      "label": "event orders.created",
+      "kind": "event",
+      "repo": "analytics",
+      "file": "contracts/analytics.asyncapi.json",
+      "meta": {
+        "adapter": "asyncapi",
+        "pattern": "orders.created",
+        "declaredBy": "contracts/analytics.asyncapi.json"
+      }
+    },
+    {
+      "id": "entry:billing:event:orders.created",
+      "type": "entry",
+      "label": "event orders.created",
+      "kind": "event",
+      "repo": "billing",
+      "file": "contracts/billing.asyncapi.json",
+      "meta": {
+        "adapter": "asyncapi",
+        "pattern": "orders.created",
+        "declaredBy": "contracts/billing.asyncapi.json"
+      }
+    },
+    {
+      "id": "entry:orders:event:invoice.issued",
+      "type": "entry",
+      "label": "event invoice.issued",
+      "repo": "orders",
+      "file": "src/orders/invoice.consumer.ts",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "pattern": "invoice.issued",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "orders#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "orders",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "InvoiceConsumer"
+        ],
+        "providers": [
+          "EventBus",
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "orders#src/bus/event-bus.service.ts:EventBus",
+      "type": "provider",
+      "label": "EventBus",
+      "repo": "orders",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/bus/event-bus.service.ts:EventBus.pSubscribe",
+      "type": "method",
+      "label": "EventBus.pSubscribe",
+      "repo": "orders",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 19
+    },
+    {
+      "id": "orders#src/bus/event-bus.service.ts:EventBus.publish",
+      "type": "method",
+      "label": "EventBus.publish",
+      "repo": "orders",
+      "file": "src/bus/event-bus.service.ts",
+      "line": 14
+    },
+    {
+      "id": "orders#src/orders/invoice.consumer.ts:InvoiceConsumer",
+      "type": "provider",
+      "label": "InvoiceConsumer",
+      "repo": "orders",
+      "file": "src/orders/invoice.consumer.ts",
+      "line": 14,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued",
+      "type": "method",
+      "label": "InvoiceConsumer.issued",
+      "repo": "orders",
+      "file": "src/orders/invoice.consumer.ts",
+      "line": 16
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.created",
+      "type": "method",
+      "label": "OrdersService.created",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 17
+    },
+    {
+      "id": "producer:billing#contracts/billing.asyncapi.json:issueInvoice",
+      "type": "producer",
+      "label": "message invoice.issued",
+      "kind": "message",
+      "repo": "billing",
+      "file": "contracts/billing.asyncapi.json",
+      "meta": {
+        "kind": "message",
+        "adapter": "asyncapi",
+        "channelVia": "address",
+        "declaredBy": "contracts/billing.asyncapi.json"
+      }
+    },
+    {
+      "id": "producer:orders#src/orders/orders.service.ts:18:5",
+      "type": "producer",
+      "label": "event orders.created",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "house-bus",
+        "channelVia": "literal",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "nestjs-microservice"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "billing#contracts/billing.asyncapi.json:issueInvoice",
+      "to": "producer:billing#contracts/billing.asyncapi.json:issueInvoice",
+      "type": "calls",
+      "confidence": "declared",
+      "file": "contracts/billing.asyncapi.json",
+      "meta": {
+        "declaredBy": "contracts/billing.asyncapi.json"
+      }
+    },
+    {
+      "from": "channel:invoice.issued",
+      "to": "consumer:orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/invoice.consumer.ts",
+      "line": 16
+    },
+    {
+      "from": "channel:orders.created",
+      "to": "consumer:analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+      "type": "consumes",
+      "confidence": "declared",
+      "file": "contracts/analytics.asyncapi.json",
+      "meta": {
+        "declaredBy": "contracts/analytics.asyncapi.json"
+      }
+    },
+    {
+      "from": "channel:orders.created",
+      "to": "consumer:billing#contracts/billing.asyncapi.json:onOrderCreated",
+      "type": "consumes",
+      "confidence": "declared",
+      "file": "contracts/billing.asyncapi.json",
+      "meta": {
+        "declaredBy": "contracts/billing.asyncapi.json"
+      }
+    },
+    {
+      "from": "consumer:analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+      "to": "analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+      "type": "handles",
+      "confidence": "declared",
+      "file": "contracts/analytics.asyncapi.json",
+      "meta": {
+        "declaredBy": "contracts/analytics.asyncapi.json"
+      }
+    },
+    {
+      "from": "consumer:billing#contracts/billing.asyncapi.json:onOrderCreated",
+      "to": "billing#contracts/billing.asyncapi.json:onOrderCreated",
+      "type": "handles",
+      "confidence": "declared",
+      "file": "contracts/billing.asyncapi.json",
+      "meta": {
+        "declaredBy": "contracts/billing.asyncapi.json"
+      }
+    },
+    {
+      "from": "consumer:orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued",
+      "to": "orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "void",
+      "file": "src/orders/invoice.consumer.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:analytics:event:orders.created",
+      "to": "analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+      "type": "handles",
+      "confidence": "declared",
+      "file": "contracts/analytics.asyncapi.json",
+      "params": [
+        "type:analytics#RecordOrderCreatedPayload"
+      ],
+      "meta": {
+        "declaredBy": "contracts/analytics.asyncapi.json",
+        "body": "type:analytics#RecordOrderCreatedPayload"
+      }
+    },
+    {
+      "from": "entry:billing:event:orders.created",
+      "to": "billing#contracts/billing.asyncapi.json:onOrderCreated",
+      "type": "handles",
+      "confidence": "declared",
+      "file": "contracts/billing.asyncapi.json",
+      "params": [
+        "type:billing#OrderCreated"
+      ],
+      "meta": {
+        "declaredBy": "contracts/billing.asyncapi.json",
+        "body": "type:billing#OrderCreated"
+      }
+    },
+    {
+      "from": "entry:orders:event:invoice.issued",
+      "to": "orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#InvoiceIssued"
+      ],
+      "returns": "void",
+      "file": "src/orders/invoice.consumer.ts",
+      "line": 16
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService",
+      "to": "orders#src/bus/event-bus.service.ts:EventBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.created",
+      "to": "orders#src/bus/event-bus.service.ts:EventBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 18
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.created",
+      "to": "producer:orders#src/orders/orders.service.ts:18:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 18
+    },
+    {
+      "from": "producer:billing#contracts/billing.asyncapi.json:issueInvoice",
+      "to": "channel:invoice.issued",
+      "type": "emits",
+      "confidence": "declared",
+      "file": "contracts/billing.asyncapi.json",
+      "params": [
+        "type:billing#InvoiceIssued"
+      ],
+      "meta": {
+        "declaredBy": "contracts/billing.asyncapi.json"
+      }
+    },
+    {
+      "from": "producer:orders#src/orders/orders.service.ts:18:5",
+      "to": "channel:orders.created",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:orders#OrderCreated"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 18
+    }
+  ],
+  "types": {
+    "type:analytics#RecordOrderCreatedPayload": {
+      "name": "RecordOrderCreatedPayload",
+      "kind": "object",
+      "declaredIn": "analytics#contracts/analytics.asyncapi.json",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": true
+        }
+      ],
+      "meta": {
+        "declaredBy": "openapi"
+      },
+      "structuralHash": "e390f27f97923469"
+    },
+    "type:billing#InvoiceIssued": {
+      "name": "InvoiceIssued",
+      "kind": "object",
+      "declaredIn": "billing#contracts/billing.asyncapi.json",
+      "structuralHash": "9189df1934b83755",
+      "fields": [
+        {
+          "name": "invoiceId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declaredBy": "openapi"
+      }
+    },
+    "type:billing#OrderCreated": {
+      "name": "OrderCreated",
+      "kind": "object",
+      "declaredIn": "billing#contracts/billing.asyncapi.json",
+      "structuralHash": "71f621f0619a7ef2",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declaredBy": "openapi"
+      }
+    },
+    "type:orders#InvoiceIssued": {
+      "name": "InvoiceIssued",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/order.dto.ts",
+      "structuralHash": "5b873ad7b41e745b",
+      "fields": [
+        {
+          "name": "invoiceId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "amount",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#OrderCreated": {
+      "name": "OrderCreated",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/order.dto.ts",
+      "structuralHash": "5f43cf68ce830d20",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/bus/event-bus.service.ts",
+      "line": 14,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "orders"
+    }
+  ]
+}

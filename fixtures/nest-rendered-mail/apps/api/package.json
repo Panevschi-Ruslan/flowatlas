@@ -1,0 +1,12 @@
+{
+  "name": "@rendered-mail/api",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@rendered-mail/mail": "workspace:*",
+    "@rendered-mail/relay": "workspace:*",
+    "@rendered-mail/sdk": "workspace:*"
+  }
+}

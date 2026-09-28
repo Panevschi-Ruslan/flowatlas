@@ -1,0 +1,394 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 5,
+  "generatedAt": "2026-09-27T17:30:54.589Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:billing#contracts/billing.asyncapi.json:issueInvoice",
+        "to": "consumer:orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued",
+        "type": "emits"
+      },
+      "edgeKey": "producer:billing#contracts/billing.asyncapi.json:issueInvoice|emits|consumer:orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#InvoiceIssued",
+        "symbol": "billing#contracts/billing.asyncapi.json:issueInvoice",
+        "declaredBy": "contracts/billing.asyncapi.json"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#InvoiceIssued",
+        "symbol": "orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "producer:billing#contracts/billing.asyncapi.json:issueInvoice",
+            "to": "consumer:orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued",
+            "type": "emits"
+          },
+          "edgeKey": "producer:billing#contracts/billing.asyncapi.json:issueInvoice|emits|consumer:orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued",
+          "direction": "payload",
+          "sender": {
+            "service": "billing",
+            "typeId": "type:billing#InvoiceIssued",
+            "symbol": "billing#contracts/billing.asyncapi.json:issueInvoice",
+            "declaredBy": "contracts/billing.asyncapi.json"
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "type:orders#InvoiceIssued",
+            "symbol": "orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued"
+          },
+          "typeId": "type:orders#InvoiceIssued",
+          "field": "amount",
+          "expected": "string",
+          "actual": "number",
+          "rule": null,
+          "message": "sender billing sends `amount` as `number`; receiver orders declares it `string`; billing was declared by contracts/billing.asyncapi.json, not read",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:18:5",
+        "to": "consumer:analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/orders.service.ts:18:5|emits|consumer:analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderCreated",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.created"
+      },
+      "receiver": {
+        "service": "analytics",
+        "typeId": "type:analytics#RecordOrderCreatedPayload",
+        "symbol": "analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+        "declaredBy": "contracts/analytics.asyncapi.json"
+      },
+      "findings": [
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:orders#src/orders/orders.service.ts:18:5",
+            "to": "consumer:analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+            "type": "emits"
+          },
+          "edgeKey": "producer:orders#src/orders/orders.service.ts:18:5|emits|consumer:analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+          "direction": "payload",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#OrderCreated",
+            "symbol": "orders#src/orders/orders.service.ts:OrdersService.created"
+          },
+          "receiver": {
+            "service": "analytics",
+            "typeId": "type:analytics#RecordOrderCreatedPayload",
+            "symbol": "analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+            "declaredBy": "contracts/analytics.asyncapi.json"
+          },
+          "typeId": "type:analytics#RecordOrderCreatedPayload",
+          "field": "customerId",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`customerId` is optional for receiver analytics and always sent by sender orders; analytics was declared by contracts/analytics.asyncapi.json, not read",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:orders#src/orders/orders.service.ts:18:5",
+            "to": "consumer:analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+            "type": "emits"
+          },
+          "edgeKey": "producer:orders#src/orders/orders.service.ts:18:5|emits|consumer:analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+          "direction": "payload",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#OrderCreated",
+            "symbol": "orders#src/orders/orders.service.ts:OrdersService.created"
+          },
+          "receiver": {
+            "service": "analytics",
+            "typeId": "type:analytics#RecordOrderCreatedPayload",
+            "symbol": "analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+            "declaredBy": "contracts/analytics.asyncapi.json"
+          },
+          "typeId": "type:analytics#RecordOrderCreatedPayload",
+          "field": "total",
+          "expected": "number",
+          "actual": "number",
+          "rule": null,
+          "message": "`total` is optional for receiver analytics and always sent by sender orders; analytics was declared by contracts/analytics.asyncapi.json, not read",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:18:5",
+        "to": "consumer:billing#contracts/billing.asyncapi.json:onOrderCreated",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/orders.service.ts:18:5|emits|consumer:billing#contracts/billing.asyncapi.json:onOrderCreated",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderCreated",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.created"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#OrderCreated",
+        "symbol": "billing#contracts/billing.asyncapi.json:onOrderCreated",
+        "declaredBy": "contracts/billing.asyncapi.json"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "producer:orders#src/orders/orders.service.ts:18:5",
+            "to": "consumer:billing#contracts/billing.asyncapi.json:onOrderCreated",
+            "type": "emits"
+          },
+          "edgeKey": "producer:orders#src/orders/orders.service.ts:18:5|emits|consumer:billing#contracts/billing.asyncapi.json:onOrderCreated",
+          "direction": "payload",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#OrderCreated",
+            "symbol": "orders#src/orders/orders.service.ts:OrdersService.created"
+          },
+          "receiver": {
+            "service": "billing",
+            "typeId": "type:billing#OrderCreated",
+            "symbol": "billing#contracts/billing.asyncapi.json:onOrderCreated",
+            "declaredBy": "contracts/billing.asyncapi.json"
+          },
+          "typeId": "type:billing#OrderCreated",
+          "field": "currency",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver billing requires `currency: string`; sender orders does not send it; billing was declared by contracts/billing.asyncapi.json, not read",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:orders#src/orders/orders.service.ts:18:5",
+            "to": "consumer:billing#contracts/billing.asyncapi.json:onOrderCreated",
+            "type": "emits"
+          },
+          "edgeKey": "producer:orders#src/orders/orders.service.ts:18:5|emits|consumer:billing#contracts/billing.asyncapi.json:onOrderCreated",
+          "direction": "payload",
+          "sender": {
+            "service": "orders",
+            "typeId": "type:orders#OrderCreated",
+            "symbol": "orders#src/orders/orders.service.ts:OrdersService.created"
+          },
+          "receiver": {
+            "service": "billing",
+            "typeId": "type:billing#OrderCreated",
+            "symbol": "billing#contracts/billing.asyncapi.json:onOrderCreated",
+            "declaredBy": "contracts/billing.asyncapi.json"
+          },
+          "typeId": "type:billing#OrderCreated",
+          "field": "total",
+          "expected": "number",
+          "actual": "number",
+          "rule": null,
+          "message": "`total` is optional for receiver billing and always sent by sender orders; billing was declared by contracts/billing.asyncapi.json, not read",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "producer:billing#contracts/billing.asyncapi.json:issueInvoice",
+        "to": "consumer:orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued",
+        "type": "emits"
+      },
+      "edgeKey": "producer:billing#contracts/billing.asyncapi.json:issueInvoice|emits|consumer:orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued",
+      "direction": "payload",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#InvoiceIssued",
+        "symbol": "billing#contracts/billing.asyncapi.json:issueInvoice",
+        "declaredBy": "contracts/billing.asyncapi.json"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#InvoiceIssued",
+        "symbol": "orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued"
+      },
+      "typeId": "type:orders#InvoiceIssued",
+      "field": "amount",
+      "expected": "string",
+      "actual": "number",
+      "rule": null,
+      "message": "sender billing sends `amount` as `number`; receiver orders declares it `string`; billing was declared by contracts/billing.asyncapi.json, not read",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:18:5",
+        "to": "consumer:analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/orders.service.ts:18:5|emits|consumer:analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+      "direction": "payload",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderCreated",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.created"
+      },
+      "receiver": {
+        "service": "analytics",
+        "typeId": "type:analytics#RecordOrderCreatedPayload",
+        "symbol": "analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+        "declaredBy": "contracts/analytics.asyncapi.json"
+      },
+      "typeId": "type:analytics#RecordOrderCreatedPayload",
+      "field": "customerId",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`customerId` is optional for receiver analytics and always sent by sender orders; analytics was declared by contracts/analytics.asyncapi.json, not read",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:18:5",
+        "to": "consumer:analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/orders.service.ts:18:5|emits|consumer:analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+      "direction": "payload",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderCreated",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.created"
+      },
+      "receiver": {
+        "service": "analytics",
+        "typeId": "type:analytics#RecordOrderCreatedPayload",
+        "symbol": "analytics#contracts/analytics.asyncapi.json:recordOrderCreated",
+        "declaredBy": "contracts/analytics.asyncapi.json"
+      },
+      "typeId": "type:analytics#RecordOrderCreatedPayload",
+      "field": "total",
+      "expected": "number",
+      "actual": "number",
+      "rule": null,
+      "message": "`total` is optional for receiver analytics and always sent by sender orders; analytics was declared by contracts/analytics.asyncapi.json, not read",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:18:5",
+        "to": "consumer:billing#contracts/billing.asyncapi.json:onOrderCreated",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/orders.service.ts:18:5|emits|consumer:billing#contracts/billing.asyncapi.json:onOrderCreated",
+      "direction": "payload",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderCreated",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.created"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#OrderCreated",
+        "symbol": "billing#contracts/billing.asyncapi.json:onOrderCreated",
+        "declaredBy": "contracts/billing.asyncapi.json"
+      },
+      "typeId": "type:billing#OrderCreated",
+      "field": "currency",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver billing requires `currency: string`; sender orders does not send it; billing was declared by contracts/billing.asyncapi.json, not read",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:18:5",
+        "to": "consumer:billing#contracts/billing.asyncapi.json:onOrderCreated",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/orders.service.ts:18:5|emits|consumer:billing#contracts/billing.asyncapi.json:onOrderCreated",
+      "direction": "payload",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#OrderCreated",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.created"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#OrderCreated",
+        "symbol": "billing#contracts/billing.asyncapi.json:onOrderCreated",
+        "declaredBy": "contracts/billing.asyncapi.json"
+      },
+      "typeId": "type:billing#OrderCreated",
+      "field": "total",
+      "expected": "number",
+      "actual": "number",
+      "rule": null,
+      "message": "`total` is optional for receiver billing and always sent by sender orders; billing was declared by contracts/billing.asyncapi.json, not read",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [],
+  "summary": {
+    "edges": 3,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 3,
+    "unchecked": 0,
+    "errors": 2,
+    "warnings": 3,
+    "infos": 0,
+    "ignored": 0
+  }
+}

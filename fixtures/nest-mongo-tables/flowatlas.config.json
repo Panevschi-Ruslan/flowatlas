@@ -1,0 +1,12 @@
+{
+  "services": [{ "name": "api", "repo": "./api", "type": "nestjs" }],
+  "adapters": {
+    "db": {
+      "localBaseClasses": [
+        { "name": "BaseRepository", "tableProperty": "collectionName" },
+        "LegacyRepository"
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

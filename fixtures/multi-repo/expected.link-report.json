@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 3,
-  "builtAt": "2026-09-22T10:05:33.018Z",
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T09:26:28.527Z",
   "configHash": "6bdd35fd6118",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 14,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 786
     },
     {
       "name": "gateway",
@@ -21,20 +21,20 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 43,
       "edges": 38,
-      "types": 4,
+      "types": 7,
       "unresolved": 1,
-      "durationMs": 0
+      "durationMs": 856
     },
     {
       "name": "orders",
       "repo": "./orders",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 32,
-      "edges": 25,
+      "nodes": 33,
+      "edges": 26,
       "types": 5,
-      "unresolved": 1,
-      "durationMs": 0
+      "unresolved": 0,
+      "durationMs": 786
     },
     {
       "name": "web",
@@ -45,7 +45,7 @@
       "edges": 21,
       "types": 1,
       "unresolved": 3,
-      "durationMs": 0
+      "durationMs": 667
     }
   ],
   "httpOut": {
@@ -97,7 +97,7 @@
     ]
   },
   "types": {
-    "total": 11,
+    "total": 14,
     "sharedPackage": 4
   },
   "unresolved": [
@@ -184,9 +184,9 @@
     }
   ],
   "totals": {
-    "nodes": 125,
-    "edges": 108,
-    "types": 11,
-    "unresolved": 14
+    "nodes": 126,
+    "edges": 109,
+    "types": 14,
+    "unresolved": 13
   }
 }

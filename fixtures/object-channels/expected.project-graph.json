@@ -1,0 +1,905 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T15:28:14.113Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "worker",
+      "repo": "./worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "JobBus",
+          "MailQueue",
+          "DigestQueue",
+          "TenantQueue",
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/jobs/job-bus.service.ts:JobBus",
+      "type": "provider",
+      "label": "JobBus",
+      "repo": "api",
+      "file": "src/jobs/job-bus.service.ts",
+      "line": 46,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/jobs/job-bus.service.ts:JobBus.queue",
+      "type": "method",
+      "label": "JobBus.queue",
+      "repo": "api",
+      "file": "src/jobs/job-bus.service.ts",
+      "line": 48
+    },
+    {
+      "id": "api#src/jobs/job-bus.service.ts:JobBus.queueAll",
+      "type": "method",
+      "label": "JobBus.queueAll",
+      "repo": "api",
+      "file": "src/jobs/job-bus.service.ts",
+      "line": 52
+    },
+    {
+      "id": "api#src/jobs/queues.ts:DigestQueue",
+      "type": "provider",
+      "label": "DigestQueue",
+      "repo": "api",
+      "file": "src/jobs/queues.ts",
+      "line": 42,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/jobs/queues.ts:MailQueue",
+      "type": "provider",
+      "label": "MailQueue",
+      "repo": "api",
+      "file": "src/jobs/queues.ts",
+      "line": 31,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/jobs/queues.ts:QueueBase",
+      "type": "provider",
+      "label": "QueueBase",
+      "repo": "api",
+      "file": "src/jobs/queues.ts",
+      "line": 12,
+      "kind": "injectable"
+    },
+    {
+      "id": "api#src/jobs/queues.ts:QueueBase.push",
+      "type": "method",
+      "label": "QueueBase.push",
+      "repo": "api",
+      "file": "src/jobs/queues.ts",
+      "line": 15
+    },
+    {
+      "id": "api#src/jobs/queues.ts:TenantQueue",
+      "type": "provider",
+      "label": "TenantQueue",
+      "repo": "api",
+      "file": "src/jobs/queues.ts",
+      "line": 59,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.confirm",
+      "type": "method",
+      "label": "OrdersService.confirm",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 30
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.digestFor",
+      "type": "method",
+      "label": "OrdersService.digestFor",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 46
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.notify",
+      "type": "method",
+      "label": "OrdersService.notify",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 41
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.perTenant",
+      "type": "method",
+      "label": "OrdersService.perTenant",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 51
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.place",
+      "type": "method",
+      "label": "OrdersService.place",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.reindex",
+      "type": "method",
+      "label": "OrdersService.reindex",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 35
+    },
+    {
+      "id": "channel:digest.send",
+      "type": "channel",
+      "label": "digest.send",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 47,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "house-jobs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:index.rebuild",
+      "type": "channel",
+      "label": "index.rebuild",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 37,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "house-jobs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:mail.send",
+      "type": "channel",
+      "label": "mail.send",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 31,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "house-jobs"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:thumbnail.generate",
+      "type": "channel",
+      "label": "thumbnail.generate",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 23,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "house-jobs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:worker#src/jobs/jobs.service.ts:JobsService.handleLegacy",
+      "type": "consumer",
+      "label": "JobsService.handleLegacy",
+      "repo": "worker",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 41,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "house-jobs",
+        "decorator": "OnJob",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:worker#src/jobs/jobs.service.ts:JobsService.handleMail",
+      "type": "consumer",
+      "label": "JobsService.handleMail",
+      "repo": "worker",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 31,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "house-jobs",
+        "decorator": "OnJob",
+        "entryId": "entry:worker:event:mail.send"
+      }
+    },
+    {
+      "id": "consumer:worker#src/jobs/jobs.service.ts:JobsService.handleThumbnail",
+      "type": "consumer",
+      "label": "JobsService.handleThumbnail",
+      "repo": "worker",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 26,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "house-jobs",
+        "decorator": "OnJob",
+        "entryId": "entry:worker:event:thumbnail.generate"
+      }
+    },
+    {
+      "id": "entry:worker:event:mail.send",
+      "type": "entry",
+      "label": "event mail.send",
+      "repo": "worker",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 31,
+      "kind": "event",
+      "meta": {
+        "pattern": "mail.send",
+        "adapter": "house-jobs"
+      }
+    },
+    {
+      "id": "entry:worker:event:thumbnail.generate",
+      "type": "entry",
+      "label": "event thumbnail.generate",
+      "repo": "worker",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "pattern": "thumbnail.generate",
+        "adapter": "house-jobs"
+      }
+    },
+    {
+      "id": "producer:api#src/orders/orders.service.ts:23:5",
+      "type": "producer",
+      "label": "job thumbnail.generate",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 23,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "house-jobs",
+        "channelVia": "literal",
+        "method": "queue"
+      }
+    },
+    {
+      "id": "producer:api#src/orders/orders.service.ts:31:5",
+      "type": "producer",
+      "label": "job mail.send",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 31,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "house-jobs",
+        "channelVia": "literal",
+        "method": "queue"
+      }
+    },
+    {
+      "id": "producer:api#src/orders/orders.service.ts:37:5",
+      "type": "producer",
+      "label": "job index.rebuild",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 37,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "house-jobs",
+        "channelVia": "const",
+        "method": "queue"
+      }
+    },
+    {
+      "id": "producer:api#src/orders/orders.service.ts:42:5",
+      "type": "producer",
+      "label": "job mail.send",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 42,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "house-jobs",
+        "channelVia": "literal",
+        "method": "push"
+      }
+    },
+    {
+      "id": "producer:api#src/orders/orders.service.ts:47:5",
+      "type": "producer",
+      "label": "job digest.send",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 47,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "house-jobs",
+        "channelVia": "literal",
+        "method": "push"
+      }
+    },
+    {
+      "id": "producer:api#src/orders/orders.service.ts:52:5",
+      "type": "producer",
+      "label": "job ?",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 52,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "house-jobs",
+        "channelVia": "unresolved",
+        "method": "push"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 7,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:worker",
+      "type": "repo",
+      "label": "worker",
+      "repo": "worker",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "worker#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "worker",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "JobsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "worker#src/jobs/jobs.service.ts:JobsService",
+      "type": "provider",
+      "label": "JobsService",
+      "repo": "worker",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 24,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "worker#src/jobs/jobs.service.ts:JobsService.handleLegacy",
+      "type": "method",
+      "label": "JobsService.handleLegacy",
+      "repo": "worker",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 41
+    },
+    {
+      "id": "worker#src/jobs/jobs.service.ts:JobsService.handleMail",
+      "type": "method",
+      "label": "JobsService.handleMail",
+      "repo": "worker",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 31
+    },
+    {
+      "id": "worker#src/jobs/jobs.service.ts:JobsService.handleThumbnail",
+      "type": "method",
+      "label": "JobsService.handleThumbnail",
+      "repo": "worker",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 26
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService",
+      "to": "api#src/jobs/job-bus.service.ts:JobBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService",
+      "to": "api#src/jobs/queues.ts:DigestQueue",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 17
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService",
+      "to": "api#src/jobs/queues.ts:MailQueue",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService",
+      "to": "api#src/jobs/queues.ts:TenantQueue",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 18
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.confirm",
+      "to": "api#src/jobs/job-bus.service.ts:JobBus.queue",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:api#JobItem"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 31
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.confirm",
+      "to": "producer:api#src/orders/orders.service.ts:31:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 31
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.digestFor",
+      "to": "api#src/jobs/queues.ts:QueueBase.push",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 47
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.digestFor",
+      "to": "producer:api#src/orders/orders.service.ts:47:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 47
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.notify",
+      "to": "api#src/jobs/queues.ts:QueueBase.push",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 42
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.notify",
+      "to": "producer:api#src/orders/orders.service.ts:42:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 42
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.perTenant",
+      "to": "api#src/jobs/queues.ts:QueueBase.push",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 52
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.perTenant",
+      "to": "producer:api#src/orders/orders.service.ts:52:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/orders.service.ts",
+      "line": 52
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.place",
+      "to": "api#src/jobs/job-bus.service.ts:JobBus.queue",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:api#JobItem"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 23
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.place",
+      "to": "producer:api#src/orders/orders.service.ts:23:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 23
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.reindex",
+      "to": "api#src/jobs/job-bus.service.ts:JobBus.queue",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:api#JobItem"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "from": "api#src/orders/orders.service.ts:OrdersService.reindex",
+      "to": "producer:api#src/orders/orders.service.ts:37:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "from": "channel:mail.send",
+      "to": "consumer:worker#src/jobs/jobs.service.ts:JobsService.handleMail",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 31
+    },
+    {
+      "from": "channel:thumbnail.generate",
+      "to": "consumer:worker#src/jobs/jobs.service.ts:JobsService.handleThumbnail",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 26
+    },
+    {
+      "from": "consumer:worker#src/jobs/jobs.service.ts:JobsService.handleLegacy",
+      "to": "worker#src/jobs/jobs.service.ts:JobsService.handleLegacy",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "void",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 41
+    },
+    {
+      "from": "consumer:worker#src/jobs/jobs.service.ts:JobsService.handleMail",
+      "to": "worker#src/jobs/jobs.service.ts:JobsService.handleMail",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "void",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 31
+    },
+    {
+      "from": "consumer:worker#src/jobs/jobs.service.ts:JobsService.handleThumbnail",
+      "to": "worker#src/jobs/jobs.service.ts:JobsService.handleThumbnail",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "void",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 26
+    },
+    {
+      "from": "entry:worker:event:mail.send",
+      "to": "worker#src/jobs/jobs.service.ts:JobsService.handleMail",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:worker#MailJob"
+      ],
+      "returns": "void",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 31,
+      "meta": {
+        "body": "type:worker#MailJob"
+      }
+    },
+    {
+      "from": "entry:worker:event:thumbnail.generate",
+      "to": "worker#src/jobs/jobs.service.ts:JobsService.handleThumbnail",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:worker#ThumbnailJob"
+      ],
+      "returns": "void",
+      "file": "src/jobs/jobs.service.ts",
+      "line": 26,
+      "meta": {
+        "body": "type:worker#ThumbnailJob"
+      }
+    },
+    {
+      "from": "producer:api#src/orders/orders.service.ts:23:5",
+      "to": "channel:thumbnail.generate",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:api#ThumbnailJobData"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 23
+    },
+    {
+      "from": "producer:api#src/orders/orders.service.ts:31:5",
+      "to": "channel:mail.send",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:api#MailJobData"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 31
+    },
+    {
+      "from": "producer:api#src/orders/orders.service.ts:37:5",
+      "to": "channel:index.rebuild",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:api#RebuildJobData"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "from": "producer:api#src/orders/orders.service.ts:42:5",
+      "to": "channel:mail.send",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 42
+    },
+    {
+      "from": "producer:api#src/orders/orders.service.ts:47:5",
+      "to": "channel:digest.send",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 47
+    }
+  ],
+  "types": {
+    "type:api#JobItem": {
+      "name": "JobItem",
+      "kind": "union",
+      "declaredIn": "api#src/jobs/job-bus.service.ts",
+      "structuralHash": "eec40d26dea28029",
+      "members": [
+        "{name:'thumbnail.generate';data:type:api#ThumbnailJobData}",
+        "{name:'mail.send';data:type:api#MailJobData}",
+        "{name:'index.rebuild';data:type:api#RebuildJobData}"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
+    "type:api#MailJobData": {
+      "name": "MailJobData",
+      "kind": "object",
+      "declaredIn": "api#src/jobs/job-bus.service.ts",
+      "structuralHash": "821f0bf2c4755576",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#RebuildJobData": {
+      "name": "RebuildJobData",
+      "kind": "object",
+      "declaredIn": "api#src/jobs/job-bus.service.ts",
+      "structuralHash": "7a3e9353615290c5",
+      "fields": [
+        {
+          "name": "since",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#ThumbnailJobData": {
+      "name": "ThumbnailJobData",
+      "kind": "object",
+      "declaredIn": "api#src/jobs/job-bus.service.ts",
+      "structuralHash": "821f0bf2c4755576",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:worker#MailJob": {
+      "name": "MailJob",
+      "kind": "object",
+      "declaredIn": "worker#src/jobs/jobs.service.ts",
+      "structuralHash": "821f0bf2c4755576",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:worker#ThumbnailJob": {
+      "name": "ThumbnailJob",
+      "kind": "object",
+      "declaredIn": "worker#src/jobs/jobs.service.ts",
+      "structuralHash": "821f0bf2c4755576",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 52,
+      "reason": "channel-dynamic",
+      "hint": "The channel name cannot be read here. Annotate OrdersService.perTenant with the channel it uses.",
+      "symbol": "OrdersService.perTenant -> tenantTopic()",
+      "service": "api"
+    },
+    {
+      "file": "src/jobs/jobs.service.ts",
+      "line": 41,
+      "reason": "channel-dynamic",
+      "hint": "The channel name cannot be read here. Annotate JobsService.handleLegacy with the channel it uses.",
+      "symbol": "JobsService.handleLegacy -> legacyJobName()",
+      "service": "worker"
+    }
+  ]
+}

@@ -1,0 +1,570 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 5,
+  "generatedAt": "2026-09-27T19:37:52.537Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:admin#src/clients/orders.client.ts:14:12",
+        "to": "entry:orders:http:POST:/orders/create",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:admin#src/clients/orders.client.ts:14:12|http_calls|entry:orders:http:POST:/orders/create",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "admin",
+        "typeId": "{customerId:string}",
+        "symbol": "admin#src/clients/orders.client.ts:OrdersClient.create",
+        "writes": [
+          "customerId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{customerId:string}",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:billing#src/clients/orders.client.ts:14:12",
+        "to": "entry:orders:http:POST:/orders/create",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:billing#src/clients/orders.client.ts:14:12|http_calls|entry:orders:http:POST:/orders/create",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "billing",
+        "typeId": "{orderId:string}",
+        "symbol": "billing#src/clients/orders.client.ts:OrdersClient.create",
+        "writes": [
+          "orderId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{customerId:string}",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:billing#src/clients/orders.client.ts:14:12",
+            "to": "entry:orders:http:POST:/orders/create",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:billing#src/clients/orders.client.ts:14:12|http_calls|entry:orders:http:POST:/orders/create",
+          "direction": "request",
+          "sender": {
+            "service": "billing",
+            "typeId": "{orderId:string}",
+            "symbol": "billing#src/clients/orders.client.ts:OrdersClient.create",
+            "writes": [
+              "orderId"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "{customerId:string}",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+          },
+          "typeId": "{customerId:string}",
+          "field": "customerId",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver orders requires `customerId: string`; sender billing does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:billing#src/clients/orders.client.ts:14:12",
+            "to": "entry:orders:http:POST:/orders/create",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:billing#src/clients/orders.client.ts:14:12|http_calls|entry:orders:http:POST:/orders/create",
+          "direction": "request",
+          "sender": {
+            "service": "billing",
+            "typeId": "{orderId:string}",
+            "symbol": "billing#src/clients/orders.client.ts:OrdersClient.create",
+            "writes": [
+              "orderId"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "{customerId:string}",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+          },
+          "typeId": "{customerId:string}",
+          "field": "orderId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender billing sends `orderId: string`; receiver orders declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:15:12",
+        "to": "entry:orders:http:POST:/orders/create",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:15:12|http_calls|entry:orders:http:POST:/orders/create",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{customerId:string}",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create",
+        "writes": [
+          "customerId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{customerId:string}",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:20:12",
+        "to": "entry:orders:http:POST:/orders/create",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:20:12|http_calls|entry:orders:http:POST:/orders/create",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{customerId:string;draft:boolean}",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.createDraft",
+        "writes": [
+          "customerId",
+          "draft"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{customerId:string}",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/orders.client.ts:20:12",
+            "to": "entry:orders:http:POST:/orders/create",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/orders.client.ts:20:12|http_calls|entry:orders:http:POST:/orders/create",
+          "direction": "request",
+          "sender": {
+            "service": "gateway",
+            "typeId": "{customerId:string;draft:boolean}",
+            "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.createDraft",
+            "writes": [
+              "customerId",
+              "draft"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "orders",
+            "typeId": "{customerId:string}",
+            "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+          },
+          "typeId": "{customerId:string}",
+          "field": "draft",
+          "expected": null,
+          "actual": "boolean",
+          "rule": null,
+          "message": "sender gateway sends `draft: boolean`; receiver orders declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:orders#src/clients/billing.client.ts:14:12",
+        "to": "entry:billing:http:POST:/invoices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:orders#src/clients/billing.client.ts:14:12|http_calls|entry:billing:http:POST:/invoices",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "{orderId:string}",
+        "symbol": "orders#src/clients/billing.client.ts:BillingClient.requestInvoice",
+        "writes": [
+          "orderId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "{orderId:string}",
+        "symbol": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:billing#src/invoices/invoices.service.ts:20:5",
+        "to": "consumer:orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+        "type": "emits"
+      },
+      "edgeKey": "producer:billing#src/invoices/invoices.service.ts:20:5|emits|consumer:orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "billing",
+        "typeId": "{orderId:string}",
+        "symbol": "billing#src/invoices/invoices.service.ts:InvoicesService.sync"
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{orderId:string}",
+        "symbol": "orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:55:5",
+        "to": "consumer:billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/orders/orders.service.ts:55:5|emits|consumer:billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "{orderId:string}",
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.sync"
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "{orderId:string}",
+        "symbol": "billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:11:12",
+        "to": "entry:gateway:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:11:12|hits|entry:gateway:http:POST:/orders",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "web",
+        "typeId": "{customerId:string}",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+        "writes": [
+          "customerId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "{customerId:string}",
+        "symbol": "gateway#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "http_out:billing#src/clients/orders.client.ts:14:12",
+        "to": "entry:orders:http:POST:/orders/create",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:billing#src/clients/orders.client.ts:14:12|http_calls|entry:orders:http:POST:/orders/create",
+      "direction": "request",
+      "sender": {
+        "service": "billing",
+        "typeId": "{orderId:string}",
+        "symbol": "billing#src/clients/orders.client.ts:OrdersClient.create",
+        "writes": [
+          "orderId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{customerId:string}",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "typeId": "{customerId:string}",
+      "field": "customerId",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver orders requires `customerId: string`; sender billing does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:billing#src/clients/orders.client.ts:14:12",
+        "to": "entry:orders:http:POST:/orders/create",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:billing#src/clients/orders.client.ts:14:12|http_calls|entry:orders:http:POST:/orders/create",
+      "direction": "request",
+      "sender": {
+        "service": "billing",
+        "typeId": "{orderId:string}",
+        "symbol": "billing#src/clients/orders.client.ts:OrdersClient.create",
+        "writes": [
+          "orderId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{customerId:string}",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "typeId": "{customerId:string}",
+      "field": "orderId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender billing sends `orderId: string`; receiver orders declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:20:12",
+        "to": "entry:orders:http:POST:/orders/create",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:20:12|http_calls|entry:orders:http:POST:/orders/create",
+      "direction": "request",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{customerId:string;draft:boolean}",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.createDraft",
+        "writes": [
+          "customerId",
+          "draft"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{customerId:string}",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "typeId": "{customerId:string}",
+      "field": "draft",
+      "expected": null,
+      "actual": "boolean",
+      "rule": null,
+      "message": "sender gateway sends `draft: boolean`; receiver orders declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:orders#src/audit/audit.service.ts:10:5",
+        "to": "channel:audit.log",
+        "type": "emits"
+      },
+      "edgeKey": "channel:audit.log|emits|producer:orders#src/audit/audit.service.ts:10:5",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:audit.log is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:orphan.in",
+        "to": "consumer:billing#src/invoices/orphan.consumer.ts:OrphanConsumer.onOrphan",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:orphan.in|consumes|consumer:billing#src/invoices/orphan.consumer.ts:OrphanConsumer.onOrphan",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:orphan.in is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "http_out:admin#src/clients/orders.client.ts:14:12",
+        "to": "entry:orders:http:POST:/orders/create",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:admin#src/clients/orders.client.ts:14:12|http_calls|entry:orders:http:POST:/orders/create",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/orders/orders.controller.ts:OrdersController.create declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:billing#src/clients/orders.client.ts:14:12",
+        "to": "entry:orders:http:POST:/orders/create",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:billing#src/clients/orders.client.ts:14:12|http_calls|entry:orders:http:POST:/orders/create",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/orders/orders.controller.ts:OrdersController.create declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:15:12",
+        "to": "entry:orders:http:POST:/orders/create",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:15:12|http_calls|entry:orders:http:POST:/orders/create",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/orders/orders.controller.ts:OrdersController.create declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:20:12",
+        "to": "entry:orders:http:POST:/orders/create",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:20:12|http_calls|entry:orders:http:POST:/orders/create",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/orders/orders.controller.ts:OrdersController.create declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:27:12",
+        "to": "entry:orders:http:GET:/orders/recent",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:27:12|http_calls|entry:orders:http:GET:/orders/recent",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "gateway#src/clients/orders.client.ts:OrdersClient.recent declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:27:12",
+        "to": "entry:orders:http:GET:/orders/recent",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:27:12|http_calls|entry:orders:http:GET:/orders/recent",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/orders/orders.controller.ts:OrdersController.recent declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:orders#src/clients/billing.client.ts:14:12",
+        "to": "entry:billing:http:POST:/invoices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:orders#src/clients/billing.client.ts:14:12|http_calls|entry:billing:http:POST:/invoices",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "billing#src/invoices/invoices.controller.ts:InvoicesController.create declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:orders#src/orders/orders.controller.ts:18:12",
+        "to": "entry:gateway:http:GET:/accounts/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:orders#src/orders/orders.controller.ts:18:12|http_calls|entry:gateway:http:GET:/accounts/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/orders/orders.controller.ts:OrdersController.recent declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:orders#src/orders/orders.controller.ts:18:12",
+        "to": "entry:gateway:http:GET:/accounts/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:orders#src/orders/orders.controller.ts:18:12|http_calls|entry:gateway:http:GET:/accounts/:param",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "gateway#src/accounts/accounts.controller.ts:AccountsController.findOne declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:11:12",
+        "to": "entry:gateway:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:11:12|hits|entry:gateway:http:POST:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "gateway#src/orders/orders.controller.ts:OrdersController.create declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    }
+  ],
+  "summary": {
+    "edges": 8,
+    "shared": 0,
+    "identical": 6,
+    "hash_differs": 2,
+    "unchecked": 12,
+    "errors": 1,
+    "warnings": 0,
+    "infos": 2,
+    "ignored": 0
+  }
+}

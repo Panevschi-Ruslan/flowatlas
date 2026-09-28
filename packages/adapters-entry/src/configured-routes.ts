@@ -1,9 +1,26 @@
-import type { EntryAdapter, EntryNode, ExtractContext } from '@flowatlas/core';
+import type {
+  EntryAdapter,
+  EntryHttpConfig,
+  EntryNode,
+  ExtractContext,
+  PackageJson,
+} from '@flowatlas/core';
 import { hasAnyDependency } from '@flowatlas/core';
 import { callRoutesAdapter } from './call-routes.js';
 import { dialectOf } from './route-dialects.js';
 
 export const CONFIGURED_ROUTES = 'entry-http-custom';
+
+/**
+ * Whether one description is about this repository.
+ *
+ * One configuration covers every repository of a project, and a description
+ * written for one service says so by naming its packages. Where it names none
+ * it is tried everywhere, which is what a project with a framework of its own
+ * and no package to point at needs.
+ */
+const appliesHere = (description: EntryHttpConfig, pkg: PackageJson): boolean =>
+  description.packages.length === 0 || hasAnyDependency(pkg, description.packages);
 
 /**
  * Routes declared by a framework nobody shipped an adapter for.
@@ -17,14 +34,20 @@ export const CONFIGURED_ROUTES = 'entry-http-custom';
  * of them are now written in, so a fifth is a row in `adapters.entry.http` and
  * is read by exactly the code that reads them.
  *
- * Detection is the one thing a description cannot do for itself. An adapter is
- * offered the repository's manifest and nothing else, so this one cannot know
- * whether the project has described anything until it is already running; it
- * therefore recognises nothing, and a project with a description turns it on
- * with `adapters.force.entry`. That is a fact about the adapter interface
- * rather than about any framework, and it is written here rather than worked
- * around because working around it would mean this adapter appearing in the
- * report of every repository this tool has ever read.
+ * Detection is a description's own answer. An entry adapter is offered the
+ * configuration alongside the manifest, so this one reads the descriptions and
+ * recognises a repository when one of them is about it — which is the same
+ * question, asked with the same code, that decides whether a description is
+ * tried once the reading has started. Answering `true` unconditionally was the
+ * alternative and is why this recognised nothing for a while: it would have put
+ * this adapter's name on the repository node of every repository this tool has
+ * ever read, including the ones whose project has described nothing at all.
+ *
+ * A description that names no packages is tried everywhere by the same rule,
+ * and so turns this adapter on in every repository of that project. That is not
+ * the failure above but the description saying what it says: a project whose
+ * own framework has no package to point at is a project where this reader
+ * really does run everywhere.
  */
 export const configuredRoutesAdapter: EntryAdapter = {
   name: CONFIGURED_ROUTES,
@@ -32,19 +55,17 @@ export const configuredRoutesAdapter: EntryAdapter = {
   // application the extractor reads is asked anything, so its guards and pipes
   // never run for them and none are drawn.
   outsideApplication: true,
-  detect: () => false,
+  detect: (pkg, config) =>
+    (config?.adapters.entry.http ?? []).some((description) => appliesHere(description, pkg)),
   extractEntries: (ctx: ExtractContext): EntryNode[] => {
     const entries: EntryNode[] = [];
 
     for (const description of ctx.config.adapters.entry.http) {
-      // One configuration covers every repository of a project, and a
-      // description written for one service says so by naming its packages.
-      // Where it names none it is tried everywhere, which is what a project
-      // with a framework of its own and no package to point at needs.
-      if (
-        description.packages.length > 0 &&
-        !hasAnyDependency(ctx.pkg, description.packages)
-      ) {
+      // The same question detection asked, and it is asked again because the
+      // answer is not the same for every description: detection is on when any
+      // one of them is about this repository, and the rest still have to be
+      // told apart from it here.
+      if (!appliesHere(description, ctx.pkg)) {
         ctx.builder.addUnresolved({
           file: 'package.json',
           line: 1,

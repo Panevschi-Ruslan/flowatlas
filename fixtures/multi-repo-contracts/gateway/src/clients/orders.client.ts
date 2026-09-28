@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { ContractIgnore } from '@flowatlas/markers';
 import type { MoneyDto } from '@fx/wire';
 
-import type { AddressDto, CreateOrderDto, DraftDto, DraftResultDto, OrderDto } from './dto';
+import type { AddressDto, BatchDraftDto, CreateOrderDto, DraftDto, DraftResultDto, OrderDto } from './dto';
 
 /**
  * Every call this fixture measures, aimed at `orders` through `ORDERS_URL`.
@@ -21,22 +21,22 @@ export class OrdersClient {
   ) {}
 
   /** The four kinds of finding at once, on the request half of one call. */
-  create(body: CreateOrderDto): { data: unknown } {
+  create(body: CreateOrderDto) {
     return this.http.post<OrderDto>(`${this.config.get('ORDERS_URL')}/orders`, body);
   }
 
   /** `total` is a number over there and text here: the response half fails. */
-  fetchOne(id: string): { data: unknown } {
+  fetchOne(id: string) {
     return this.http.get<OrderDto>(`${this.config.get('ORDERS_URL')}/orders/${id}`);
   }
 
   /** Both ends import the declaration, so nothing can drift: `shared`. */
-  price(body: MoneyDto): { data: unknown } {
+  price(body: MoneyDto) {
     return this.http.post<MoneyDto>(`${this.config.get('ORDERS_URL')}/orders/prices`, body);
   }
 
   /** Two declarations, one shape, so the hashes agree: `identical`. */
-  address(body: AddressDto): { data: unknown } {
+  address(body: AddressDto) {
     return this.http.post<AddressDto>(`${this.config.get('ORDERS_URL')}/orders/addresses`, body);
   }
 
@@ -47,7 +47,7 @@ export class OrdersClient {
    * writes one of them. Expected: no finding at all — not one about `owner`,
    * and not one about `archived`.
    */
-  draftWritten(): { data: unknown } {
+  draftWritten() {
     return this.http.post<DraftResultDto>(`${this.config.get('ORDERS_URL')}/orders/drafts`, {
       title: 'first',
     });
@@ -60,7 +60,7 @@ export class OrdersClient {
    * there is and the findings have to say so. Expected: `owner` and `archived`
    * as `extra_field`, worded as a permission rather than as an act.
    */
-  draftDeclared(body: DraftDto): { data: unknown } {
+  draftDeclared(body: DraftDto) {
     return this.http.post<DraftResultDto>(`${this.config.get('ORDERS_URL')}/orders/drafts`, body);
   }
 
@@ -70,7 +70,7 @@ export class OrdersClient {
    * Expected: `owner`, `archived` and `extra` as `extra_field`, worded as an
    * act — a spread is not a permission, it is a copy.
    */
-  draftSpread(base: DraftDto): { data: unknown } {
+  draftSpread(base: DraftDto) {
     return this.http.post<DraftResultDto>(`${this.config.get('ORDERS_URL')}/orders/drafts`, {
       ...base,
       extra: 1,
@@ -83,7 +83,7 @@ export class OrdersClient {
    * Expected: `missing_required title` on the response half, with a note saying
    * it is on one of the two shapes and naming the one it is not on (R32).
    */
-  fetchDraft(id: string): { data: unknown } {
+  fetchDraft(id: string) {
     return this.http.get<DraftResultDto>(`${this.config.get('ORDERS_URL')}/orders/drafts/${id}`);
   }
 
@@ -96,7 +96,7 @@ export class OrdersClient {
    * check nobody can fix today.
    */
   @ContractIgnore()
-  legacy(body: CreateOrderDto): { data: unknown } {
+  legacy(body: CreateOrderDto) {
     return this.http.post<OrderDto>(`${this.config.get('ORDERS_URL')}/orders/legacy`, body);
   }
 
@@ -106,7 +106,7 @@ export class OrdersClient {
    * `note` is on `DraftSchema` and not on `CreateDraftDto`, and the handler
    * writes that document. Expected: `impact: stored`.
    */
-  storeDraft(): { data: unknown } {
+  storeDraft() {
     return this.http.post<DraftResultDto>(`${this.config.get('ORDERS_URL')}/orders/drafts/store`, {
       title: 'first',
       note: 'keep me',
@@ -118,7 +118,7 @@ export class OrdersClient {
    *
    * Expected: `impact: unknown` — a warning like the one above, below it.
    */
-  tagDraft(): { data: unknown } {
+  tagDraft() {
     return this.http.post<DraftResultDto>(`${this.config.get('ORDERS_URL')}/orders/drafts/tag`, {
       title: 'first',
       colour: 'red',
@@ -130,10 +130,36 @@ export class OrdersClient {
    *
    * Expected: `impact: none`, at `info`, counted rather than listed.
    */
-  previewDraft(): { data: unknown } {
+  previewDraft() {
     return this.http.post<DraftResultDto>(
       `${this.config.get('ORDERS_URL')}/orders/drafts/preview`,
       { title: 'first', note: 'keep me' },
     );
   }
+
+  /**
+   * The same strip, sent as a list (R71).
+   *
+   * The body is declared rather than written at the call site, so the declared
+   * element type is what is compared, and it is compared at path `[]`. Expected:
+   * `extra_field [].note`, rule `whitelist-strip`, `impact: stored` — the same
+   * row `storeDraft` gets, one array deep.
+   */
+  batchDrafts(body: BatchDraftDto[]) {
+    return this.http.post<DraftResultDto[]>(
+      `${this.config.get('ORDERS_URL')}/orders/drafts/batch`,
+      body,
+    );
+  }
 }
+
+// The request methods above declare no return type on purpose. What a request
+// answers with is the library's business — `HttpService.get<T>` gives back
+// `Observable<AxiosResponse<T>>` — and letting that signature decide is what
+// makes this fixture a test of the library's shape rather than of a shape
+// somebody retyped. They used to say `{ data: unknown }`, which no real Nest
+// client can say and which hid the delivery wrapper the graph reads through.
+//
+// Do not put an annotation back. The stub's signature is what decides the type
+// here, so an annotation written out by hand would be asserting the copy rather
+// than the library, which is exactly how the wrong shape went unnoticed.

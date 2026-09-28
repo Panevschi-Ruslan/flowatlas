@@ -1,0 +1,687 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T18:35:28.119Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "client",
+      "repo": "./client",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "FilesController",
+          "ReportsController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/files/files.controller.ts:FilesController",
+      "type": "provider",
+      "label": "FilesController",
+      "repo": "api",
+      "file": "src/files/files.controller.ts",
+      "line": 11,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/files/files.controller.ts:FilesController.any",
+      "type": "method",
+      "label": "FilesController.any",
+      "repo": "api",
+      "file": "src/files/files.controller.ts",
+      "line": 18
+    },
+    {
+      "id": "api#src/files/files.controller.ts:FilesController.latest",
+      "type": "method",
+      "label": "FilesController.latest",
+      "repo": "api",
+      "file": "src/files/files.controller.ts",
+      "line": 13
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "method",
+      "label": "OrdersController.findOne",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.rename",
+      "type": "method",
+      "label": "OrdersController.rename",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "method",
+      "label": "OrdersService.findOne",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 6
+    },
+    {
+      "id": "api#src/orders/orders.service.ts:OrdersService.rename",
+      "type": "method",
+      "label": "OrdersService.rename",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 10
+    },
+    {
+      "id": "api#src/reports/reports.controller.ts:ReportsController",
+      "type": "provider",
+      "label": "ReportsController",
+      "repo": "api",
+      "file": "src/reports/reports.controller.ts",
+      "line": 10,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/reports/reports.controller.ts:ReportsController.ofKind",
+      "type": "method",
+      "label": "ReportsController.ofKind",
+      "repo": "api",
+      "file": "src/reports/reports.controller.ts",
+      "line": 12
+    },
+    {
+      "id": "client#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "client",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "client#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "client",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "client#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "client",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "OrdersClient"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "client#src/orders/orders.client.ts:OrdersClient",
+      "type": "provider",
+      "label": "OrdersClient",
+      "repo": "client",
+      "file": "src/orders/orders.client.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "client#src/orders/orders.client.ts:OrdersClient.newest",
+      "type": "method",
+      "label": "OrdersClient.newest",
+      "repo": "client",
+      "file": "src/orders/orders.client.ts",
+      "line": 25
+    },
+    {
+      "id": "client#src/orders/orders.client.ts:OrdersClient.rename",
+      "type": "method",
+      "label": "OrdersClient.rename",
+      "repo": "client",
+      "file": "src/orders/orders.client.ts",
+      "line": 20
+    },
+    {
+      "id": "client#src/orders/orders.client.ts:OrdersClient.report",
+      "type": "method",
+      "label": "OrdersClient.report",
+      "repo": "client",
+      "file": "src/orders/orders.client.ts",
+      "line": 34
+    },
+    {
+      "id": "config_key:client#API_URL",
+      "type": "config_key",
+      "label": "API_URL",
+      "repo": "client",
+      "file": "src/orders/orders.client.ts",
+      "line": 21,
+      "meta": {
+        "key": "API_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/files/*",
+      "type": "entry",
+      "label": "GET /files/*",
+      "repo": "api",
+      "file": "src/files/files.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/files/*",
+        "rawPath": "/files/*",
+        "controller": "FilesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/files/latest",
+      "type": "entry",
+      "label": "GET /files/latest",
+      "repo": "api",
+      "file": "src/files/files.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/files/latest",
+        "rawPath": "/files/latest",
+        "controller": "FilesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/o/:param",
+      "type": "entry",
+      "label": "GET /o/:param",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/o/:param",
+        "rawPath": "/o/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/reports/:param",
+      "type": "entry",
+      "label": "GET /reports/:param",
+      "repo": "api",
+      "file": "src/reports/reports.controller.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/reports/:param",
+        "rawPath": "/reports/:kind",
+        "controller": "ReportsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:PATCH:/o/:param",
+      "type": "entry",
+      "label": "PATCH /o/:param",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/o/:param",
+        "rawPath": "/o/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:PATCH:/orders/:param",
+      "type": "entry",
+      "label": "PATCH /orders/:param",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "http_out:client#src/orders/orders.client.ts:21:12",
+      "type": "http_out",
+      "label": "PATCH /orders/:param",
+      "repo": "client",
+      "file": "src/orders/orders.client.ts",
+      "line": 21,
+      "meta": {
+        "method": "PATCH",
+        "url": "${API_URL}/orders/${…}",
+        "path": "/orders/:param",
+        "baseUrlEnv": "API_URL",
+        "responseType": null,
+        "bodyType": "{name:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name"
+        ],
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "http_out:client#src/orders/orders.client.ts:26:12",
+      "type": "http_out",
+      "label": "GET /files/latest",
+      "repo": "client",
+      "file": "src/orders/orders.client.ts",
+      "line": 26,
+      "meta": {
+        "method": "GET",
+        "url": "${API_URL}/files/latest",
+        "path": "/files/latest",
+        "baseUrlEnv": "API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "http_out:client#src/orders/orders.client.ts:35:12",
+      "type": "http_out",
+      "label": "GET /reports/${…}",
+      "repo": "client",
+      "file": "src/orders/orders.client.ts",
+      "line": 35,
+      "meta": {
+        "method": "GET",
+        "url": "${API_URL}/reports/${…}",
+        "path": "/reports/${…}",
+        "baseUrlEnv": "API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:client",
+      "type": "repo",
+      "label": "client",
+      "repo": "client",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {
+            "@nestjs/axios": 3,
+            "@nestjs/config": 3
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController",
+      "to": "api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "to": "api#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController.rename",
+      "to": "api#src/orders/orders.service.ts:OrdersService.rename",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "{id:string;name:string}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 24
+    },
+    {
+      "from": "client#src/orders/orders.client.ts:OrdersClient",
+      "to": "client#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.client.ts",
+      "line": 15
+    },
+    {
+      "from": "client#src/orders/orders.client.ts:OrdersClient",
+      "to": "client#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.client.ts",
+      "line": 16
+    },
+    {
+      "from": "client#src/orders/orders.client.ts:OrdersClient.newest",
+      "to": "config_key:client#API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.client.ts",
+      "line": 26
+    },
+    {
+      "from": "client#src/orders/orders.client.ts:OrdersClient.newest",
+      "to": "http_out:client#src/orders/orders.client.ts:26:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.client.ts",
+      "line": 26
+    },
+    {
+      "from": "client#src/orders/orders.client.ts:OrdersClient.rename",
+      "to": "config_key:client#API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.client.ts",
+      "line": 21
+    },
+    {
+      "from": "client#src/orders/orders.client.ts:OrdersClient.rename",
+      "to": "http_out:client#src/orders/orders.client.ts:21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.client.ts",
+      "line": 21
+    },
+    {
+      "from": "client#src/orders/orders.client.ts:OrdersClient.report",
+      "to": "config_key:client#API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.client.ts",
+      "line": 35
+    },
+    {
+      "from": "client#src/orders/orders.client.ts:OrdersClient.report",
+      "to": "http_out:client#src/orders/orders.client.ts:35:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.client.ts",
+      "line": 35
+    },
+    {
+      "from": "entry:api:http:GET:/files/*",
+      "to": "api#src/files/files.controller.ts:FilesController.any",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "{params:object}",
+      "file": "src/files/files.controller.ts",
+      "line": 18,
+      "meta": {
+        "params": "object"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/files/latest",
+      "to": "api#src/files/files.controller.ts:FilesController.latest",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "{name:string}",
+      "file": "src/files/files.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:api:http:GET:/o/:param",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/orders/:param",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/reports/:param",
+      "to": "api#src/reports/reports.controller.ts:ReportsController.ofKind",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{kind:string}",
+      "file": "src/reports/reports.controller.ts",
+      "line": 12,
+      "meta": {
+        "params": "{kind:string}"
+      }
+    },
+    {
+      "from": "entry:api:http:PATCH:/o/:param",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.rename",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{name:string}"
+      ],
+      "returns": "{id:string;name:string}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22,
+      "meta": {
+        "params": "{id:string}",
+        "body": "{name:string}"
+      }
+    },
+    {
+      "from": "entry:api:http:PATCH:/orders/:param",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.rename",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{name:string}"
+      ],
+      "returns": "{id:string;name:string}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22,
+      "meta": {
+        "params": "{id:string}",
+        "body": "{name:string}"
+      }
+    },
+    {
+      "from": "http_out:client#src/orders/orders.client.ts:21:12",
+      "to": "entry:api:http:PATCH:/orders/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/orders/orders.client.ts",
+      "line": 21,
+      "params": [
+        "{name:string}"
+      ],
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "http_out:client#src/orders/orders.client.ts:26:12",
+      "to": "entry:api:http:GET:/files/latest",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/orders/orders.client.ts",
+      "line": 26,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "api"
+      }
+    }
+  ],
+  "types": {
+    "type:axios#AxiosResponse<unknown>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    }
+  },
+  "unresolved": []
+}

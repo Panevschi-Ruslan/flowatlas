@@ -85,10 +85,23 @@ export class OrdersService {
     this.client.emit(REGION_TOPIC, dto);
   }
 
-  // A shared-package const annotated `: string`, so the declaration carries no
-  // literal either. Expected: unresolved `channel-const-unresolved`.
+  // A shared-package const annotated `: string`: the type is widened, the value
+  // is not. Expected: `channel:order.legacy`, via `shared-package` (R140).
   emitLegacy(dto: OrderCreatedEvent): void {
     this.client.emit(LEGACY_TOPIC, dto);
+  }
+
+  // A job handed over whole, where the address is one property of it and the
+  // rest is the payload. The record is readable and is still not a name: its
+  // stable text used to become a channel of its own, so the graph held
+  // `channel:{"data":{},"name":"order.checksum"}` beside the
+  // `channel:order.checksum` the handler below produces — two nodes for one
+  // channel, and the publish pointed at the one nothing else can ever write
+  // (R83). Which property carries the address is this queue's own convention,
+  // so it is reported rather than guessed at.
+  // Expected: no channel node, unresolved `channel-dynamic`.
+  checksum(dto: OrderCreatedEvent): void {
+    this.client.emit({ name: 'order.checksum', data: {} }, dto);
   }
 
   // Step 3, the channel comes from configuration. No `channel` node; the
@@ -110,15 +123,15 @@ export class OrdersService {
     this.client.emit(...args);
   }
 
-  // `send` rather than `emit`: `meta.kind: "rpc"`. The return type is the type
-  // argument of the call, unwrapped from `Observable<Order>` by `firstValueFrom`.
-  // Expected: `returns: type:nest-kafka#Order`.
+  // `send` rather than `emit`: `meta.kind: "rpc"`. The reply is the call's own
+  // `Observable<Order>`, unwrapped. Expected: the `emits` edge carries
+  // `returns: type:nest-kafka#Order`, compared with the handler's (R151).
   getOrder(query: OrderQuery): Promise<Order> {
     return firstValueFrom(this.client.send<Order, OrderQuery>('get.order', query));
   }
 
-  // An rpc whose result is never given a type: the producer still exists, the
-  // return does not. Expected: unresolved `rpc-return-type-unknown`.
+  // An rpc whose result is never given a type: the producer still exists, and
+  // `send`'s own default makes the answer `any` - untyped, not unread, so no row (R148).
   getAnything(query: OrderQuery): unknown {
     return this.client.send('get.order.raw', query);
   }

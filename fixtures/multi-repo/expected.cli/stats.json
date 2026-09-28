@@ -1,15 +1,15 @@
 {
   "totals": {
-    "nodes": 125,
-    "edges": 108,
-    "types": 11,
-    "unresolved": 14
+    "nodes": 126,
+    "edges": 109,
+    "types": 14,
+    "unresolved": 13
   },
   "nodesByType": {
     "repo": 4,
     "module": 4,
     "entry": 17,
-    "provider": 17,
+    "provider": 18,
     "method": 47,
     "db_query": 4,
     "table": 1,
@@ -26,12 +26,12 @@
   "nodesByService": {
     "billing": 18,
     "gateway": 43,
-    "orders": 32,
+    "orders": 33,
     "web": 32
   },
   "edgesByType": {
     "imports": 1,
-    "injects": 15,
+    "injects": 16,
     "calls": 49,
     "handles": 21,
     "queries": 4,
@@ -42,14 +42,13 @@
     "reads_config": 4
   },
   "edgesByConfidence": {
-    "static": 98,
+    "static": 99,
     "marker": 5,
     "heuristic": 5
   },
   "unresolvedByReason": {
     "ambiguous-route-target": 1,
     "api-path-dynamic": 3,
-    "di-token-unknown": 1,
     "dynamic-http-url": 1,
     "route-unguarded": 4,
     "target-route-not-found": 3,
@@ -58,7 +57,6 @@
   "unresolvedSites": {
     "ambiguous-route-target": 1,
     "api-path-dynamic": 3,
-    "di-token-unknown": 1,
     "dynamic-http-url": 1,
     "route-unguarded": 4,
     "target-route-not-found": 3,

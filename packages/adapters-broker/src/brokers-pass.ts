@@ -6,13 +6,23 @@ import {
   findDecorators,
   forEachCall,
   getDecorator,
+  locatedExpressions,
+  isEntryKind,
   makeChannelId,
   narrowUnionByLiteral,
+  makeEntryId,
   makeLeafId,
   makeSymbolId,
+  resolveTypeOrigin,
   type CallPattern,
+  type ClassMethod,
+  type EntryKind,
   type ExtractorPass,
   type GraphNode,
+  type LocatorContext,
+  type LocatorSite,
+  type NameLocator,
+  type TypeRef,
 } from '@flowatlas/core';
 // The context and the body walk, from the package neither extractor owns. This
 // import is the whole of R46's answer at this end: a channel reader is not part
@@ -22,60 +32,58 @@ import { scopesOf, type Holder, type PassContext, type Scope } from '@flowatlas/
 import type { CallExpression, ClassDeclaration, MethodDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { brokerAdapters, createCustomBrokerAdapter, type BrokerSpec, type ConsumerPattern } from './adapters/index.js';
-import { hasAcknowledgement, receiverIsFrom, targetOfHandler } from './call-site.js';
-import {
-  isResolved,
-  resolveChannelName,
-  shapeChannelNames,
-  trimEndpoint,
-  type ChannelResolution,
-  type ChannelShaping,
-} from './channel-name.js';
+import { hasAcknowledgement, methodMatches, receiverIsFrom, replyAt, targetOfHandler } from './call-site.js';
+import { payloadParameter, typeAtPath } from './payload.js';
+import { isResolved, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
+import { endpointShapingAt, isUnreadable, unreadableEndpointRow, type EndpointShaping } from './endpoint.js';
 import { pairKey, readBrokerMarkers } from './markers.js';
 
 const lineColOf = (node: TsNode): { line: number; column: number } =>
   node.getSourceFile().getLineAndColumnAtPos(node.getStart());
 
 /**
- * What the class a call sits in says about the names written in it.
+ * Where a description says its channel is written.
  *
- * Either the transport's rules applied to this class, or the one case where
- * the class declares an endpoint and that endpoint cannot be read. The second
- * is not a detail to shrug at: falling back to the default endpoint would put
- * every channel of a namespaced gateway on the node the unnamespaced ones use,
- * and quietly join services that never speak.
+ * The one place `channelArg` is turned into a locator, which is what keeps the
+ * shorthand and the list from ever disagreeing: `channelArg: n` *is*
+ * `[{ kind: 'argument', index: n }]`, and `-1` has always meant "not an argument
+ * at all", which now reads as "whatever `channel` says" instead of as a flag a
+ * second field had to be consulted about.
  */
-type ClassShaping = ChannelShaping | { readonly unreadable: string };
-
-const isUnreadable = (shaping: ClassShaping): shaping is { readonly unreadable: string } =>
-  'unreadable' in shaping;
+const channelLocators = (pattern: {
+  readonly channel?: readonly NameLocator[];
+  readonly channelArg: number;
+}): readonly NameLocator[] =>
+  pattern.channel ?? (pattern.channelArg < 0 ? [] : [{ kind: 'argument', index: pattern.channelArg }]);
 
 /**
- * `owner` is absent for a publish written outside any class — a module-level
- * function, or a handler written in the registration. Only the endpoint half of
- * the shaping is a class's to declare, so what is left is the transport's own
- * reserved names, which apply wherever the call is written.
+ * The channel a site is addressed to, read through the locators of its pattern.
+ *
+ * Every locator is tried and the first that yields a readable name wins; when
+ * none does, the first that pointed at anything is what the row reports, because
+ * a reader acting on the row needs the expression that was actually looked at
+ * rather than the whole call. A description that reached nothing at all has
+ * nothing to show but the call, which is the last fallback.
+ *
+ * The fold rather than the walk is what lives here: the walk is the core's and is
+ * shared with the side of the graph that reads stored collections, while what
+ * counts as a name differs — a channel that cannot be read is a refusal with a
+ * reason attached, and a table is simply absent.
  */
-const shapingOf = (owner: ClassDeclaration | undefined, spec: BrokerSpec): ClassShaping => {
-  const reserved = spec.reservedChannels;
-  const base: ChannelShaping = reserved === undefined ? {} : { reserved };
-  const shape = spec.channelPrefix;
-  if (shape === undefined || owner === undefined) return base;
-  const decorator = getDecorator(owner, shape.classDecorator);
-  if (decorator === undefined) return base;
-  for (const argument of decorator.getArguments()) {
-    if (!Node.isObjectLiteralExpression(argument)) continue;
-    const property = argument.getProperty(shape.optionKey);
-    if (property === undefined || !Node.isPropertyAssignment(property)) continue;
-    const initializer = property.getInitializer();
-    if (initializer === undefined) return { unreadable: property.getText() };
-    const value = evaluateExpression(initializer);
-    if (!value.resolved || typeof value.value !== 'string') {
-      return { unreadable: initializer.getText() };
-    }
-    return { ...base, prefix: trimEndpoint(value.value), separator: shape.separator };
-  }
-  return base;
+const channelAt = (
+  site: LocatorSite,
+  locators: readonly NameLocator[],
+  context: LocatorContext,
+  config: Parameters<typeof resolveChannelName>[1],
+  fallback: string,
+): ChannelResolution => {
+  const resolutions = locatedExpressions(site, locators, context).map((expression) =>
+    resolveChannelName(expression, config),
+  );
+  return (
+    resolutions.find(isResolved) ??
+    resolutions[0] ?? { unresolved: 'channel-dynamic', text: fallback }
+  );
 };
 
 /** Every adapter that applies: the detected ones plus any described in configuration. */
@@ -139,47 +147,63 @@ export const extractBrokers = (ctx: PassContext): void => {
   };
 
   /**
-   * The class declares the endpoint its channels sit under, and it cannot be read.
+   * Whether the entry reader has already refused this handler's decorator.
+   *
+   * A pattern decorator's argument is read once, by the framework's entry
+   * reader, and a consumer reuses that reading as its channel name (D1). Where
+   * the entry reader could not read it, it has written a row at the handler
+   * saying so, and the consumer, having read the same argument of the same
+   * decorator, has nothing to add but a second row at one site for one thing to
+   * fix. Worse than redundant for `@EventPattern()` with nothing in it: there
+   * is no channel at all, and the channel row's advice - annotate with
+   * `@Consumes` - would claim one for a handler the framework delivers nothing
+   * to (R148). A decorator no entry reader knows - `@RabbitSubscribe`,
+   * `@Process` - wrote no such row, so its consumer still reports its own.
+   */
+  const entryReaderRefused = (file: string, line: number, symbol: string): boolean =>
+    ctx.builder.unresolved.some(
+      (row) =>
+        row.reason === 'decorator-arg-dynamic' &&
+        row.file === file &&
+        row.line === line &&
+        row.symbol === symbol,
+    );
+
+  /**
+   * The endpoint the channels sit under is stated, and it cannot be read.
    *
    * Reported once per call site rather than once per class, because a call site
    * is where a reader can do something about it, and because the row has to say
    * which publish or which handler lost its channel.
    */
   const reportEndpoint = (
-    shaping: { readonly unreadable: string },
+    shaping: EndpointShaping,
     spec: BrokerSpec,
     file: string,
     line: number,
     symbol: string,
   ): void => {
-    const option = spec.channelPrefix?.optionKey ?? 'endpoint';
-    ctx.report({
-      file,
-      line,
-      reason: 'channel-dynamic',
-      hint: `The ${option} this class declares cannot be read, so neither can any channel name under it. Write it as a literal or a constant.`,
-      symbol: `${symbol} -> ${shaping.unreadable.slice(0, 60)}`,
-    });
+    if (isUnreadable(shaping)) ctx.report(unreadableEndpointRow(shaping, spec, file, line, symbol));
   };
 
   /**
-   * The queue a receiver is bound to, named on the parameter that injected it.
+   * What the locators may ask about a call beyond the call itself.
    *
-   * Only a class has constructor injection to read, so a publish written
-   * outside one has no parameter to carry the name.
+   * Two answers the reader already has and a locator cannot work out: the class
+   * the receiver was declared as, and the constructor parameter that provided it.
+   * A publish written outside a class has no injection to read, which is why the
+   * second is absent there rather than guessed at.
    */
-  const channelFromParameter = (
-    owner: ClassDeclaration | undefined,
-    receiver: TsNode,
-    decoratorName: string,
-  ): string | undefined => {
-    if (owner === undefined || !Node.isPropertyAccessExpression(receiver)) return undefined;
-    const entry = ctx.di.lookup(owner, receiver.getName());
-    if (entry?.parameter === undefined) return undefined;
-    const decorator = getDecorator(entry.parameter, decoratorName);
-    if (decorator === undefined) return undefined;
-    const [first] = decoratorArgs(decorator);
-    return first?.resolved === true && typeof first.value === 'string' ? first.value : undefined;
+  const contextOf = (receiver: TsNode, owner: ClassDeclaration | undefined): LocatorContext => {
+    const declaration = resolveTypeOrigin(receiver)?.declaration;
+    const provider =
+      owner !== undefined && Node.isPropertyAccessExpression(receiver)
+        ? ctx.di.lookup(owner, receiver.getName())?.parameter
+        : undefined;
+    return {
+      ...(declaration === undefined ? {} : { typeDeclaration: declaration }),
+      ...(provider === undefined ? {} : { providerDeclaration: provider }),
+    };
   };
 
   /**
@@ -205,23 +229,16 @@ export const extractBrokers = (ctx: PassContext): void => {
     const callee = call.getExpression();
     const receiver = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
 
-    let resolution: ChannelResolution;
-    if (pattern.channelArg < 0) {
-      const name =
-        pattern.channelFromParameterDecorator === undefined
-          ? undefined
-          : channelFromParameter(owner, receiver, pattern.channelFromParameterDecorator);
-      resolution =
-        name === undefined
-          ? { unresolved: 'channel-dynamic', text: receiver.getText() }
-          : { name, names: [name], via: 'const' };
-    } else {
-      const argument = args[pattern.channelArg];
-      resolution =
-        argument === undefined
-          ? { unresolved: 'channel-dynamic', text: call.getText().slice(0, 60) }
-          : resolveChannelName(argument, ctx.config);
-    }
+    const resolution = channelAt(
+      call,
+      channelLocators(pattern),
+      contextOf(receiver, owner),
+      ctx.config,
+      // A receiver that is the channel and names nothing readable is best shown
+      // as the receiver: `queue.add(job)` says nothing, and `queue` is the thing
+      // a reader has to go and look at.
+      pattern.channel === undefined ? call.getText().slice(0, 60) : receiver.getText(),
+    );
 
     const jobNameArg = pattern.nameArg === undefined ? undefined : args[pattern.nameArg];
     const jobName =
@@ -254,17 +271,28 @@ export const extractBrokers = (ctx: PassContext): void => {
       declaredWide !== undefined && payloadArg !== undefined
         ? narrowUnionByLiteral(declaredWide, payloadArg)
         : declaredWide;
-    const payloadType =
+    // Whichever of the two was read, the description says where in it the
+    // message sits: the same value is a message on one transport and a record
+    // carrying one on the next, and only the description knows which.
+    const carried =
       declared !== undefined
-        ? ctx.types.collectType(declared, call)
+        ? { type: declared, site: call as TsNode }
         : payloadArg === undefined
           ? undefined
-          : ctx.types.collectType(payloadArg.getType(), payloadArg);
+          : { type: payloadArg.getType(), site: payloadArg };
+    const carriedPayload =
+      carried === undefined
+        ? undefined
+        : typeAtPath(carried.type, pattern.payloadPath ?? [], carried.site);
+    const payloadType =
+      carried === undefined || carriedPayload === undefined
+        ? undefined
+        : ctx.types.collectType(carriedPayload, carried.site);
 
     // The transport has the last word on the name the call wrote: an endpoint
     // the class declares is part of it, and a name the transport keeps for its
     // own signalling is not a channel at all.
-    const shaping = shapingOf(owner, spec);
+    const shaping = endpointShapingAt(spec, owner, receiver);
     const names = isResolved(resolution) && !isUnreadable(shaping)
       ? shapeChannelNames(resolution.names, shaping)
       : [];
@@ -275,10 +303,16 @@ export const extractBrokers = (ctx: PassContext): void => {
 
     // A call that hands over somewhere to send the answer is a request, not a
     // publish, and the graph should not call the two the same thing.
-    const kind =
-      spec.acknowledgedKind !== undefined && hasAcknowledgement(args)
-        ? spec.acknowledgedKind
-        : (pattern.kind ?? 'event');
+    const acknowledgedKind =
+      spec.acknowledgedKind !== undefined && hasAcknowledgement(args) ? spec.acknowledgedKind : undefined;
+    const kind = acknowledgedKind ?? pattern.kind ?? 'event';
+    // A request has an answer, and the answer is a second shape crossing the
+    // same boundary: recorded as the edge's `returns`, the field a call to a
+    // route carries its expected answer in, so that one comparison reads both.
+    // A publish expects nothing back and is given nothing here (R151).
+    const reply = kind === 'rpc' ? replyAt(call, acknowledgedKind !== undefined) : undefined;
+    const replyType =
+      reply === undefined ? undefined : ctx.types.collectType(ctx.types.unwrapAsync(reply), call);
 
     const producerId = makeLeafId('producer', ctx.repo, file, line, column);
     const channelName = names[0] ?? null;
@@ -344,6 +378,7 @@ export const extractBrokers = (ctx: PassContext): void => {
         file,
         line,
         ...(payloadType === undefined ? {} : { params: [payloadType] }),
+        ...(replyType === undefined ? {} : { returns: replyType }),
       });
     }
     if (payloadType === undefined) {
@@ -358,60 +393,63 @@ export const extractBrokers = (ctx: PassContext): void => {
     return true;
   };
 
-  /** The channel a decorated handler receives from. */
+  /**
+   * The channel a decorated handler receives from.
+   *
+   * One decorator and one list of locators, whichever shape the transport uses.
+   * The three branches this replaced — an argument, a key of an argument's object,
+   * a decorator on the class — were three ways of saying where a name is written,
+   * which is the one thing a locator says; and having them as branches meant a
+   * transport whose handlers are marked `@OnJob({ name: … })` was describable on
+   * the publishing side and not here.
+   */
   const consumerChannel = (
     pattern: ConsumerPattern,
     method: MethodDeclaration,
     owner: ClassDeclaration,
   ): { resolution: ChannelResolution; jobName?: string | null } => {
-    if (pattern.channelFrom === 'class-decorator') {
-      const classDecorator =
-        pattern.classDecorator === undefined ? undefined : getDecorator(owner, pattern.classDecorator);
-      const [first] = classDecorator === undefined ? [] : decoratorArgs(classDecorator);
-      const queue =
-        first?.resolved === true && typeof first.value === 'string'
-          ? first.value
-          : first?.resolved === true && typeof first.value === 'object' && first.value !== null
-            ? (first.value as { name?: unknown }).name
-            : undefined;
-      const nameDecorator = getDecorator(method, pattern.decorator);
-      const [nameArg] =
-        nameDecorator === undefined || pattern.nameArgIndex === undefined
-          ? []
-          : decoratorArgs(nameDecorator);
-      return {
-        resolution:
-          typeof queue === 'string'
-            ? { name: queue, names: [queue], via: 'const' }
-            : { unresolved: 'channel-dynamic', text: owner.getName() ?? '?' },
-        ...(nameArg?.resolved === true && typeof nameArg.value === 'string'
-          ? { jobName: nameArg.value }
-          : {}),
-      };
+    const site =
+      pattern.classDecorator === undefined
+        ? getDecorator(method, pattern.decorator)
+        : getDecorator(owner, pattern.classDecorator);
+    const nameDecorator =
+      pattern.nameArgIndex === undefined ? undefined : getDecorator(method, pattern.decorator);
+    const [nameArg] = nameDecorator === undefined ? [] : decoratorArgs(nameDecorator);
+    const jobName =
+      nameArg?.resolved === true && typeof nameArg.value === 'string' ? { jobName: nameArg.value } : {};
+    if (site === undefined) {
+      return { resolution: { unresolved: 'channel-dynamic', text: pattern.decorator }, ...jobName };
     }
+    return {
+      resolution: channelAt(
+        site,
+        pattern.channel,
+        {},
+        ctx.config,
+        // What a reader has to go and look at is the decorator that was supposed
+        // to name the channel, not the method under it.
+        site.getText().slice(0, 60),
+      ),
+      ...jobName,
+    };
+  };
 
-    const decorator = getDecorator(method, pattern.decorator);
-    const [first] = decorator === undefined ? [] : decorator.getArguments();
-    if (first === undefined) {
-      return { resolution: { unresolved: 'channel-dynamic', text: pattern.decorator } };
-    }
-    if (pattern.channelFrom === 'option') {
-      if (!Node.isObjectLiteralExpression(first)) {
-        return { resolution: { unresolved: 'channel-dynamic', text: first.getText() } };
-      }
-      const property = first.getProperty(pattern.optionKey ?? '');
-      const initializer =
-        property !== undefined && Node.isPropertyAssignment(property)
-          ? property.getInitializer()
-          : undefined;
-      return {
-        resolution:
-          initializer === undefined
-            ? { unresolved: 'channel-dynamic', text: first.getText().slice(0, 60) }
-            : resolveChannelName(initializer, ctx.config),
-      };
-    }
-    return { resolution: resolveChannelName(first, ctx.config) };
+  /**
+   * The message a decorated handler is given, as the description locates it.
+   *
+   * Nothing at all where the description says nothing and the parameters say
+   * nothing either, which is the honest answer and the one the comparison
+   * already knows how to hold: a handler whose message cannot be found is
+   * unchecked, not wrong.
+   */
+  const receivedPayload = (
+    pattern: ConsumerPattern,
+    method: MethodDeclaration,
+  ): string | undefined => {
+    const parameter = payloadParameter(method.getParameters(), pattern);
+    if (parameter === undefined) return undefined;
+    const carried = typeAtPath(parameter.getType(), pattern.payloadPath ?? [], parameter);
+    return carried === undefined ? undefined : ctx.types.collectType(carried, parameter);
   };
 
   const emitConsumer = (
@@ -426,7 +464,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     if (methodId === undefined) return;
     const { line } = lineColOf(method);
     const { resolution, jobName } = consumerChannel(pattern, method, owner);
-    const shaping = shapingOf(owner, spec);
+    const shaping = endpointShapingAt(spec, owner);
     const names = isResolved(resolution) && !isUnreadable(shaping)
       ? shapeChannelNames(resolution.names, shaping)
       : [];
@@ -435,9 +473,27 @@ export const extractBrokers = (ctx: PassContext): void => {
     if (isResolved(resolution) && !isUnreadable(shaping) && names.length === 0) return;
     const consumerId = `consumer:${makeSymbolId(ctx.repo, file, className, method.getName())}`;
 
-    // The framework's own transports already produced an entry for this handler;
-    // pointing at it keeps the two views of the same handler joined.
-    const entryId = ctx.entries.find((entry) => entry.handlerMethod === method)?.node.id ?? null;
+    // The framework's own transports already produced an entry for this
+    // handler; pointing at it keeps the two views of the same handler joined.
+    // Where no entry reader knows the decorator - a worker's `@Process`, a
+    // described bus's `@OnJob` - the way in is drawn here instead, in the same
+    // shape and from the same helper the subscription side uses, so that both
+    // spellings of one address land on one entry with an edge each.
+    //
+    // This is what R126 declined and what R133 made safe. Drawn as it stood
+    // then, the entry turned `no-type-on-receiver` into `receiver requires
+    // orderId; sender does not send it` on `fixtures/object-channels`: a queue
+    // hands its handler the library's envelope while the publishing call may
+    // have been described as taking the message itself, and nothing said which
+    // of the two either end named. Now the description says where in each of
+    // them the message sits, so the envelope is read as an envelope and the
+    // message as the message.
+    const known = ctx.entries.find((entry) => entry.handlerMethod === method)?.node.id ?? null;
+    const entryId =
+      known ??
+      (names.length === 0
+        ? null
+        : entryOfHandler(names, pattern.kind, method, methodId, spec, file, line, receivedPayload(pattern, method)));
     const returns = ctx.types.collectSignature(method).returns;
 
     ctx.builder.addNode({
@@ -470,7 +526,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     if (names.length === 0) {
       const symbol = `${className}.${method.getName()}`;
       if (isUnreadable(shaping)) reportEndpoint(shaping, spec, file, line, symbol);
-      else reportChannel(resolution, file, line, symbol);
+      else if (!entryReaderRefused(file, line, symbol)) reportChannel(resolution, file, line, symbol);
       return;
     }
     // One edge per channel the address reaches: a hole holding a closed set of
@@ -492,6 +548,106 @@ export const extractBrokers = (ctx: PassContext): void => {
     }
   };
 
+  /**
+   * What a handler declares it is given, however the handler is written.
+   *
+   * A method states it directly; a field holding an arrow states it on the
+   * arrow, which is how a handler keeps its `this` (R29) and is the shape the
+   * chain from a subscription most often ends on. Anything else declares
+   * nothing here, and says so by answering nothing rather than by answering an
+   * empty signature.
+   */
+  const signatureOf = (
+    handler: ClassMethod,
+  ): { params: TypeRef[]; returns: TypeRef } | undefined => {
+    if (Node.isMethodDeclaration(handler)) return ctx.types.collectSignature(handler);
+    const written = handler.getInitializer();
+    if (written === undefined) return undefined;
+    if (!Node.isArrowFunction(written) && !Node.isFunctionExpression(written)) return undefined;
+    return ctx.types.collectSignature(written);
+  };
+
+  /**
+   * The way in a handler has, so that what it receives can be read.
+   *
+   * A handler declared by a decorator the framework's own entry reader knows
+   * already has one: that reader makes an `entry` node for the pattern and
+   * draws `handles` from it to the method, and everything downstream that asks
+   * what a receiver is given asks that edge. A handler registered by a **call**
+   * had none, so the question had nothing to answer with and every boundary
+   * through it came back `no-type-on-receiver` - the row for a shape that
+   * cannot be read at all, given for a shape written plainly in the source. The
+   * parameter of the function handed to the call is the shape; what was missing
+   * was a place to put it.
+   *
+   * A handler marked with a decorator **no** entry reader knows - a worker's
+   * `@Process`, a described bus's `@OnJob` - was in exactly the same position,
+   * and gets its way in from here too. The gap was never call versus decorator;
+   * it was whether any reader knew the spelling (R133).
+   *
+   * So the same two facts are drawn here, in the same shape the entry side
+   * uses: `entry:<service>:<kind>:<address>` and one `handles` edge carrying
+   * the handler's signature. It is written here rather than in an entry reader
+   * because only this pass knows a subscription happened, and the signature is
+   * the target method's - the rule the types pass already applies to every
+   * other `handles` edge - rather than a second judgement about what a receiver
+   * receives. A subscription whose handler could not be followed lands on the
+   * method that registered it, which declares no payload, so the row keeps
+   * meaning what it says.
+   *
+   * The two spellings may reach the same node, and should: the id is the address
+   * and the service, so a repository that declares one handler on `orders:created`
+   * and registers another by a call has one way in with two `handles` edges out
+   * of it, which is what the graph already says about a queue with two handlers.
+   *
+   * The kind is the transport's own word where the model has that word for a
+   * way in, and `event` otherwise: a redis `message` and a socket `event` are
+   * the same one-way arrival, and only the core says which kinds exist.
+   */
+  const entryOfHandler = (
+    names: readonly string[],
+    kind: string,
+    handlerMethod: ClassMethod,
+    handlerId: string,
+    spec: BrokerSpec,
+    file: string,
+    line: number,
+    body?: string,
+  ): string | null => {
+    const entryKind: EntryKind = isEntryKind(kind) ? kind : 'event';
+    const signature = signatureOf(handlerMethod);
+    let first: string | null = null;
+    for (const name of names) {
+      const id = makeEntryId(ctx.repo, entryKind, name);
+      ctx.builder.addNode({
+        id,
+        type: 'entry',
+        label: `${entryKind} ${name}`,
+        repo: ctx.repo,
+        file,
+        line,
+        kind: entryKind,
+        meta: { pattern: name, adapter: spec.name },
+      });
+      ctx.builder.addEdge({
+        from: id,
+        to: handlerId,
+        type: 'handles',
+        confidence: 'static',
+        file,
+        line,
+        ...(signature === undefined ? {} : signature),
+        // Where the handler's parameters are not the message itself, the
+        // message is named here: the same key a route's body is named with, so
+        // that everything downstream asking what a receiver is given keeps
+        // asking one question (R133).
+        ...(body === undefined ? {} : { meta: { body } }),
+      });
+      first ??= id;
+    }
+    return first;
+  };
+
   const emitSubscribers = (
     method: MethodDeclaration,
     owner: ClassDeclaration,
@@ -509,17 +665,20 @@ export const extractBrokers = (ctx: PassContext): void => {
         for (const call of calls) {
           const callee = call.getExpression();
           if (!Node.isPropertyAccessExpression(callee)) continue;
-          if (callee.getName() !== pattern.method) continue;
+          const spelling = callee.getName();
+          if (!methodMatches(spelling, pattern.method)) continue;
           if (!receiverIsFrom(callee.getExpression(), pattern)) continue;
 
           const args = call.getArguments();
-          const channelArg = args[pattern.channelArg];
-          const resolution =
-            channelArg === undefined
-              ? { unresolved: 'channel-dynamic' as const, text: call.getText().slice(0, 60) }
-              : resolveChannelName(channelArg, ctx.config);
+          const resolution = channelAt(
+            call,
+            channelLocators(pattern),
+            contextOf(callee.getExpression(), owner),
+            ctx.config,
+            call.getText().slice(0, 60),
+          );
           const { line } = lineColOf(call);
-          const shaping = shapingOf(owner, spec);
+          const shaping = endpointShapingAt(spec, owner, callee.getExpression());
           const names = isResolved(resolution) && !isUnreadable(shaping)
             ? shapeChannelNames(resolution.names, shaping)
             : [];
@@ -563,6 +722,19 @@ export const extractBrokers = (ctx: PassContext): void => {
           if (handlerId === undefined) continue;
           const consumerId = `consumer:${makeSymbolId(ctx.repo, file, className, handlerMethod.getName())}`;
 
+          ctx.ensureMethodNode(handlerMethod);
+          // Drawn before the consumer, because the consumer records which entry
+          // it answers and a `null` there is exactly what this used to say.
+          const entryId = entryOfHandler(
+            names,
+            pattern.kind,
+            handlerMethod,
+            handlerId,
+            spec,
+            file,
+            line,
+          );
+
           ctx.builder.addNode({
             id: consumerId,
             type: 'consumer',
@@ -571,9 +743,10 @@ export const extractBrokers = (ctx: PassContext): void => {
             file,
             line,
             kind: pattern.kind,
-            meta: { kind: pattern.kind, adapter: spec.name, decorator: pattern.method, entryId: null },
+            // The spelling written at the call site, not the first the
+            // description happens to list: what a reader opening the file sees.
+            meta: { kind: pattern.kind, adapter: spec.name, decorator: spelling, entryId },
           });
-          ctx.ensureMethodNode(handlerMethod);
           ctx.builder.addEdge({
             from: consumerId,
             to: handlerId,
@@ -610,7 +783,7 @@ export const extractBrokers = (ctx: PassContext): void => {
   };
 
   const matches = (pattern: CallPattern, receiver: TsNode, method: string): boolean =>
-    pattern.method === method && receiverIsFrom(receiver, pattern);
+    methodMatches(method, pattern.method) && receiverIsFrom(receiver, pattern);
 
   /**
    * Receiving, for a body that is a method of an indexed class.
@@ -648,10 +821,10 @@ export const extractBrokers = (ctx: PassContext): void => {
 
     for (const spec of specs) {
       for (const pattern of spec.consumerPatterns) {
-        if (pattern.channelFrom === 'class-decorator' && pattern.nameArgIndex === undefined) {
+        if (pattern.classDecorator !== undefined && pattern.nameArgIndex === undefined) {
           // A worker class handles its queue through one named method.
           if (method.getName() !== 'process') continue;
-          if (getDecorator(owner, pattern.classDecorator ?? '') === undefined) continue;
+          if (getDecorator(owner, pattern.classDecorator) === undefined) continue;
         } else if (findDecorators(method, { names: [pattern.decorator] }).length === 0) {
           continue;
         }

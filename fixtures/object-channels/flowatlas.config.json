@@ -1,0 +1,41 @@
+{
+  "services": [
+    { "name": "api", "repo": "./api", "type": "nestjs" },
+    { "name": "worker", "repo": "./worker", "type": "nestjs" }
+  ],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "house-jobs",
+          "channelKind": "queue",
+          "producers": [
+            {
+              "receiverType": ["JobBus"],
+              "method": "queue",
+              "channel": [{ "kind": "argument-property", "index": 0, "key": "name" }],
+              "payloadArg": 0,
+              "payloadPath": ["data"],
+              "kind": "job"
+            },
+            {
+              "receiverType": ["MailQueue", "DigestQueue", "TenantQueue"],
+              "method": "push",
+              "channel": [{ "kind": "base-constructor-argument", "index": 0 }],
+              "payloadArg": 0,
+              "kind": "job"
+            }
+          ],
+          "consumers": [
+            {
+              "decorator": "OnJob",
+              "channel": [{ "kind": "argument-property", "index": 0, "key": "name" }],
+              "kind": "job"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

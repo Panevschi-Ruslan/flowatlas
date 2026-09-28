@@ -1,0 +1,33 @@
+{
+  "services": [
+    { "name": "orders", "repo": "./orders", "type": "nestjs" },
+    {
+      "name": "billing",
+      "document": { "kind": "asyncapi", "path": "./contracts/billing.asyncapi.json" }
+    },
+    {
+      "name": "analytics",
+      "document": { "kind": "asyncapi", "path": "./contracts/analytics.asyncapi.json" }
+    }
+  ],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "house-bus",
+          "channelKind": "channel",
+          "producers": [
+            {
+              "receiverType": ["EventBus"],
+              "method": "publish",
+              "channelArg": 0,
+              "payloadArg": 1,
+              "kind": "event"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

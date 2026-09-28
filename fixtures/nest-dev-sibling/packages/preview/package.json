@@ -1,0 +1,10 @@
+{
+  "name": "@dev-sibling/preview",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A browser tool for looking at the mailer's messages while writing them. A devDependency of the mailer, and nothing the API runs.",
+  "type": "module",
+  "dependencies": {
+    "react": "^19.0.0"
+  }
+}

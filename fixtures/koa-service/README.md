@@ -35,7 +35,7 @@ verb.
 
 ## The routes
 
-| Site | Entry | `handlerVia` | `meta.middleware` |
+| Site | Entry | `handlerVia` | `guarded_by`, layer `middleware` |
 |---|---|---|---|
 | `publicRouter.get('/health', …)` | `GET /public/health` | `inline` | none |
 | `publicRouter.get('/summary', …)` | `GET /public/summary` | `inline` | none |

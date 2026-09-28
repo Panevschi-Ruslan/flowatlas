@@ -1,4 +1,4 @@
-import type { FieldDeclaration, FieldMetaReader, FieldMetaResult } from '@flowatlas/core';
+import type { FieldDeclaration, FieldMetaReader, FieldMetaResult, UnreadAnnotation } from '@flowatlas/core';
 import type { Decorator, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { decoratorArgs, decoratorModule, decoratorName } from '@flowatlas/core';
@@ -84,6 +84,47 @@ const arrowTarget = (decorator: Decorator): TsNode | undefined => {
   return Node.isIdentifier(body) ? body : undefined;
 };
 
+/**
+ * What each serialisation annotation leaves unread when its argument cannot be.
+ *
+ * `@Transform` always does: its argument is a function, and what the field
+ * carries on the wire is whatever that function returns. `@Expose` and `@Type`
+ * only do when what they were handed is not something written in place — a
+ * name nobody can follow, a class chosen at run time. Each still records that
+ * it was there; this is the row saying what that record does not cover, which
+ * P02 section 10 promised and nothing wrote (R140).
+ */
+const UNREAD_HINTS: ReadonlyMap<string, string> = new Map([
+  [
+    'Transform',
+    'A function rewrites this field, so what it carries on the wire is not read. The field is compared as its declared type.',
+  ],
+  ['Expose', 'The options could not be read, so a rename on the wire is not known. Write them as a literal.'],
+  ['Type', 'The class this field is turned into could not be read. Write it as `@Type(() => SomeClass)`.'],
+]);
+
+/** Whether a serialisation annotation's argument was read, by its own rule. */
+const wasArgumentRead = (name: string, decorator: Decorator): boolean => {
+  if (name === 'Transform') return false;
+  if (decorator.getArguments().length === 0) return true;
+  if (name === 'Expose') return decoratorArgs(decorator)[0]?.resolved === true;
+  if (name === 'Type') return arrowTarget(decorator) !== undefined;
+  return true;
+};
+
+const unreadAt = (property: FieldDeclaration, name: string, decorator: Decorator): UnreadAnnotation | undefined => {
+  const hint = UNREAD_HINTS.get(name);
+  if (hint === undefined || wasArgumentRead(name, decorator)) return undefined;
+  const owner = property.getParent();
+  const ownerName = Node.isClassDeclaration(owner) ? owner.getName() : undefined;
+  return {
+    at: decorator,
+    reason: 'decorator-arg-dynamic',
+    hint,
+    symbol: ownerName === undefined ? property.getName() : `${ownerName}.${property.getName()}`,
+  };
+};
+
 export const createNestFieldMetaReader = (
   options: NestFieldMetaOptions = {},
 ): FieldMetaReader => ({
@@ -91,6 +132,7 @@ export const createNestFieldMetaReader = (
   read: (property: FieldDeclaration): FieldMetaResult => {
     const validators: string[] = [];
     const meta: Record<string, unknown> = {};
+    const unread: UnreadAnnotation[] = [];
     let optional = false;
 
     // Only a class property can carry annotations; an interface member cannot.
@@ -101,6 +143,8 @@ export const createNestFieldMetaReader = (
       if (source === 'other') continue;
 
       if (source !== 'validator' && TRANSFORMER_NAMES.has(name)) {
+        const row = unreadAt(property, name, decorator);
+        if (row !== undefined) unread.push(row);
         if (name === 'Exclude') meta['exclude'] = true;
         if (name === 'Transform') meta['transform'] = true;
         if (name === 'Expose') {
@@ -142,6 +186,7 @@ export const createNestFieldMetaReader = (
     return {
       ...(optional ? { optional } : {}),
       ...(Object.keys(meta).length > 0 ? { meta } : {}),
+      ...(unread.length > 0 ? { unread } : {}),
     };
   },
 });

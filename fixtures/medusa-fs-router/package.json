@@ -1,0 +1,8 @@
+{
+  "name": "medusa-fs-router",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@medusajs/framework": "^2.21.1"
+  }
+}

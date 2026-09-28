@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T18:35:18.770Z",
+  "configHash": "b1d164ec2ac5",
+  "services": [
+    {
+      "name": "angular-basic",
+      "repo": ".",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 49,
+      "edges": 32,
+      "types": 2,
+      "unresolved": 6,
+      "durationMs": 0
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 5,
+    "resolved": 0,
+    "unresolved": 5,
+    "byReason": {
+      "api-path-dynamic": 1,
+      "target-route-not-found": 4
+    }
+  },
+  "channels": {
+    "total": 1,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": [
+      "channel:order.updated"
+    ]
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 27,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /orders",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /orders */.",
+      "symbol": "ui_api_call:angular-basic#src/app/orders-api.service.ts:27:12"
+    },
+    {
+      "service": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 32,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /orders",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /orders */.",
+      "symbol": "ui_api_call:angular-basic#src/app/orders-api.service.ts:32:12"
+    },
+    {
+      "service": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 37,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves DELETE /orders/:param",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls DELETE /orders/:param */.",
+      "symbol": "ui_api_call:angular-basic#src/app/orders-api.service.ts:37:12"
+    },
+    {
+      "service": "angular-basic",
+      "file": "src/app/orders-api.service.ts",
+      "line": 55,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves PATCH /orders/:param/status",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls PATCH /orders/:param/status */.",
+      "symbol": "ui_api_call:angular-basic#src/app/orders-api.service.ts:55:3"
+    }
+  ],
+  "totals": {
+    "nodes": 49,
+    "edges": 32,
+    "types": 2,
+    "unresolved": 10
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "asyncapi": "2.6.0",
+  "info": {
+    "title": "Analytics",
+    "version": "1.1.0"
+  },
+  "channels": {
+    "orders.created": {
+      "description": "Not an operation, and must not be read as one.",
+      "publish": {
+        "operationId": "recordOrderCreated",
+        "summary": "Count an order",
+        "message": {
+          "name": "OrderCreated",
+          "payload": {
+            "type": "object",
+            "required": ["orderId"],
+            "properties": {
+              "orderId": { "type": "string" },
+              "customerId": { "type": "string" },
+              "total": { "type": "number" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

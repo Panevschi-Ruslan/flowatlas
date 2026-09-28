@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "repo": "fastify-service",
-  "generatedAt": "2026-09-24T22:21:50.649Z",
+  "generatedAt": "2026-09-27T17:37:27.803Z",
   "nodes": [
     {
       "id": "db_query:fastify-service#src/orders/orders.repository.ts:12:12",
@@ -75,10 +75,6 @@
         "adapter": "fastify-routes",
         "registration": "app.route",
         "middlewareRead": true,
-        "middleware": [
-          "authenticate",
-          "withTenant"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -97,10 +93,6 @@
         "adapter": "fastify-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "middleware": [
-          "authenticate",
-          "withTenant"
-        ],
         "handlerVia": "function"
       }
     },
@@ -119,10 +111,6 @@
         "adapter": "fastify-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "middleware": [
-          "authenticate",
-          "withTenant"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -177,13 +165,17 @@
         "adapter": "fastify-routes",
         "registration": "app.post",
         "middlewareRead": true,
-        "middleware": [
-          "authenticate",
-          "withTenant",
-          "requireAdmin"
-        ],
         "handlerVia": "inline"
       }
+    },
+    {
+      "id": "fastify-service#src/app.ts:authenticate",
+      "type": "middleware",
+      "label": "authenticate",
+      "repo": "fastify-service",
+      "file": "src/app.ts",
+      "line": 17,
+      "kind": "function"
     },
     {
       "id": "fastify-service#src/orders/orders.controller.ts:listOrders",
@@ -251,6 +243,24 @@
       "line": 38
     },
     {
+      "id": "fastify-service#src/orders/orders.routes.ts:requireAdmin",
+      "type": "middleware",
+      "label": "requireAdmin",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 35,
+      "kind": "function"
+    },
+    {
+      "id": "fastify-service#src/orders/orders.routes.ts:withTenant",
+      "type": "middleware",
+      "label": "withTenant",
+      "repo": "fastify-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 23,
+      "kind": "function"
+    },
+    {
       "id": "fastify-service#src/public/public.routes.ts:GET /health@10",
       "type": "function",
       "label": "GET /health@10",
@@ -274,6 +284,8 @@
       "meta": {
         "stats": {
           "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
           "classes": 1,
           "skippedExternalCalls": {
             "pg": 3,
@@ -321,11 +333,53 @@
     },
     {
       "from": "entry:fastify-service:http:DELETE:/orders/:param",
+      "to": "fastify-service#src/app.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 17,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.addHook"
+      }
+    },
+    {
+      "from": "entry:fastify-service:http:DELETE:/orders/:param",
       "to": "fastify-service#src/orders/orders.routes.ts:DELETE /:orderId@48",
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
       "line": 48
+    },
+    {
+      "from": "entry:fastify-service:http:DELETE:/orders/:param",
+      "to": "fastify-service#src/orders/orders.routes.ts:withTenant",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 23,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.addHook"
+      }
+    },
+    {
+      "from": "entry:fastify-service:http:GET:/orders",
+      "to": "fastify-service#src/app.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 17,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.addHook"
+      }
     },
     {
       "from": "entry:fastify-service:http:GET:/orders",
@@ -336,12 +390,54 @@
       "line": 5
     },
     {
+      "from": "entry:fastify-service:http:GET:/orders",
+      "to": "fastify-service#src/orders/orders.routes.ts:withTenant",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 23,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.addHook"
+      }
+    },
+    {
+      "from": "entry:fastify-service:http:GET:/orders/:param",
+      "to": "fastify-service#src/app.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 17,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.addHook"
+      }
+    },
+    {
       "from": "entry:fastify-service:http:GET:/orders/:param",
       "to": "fastify-service#src/orders/orders.routes.ts:GET /:orderId@29",
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
       "line": 29
+    },
+    {
+      "from": "entry:fastify-service:http:GET:/orders/:param",
+      "to": "fastify-service#src/orders/orders.routes.ts:withTenant",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 23,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.addHook"
+      }
     },
     {
       "from": "entry:fastify-service:http:GET:/public/health",
@@ -361,11 +457,53 @@
     },
     {
       "from": "entry:fastify-service:http:POST:/orders",
+      "to": "fastify-service#src/app.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 17,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.addHook"
+      }
+    },
+    {
+      "from": "entry:fastify-service:http:POST:/orders",
       "to": "fastify-service#src/orders/orders.routes.ts:POST /@38",
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
       "line": 38
+    },
+    {
+      "from": "entry:fastify-service:http:POST:/orders",
+      "to": "fastify-service#src/orders/orders.routes.ts:requireAdmin",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 35,
+      "meta": {
+        "order": 2,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "app.post"
+      }
+    },
+    {
+      "from": "entry:fastify-service:http:POST:/orders",
+      "to": "fastify-service#src/orders/orders.routes.ts:withTenant",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 23,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.addHook"
+      }
     },
     {
       "from": "fastify-service#src/orders/orders.controller.ts:listOrders",
@@ -442,7 +580,7 @@
       "file": "src/orders/orders.routes.ts",
       "line": 52,
       "reason": "route-path-dynamic",
-      "hint": "Give the route a string literal or a const string; a computed path cannot be matched against callers.",
+      "hint": "Write the path as a literal, a const, or a + or template of them, and every path of a list the same way; a path that needs a call or a run-time value to compute is not recorded as a route at all, so no caller can reach it.",
       "symbol": "app.get(archivePath('old'))",
       "adapter": "fastify-routes"
     }

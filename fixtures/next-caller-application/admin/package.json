@@ -1,0 +1,8 @@
+{
+  "name": "next-caller-application-admin",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "react": "^19.0.0"
+  }
+}

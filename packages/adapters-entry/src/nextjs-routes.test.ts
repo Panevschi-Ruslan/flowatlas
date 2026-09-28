@@ -10,7 +10,8 @@ import {
 } from '@flowatlas/core';
 import { Project } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
-import { APP_PAGES, APP_ROUTER, PAGES_API, routePathOfFile } from './nextjs-paths.js';
+import { routePathOfFile } from './fs-routes.js';
+import { APP_PAGES, APP_ROUTER, PAGES_API } from './nextjs-paths.js';
 import { nextjsRoutesAdapter } from './nextjs-routes.js';
 
 interface Read {
@@ -100,6 +101,133 @@ describe('ways in a Next.js repository declares by where its files are', () => {
     expect(ids(read)).toEqual(['entry:shop:http:GET:/api/orders', 'entry:shop:http:POST:/api/orders']);
     const [first] = read.entries;
     expect(first?.handler !== undefined && isFunctionHandler(first.handler)).toBe(true);
+  });
+
+  // The dominant spelling in a real repository, and the one that read as a way
+  // in with nothing behind it: every route in dub is written this way, and the
+  // entry was right while the handler was missing, so nothing past the boundary
+  // was attached to the route (R72).
+  it('names the code behind a verb whose value a call built', () => {
+    const read = extract({
+      '/app/api/orders/route.ts': `
+        import { withWorkspace } from '../../../lib/auth';
+        export const GET = withWorkspace(async (req) => null);
+      `,
+      '/lib/auth.ts': `export const withWorkspace = (fn: unknown) => fn;`,
+    });
+    expect(ids(read)).toEqual(['entry:shop:http:GET:/api/orders']);
+    const handler = read.entries[0]?.handler;
+    // Named after the export, because that is the node the function index gives
+    // such an export, and the two readings are one function for that reason.
+    expect(handler !== undefined && isFunctionHandler(handler) ? handler.functionName : undefined).toBe(
+      'GET',
+    );
+    expect(read.entries[0]?.meta?.['handlerVia']).toBe('function');
+  });
+
+  // A verb whose value is not built by a call is still a value, and a guess
+  // here would be a handler nobody can point at.
+  it('leaves a verb nobody can name as the row it already produced', () => {
+    const read = extract({
+      '/app/api/orders/route.ts': `
+        import { handlers } from '../../../lib/handlers';
+        export const GET = handlers.orders;
+      `,
+      '/lib/handlers.ts': `export const handlers = { orders: async () => null };`,
+    });
+    expect(ids(read)).toEqual(['entry:shop:http:GET:/api/orders']);
+    expect(read.entries[0]?.handler).toBeUndefined();
+    expect(read.entries[0]?.meta?.['handlerVia']).toBe('unread');
+  });
+
+  // Three spellings that were a way in with nothing behind it after R72, and
+  // nineteen of dub's six hundred and fifty-three verbs between them (R74).
+  it('follows a verb written as the name of another verb', () => {
+    const read = extract({
+      '/app/api/orders/route.ts': `
+        export async function PATCH(req: Request) { return null; }
+        export const PUT = PATCH;
+      `,
+    });
+    const put = read.entries.find((entry) => entry.meta?.['method'] === 'PUT');
+    // The node the verb it names already has, rather than one of its own.
+    expect(
+      put?.handler !== undefined && isFunctionHandler(put.handler)
+        ? put.handler.functionName
+        : undefined,
+    ).toBe('PATCH');
+    expect(put?.meta?.['handlerVia']).toBe('function');
+  });
+
+  it('reads an alias of a built verb as a built verb in its turn', () => {
+    const read = extract({
+      '/app/api/cron/route.ts': `
+        import { withCron } from '../../../lib/cron';
+        export const GET = withCron(async () => null);
+        export const POST = GET;
+      `,
+      '/lib/cron.ts': `export const withCron = (fn: unknown) => fn;`,
+    });
+    const post = read.entries.find((entry) => entry.meta?.['method'] === 'POST');
+    expect(
+      post?.handler !== undefined && isFunctionHandler(post.handler)
+        ? post.handler.functionName
+        : undefined,
+    ).toBe('GET');
+  });
+
+  // An alias of something this repository does not declare is still a way in
+  // with nothing to point at, and saying otherwise would draw an edge to a node
+  // that does not exist.
+  it('leaves a verb aliased to a package function unread', () => {
+    const read = extract({
+      '/app/api/auth/route.ts': `
+        import { handler } from 'next-auth';
+        export const GET = handler;
+      `,
+    });
+    expect(read.entries[0]?.handler).toBeUndefined();
+    expect(read.entries[0]?.meta?.['handlerVia']).toBe('unread');
+  });
+
+  it('names the code behind a built value re-exported under two verbs', () => {
+    const read = extract({
+      '/app/api/auth/route.ts': `
+        import NextAuth from 'next-auth';
+        const handler = NextAuth({});
+        export { handler as GET, handler as POST };
+      `,
+    });
+    expect(ids(read)).toEqual([
+      'entry:shop:http:GET:/api/auth',
+      'entry:shop:http:POST:/api/auth',
+    ]);
+    // Both verbs are the one value, so both point at the one node, named as it
+    // was declared, which is the name the function index gives it too.
+    for (const entry of read.entries) {
+      expect(
+        entry.handler !== undefined && isFunctionHandler(entry.handler)
+          ? entry.handler.functionName
+          : undefined,
+      ).toBe('handler');
+      expect(entry.meta?.['handlerVia']).toBe('function');
+    }
+  });
+
+  it('names the code behind a verb taken out of a built value', () => {
+    const read = extract({
+      '/app/api/workflows/route.ts': `
+        import { serve } from '../../../lib/serve';
+        export const { POST } = serve<string>(async () => null);
+      `,
+      '/lib/serve.ts': `export const serve = <T>(fn: unknown) => ({ POST: fn });`,
+    });
+    expect(ids(read)).toEqual(['entry:shop:http:POST:/api/workflows']);
+    const handler = read.entries[0]?.handler;
+    expect(
+      handler !== undefined && isFunctionHandler(handler) ? handler.functionName : undefined,
+    ).toBe('POST');
+    expect(read.entries[0]?.meta?.['handlerVia']).toBe('function');
   });
 
   // Aliasing and re-exporting are how a repository shares one handler between
@@ -288,8 +416,8 @@ describe('ways in a Next.js repository declares by where its files are', () => {
     });
     const guarded = read.entries.find((entry) => entry.meta?.['path'] === '/api/orders');
     const open = read.entries.find((entry) => entry.meta?.['path'] === '/health');
-    expect(guarded?.meta?.['middleware']).toEqual(['middleware.ts']);
-    expect(open?.meta?.['middleware']).toBeUndefined();
+    expect(guarded?.wrapping?.map((one) => one.label)).toEqual(['middleware.ts']);
+    expect(open?.wrapping).toBeUndefined();
   });
 
   // A matcher written as a regular expression is the framework's own example,
@@ -303,7 +431,7 @@ describe('ways in a Next.js repository declares by where its files are', () => {
       `,
       '/app/api/orders/route.ts': `export async function GET() { return null; }`,
     });
-    expect(read.entries[0]?.meta?.['middleware']).toBeUndefined();
+    expect(read.entries[0]?.wrapping).toBeUndefined();
     expect(read.unresolved.map((row) => row.reason)).toContain('middleware-matcher-unread');
   });
 
@@ -312,6 +440,6 @@ describe('ways in a Next.js repository declares by where its files are', () => {
       '/middleware.ts': `export function middleware() { return undefined; }`,
       '/app/api/orders/route.ts': `export async function GET() { return null; }`,
     });
-    expect(read.entries[0]?.meta?.['middleware']).toEqual(['middleware.ts']);
+    expect(read.entries[0]?.wrapping?.map((one) => one.label)).toEqual(['middleware.ts']);
   });
 });

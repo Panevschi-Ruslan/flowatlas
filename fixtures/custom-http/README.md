@@ -22,12 +22,20 @@ What the fixture proves, in the order the output shows it:
 - a second description, `misspelt-routes`, names a type that does not exist.
   It is there on purpose. The failure mode of a configuration-driven reader is
   silence that reads like a clean repository, so it produces a row naming which
-  part of it matched nothing rather than a quiet zero.
+  part of it matched nothing rather than a quiet zero;
+- there is no `adapters.force` in the configuration. The descriptions name
+  `minihttp`, this repository declares it, and detection is handed the
+  configuration, so the described reader recognises this repository by itself.
+  Before R66 an adapter was offered the manifest alone, a description could not
+  turn its own reader on, and this line of configuration was the price of
+  reading the fixture at all.
 
 The service is typed `nestjs` because that is the name of the reader that opens
 a TypeScript server repository, not because anything here is written in it —
 `hono-worker` does the same. That the type list has no name for "a TypeScript
-server built on something you describe yourself" is a wart, and it is the
-second one this fixture shows: the description cannot turn its own reader on,
-because an adapter is offered the manifest and not the configuration, so
-`adapters.force.entry` is what puts it there.
+server built on something you describe yourself" is still a wart, and it is
+deliberately not fixed by adding one: the value's only job is to choose a
+reader, this repository really is read by that reader, and a `type` value is
+user-facing and permanent. The question `type` asks is the thing that is wrong
+— it asks a person to name a reader — and a further value would make that
+question harder to withdraw rather than answer it.

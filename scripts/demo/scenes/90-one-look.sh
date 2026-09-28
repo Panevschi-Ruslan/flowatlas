@@ -6,7 +6,8 @@ note "read all four with the TypeScript compiler and join what they say"
 say "flowatlas build --no-cache" 4.5
 note "what happens when someone clicks checkout? ask by the word you know"
 say "flowatlas flow checkout" 3.2
+checkout=$(node_id ui_action handling 'web#src/app/checkout.component.ts:CheckoutComponent.checkout')
 note "it hands back the id, so follow that"
-say "flowatlas flow 'ui_action:web#src/app/checkout.component.ts:15:22' --format tree --depth 20" 4
+say "flowatlas flow '$checkout' --format tree --depth 20" 4
 note "web → gateway → orders. three repositories, one chain, nothing guessed"
 pause 3

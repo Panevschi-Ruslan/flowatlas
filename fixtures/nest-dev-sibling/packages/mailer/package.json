@@ -1,0 +1,11 @@
+{
+  "name": "@dev-sibling/mailer",
+  "version": "0.0.0",
+  "private": true,
+  "description": "What the API runs. Its preview tool is how it is developed, not what it ships.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "devDependencies": {
+    "@dev-sibling/preview": "workspace:*"
+  }
+}

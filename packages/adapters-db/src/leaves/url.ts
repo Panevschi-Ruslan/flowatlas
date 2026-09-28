@@ -3,7 +3,7 @@ import type { Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { evaluateExpression } from '@flowatlas/extractor-nestjs';
 import { readConfig } from './config.js';
-import { deref, rootConfigKey } from './trace.js';
+import { deref, rootConfigKey, type SplitAddress } from './trace.js';
 
 export interface UrlInfo {
   /** The address as written, with interpolations shown as `${…}`. */
@@ -114,4 +114,41 @@ export const analyzeUrl = (node: TsNode): UrlInfo => {
   const absolute = fromAbsolute(rest);
   if (absolute !== null) return { ...absolute, url: written, baseUrlEnv };
   return { url: written, path: routePathOf(rest), baseUrlEnv, host: null };
+};
+
+/** `scheme://host` at the start of an address, and the host inside it. */
+const ORIGIN = /^([a-z][a-z0-9+.-]*:\/\/([^/?#]+))/i;
+
+/**
+ * Puts an address back together from its two halves.
+ *
+ * The request knew the fixed half and a caller knew the part it fills in;
+ * neither knew the whole address, and the request is only useful once they are
+ * joined. What the fixed half states - a settings key it is rooted at, or a
+ * host written outright - belongs to the request, and the caller only fills the
+ * hole (R161). Reading the host as the first segment of a path is how
+ * `https://host/items/${id}` used to become `/https:/host/items/…`.
+ */
+export const composeAddress = (info: UrlInfo, split?: SplitAddress): UrlInfo => {
+  if (split === undefined) return info;
+  if (info.host !== null) return info;
+  const origin = ORIGIN.exec(split.before);
+  const stated = origin?.[1] ?? '';
+  const before = split.before.slice(stated.length);
+  const path = info.path === null ? null : routePathOf(before + info.path + split.after);
+  if (origin !== null) {
+    return {
+      url: path === null ? info.url : `${stated}${path}`,
+      path,
+      baseUrlEnv: null,
+      host: (origin[2] ?? '').toLowerCase(),
+    };
+  }
+  const env = split.baseUrlEnv ?? info.baseUrlEnv;
+  return {
+    url: path === null ? info.url : `${env === null ? '' : `\${${env}}`}${path}`,
+    path,
+    baseUrlEnv: env,
+    host: null,
+  };
 };

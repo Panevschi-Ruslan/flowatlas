@@ -15,3 +15,12 @@ export const PATCH = async (
   const order = await patchOrder(context.params.id, body);
   return Response.json(order);
 };
+
+/**
+ * The older spelling of the same route, written as the verb it replaced.
+ *
+ * The initializer is a name rather than a function or a call, so nothing about
+ * this declaration says what answers it; the verb it names does, and both ways
+ * in are the same code (R74).
+ */
+export const PUT = PATCH;

@@ -1,0 +1,11 @@
+{
+  "name": "koa-plugin-registry",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@koa/router": "^13.1.0",
+    "koa": "^2.15.4",
+    "koa-mount": "^4.2.0",
+    "plugin-host": "^1.0.0"
+  }
+}

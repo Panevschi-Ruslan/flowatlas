@@ -18,7 +18,7 @@ describe('the build stamp the cache is keyed on', () => {
     // was not told, so a tool rebuilt with it answered from the cache written
     // before it existed. Whatever is added there is covered here, or this fails
     // rather than the cache quietly going stale.
-    for (const reader of new Set(Object.values(EXTRACTORS))) {
+    for (const reader of new Set(EXTRACTORS.values())) {
       expect(READER_PACKAGES).toContain(reader);
     }
   });

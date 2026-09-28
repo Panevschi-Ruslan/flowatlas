@@ -1,0 +1,15 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs"
+    },
+    {
+      "name": "billing",
+      "openapi": "./contracts/billing.json",
+      "baseUrlEnv": ["BILLING_URL"]
+    }
+  ],
+  "output": ".flowatlas"
+}

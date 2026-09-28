@@ -1,0 +1,8 @@
+{
+  "name": "@dev-sibling/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The API's own end-to-end helpers: a devDependency of the service itself, which stays in its extent.",
+  "type": "module",
+  "main": "./src/index.ts"
+}

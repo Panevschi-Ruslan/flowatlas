@@ -14,7 +14,7 @@ markers: 0 errors, 3 warnings:
 
 desync: none
 
-contracts: no errors, 0 excused, 4 boundary directions nothing could be compared on
+contracts: no errors, 0 excused, 1 boundary directions nothing could be compared on
 
 baseline: missing (0 accepted, 0 now, +0)
   no baseline at <root>/fixtures/folded-channels/flowatlas.baseline.json; run flowatlas doctor --accept to write one

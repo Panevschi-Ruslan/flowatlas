@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T12:28:03.650Z",
+  "configHash": "ca43abf5e7cd",
+  "services": [
+    {
+      "name": "analytics",
+      "repo": "contracts/analytics.asyncapi.json",
+      "type": "declared",
+      "extractor": "asyncapi-document",
+      "nodes": 4,
+      "edges": 3,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 7
+    },
+    {
+      "name": "billing",
+      "repo": "contracts/billing.asyncapi.json",
+      "type": "declared",
+      "extractor": "asyncapi-document",
+      "nodes": 7,
+      "edges": 5,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 9
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 14,
+      "edges": 7,
+      "types": 2,
+      "unresolved": 1,
+      "durationMs": 1362
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 5,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 22,
+    "edges": 15,
+    "types": 5,
+    "unresolved": 1
+  }
+}

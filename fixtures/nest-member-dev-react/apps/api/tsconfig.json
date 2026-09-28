@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "jsx": "react-jsx",
+    "strict": false,
+    "skipLibCheck": true,
+    "types": [],
+    "paths": {
+      "@member-dev-react/mailer": ["../../packages/mailer/src/index.ts"]
+    }
+  },
+  "include": ["src"]
+}

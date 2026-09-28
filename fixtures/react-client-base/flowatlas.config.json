@@ -1,0 +1,10 @@
+{
+  "services": [
+    {
+      "name": "app",
+      "repo": ".",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

@@ -38,16 +38,43 @@ tie-breaker.
 | `client.emit(SharedTopics.OrderArchived, dto)` | 72 | `order.archived` | `event` | static | — |
 | `client.emit(COMPUTED_TOPIC, dto)` | 78 | `order.computed` | `event` | static | — |
 | `client.emit(REGION_TOPIC, dto)` | 85 | none | `event` | — | `channel-const-unresolved` |
-| `client.emit(LEGACY_TOPIC, dto)` | 91 | none | `event` | — | `channel-const-unresolved` |
-| `client.emit(this.config.get('ORDER_TOPIC'), dto)` | 99 | none | `event` | heuristic | `channel-from-config` |
-| `client.emit(topic, dto)` | 104 | none | `event` | heuristic | `channel-dynamic` |
-| `client.emit(...args)` | 110 | none | `event` | heuristic | `channel-dynamic` |
-| `firstValueFrom(client.send<Order, OrderQuery>('get.order', query))` | 117 | `get.order` | `rpc` | static | — |
-| `client.send('get.order.raw', query)` | 123 | `get.order.raw` | `rpc` | static | `rpc-return-type-unknown` |
-| `telemetry.emit('order.created', …)` | 130 | — | — | — | — |
+| `client.emit(LEGACY_TOPIC, dto)` | 91 | `order.legacy` | `event` | static | — |
+| `client.emit({ name: 'order.checksum', data: {} }, dto)` | 104 | none | `event` | heuristic | `channel-dynamic` |
+| `client.emit(this.config.get('ORDER_TOPIC'), dto)` | 112 | none | `event` | heuristic | `channel-from-config` |
+| `client.emit(topic, dto)` | 117 | none | `event` | heuristic | `channel-dynamic` |
+| `client.emit(...args)` | 123 | none | `event` | heuristic | `channel-dynamic` |
+| `firstValueFrom(client.send<Order, OrderQuery>('get.order', query))` | 130 | `get.order` | `rpc` | static | — |
+| `client.send('get.order.raw', query)` | 136 | `get.order.raw` | `rpc` | static | — |
+| `telemetry.emit('order.created', …)` | 143 | — | — | — | — |
 
 `meta.channelVia` per row: `literal` (35, 42, 51), `enum` (59), `shared-package`
-(66, 72), `const` (78), `config` (99), `dynamic` (85, 91, 104, 110).
+(66, 72, 91), `const` (78), and `unresolved` (85, 104, 112, 117, 123), where the
+row's `reason` says which of the three it was. Under `extract`, which reads the
+repository with no configuration and so lists no shared package, 66, 72 and 91
+are `const` and the channel is the same.
+
+Line 91 is the judgement worth writing down, because this README used to say the
+opposite (R140). `LEGACY_TOPIC` is annotated `: string`, which widens its *type*
+and changes nothing about its *value*: it is a `const`, assigned once, in the
+source the build reads, so every call naming it sends `order.legacy` and nothing
+else. The annotation tells other code what it may assume about the name — that
+a later version of the package might hold another string — and a channel is not
+what code may assume, it is what the program sends. Refusing it would drop an
+edge the running service really has, and would make a channel name disagree with
+a route path or mount written with the same constant, which the core reads
+through the same `evaluateExpression`. What cannot be read is a constant whose
+value is not in the source: `export declare const LEGACY_TOPIC: string` in a
+package's `.d.ts`, with no initializer. That is `channel-const-unresolved`, and
+`REGION_TOPIC` below is the case this fixture keeps for it.
+
+Line 104 is the one that must produce a row and nothing else. The argument is a
+readable record, and a readable record is still not a name: the address is one
+property of it and the rest is the payload, so its stable text used to become a
+channel of its own — `channel:{"data":{},"name":"order.checksum"}`, beside the
+`channel:order.checksum` the handler at line 40 produces. Two nodes for one
+channel, and the publish pointed at the one nothing else in any repository could
+ever write (R83). Which property carries the address is this queue's convention;
+guessing it is how a tool joins services that never speak.
 
 The last row emits **nothing**. `TelemetryService` is declared in this repo, so
 its type origin is not a broker package and no `custom` adapter matches it: an
@@ -60,6 +87,12 @@ the producer must be attributed to `importAll`, the enclosing method.
 Lines 35, 42 and 51 share one `channel:order.created` node between three
 producers and three `emits` edges.
 
+The two `rpc` rows are the only `emits` edges with a `returns`: the reply the
+call reads, which a publish does not have (R151). Line 130's is
+`type:nest-kafka#Order`, and contracts compares it with the handler's on line 63
+as the answer to a route is compared. Line 136's is `any`, so the answer is
+listed unchecked rather than left out.
+
 ## Consumers — `src/orders/orders.controller.ts`
 
 | Handler | Line | Channel | `meta.kind` | `returns` | Confidence | `unresolved.reason` |
@@ -67,31 +100,37 @@ producers and three `emits` edges.
 | `@EventPattern('order.created')` | 18 | `order.created` | `event` | — | static | — |
 | `@EventPattern(Topics.ORDER_PAID)` | 25 | `order.paid` | `event` | — | static | — |
 | `@EventPattern({ cmd: 'order.sync' })` | 32 | `{"cmd":"order.sync"}` | `event` | — | static | — |
-| `@EventPattern()` | 39 | none | `event` | — | heuristic | `channel-dynamic` |
-| `@EventPattern('order.audit')` | 47 | `order.audit` | `event` | — | static | — |
-| `@MessagePattern('get.order')` | 55 | `get.order` | `rpc` | `type:nest-kafka#Order` | static | — |
-| `@MessagePattern('get.order.raw')` | 62 | `get.order.raw` | `rpc` | none | static | `rpc-return-type-unknown` |
+| `@EventPattern('order.checksum')` | 40 | `order.checksum` | `event` | — | static | — |
+| `@EventPattern()` | 47 | none | `event` | — | — | `decorator-arg-dynamic` (the entry reader's; no channel row) |
+| `@EventPattern('order.audit')` | 55 | `order.audit` | `event` | — | static | — |
+| `@MessagePattern('get.order')` | 63 | `get.order` | `rpc` | `type:nest-kafka#Order` | static | — |
+| `@MessagePattern('get.order.raw')` | 70 | `get.order.raw` | `rpc` | `any` | static | — |
 
-Every consumer here sits on a P01 entry, so each one carries `meta.entryId` —
-`entry:nest-kafka:event:<pattern>` or `entry:nest-kafka:rpc:<pattern>` — and
-never duplicates it (D1, §12).
+Every consumer here with a pattern sits on a P01 entry, so each one carries
+`meta.entryId` — `entry:nest-kafka:event:<pattern>` or
+`entry:nest-kafka:rpc:<pattern>` — and never duplicates it (D1, §12). The one
+on line 47 has no pattern and so no entry: its `entryId` is `null`.
 
 The object pattern on line 32 keeps P01's `meta.pattern` verbatim as the channel
 name, so the id is `channel:{"cmd":"order.sync"}` and the two sides of the repo
-agree on it.
+agree on it. That is what an object pattern is for, and why it survives: a flat
+record of scalars is an address both ends write the same way. Line 104 of the
+service is the other thing an object can be, and does not.
+
+`channel:order.checksum`, from the handler on line 40, deliberately has only one
+end. Its publish is in this repository and cannot be read, and a channel with one
+end plus a row saying which publish lost it is the honest shape of that.
 
 ## Deliberately unresolvable constructs
 
 | Construct | Where | Reason it must produce |
 |---|---|---|
 | `REGION_TOPIC` — a template literal whose hole is a call | `src/orders/topics.ts:26` | `channel-const-unresolved` |
-| `LEGACY_TOPIC: string` in `@fixture/events` | `shared/events/src/index.ts` | `channel-const-unresolved` |
-| `this.config.get('ORDER_TOPIC')` | `orders.service.ts:99` | `channel-from-config`, hint `add @Emits('<topic>') on OrdersService.emitConfigured` |
-| `topic` parameter | `orders.service.ts:104` | `channel-dynamic`, same hint |
-| `emit(...args)` spread | `orders.service.ts:110` | `channel-dynamic`; the point is that it must not crash |
-| `@EventPattern()` with no argument | `orders.controller.ts:39` | `channel-dynamic`; must not crash |
-| `client.send` with no type argument | `orders.service.ts:123` | `rpc-return-type-unknown` |
-| `@MessagePattern` handler returning `any` | `orders.controller.ts:62` | `rpc-return-type-unknown` |
+| `{ name, data }` — a job, not an address | `orders.service.ts:104` | `channel-dynamic`, and no channel node |
+| `this.config.get('ORDER_TOPIC')` | `orders.service.ts:112` | `channel-from-config`, hint `add @Emits('<topic>') on OrdersService.emitConfigured` |
+| `topic` parameter | `orders.service.ts:117` | `channel-dynamic`, same hint: a parameter is not a constant nobody could follow, and its row must not say it is (R140) |
+| `emit(...args)` spread | `orders.service.ts:123` | `channel-dynamic`; the point is that it must not crash |
+| `@EventPattern()` with no argument | `orders.controller.ts:47` | `decorator-arg-dynamic`, once, and no `channel-dynamic` beside it; must not crash |
 
 `COMPUTED_TOPIC` (`topics.ts:17`) is the mirror image of `REGION_TOPIC`: its hole
 is one other const with a literal value, so it is the half of §10's computed-
@@ -99,5 +138,49 @@ initializer row that **does** resolve ("resolve nested consts one level"). If
 both come out unresolved, the resolver is not following consts at all; if both
 come out resolved, it is guessing.
 
-`expected.graph.json` is deliberately absent: it is generated once the P04 passes
-exist and reviewed as a diff.
+`expected.graph.json` holds what `extract` writes, and `expected.project-graph.json`
+and `expected.link-report.json` what `build` writes. `channel:order.legacy` is in
+the link report's `noConsumers`, which is right: nothing in this repository
+handles it.
+
+## What R148 decided
+
+Four places where this README and the snapshots used to disagree, each settled
+by saying which of the two was right and why.
+
+**No `rpc-return-type-unknown`, at `service:136` or `controller:70`. The README
+was wrong.** Nothing in the tool emits that reason, `flowatlas doctor` has no
+sentence for it, and it should not have one. An unresolved row says that the
+source holds something the reader could not follow. Neither site is that. The
+handler declares `: any`, and the handles edge records `returns: "any"` exactly
+as written. The call passes no type argument, so `ClientProxy.send`'s own
+default applies and the answer is `Observable<any>`, which is also read as
+written. An untyped answer is not an unread one. The tool already has words for
+"this end declares nothing to compare": the contracts report's
+`no-type-on-sender` and `no-type-on-receiver`, per direction. A handler that
+returns `any` on an HTTP route is reported there and nowhere else. A second
+reason, only for rpc and in the other report, would say the same thing about
+the same fact. One gap remains, and it sits in the contracts report, not here:
+a broker edge is compared in the `payload` direction only, so the reply of an
+rpc is not compared at all yet. That is why neither of these sites shows up
+anywhere as unchecked.
+
+**`controller:47` has one row, `decorator-arg-dynamic`, and not a
+`channel-dynamic` beside it. The second row was a duplicate.** A pattern
+decorator's argument is read once, by the entry reader (P01). The consumer
+reuses that reading as its channel name, which is D1 above. When the entry
+reader refuses the argument, the consumer read the same argument of the same
+decorator and has nothing new to say. For `@EventPattern()` the channel row was
+also false. Nothing here is "built at run time": there is no pattern, Nest
+stores `[undefined]`, and no producer can reach the handler. The row's advice,
+annotate with `@Consumes`, would claim a channel for a handler that receives
+nothing. The entry reader's row gives the fix that is true: write the pattern.
+A decorator no entry reader knows, such as `@RabbitSubscribe` or `@Process`,
+has no such row, so its consumer still reports its own.
+
+**No `di-token-unknown` at `service:28`.** `ClientsModule.register([{ name:
+'KAFKA_CLIENT', … }])` at `app.module.ts:15-21` provides that token, because
+Nest registers each client's `name` as a provider. The module reader asks its
+table of configured modules what such an import contributes, and the token is
+resolved to the installed `ClientProxy` it holds. The calls made through it are
+counted under `skippedExternalCalls["@nestjs/microservices"]`.

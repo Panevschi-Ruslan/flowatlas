@@ -1,6 +1,6 @@
 import type { EntryAdapter, EntryHandler, EntryKind, EntryNode, ExtractContext } from '@flowatlas/core';
 import { hasAnyDependency, makeEntryId, resolveTypeOrigin } from '@flowatlas/core';
-import type { Node as TsNode } from 'ts-morph';
+import type { CallExpression, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { resolveTriggerArg } from './nestjs-telegraf/triggers.js';
 import {
@@ -17,26 +17,56 @@ const ADAPTER = 'telegraf-calls';
 /** The package whose type on the receiver is what makes a call a registration. */
 const TELEGRAF = 'telegraf';
 
+interface Registration {
+  name: string;
+  kind: EntryKind;
+  /** The command, for a method whose own name is the command since it takes no trigger. */
+  implied?: string;
+}
+
 /**
  * Registration methods, and the kind of way in each one opens.
  *
  * A bot written against the library directly installs its handlers by calling
  * these rather than by decorating a class, which is the older and still the more
  * common of the two styles.
+ *
+ * A `Map`, because it is asked about every method name in the repository and a
+ * plain object answers `toString` or `__proto__` with the language's own value:
+ * one `bot.toString()` gave an entry a function for its kind, the id threw, and
+ * the whole repository read as nothing (R130).
  */
-const REGISTRATIONS: Record<string, EntryKind> = {
-  start: 'bot_command',
-  help: 'bot_command',
-  settings: 'bot_command',
-  command: 'bot_command',
-  hears: 'bot_command',
-  action: 'bot_callback',
-  inlineQuery: 'bot_callback',
-  on: 'bot_event',
-};
+const REGISTRATIONS: ReadonlyMap<string, Registration> = new Map(
+  (
+    [
+      { name: 'start', kind: 'bot_command', implied: 'start' },
+      { name: 'help', kind: 'bot_command', implied: 'help' },
+      { name: 'settings', kind: 'bot_command', implied: 'settings' },
+      { name: 'command', kind: 'bot_command' },
+      { name: 'hears', kind: 'bot_command' },
+      { name: 'action', kind: 'bot_callback' },
+      { name: 'inlineQuery', kind: 'bot_callback' },
+      { name: 'on', kind: 'bot_event' },
+    ] satisfies Registration[]
+  ).map((registration) => [registration.name, registration]),
+);
 
-/** Methods whose own name is the command, since they take no trigger. */
-const IMPLIED: Record<string, string> = { start: 'start', help: 'help', settings: 'settings' };
+/**
+ * The registration a call makes on a bot, or `undefined` when it makes none.
+ *
+ * The one place that decides it, read by the adapter and by the report of an
+ * unreadable trigger alike, so the two cannot disagree about what counts.
+ */
+const registrationOf = (call: CallExpression): Registration | undefined => {
+  const callee = call.getExpression();
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const registration = REGISTRATIONS.get(callee.getName());
+  if (registration === undefined) return undefined;
+  // The receiver's type is the only signal that separates a bot from any other
+  // object with a method called `on`, which is a great many objects.
+  if (resolveTypeOrigin(callee.getExpression())?.package !== TELEGRAF) return undefined;
+  return registration;
+};
 
 /**
  * Every trigger a registration installs, as written.
@@ -77,22 +107,12 @@ interface Site {
   updateClass?: string;
 }
 
-const siteOf = (call: TsNode, ctx: ExtractContext): Site | null => {
-  if (!Node.isCallExpression(call)) return null;
-  const callee = call.getExpression();
-  if (!Node.isPropertyAccessExpression(callee)) return null;
-
-  const name = callee.getName();
-  const kind = REGISTRATIONS[name];
-  if (kind === undefined) return null;
-
-  // The receiver's type is the only signal that separates a bot from any other
-  // object with a method called `on`, which is a great many objects.
-  const origin = resolveTypeOrigin(callee.getExpression());
-  if (origin?.package !== TELEGRAF) return null;
+const siteOf = (call: CallExpression, ctx: ExtractContext): Site | null => {
+  const registration = registrationOf(call);
+  if (registration === undefined) return null;
+  const { name, kind, implied } = registration;
 
   const args = call.getArguments();
-  const implied = IMPLIED[name];
   const keys = implied === undefined ? triggersOf(args[0]) : [implied];
   if (keys.length === 0) return null;
 
@@ -192,14 +212,9 @@ const DYNAMIC_HINT = 'Register with a string literal or a constant, so the comma
  * was a registration at all, so that a bot whose every trigger is computed does
  * not also read as a bot with no handlers.
  */
-const reportUnreadable = (ctx: ExtractContext, call: TsNode): boolean => {
-  if (!Node.isCallExpression(call)) return false;
-  const callee = call.getExpression();
-  if (!Node.isPropertyAccessExpression(callee)) return false;
-  const name = callee.getName();
-  if (REGISTRATIONS[name] === undefined) return false;
-  if (resolveTypeOrigin(callee.getExpression())?.package !== TELEGRAF) return false;
-  if (IMPLIED[name] !== undefined) return false;
+const reportUnreadable = (ctx: ExtractContext, call: CallExpression): boolean => {
+  const registration = registrationOf(call);
+  if (registration === undefined || registration.implied !== undefined) return false;
   if (triggersOf(call.getArguments()[0]).length > 0) return false;
 
   ctx.builder.addUnresolved({
@@ -207,7 +222,7 @@ const reportUnreadable = (ctx: ExtractContext, call: TsNode): boolean => {
     line: call.getStartLineNumber(),
     reason: 'dynamic-bot-trigger',
     hint: DYNAMIC_HINT,
-    symbol: call.getArguments()[0]?.getText().slice(0, 60) ?? name,
+    symbol: call.getArguments()[0]?.getText().slice(0, 60) ?? registration.name,
     adapter: ADAPTER,
   });
   return true;

@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 5,
+  "repo": "express-path-array",
+  "generatedAt": "2026-09-27T09:26:19.351Z",
+  "nodes": [
+    {
+      "id": "entry:express-path-array:http:GET:/api/i/:param",
+      "type": "entry",
+      "label": "GET /api/i/:param",
+      "repo": "express-path-array",
+      "file": "src/items.routes.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/i/:param",
+        "rawPath": "/api/i/:id",
+        "adapter": "express-routes",
+        "registration": "itemsRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:express-path-array:http:GET:/api/items",
+      "type": "entry",
+      "label": "GET /api/items",
+      "repo": "express-path-array",
+      "file": "src/items.routes.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/items",
+        "rawPath": "/api/items",
+        "adapter": "express-routes",
+        "registration": "itemsRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:express-path-array:http:GET:/api/items/:param",
+      "type": "entry",
+      "label": "GET /api/items/:param",
+      "repo": "express-path-array",
+      "file": "src/items.routes.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/items/:param",
+        "rawPath": "/api/items/:id",
+        "adapter": "express-routes",
+        "registration": "itemsRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:express-path-array:http:GET:/api/legacy/items",
+      "type": "entry",
+      "label": "GET /api/legacy/items",
+      "repo": "express-path-array",
+      "file": "src/items.routes.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/legacy/items",
+        "rawPath": "/api/legacy/items",
+        "adapter": "express-routes",
+        "registration": "itemsRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:express-path-array:http:GET:/api/old/items",
+      "type": "entry",
+      "label": "GET /api/old/items",
+      "repo": "express-path-array",
+      "file": "src/items.routes.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/old/items",
+        "rawPath": "/api/old/items",
+        "adapter": "express-routes",
+        "registration": "itemsRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "express-path-array#src/items.controller.ts:listItems",
+      "type": "function",
+      "label": "listItems",
+      "repo": "express-path-array",
+      "file": "src/items.controller.ts",
+      "line": 4
+    },
+    {
+      "id": "express-path-array#src/items.controller.ts:showItem",
+      "type": "function",
+      "label": "showItem",
+      "repo": "express-path-array",
+      "file": "src/items.controller.ts",
+      "line": 9
+    },
+    {
+      "id": "repo:express-path-array",
+      "type": "repo",
+      "label": "express-path-array",
+      "repo": "express-path-array",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:express-path-array:http:GET:/api/i/:param",
+      "to": "express-path-array#src/items.controller.ts:showItem",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/items.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:express-path-array:http:GET:/api/items",
+      "to": "express-path-array#src/items.controller.ts:listItems",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/items.controller.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:express-path-array:http:GET:/api/items/:param",
+      "to": "express-path-array#src/items.controller.ts:showItem",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/items.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:express-path-array:http:GET:/api/legacy/items",
+      "to": "express-path-array#src/items.controller.ts:listItems",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/items.controller.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:express-path-array:http:GET:/api/old/items",
+      "to": "express-path-array#src/items.controller.ts:listItems",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/items.controller.ts",
+      "line": 4
+    }
+  ],
+  "types": {},
+  "unresolved": []
+}

@@ -11,6 +11,11 @@ export interface ProviderRegistration {
   declaration?: ClassDeclaration;
   /** For `useExisting`, the token it points at. */
   alias?: string;
+  /**
+   * The installed class the token is an instance of, when a framework module
+   * provides it and says so: `ClientsModule`'s clients are `ClientProxy`s.
+   */
+  holds?: { typeName: string; package: string };
   file: string;
   line: number;
 }
@@ -24,6 +29,12 @@ export interface ModuleInfo {
   declaration: ClassDeclaration;
   controllers: ClassDeclaration[];
   providers: ProviderRegistration[];
+  /**
+   * Tokens a configured module in `imports:` provides into this one, such as
+   * each client `ClientsModule.register` names. Not the module's own
+   * `providers:`, which is what its node's `meta.providers` lists.
+   */
+  providedByImports: ProviderRegistration[];
   exports: string[];
   /** Modules imported, resolved where possible. */
   imports: Array<{ id: string; declaration?: ClassDeclaration; kind: ModuleKind; name: string }>;
@@ -39,7 +50,7 @@ export class ModuleIndex {
 
   add(info: ModuleInfo): void {
     this.#byDeclaration.set(info.declaration, info);
-    for (const provider of info.providers) {
+    for (const provider of [...info.providers, ...info.providedByImports]) {
       const existing = this.#byToken.get(provider.token);
       if (existing === undefined) this.#byToken.set(provider.token, [provider]);
       else existing.push(provider);

@@ -1,0 +1,71 @@
+{
+  "asyncapi": "3.0.0",
+  "info": {
+    "title": "Billing",
+    "version": "4.2.0"
+  },
+  "channels": {
+    "ordersCreated": {
+      "address": "orders.created",
+      "title": "Orders created",
+      "messages": {
+        "OrderCreated": {
+          "$ref": "#/components/messages/OrderCreated"
+        }
+      }
+    },
+    "invoiceIssued": {
+      "address": "invoice.issued",
+      "messages": {
+        "InvoiceIssued": {
+          "$ref": "#/components/messages/InvoiceIssued"
+        }
+      }
+    }
+  },
+  "operations": {
+    "onOrderCreated": {
+      "action": "receive",
+      "summary": "Raise an invoice for a new order",
+      "channel": { "$ref": "#/channels/ordersCreated" },
+      "messages": [{ "$ref": "#/channels/ordersCreated/messages/OrderCreated" }]
+    },
+    "issueInvoice": {
+      "action": "send",
+      "channel": { "$ref": "#/channels/invoiceIssued" }
+    }
+  },
+  "components": {
+    "messages": {
+      "OrderCreated": {
+        "name": "OrderCreated",
+        "payload": { "$ref": "#/components/schemas/OrderCreated" }
+      },
+      "InvoiceIssued": {
+        "name": "InvoiceIssued",
+        "payload": { "$ref": "#/components/schemas/InvoiceIssued" }
+      }
+    },
+    "schemas": {
+      "OrderCreated": {
+        "type": "object",
+        "required": ["orderId", "customerId", "currency"],
+        "properties": {
+          "orderId": { "type": "string" },
+          "customerId": { "type": "string" },
+          "total": { "type": "number" },
+          "currency": { "type": "string" }
+        }
+      },
+      "InvoiceIssued": {
+        "type": "object",
+        "required": ["invoiceId", "orderId", "amount"],
+        "properties": {
+          "invoiceId": { "type": "string" },
+          "orderId": { "type": "string" },
+          "amount": { "type": "number" }
+        }
+      }
+    }
+  }
+}

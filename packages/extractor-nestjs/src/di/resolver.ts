@@ -65,6 +65,22 @@ const resolveToken = (
       continue;
     }
 
+    // A token a framework module provides holds that module's installed class
+    // (R150): injected through it, a `ClientProxy` is what it would be had it
+    // been injected by its type, and a call on it is a call into the package.
+    const held = registrations[0]?.holds;
+    if (
+      held !== undefined &&
+      registrations.every(
+        (registration) =>
+          registration.holds?.typeName === held.typeName &&
+          registration.holds.package === held.package,
+      )
+    ) {
+      const node = ctx.ensureExternalClassNode(held);
+      return { kind: 'external', id: node.id, package: held.package, typeName: held.typeName };
+    }
+
     const classes = distinctClasses(registrations);
     if (classes.length > 1) {
       return {

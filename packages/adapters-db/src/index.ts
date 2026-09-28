@@ -11,17 +11,21 @@ export { extractLeaves, leavesPass } from './leaves-pass.js';
 export {
   dataNameHints,
   dbAdapters,
+  descriptorAliases,
   drizzleDescriptor,
+  handovers,
   knexDescriptor,
+  kyselyDescriptor,
   localBaseDescriptor,
   mongodbDescriptor,
   mongooseDescriptor,
   pgDescriptor,
   prismaDescriptor,
   sequelizeDescriptor,
-  tableLocators,
+  tableReadings,
   typeormDescriptor,
 } from './descriptors/index.js';
+export type { Handover, TableReading } from './descriptors/index.js';
 export { locateTable } from './descriptors/table.js';
 export type { TableLocator } from './descriptors/table.js';
 export { sqlOperation, sqlTables } from './sql.js';

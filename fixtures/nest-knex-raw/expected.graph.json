@@ -1,0 +1,701 @@
+{
+  "schemaVersion": 5,
+  "repo": "nest-knex-raw",
+  "generatedAt": "2026-09-28T07:26:24.489Z",
+  "nodes": [
+    {
+      "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:14:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 14,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "knex",
+        "method": "raw",
+        "receiver": "this.db",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:20:11",
+      "type": "db_query",
+      "label": "delete order_events",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 20,
+      "meta": {
+        "op": "delete",
+        "table": "order_events",
+        "tables": [
+          "order_events"
+        ],
+        "package": "knex",
+        "method": "raw",
+        "receiver": "this.db",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:27:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 27,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders",
+          "customers"
+        ],
+        "package": "knex",
+        "method": "raw",
+        "receiver": "this.db",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:36:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 36,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "knex",
+        "method": "raw",
+        "receiver": "this.db",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:44:7",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 44,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "knex",
+        "method": "raw",
+        "receiver": "this.db",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:45:7",
+      "type": "db_query",
+      "label": "read refunds",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 45,
+      "meta": {
+        "op": "read",
+        "table": "refunds",
+        "tables": [
+          "refunds"
+        ],
+        "package": "knex",
+        "method": "raw",
+        "receiver": "this.db",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:52:12",
+      "type": "db_query",
+      "label": "access ?",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 52,
+      "meta": {
+        "op": null,
+        "table": null,
+        "tables": [],
+        "package": "knex",
+        "method": "raw",
+        "receiver": "this.db",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:67:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 67,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "knex",
+        "method": "select",
+        "receiver": "this.db('orders')\n      .where(this.db.raw('total > ?', [min]))\n      .whereIn('",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:78:12",
+      "type": "db_query",
+      "label": "read customers",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 78,
+      "meta": {
+        "op": "read",
+        "table": "customers",
+        "tables": [
+          "customers"
+        ],
+        "package": "knex",
+        "method": "select",
+        "receiver": "this.db('customers')",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:86:12",
+      "type": "db_query",
+      "label": "write orders",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 86,
+      "meta": {
+        "op": "write",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "package": "knex",
+        "method": "update",
+        "receiver": "this.db('orders')",
+        "source": "string-arg"
+      }
+    },
+    {
+      "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:98:12",
+      "type": "db_query",
+      "label": "read orders",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 98,
+      "meta": {
+        "op": "read",
+        "table": "orders",
+        "tables": [
+          "orders",
+          "refunds"
+        ],
+        "package": "knex",
+        "method": "raw",
+        "receiver": "this.db",
+        "source": "sql-parse"
+      }
+    },
+    {
+      "id": "entry:nest-knex-raw:http:GET:/reports/large",
+      "type": "entry",
+      "label": "GET /reports/large",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/reports/large",
+        "rawPath": "/reports/large",
+        "controller": "ReportsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-knex-raw:http:GET:/reports/open",
+      "type": "entry",
+      "label": "GET /reports/open",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/reports/open",
+        "rawPath": "/reports/open",
+        "controller": "ReportsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-knex-raw#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-knex-raw",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ReportsController"
+        ],
+        "providers": [
+          "ReportsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.controller.ts:ReportsController",
+      "type": "provider",
+      "label": "ReportsController",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.controller.ts:ReportsController.large",
+      "type": "method",
+      "label": "ReportsController.large",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.controller.ts",
+      "line": 14
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.controller.ts:ReportsController.open",
+      "type": "method",
+      "label": "ReportsController.open",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.controller.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService",
+      "type": "provider",
+      "label": "ReportsService",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.both",
+      "type": "method",
+      "label": "ReportsService.both",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 42
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.emails",
+      "type": "method",
+      "label": "ReportsService.emails",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 76
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.forCustomer",
+      "type": "method",
+      "label": "ReportsService.forCustomer",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 26
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.large",
+      "type": "method",
+      "label": "ReportsService.large",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 66
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.open",
+      "type": "method",
+      "label": "ReportsService.open",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.picked",
+      "type": "method",
+      "label": "ReportsService.picked",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 93
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.ping",
+      "type": "method",
+      "label": "ReportsService.ping",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 57
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.prune",
+      "type": "method",
+      "label": "ReportsService.prune",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 19
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.purge",
+      "type": "method",
+      "label": "ReportsService.purge",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 51
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.total",
+      "type": "method",
+      "label": "ReportsService.total",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 35
+    },
+    {
+      "id": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.touch",
+      "type": "method",
+      "label": "ReportsService.touch",
+      "repo": "nest-knex-raw",
+      "file": "src/reports/reports.service.ts",
+      "line": 84
+    },
+    {
+      "id": "repo:nest-knex-raw",
+      "type": "repo",
+      "label": "nest-knex-raw",
+      "repo": "nest-knex-raw",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "knex": 19,
+            "knex.raw": 6,
+            "knex.whereIn": 1,
+            "knex.where": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:nest-knex-raw#customers",
+      "type": "table",
+      "label": "customers",
+      "repo": "nest-knex-raw"
+    },
+    {
+      "id": "table:nest-knex-raw#order_events",
+      "type": "table",
+      "label": "order_events",
+      "repo": "nest-knex-raw"
+    },
+    {
+      "id": "table:nest-knex-raw#orders",
+      "type": "table",
+      "label": "orders",
+      "repo": "nest-knex-raw"
+    },
+    {
+      "id": "table:nest-knex-raw#refunds",
+      "type": "table",
+      "label": "refunds",
+      "repo": "nest-knex-raw"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:nest-knex-raw#src/reports/reports.service.ts:14:12",
+      "to": "table:nest-knex-raw#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 14
+    },
+    {
+      "from": "db_query:nest-knex-raw#src/reports/reports.service.ts:20:11",
+      "to": "table:nest-knex-raw#order_events",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 20
+    },
+    {
+      "from": "db_query:nest-knex-raw#src/reports/reports.service.ts:27:12",
+      "to": "table:nest-knex-raw#customers",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 27
+    },
+    {
+      "from": "db_query:nest-knex-raw#src/reports/reports.service.ts:27:12",
+      "to": "table:nest-knex-raw#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 27
+    },
+    {
+      "from": "db_query:nest-knex-raw#src/reports/reports.service.ts:36:12",
+      "to": "table:nest-knex-raw#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 36
+    },
+    {
+      "from": "db_query:nest-knex-raw#src/reports/reports.service.ts:44:7",
+      "to": "table:nest-knex-raw#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 44
+    },
+    {
+      "from": "db_query:nest-knex-raw#src/reports/reports.service.ts:45:7",
+      "to": "table:nest-knex-raw#refunds",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 45
+    },
+    {
+      "from": "db_query:nest-knex-raw#src/reports/reports.service.ts:67:12",
+      "to": "table:nest-knex-raw#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 67
+    },
+    {
+      "from": "db_query:nest-knex-raw#src/reports/reports.service.ts:78:12",
+      "to": "table:nest-knex-raw#customers",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 78
+    },
+    {
+      "from": "db_query:nest-knex-raw#src/reports/reports.service.ts:86:12",
+      "to": "table:nest-knex-raw#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 86
+    },
+    {
+      "from": "db_query:nest-knex-raw#src/reports/reports.service.ts:98:12",
+      "to": "table:nest-knex-raw#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 98
+    },
+    {
+      "from": "db_query:nest-knex-raw#src/reports/reports.service.ts:98:12",
+      "to": "table:nest-knex-raw#refunds",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 98
+    },
+    {
+      "from": "entry:nest-knex-raw:http:GET:/reports/large",
+      "to": "nest-knex-raw#src/reports/reports.controller.ts:ReportsController.large",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 14,
+      "params": [],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "entry:nest-knex-raw:http:GET:/reports/open",
+      "to": "nest-knex-raw#src/reports/reports.controller.ts:ReportsController.open",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 9,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-knex-raw#src/reports/reports.controller.ts:ReportsController",
+      "to": "nest-knex-raw#src/reports/reports.service.ts:ReportsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-knex-raw#src/reports/reports.controller.ts:ReportsController.large",
+      "to": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.large",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 16,
+      "params": [
+        "number"
+      ],
+      "returns": "unknown[]"
+    },
+    {
+      "from": "nest-knex-raw#src/reports/reports.controller.ts:ReportsController.open",
+      "to": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.open",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.both",
+      "to": "db_query:nest-knex-raw#src/reports/reports.service.ts:44:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 44
+    },
+    {
+      "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.both",
+      "to": "db_query:nest-knex-raw#src/reports/reports.service.ts:45:7",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 45
+    },
+    {
+      "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.emails",
+      "to": "db_query:nest-knex-raw#src/reports/reports.service.ts:78:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 78
+    },
+    {
+      "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.forCustomer",
+      "to": "db_query:nest-knex-raw#src/reports/reports.service.ts:27:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 27
+    },
+    {
+      "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.large",
+      "to": "db_query:nest-knex-raw#src/reports/reports.service.ts:67:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 67
+    },
+    {
+      "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.open",
+      "to": "db_query:nest-knex-raw#src/reports/reports.service.ts:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 14
+    },
+    {
+      "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.picked",
+      "to": "db_query:nest-knex-raw#src/reports/reports.service.ts:98:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 98
+    },
+    {
+      "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.prune",
+      "to": "db_query:nest-knex-raw#src/reports/reports.service.ts:20:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 20
+    },
+    {
+      "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.purge",
+      "to": "db_query:nest-knex-raw#src/reports/reports.service.ts:52:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/reports/reports.service.ts",
+      "line": 52
+    },
+    {
+      "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.total",
+      "to": "db_query:nest-knex-raw#src/reports/reports.service.ts:36:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 36
+    },
+    {
+      "from": "nest-knex-raw#src/reports/reports.service.ts:ReportsService.touch",
+      "to": "db_query:nest-knex-raw#src/reports/reports.service.ts:86:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.service.ts",
+      "line": 86
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/reports/reports.service.ts",
+      "line": 52,
+      "reason": "sql-parse-failed",
+      "hint": "The query is not a literal, so the tables it touches cannot be read. Use a literal, or annotate the call.",
+      "symbol": "this.db.raw"
+    },
+    {
+      "file": "src/reports/reports.service.ts",
+      "line": 67,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "db on ReportsService is a field assigned a function from elsewhere, so there is no one body to follow. Declare it as a method to make the edge visible.",
+      "symbol": "ReportsService.large -> this.db",
+      "sites": 3
+    }
+  ]
+}

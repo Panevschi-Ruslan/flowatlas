@@ -204,6 +204,27 @@ describe('joining a call to a route', () => {
     expect(report.httpOut.linked).toBe(1);
   });
 
+  it('is no stronger than a route read from an application its type did not prove', () => {
+    // R142 reads a route off an application recognised from what the source
+    // states when its type is not installed, and marks the route `heuristic`.
+    // A join that finds that route by a settings key it read in full is still
+    // only as strong as the route it lands on.
+    const guessed = route('orders', 'GET', '/orders/:param');
+    guessed.meta = { ...guessed.meta, confidence: 'heuristic' };
+    const { project } = link([callerGraph(), graph('orders', { nodes: [guessed] })]);
+    const joined = project.edges.filter((item) => item.type === 'http_calls');
+
+    expect(joined).toHaveLength(1);
+    expect(joined[0]?.confidence).toBe('heuristic');
+  });
+
+  it('ignores a confidence a route claims that is not on the ladder', () => {
+    const odd = route('orders', 'GET', '/orders/:param');
+    odd.meta = { ...odd.meta, confidence: 'toString' };
+    const { project } = link([callerGraph(), graph('orders', { nodes: [odd] })]);
+    expect(project.edges.find((item) => item.type === 'http_calls')?.confidence).toBe('static');
+  });
+
   it('says which service was meant when the route is gone', () => {
     const gone = callerGraph({ meta: { method: 'POST', path: '/orders/:param/cancel' } });
     const { project, report } = link([gone, ordersGraph()]);
@@ -255,6 +276,35 @@ describe('joining a call to a route', () => {
     expect(project.edges.filter((item) => item.type === 'http_calls')).toHaveLength(0);
     expect(report.httpOut.ambiguous).toBe(1);
     expect(report.unresolved[0]?.reason).toBe('ambiguous-route');
+  });
+
+  /**
+   * Two applications of one service both serving the address is not a route
+   * claimed twice (R119).
+   *
+   * The call still cannot be placed — which of them answers a request from
+   * outside is decided by how they are deployed and written in no source — but the
+   * row says a different thing, because a reader told to make the path more
+   * specific when nothing is wrong with the path spends the afternoon on it.
+   */
+  it('says which applications answer, rather than blaming the route', () => {
+    const inApplication = (application: string, path: string): GraphNode =>
+      node(`entry:orders@${application}:http:GET:${path}`, 'orders', {
+        type: 'entry',
+        kind: 'http',
+        label: `GET ${path} (${application})`,
+        meta: { method: 'GET', path, application },
+      });
+    const asking = callerGraph({ meta: { path: '/health' } });
+    const twoApplications = graph('orders', {
+      nodes: [inApplication('ApiModule', '/health'), inApplication('WorkerModule', '/health')],
+    });
+    const { project, report } = link([asking, twoApplications]);
+
+    expect(project.edges.filter((item) => item.type === 'http_calls')).toHaveLength(0);
+    expect(report.httpOut.ambiguous).toBe(1);
+    expect(report.unresolved[0]?.reason).toBe('ambiguous-route-application');
+    expect(report.unresolved[0]?.message).toContain('ApiModule, WorkerModule');
   });
 
   it('takes the spelled-out route over the one with a hole, and says so', () => {
@@ -529,5 +579,46 @@ describe('annotations that name where a call goes', () => {
     const { project } = link([marked([{ name: 'CallsService', args: ['orders', 'GET /orders/:id'] }]), prefixed]);
     expect(project.edges.some((item) => item.to === 'entry:orders:http:GET:/api/orders/:param')).toBe(true);
     expect(project.unresolved.some((item) => item.reason === 'marker-route-not-found')).toBe(false);
+  });
+});
+
+/**
+ * A call between services to a route whose address opens with a mount read from
+ * settings (R144). A notification service's shape: every route is recorded as `/${…}v1/…`.
+ */
+describe('a call to a route behind a mount read from settings', () => {
+  const mountedGraph = (setIn: string[]) => {
+    const entry = route('orders', 'GET', '/${…}v1/orders/:param');
+    entry.meta = { ...entry.meta, mount: { settings: ['API_CONTEXT_PATH'], setIn, envFiles: 2 } };
+    return graph('orders', { nodes: [entry] });
+  };
+  const asking = () => callerGraph({ meta: { path: '/v1/orders/:param' } });
+
+  it('joins where every environment file leaves the setting empty, weaker, with a row naming it', () => {
+    const { project, report } = link([asking(), mountedGraph([])]);
+    const joined = project.edges.filter((item) => item.type === 'http_calls');
+
+    expect(joined).toHaveLength(1);
+    expect(joined[0]?.confidence).toBe('heuristic');
+    expect(joined[0]?.meta).toMatchObject({ mountAssumedEmpty: ['API_CONTEXT_PATH'] });
+    expect(report.httpOut.linked).toBe(1);
+    const row = report.unresolved.find((item) => item.reason === 'route-mount-assumed-empty');
+    expect(row?.level).toBe('info');
+    expect(row?.message).toBe(
+      'GET /v1/orders/:param is joined to orders GET /${…}v1/orders/:param by taking the part of its ' +
+        'address read from API_CONTEXT_PATH as empty, as every committed environment file of orders leaves it',
+    );
+  });
+
+  it('does not join where an environment file sets it, and names the route rather than denying it', () => {
+    const { project, report } = link([asking(), mountedGraph(['src/.env.production'])]);
+
+    expect(project.edges.filter((item) => item.type === 'http_calls')).toHaveLength(0);
+    expect(report.httpOut.noRoute).toBe(1);
+    expect(report.unresolved[0]?.reason).toBe('target-route-not-found');
+    expect(report.unresolved[0]?.message).toBe(
+      'target service orders has no route GET /v1/orders/:param at an address read in full, though ' +
+        'orders GET /${…}v1/orders/:param answers it if the part of its address nobody read is left open',
+    );
   });
 });

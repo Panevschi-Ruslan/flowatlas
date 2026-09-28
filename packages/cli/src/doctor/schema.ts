@@ -147,6 +147,13 @@ export interface DoctorReport {
     byReason: ReasonGroup[];
     /** Reasons the catalogue has never heard of, each named once. */
     unknownReasons: string[];
+    /**
+     * Ways in found, and those with a handler whose body was read — the figure
+     * `build` prints. Where most of one service's are unread it is a verdict
+     * reason as well (R94); anywhere else it is the size of the gap the
+     * `route-handler-unread` rows name.
+     */
+    waysIn: { found: number; read: number };
   };
   markers: {
     status: SectionStatus;
@@ -256,6 +263,10 @@ export const doctorReportSchema = z.object({
       }),
     ),
     unknownReasons: z.array(z.string()),
+    waysIn: z.object({
+      found: z.number().int().nonnegative(),
+      read: z.number().int().nonnegative(),
+    }),
   }),
   markers: z.object({
     status,

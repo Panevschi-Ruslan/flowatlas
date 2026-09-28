@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T17:41:34.475Z",
+  "configHash": "6770c6354ded",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 0
+    },
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 10,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 11,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 7,
+    "resolved": 5,
+    "unresolved": 2,
+    "byReason": {
+      "procedure-not-found": 1,
+      "procedure-path-dynamic": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 0,
+    "uncalled": [
+      "entry:api:http:ALL:/api/trpc/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/Orders.tsx",
+      "line": 16,
+      "reason": "procedure-call-mismatch",
+      "message": "orders.list is asked for as a mutation and declared as a query",
+      "hint": "The two are sent differently and the server refuses the one it did not declare. Call it as a query, or declare it as a mutation.",
+      "symbol": "ui_api_call:web#src/Orders.tsx:16:19"
+    },
+    {
+      "service": "web",
+      "file": "src/Orders.tsx",
+      "line": 17,
+      "reason": "procedure-not-found",
+      "message": "no procedure orders.archive in web or api",
+      "hint": "admin declares it, and nothing says web calls it. If it does, name it in services[].apiTarget of web.",
+      "symbol": "ui_api_call:web#src/Orders.tsx:17:19"
+    }
+  ],
+  "totals": {
+    "nodes": 24,
+    "edges": 17,
+    "types": 0,
+    "unresolved": 4
+  }
+}

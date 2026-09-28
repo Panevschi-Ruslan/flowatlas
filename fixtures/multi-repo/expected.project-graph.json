@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 3,
-  "builtAt": "2026-09-24T21:18:46.052Z",
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T09:26:28.527Z",
   "services": [
     {
       "name": "gateway",
@@ -957,6 +957,18 @@
       }
     },
     {
+      "id": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "orders",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
       "id": "orders#node_modules/@nestjs/microservices:ClientsModule",
       "type": "module",
       "label": "ClientsModule",
@@ -1166,6 +1178,8 @@
       "meta": {
         "stats": {
           "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
           "classes": 4,
           "skippedExternalCalls": {}
         },
@@ -1186,6 +1200,8 @@
       "meta": {
         "stats": {
           "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
           "classes": 6,
           "skippedExternalCalls": {
             "@nestjs/axios": 5,
@@ -1209,9 +1225,12 @@
       "meta": {
         "stats": {
           "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
           "classes": 6,
           "skippedExternalCalls": {
-            "typeorm": 4
+            "typeorm": 4,
+            "@nestjs/microservices": 2
           }
         },
         "bootstrap": "src/main.ts",
@@ -1231,6 +1250,8 @@
       "meta": {
         "stats": {
           "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
           "classes": 2,
           "templates": 1,
           "skippedExternalCalls": {
@@ -1907,7 +1928,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 30,
       "meta": {
@@ -1922,7 +1943,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 35,
       "meta": {
@@ -1937,7 +1958,7 @@
       "params": [
         "type:@fx/contracts#OrderDto"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:gateway#InvoiceDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 40,
       "meta": {
@@ -1952,7 +1973,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 65,
       "meta": {
@@ -1967,7 +1988,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 71,
       "meta": {
@@ -1982,7 +2003,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 60,
       "meta": {
@@ -2012,7 +2033,7 @@
       "params": [
         "type:@fx/contracts#OrderDto"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<unknown>",
       "file": "src/orders/orders.controller.ts",
       "line": 45,
       "meta": {
@@ -2286,7 +2307,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 37
     },
@@ -2310,7 +2331,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 32
     },
@@ -2322,7 +2343,7 @@
       "params": [
         "type:@fx/contracts#OrderDto"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:gateway#InvoiceDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 42
     },
@@ -2334,7 +2355,7 @@
       "params": [
         "type:@fx/contracts#OrderDto"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<unknown>",
       "file": "src/orders/orders.controller.ts",
       "line": 47
     },
@@ -2346,7 +2367,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 67
     },
@@ -2358,7 +2379,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 73
     },
@@ -2370,7 +2391,7 @@
       "params": [
         "string"
       ],
-      "returns": "{data:unknown}",
+      "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
       "file": "src/orders/orders.controller.ts",
       "line": 62
     },
@@ -2475,6 +2496,14 @@
       "returns": "type:@fx/contracts#OrderDto[]",
       "file": "src/orders/orders.controller.ts",
       "line": 21
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService",
+      "to": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 16
     },
     {
       "from": "orders#src/orders/orders.service.ts:OrdersService",
@@ -2933,6 +2962,36 @@
         "sharedPackage": "@fx/contracts"
       }
     },
+    "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:axios#AxiosResponse<type:gateway#InvoiceDto>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:axios#AxiosResponse<unknown>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
     "type:billing#CreateInvoiceDto": {
       "name": "CreateInvoiceDto",
       "kind": "object",
@@ -3200,14 +3259,6 @@
       "message": "POST /orders/:param/archive has no guard in front of it and reaches Order.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
       "symbol": "POST /orders/:param/archive"
-    },
-    {
-      "file": "src/orders/orders.service.ts",
-      "line": 16,
-      "reason": "di-token-unknown",
-      "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
-      "symbol": "OrdersService.constructor[1]",
-      "service": "orders"
     },
     {
       "service": "web",

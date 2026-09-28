@@ -1,0 +1,10 @@
+{
+  "name": "@member-dev-react/api",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@member-dev-react/mailer": "workspace:*",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0"
+  }
+}

@@ -1,3 +1,6 @@
+type:axios#AxiosResponse<type:@fx/contracts#OrderDto> external 35a86165238c  axios
+type:axios#AxiosResponse<type:gateway#InvoiceDto> external 35a86165238c  axios
+type:axios#AxiosResponse<unknown>            external 35a86165238c  axios
 type:billing#CreateInvoiceDto                object   7b74f42d5321  billing#src/invoices/invoice.dto.ts
 type:@fx/contracts#CreateOrderDto            object   b192e84bf006  @fx/contracts
 type:billing#InvoiceDto                      object   98b4593efb5a  billing#src/invoices/invoice.dto.ts
@@ -9,4 +12,4 @@ type:billing#OrderCreatedEvent               object   13c4f1b476f9  billing#src/
 type:@fx/contracts#OrderDto                  object   1fe9aae8bb47  @fx/contracts
 type:web#OrderDto                            object   13c4f1b476f9  web#src/app/order.dto.ts
 type:@fx/contracts#OrderStatus               union    3961cde6eaf5  @fx/contracts
-11 type(s)
+14 type(s)

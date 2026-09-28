@@ -1,5 +1,9 @@
+import type { ApplicationMap } from './applications.js';
+import type { FlowatlasConfig } from '../config.js';
 import type { EntryKind } from '../model/nodes.js';
-import type { ExtractContext, PackageJson } from './context.js';
+import type { ExtractContext } from './context.js';
+import type { EntryWrapping } from './wrapping.js';
+import type { PackageJson } from './manifest.js';
 
 /** A method of a class, which is where most handlers live. */
 export interface MethodHandler {
@@ -76,6 +80,16 @@ export interface EntryNode {
   /** Repo-relative POSIX path of the declaration site. */
   file: string;
   line?: number;
+  /**
+   * What runs in front of it, in the order it runs.
+   *
+   * Described rather than drawn, like the handler: the extractor turns it into
+   * the same nodes and the same `guarded_by` edges a decorator-driven reader
+   * produces, so that a route's protection is one shape in the graph however it
+   * was written. A list on the entry was the other option and is why nothing
+   * that read the graph as a graph could see a middleware chain at all (R109).
+   */
+  wrapping?: readonly EntryWrapping[];
   meta?: Record<string, unknown>;
 }
 
@@ -88,6 +102,34 @@ export interface EntryAdapter {
    * guards, pipes and middleware never run for those, so none are drawn.
    */
   outsideApplication?: boolean;
-  detect(pkg: PackageJson): boolean;
+  /**
+   * Whether this adapter applies to a repository.
+   *
+   * The manifest answers it for an adapter that stands for a package: the
+   * dependency is there or it is not. It cannot answer it for an adapter that
+   * runs descriptions the project wrote, because what such an adapter
+   * recognises is in the configuration rather than in the repository, so the
+   * configuration is offered alongside it.
+   *
+   * Offered rather than promised: a caller that has no configuration to hand
+   * passes none, and an adapter that reads the manifest alone declares one
+   * parameter and is none the wiser. Only this slot is given it, because only
+   * here does a description decide whether an adapter runs at all: the broker
+   * and data-layer descriptions are read by passes that go looking for them
+   * whatever was detected, so nothing about them is waiting on this answer.
+   */
+  detect(pkg: PackageJson, config?: FlowatlasConfig): boolean;
   extractEntries(ctx: ExtractContext): EntryNode[];
+  /**
+   * Which applications this adapter reads in the service, for whoever has to
+   * ask the question of something that is not an entry.
+   *
+   * Optional, and most adapters have nothing to say: a service with one address
+   * space answers every such question the same way, and an adapter that cannot
+   * tell one application from another should say nothing rather than invent a
+   * map. Answering is what lets a reader that knows nothing about this
+   * framework — the browser reader, recording which application a call site is
+   * in — get the same answer the ids carry, from the same reading.
+   */
+  applications?(ctx: ExtractContext): ApplicationMap | undefined;
 }

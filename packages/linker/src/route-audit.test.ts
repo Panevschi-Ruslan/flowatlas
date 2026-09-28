@@ -21,7 +21,13 @@ const edge = (from: string, type: GraphEdge['type'], to: string, extra: Partial<
 const OPTIONS = { publicDecorators: ['Public'], publicRoutes: [] as string[] };
 
 /** One route, its handler, and a query two calls away. */
-const graph = (route: { meta?: Record<string, unknown>; guard?: boolean; data?: boolean }) => {
+const graph = (route: {
+  meta?: Record<string, unknown>;
+  guard?: boolean;
+  data?: boolean;
+  /** Middleware in front of the route, in the order it runs. */
+  middleware?: readonly string[];
+}) => {
   const entry = node('entry:api:http:GET:/orders', 'entry', {
     kind: 'http',
     file: 'src/orders.controller.ts',
@@ -35,6 +41,7 @@ const graph = (route: { meta?: Record<string, unknown>; guard?: boolean; data?: 
     node('db_query:api#1', 'db_query'),
     node('table:api#Order', 'table', { label: 'Order' }),
     node('api#JwtGuard', 'provider', { label: 'JwtGuard' }),
+    ...(route.middleware ?? []).map((name) => node(`api#app.ts:${name}`, 'middleware', { label: name })),
   ];
   const edges = [
     edge(entry.id, 'handles', 'api#OrdersController.list'),
@@ -42,6 +49,12 @@ const graph = (route: { meta?: Record<string, unknown>; guard?: boolean; data?: 
     ...(route.data === false ? [] : [edge('api#OrdersService.list', 'calls', 'db_query:api#1')]),
     edge('db_query:api#1', 'queries', 'table:api#Order'),
     ...(route.guard === true ? [edge(entry.id, 'guarded_by', 'api#JwtGuard', { meta: { layer: 'guard' } })] : []),
+    // Reversed on purpose: an edge list has no order of its own, so the only
+    // thing that says which middleware runs first is `meta.order`, and a reader
+    // that trusted the list would print the chain backwards.
+    ...(route.middleware ?? [])
+      .map((name, order) => edge(entry.id, 'guarded_by', `api#app.ts:${name}`, { meta: { order, layer: 'middleware' } }))
+      .reverse(),
   ];
   return { nodes: new Map(nodes.map((item) => [item.id, item])), edges };
 };
@@ -166,6 +179,18 @@ describe('a route nothing guards', () => {
     expect(row).not.toHaveProperty('level');
   });
 
+  it('is left alone when middleware stands in front of it', () => {
+    // The defect R109 closes, from the audit's side. Middleware is a
+    // `guarded_by` edge with `layer: middleware` whoever read it, so this asks
+    // one question and asks it of the graph. While it was a list on the entry,
+    // the audit was the only reader in the project that could see it at all.
+    const { nodes, edges } = graph({
+      middleware: ['express.json()', 'authenticate'],
+      meta: { registration: 'app.get', middlewareRead: true },
+    });
+    expect(auditRoutes(nodes, edges, OPTIONS)).toEqual([]);
+  });
+
   it('matches a configured route by verb and pattern', () => {
     expect(matchesRoutePattern('* /api/health', 'GET', '/api/health')).toBe(true);
     expect(matchesRoutePattern('POST /api/*', 'GET', '/api/x')).toBe(false);
@@ -184,5 +209,18 @@ describe('a worker route in front of an application route', () => {
     expect(rows[0]?.message).toBe(
       "GET /orders is answered by listOrders before OrdersController.list is reached; the application route's guards (JwtGuard) never run, and the worker route has no middleware.",
     );
+  });
+
+  it('names the middleware the worker route does have, in the order it runs', () => {
+    const { nodes, edges } = graph({
+      guard: true,
+      middleware: ['requestLogger', 'withNest'],
+      meta: { controller: 'OrdersController', registration: 'app.post' },
+    });
+    nodes.set('api#worker.ts:listOrders', node('api#worker.ts:listOrders', 'function', { label: 'listOrders' }));
+    edges.push(edge('entry:api:http:GET:/orders', 'handles', 'api#worker.ts:listOrders', { file: 'src/worker.ts', line: 40 }));
+    const rows = auditRoutes(nodes, edges, OPTIONS);
+    expect(rows.map((row) => row.reason)).toEqual(['route-shadowed']);
+    expect(rows[0]?.message).toContain('the worker route has middleware requestLogger, withNest.');
   });
 });

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "repo": "koa-service",
-  "generatedAt": "2026-09-24T22:21:54.384Z",
+  "generatedAt": "2026-09-27T17:37:38.257Z",
   "nodes": [
     {
       "id": "db_query:koa-service#src/orders/orders.repository.ts:12:12",
@@ -75,10 +75,6 @@
         "adapter": "koa-routes",
         "registration": "ordersRouter.get",
         "middlewareRead": true,
-        "middleware": [
-          "authenticate",
-          "withTenant"
-        ],
         "handlerVia": "function"
       }
     },
@@ -97,10 +93,6 @@
         "adapter": "koa-routes",
         "registration": "ordersRouter.get",
         "middlewareRead": true,
-        "middleware": [
-          "authenticate",
-          "withTenant"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -155,11 +147,6 @@
         "adapter": "koa-routes",
         "registration": "ordersRouter.post",
         "middlewareRead": true,
-        "middleware": [
-          "authenticate",
-          "withTenant",
-          "requireAdmin"
-        ],
         "handlerVia": "inline"
       }
     },
@@ -221,6 +208,24 @@
       "line": 32
     },
     {
+      "id": "koa-service#src/orders/orders.routes.ts:requireAdmin",
+      "type": "middleware",
+      "label": "requireAdmin",
+      "repo": "koa-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 32,
+      "kind": "function"
+    },
+    {
+      "id": "koa-service#src/orders/orders.routes.ts:withTenant",
+      "type": "middleware",
+      "label": "withTenant",
+      "repo": "koa-service",
+      "file": "src/orders/orders.routes.ts",
+      "line": 21,
+      "kind": "function"
+    },
+    {
       "id": "koa-service#src/public/public.routes.ts:GET /health@12",
       "type": "function",
       "label": "GET /health@12",
@@ -237,6 +242,15 @@
       "line": 16
     },
     {
+      "id": "koa-service#src/server.ts:authenticate",
+      "type": "middleware",
+      "label": "authenticate",
+      "repo": "koa-service",
+      "file": "src/server.ts",
+      "line": 18,
+      "kind": "function"
+    },
+    {
       "id": "repo:koa-service",
       "type": "repo",
       "label": "koa-service",
@@ -244,6 +258,8 @@
       "meta": {
         "stats": {
           "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
           "classes": 1,
           "skippedExternalCalls": {
             "pg": 3
@@ -297,12 +313,68 @@
       "line": 5
     },
     {
+      "from": "entry:koa-service:http:GET:/orders",
+      "to": "koa-service#src/orders/orders.routes.ts:withTenant",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 21,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "ordersRouter.use"
+      }
+    },
+    {
+      "from": "entry:koa-service:http:GET:/orders",
+      "to": "koa-service#src/server.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
       "from": "entry:koa-service:http:GET:/orders/:param",
       "to": "koa-service#src/orders/orders.routes.ts:GET /:orderId@27",
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
       "line": 27
+    },
+    {
+      "from": "entry:koa-service:http:GET:/orders/:param",
+      "to": "koa-service#src/orders/orders.routes.ts:withTenant",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 21,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "ordersRouter.use"
+      }
+    },
+    {
+      "from": "entry:koa-service:http:GET:/orders/:param",
+      "to": "koa-service#src/server.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
     },
     {
       "from": "entry:koa-service:http:GET:/public/health",
@@ -327,6 +399,48 @@
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
       "line": 32
+    },
+    {
+      "from": "entry:koa-service:http:POST:/orders",
+      "to": "koa-service#src/orders/orders.routes.ts:requireAdmin",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 32,
+      "meta": {
+        "order": 2,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "ordersRouter.post"
+      }
+    },
+    {
+      "from": "entry:koa-service:http:POST:/orders",
+      "to": "koa-service#src/orders/orders.routes.ts:withTenant",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.routes.ts",
+      "line": 21,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "ordersRouter.use"
+      }
+    },
+    {
+      "from": "entry:koa-service:http:POST:/orders",
+      "to": "koa-service#src/server.ts:authenticate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
     },
     {
       "from": "koa-service#src/orders/orders.controller.ts:listOrders",
@@ -403,7 +517,7 @@
       "file": "src/orders/orders.routes.ts",
       "line": 38,
       "reason": "route-path-dynamic",
-      "hint": "Give the route a string literal or a const string; a computed path cannot be matched against callers.",
+      "hint": "Write the path as a literal, a const, or a + or template of them, and every path of a list the same way; a path that needs a call or a run-time value to compute is not recorded as a route at all, so no caller can reach it.",
       "symbol": "ordersRouter.del(archivePath('old'))",
       "adapter": "koa-routes"
     }

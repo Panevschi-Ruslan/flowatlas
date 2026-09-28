@@ -8,17 +8,27 @@
  * Two kinds of fixture. A single repository holds `expected.graph.json` and is
  * compared against `<fixture>/.flowatlas/graph.json` from `flowatlas extract`. A
  * project holds `expected.project-graph.json` and `expected.link-report.json`
- * and is compared against what `flowatlas build` wrote beside them.
+ * and is compared against what `flowatlas build` wrote beside them, and may hold
+ * `expected.contracts-report.json`, compared against the `contracts.json` that
+ * `flowatlas contracts` writes after the build.
  *
- * A fixture that has not been run is validated but not compared. Timestamps and
- * durations are ignored on both sides, since they change on every run.
+ * Timestamps and durations are ignored on both sides, since they change on every
+ * run.
+ *
+ * A snapshot that is validated and not compared is a snapshot that is not a
+ * gate, so the two counts this prints have to agree - or the fixture has to be
+ * named in `VALIDATE_ONLY` below with a reason, and the gate says so out loud on
+ * every run. Which fixtures can be run at all, and how, is `fixture-layout.mjs`,
+ * shared with `fixtures-run.mjs`: a fixture checked against a run that never
+ * happened is R120, and it happened because those two scripts each had an
+ * opinion about where a fixture keeps its sources.
  */
-import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFileSync, statSync, writeFileSync } from 'node:fs';
+import { basename, join, relative } from 'node:path';
 import { parseProjectGraph, parseRepoGraph } from '@flowatlas/core';
+import { parseContractReport } from '../packages/contracts/dist/index.js';
+import { fixtureDirs, layoutOf, outputDir, root } from './fixture-layout.mjs';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 const update = args.includes('--update');
 const selected = args.filter((arg) => !arg.startsWith('--'));
@@ -28,17 +38,6 @@ const isFile = (path) => {
     return statSync(path).isFile();
   } catch {
     return false;
-  }
-};
-
-const fixtureDirs = () => {
-  if (selected.length > 0) return selected.map((path) => join(root, path));
-  try {
-    return readdirSync(join(root, 'fixtures'), { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => join(root, 'fixtures', entry.name));
-  } catch {
-    return [];
   }
 };
 
@@ -85,8 +84,27 @@ const diffLines = (before, after) => {
   return out;
 };
 
+/**
+ * Fixtures whose snapshot is deliberately compared never, and why.
+ *
+ * The shape the read gate and I12 use, and for their reasons: an exception is a
+ * named debt rather than a silent difference between two numbers, and an
+ * exception that no longer applies is reported too, because one nobody has
+ * removed is one nobody has re-read. Anything not in here that comes out
+ * validated and uncompared fails the gate.
+ */
+const VALIDATE_ONLY = {
+  'schema-smoke':
+    'A hand-written sample of the schema itself rather than a repository: no manifest, ' +
+    'no configuration, no sources, nothing for the tool to be run over. It exists so ' +
+    'that a version bump has one snapshot a person wrote, and it is held to the schema ' +
+    'and to nothing else.',
+};
+
 let validated = 0;
 let compared = 0;
+/** One entry per validated snapshot, so a gap can be named rather than counted. */
+const snapshots = [];
 const problems = [];
 
 /**
@@ -95,14 +113,41 @@ const problems = [];
  * `parse` is the schema the snapshot must satisfy: a snapshot that is not a
  * valid graph is a problem in its own right, whether or not anything ran.
  */
-const check = (label, expectedPath, actualPath, parse) => {
-  if (!isFile(expectedPath)) return;
+const check = (dir, label, expectedPath, actualPath, parse) => {
+  if (!isFile(expectedPath)) {
+    // The other half of the question R120 asked. A snapshot that exists but is
+    // never compared was already an error; a run that writes an output nobody
+    // holds a snapshot of was silently fine, so a fixture added before a kind of
+    // output existed - or a new kind of output landing on fixtures that predate
+    // it - went ungated with nothing said. Two fixtures were in that state the
+    // day the contracts step arrived. `--update` now creates the snapshot, and
+    // outside an update the gap is a failure, so it cannot be missed twice.
+    if (!isFile(actualPath)) return;
+    // Only an output this fixture's own steps say they write. Anything else in
+    // the output directory is a leftover of some other run, and the layout table
+    // is the one answer to which files a fixture of this kind produces.
+    const declared = layoutOf(dir).steps.flatMap((step) => step.writes);
+    if (!declared.includes(basename(actualPath))) return;
+    if (UNHELD[basename(dir)] !== undefined && HELD_BACK.includes(basename(expectedPath))) return;
+    if (update) {
+      accept(expectedPath, actualPath);
+      console.log(`created ${label}`);
+      return;
+    }
+    problems.push(
+      `${label}: a run wrote ${relative(root, actualPath)} and no snapshot holds it, so nothing compares it. ` +
+        'Run with --update, read the new file, and commit it.',
+    );
+    return;
+  }
 
+  const snapshot = { label, fixture: basename(dir), compared: false };
   let expected;
   let stale;
   try {
     expected = parse(JSON.parse(readFileSync(expectedPath, 'utf8')));
     validated += 1;
+    snapshots.push(snapshot);
   } catch (cause) {
     // A snapshot the schema no longer accepts is what `--update` is for: after
     // a version bump every one of them fails here, and refusing to rewrite them
@@ -133,6 +178,7 @@ const check = (label, expectedPath, actualPath, parse) => {
     return;
   }
   compared += 1;
+  snapshot.compared = true;
 
   const before = JSON.stringify(stable(expected), null, 2).split('\n');
   const after = JSON.stringify(stable(actual), null, 2).split('\n');
@@ -168,38 +214,128 @@ const asReport = (value) => {
   return value;
 };
 
-const hasSources = (dir) => {
-  try {
-    return statSync(join(dir, 'src')).isDirectory();
-  } catch {
-    return false;
-  }
-};
+/**
+ * Project fixtures whose project graph and link report are deliberately held by
+ * no snapshot yet, and why.
+ *
+ * The rule above found nine project fixtures held by their repository graph
+ * alone. Each was read against its README before its outputs became an
+ * expectation (R138), and the ones that read wrong were named here: a snapshot
+ * taken then would have written the disagreement into the gate as the right
+ * answer. Each entry named what was wrong, so the entry was a debt with a reason
+ * rather than a hole.
+ *
+ * Empty since R140, which settled the last three - `multi-repo-analytics`,
+ * `nest-kafka` and `nest-types` - each by deciding whether the reader or the
+ * README was right, and not by taking the output. The mechanism stays, because
+ * the next fixture whose output contradicts its README needs somewhere to wait
+ * that is not a snapshot.
+ *
+ * The same shape as `VALIDATE_ONLY`, and for its reason: an exception that no
+ * longer applies is reported too. An entry whose fixture now holds either
+ * snapshot fails the gate - somebody resolved it and has to remove the name, or
+ * somebody snapshotted a disagreement and has to look again.
+ */
+const UNHELD = {};
 
-for (const dir of fixtureDirs()) {
+/** The outputs an `UNHELD` entry holds back: everything a build writes. */
+const HELD_BACK = ['expected.project-graph.json', 'expected.link-report.json'];
+
+/** What a snapshot is compared against, one row per file the tool writes. */
+const SNAPSHOTS = [
+  ['expected.graph.json', 'graph.json', parseRepoGraph],
+  ['expected.project-graph.json', 'project-graph.json', parseProjectGraph],
+  ['expected.link-report.json', 'link-report.json', asReport],
+  // Not `expected.contracts.json`: in multi-repo-contracts that name already
+  // holds what `contracts --format json` prints, which `cli-snapshots.mjs`
+  // records, and the printed report is ordered for a reader while the file is
+  // in the order the check produced it. Same findings, different bytes, so
+  // the two cannot share a name.
+  ['expected.contracts-report.json', 'contracts.json', parseContractReport],
+];
+
+const visited = new Set();
+
+for (const dir of fixtureDirs(selected)) {
   const label = relative(root, dir);
-  // A fixture with no sources cannot be produced by running the tool. The one
-  // that exists is a hand-written sample of the schema itself, so it is checked
-  // against the schema and never against an extraction.
-  const flowatlas = hasSources(dir) || isFile(join(dir, 'flowatlas.config.json')) ? join(dir, '.flowatlas') : join(dir, '.none');
-  check(
-    `${label}/expected.graph.json`,
-    join(dir, 'expected.graph.json'),
-    join(flowatlas, 'graph.json'),
-    parseRepoGraph,
-  );
-  check(
-    `${label}/expected.project-graph.json`,
-    join(dir, 'expected.project-graph.json'),
-    join(flowatlas, 'project-graph.json'),
-    parseProjectGraph,
-  );
-  check(
-    `${label}/expected.link-report.json`,
-    join(dir, 'expected.link-report.json'),
-    join(flowatlas, 'link-report.json'),
-    asReport,
-  );
+  visited.add(basename(dir));
+  // Where a run over this fixture writes, whatever its layout. A fixture of no
+  // kind has no such directory, so its snapshot comes out uncompared and the
+  // reconciliation below insists on a reason for it.
+  const out = outputDir(dir);
+  for (const [expected, actual, parse] of SNAPSHOTS) {
+    check(dir, `${label}/${expected}`, join(dir, expected), join(out, actual), parse);
+  }
+}
+
+/**
+ * The gap between the two counts, named.
+ *
+ * Under `--update` every uncompared snapshot is one a run has not been done for
+ * yet, which is the state `--update` exists to leave, so this only runs when the
+ * gate is being asked for a verdict.
+ */
+const validateOnly = [];
+if (!update) {
+  const gaps = new Map();
+  for (const snapshot of snapshots) {
+    if (snapshot.compared) continue;
+    const found = gaps.get(snapshot.fixture) ?? [];
+    found.push(snapshot.label);
+    gaps.set(snapshot.fixture, found);
+  }
+  for (const [fixture, labels] of gaps) {
+    const why = VALIDATE_ONLY[fixture];
+    if (why !== undefined) {
+      validateOnly.push(`  validate-only ${fixture}: ${why}`);
+      continue;
+    }
+    // Two ways to get here, and they need different sentences: a fixture the
+    // tool cannot be run over at all, and one that simply has not been run.
+    const remedy =
+      layoutOf(join(root, 'fixtures', fixture)).kind === 'none'
+        ? `nothing in fixtures/${fixture} declares how it is produced - give it a manifest or a configuration`
+        : 'run `pnpm fixtures:run` first';
+    problems.push(
+      `${labels.join('\n    ')}\n    validated but compared never: ${remedy}, ` +
+        'or name the fixture in VALIDATE_ONLY with the reason.',
+    );
+  }
+  for (const fixture of Object.keys(VALIDATE_ONLY)) {
+    if (visited.has(fixture) && !gaps.has(fixture)) {
+      problems.push(
+        `fixtures/${fixture}: named in VALIDATE_ONLY, but every snapshot of it was compared. Remove the entry.`,
+      );
+    }
+  }
+}
+
+/**
+ * `UNHELD`, reconciled the way `VALIDATE_ONLY` is: every entry is said out loud,
+ * and one that no longer holds anything back is a failure rather than a
+ * leftover. Not only under a verdict: `--update` never creates a held-back
+ * snapshot, so one that exists was put there by hand, and that is the moment to
+ * be told.
+ */
+const unheld = [];
+for (const [fixture, why] of Object.entries(UNHELD)) {
+  if (!visited.has(fixture)) {
+    // Checking one fixture says nothing about another; checking all of them
+    // and not finding this one means the entry names nothing.
+    if (selected.length === 0) {
+      problems.push(`fixtures/${fixture}: named in UNHELD, but there is no such fixture. Remove the entry.`);
+    }
+    continue;
+  }
+  const held = HELD_BACK.filter((name) => isFile(join(root, 'fixtures', fixture, name)));
+  if (held.length > 0) {
+    problems.push(
+      `fixtures/${fixture}: named in UNHELD, but ${held.join(' and ')} now exist${held.length === 1 ? 's' : ''}. ` +
+        'If what it held back is resolved, remove the entry; if not, the snapshot has taken the wrong answer as the expectation.',
+    );
+    continue;
+  }
+  unheld.push(`  unheld ${fixture}: ${why}`);
 }
 
 if (problems.length > 0) {
@@ -209,3 +345,5 @@ if (problems.length > 0) {
 }
 
 console.log(`fixtures ok: ${compared} compared, ${validated} validated`);
+for (const line of validateOnly) console.log(line);
+for (const line of unheld) console.log(line);

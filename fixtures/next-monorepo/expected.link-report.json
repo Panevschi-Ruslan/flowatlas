@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T09:26:56.734Z",
+  "configHash": "ef851b9ed9cb",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./apps/web",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 9,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 553
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 1,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 1,
+    "resolved": 0,
+    "unresolved": 1,
+    "byReason": {
+      "target-route-not-found": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:web:http:GET:/api/orders",
+      "entry:web:http:POST:/api/orders"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "../../packages/orders-lib/src/store.ts",
+      "line": 16,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares ORDERS_UPSTREAM_URL",
+      "hint": "Add ORDERS_UPSTREAM_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:web#../../packages/orders-lib/src/store.ts:16:24"
+    },
+    {
+      "service": "web",
+      "file": "../../packages/orders-lib/src/store.ts",
+      "line": 16,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /orders",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /orders */.",
+      "symbol": "ui_api_call:web#../../packages/orders-lib/src/store.ts:16:24"
+    }
+  ],
+  "totals": {
+    "nodes": 12,
+    "edges": 9,
+    "types": 0,
+    "unresolved": 2
+  }
+}

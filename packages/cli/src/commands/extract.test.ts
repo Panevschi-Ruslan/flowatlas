@@ -306,6 +306,26 @@ describe('nest-di-tokens', () => {
     expect(reasons(load('nest-di-tokens'))).toContain('di-token-unknown');
   });
 
+  // R150. `ClientsModule.register([{ name: 'KAFKA_CLIENT', ... }])` provides the
+  // token as surely as `providers: [{ provide: 'KAFKA_CLIENT', useValue }]` would:
+  // Nest writes exactly that provider for each entry, and the value is a
+  // `ClientProxy`. A reader that saw only `providers:` reported the token
+  // unprovided, and six snapshots agreed.
+  it.each([
+    ['nest-kafka', 'KAFKA_CLIENT'],
+    ['nest-rabbitmq', 'RMQ_CLIENT'],
+  ])('takes a token a client module registers as provided (%s)', (name, token) => {
+    const graph = load(name);
+    const mentions = graph.unresolved.filter((row) => row.hint?.includes(token) === true);
+    expect(mentions).toEqual([]);
+    const proxy = graph.nodes.find((node) => node.label === 'ClientProxy');
+    const service = graph.nodes.find((node) => node.label === 'OrdersService');
+    const injected = edgesOf(graph, 'injects').filter(
+      (edge) => edge.from === service?.id && edge.to === proxy?.id,
+    );
+    expect(injected).toHaveLength(1);
+  });
+
   it('survives a cycle written with forwardRef, and keeps both edges', () => {
     const graph = load('nest-di-tokens');
     const injects = edgesOf(graph, 'injects');
@@ -495,6 +515,14 @@ describe('nest-types', () => {
     expect(types()['type:nest-types#Paginated<type:nest-types#Order>']?.fields).toBeDefined();
   });
 
+  it('registers a generic used with only its parameter as the template, not beside it', () => {
+    const ids = Object.keys(types()).filter((id) => id.startsWith('type:nest-types#Paginated'));
+    expect(ids.sort()).toEqual([
+      'type:nest-types#Paginated',
+      'type:nest-types#Paginated<type:nest-types#Order>',
+    ]);
+  });
+
   it('reads a shared package in full, under its own name', () => {
     const shared = types()['type:@fixture/contracts#SharedOrderEvent'];
     expect(shared?.kind).toBe('object');
@@ -645,35 +673,48 @@ describe('data access', () => {
     expect(graph.unresolved.map((row) => row.reason)).toContain('sql-parse-failed');
   });
 
-  it('keeps an unfamiliar data layer in the graph, losing only the operation', () => {
+  /**
+   * A package nobody has described is a package whose type parameters nobody
+   * can read, so the query stays and names nothing.
+   *
+   * It used to name its first type argument. `Kysely<DB>` is a connection typed
+   * by the whole schema, and that gave a photo server two table nodes with 407 `queries`
+   * edges pointing at them, beside 407 rows saying the package was not
+   * understood (R83).
+   */
+  it('keeps an unfamiliar data layer in the graph, naming no table', () => {
     const graph = load('nest-unknown-orm');
     const fromLibrary = graph.nodes.filter(
       (node) => node.type === 'db_query' && node.meta?.['package'] === 'fake-orm',
     );
-    expect(fromLibrary).toHaveLength(2);
+    expect(fromLibrary).toHaveLength(4);
     for (const node of fromLibrary) {
-      expect(node.meta?.['table']).toBe('Order');
+      expect(node.meta?.['table']).toBeNull();
       expect(node.meta?.['op']).toBeNull();
     }
-    expect(graph.unresolved.filter((row) => row.reason === 'unknown-db-package')).toHaveLength(2);
+    expect(graph.unresolved.filter((row) => row.reason === 'unknown-db-package')).toHaveLength(4);
+    expect(graph.nodes.filter((node) => node.type === 'table')).toHaveLength(0);
   });
 
-  it('says when a name was all it had to go on', () => {
+  /** A name is not evidence, so it produces the row and no node (R83). */
+  it('says when a name was all it had to go on, and draws nothing for it', () => {
     const graph = load('nest-unknown-orm');
-    const guessed = graph.nodes.find(
-      (node) => node.type === 'db_query' && node.meta?.['table'] === null,
+    expect(graph.unresolved.filter((row) => row.reason === 'db-receiver-name-only')).toHaveLength(2);
+    const guessed = graph.nodes.filter(
+      (node) => node.type === 'db_query' && node.meta?.['package'] === null,
     );
-    expect(guessed?.meta?.['source']).toBe('none');
-    expect(graph.unresolved.map((row) => row.reason)).toContain('db-receiver-name-only');
+    expect(guessed).toHaveLength(0);
   });
 
   it('marks a guess as a guess and a proof as proof', () => {
     for (const edge of load('nest-typeorm').edges.filter((item) => item.type === 'queries')) {
       expect(edge.confidence).toBe('static');
     }
-    for (const edge of load('nest-unknown-orm').edges.filter((item) => item.type === 'queries')) {
-      expect(edge.confidence).toBe('heuristic');
-    }
+    // And a guess at a table is no longer drawn at all: an undescribed package
+    // names none, so there is no edge here to be honest about (R83). Asserted as
+    // an emptiness rather than left as a loop over nothing, which would read as
+    // a check and be none.
+    expect(load('nest-unknown-orm').edges.filter((item) => item.type === 'queries')).toHaveLength(0);
   });
 });
 
@@ -746,6 +787,16 @@ describe('cache, outgoing calls and configuration', () => {
 });
 
 describe('channels', () => {
+  // One decorator with nothing in it is one thing to fix, and the entry reader
+  // is the one that reads a pattern's argument: the consumer reuses that
+  // reading, so where it was refused there is nothing new to say (R148).
+  it('writes one row for a pattern decorator with no argument, not two', () => {
+    const rows = load('nest-kafka').unresolved.filter(
+      (row) => row.file === 'src/orders/orders.controller.ts' && row.line === 47,
+    );
+    expect(rows.map((row) => row.reason)).toEqual(['decorator-arg-dynamic']);
+  });
+
   it.each(['nest-kafka', 'nest-rabbitmq', 'nest-bullmq', 'nest-redis-pubsub', 'nest-broker-markers'])(
     '%s gives every channel an id no repository could claim',
     (name) => {

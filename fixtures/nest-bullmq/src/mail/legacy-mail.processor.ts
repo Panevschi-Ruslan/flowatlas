@@ -1,5 +1,5 @@
 import { Process, Processor } from '@nestjs/bull';
-import type { Job } from '@nestjs/bull';
+import type { Job } from 'bull';
 
 import type { SendEmailJob } from './jobs';
 

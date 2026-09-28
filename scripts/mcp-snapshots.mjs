@@ -14,11 +14,18 @@ import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createFlowatlasServer } from '@flowatlas/mcp';
+import { readGraphFile, resolveNodeId } from './fixture-nodes.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const fixture = join(root, 'fixtures', 'multi-repo');
 const outDir = join(fixture, 'expected.mcp');
 const update = process.argv.includes('--update');
+
+// The two questions below are about a particular request, and a request's id
+// carries the line it was written at. Asked for by the client method that makes
+// it, so that a fixture can gain a line without this script needing an edit.
+const graph = readGraphFile(join(fixture, '.flowatlas', 'project-graph.json'));
+const requestIn = (method) => resolveNodeId(graph, { type: 'http_out', calledBy: method });
 
 /** One question per file, named for what it asks. */
 const CASES = [
@@ -37,11 +44,11 @@ const CASES = [
   ['get_type.shared', 'get_type', { type: 'type:@fx/contracts#OrderDto' }],
   ['get_type.ambiguous', 'get_type', { type: 'InvoiceDto' }],
   ['check_contract.shared', 'check_contract', {
-    from: 'http_out:gateway#src/clients/orders.client.ts:33:12',
+    from: requestIn('gateway#src/clients/orders.client.ts:OrdersClient.fetchOne'),
     to: 'entry:orders:http:GET:/orders/:param',
   }],
   ['check_contract.hash-differs', 'check_contract', {
-    from: 'http_out:gateway#src/clients/billing.client.ts:33:12',
+    from: requestIn('gateway#src/clients/billing.client.ts:BillingClient.requestInvoice'),
     to: 'entry:billing:http:POST:/invoices',
   }],
   ['find_symbol.partial', 'find_symbol', { query: 'fetchOne' }],

@@ -25,3 +25,17 @@ export interface GetOrderQuery {
   orderId: string;
   includeRefunds: boolean;
 }
+
+/**
+ * What `billing` believes comes back from `orders.get`.
+ *
+ * `orders` answers with `id`, `total` and `placedAt`; this also requires a
+ * `status` the handler never returns. The reply to a request over a channel is
+ * a response like any other, with no compiler between its two ends (R151).
+ */
+export interface OrderDto {
+  id: string;
+  total: number;
+  placedAt: string;
+  status: string;
+}

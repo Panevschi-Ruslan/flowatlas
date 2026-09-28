@@ -1,0 +1,279 @@
+{
+  "schemaVersion": 5,
+  "repo": "next-nested-apps",
+  "generatedAt": "2026-09-27T18:38:06.613Z",
+  "nodes": [
+    {
+      "id": "entry:next-nested-apps@.:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders (.)",
+      "repo": "next-nested-apps",
+      "file": "app/api/orders/route.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "application": ".",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:next-nested-apps@examples/blog:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders (examples/blog)",
+      "repo": "next-nested-apps",
+      "file": "examples/blog/src/app/api/orders/route.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "application": "examples/blog",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:next-nested-apps@examples/blog:http:GET:/api/posts",
+      "type": "entry",
+      "label": "GET /api/posts (examples/blog)",
+      "repo": "next-nested-apps",
+      "file": "examples/blog/src/app/api/posts/route.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/posts",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "application": "examples/blog",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "http_out:next-nested-apps#app/orders-client.ts:10:26",
+      "type": "http_out",
+      "label": "GET /api/orders",
+      "repo": "next-nested-apps",
+      "file": "app/orders-client.ts",
+      "line": 10,
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "application": "."
+      }
+    },
+    {
+      "id": "http_out:next-nested-apps#examples/blog/src/orders-client.ts:8:26",
+      "type": "http_out",
+      "label": "GET /api/orders",
+      "repo": "next-nested-apps",
+      "file": "examples/blog/src/orders-client.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "application": "examples/blog"
+      }
+    },
+    {
+      "id": "next-nested-apps#app/api/orders/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "next-nested-apps",
+      "file": "app/api/orders/route.ts",
+      "line": 4
+    },
+    {
+      "id": "next-nested-apps#app/orders-client.ts:loadOrders",
+      "type": "function",
+      "label": "loadOrders",
+      "repo": "next-nested-apps",
+      "file": "app/orders-client.ts",
+      "line": 9
+    },
+    {
+      "id": "next-nested-apps#examples/blog/src/app/api/orders/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "next-nested-apps",
+      "file": "examples/blog/src/app/api/orders/route.ts",
+      "line": 6
+    },
+    {
+      "id": "next-nested-apps#examples/blog/src/app/api/posts/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "next-nested-apps",
+      "file": "examples/blog/src/app/api/posts/route.ts",
+      "line": 2
+    },
+    {
+      "id": "next-nested-apps#examples/blog/src/orders-client.ts:loadOrders",
+      "type": "function",
+      "label": "loadOrders",
+      "repo": "next-nested-apps",
+      "file": "examples/blog/src/orders-client.ts",
+      "line": 7
+    },
+    {
+      "id": "next-nested-apps#lib/orders-store.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "next-nested-apps",
+      "file": "lib/orders-store.ts",
+      "line": 3
+    },
+    {
+      "id": "repo:next-nested-apps",
+      "type": "repo",
+      "label": "next-nested-apps",
+      "repo": "next-nested-apps",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 6,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:next-nested-apps#app/orders-client.ts:10:26",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "next-nested-apps",
+      "file": "app/orders-client.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "application": ".",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "ui_api_call:next-nested-apps#examples/blog/src/orders-client.ts:8:26",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "next-nested-apps",
+      "file": "examples/blog/src/orders-client.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "application": "examples/blog",
+        "via": "literal"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:next-nested-apps@.:http:GET:/api/orders",
+      "to": "next-nested-apps#app/api/orders/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:next-nested-apps@examples/blog:http:GET:/api/orders",
+      "to": "next-nested-apps#examples/blog/src/app/api/orders/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "examples/blog/src/app/api/orders/route.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:next-nested-apps@examples/blog:http:GET:/api/posts",
+      "to": "next-nested-apps#examples/blog/src/app/api/posts/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "examples/blog/src/app/api/posts/route.ts",
+      "line": 2
+    },
+    {
+      "from": "next-nested-apps#app/api/orders/route.ts:GET",
+      "to": "next-nested-apps#lib/orders-store.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 5
+    },
+    {
+      "from": "next-nested-apps#app/orders-client.ts:loadOrders",
+      "to": "http_out:next-nested-apps#app/orders-client.ts:10:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/orders-client.ts",
+      "line": 10
+    },
+    {
+      "from": "next-nested-apps#app/orders-client.ts:loadOrders",
+      "to": "ui_api_call:next-nested-apps#app/orders-client.ts:10:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/orders-client.ts",
+      "line": 10
+    },
+    {
+      "from": "next-nested-apps#examples/blog/src/orders-client.ts:loadOrders",
+      "to": "http_out:next-nested-apps#examples/blog/src/orders-client.ts:8:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "examples/blog/src/orders-client.ts",
+      "line": 8
+    },
+    {
+      "from": "next-nested-apps#examples/blog/src/orders-client.ts:loadOrders",
+      "to": "ui_api_call:next-nested-apps#examples/blog/src/orders-client.ts:8:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "examples/blog/src/orders-client.ts",
+      "line": 8
+    }
+  ],
+  "types": {},
+  "unresolved": []
+}

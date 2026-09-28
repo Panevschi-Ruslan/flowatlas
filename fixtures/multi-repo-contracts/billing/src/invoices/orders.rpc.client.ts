@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+import type { Observable } from 'rxjs';
+import type { GetOrderQuery, OrderDto } from './dto';
 
-import type { GetOrderQuery } from './dto';
-
-/** The asking half of the rpc pair. */
+/** The asking half of the rpc pair, and the reader of its answer. */
 @Injectable()
 export class OrdersRpcClient {
   constructor(
@@ -11,7 +11,7 @@ export class OrdersRpcClient {
     private readonly orders: ClientProxy,
   ) {}
 
-  ask(query: GetOrderQuery): unknown {
-    return this.orders.send('orders.get', query);
+  ask(query: GetOrderQuery): Observable<OrderDto> {
+    return this.orders.send<OrderDto, GetOrderQuery>('orders.get', query);
   }
 }

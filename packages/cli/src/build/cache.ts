@@ -7,8 +7,14 @@ import { z } from 'zod';
 /**
  * Bumped like `SCHEMA_VERSION`, and for the same reason: a cache written by an
  * older shape must be ignored rather than half understood.
+ *
+ * 2 records the state of a repository's dependencies, which the plan now
+ * compares. A cache written before this field existed says nothing about whether
+ * `node_modules` was there when it was written, and every entry in it would have
+ * to be re-read anyway; a version bump says so once, as `cache-invalid:version`,
+ * rather than repeating it per repository.
  */
-export const CACHE_VERSION = 1;
+export const CACHE_VERSION = 2;
 
 export const CACHE_FILENAME = 'cache.json';
 
@@ -20,6 +26,23 @@ const fileStampSchema = z.strictObject({
   deps: z.array(z.string()).default([]),
 });
 
+/**
+ * What was installed for a repository when it was last read.
+ *
+ * Its shape lives here, beside the rest of what the cache records, so that
+ * nothing has to import the cache in order to describe itself to it. What it
+ * means, where it is read from and what a difference in it amounts to are in
+ * `dependencies.ts`, which is the one place that judges it.
+ */
+const dependencyStateSchema = z.strictObject({
+  /** Directories of the service's extent holding an install, repository-relative. */
+  installed: z.array(z.string()),
+  /** Every lockfile governing the service, repository-relative, to its content hash. */
+  lockfiles: z.record(z.string(), z.string()),
+});
+
+export type DependencyState = z.infer<typeof dependencyStateSchema>;
+
 const repoCacheSchema = z.strictObject({
   /** Path as written in the configuration, so a moved repository invalidates. */
   repo: z.string(),
@@ -27,6 +50,17 @@ const repoCacheSchema = z.strictObject({
   adapters: z.array(z.string()),
   tsconfigHash: z.string(),
   packageJsonHash: z.string(),
+  /**
+   * Whether its dependencies were there, and which, when it was read.
+   *
+   * Optional because not every writer of an entry is a build: a lone `extract`
+   * leaves one behind for the file hashes in it, and it never surveyed the
+   * question. Absent therefore means *not recorded* rather than *nothing
+   * installed*, and the plan treats it as a reading it cannot compare against
+   * rather than as a reading with no dependencies — which would be a guess, and
+   * the wrong one half the time.
+   */
+  dependencies: dependencyStateSchema.optional(),
   globalFiles: z.array(z.string()),
   files: z.record(z.string(), fileStampSchema),
   graphPath: z.string(),

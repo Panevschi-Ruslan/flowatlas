@@ -7,9 +7,6 @@
     }
   ],
   "adapters": {
-    "force": {
-      "entry": ["entry-http-custom"]
-    },
     "entry": {
       "http": [
         {

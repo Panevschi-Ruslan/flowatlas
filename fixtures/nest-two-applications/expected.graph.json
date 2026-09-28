@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 5,
+  "repo": "nest-two-applications",
+  "generatedAt": "2026-09-27T12:27:24.445Z",
+  "nodes": [
+    {
+      "id": "entry:nest-two-applications:http:GET:/legacy",
+      "type": "entry",
+      "label": "GET /legacy",
+      "repo": "nest-two-applications",
+      "file": "src/legacy/legacy.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/legacy",
+        "rawPath": "/legacy",
+        "controller": "LegacyController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-two-applications@ApiModule:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health (ApiModule)",
+      "repo": "nest-two-applications",
+      "file": "src/health/health.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "controller": "HealthController",
+        "application": "ApiModule",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-two-applications@ApiModule:http:GET:/status",
+      "type": "entry",
+      "label": "GET /status (ApiModule)",
+      "repo": "nest-two-applications",
+      "file": "src/shared/status.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/status",
+        "rawPath": "/status",
+        "controller": "StatusController",
+        "application": "ApiModule",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-two-applications@WorkerModule:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health (WorkerModule)",
+      "repo": "nest-two-applications",
+      "file": "src/worker/worker-health.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "controller": "WorkerHealthController",
+        "application": "WorkerModule",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-two-applications@WorkerModule:http:GET:/status",
+      "type": "entry",
+      "label": "GET /status (WorkerModule)",
+      "repo": "nest-two-applications",
+      "file": "src/shared/status.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/status",
+        "rawPath": "/status",
+        "controller": "StatusController",
+        "application": "WorkerModule",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-two-applications#src/api/api.module.ts:ApiModule",
+      "type": "module",
+      "label": "ApiModule",
+      "repo": "nest-two-applications",
+      "file": "src/api/api.module.ts",
+      "line": 15,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "StatusController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-two-applications#src/health/health.controller.ts:HealthController",
+      "type": "provider",
+      "label": "HealthController",
+      "repo": "nest-two-applications",
+      "file": "src/health/health.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "HealthModule"
+      }
+    },
+    {
+      "id": "nest-two-applications#src/health/health.controller.ts:HealthController.check",
+      "type": "method",
+      "label": "HealthController.check",
+      "repo": "nest-two-applications",
+      "file": "src/health/health.controller.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-two-applications#src/health/health.module.ts:HealthModule",
+      "type": "module",
+      "label": "HealthModule",
+      "repo": "nest-two-applications",
+      "file": "src/health/health.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "HealthController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-two-applications#src/legacy/legacy.controller.ts:LegacyController",
+      "type": "provider",
+      "label": "LegacyController",
+      "repo": "nest-two-applications",
+      "file": "src/legacy/legacy.controller.ts",
+      "line": 12,
+      "kind": "controller"
+    },
+    {
+      "id": "nest-two-applications#src/legacy/legacy.controller.ts:LegacyController.list",
+      "type": "method",
+      "label": "LegacyController.list",
+      "repo": "nest-two-applications",
+      "file": "src/legacy/legacy.controller.ts",
+      "line": 14
+    },
+    {
+      "id": "nest-two-applications#src/legacy/legacy.module.ts:LegacyModule",
+      "type": "module",
+      "label": "LegacyModule",
+      "repo": "nest-two-applications",
+      "file": "src/legacy/legacy.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-two-applications#src/shared/status.controller.ts:StatusController",
+      "type": "provider",
+      "label": "StatusController",
+      "repo": "nest-two-applications",
+      "file": "src/shared/status.controller.ts",
+      "line": 11,
+      "kind": "controller",
+      "meta": {
+        "module": "WorkerModule"
+      }
+    },
+    {
+      "id": "nest-two-applications#src/shared/status.controller.ts:StatusController.status",
+      "type": "method",
+      "label": "StatusController.status",
+      "repo": "nest-two-applications",
+      "file": "src/shared/status.controller.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-two-applications#src/worker/worker-health.controller.ts:WorkerHealthController",
+      "type": "provider",
+      "label": "WorkerHealthController",
+      "repo": "nest-two-applications",
+      "file": "src/worker/worker-health.controller.ts",
+      "line": 13,
+      "kind": "controller",
+      "meta": {
+        "module": "WorkerModule"
+      }
+    },
+    {
+      "id": "nest-two-applications#src/worker/worker-health.controller.ts:WorkerHealthController.check",
+      "type": "method",
+      "label": "WorkerHealthController.check",
+      "repo": "nest-two-applications",
+      "file": "src/worker/worker-health.controller.ts",
+      "line": 15
+    },
+    {
+      "id": "nest-two-applications#src/worker/worker.module.ts:WorkerModule",
+      "type": "module",
+      "label": "WorkerModule",
+      "repo": "nest-two-applications",
+      "file": "src/worker/worker.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "WorkerHealthController",
+          "StatusController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "repo:nest-two-applications",
+      "type": "repo",
+      "label": "nest-two-applications",
+      "repo": "nest-two-applications",
+      "meta": {
+        "stats": {
+          "files": 11,
+          "filesRead": 11,
+          "filesUnreadable": 0,
+          "classes": 8,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-two-applications:http:GET:/legacy",
+      "to": "nest-two-applications#src/legacy/legacy.controller.ts:LegacyController.list",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/legacy/legacy.controller.ts",
+      "line": 14,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-two-applications@ApiModule:http:GET:/health",
+      "to": "nest-two-applications#src/health/health.controller.ts:HealthController.check",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/health/health.controller.ts",
+      "line": 6,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-two-applications@ApiModule:http:GET:/status",
+      "to": "nest-two-applications#src/shared/status.controller.ts:StatusController.status",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/shared/status.controller.ts",
+      "line": 13,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-two-applications@WorkerModule:http:GET:/health",
+      "to": "nest-two-applications#src/worker/worker-health.controller.ts:WorkerHealthController.check",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker/worker-health.controller.ts",
+      "line": 15,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-two-applications@WorkerModule:http:GET:/status",
+      "to": "nest-two-applications#src/shared/status.controller.ts:StatusController.status",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/shared/status.controller.ts",
+      "line": 13,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "nest-two-applications#src/api/api.module.ts:ApiModule",
+      "to": "nest-two-applications#src/health/health.module.ts:HealthModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/api/api.module.ts",
+      "line": 15
+    },
+    {
+      "from": "nest-two-applications#src/api/api.module.ts:ApiModule",
+      "to": "nest-two-applications#src/legacy/legacy.module.ts:LegacyModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/api/api.module.ts",
+      "line": 15
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/legacy/legacy.module.ts",
+      "line": 7,
+      "reason": "module-controllers-unread",
+      "hint": "List the controller classes, or a name that leads to an array of them in this repository. Which application serves an address is read from the module that declares its controller.",
+      "symbol": "LegacyModule controllers ...legacyControllers"
+    }
+  ]
+}

@@ -2,10 +2,7 @@ import {
   findMethod,
   forEachCall,
   lineOf,
-  memberFunction,
   methodBodies,
-  namedFunction,
-  originOfValue,
   resolveReceiver,
   type NamedFunction,
 } from '@flowatlas/core';
@@ -13,6 +10,7 @@ import type { ClassDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
 import type { ClassRole } from '../index-classes.js';
+import { functionNamedBy, memberFunctionCalled } from './called-function.js';
 import { definePass } from './types.js';
 
 const WALKED: ReadonlySet<ClassRole> = new Set([
@@ -49,6 +47,10 @@ interface Caller {
  * not a helper but where a class keeps behaviour that has no class of its own,
  * and the call names which one, so a method's walk follows it too. A walk that
  * gives only `byName` follows both through it.
+ *
+ * A helper a method calls by name is not lost: once every reader has said which
+ * functions the graph holds, `held-calls.ts` draws the calls that lead to one
+ * (R156).
  */
 interface Follow {
   byName?: (fn: NamedFunction, call: TsNode) => void;
@@ -75,9 +77,7 @@ const walkCalls = (
 
     if (!Node.isPropertyAccessExpression(callee)) {
       if (Node.isIdentifier(callee) && follow.byName !== undefined) {
-        const origin = originOfValue(callee);
-        if (origin.kind !== 'local') return;
-        const fn = namedFunction(origin.declaration);
+        const fn = functionNamedBy(callee);
         if (fn !== undefined) follow.byName(fn, call);
         return;
       }
@@ -101,12 +101,8 @@ const walkCalls = (
     // a module of functions spelled as an object, followed like a function
     // called by name.
     const onMember = follow.byMember ?? follow.byName;
-    if (onMember !== undefined && Node.isIdentifier(receiverExpr)) {
-      const origin = originOfValue(receiverExpr);
-      const member =
-        origin.kind === 'local' && Node.isVariableDeclaration(origin.declaration)
-          ? memberFunction(origin.declaration.getNameNode(), calledName)
-          : undefined;
+    if (onMember !== undefined) {
+      const member = memberFunctionCalled(callee);
       if (member !== undefined) {
         onMember(member, call);
         return;

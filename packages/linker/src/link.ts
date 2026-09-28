@@ -1,8 +1,10 @@
 import { createHash } from 'node:crypto';
 import {
+  CONFIDENCE_RANK,
   namesGivenTo,
   SCHEMA_VERSION,
   wasMissed,
+  type Confidence,
   type FlowatlasConfig,
   type GraphEdge,
   type GraphNode,
@@ -15,6 +17,7 @@ import {
 } from '@flowatlas/core';
 import {
   findingFor,
+  mountAssumedFinding,
   resolveCall,
   type CallOutcome,
   type CallsServiceMarker,
@@ -22,6 +25,14 @@ import {
   type RouteIndex,
 } from './http-link.js';
 import { mergeGraphs } from './merge.js';
+import {
+  isProcedureEntry,
+  procedureFindingFor,
+  procedureReasonOf,
+  resolveProcedureCall,
+  type ProcedureIndex,
+  type ProcedureOutcome,
+} from './procedure-link.js';
 import { auditRoutes } from './route-audit.js';
 import { answeredOnlyByWildcard } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
@@ -169,6 +180,112 @@ const buildUiIndex = (
   };
 };
 
+/**
+ * The lookups a request for a procedure needs.
+ *
+ * Kept apart from the route index because the two are keyed by different
+ * things: a route by a verb and a path pattern, a procedure by one exact string.
+ * Folding them together is how a procedure path would come to be matched as a
+ * URL, which it is not.
+ */
+const buildProcedureIndex = (
+  nodes: ReadonlyMap<string, GraphNode>,
+  config: FlowatlasConfig,
+): ProcedureIndex => {
+  const byService = new Map<string, Map<string, GraphNode>>();
+  for (const node of nodes.values()) {
+    if (!isProcedureEntry(node)) continue;
+    const declared = byService.get(node.repo) ?? new Map<string, GraphNode>();
+    declared.set(String(node.meta?.['key']), node);
+    byService.set(node.repo, declared);
+  }
+  const targets = new Map<string, string[]>();
+  for (const service of config.services) {
+    targets.set(service.name, [...new Set(Object.values(service.apiTarget ?? {}))].sort(cmp));
+  }
+  const declaring = [...byService.keys()].sort(cmp);
+  const none = new Map<string, GraphNode>();
+  return {
+    proceduresOf: (service) => byService.get(service) ?? none,
+    targetsOf: (service) => targets.get(service) ?? [],
+    services: () => declaring,
+  };
+};
+
+/**
+ * The edge a request for a procedure becomes.
+ *
+ * `static` whichever of the two ways found it: the path was read in full at the
+ * call and matched letter for letter, and the service was either the caller's
+ * own or one the configuration named. Nothing about it was guessed.
+ */
+const procedureEdge = (
+  call: GraphNode,
+  outcome: Extract<ProcedureOutcome, { kind: 'linked' }>,
+): GraphEdge => ({
+  from: call.id,
+  to: outcome.entry.id,
+  type: 'hits',
+  confidence: boundedByRoute('static', outcome.entry),
+  ...(call.file === undefined ? {} : { file: call.file }),
+  ...(call.line === undefined ? {} : { line: call.line }),
+  meta: { via: outcome.via, targetService: outcome.targetService },
+});
+
+/**
+ * A join edge may not claim more than the weakest of the two ends it rests on.
+ *
+ * The caller's half really was read, so on its own it is `static`. The route's
+ * half may be nobody's reading at all: a service configured as a document has
+ * routes that are that service's own description of itself, and there is no
+ * source anywhere here to check them against. An edge that stayed `static`
+ * across such a join would be saying the whole claim was proven, which is
+ * precisely the overstatement the way in for a document exists not to make —
+ * and it is the confidence a person actually meets, because `impact` and `flow`
+ * walk these edges and print what they carry.
+ *
+ * `declared` is the word for exactly this and for nothing else, so the join
+ * says what it is rather than borrowing the word for an annotation.
+ *
+ * It only ever weakens. A request whose path the extractor had to guess is
+ * `heuristic` whoever answers it, and a route somebody declared does not make a
+ * guess any better than it was.
+ */
+const boundedByRoute = (confidence: Confidence, entry: GraphNode): Confidence => {
+  // Two ways a route can be weaker than the join that finds it, and the join
+  // takes the weaker of what it found and what the route is. A route a document
+  // declared is `declared`; a route read from an application recognised only by
+  // what the source states, because its type was not installed, carries its own
+  // `meta.confidence` (R142). Read through `Object.hasOwn` because the value
+  // came out of a graph and the ladder is a plain object (R130).
+  const own = entry.meta?.['confidence'];
+  const ceilings: Confidence[] = [];
+  if (typeof own === 'string' && Object.hasOwn(CONFIDENCE_RANK, own)) ceilings.push(own as Confidence);
+  if (entry.meta?.['declaredBy'] !== undefined) ceilings.push('declared');
+  return ceilings.reduce(
+    (bound, ceiling) => (CONFIDENCE_RANK[ceiling] < CONFIDENCE_RANK[bound] ? ceiling : bound),
+    confidence,
+  );
+};
+
+/**
+ * A join across a mount taken as empty is no stronger than a guess (R144).
+ *
+ * The route's address was not read in full: its leading part is where the
+ * deployment mounts the service, taken as empty because every committed
+ * environment file leaves it so. That is evidence, and it is not the address, so
+ * the edge says `heuristic` however it was found — the word for a join resting
+ * on a judgement rather than on text read letter for letter.
+ */
+const boundedByMount = (confidence: Confidence, mountAssumed: readonly string[] | undefined): Confidence =>
+  mountAssumed === undefined || CONFIDENCE_RANK[confidence] <= CONFIDENCE_RANK.heuristic
+    ? confidence
+    : 'heuristic';
+
+/** What an edge across a mount taken as empty carries, so a reader of the edge alone can see it. */
+const mountMeta = (mountAssumed: readonly string[] | undefined): Record<string, unknown> =>
+  mountAssumed === undefined ? {} : { mountAssumedEmpty: [...mountAssumed] };
+
 /** The edge a resolved call becomes. */
 const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked' }>): GraphEdge => {
   const params = call.meta?.['bodyType'];
@@ -177,7 +294,10 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
     from: call.id,
     to: outcome.entry.id,
     type: 'http_calls',
-    confidence: outcome.via === 'marker' ? 'marker' : 'static',
+    confidence: boundedByMount(
+      boundedByRoute(outcome.via === 'marker' ? 'marker' : 'static', outcome.entry),
+      outcome.mountAssumed,
+    ),
     ...(call.file === undefined ? {} : { file: call.file }),
     ...(call.line === undefined ? {} : { line: call.line }),
     ...(typeof params === 'string' ? { params: [params] } : {}),
@@ -185,6 +305,7 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
     meta: {
       via: outcome.via,
       targetService: outcome.entry.repo,
+      ...mountMeta(outcome.mountAssumed),
       ...(outcome.runnersUp.length === 0
         ? {}
         : {
@@ -213,7 +334,10 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
     from: call.id,
     to: outcome.entry.id,
     type: 'hits',
-    confidence: asserted ? 'marker' : guessed ? 'heuristic' : 'static',
+    confidence: boundedByMount(
+      boundedByRoute(asserted ? 'marker' : guessed ? 'heuristic' : 'static', outcome.entry),
+      outcome.mountAssumed,
+    ),
     ...(call.file === undefined ? {} : { file: call.file }),
     ...(call.line === undefined ? {} : { line: call.line }),
     ...(typeof params === 'string' ? { params: [params] } : {}),
@@ -221,6 +345,7 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
     meta: {
       via: outcome.via,
       targetService: outcome.targetService,
+      ...mountMeta(outcome.mountAssumed),
       ...(outcome.runnersUp.length === 0
         ? {}
         : {
@@ -244,10 +369,16 @@ type Spread =
 const wildcardFinding = (call: GraphNode, entry: GraphNode): Finding => {
   const asked = `${String(call.meta?.['method'] ?? '?')} ${String(call.meta?.['path'] ?? '?')}`;
   const route = `${String(entry.meta?.['method'] ?? '?')} ${String(entry.meta?.['path'] ?? '?')}`;
+  // Which program the sentence is about. A service with two applications has
+  // two address spaces, and the question this row asks — does anything here
+  // spell the address out? — is asked of one of them, so naming the service
+  // alone would send a reader to look at routes of the other one (R132).
+  const application = String(entry.meta?.['application'] ?? '');
+  const where = application === '' ? entry.repo : `${entry.repo}'s ${application} application`;
   return {
     reason: 'route-wildcard-only',
-    message: `only the catch-all ${route} in ${entry.repo} answers ${asked}`,
-    hint: `No route of ${entry.repo} spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.`,
+    message: `only the catch-all ${route} in ${where} answers ${asked}`,
+    hint: `No route of ${where} spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.`,
   };
 };
 
@@ -296,6 +427,7 @@ export const linkGraphs = (
   const servicesByEnv = servicesByEnvOf(config);
   const index = buildRouteIndex(nodes, edges.values(), config, routesByService, servicesByEnv);
   const uiIndex = buildUiIndex(config, routesByService, servicesByEnv);
+  const procedureIndex = buildProcedureIndex(nodes, config);
 
   /** Where a finding happened; the finding itself says what and what to do. */
   const record = (call: GraphNode, finding: Finding): void => {
@@ -308,6 +440,19 @@ export const linkGraphs = (
     });
   };
 
+  /**
+   * The edge a request from a browser becomes, and the row a join across a
+   * mount taken as empty carries beside it (R144).
+   */
+  const joinUi = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>, path: string): void => {
+    const edge = uiEdge(call, outcome);
+    edges.set(edgeKey(edge), edge);
+    if (outcome.mountAssumed !== undefined) {
+      const method = String(call.meta?.['method'] ?? '?');
+      record(call, mountAssumedFinding(method, path, outcome.entry, outcome.mountAssumed));
+    }
+  };
+
   for (const call of nodes.values()) {
     if (call.type !== 'http_out') continue;
     httpOut.total += 1;
@@ -318,8 +463,13 @@ export const linkGraphs = (
     if (outcome.kind === 'linked') {
       const edge = callEdge(call, outcome);
       edges.set(edgeKey(edge), edge);
-      for (const entry of alsoLinked ?? []) {
-        const more = callEdge(call, { ...outcome, entry, runnersUp: [] });
+      for (const also of alsoLinked ?? []) {
+        const more = callEdge(call, {
+          kind: 'linked',
+          via: outcome.via,
+          runnersUp: [],
+          ...also,
+        });
         edges.set(edgeKey(more), more);
       }
       httpOut.linked += 1;
@@ -342,6 +492,25 @@ export const linkGraphs = (
   for (const call of nodes.values()) {
     if (call.type !== 'ui_api_call') continue;
     ui.total += 1;
+
+    // A procedure asked for by its path, which has no verb and no URL to match
+    // a route with and is joined on the path alone.
+    if (call.kind === 'rpc') {
+      const outcome = resolveProcedureCall(call, procedureIndex);
+      const finding = procedureFindingFor(outcome, call);
+      if (outcome.kind === 'linked') {
+        const edge = procedureEdge(call, outcome);
+        edges.set(edgeKey(edge), edge);
+        call.meta = { ...call.meta, targetService: outcome.targetService };
+        ui.resolved += 1;
+      } else {
+        ui.unresolved += 1;
+        const reason = procedureReasonOf(outcome, call);
+        if (reason !== undefined) ui.byReason[reason] = (ui.byReason[reason] ?? 0) + 1;
+      }
+      if (finding !== undefined) record(call, finding);
+      continue;
+    }
 
     /** True when matching the address as written settled nothing worth keeping. */
     const onlyCatchAll = (found: UiOutcome): boolean =>
@@ -388,8 +557,7 @@ export const linkGraphs = (
     // addresses somebody wrote are the better answer (R31).
     if (spelledOut?.kind === 'all') {
       for (const each of spelledOut.linked) {
-        const edge = uiEdge(call, each.outcome);
-        edges.set(edgeKey(edge), edge);
+        joinUi(call, each.outcome, each.path);
         call.meta = { ...call.meta, targetService: each.outcome.targetService };
       }
       ui.resolved += 1;
@@ -397,8 +565,7 @@ export const linkGraphs = (
     }
 
     if (outcome.kind === 'linked' && spelledOut?.kind !== 'some') {
-      const edge = uiEdge(call, outcome);
-      edges.set(edgeKey(edge), edge);
+      joinUi(call, outcome, String(call.meta?.['path'] ?? '?'));
       ui.resolved += 1;
       const routes = routesByService.get(outcome.targetService) ?? [];
       if (answeredOnlyByWildcard(outcome.entry, routes)) record(call, wildcardFinding(call, outcome.entry));
@@ -414,8 +581,7 @@ export const linkGraphs = (
       // did. They were resolved; throwing them away would leave the graph
       // missing something the tool had already worked out.
       for (const each of spelledOut.linked) {
-        const edge = uiEdge(call, each.outcome);
-        edges.set(edgeKey(edge), edge);
+        joinUi(call, each.outcome, each.path);
         call.meta = { ...call.meta, targetService: each.outcome.targetService };
       }
       ui.unresolved += 1;

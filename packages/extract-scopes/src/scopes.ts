@@ -24,13 +24,21 @@
  * is the altitude, which is above the core and below every framework.
  */
 import {
+  isServiceSource,
   memberFunction,
   methodBodies,
   moduleFunctions,
+  placedFunction,
   type ClassMethod,
   type NamedFunction,
 } from '@flowatlas/core';
-import type { ClassDeclaration, Node as TsNode, SourceFile } from 'ts-morph';
+import type {
+  ArrowFunction,
+  ClassDeclaration,
+  FunctionExpression,
+  Node as TsNode,
+  SourceFile,
+} from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ScopeContext } from './context.js';
 
@@ -67,6 +75,15 @@ export interface Scope extends Holder {
    * guess about which node a block hangs under.
    */
   method?: ClassMethod;
+  /**
+   * The function the body is, when it is one.
+   *
+   * Carried for the same reason as `method`: a call names a function by its
+   * declaration, and a reader that joins a call to the body it lands in needs
+   * that declaration rather than an id, which a function of the same name
+   * declared inside another one would share (R156).
+   */
+  fn?: NamedFunction;
 }
 
 /**
@@ -86,13 +103,24 @@ export const WALKED_ROLES: ReadonlySet<string> = new Set([
   'plain',
 ]);
 
-/** The files of this repository, which is what the module-level sources read. */
+/**
+ * The files this service's code is in, which is what the module-level sources read.
+ *
+ * "This service's" rather than "this directory's", and that one word is R96. A
+ * workspace member whose handler bodies live in a sibling package had those files
+ * in the project already — the checker had resolved into them so that types would
+ * come out — and this test then threw every one of them away, because they were
+ * not under the directory the manifest was in. The result was a graph with all
+ * eighty-four of a scheduling app's routes in it and not one of the functions they call:
+ * boundaries or bodies, never both. What a service is includes the packages it
+ * declares (see `serviceSourceDirs`), so what its own files are does too.
+ *
+ * A file of an installed package, or of another repository read into the same
+ * project, is still not this service's to answer for.
+ */
 export const repoSourceFiles = function* (ctx: ScopeContext): Generator<SourceFile> {
   for (const source of ctx.project.getSourceFiles()) {
-    const path = source.getFilePath();
-    // A file of an installed package, or of another repository read into the
-    // same project, is not this repository's to answer for.
-    if (path.includes('/node_modules/') || !path.startsWith(`${ctx.repoDir}/`)) continue;
+    if (!isServiceSource(source.getFilePath(), ctx.repoDir)) continue;
     yield source;
   }
 };
@@ -109,6 +137,7 @@ const scopeOf = (ctx: ScopeContext, fn: NamedFunction): Scope => ({
   id: ctx.functionIdOf(fn),
   file: ctx.fileOf(fn.declaration),
   body: fn.body,
+  fn,
   ensure: () => {
     ctx.ensureFunctionNode(fn);
   },
@@ -190,21 +219,82 @@ const registeredHandlers = function* (ctx: ScopeContext, seen: Seen): Generator<
   }
 };
 
+/** Whether a node opens a body of its own, which the walk below leaves to that body. */
+const opensBody = (node: TsNode): boolean =>
+  Node.isFunctionDeclaration(node) ||
+  Node.isMethodDeclaration(node) ||
+  Node.isClassDeclaration(node) ||
+  Node.isClassExpression(node) ||
+  Node.isConstructorDeclaration(node) ||
+  Node.isGetAccessorDeclaration(node) ||
+  Node.isSetAccessorDeclaration(node);
+
+/**
+ * A function written in place in a module's own statements, and nobody's yet.
+ *
+ * `export const bookingsProcedure = authedProcedure.use(async ({ ctx }) => …)`
+ * is a function the module holds and a framework runs, and it is written where
+ * no walk above looks: it is not declared under a name of its own, not a member
+ * of an object of functions, and not a way in the entries pass named. A query in
+ * it produced nothing - no node, no row - because there was nothing to hang the
+ * query off (R157). So it is a body like any other, held by a function named for
+ * where it is written (`placedFunction`), and a reader that has more to say about
+ * it - that it stands in front of a way in - names it the same way, so the two
+ * are one node.
+ *
+ * Only the outermost such function of a statement: one written inside it is
+ * read as part of it, as a function nested in any body is. Last of every source,
+ * so that a function something else already names keeps that name.
+ */
+const placedFunctions = function* (
+  ctx: ScopeContext,
+  seen: Seen,
+  bodies: ReadonlySet<TsNode>,
+): Generator<Scope> {
+  for (const source of repoSourceFiles(ctx)) {
+    const found: Array<ArrowFunction | FunctionExpression> = [];
+    for (const statement of source.getStatements()) {
+      if (opensBody(statement)) continue;
+      statement.forEachDescendant((node, traversal) => {
+        if (opensBody(node)) {
+          traversal.skip();
+          return;
+        }
+        if (!Node.isArrowFunction(node) && !Node.isFunctionExpression(node)) return;
+        traversal.skip();
+        if (!seen.has(node) && !bodies.has(node.getBody())) found.push(node);
+      });
+    }
+    for (const fn of found) {
+      seen.add(fn);
+      yield scopeOf(ctx, placedFunction(fn));
+    }
+  }
+};
+
 /**
  * Every scope of this repository, once each.
  *
  * The order is the one the readers were written against: classes, then each
  * file's module-level functions and objects of functions together, then the
- * handlers the entries pass named. A file is read once for both of its
- * module-level spellings rather than twice, so two functions declared next to
- * each other come out next to each other, which is what a snapshot of the
- * result reads like.
+ * handlers the entries pass named, and last the functions written in place that
+ * none of those named. A file is read once for both of its module-level
+ * spellings rather than twice, so two functions declared next to each other come
+ * out next to each other, which is what a snapshot of the result reads like.
  */
 export const scopesOf = function* (ctx: ScopeContext): Generator<Scope> {
   const seen: Seen = new Set();
-  yield* classMethods(ctx, seen);
+  const bodies = new Set<TsNode>();
+  const kept = function* (scopes: Iterable<Scope>): Generator<Scope> {
+    for (const scope of scopes) {
+      bodies.add(scope.body);
+      yield scope;
+    }
+  };
+  yield* kept(classMethods(ctx, seen));
   for (const source of repoSourceFiles(ctx)) {
-    for (const read of FILE_SOURCES) yield* read(ctx, seen, source);
+    for (const read of FILE_SOURCES) yield* kept(read(ctx, seen, source));
   }
-  yield* registeredHandlers(ctx, seen);
+  yield* kept(registeredHandlers(ctx, seen));
+  yield* placedFunctions(ctx, seen, bodies);
 };

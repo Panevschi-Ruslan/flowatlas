@@ -1,4 +1,5 @@
-import type { ExtractContext, PackageJson } from './context.js';
+import type { ExtractContext } from './context.js';
+import type { PackageJson } from './manifest.js';
 
 /** What a caller may ask of any frontend extractor, whichever one it is. */
 export interface FrontendExtractOptions {

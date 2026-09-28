@@ -5,13 +5,18 @@ import { NEST_COMMON } from '../index-classes.js';
 import { findDecorators, firstStringArg } from '@flowatlas/core';
 import { definePass } from './types.js';
 
-/** Parameter annotations that say which part of a request a value comes from. */
-const REQUEST_PARTS: Record<string, string> = {
-  Body: 'body',
-  Query: 'query',
-  Param: 'params',
-  Headers: 'headers',
-};
+/**
+ * Parameter annotations that say which part of a request a value comes from.
+ *
+ * A `Map`, so the lookup by a decorator's name is safe by construction and not
+ * only by the filter in front of it (R130).
+ */
+const REQUEST_PARTS: ReadonlyMap<string, string> = new Map([
+  ['Body', 'body'],
+  ['Query', 'query'],
+  ['Param', 'params'],
+  ['Headers', 'headers'],
+]);
 
 interface Signature {
   params: TypeRef[];
@@ -33,10 +38,10 @@ const requestShape = (
 
   for (const parameter of method.getParameters()) {
     for (const decorator of findDecorators(parameter, {
-      names: Object.keys(REQUEST_PARTS),
+      names: [...REQUEST_PARTS.keys()],
       fromModules: NEST_COMMON,
     })) {
-      const part = REQUEST_PARTS[decorator.getName()];
+      const part = REQUEST_PARTS.get(decorator.getName());
       if (part === undefined) continue;
       const key = firstStringArg(decorator);
       const ref = collect(parameter);

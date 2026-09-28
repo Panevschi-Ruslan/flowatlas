@@ -1,0 +1,27 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "./generated/prisma"
+}
+
+generator zod {
+  provider = "zod-prisma-types"
+  output   = "./zod"
+}
+
+model User {
+  id     String  @id
+  orders Order[]
+
+  @@map(name: "users")
+}
+
+model Order {
+  id     String @id
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}

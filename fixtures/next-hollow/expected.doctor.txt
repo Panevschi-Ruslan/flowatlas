@@ -1,0 +1,37 @@
+unresolved: total=6 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=2
+
+unresolved: 6 to act on over 6 rows
+  ways in: 7 found, 2 with a handler that was read, 5 without
+  route-handler-unread: 5 rows
+    Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.
+      shop/app/api/exports/route.ts:11  PUT /api/exports
+      shop/app/api/exports/route.ts:11  DELETE /api/exports
+      shop/app/api/orders/route.ts:17  GET /api/orders
+      shop/app/api/reports/route.ts:10  POST /api/reports
+      shop/pages/api/legacy.ts:10  ALL /api/legacy
+  service-read-nothing: 1 row
+    Nothing downstream of this service is in the graph, so every question asked about it will answer nothing rather than answer wrongly. Check its type in flowatlas.config.json against what its manifest declares, or write an adapter for the framework it is built on.
+      widget/package.json:1  widget
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 0 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 6 now, +6)
+  no baseline at <root>/fixtures/next-hollow/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  route-handler-unread: 0 → 5 (+5)
+  service-read-nothing: 0 → 1 (+1)
+  new (6):
+    shop|app/api/exports/route.ts|DELETE /api/exports|route-handler-unread
+    shop|app/api/exports/route.ts|PUT /api/exports|route-handler-unread
+    shop|app/api/orders/route.ts|GET /api/orders|route-handler-unread
+    shop|app/api/reports/route.ts|POST /api/reports|route-handler-unread
+    shop|pages/api/legacy.ts|ALL /api/legacy|route-handler-unread
+    widget|package.json|widget|service-read-nothing
+
+verdict:
+  widget was read by @flowatlas/extractor-react and contributed no node, so nothing asked about that service can be answered from this graph
+  shop: 5 of its 7 ways in have no handler that was read, so what happens after a request arrives there is not in this graph, and a change inside one of those bodies can never add a row for a baseline to catch — the route-handler-unread rows above name each one

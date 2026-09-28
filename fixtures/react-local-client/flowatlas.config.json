@@ -1,0 +1,15 @@
+{
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react"
+    }
+  ],
+  "adapters": {
+    "frontend": {
+      "localClientClasses": ["BillingClient"]
+    }
+  },
+  "output": ".flowatlas"
+}

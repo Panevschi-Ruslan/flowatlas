@@ -31,11 +31,12 @@ export interface ActionBuilder {
   /**
    * The methods that receive the action, and which argument it is.
    *
-   * A record rather than a list because that is how it is asked: the reader has
+   * A map rather than a list because that is how it is asked: the reader has
    * a method name in its hand and wants the argument position, which is a
-   * lookup and not a search.
+   * lookup and not a search. A `Map` rather than an object because the name is
+   * whatever the source called, and an object answers `toString` (R130).
    */
-  readonly methods: Readonly<Record<string, number>>;
+  readonly methods: ReadonlyMap<string, number>;
 }
 
 /**
@@ -53,7 +54,10 @@ export interface ActionBuilder {
 export const NEXT_SAFE_ACTION: ActionBuilder = {
   name: 'next-safe-action',
   packages: ['next-safe-action'],
-  methods: { action: 0, stateAction: 0 },
+  methods: new Map([
+    ['action', 0],
+    ['stateAction', 0],
+  ]),
 };
 
 /**
@@ -67,7 +71,7 @@ export const NEXT_SAFE_ACTION: ActionBuilder = {
 export const ZSA: ActionBuilder = {
   name: 'zsa',
   packages: ['zsa', '@zsa/zsa'],
-  methods: { handler: 0 },
+  methods: new Map([['handler', 0]]),
 };
 
 /** Every library that builds a server action from a function. */

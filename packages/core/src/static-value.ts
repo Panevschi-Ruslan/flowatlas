@@ -22,6 +22,28 @@ export const unresolvedValue = (text: string, reason = 'not-a-static-value'): St
 
 const MAX_DEPTH = 8;
 
+/**
+ * The reasons that mean a name holds a value decided at run time.
+ *
+ * Every other unresolved name is a constant this could not read — declared
+ * without a value, or written with one no walk can settle — and those are two
+ * different things to tell a reader: one can be fixed by moving the constant
+ * somewhere it can be followed, the other by nothing short of annotating the
+ * call. One list, so every reader asking the question gets one answer (R140).
+ */
+const RUN_TIME_REASONS = {
+  /** A `let` or `var`: whatever was last assigned. */
+  reassignable: 'reassignable-binding',
+  /** A parameter: whatever each caller hands it. */
+  parameter: 'parameter',
+} as const;
+
+const RUN_TIME = new Set<string>(Object.values(RUN_TIME_REASONS));
+
+/** Whether an unread value is a name bound at run time, rather than a constant nobody could read. */
+export const isRunTimeValue = (value: StaticValue): boolean =>
+  !value.resolved && RUN_TIME.has(value.reason);
+
 const unwrap = (expr: TsNode): TsNode => {
   let current = expr;
   for (;;) {
@@ -98,6 +120,32 @@ export const evaluateExpression = (expr: TsNode, depth = 0): StaticValue => {
     return resolvedValue(out);
   }
 
+  // `'/api/' + API_VERSION` is one string written in two pieces, and the
+  // checker is no help here: the type of a `+` is the widened `string` even
+  // when both sides are literals, so the type branch below cannot settle it.
+  // Refusing it meant a mount written `app.use('/api/' + API_VERSION, router)`
+  // placed no address at all and every route behind it was lost, while the same
+  // address written as a template literal was read in full (R102).
+  if (Node.isBinaryExpression(node) && node.getOperatorToken().getKind() === SyntaxKind.PlusToken) {
+    const left = evaluateExpression(node.getLeft(), depth + 1);
+    if (!left.resolved) return unresolvedValue(node.getText(), left.reason);
+    const right = evaluateExpression(node.getRight(), depth + 1);
+    if (!right.resolved) return unresolvedValue(node.getText(), right.reason);
+    // The same discipline the template-literal path keeps: a piece that cannot
+    // be read leaves the whole thing unread, never half-read. Here that means
+    // only the two operand kinds `+` has one obvious compile-time answer for.
+    // `true + '/x'` and `{} + ''` are answers nobody wrote down on purpose, and
+    // inventing an address from one is worse than reporting no address.
+    const readable = (value: unknown): value is string | number =>
+      typeof value === 'string' || typeof value === 'number';
+    if (!readable(left.value) || !readable(right.value)) {
+      return unresolvedValue(node.getText(), 'not-a-concatenation');
+    }
+    return typeof left.value === 'number' && typeof right.value === 'number'
+      ? resolvedValue(left.value + right.value)
+      : resolvedValue(`${left.value}${right.value}`);
+  }
+
   // A literal type already carries the value: string enum members, `const`
   // bindings and `as const` all land here without any walking.
   if (Node.isExpression(node)) {
@@ -136,8 +184,14 @@ export const evaluateExpression = (expr: TsNode, depth = 0): StaticValue => {
     if (Node.isVariableDeclaration(declaration)) {
       const kind = declaration.getVariableStatement()?.getDeclarationKind();
       if (kind !== undefined && kind !== VariableDeclarationKind.Const) {
-        return unresolvedValue(node.getText(), 'reassignable-binding');
+        return unresolvedValue(node.getText(), RUN_TIME_REASONS.reassignable);
       }
+    }
+    // A parameter holds whatever each caller hands it. It is not a constant
+    // whose value could not be followed, and saying so would send a reader off
+    // to move a constant that does not exist (R140).
+    if (Node.isParameterDeclaration(declaration)) {
+      return unresolvedValue(node.getText(), RUN_TIME_REASONS.parameter);
     }
     if (Node.isVariableDeclaration(declaration) || Node.isPropertyAssignment(declaration)) {
       const initializer = declaration.getInitializer();

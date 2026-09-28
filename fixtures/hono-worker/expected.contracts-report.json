@@ -1,0 +1,69 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 5,
+  "generatedAt": "2026-09-27T17:30:49.916Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/live-events.service.ts:26:20",
+        "to": "entry:api:http:GET:/api/depots/:param/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/live-events.service.ts:26:20|hits|entry:api:http:GET:/api/depots/:param/stream",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/live-events.service.ts:LiveEventsService.open declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/live-events.service.ts:26:20",
+        "to": "entry:api:http:GET:/api/depots/:param/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/live-events.service.ts:26:20|hits|entry:api:http:GET:/api/depots/:param/stream",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "api#src/stream/sse.ts:orderStream declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:17:12",
+        "to": "entry:api:http:GET:/api/depots/:param/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:17:12|hits|entry:api:http:GET:/api/depots/:param/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.list declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:17:12",
+        "to": "entry:api:http:GET:/api/depots/:param/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:17:12|hits|entry:api:http:GET:/api/depots/:param/orders",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.list declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 4,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

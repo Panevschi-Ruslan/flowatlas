@@ -1,0 +1,686 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T09:26:32.105Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "billing",
+      "repo": "./contracts",
+      "type": "declared",
+      "extractor": "openapi-document"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "api",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "api#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "api",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "BillingClient"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/billing/billing.client.ts:BillingClient",
+      "type": "provider",
+      "label": "BillingClient",
+      "repo": "api",
+      "file": "src/billing/billing.client.ts",
+      "line": 15,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/billing/billing.client.ts:BillingClient.create",
+      "type": "method",
+      "label": "BillingClient.create",
+      "repo": "api",
+      "file": "src/billing/billing.client.ts",
+      "line": 29
+    },
+    {
+      "id": "api#src/billing/billing.client.ts:BillingClient.customer",
+      "type": "method",
+      "label": "BillingClient.customer",
+      "repo": "api",
+      "file": "src/billing/billing.client.ts",
+      "line": 45
+    },
+    {
+      "id": "api#src/billing/billing.client.ts:BillingClient.fetchOne",
+      "type": "method",
+      "label": "BillingClient.fetchOne",
+      "repo": "api",
+      "file": "src/billing/billing.client.ts",
+      "line": 34
+    },
+    {
+      "id": "billing#contracts/billing.json:createInvoice",
+      "type": "method",
+      "label": "createInvoice",
+      "repo": "billing",
+      "file": "contracts/billing.json",
+      "meta": {
+        "declaredBy": "contracts/billing.json"
+      }
+    },
+    {
+      "id": "billing#contracts/billing.json:getCustomer",
+      "type": "method",
+      "label": "getCustomer",
+      "repo": "billing",
+      "file": "contracts/billing.json",
+      "meta": {
+        "declaredBy": "contracts/billing.json"
+      }
+    },
+    {
+      "id": "billing#contracts/billing.json:getInvoice",
+      "type": "method",
+      "label": "getInvoice",
+      "repo": "billing",
+      "file": "contracts/billing.json",
+      "meta": {
+        "declaredBy": "contracts/billing.json"
+      }
+    },
+    {
+      "id": "billing#contracts/billing.json:voidInvoice",
+      "type": "method",
+      "label": "voidInvoice",
+      "repo": "billing",
+      "file": "contracts/billing.json",
+      "meta": {
+        "declaredBy": "contracts/billing.json"
+      }
+    },
+    {
+      "id": "config_key:api#BILLING_URL",
+      "type": "config_key",
+      "label": "BILLING_URL",
+      "repo": "api",
+      "file": "src/billing/billing.client.ts",
+      "line": 30,
+      "meta": {
+        "key": "BILLING_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "entry:billing:http:DELETE:/invoices/:param",
+      "type": "entry",
+      "label": "DELETE /invoices/:param",
+      "repo": "billing",
+      "file": "contracts/billing.json",
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/invoices/:param",
+        "rawPath": "/invoices/{invoiceId}",
+        "adapter": "openapi",
+        "declaredBy": "contracts/billing.json",
+        "pathParams": [
+          "invoiceId"
+        ]
+      }
+    },
+    {
+      "id": "entry:billing:http:GET:/customers/:param",
+      "type": "entry",
+      "label": "GET /customers/:param",
+      "repo": "billing",
+      "file": "contracts/billing.json",
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/customers/:param",
+        "rawPath": "/customers/{customerId}",
+        "adapter": "openapi",
+        "declaredBy": "contracts/billing.json",
+        "pathParams": [
+          "customerId"
+        ]
+      }
+    },
+    {
+      "id": "entry:billing:http:GET:/invoices/:param",
+      "type": "entry",
+      "label": "GET /invoices/:param",
+      "repo": "billing",
+      "file": "contracts/billing.json",
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/invoices/:param",
+        "rawPath": "/invoices/{invoiceId}",
+        "adapter": "openapi",
+        "declaredBy": "contracts/billing.json",
+        "pathParams": [
+          "invoiceId"
+        ]
+      }
+    },
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "type": "entry",
+      "label": "POST /invoices",
+      "repo": "billing",
+      "file": "contracts/billing.json",
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/invoices",
+        "rawPath": "/invoices",
+        "adapter": "openapi",
+        "declaredBy": "contracts/billing.json",
+        "summary": "Raise an invoice"
+      }
+    },
+    {
+      "id": "http_out:api#src/billing/billing.client.ts:30:12",
+      "type": "http_out",
+      "label": "POST /invoices",
+      "repo": "api",
+      "file": "src/billing/billing.client.ts",
+      "line": 30,
+      "meta": {
+        "method": "POST",
+        "url": "${BILLING_URL}/invoices",
+        "path": "/invoices",
+        "baseUrlEnv": "BILLING_URL",
+        "responseType": "type:api#InvoiceDto",
+        "bodyType": "type:api#CreateInvoiceDto",
+        "bodyFrom": "value",
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "http_out:api#src/billing/billing.client.ts:35:12",
+      "type": "http_out",
+      "label": "GET /invoices/:param",
+      "repo": "api",
+      "file": "src/billing/billing.client.ts",
+      "line": 35,
+      "meta": {
+        "method": "GET",
+        "url": "${BILLING_URL}/invoices/${…}",
+        "path": "/invoices/:param",
+        "baseUrlEnv": "BILLING_URL",
+        "responseType": "type:api#InvoiceDto",
+        "bodyType": null,
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "http_out:api#src/billing/billing.client.ts:46:12",
+      "type": "http_out",
+      "label": "GET /customers/:param",
+      "repo": "api",
+      "file": "src/billing/billing.client.ts",
+      "line": 46,
+      "meta": {
+        "method": "GET",
+        "url": "${BILLING_URL}/customers/${…}",
+        "path": "/customers/:param",
+        "baseUrlEnv": "BILLING_URL",
+        "responseType": "type:api#CustomerRefDto",
+        "bodyType": null,
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {
+            "@nestjs/axios": 3,
+            "@nestjs/config": 3
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/billing/billing.client.ts:BillingClient",
+      "to": "api#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/billing/billing.client.ts",
+      "line": 18
+    },
+    {
+      "from": "api#src/billing/billing.client.ts:BillingClient",
+      "to": "api#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/billing/billing.client.ts",
+      "line": 19
+    },
+    {
+      "from": "api#src/billing/billing.client.ts:BillingClient.create",
+      "to": "config_key:api#BILLING_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/billing/billing.client.ts",
+      "line": 30
+    },
+    {
+      "from": "api#src/billing/billing.client.ts:BillingClient.create",
+      "to": "http_out:api#src/billing/billing.client.ts:30:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing/billing.client.ts",
+      "line": 30
+    },
+    {
+      "from": "api#src/billing/billing.client.ts:BillingClient.customer",
+      "to": "config_key:api#BILLING_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/billing/billing.client.ts",
+      "line": 46
+    },
+    {
+      "from": "api#src/billing/billing.client.ts:BillingClient.customer",
+      "to": "http_out:api#src/billing/billing.client.ts:46:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing/billing.client.ts",
+      "line": 46
+    },
+    {
+      "from": "api#src/billing/billing.client.ts:BillingClient.fetchOne",
+      "to": "config_key:api#BILLING_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/billing/billing.client.ts",
+      "line": 35
+    },
+    {
+      "from": "api#src/billing/billing.client.ts:BillingClient.fetchOne",
+      "to": "http_out:api#src/billing/billing.client.ts:35:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing/billing.client.ts",
+      "line": 35
+    },
+    {
+      "from": "entry:billing:http:DELETE:/invoices/:param",
+      "to": "billing#contracts/billing.json:voidInvoice",
+      "type": "handles",
+      "confidence": "declared",
+      "file": "contracts/billing.json",
+      "meta": {
+        "declaredBy": "contracts/billing.json"
+      }
+    },
+    {
+      "from": "entry:billing:http:GET:/customers/:param",
+      "to": "billing#contracts/billing.json:getCustomer",
+      "type": "handles",
+      "confidence": "declared",
+      "file": "contracts/billing.json",
+      "returns": "type:billing#CustomerRef",
+      "meta": {
+        "declaredBy": "contracts/billing.json"
+      }
+    },
+    {
+      "from": "entry:billing:http:GET:/invoices/:param",
+      "to": "billing#contracts/billing.json:getInvoice",
+      "type": "handles",
+      "confidence": "declared",
+      "file": "contracts/billing.json",
+      "returns": "type:billing#Invoice",
+      "meta": {
+        "declaredBy": "contracts/billing.json"
+      }
+    },
+    {
+      "from": "entry:billing:http:POST:/invoices",
+      "to": "billing#contracts/billing.json:createInvoice",
+      "type": "handles",
+      "confidence": "declared",
+      "file": "contracts/billing.json",
+      "params": [
+        "type:billing#CreateInvoice"
+      ],
+      "returns": "type:billing#Invoice",
+      "meta": {
+        "declaredBy": "contracts/billing.json",
+        "body": "type:billing#CreateInvoice"
+      }
+    },
+    {
+      "from": "http_out:api#src/billing/billing.client.ts:30:12",
+      "to": "entry:billing:http:POST:/invoices",
+      "type": "http_calls",
+      "confidence": "declared",
+      "file": "src/billing/billing.client.ts",
+      "line": 30,
+      "params": [
+        "type:api#CreateInvoiceDto"
+      ],
+      "returns": "type:api#InvoiceDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "billing"
+      }
+    },
+    {
+      "from": "http_out:api#src/billing/billing.client.ts:35:12",
+      "to": "entry:billing:http:GET:/invoices/:param",
+      "type": "http_calls",
+      "confidence": "declared",
+      "file": "src/billing/billing.client.ts",
+      "line": 35,
+      "returns": "type:api#InvoiceDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "billing"
+      }
+    },
+    {
+      "from": "http_out:api#src/billing/billing.client.ts:46:12",
+      "to": "entry:billing:http:GET:/customers/:param",
+      "type": "http_calls",
+      "confidence": "declared",
+      "file": "src/billing/billing.client.ts",
+      "line": 46,
+      "returns": "type:api#CustomerRefDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "billing"
+      }
+    }
+  ],
+  "types": {
+    "type:api#CreateInvoiceDto": {
+      "name": "CreateInvoiceDto",
+      "kind": "object",
+      "declaredIn": "api#src/billing/dto.ts",
+      "structuralHash": "74cdc45818f5c749",
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "traceId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#CustomerRefDto": {
+      "name": "CustomerRefDto",
+      "kind": "object",
+      "declaredIn": "api#src/billing/dto.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#InvoiceDto": {
+      "name": "InvoiceDto",
+      "kind": "object",
+      "declaredIn": "api#src/billing/dto.ts",
+      "structuralHash": "f26a6110da20995b",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "issuedAt",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:axios#AxiosResponse<type:api#CustomerRefDto>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:axios#AxiosResponse<type:api#InvoiceDto>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:billing#CreateInvoice": {
+      "name": "CreateInvoice",
+      "kind": "object",
+      "declaredIn": "billing#contracts/billing.json",
+      "structuralHash": "99f8ee1cd6aca0aa",
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declaredBy": "openapi"
+      }
+    },
+    "type:billing#CustomerRef": {
+      "name": "CustomerRef",
+      "kind": "object",
+      "declaredIn": "billing#contracts/billing.json",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declaredBy": "openapi"
+      }
+    },
+    "type:billing#Invoice": {
+      "name": "Invoice",
+      "kind": "object",
+      "declaredIn": "billing#contracts/billing.json",
+      "structuralHash": "0dd4958278350483",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "issuedAt",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "state",
+          "type": "type:billing#InvoiceState",
+          "optional": true
+        }
+      ],
+      "meta": {
+        "declaredBy": "openapi"
+      }
+    },
+    "type:billing#InvoiceState": {
+      "name": "InvoiceState",
+      "kind": "enum",
+      "declaredIn": "billing#contracts/billing.json",
+      "structuralHash": "4a4a6877bf1d1ef2",
+      "members": [
+        "'draft'",
+        "'issued'",
+        "'paid'"
+      ],
+      "meta": {
+        "declaredBy": "openapi"
+      }
+    },
+    "type:billing#Problem": {
+      "name": "Problem",
+      "kind": "object",
+      "declaredIn": "billing#contracts/billing.json",
+      "structuralHash": "7edc4be092efcd65",
+      "fields": [
+        {
+          "name": "detail",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declaredBy": "openapi"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app.module.ts",
+      "line": 8,
+      "reason": "module-import-dynamic",
+      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "symbol": "AppModule imports HttpModule",
+      "service": "api"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 8,
+      "reason": "module-import-dynamic",
+      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "symbol": "AppModule imports ConfigModule",
+      "service": "api"
+    }
+  ]
+}

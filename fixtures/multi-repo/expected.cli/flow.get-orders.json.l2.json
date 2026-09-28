@@ -32,7 +32,7 @@
           "params": [
             "string"
           ],
-          "returns": "{data:unknown}"
+          "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
         },
         "children": [
           {
@@ -49,7 +49,7 @@
               "params": [
                 "string"
               ],
-              "returns": "{data:unknown}"
+              "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
             },
             "children": [
               {

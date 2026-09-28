@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "jsx": "react-jsx",
+    "strict": false,
+    "skipLibCheck": true,
+    "types": [],
+    "paths": {
+      "@rendered-mail/mail": [
+        "../../packages/mail/src/index.tsx"
+      ],
+      "@rendered-mail/relay": [
+        "../../packages/relay/src/index.ts"
+      ],
+      "@rendered-mail/sdk": [
+        "../../packages/sdk/src/index.ts"
+      ],
+      "@rendered-mail/ui": [
+        "../../packages/ui/src/index.tsx"
+      ]
+    }
+  },
+  "include": [
+    "src"
+  ]
+}

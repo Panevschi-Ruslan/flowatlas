@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 3,
-  "builtAt": "2026-09-22T12:52:45.423Z",
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T13:55:43.877Z",
   "services": [
     {
       "name": "api",
@@ -209,7 +209,7 @@
         "kind": "event",
         "adapter": "house-bus",
         "decorator": "pSubscribe",
-        "entryId": null
+        "entryId": "entry:worker:event:order:*:closed"
       }
     },
     {
@@ -224,7 +224,7 @@
         "kind": "event",
         "adapter": "house-bus",
         "decorator": "pSubscribe",
-        "entryId": null
+        "entryId": "entry:worker:event:order:*:on-hold"
       }
     },
     {
@@ -239,7 +239,7 @@
         "kind": "event",
         "adapter": "house-bus",
         "decorator": "pSubscribe",
-        "entryId": null
+        "entryId": "entry:worker:event:order:*:opened"
       }
     },
     {
@@ -256,6 +256,45 @@
         "rawPath": "/orders/:id/state",
         "controller": "OrdersController",
         "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:worker:event:order:*:closed",
+      "type": "entry",
+      "label": "event order:*:closed",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "pattern": "order:*:closed",
+        "adapter": "house-bus"
+      }
+    },
+    {
+      "id": "entry:worker:event:order:*:on-hold",
+      "type": "entry",
+      "label": "event order:*:on-hold",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 25,
+      "kind": "event",
+      "meta": {
+        "pattern": "order:*:on-hold",
+        "adapter": "house-bus"
+      }
+    },
+    {
+      "id": "entry:worker:event:order:*:opened",
+      "type": "entry",
+      "label": "event order:*:opened",
+      "repo": "worker",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 24,
+      "kind": "event",
+      "meta": {
+        "pattern": "order:*:opened",
+        "adapter": "house-bus"
       }
     },
     {
@@ -296,6 +335,8 @@
       "meta": {
         "stats": {
           "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
           "classes": 4,
           "skippedExternalCalls": {}
         },
@@ -315,6 +356,8 @@
       "meta": {
         "stats": {
           "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
           "classes": 3,
           "skippedExternalCalls": {}
         },
@@ -553,6 +596,42 @@
         "params": "{id:string}",
         "body": "{state:type:api#OrderState}"
       }
+    },
+    {
+      "from": "entry:worker:event:order:*:closed",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 26
+    },
+    {
+      "from": "entry:worker:event:order:*:on-hold",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onHeld",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 25
+    },
+    {
+      "from": "entry:worker:event:order:*:opened",
+      "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onOpened",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
+      "file": "src/projections/lifecycle.service.ts",
+      "line": 24
     },
     {
       "from": "producer:api#src/orders/orders.service.ts:26:5",

@@ -24,32 +24,46 @@ each case so the rows stay honest:
   names. It is a boundary all the same, and the run says so in one aggregate row
   rather than leaving the repository looking as though it had three actions.
 
-## A known gap, deliberately left visible
+## What the two defects were, and what closed them
 
-`OrdersPage` calls `archiveOrder` and `cancelOrder`, and only `cancelOrder` gets
-a `calls` edge to its entry. That is not the reader working correctly, and it is
-not a fact about built actions either — it is a defect, reproduced here on
-purpose so that fixing it has a test.
+`OrdersPage` calls `archiveOrder` and `cancelOrder`, and for a long time only
+`cancelOrder` got a `calls` edge to its entry. Both halves of that are now read,
+and this fixture is where the movement shows.
 
 An entry marked `viaImport` has its callers drawn by
-`packages/extractor-react/src/passes/entries.ts`, which resolves the entry's
-handler through `ctx.functions.byId(makeSymbolId(repo, file, functionName))`.
-That index comes from `moduleFunctions` in `packages/core/src/functions.ts`,
-which treats `const x = <arrow>` as a named function and `const x = builder(<arrow>)`
-as nothing. So there is no indexed function named `archiveOrder`, and the
-callers reference `archiveOrder` rather than the arrow inside it.
+`packages/extractor-react/src/passes/entries.ts`. It used to resolve the entry's
+handler and then look for calls of *that*, which works only when the handler and
+the export are the same name — that is, only for an action declared outright. A
+built action is exported under one name and hands its work to another: an arrow
+written in the call, or a function declared beside it. So the callers of the
+built ones were looked for under a name nobody writes, and none were found. The
+pass now finds the export by where it is declared, which is the position the
+entry already carries, and draws the caller edges from there; the code behind
+the boundary is still what the `handles` edge points at.
 
-Beside it sat a second, independent defect — that pass dropped inline handlers
-altogether, where the NestJS pass resolves them with `functionAt` — and that
-half is **fixed**, though not by anyone working on this fixture. A Next.js
-repository is now read by the server reader with both file kinds open, so
-`archiveOrder`'s inline arrow gets a function node, a `handles` edge from the
-entry, and a `calls` edge into the store it writes through. None of that was
-visible until two branches met, which is why it is recorded here in the tense
-it is: the fixture was written for one defect and now demonstrates one and a
-half.
+For that lookup to answer, the export has to be a function of the graph in the
+first place, and it was not: `moduleFunctions` in `packages/core/src/functions.ts`
+reads `const x = <arrow>` as a named function and `const x = builder(<arrow>)` as
+nothing at all. That remains true there, and deliberately — it is the right
+answer for a reader that cannot check what the call returned. The React reader
+now indexes an exported `const` built by a call as a function under its own name
+(`packages/extractor-react/src/index-functions.ts`), because that is where the
+guess pays for itself: the name in the source is the name every caller writes.
+Its body is the whole initializer, so `archiveOrder` reaches `archive` under the
+name callers know, beside the finer edge from the arrow itself.
 
-What is still missing is the caller edge, which belongs to
-`packages/extractor-react`. When it is fixed, `OrdersPage` reaches
-`archiveOrder` as it already reaches `cancelOrder`, and that movement is the
-proof.
+The second defect — that the React pass dropped inline handlers altogether,
+where the NestJS pass resolved them with `functionAt` — is closed too, and was
+half closed by something else entirely. A Next.js repository is read by the
+server reader with both file kinds open, so on this fixture `archiveOrder`'s
+inline arrow already had a function node, a `handles` edge and a `calls` edge
+into the store it writes through, drawn by the server half. A repository read as
+a browser alone had no second half to cover for it, so that pass now resolves an
+inline handler the same way, and the two halves agree on the node rather than
+one of them depending on the other.
+
+One more movement is in the snapshot and is worth naming, because it is the
+same reading applied to an export nobody described: `exportOrders` is a function
+of the graph now, reaching `withAudit` and `exportAll`, although it is still not
+an entry and the aggregate row still says why. The graph says more about it
+than it did rather than less.

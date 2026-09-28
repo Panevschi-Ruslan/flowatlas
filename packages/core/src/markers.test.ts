@@ -87,4 +87,15 @@ describe('the names an annotation gives', () => {
       expect(takesNames(name), name).toBe(false);
     }
   });
+
+  // The name is read out of somebody's source, so the table can be asked about
+  // the words the language puts on every object. `takesNames` already used
+  // `Object.hasOwn` while `namesGivenTo` indexed the same table directly, two
+  // answers to one question; the table is a `Map` now and there is one (R134).
+  it('takes no names for a marker spelled like a member every object has', () => {
+    for (const name of ['constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__']) {
+      expect(takesNames(name), name).toBe(false);
+      expect(namesGivenTo({ name, args: ['orders'] }).names).toEqual(['orders']);
+    }
+  });
 });

@@ -37,7 +37,7 @@ export class EventBus implements OnModuleInit {
   /** Where the pattern is an argument, so there is no channel to join on. */
   async listenTo(pattern: string): Promise<void> {
     // Expected: `consumer` on `EventBus.receive`, no channel node, unresolved
-    // `channel-const-unresolved` naming `EventBus.listenTo`.
+    // `channel-dynamic` naming `EventBus.listenTo`.
     await this.broadcaster.pSubscribe(pattern, (message) => this.receive(message));
   }
 

@@ -36,6 +36,8 @@ export interface BuildClassIndexOptions {
   project: Project;
   repo: string;
   repoDir: string;
+  /** Which files are this framework's code, by absolute path; every file when absent. */
+  reads?: (file: string) => boolean;
 }
 
 export const buildAngularClassIndex = (options: BuildClassIndexOptions): AngularClassIndex =>

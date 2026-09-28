@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import {
+import { localBaseClassNames, localBaseTableProperty,
   CONFIG_FILENAME,
   DEFAULT_OUTPUT,
   DEFAULT_TYPE_MAX_DEPTH,
@@ -41,9 +41,10 @@ describe('parseConfig', () => {
       adapters: {
         auto: true,
         force: {},
-        entry: { registries: [], http: [] },
+        entry: { registries: [], http: [], procedures: [] },
         broker: { custom: [] },
         db: { localBaseClasses: [] },
+        frontend: { localClientClasses: [] },
       },
       output: DEFAULT_OUTPUT,
       types: { maxDepth: DEFAULT_TYPE_MAX_DEPTH },
@@ -67,9 +68,10 @@ describe('parseConfig', () => {
     expect(parseConfig({ adapters: { auto: false } }).adapters).toEqual({
       auto: false,
       force: {},
-      entry: { registries: [], http: [] },
+      entry: { registries: [], http: [], procedures: [] },
       broker: { custom: [] },
       db: { localBaseClasses: [] },
+      frontend: { localClientClasses: [] },
     });
     expect(parseConfig({ types: {} }).types).toEqual({ maxDepth: DEFAULT_TYPE_MAX_DEPTH });
   });
@@ -122,6 +124,16 @@ describe('parseConfig', () => {
     ).toThrow(ConfigInvalidError);
   });
 
+  // The name keys every per-service table, and these the language keeps (R130).
+  it.each(['__proto__', 'constructor', 'toString', 'hasOwnProperty', 'valueOf'])(
+    'rejects a service named %s',
+    (name) => {
+      expect(() => parseConfig({ services: [{ name, repo: '../a', type: 'backend' }] })).toThrow(
+        /a name every object already has/,
+      );
+    },
+  );
+
   it('rejects an unknown key', () => {
     expect(() => parseConfig({ servces: [] })).toThrow(ConfigInvalidError);
     expect(() => parseConfig({ services: [{ name: 'a', repo: '../a', type: 'backend', extra: 1 }] })).toThrow(
@@ -173,6 +185,61 @@ describe('parseConfig', () => {
     } catch (error) {
       expect((error as ConfigInvalidError).issues.join()).toContain('services.0.name');
     }
+  });
+});
+
+/**
+ * The two spellings of a declared service, which must be one fact.
+ *
+ * `openapi: <path>` was the only way to declare a service and is still written in
+ * configurations nobody is going to edit. It is normalised into `document` here,
+ * so that "which format is this" and "where is the document" each have one place
+ * to be answered rather than three (R79). A key that silently stopped being read
+ * would be the worst kind of breaking change: the build succeeds and the service
+ * quietly has no routes.
+ */
+describe('a service declared by a document', () => {
+  const documentOf = (service: Record<string, unknown>) =>
+    parseConfig({ services: [{ name: 'billing', ...service }] }).services[0];
+
+  it('reads the older openapi key as an openapi document', () => {
+    expect(documentOf({ openapi: './contracts/billing.json' })?.document).toEqual({
+      kind: 'openapi',
+      path: './contracts/billing.json',
+    });
+  });
+
+  it('reads a document of any kind the same way', () => {
+    expect(
+      documentOf({ document: { kind: 'asyncapi', path: './contracts/billing.asyncapi.json' } })
+        ?.document,
+    ).toEqual({ kind: 'asyncapi', path: './contracts/billing.asyncapi.json' });
+  });
+
+  it('gives both spellings the same directory to live in, and the same type', () => {
+    const older = documentOf({ openapi: './contracts/billing.json' });
+    const newer = documentOf({ document: { kind: 'openapi', path: './contracts/billing.json' } });
+    expect([older?.repo, older?.type]).toEqual([newer?.repo, newer?.type]);
+    expect(older?.repo).toBe('./contracts');
+  });
+
+  it('refuses a service that writes both, rather than picking one', () => {
+    expect(() =>
+      documentOf({
+        openapi: './contracts/billing.json',
+        document: { kind: 'asyncapi', path: './contracts/billing.asyncapi.json' },
+      }),
+    ).toThrow(ConfigInvalidError);
+  });
+
+  it('refuses a service with neither a repo nor a document', () => {
+    expect(() => documentOf({})).toThrow(ConfigInvalidError);
+  });
+
+  it('refuses a service with both a repo and a document', () => {
+    expect(() =>
+      documentOf({ repo: './billing', document: { kind: 'openapi', path: './b.json' } }),
+    ).toThrow(ConfigInvalidError);
   });
 });
 
@@ -267,5 +334,26 @@ describe('loadConfig', () => {
     const root = makeRoot();
     writeConfig(root, {});
     expect(() => loadConfig(root).repoDir('nope')).toThrow(ConfigInvalidError);
+  });
+});
+
+describe('a repository base that says where its classes name their table (R165)', () => {
+  const bases = (entries: unknown[]) =>
+    parseConfig({ adapters: { db: { localBaseClasses: entries } } }).adapters.db.localBaseClasses;
+
+  it('accepts a bare name and a name with its table property, side by side', () => {
+    const entries = bases(['LegacyRepository', { name: 'BaseRepository', tableProperty: 'collectionName' }]);
+    expect(localBaseClassNames(entries)).toEqual(['LegacyRepository', 'BaseRepository']);
+    expect(localBaseTableProperty(entries, 'BaseRepository')).toBe('collectionName');
+    expect(localBaseTableProperty(entries, 'LegacyRepository')).toBeUndefined();
+  });
+
+  it('answers nothing for a word that is not a configured base, prototype names included', () => {
+    const entries = bases([{ name: 'BaseRepository', tableProperty: 'collectionName' }]);
+    expect(localBaseTableProperty(entries, 'toString')).toBeUndefined();
+  });
+
+  it('refuses an entry with a key it does not know', () => {
+    expect(() => bases([{ name: 'BaseRepository', table: 'x' }])).toThrow();
   });
 });

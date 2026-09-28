@@ -10,7 +10,7 @@
 import { tally, wasMissed, type GraphNode, type Unresolved } from '@flowatlas/core';
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
 import { summarizeForDoctor } from '@flowatlas/contracts';
-import type { GraphDb } from '@flowatlas/linker';
+import type { GraphDb, ServiceReport } from '@flowatlas/linker';
 import {
   compareBaseline,
   isProblem,
@@ -29,6 +29,7 @@ import {
   type HintContext,
 } from './hints.js';
 import { validateMarkers, type MarkerIssue } from './markers.js';
+import { mostlyUnread, waysInByService, waysInTotal, type WaysIn } from './ways-in.js';
 import {
   DOCTOR_FORMAT_VERSION,
   SECTIONS,
@@ -86,9 +87,126 @@ const DESYNC_REASONS: ReadonlySet<string> = new Set([
   'unknown-base-url-env',
   'target-route-not-found',
   'ambiguous-route',
+  'ambiguous-route-application',
   'ambiguous-route-target',
   'route-wildcard-only',
 ]);
+
+/**
+ * What the graph and the report beside it say about themselves.
+ *
+ * Read once and handed to the checks below, so that each of them is a sentence
+ * about facts rather than a second way of asking the database.
+ */
+interface GraphFacts {
+  nodes: number;
+  services: readonly ServiceReport[];
+  /** Ways in found and read, per service. */
+  ways: ReadonlyMap<string, WaysIn>;
+}
+
+/**
+ * Whether this graph can be given a clean bill of health at all.
+ *
+ * Four ways it cannot, and they are one failure wearing four hats: the graph
+ * came from a build that failed, or it holds nothing, or a service that was read
+ * put nothing in it, or a service's ways in were read as far as their addresses
+ * and, for most of them, no further. In every one of them the check that
+ * follows is asked about a project the tool did not read, and every question it
+ * asks answers "nothing wrong here" — which is true of the graph and false of
+ * the project. `doctor` exited 0 on all four (R85, R94, R106).
+ *
+ * A lookup rather than a run of conditions, because each of these is an
+ * independent claim about one graph and a fourth should be an entry here.
+ */
+const GRAPH_FAULTS: ReadonlyArray<(facts: GraphFacts) => string[]> = Object.freeze([
+  (facts) =>
+    facts.services
+      .filter((service) => service.skipped === 'extract-failed')
+      .map(
+        (service) =>
+          `the build that wrote this graph failed: ${service.name} could not be read` +
+          `${service.error === undefined ? '' : ` (${service.error})`}, so this graph is the project without it`,
+      ),
+  (facts) =>
+    facts.nodes === 0
+      ? ['this graph holds no node at all, so nothing in it could be checked']
+      : [],
+  (facts) =>
+    facts.services
+      .filter(
+        (service) =>
+          service.skipped === undefined && service.extractor !== null && service.nodes === 0,
+      )
+      .map(
+        (service) =>
+          `${service.name} was read by ${service.extractor} and contributed no node, so nothing` +
+          ' asked about that service can be answered from this graph',
+      ),
+  /**
+   * A service whose ways in mostly have no body that was read (R94).
+   *
+   * Why this is the third hat and not an ordinary row. Each `route-handler-unread`
+   * row is a real, reportable limit, and a service with a few of them — handlers
+   * a helper builds that the reader cannot follow — is a service this graph
+   * describes with gaps it names: those rows stay rows, a baseline may accept
+   * them, and the run stays green. What changes past the point where most of a
+   * service's ways in are hollow is what the checks can see, not how much is
+   * missing. The growth check is the gate a team relies on, and it can only see
+   * a change that produces a row; a change inside a body nobody read produces
+   * none, ever. So for such a service the gate is not strict or lax, it is blind,
+   * and accepting a baseline over it accepts the blindness — which is R85's and
+   * R106's case exactly: a check that could not be run, answered as if it had
+   * been. Hence exit 2, without waiting for `--strict`, and `--accept` refusing.
+   *
+   * The count is the one `build` prints, from `ways-in.ts`, so the summary line
+   * a reader saw and the verdict they got cannot disagree about a number.
+   */
+  (facts) =>
+    [...facts.ways]
+      .filter(([, ways]) => mostlyUnread(ways))
+      .map(
+        ([name, ways]) =>
+          `${name}: ${ways.found - ways.read} of its ${ways.found} ways in have no handler that was read,` +
+          ' so what happens after a request arrives there is not in this graph, and a change inside one' +
+          ' of those bodies can never add a row for a baseline to catch — the route-handler-unread rows' +
+          ' above name each one',
+      ),
+]);
+
+/**
+ * The sentences, if any, that say this graph is not one to report on.
+ *
+ * Narrowed to one service when the run was, because a fault about a service
+ * nobody asked about is not an answer to the question that was asked. The
+ * graph-wide fault — no nodes anywhere — is never narrowed away, since there is
+ * no service for which it is untrue.
+ */
+const graphFaults = (
+  db: GraphDb,
+  ways: ReadonlyMap<string, WaysIn>,
+  service?: string,
+): string[] => {
+  const report = db.report();
+  const services = report?.services ?? [];
+  const facts: GraphFacts = {
+    nodes: report?.totals.nodes ?? db.allNodes().length,
+    services: service === undefined ? services : services.filter((one) => one.name === service),
+    ways,
+  };
+  return GRAPH_FAULTS.flatMap((check) => check(facts));
+};
+
+/** Ways in per service, narrowed as the run is. */
+const waysOf = (db: GraphDb, service?: string): Map<string, WaysIn> => {
+  const all = waysInByService(
+    db.nodesByType('entry'),
+    (id) => db.edgesFrom(id, ['handles']).length > 0,
+  );
+  return service === undefined
+    ? all
+    : new Map([...all].filter(([name]) => name === service));
+};
 
 const text = (value: unknown): string | null =>
   typeof value === 'string' && value !== '' ? value : null;
@@ -342,6 +460,7 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
   };
 
   const levelled = withAnsweredDemoted(rows, db);
+  const ways = waysOf(db, settings.service);
 
   const snapshot: UnresolvedSnapshot = snapshotOf(levelled, { ignoreReasons: [...ignore] });
   const grouped = wanted.has('unresolved')
@@ -363,6 +482,7 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
     excluded: { reasons: [...ignore].sort(cmp), sites: excludedSites },
     byReason: grouped.groups,
     unknownReasons: grouped.unknown,
+    waysIn: waysInTotal(ways),
   };
 
   // ---- contracts --------------------------------------------------------
@@ -476,8 +596,30 @@ export const runDoctor = (input: DoctorInput, settings: DoctorSettings = {}): Do
     reasons.push(baseline.note ?? 'the baseline could not be read');
   }
 
+  /**
+   * A graph nobody could report on, and why exit 2 rather than 1.
+   *
+   * This is a change to what `doctor` fails on, so it is written down. 1 means a
+   * check found something: a route was renamed, an annotation is wrong, the list
+   * of unresolved places grew. 2 means the check could not be run — which is
+   * exactly the case here, because a graph that is empty, that lost a service, or
+   * that came from a failed build is not a project this looked at and said
+   * nothing was wrong. Calling it 1 would say the project is broken when the
+   * reading is; calling it 0 is what every one of these bugs did.
+   *
+   * Two consequences are deliberate. It does not wait for `--strict`: a run
+   * without the flag answers a question, and "nothing wrong" is not an answer
+   * anybody asked of an unread graph, so the one gate that a team can disable by
+   * dropping a flag is the one gate that must not be the only thing standing
+   * between this and a clean bill of health. And `--accept` already refuses to
+   * write a baseline over exit 2, which is the right refusal for the same reason:
+   * numbers from a graph nobody read are not numbers to accept.
+   */
+  const faults = graphFaults(db, ways, settings.service);
+  reasons.push(...faults);
+
   const exitCode: 0 | 1 | 2 =
-    baseline.status === 'invalid' ? 2 : failing ? 1 : 0;
+    faults.length > 0 || baseline.status === 'invalid' ? 2 : failing ? 1 : 0;
 
   return {
     doctorFormatVersion: DOCTOR_FORMAT_VERSION,

@@ -122,6 +122,25 @@ const isNamedType = (type: Type): boolean => {
   return name !== undefined && !ANONYMOUS_TYPE_NAMES.has(name);
 };
 
+/**
+ * Whether a type is declared outside the repository being read.
+ *
+ * Deliberately narrower than `isPackagedType` below, and narrow in the same way
+ * `resolveTypeOrigin` is: a file under `node_modules` belongs to somebody else,
+ * and every other file belongs to the project. Asking the nearest manifest
+ * instead — which is the right question when choosing between two members of an
+ * intersection, because a workspace package is a package — answers `true` for
+ * every file in every repository, since a repository has a manifest of its own.
+ * The alias rule that used it therefore never fired, and a wiki app's sockets stayed
+ * hidden behind their own alias with the guard in place and a passing test
+ * beside it.
+ */
+const isForeignType = (type: Type): boolean => {
+  const declaration = symbolOf(type)?.getDeclarations()[0];
+  if (declaration === undefined) return false;
+  return packageOfPath(declaration.getSourceFile().getFilePath()) !== null;
+};
+
 const isPackagedType = (type: Type): boolean => {
   const declaration = symbolOf(type)?.getDeclarations()[0];
   if (declaration === undefined) return false;
@@ -165,13 +184,21 @@ const traitScoreOf = (type: Type): number =>
  */
 const bestOfIntersection = (type: Type): Type => {
   if (!type.isIntersection()) return type;
-  // An intersection given a name of its own is already answerable, and the name
-  // is the better answer: an alias is declared somewhere, and where it is
-  // declared is the honest origin. A framework's read-only cookie store is
-  // written that way, and reducing it to a member threw its package away.
-  // Only an intersection written out in place has nothing to ask of itself,
-  // and that is the one a driver hands back from its constructor.
-  if (symbolOf(type) !== undefined) return type;
+  // An intersection given a name of its own can answer for itself, but only
+  // when the name is declared where a reader would look for it. A framework's
+  // read-only cookie store is an alias a package declares, and reducing that to
+  // a member threw its package away; an alias declared in the repository being
+  // read is the opposite case. A project that writes
+  // `type ConnectionWithUser = Connection & { user: User }` and registers every
+  // listener on it has said nothing about where its connections come from, and
+  // answering with the alias hid the library underneath it — one real repository
+  // had 29 of its 31 channels one-ended for exactly that reason.
+  //
+  // So the alias is preferred only when the alias is itself packaged. Where it
+  // is local there is a package inside the intersection and no package outside
+  // it, which makes the member the better answer, and the scoring below picks
+  // which member.
+  if (symbolOf(type) !== undefined && isForeignType(type)) return type;
   const members = type.getIntersectionTypes();
   const [first] = members;
   if (first === undefined) return type;

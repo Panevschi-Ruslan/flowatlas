@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T19:37:52.094Z",
+  "configHash": "2325b3c105ab",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 7,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 0
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 28,
+      "edges": 21,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 0
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 26,
+      "edges": 20,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 46,
+      "edges": 43,
+      "types": 1,
+      "unresolved": 4,
+      "durationMs": 0
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 4,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1257
+    }
+  ],
+  "httpOut": {
+    "total": 7,
+    "linked": 7,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 1,
+    "resolved": 1,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 4,
+    "linked": 2,
+    "noConsumers": [
+      "channel:audit.log"
+    ],
+    "noProducers": [
+      "channel:orphan.in"
+    ]
+  },
+  "routes": {
+    "total": 6,
+    "called": 5,
+    "uncalled": [
+      "entry:gateway:http:GET:/internal/legacy"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 113,
+    "edges": 100,
+    "types": 2,
+    "unresolved": 4
+  }
+}

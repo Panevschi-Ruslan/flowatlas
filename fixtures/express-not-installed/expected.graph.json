@@ -1,0 +1,287 @@
+{
+  "schemaVersion": 5,
+  "repo": "express-not-installed",
+  "generatedAt": "2026-09-27T19:29:04.832Z",
+  "nodes": [
+    {
+      "id": "entry:express-not-installed:http:GET:/admin",
+      "type": "entry",
+      "label": "GET /admin",
+      "repo": "express-not-installed",
+      "file": "src/admin.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/admin",
+        "rawPath": "/admin",
+        "adapter": "express-routes",
+        "registration": "router.get",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:express-not-installed:http:GET:/admin/*",
+      "type": "entry",
+      "label": "GET /admin/*",
+      "repo": "express-not-installed",
+      "file": "src/admin.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/admin/*",
+        "rawPath": "/admin/*",
+        "adapter": "express-routes",
+        "registration": "router.get",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:express-not-installed:http:GET:/api/v1/videos",
+      "type": "entry",
+      "label": "GET /api/v1/videos",
+      "repo": "express-not-installed",
+      "file": "src/videos.routes.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/v1/videos",
+        "rawPath": "/api/v1/videos",
+        "adapter": "express-routes",
+        "registration": "videosRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:express-not-installed:http:GET:/api/v1/videos/:param",
+      "type": "entry",
+      "label": "GET /api/v1/videos/:param",
+      "repo": "express-not-installed",
+      "file": "src/videos.routes.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/v1/videos/:param",
+        "rawPath": "/api/v1/videos/:id",
+        "adapter": "express-routes",
+        "registration": "videosRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:express-not-installed:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "express-not-installed",
+      "file": "src/server.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "express-not-installed#src/admin.ts:sendHtml",
+      "type": "function",
+      "label": "sendHtml",
+      "repo": "express-not-installed",
+      "file": "src/admin.ts",
+      "line": 9
+    },
+    {
+      "id": "express-not-installed#src/server.ts:GET /health@23",
+      "type": "function",
+      "label": "GET /health@23",
+      "repo": "express-not-installed",
+      "file": "src/server.ts",
+      "line": 23
+    },
+    {
+      "id": "express-not-installed#src/server.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "express-not-installed",
+      "file": "src/server.ts",
+      "line": 15,
+      "kind": "function"
+    },
+    {
+      "id": "express-not-installed#src/videos.controller.ts:getVideo",
+      "type": "function",
+      "label": "getVideo",
+      "repo": "express-not-installed",
+      "file": "src/videos.controller.ts",
+      "line": 8
+    },
+    {
+      "id": "express-not-installed#src/videos.controller.ts:listVideos",
+      "type": "function",
+      "label": "listVideos",
+      "repo": "express-not-installed",
+      "file": "src/videos.controller.ts",
+      "line": 4
+    },
+    {
+      "id": "repo:express-not-installed",
+      "type": "repo",
+      "label": "express-not-installed",
+      "repo": "express-not-installed",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:express-not-installed:http:GET:/admin",
+      "to": "express-not-installed#src/admin.ts:sendHtml",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/admin.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:express-not-installed:http:GET:/admin",
+      "to": "express-not-installed#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:express-not-installed:http:GET:/admin/*",
+      "to": "express-not-installed#src/admin.ts:sendHtml",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/admin.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:express-not-installed:http:GET:/admin/*",
+      "to": "express-not-installed#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:express-not-installed:http:GET:/api/v1/videos",
+      "to": "express-not-installed#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:express-not-installed:http:GET:/api/v1/videos",
+      "to": "express-not-installed#src/videos.controller.ts:listVideos",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/videos.controller.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:express-not-installed:http:GET:/api/v1/videos/:param",
+      "to": "express-not-installed#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:express-not-installed:http:GET:/api/v1/videos/:param",
+      "to": "express-not-installed#src/videos.controller.ts:getVideo",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/videos.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:express-not-installed:http:GET:/health",
+      "to": "express-not-installed#src/server.ts:GET /health@23",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 23
+    },
+    {
+      "from": "entry:express-not-installed:http:GET:/health",
+      "to": "express-not-installed#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/admin.ts",
+      "line": 10,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "sendHtml -> res.send",
+      "sites": 4
+    }
+  ]
+}

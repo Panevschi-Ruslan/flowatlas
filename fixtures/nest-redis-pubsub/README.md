@@ -54,7 +54,10 @@ second body calls `audit` **and** `handleRaw`, so there is no single method to
 point at and the consumer falls back to the enclosing method with a reason
 recorded (I3: the degradation is never silent).
 
-There is no P01 entry for either, so both carry `meta.entryId: null`.
+No P01 reader knows a subscription made by a call, so the way in is drawn by the
+channel reader itself: each consumer carries the `meta.entryId` of an
+`entry:nest-redis-pubsub:event:<channel>` node with one `handles` edge to the
+handler (R126). The README said `null` here until that landed.
 
 ## Deliberately unresolvable constructs
 

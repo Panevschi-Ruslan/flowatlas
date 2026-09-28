@@ -1,0 +1,11 @@
+{
+  "name": "@sibling-types/platform-types",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared DTOs, decorated for a Nest API elsewhere in the workspace. Declaring @nestjs/common makes this package use Nest; it does not make the application that imports it one.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@nestjs/common": "^11.0.0"
+  }
+}

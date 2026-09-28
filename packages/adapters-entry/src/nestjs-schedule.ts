@@ -1,6 +1,11 @@
 import type { EntryAdapter, EntryNode } from '@flowatlas/core';
-import { hasAnyDependency, makeEntryId } from '@flowatlas/core';
-import { decoratorArgs, decoratorName, findDecorators } from '@flowatlas/extractor-nestjs';
+import {
+  decoratorArgs,
+  decoratorName,
+  findDecorators,
+  hasAnyDependency,
+  makeEntryId,
+} from '@flowatlas/core';
 import { fileOfNode, handlerOf, repoClasses } from './shared.js';
 
 const NEST_SCHEDULE = ['@nestjs/schedule'] as const;

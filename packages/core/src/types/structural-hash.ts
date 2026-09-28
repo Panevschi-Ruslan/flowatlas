@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import type { TypeEntry, TypeField, TypeRegistry } from '../model/types.js';
-import { formatTypeRef, parseTypeRef, type TypeRefAst } from './type-ref.js';
+import { formatFieldKey, formatTypeRef, parseTypeRef, type TypeRefAst } from './type-ref.js';
 
 /**
  * A hash of a type's shape, with its name thrown away.
@@ -65,7 +65,7 @@ export const normalizeStructure = (
           .sort((a, b) => cmp(a.name, b.name))
           .map(
             (field) =>
-              `${field.name}${field.optional ? '?' : ''}:${shapeOfRef(field.type, depth, seen)}`,
+              `${formatFieldKey(field.name)}${field.optional ? '?' : ''}:${shapeOfRef(field.type, depth, seen)}`,
           )
           .join(';')}}`;
       case 'id': {
@@ -100,7 +100,7 @@ export const normalizeStructure = (
         const body = fieldsOf(target.fields)
           .map(
             (field) =>
-              `${field.name}${field.optional ? '?' : ''}:${shapeOfRef(parseTypeRef(field.type), depth, seen)}`,
+              `${formatFieldKey(field.name)}${field.optional ? '?' : ''}:${shapeOfRef(parseTypeRef(field.type), depth, seen)}`,
           )
           .join(';');
         return `${prefix}{${body}}`;

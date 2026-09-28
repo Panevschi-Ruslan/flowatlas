@@ -1,0 +1,4001 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T19:37:54.109Z",
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "billing#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "billing",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
+      "id": "billing#node_modules/@nestjs/microservices:ClientsModule",
+      "type": "module",
+      "label": "ClientsModule",
+      "repo": "billing",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
+      "id": "billing#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "billing",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "InvoicesConsumer"
+        ],
+        "providers": [
+          "OrdersRpcClient"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer",
+      "type": "provider",
+      "label": "InvoicesConsumer",
+      "repo": "billing",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "type": "method",
+      "label": "InvoicesConsumer.onOrderCreated",
+      "repo": "billing",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 14
+    },
+    {
+      "id": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient",
+      "type": "provider",
+      "label": "OrdersRpcClient",
+      "repo": "billing",
+      "file": "src/invoices/orders.rpc.client.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient.ask",
+      "type": "method",
+      "label": "OrdersRpcClient.ask",
+      "repo": "billing",
+      "file": "src/invoices/orders.rpc.client.ts",
+      "line": 14
+    },
+    {
+      "id": "channel:order.created",
+      "type": "channel",
+      "label": "order.created",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 69,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:orders.get",
+      "type": "channel",
+      "label": "orders.get",
+      "repo": "orders",
+      "file": "src/rpc/orders.rpc.controller.ts",
+      "line": 15,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "nestjs-kafka"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:gateway#ORDERS_URL",
+      "type": "config_key",
+      "label": "ORDERS_URL",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 25,
+      "meta": {
+        "key": "ORDERS_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "type": "consumer",
+      "label": "InvoicesConsumer.onOrderCreated",
+      "repo": "billing",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:billing:event:order.created"
+      }
+    },
+    {
+      "id": "consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+      "type": "consumer",
+      "label": "OrdersRpcController.get",
+      "repo": "orders",
+      "file": "src/rpc/orders.rpc.controller.ts",
+      "line": 15,
+      "kind": "rpc",
+      "meta": {
+        "kind": "rpc",
+        "adapter": "nestjs-kafka",
+        "decorator": "MessagePattern",
+        "entryId": "entry:orders:rpc:orders.get"
+      }
+    },
+    {
+      "id": "db_query:orders#src/orders/orders.service.ts:28:11",
+      "type": "db_query",
+      "label": "write Draft",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 28,
+      "meta": {
+        "op": "write",
+        "table": "Draft",
+        "tables": [
+          "Draft"
+        ],
+        "package": "typeorm",
+        "method": "save",
+        "receiver": "this.drafts",
+        "source": "type-arg",
+        "entityType": "DraftSchema",
+        "entityTypeId": "type:orders#DraftSchema"
+      }
+    },
+    {
+      "id": "db_query:orders#src/orders/orders.service.ts:81:11",
+      "type": "db_query",
+      "label": "write Draft",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 81,
+      "meta": {
+        "op": "write",
+        "table": "Draft",
+        "tables": [
+          "Draft"
+        ],
+        "package": "typeorm",
+        "method": "save",
+        "receiver": "this.drafts",
+        "source": "type-arg",
+        "entityType": "DraftSchema",
+        "entityTypeId": "type:orders#DraftSchema"
+      }
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "type": "entry",
+      "label": "event order.created",
+      "repo": "billing",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "pattern": "order.created",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/drafts/:param",
+      "type": "entry",
+      "label": "GET /orders/drafts/:param",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 62,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/drafts/:param",
+        "rawPath": "/orders/drafts/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/deep",
+      "type": "entry",
+      "label": "POST /deep",
+      "repo": "orders",
+      "file": "src/deep/deep.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/deep",
+        "rawPath": "/deep",
+        "controller": "DeepController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/deep/categories",
+      "type": "entry",
+      "label": "POST /deep/categories",
+      "repo": "orders",
+      "file": "src/deep/deep.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/deep/categories",
+        "rawPath": "/deep/categories",
+        "controller": "DeepController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/addresses",
+      "type": "entry",
+      "label": "POST /orders/addresses",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 37,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/addresses",
+        "rawPath": "/orders/addresses",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/drafts",
+      "type": "entry",
+      "label": "POST /orders/drafts",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 49,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/drafts",
+        "rawPath": "/orders/drafts",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/drafts/batch",
+      "type": "entry",
+      "label": "POST /orders/drafts/batch",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 109,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/drafts/batch",
+        "rawPath": "/orders/drafts/batch",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/drafts/preview",
+      "type": "entry",
+      "label": "POST /orders/drafts/preview",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 95,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/drafts/preview",
+        "rawPath": "/orders/drafts/preview",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/drafts/store",
+      "type": "entry",
+      "label": "POST /orders/drafts/store",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 83,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/drafts/store",
+        "rawPath": "/orders/drafts/store",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/drafts/tag",
+      "type": "entry",
+      "label": "POST /orders/drafts/tag",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 89,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/drafts/tag",
+        "rawPath": "/orders/drafts/tag",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/legacy",
+      "type": "entry",
+      "label": "POST /orders/legacy",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 68,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/legacy",
+        "rawPath": "/orders/legacy",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/prices",
+      "type": "entry",
+      "label": "POST /orders/prices",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/prices",
+        "rawPath": "/orders/prices",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/wire",
+      "type": "entry",
+      "label": "POST /wire",
+      "repo": "orders",
+      "file": "src/wire/wire.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/wire",
+        "rawPath": "/wire",
+        "controller": "WireController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/wire/broken",
+      "type": "entry",
+      "label": "POST /wire/broken",
+      "repo": "orders",
+      "file": "src/wire/wire.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/wire/broken",
+        "rawPath": "/wire/broken",
+        "controller": "WireController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:rpc:orders.get",
+      "type": "entry",
+      "label": "rpc orders.get",
+      "repo": "orders",
+      "file": "src/rpc/orders.rpc.controller.ts",
+      "line": 15,
+      "kind": "rpc",
+      "meta": {
+        "pattern": "orders.get",
+        "adapter": "nestjs-microservice"
+      }
+    },
+    {
+      "id": "gateway#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "gateway",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "gateway#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "gateway",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "gateway#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "gateway",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "OrdersClient",
+          "WireClient"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient",
+      "type": "provider",
+      "label": "OrdersClient",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 16,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.address",
+      "type": "method",
+      "label": "OrdersClient.address",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 39
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.batchDrafts",
+      "type": "method",
+      "label": "OrdersClient.batchDrafts",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 148
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.create",
+      "type": "method",
+      "label": "OrdersClient.create",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 24
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.draftDeclared",
+      "type": "method",
+      "label": "OrdersClient.draftDeclared",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 63
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.draftSpread",
+      "type": "method",
+      "label": "OrdersClient.draftSpread",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 73
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.draftWritten",
+      "type": "method",
+      "label": "OrdersClient.draftWritten",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 50
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchDraft",
+      "type": "method",
+      "label": "OrdersClient.fetchDraft",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 86
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+      "type": "method",
+      "label": "OrdersClient.fetchOne",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 29
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.legacy",
+      "type": "method",
+      "label": "OrdersClient.legacy",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 98,
+      "meta": {
+        "markers": [
+          {
+            "name": "ContractIgnore",
+            "args": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.previewDraft",
+      "type": "method",
+      "label": "OrdersClient.previewDraft",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 133
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.price",
+      "type": "method",
+      "label": "OrdersClient.price",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 34
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.storeDraft",
+      "type": "method",
+      "label": "OrdersClient.storeDraft",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 109
+    },
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.tagDraft",
+      "type": "method",
+      "label": "OrdersClient.tagDraft",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 121
+    },
+    {
+      "id": "gateway#src/clients/wire.client.ts:WireClient",
+      "type": "provider",
+      "label": "WireClient",
+      "repo": "gateway",
+      "file": "src/clients/wire.client.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "gateway#src/clients/wire.client.ts:WireClient.send",
+      "type": "method",
+      "label": "WireClient.send",
+      "repo": "gateway",
+      "file": "src/clients/wire.client.ts",
+      "line": 17
+    },
+    {
+      "id": "gateway#src/clients/wire.client.ts:WireClient.sendBroken",
+      "type": "method",
+      "label": "WireClient.sendBroken",
+      "repo": "gateway",
+      "file": "src/clients/wire.client.ts",
+      "line": 22
+    },
+    {
+      "id": "gateway#src/clients/wire.client.ts:WireClient.sendCategory",
+      "type": "method",
+      "label": "WireClient.sendCategory",
+      "repo": "gateway",
+      "file": "src/clients/wire.client.ts",
+      "line": 32
+    },
+    {
+      "id": "gateway#src/clients/wire.client.ts:WireClient.sendDeep",
+      "type": "method",
+      "label": "WireClient.sendDeep",
+      "repo": "gateway",
+      "file": "src/clients/wire.client.ts",
+      "line": 27
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:100:12",
+      "type": "http_out",
+      "label": "POST /orders/legacy",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 100,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders/legacy",
+        "path": "/orders/legacy",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#OrderDto",
+        "bodyType": "type:gateway#CreateOrderDto",
+        "bodyFrom": "value",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:110:12",
+      "type": "http_out",
+      "label": "POST /orders/drafts/store",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 110,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders/drafts/store",
+        "path": "/orders/drafts/store",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#DraftResultDto",
+        "bodyType": "{title:string;note:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "note",
+          "title"
+        ],
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:122:12",
+      "type": "http_out",
+      "label": "POST /orders/drafts/tag",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 122,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders/drafts/tag",
+        "path": "/orders/drafts/tag",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#DraftResultDto",
+        "bodyType": "{title:string;colour:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "colour",
+          "title"
+        ],
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:134:12",
+      "type": "http_out",
+      "label": "POST /orders/drafts/preview",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 134,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders/drafts/preview",
+        "path": "/orders/drafts/preview",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#DraftResultDto",
+        "bodyType": "{title:string;note:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "note",
+          "title"
+        ],
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:149:12",
+      "type": "http_out",
+      "label": "POST /orders/drafts/batch",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 149,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders/drafts/batch",
+        "path": "/orders/drafts/batch",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#DraftResultDto[]",
+        "bodyType": "type:gateway#BatchDraftDto[]",
+        "bodyFrom": "value",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:25:12",
+      "type": "http_out",
+      "label": "POST /orders",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 25,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#OrderDto",
+        "bodyType": "type:gateway#CreateOrderDto",
+        "bodyFrom": "value",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:30:12",
+      "type": "http_out",
+      "label": "GET /orders/:param",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 30,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/orders/${…}",
+        "path": "/orders/:param",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#OrderDto",
+        "bodyType": null,
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:35:12",
+      "type": "http_out",
+      "label": "POST /orders/prices",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 35,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders/prices",
+        "path": "/orders/prices",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:@fx/wire#MoneyDto",
+        "bodyType": "type:@fx/wire#MoneyDto",
+        "bodyFrom": "value",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:40:12",
+      "type": "http_out",
+      "label": "POST /orders/addresses",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 40,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders/addresses",
+        "path": "/orders/addresses",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#AddressDto",
+        "bodyType": "type:gateway#AddressDto",
+        "bodyFrom": "value",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:51:12",
+      "type": "http_out",
+      "label": "POST /orders/drafts",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 51,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders/drafts",
+        "path": "/orders/drafts",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#DraftResultDto",
+        "bodyType": "{title:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "title"
+        ],
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:64:12",
+      "type": "http_out",
+      "label": "POST /orders/drafts",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 64,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders/drafts",
+        "path": "/orders/drafts",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#DraftResultDto",
+        "bodyType": "type:gateway#DraftDto",
+        "bodyFrom": "value",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:74:12",
+      "type": "http_out",
+      "label": "POST /orders/drafts",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 74,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/orders/drafts",
+        "path": "/orders/drafts",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#DraftResultDto",
+        "bodyType": "{extra:number;title:string;owner:string;archived:boolean}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "archived",
+          "extra",
+          "owner",
+          "title"
+        ],
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/orders.client.ts:87:12",
+      "type": "http_out",
+      "label": "GET /orders/drafts/:param",
+      "repo": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 87,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/orders/drafts/${…}",
+        "path": "/orders/drafts/:param",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#DraftResultDto",
+        "bodyType": null,
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/wire.client.ts:18:12",
+      "type": "http_out",
+      "label": "POST /wire",
+      "repo": "gateway",
+      "file": "src/clients/wire.client.ts",
+      "line": 18,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/wire",
+        "path": "/wire",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "void",
+        "bodyType": "type:gateway#WireDto",
+        "bodyFrom": "value",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/wire.client.ts:23:12",
+      "type": "http_out",
+      "label": "POST /wire/broken",
+      "repo": "gateway",
+      "file": "src/clients/wire.client.ts",
+      "line": 23,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/wire/broken",
+        "path": "/wire/broken",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "void",
+        "bodyType": "type:gateway#WireBrokenDto",
+        "bodyFrom": "value",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/wire.client.ts:28:12",
+      "type": "http_out",
+      "label": "POST /deep",
+      "repo": "gateway",
+      "file": "src/clients/wire.client.ts",
+      "line": 28,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/deep",
+        "path": "/deep",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "void",
+        "bodyType": "type:gateway#DeepDto",
+        "bodyFrom": "value",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/wire.client.ts:33:12",
+      "type": "http_out",
+      "label": "POST /deep/categories",
+      "repo": "gateway",
+      "file": "src/clients/wire.client.ts",
+      "line": 33,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/deep/categories",
+        "path": "/deep/categories",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "void",
+        "bodyType": "type:gateway#CategoryDto",
+        "bodyFrom": "value",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "orders#node_modules/@nestjs/common:ValidationPipe",
+      "type": "pipe",
+      "label": "ValidationPipe",
+      "repo": "orders",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true,
+        "factoryArgs": [
+          {
+            "whitelist": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "pipe",
+      "label": "ValidationPipe({\"whitelist\":true})",
+      "repo": "orders",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true,
+        "factoryArgs": [
+          {
+            "whitelist": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "orders",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
+      "id": "orders#node_modules/@nestjs/microservices:ClientsModule",
+      "type": "module",
+      "label": "ClientsModule",
+      "repo": "orders",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
+      "id": "orders#node_modules/typeorm:Repository",
+      "type": "provider",
+      "label": "Repository",
+      "repo": "orders",
+      "file": "node_modules/typeorm",
+      "kind": "external",
+      "meta": {
+        "package": "typeorm",
+        "external": true
+      }
+    },
+    {
+      "id": "orders#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "orders",
+      "file": "src/app.module.ts",
+      "line": 15,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "WireController",
+          "DeepController",
+          "OrdersRpcController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "orders#src/deep/deep.controller.ts:DeepController",
+      "type": "provider",
+      "label": "DeepController",
+      "repo": "orders",
+      "file": "src/deep/deep.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/deep/deep.controller.ts:DeepController.accept",
+      "type": "method",
+      "label": "DeepController.accept",
+      "repo": "orders",
+      "file": "src/deep/deep.controller.ts",
+      "line": 8
+    },
+    {
+      "id": "orders#src/deep/deep.controller.ts:DeepController.categories",
+      "type": "method",
+      "label": "DeepController.categories",
+      "repo": "orders",
+      "file": "src/deep/deep.controller.ts",
+      "line": 13
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.address",
+      "type": "method",
+      "label": "OrdersController.address",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 37
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.batchDrafts",
+      "type": "method",
+      "label": "OrdersController.batchDrafts",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 109
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.draft",
+      "type": "method",
+      "label": "OrdersController.draft",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 49
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "method",
+      "label": "OrdersController.findOne",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.legacy",
+      "type": "method",
+      "label": "OrdersController.legacy",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 68
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.previewDraft",
+      "type": "method",
+      "label": "OrdersController.previewDraft",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 95
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.price",
+      "type": "method",
+      "label": "OrdersController.price",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 28
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.readDraft",
+      "type": "method",
+      "label": "OrdersController.readDraft",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 62
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.storeDraft",
+      "type": "method",
+      "label": "OrdersController.storeDraft",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 83
+    },
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.tagDraft",
+      "type": "method",
+      "label": "OrdersController.tagDraft",
+      "repo": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 89
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.address",
+      "type": "method",
+      "label": "OrdersService.address",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 45
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 63
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.draft",
+      "type": "method",
+      "label": "OrdersService.draft",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 49
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "method",
+      "label": "OrdersService.findOne",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 37
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.previewDraft",
+      "type": "method",
+      "label": "OrdersService.previewDraft",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 33
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.price",
+      "type": "method",
+      "label": "OrdersService.price",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 41
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.readDraft",
+      "type": "method",
+      "label": "OrdersService.readDraft",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 53
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.storeDraft",
+      "type": "method",
+      "label": "OrdersService.storeDraft",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 27
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.storeDrafts",
+      "type": "method",
+      "label": "OrdersService.storeDrafts",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 80
+    },
+    {
+      "id": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController",
+      "type": "provider",
+      "label": "OrdersRpcController",
+      "repo": "orders",
+      "file": "src/rpc/orders.rpc.controller.ts",
+      "line": 13,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+      "type": "method",
+      "label": "OrdersRpcController.get",
+      "repo": "orders",
+      "file": "src/rpc/orders.rpc.controller.ts",
+      "line": 15
+    },
+    {
+      "id": "orders#src/wire/wire.controller.ts:WireController",
+      "type": "provider",
+      "label": "WireController",
+      "repo": "orders",
+      "file": "src/wire/wire.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/wire/wire.controller.ts:WireController.accept",
+      "type": "method",
+      "label": "WireController.accept",
+      "repo": "orders",
+      "file": "src/wire/wire.controller.ts",
+      "line": 9
+    },
+    {
+      "id": "orders#src/wire/wire.controller.ts:WireController.broken",
+      "type": "method",
+      "label": "WireController.broken",
+      "repo": "orders",
+      "file": "src/wire/wire.controller.ts",
+      "line": 15
+    },
+    {
+      "id": "producer:billing#src/invoices/orders.rpc.client.ts:15:12",
+      "type": "producer",
+      "label": "rpc orders.get",
+      "repo": "billing",
+      "file": "src/invoices/orders.rpc.client.ts",
+      "line": 15,
+      "kind": "rpc",
+      "meta": {
+        "kind": "rpc",
+        "adapter": "nestjs-kafka",
+        "channelVia": "literal",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:orders#src/orders/orders.service.ts:69:5",
+      "type": "producer",
+      "label": "event order.created",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 69,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "nestjs-kafka",
+        "channelVia": "literal",
+        "method": "emit"
+      }
+    },
+    {
+      "id": "repo:billing",
+      "type": "repo",
+      "label": "billing",
+      "repo": "billing",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "@nestjs/microservices": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "nestjs-microservice"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:gateway",
+      "type": "repo",
+      "label": "gateway",
+      "repo": "gateway",
+      "meta": {
+        "stats": {
+          "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {
+            "@nestjs/axios": 17,
+            "@nestjs/config": 17
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 12,
+          "filesRead": 12,
+          "filesUnreadable": 0,
+          "classes": 11,
+          "skippedExternalCalls": {
+            "typeorm": 2,
+            "@nestjs/microservices": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "nestjs-microservice"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "templates": 1,
+          "skippedExternalCalls": {
+            "rxjs": 1,
+            "@angular/common": 1
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:orders#Draft",
+      "type": "table",
+      "label": "Draft",
+      "repo": "orders"
+    },
+    {
+      "id": "ui_action:web#src/app/checkout.component.ts:12:59",
+      "type": "ui_action",
+      "label": "click=\"place()\"",
+      "repo": "web",
+      "file": "src/app/checkout.component.ts",
+      "line": 12,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "place()",
+        "component": "web#src/app/checkout.component.ts:CheckoutComponent",
+        "template": "src/app/checkout.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:21:12",
+      "type": "ui_api_call",
+      "label": "POST /orders",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:web#OrderDto",
+        "bodyType": "type:web#CreateOrderDto",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "channel",
+          "customerId",
+          "note",
+          "shipTo",
+          "total"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "web#src/app/checkout.component.ts:CheckoutComponent",
+      "type": "ui_component",
+      "label": "CheckoutComponent",
+      "repo": "web",
+      "file": "src/app/checkout.component.ts",
+      "line": 12,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-checkout"
+      }
+    },
+    {
+      "id": "web#src/app/checkout.component.ts:CheckoutComponent.place",
+      "type": "method",
+      "label": "CheckoutComponent.place",
+      "repo": "web",
+      "file": "src/app/checkout.component.ts",
+      "line": 16
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "provider",
+      "label": "OrdersApiService",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 15,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+      "type": "method",
+      "label": "OrdersApiService.create",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 20
+    }
+  ],
+  "edges": [
+    {
+      "from": "billing#src/app.module.ts:AppModule",
+      "to": "billing#node_modules/@nestjs/microservices:ClientsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient",
+      "to": "billing#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/invoices/orders.rpc.client.ts",
+      "line": 10
+    },
+    {
+      "from": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient.ask",
+      "to": "producer:billing#src/invoices/orders.rpc.client.ts:15:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/invoices/orders.rpc.client.ts",
+      "line": 15
+    },
+    {
+      "from": "channel:order.created",
+      "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 14
+    },
+    {
+      "from": "channel:orders.get",
+      "to": "consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/rpc/orders.rpc.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "to": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "void",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 14
+    },
+    {
+      "from": "consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+      "to": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:orders#OrderDto",
+      "file": "src/rpc/orders.rpc.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "db_query:orders#src/orders/orders.service.ts:28:11",
+      "to": "table:orders#Draft",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 28
+    },
+    {
+      "from": "db_query:orders#src/orders/orders.service.ts:81:11",
+      "to": "table:orders#Draft",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 81
+    },
+    {
+      "from": "entry:billing:event:order.created",
+      "to": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:billing#OrderCreatedEvent"
+      ],
+      "returns": "void",
+      "file": "src/invoices/invoices.consumer.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:orders:http:GET:/orders/:param",
+      "to": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:orders#OrderDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/orders/drafts/:param",
+      "to": "orders#src/orders/orders.controller.ts:OrdersController.readDraft",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:orders#CreateDraftDto|type:orders#LockedDraftDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 62,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/deep",
+      "to": "orders#src/deep/deep.controller.ts:DeepController.accept",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#DeepDto"
+      ],
+      "returns": "void",
+      "file": "src/deep/deep.controller.ts",
+      "line": 8,
+      "meta": {
+        "body": "type:orders#DeepDto"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/deep/categories",
+      "to": "orders#src/deep/deep.controller.ts:DeepController.categories",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#CategoryDto"
+      ],
+      "returns": "void",
+      "file": "src/deep/deep.controller.ts",
+      "line": 13,
+      "meta": {
+        "body": "type:orders#CategoryDto"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders",
+      "to": "orders#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#CreateOrderDto"
+      ],
+      "returns": "type:orders#OrderDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "meta": {
+        "body": "type:orders#CreateOrderDto"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders/addresses",
+      "to": "orders#src/orders/orders.controller.ts:OrdersController.address",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#AddressDto"
+      ],
+      "returns": "type:orders#AddressDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 37,
+      "meta": {
+        "body": "type:orders#AddressDto"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders/drafts",
+      "to": "orders#src/orders/orders.controller.ts:OrdersController.draft",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#CreateDraftDto"
+      ],
+      "returns": "type:orders#CreateDraftDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 49,
+      "meta": {
+        "body": "type:orders#CreateDraftDto"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders/drafts/batch",
+      "to": "orders#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 110,
+      "meta": {
+        "order": 0,
+        "scope": "method",
+        "layer": "pipe",
+        "source": "UsePipes"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders/drafts/batch",
+      "to": "orders#src/orders/orders.controller.ts:OrdersController.batchDrafts",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#CreateDraftDto[]"
+      ],
+      "returns": "type:orders#CreateDraftDto[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 109,
+      "meta": {
+        "body": "type:orders#CreateDraftDto[]"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders/drafts/preview",
+      "to": "orders#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 96,
+      "meta": {
+        "order": 0,
+        "scope": "method",
+        "layer": "pipe",
+        "source": "UsePipes"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders/drafts/preview",
+      "to": "orders#src/orders/orders.controller.ts:OrdersController.previewDraft",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#CreateDraftDto"
+      ],
+      "returns": "type:orders#CreateDraftDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 95,
+      "meta": {
+        "body": "type:orders#CreateDraftDto"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders/drafts/store",
+      "to": "orders#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 84,
+      "meta": {
+        "order": 0,
+        "scope": "method",
+        "layer": "pipe",
+        "source": "UsePipes"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders/drafts/store",
+      "to": "orders#src/orders/orders.controller.ts:OrdersController.storeDraft",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#CreateDraftDto"
+      ],
+      "returns": "type:orders#CreateDraftDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 83,
+      "meta": {
+        "body": "type:orders#CreateDraftDto"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders/drafts/tag",
+      "to": "orders#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 90,
+      "meta": {
+        "order": 0,
+        "scope": "method",
+        "layer": "pipe",
+        "source": "UsePipes"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders/drafts/tag",
+      "to": "orders#src/orders/orders.controller.ts:OrdersController.tagDraft",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#CreateDraftDto"
+      ],
+      "returns": "type:orders#CreateDraftDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 89,
+      "meta": {
+        "body": "type:orders#CreateDraftDto"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders/legacy",
+      "to": "orders#src/orders/orders.controller.ts:OrdersController.legacy",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#CreateOrderDto"
+      ],
+      "returns": "type:orders#OrderDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 68,
+      "meta": {
+        "body": "type:orders#CreateOrderDto"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders/prices",
+      "to": "orders#src/orders/orders.controller.ts:OrdersController.price",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:@fx/wire#MoneyDto"
+      ],
+      "returns": "type:@fx/wire#MoneyDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 28,
+      "meta": {
+        "body": "type:@fx/wire#MoneyDto"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/wire",
+      "to": "orders#src/wire/wire.controller.ts:WireController.accept",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#WireDto"
+      ],
+      "returns": "void",
+      "file": "src/wire/wire.controller.ts",
+      "line": 9,
+      "meta": {
+        "body": "type:orders#WireDto"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/wire/broken",
+      "to": "orders#src/wire/wire.controller.ts:WireController.broken",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#WireBrokenDto"
+      ],
+      "returns": "void",
+      "file": "src/wire/wire.controller.ts",
+      "line": 15,
+      "meta": {
+        "body": "type:orders#WireBrokenDto"
+      }
+    },
+    {
+      "from": "entry:orders:rpc:orders.get",
+      "to": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#GetOrderQuery"
+      ],
+      "returns": "type:orders#OrderDto",
+      "file": "src/rpc/orders.rpc.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient",
+      "to": "gateway#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 19
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient",
+      "to": "gateway#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 20
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.address",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 40
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.address",
+      "to": "http_out:gateway#src/clients/orders.client.ts:40:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 40
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.batchDrafts",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 150
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.batchDrafts",
+      "to": "http_out:gateway#src/clients/orders.client.ts:149:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 149
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.create",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 25
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.create",
+      "to": "http_out:gateway#src/clients/orders.client.ts:25:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 25
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.draftDeclared",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 64
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.draftDeclared",
+      "to": "http_out:gateway#src/clients/orders.client.ts:64:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 64
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.draftSpread",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 74
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.draftSpread",
+      "to": "http_out:gateway#src/clients/orders.client.ts:74:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 74
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.draftWritten",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 51
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.draftWritten",
+      "to": "http_out:gateway#src/clients/orders.client.ts:51:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 51
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.fetchDraft",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 87
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.fetchDraft",
+      "to": "http_out:gateway#src/clients/orders.client.ts:87:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 87
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 30
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+      "to": "http_out:gateway#src/clients/orders.client.ts:30:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 30
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.legacy",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 100
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.legacy",
+      "to": "http_out:gateway#src/clients/orders.client.ts:100:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 100
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.previewDraft",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 135
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.previewDraft",
+      "to": "http_out:gateway#src/clients/orders.client.ts:134:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 134
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.price",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 35
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.price",
+      "to": "http_out:gateway#src/clients/orders.client.ts:35:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 35
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.storeDraft",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 110
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.storeDraft",
+      "to": "http_out:gateway#src/clients/orders.client.ts:110:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 110
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.tagDraft",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 122
+    },
+    {
+      "from": "gateway#src/clients/orders.client.ts:OrdersClient.tagDraft",
+      "to": "http_out:gateway#src/clients/orders.client.ts:122:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 122
+    },
+    {
+      "from": "gateway#src/clients/wire.client.ts:WireClient",
+      "to": "gateway#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/wire.client.ts",
+      "line": 12
+    },
+    {
+      "from": "gateway#src/clients/wire.client.ts:WireClient",
+      "to": "gateway#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/wire.client.ts",
+      "line": 13
+    },
+    {
+      "from": "gateway#src/clients/wire.client.ts:WireClient.send",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/wire.client.ts",
+      "line": 18
+    },
+    {
+      "from": "gateway#src/clients/wire.client.ts:WireClient.send",
+      "to": "http_out:gateway#src/clients/wire.client.ts:18:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/wire.client.ts",
+      "line": 18
+    },
+    {
+      "from": "gateway#src/clients/wire.client.ts:WireClient.sendBroken",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/wire.client.ts",
+      "line": 23
+    },
+    {
+      "from": "gateway#src/clients/wire.client.ts:WireClient.sendBroken",
+      "to": "http_out:gateway#src/clients/wire.client.ts:23:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/wire.client.ts",
+      "line": 23
+    },
+    {
+      "from": "gateway#src/clients/wire.client.ts:WireClient.sendCategory",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/wire.client.ts",
+      "line": 33
+    },
+    {
+      "from": "gateway#src/clients/wire.client.ts:WireClient.sendCategory",
+      "to": "http_out:gateway#src/clients/wire.client.ts:33:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/wire.client.ts",
+      "line": 33
+    },
+    {
+      "from": "gateway#src/clients/wire.client.ts:WireClient.sendDeep",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/wire.client.ts",
+      "line": 28
+    },
+    {
+      "from": "gateway#src/clients/wire.client.ts:WireClient.sendDeep",
+      "to": "http_out:gateway#src/clients/wire.client.ts:28:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/wire.client.ts",
+      "line": 28
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:100:12",
+      "to": "entry:orders:http:POST:/orders/legacy",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 100,
+      "params": [
+        "type:gateway#CreateOrderDto"
+      ],
+      "returns": "type:gateway#OrderDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:110:12",
+      "to": "entry:orders:http:POST:/orders/drafts/store",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 110,
+      "params": [
+        "{title:string;note:string}"
+      ],
+      "returns": "type:gateway#DraftResultDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:122:12",
+      "to": "entry:orders:http:POST:/orders/drafts/tag",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 122,
+      "params": [
+        "{title:string;colour:string}"
+      ],
+      "returns": "type:gateway#DraftResultDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:134:12",
+      "to": "entry:orders:http:POST:/orders/drafts/preview",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 134,
+      "params": [
+        "{title:string;note:string}"
+      ],
+      "returns": "type:gateway#DraftResultDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:149:12",
+      "to": "entry:orders:http:POST:/orders/drafts/batch",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 149,
+      "params": [
+        "type:gateway#BatchDraftDto[]"
+      ],
+      "returns": "type:gateway#DraftResultDto[]",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:25:12",
+      "to": "entry:orders:http:POST:/orders",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 25,
+      "params": [
+        "type:gateway#CreateOrderDto"
+      ],
+      "returns": "type:gateway#OrderDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:30:12",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 30,
+      "returns": "type:gateway#OrderDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:35:12",
+      "to": "entry:orders:http:POST:/orders/prices",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 35,
+      "params": [
+        "type:@fx/wire#MoneyDto"
+      ],
+      "returns": "type:@fx/wire#MoneyDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:40:12",
+      "to": "entry:orders:http:POST:/orders/addresses",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 40,
+      "params": [
+        "type:gateway#AddressDto"
+      ],
+      "returns": "type:gateway#AddressDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:51:12",
+      "to": "entry:orders:http:POST:/orders/drafts",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 51,
+      "params": [
+        "{title:string}"
+      ],
+      "returns": "type:gateway#DraftResultDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:64:12",
+      "to": "entry:orders:http:POST:/orders/drafts",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 64,
+      "params": [
+        "type:gateway#DraftDto"
+      ],
+      "returns": "type:gateway#DraftResultDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:74:12",
+      "to": "entry:orders:http:POST:/orders/drafts",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 74,
+      "params": [
+        "{extra:number;title:string;owner:string;archived:boolean}"
+      ],
+      "returns": "type:gateway#DraftResultDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/orders.client.ts:87:12",
+      "to": "entry:orders:http:GET:/orders/drafts/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/orders.client.ts",
+      "line": 87,
+      "returns": "type:gateway#DraftResultDto",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/wire.client.ts:18:12",
+      "to": "entry:orders:http:POST:/wire",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/wire.client.ts",
+      "line": 18,
+      "params": [
+        "type:gateway#WireDto"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/wire.client.ts:23:12",
+      "to": "entry:orders:http:POST:/wire/broken",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/wire.client.ts",
+      "line": 23,
+      "params": [
+        "type:gateway#WireBrokenDto"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/wire.client.ts:28:12",
+      "to": "entry:orders:http:POST:/deep",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/wire.client.ts",
+      "line": 28,
+      "params": [
+        "type:gateway#DeepDto"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/wire.client.ts:33:12",
+      "to": "entry:orders:http:POST:/deep/categories",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/wire.client.ts",
+      "line": 33,
+      "params": [
+        "type:gateway#CategoryDto"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "orders#src/app.module.ts:AppModule",
+      "to": "orders#node_modules/@nestjs/microservices:ClientsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 15,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController",
+      "to": "orders#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.address",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.address",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:orders#AddressDto"
+      ],
+      "returns": "type:orders#AddressDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 39
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.batchDrafts",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.storeDrafts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:orders#CreateDraftDto[]"
+      ],
+      "returns": "type:orders#CreateDraftDto[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 112
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:orders#CreateOrderDto"
+      ],
+      "returns": "type:orders#OrderDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.draft",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.draft",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:orders#CreateDraftDto"
+      ],
+      "returns": "type:orders#CreateDraftDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 51
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:orders#OrderDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.legacy",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:orders#CreateOrderDto"
+      ],
+      "returns": "type:orders#OrderDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 70
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.previewDraft",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.previewDraft",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:orders#CreateDraftDto"
+      ],
+      "returns": "type:orders#CreateDraftDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 98
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.price",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.price",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:@fx/wire#MoneyDto"
+      ],
+      "returns": "type:@fx/wire#MoneyDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 30
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.readDraft",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.readDraft",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:orders#CreateDraftDto|type:orders#LockedDraftDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 64
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.storeDraft",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.storeDraft",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:orders#CreateDraftDto"
+      ],
+      "returns": "type:orders#CreateDraftDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 86
+    },
+    {
+      "from": "orders#src/orders/orders.controller.ts:OrdersController.tagDraft",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.storeDraft",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:orders#CreateDraftDto"
+      ],
+      "returns": "type:orders#CreateDraftDto",
+      "file": "src/orders/orders.controller.ts",
+      "line": 92
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService",
+      "to": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 20
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService",
+      "to": "orders#node_modules/typeorm:Repository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "to": "producer:orders#src/orders/orders.service.ts:69:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 69
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.storeDraft",
+      "to": "db_query:orders#src/orders/orders.service.ts:28:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 28
+    },
+    {
+      "from": "orders#src/orders/orders.service.ts:OrdersService.storeDrafts",
+      "to": "db_query:orders#src/orders/orders.service.ts:81:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 81
+    },
+    {
+      "from": "producer:billing#src/invoices/orders.rpc.client.ts:15:12",
+      "to": "channel:orders.get",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:billing#GetOrderQuery"
+      ],
+      "returns": "type:billing#OrderDto",
+      "file": "src/invoices/orders.rpc.client.ts",
+      "line": 15
+    },
+    {
+      "from": "producer:orders#src/orders/orders.service.ts:69:5",
+      "to": "channel:order.created",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:orders#OrderCreatedEvent"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 69
+    },
+    {
+      "from": "ui_action:web#src/app/checkout.component.ts:12:59",
+      "to": "web#src/app/checkout.component.ts:CheckoutComponent.place",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 12
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:21:12",
+      "to": "entry:orders:http:POST:/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 21,
+      "params": [
+        "type:web#CreateOrderDto"
+      ],
+      "returns": "type:web#OrderDto",
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "web#src/app/checkout.component.ts:CheckoutComponent",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 14
+    },
+    {
+      "from": "web#src/app/checkout.component.ts:CheckoutComponent.place",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/checkout.component.ts",
+      "line": 17
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "to": "web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 17
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 21
+    }
+  ],
+  "types": {
+    "type:@fx/wire#MoneyDto": {
+      "name": "MoneyDto",
+      "kind": "object",
+      "declaredIn": "@fx/wire",
+      "structuralHash": "fe1facfc23710e30",
+      "fields": [
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true,
+        "sharedPackage": "@fx/wire"
+      }
+    },
+    "type:axios#AxiosResponse<type:@fx/wire#MoneyDto>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:axios#AxiosResponse<type:gateway#AddressDto>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:axios#AxiosResponse<type:gateway#DraftResultDto>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:axios#AxiosResponse<type:gateway#DraftResultDto[]>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:axios#AxiosResponse<type:gateway#OrderDto>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:axios#AxiosResponse<void>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:billing#GetOrderQuery": {
+      "name": "GetOrderQuery",
+      "kind": "object",
+      "declaredIn": "billing#src/invoices/dto.ts",
+      "structuralHash": "47cbe86c7a813a67",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "includeRefunds",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:billing#OrderCreatedEvent": {
+      "name": "OrderCreatedEvent",
+      "kind": "object",
+      "declaredIn": "billing#src/invoices/dto.ts",
+      "structuralHash": "d889a6cb21dbbbdc",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "type:@fx/wire#MoneyDto",
+          "optional": false
+        },
+        {
+          "name": "placedAt",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:billing#OrderDto": {
+      "name": "OrderDto",
+      "kind": "object",
+      "declaredIn": "billing#src/invoices/dto.ts",
+      "structuralHash": "375ac8e3e6b2514c",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "placedAt",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#AddressDto": {
+      "name": "AddressDto",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/dto.ts",
+      "structuralHash": "9c2ba9fcc89f0bfc",
+      "fields": [
+        {
+          "name": "line1",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "city",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "postcode",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#BatchDraftDto": {
+      "name": "BatchDraftDto",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/dto.ts",
+      "structuralHash": "2f9500f3a16bfe10",
+      "fields": [
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#CategoryDto": {
+      "name": "CategoryDto",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/deep.dto.ts",
+      "structuralHash": "8c06bc702d41270d",
+      "fields": [
+        {
+          "name": "code",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "children",
+          "type": "type:gateway#CategoryDto[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#Channel": {
+      "name": "Channel",
+      "kind": "enum",
+      "declaredIn": "gateway#src/clients/wire.dto.ts",
+      "structuralHash": "2658b612d40b4bf2",
+      "members": [
+        "web",
+        "phone"
+      ],
+      "meta": {
+        "declKind": "enum",
+        "exported": true
+      }
+    },
+    "type:gateway#CreateOrderDto": {
+      "name": "CreateOrderDto",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/dto.ts",
+      "structuralHash": "89204a93db7b9e01",
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "debugId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "type:@fx/wire#MoneyDto",
+          "optional": false
+        },
+        {
+          "name": "shipTo",
+          "type": "type:gateway#AddressDto",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#DeepDto": {
+      "name": "DeepDto",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/deep.dto.ts",
+      "structuralHash": "111b3b97f3d1ef71",
+      "fields": [
+        {
+          "name": "label",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "next",
+          "type": "type:gateway#DeepL1",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#DeepL1": {
+      "name": "DeepL1",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/deep.dto.ts",
+      "structuralHash": "adb073484d042550",
+      "fields": [
+        {
+          "name": "next",
+          "type": "type:gateway#DeepL2",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#DeepL2": {
+      "name": "DeepL2",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/deep.dto.ts",
+      "structuralHash": "0aa724d0d4392e06",
+      "fields": [
+        {
+          "name": "next",
+          "type": "type:gateway#DeepL3",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#DeepL3": {
+      "name": "DeepL3",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/deep.dto.ts",
+      "structuralHash": "50992261949f5f6d",
+      "fields": [
+        {
+          "name": "next",
+          "type": "type:gateway#DeepL4",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#DeepL4": {
+      "name": "DeepL4",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/deep.dto.ts",
+      "structuralHash": "6b162e650153d558",
+      "fields": [
+        {
+          "name": "leaf",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#Delivery": {
+      "name": "Delivery",
+      "kind": "enum",
+      "declaredIn": "gateway#src/clients/wire.dto.ts",
+      "structuralHash": "6506fee6a770a260",
+      "members": [
+        "post",
+        "courier"
+      ],
+      "meta": {
+        "declKind": "enum",
+        "exported": true
+      }
+    },
+    "type:gateway#DraftDto": {
+      "name": "DraftDto",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/dto.ts",
+      "structuralHash": "19a145f4827f0016",
+      "fields": [
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "owner",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "archived",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#DraftResultDto": {
+      "name": "DraftResultDto",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/dto.ts",
+      "structuralHash": "695c192abad871ec",
+      "fields": [
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#OrderDto": {
+      "name": "OrderDto",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/dto.ts",
+      "structuralHash": "6b168385547a15d0",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "placedAt",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#WireBrokenDto": {
+      "name": "WireBrokenDto",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/wire.dto.ts",
+      "structuralHash": "02ea0cc9bbb2c77e",
+      "fields": [
+        {
+          "name": "placedAt",
+          "type": "Date",
+          "optional": false
+        },
+        {
+          "name": "reference",
+          "type": "undefined",
+          "optional": false
+        },
+        {
+          "name": "delivery",
+          "type": "type:gateway#Delivery",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:gateway#WireDto": {
+      "name": "WireDto",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/wire.dto.ts",
+      "structuralHash": "a63862320ec2e184",
+      "fields": [
+        {
+          "name": "placedAt",
+          "type": "Date",
+          "optional": false
+        },
+        {
+          "name": "reference",
+          "type": "bigint",
+          "optional": false
+        },
+        {
+          "name": "signature",
+          "type": "Buffer",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "undefined-union"
+          }
+        },
+        {
+          "name": "secret",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "exclude": true
+          }
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "expose": true,
+            "exposeAs": "customer_id"
+          }
+        },
+        {
+          "name": "coupon",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "transform": true
+          }
+        },
+        {
+          "name": "extras",
+          "type": "any",
+          "optional": false
+        },
+        {
+          "name": "channel",
+          "type": "type:gateway#Channel",
+          "optional": false
+        },
+        {
+          "name": "tags",
+          "type": "Set<string>",
+          "optional": false
+        },
+        {
+          "name": "counts",
+          "type": "Map<string,number>",
+          "optional": false
+        },
+        {
+          "name": "shipping_city",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "internalNote",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "score",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:orders#AddressDto": {
+      "name": "AddressDto",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/dto.ts",
+      "structuralHash": "9c2ba9fcc89f0bfc",
+      "fields": [
+        {
+          "name": "line1",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "city",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "postcode",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#CategoryDto": {
+      "name": "CategoryDto",
+      "kind": "object",
+      "declaredIn": "orders#src/deep/deep.dto.ts",
+      "structuralHash": "4d278203b0a427ed",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "children",
+          "type": "type:orders#CategoryDto[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#CreateDraftDto": {
+      "name": "CreateDraftDto",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/dto.ts",
+      "structuralHash": "695c192abad871ec",
+      "fields": [
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "validators": [
+              "IsString"
+            ]
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:orders#CreateOrderDto": {
+      "name": "CreateOrderDto",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/dto.ts",
+      "structuralHash": "703fb56b8879a398",
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "channel",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "type:@fx/wire#MoneyDto",
+          "optional": false
+        },
+        {
+          "name": "shipTo",
+          "type": "type:orders#AddressDto",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:orders#DeepDto": {
+      "name": "DeepDto",
+      "kind": "object",
+      "declaredIn": "orders#src/deep/deep.dto.ts",
+      "structuralHash": "40d774bbe73c0649",
+      "fields": [
+        {
+          "name": "label",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "next",
+          "type": "type:orders#DeepL1",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#DeepL1": {
+      "name": "DeepL1",
+      "kind": "object",
+      "declaredIn": "orders#src/deep/deep.dto.ts",
+      "structuralHash": "114793f61164f100",
+      "fields": [
+        {
+          "name": "next",
+          "type": "type:orders#DeepL2",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#DeepL2": {
+      "name": "DeepL2",
+      "kind": "object",
+      "declaredIn": "orders#src/deep/deep.dto.ts",
+      "structuralHash": "50c4de1eabe0682c",
+      "fields": [
+        {
+          "name": "next",
+          "type": "type:orders#DeepL3",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#DeepL3": {
+      "name": "DeepL3",
+      "kind": "object",
+      "declaredIn": "orders#src/deep/deep.dto.ts",
+      "structuralHash": "623146b31e8b9940",
+      "fields": [
+        {
+          "name": "next",
+          "type": "type:orders#DeepL4",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#DeepL4": {
+      "name": "DeepL4",
+      "kind": "object",
+      "declaredIn": "orders#src/deep/deep.dto.ts",
+      "structuralHash": "10c554feec304d36",
+      "fields": [
+        {
+          "name": "leaf",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#DraftSchema": {
+      "name": "DraftSchema",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/draft.entity.ts",
+      "structuralHash": "0828987ca8845d19",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:orders#GetOrderQuery": {
+      "name": "GetOrderQuery",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/dto.ts",
+      "structuralHash": "ac9d0d15f84a0ca6",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "includeItems",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#LockedDraftDto": {
+      "name": "LockedDraftDto",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/dto.ts",
+      "structuralHash": "77b0f5d5f6b510dc",
+      "fields": [
+        {
+          "name": "draft",
+          "type": "type:orders#CreateDraftDto",
+          "optional": false
+        },
+        {
+          "name": "lockedBy",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:orders#OrderCreatedEvent": {
+      "name": "OrderCreatedEvent",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/dto.ts",
+      "structuralHash": "fad56d286c1e3f17",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "type:@fx/wire#MoneyDto",
+          "optional": false
+        },
+        {
+          "name": "placedAt",
+          "type": "Date",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#OrderDto": {
+      "name": "OrderDto",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/dto.ts",
+      "structuralHash": "5480a6e342a11824",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "placedAt",
+          "type": "Date",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#WireBrokenDto": {
+      "name": "WireBrokenDto",
+      "kind": "object",
+      "declaredIn": "orders#src/wire/wire.dto.ts",
+      "structuralHash": "0af3a7d7bb0292d9",
+      "fields": [
+        {
+          "name": "placedAt",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "reference",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "delivery",
+          "type": "'post'",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#WireDto": {
+      "name": "WireDto",
+      "kind": "object",
+      "declaredIn": "orders#src/wire/wire.dto.ts",
+      "structuralHash": "73416d6877253d1b",
+      "fields": [
+        {
+          "name": "placedAt",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "reference",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "signature",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "secret",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "customer_id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "coupon",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "extras",
+          "type": "unknown",
+          "optional": false
+        },
+        {
+          "name": "channel",
+          "type": "'phone'|'web'",
+          "optional": false
+        },
+        {
+          "name": "tags",
+          "type": "string[]",
+          "optional": false
+        },
+        {
+          "name": "counts",
+          "type": "object",
+          "optional": false
+        },
+        {
+          "name": "shippingCity",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "expose": true,
+            "exposeAs": "shipping_city"
+          }
+        },
+        {
+          "name": "internalNote",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "exclude": true,
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "score",
+          "type": "number",
+          "optional": false,
+          "meta": {
+            "transform": true
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:web#CreateOrderDto": {
+      "name": "CreateOrderDto",
+      "kind": "object",
+      "declaredIn": "web#src/app/order.dto.ts",
+      "structuralHash": "645420de17bd21fb",
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "channel",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "{amount:number;currency:string}",
+          "optional": false
+        },
+        {
+          "name": "shipTo",
+          "type": "{line1:string;city:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:web#OrderDto": {
+      "name": "OrderDto",
+      "kind": "object",
+      "declaredIn": "web#src/app/order.dto.ts",
+      "structuralHash": "6b168385547a15d0",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "placedAt",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app.module.ts",
+      "line": 9,
+      "reason": "module-import-dynamic",
+      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "symbol": "AppModule imports HttpModule",
+      "service": "gateway"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 9,
+      "reason": "module-import-dynamic",
+      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "symbol": "AppModule imports ConfigModule",
+      "service": "gateway"
+    },
+    {
+      "file": "src/clients/wire.dto.ts",
+      "line": 32,
+      "reason": "decorator-arg-dynamic",
+      "hint": "A function rewrites this field, so what it carries on the wire is not read. The field is compared as its declared type.",
+      "symbol": "WireDto.coupon",
+      "service": "gateway"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 83,
+      "reason": "route-unguarded",
+      "message": "POST /orders/drafts/store has no guard in front of it and reaches Draft.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "POST /orders/drafts/store"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 89,
+      "reason": "route-unguarded",
+      "message": "POST /orders/drafts/tag has no guard in front of it and reaches Draft.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "POST /orders/drafts/tag"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 109,
+      "reason": "route-unguarded",
+      "message": "POST /orders/drafts/batch has no guard in front of it and reaches Draft.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "symbol": "POST /orders/drafts/batch"
+    },
+    {
+      "file": "src/wire/wire.dto.ts",
+      "line": 40,
+      "reason": "decorator-arg-dynamic",
+      "hint": "A function rewrites this field, so what it carries on the wire is not read. The field is compared as its declared type.",
+      "symbol": "WireDto.score",
+      "service": "orders"
+    }
+  ]
+}

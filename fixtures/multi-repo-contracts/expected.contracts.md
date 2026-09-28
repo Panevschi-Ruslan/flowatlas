@@ -1,6 +1,6 @@
 ## Contracts
 
-contracts: edges=30 shared=2 identical=8 drift=20 unchecked=6 errors=14 warnings=5 infos=12 ignored=4
+contracts: edges=33 shared=2 identical=8 drift=23 unchecked=6 errors=15 warnings=6 infos=12 ignored=4
 
 | severity | kind | between | direction | field | what |
 |---|---|---|---|---|---|
@@ -15,10 +15,12 @@ contracts: edges=30 shared=2 identical=8 drift=20 unchecked=6 errors=14 warnings
 | error | type_mismatch | gateway → orders | request | next.next.next | sender gateway sends `next.next.next` as `DeepL3`; receiver orders declares it `DeepL3`; their shapes differ below the depth this run compared; raise --depth to see which field |
 | error | missing_required | gateway → orders | request | id | receiver orders requires `id: string`; sender gateway does not send it |
 | error | missing_required | billing → orders | payload | includeItems | receiver orders requires `includeItems: boolean`; sender billing does not send it |
+| error | missing_required | orders → billing | response | status | receiver billing requires `status: string`; sender orders does not send it |
 | error | missing_required | orders → billing | payload | customerId | receiver billing requires `customerId: string`; sender orders does not send it |
 | error | missing_required | web → orders | request | shipTo.postcode | receiver orders requires `shipTo.postcode: string`; sender web does not send it |
 | error | type_mismatch | orders → web | response | total | sender orders sends `total` as `number`; receiver web declares it `string` |
 | warning | extra_field | gateway → orders | request | note | sender gateway sends `note: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it |
+| warning | extra_field | gateway → orders | request | [].note | the type sender gateway declares permits `[].note: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it |
 | warning | extra_field | gateway → orders | request | colour | sender gateway sends `colour: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it |
 | warning | optionality_mismatch | gateway → orders | request | note | `note` may be left out by sender gateway and is required by receiver orders; the sender marks it optional by question |
 | warning | type_mismatch | gateway → orders | request | counts | `counts` is a Set or a Map; JSON carries neither, so what receiver orders reads is whatever a replacer wrote by hand |

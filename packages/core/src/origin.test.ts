@@ -1,3 +1,6 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Project, SyntaxKind, type SourceFile } from 'ts-morph';
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -13,6 +16,14 @@ import {
 const SOURCE = `
 import { Repository } from 'some-orm';
 import { Client } from '@scope/driver';
+import { Socket } from '@scope/sockets';
+import type { ReadonlyCookies } from '@scope/framework';
+
+/**
+ * An alias of this repository's own over a library's type, which is how a
+ * project names the socket it has authenticated.
+ */
+export type SocketWithAuthentication = Socket & { user: { id: string } };
 
 export interface Order { id: string }
 export class OrdersRepository { find(): Order[] { return [] } }
@@ -29,12 +40,36 @@ export class Api {
   awaited!: Promise<Repository<Order>>;
   intersected!: Repository<Order> & { $client: Client };
   bolted!: { $client: Client } & Repository<Order>;
+  localAlias!: SocketWithAuthentication;
+  packagedAlias!: ReadonlyCookies;
   plain!: string;
 }
 `;
 
 const ORM = `export declare class Repository<Entity> { find(): Promise<Entity[]> }`;
 const DRIVER = `export declare class Client { send(): void }`;
+const SOCKETS = `export declare class Socket { on(event: string): void }`;
+
+/**
+ * A package that names an intersection of its own, which is the case the alias
+ * rule exists for: the alias is where the framework declares its cookie store,
+ * and the framework is the better answer than either member.
+ */
+const FRAMEWORK = `
+export declare class CookieStore { get(name: string): string }
+export type ReadonlyCookies = CookieStore & { readonly readonly: true };
+`;
+
+/** The same alias, alone, for the one case that needs files on a real disk. */
+const ON_DISK = `
+import { Socket } from '@scope/sockets';
+
+type SocketWithAuthentication = Socket & { user: { id: string } };
+
+export class Api {
+  localAlias!: SocketWithAuthentication;
+}
+`;
 
 let file: SourceFile;
 
@@ -42,6 +77,8 @@ beforeAll(() => {
   const project = new Project({ useInMemoryFileSystem: true });
   project.createSourceFile('node_modules/some-orm/index.d.ts', ORM);
   project.createSourceFile('node_modules/@scope/driver/index.d.ts', DRIVER);
+  project.createSourceFile('node_modules/@scope/sockets/index.d.ts', SOCKETS);
+  project.createSourceFile('node_modules/@scope/framework/index.d.ts', FRAMEWORK);
   file = project.createSourceFile('api.ts', SOURCE);
 });
 
@@ -108,6 +145,56 @@ describe('where a type came from', () => {
     // The anonymous `{ $client }` is the bolt-on, not the client, and which one
     // answers must not depend on the order the author typed them in.
     expect(of('bolted')).toMatchObject({ package: 'some-orm', typeName: 'Repository' });
+  });
+
+  /**
+   * The two halves of the alias rule, which are the same shape and want
+   * opposite answers.
+   *
+   * An alias a package declares is where that package keeps the type, so the
+   * alias answers. An alias this repository declares over a library's type
+   * names nothing a reader can look up, and the library inside it is the whole
+   * of what can be said about where the value came from.
+   */
+  it('looks through an alias of this repository own to the library inside it', () => {
+    expect(of('localAlias')).toMatchObject({ package: '@scope/sockets', typeName: 'Socket' });
+  });
+
+  /**
+   * The same case on a real directory with a manifest above it, which is what
+   * every repository is.
+   *
+   * Worth a second test, and worth the files on disk that it costs. The first
+   * version of this rule asked the *nearest manifest* whether the alias was
+   * packaged, and a repository's own manifest answers yes — so the rule was inert
+   * on every real repository while the test above passed, because an in-memory
+   * file system has no manifest for that question to find. A test that cannot
+   * tell the two versions apart is not a test of the rule.
+   */
+  it('still looks through it in a directory with a manifest of its own', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'flowatlas-origin-'));
+    try {
+      writeFileSync(join(dir, 'package.json'), '{ "name": "the-repository" }');
+      mkdirSync(join(dir, 'node_modules', '@scope', 'sockets'), { recursive: true });
+      writeFileSync(join(dir, 'node_modules', '@scope', 'sockets', 'index.d.ts'), SOCKETS);
+      writeFileSync(
+        join(dir, 'node_modules', '@scope', 'sockets', 'package.json'),
+        '{ "name": "@scope/sockets", "types": "index.d.ts" }',
+      );
+      const project = new Project({ compilerOptions: { skipLibCheck: true } });
+      const local = project.createSourceFile(join(dir, 'app.ts'), ON_DISK);
+      const property = local.getClassOrThrow('Api').getPropertyOrThrow('localAlias');
+      expect(resolveTypeOrigin(property)).toMatchObject({ package: '@scope/sockets' });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps an alias a package declares, because the package is the answer', () => {
+    expect(of('packagedAlias')).toMatchObject({
+      package: '@scope/framework',
+      typeName: 'ReadonlyCookies',
+    });
   });
 });
 

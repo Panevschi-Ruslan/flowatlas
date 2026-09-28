@@ -72,16 +72,22 @@ export interface BuildClassIndexOptions<Role extends string> {
   repoDir: string;
   /** What a class is, as far as the extractor's graph is concerned. */
   roleOf(declaration: ClassDeclaration): Role;
+  /**
+   * Which of the project's files the extractor reads, by absolute path. Every
+   * file outside an installed package when absent; an extractor that decides it
+   * by the package a file is in asks `suppliedWith` (R145, R159).
+   */
+  reads?: (file: string) => boolean;
 }
 
 export const buildClassIndex = <Role extends string>(
   options: BuildClassIndexOptions<Role>,
 ): ClassIndex<Role> => {
-  const { project, repo, repoDir, roleOf } = options;
+  const { project, repo, repoDir, roleOf, reads = () => true } = options;
   const index = new ClassIndex<Role>();
   for (const sourceFile of project.getSourceFiles()) {
     const file = fileOf(sourceFile, repoDir);
-    if (file.includes('node_modules/')) continue;
+    if (file.includes('node_modules/') || !reads(sourceFile.getFilePath())) continue;
     for (const declaration of sourceFile.getClasses()) {
       const name = className(declaration);
       index.add({

@@ -1,0 +1,10 @@
+{
+  "name": "@sibling-types/web",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@sibling-types/platform-types": "workspace:*",
+    "next": "^15.0.0",
+    "react": "^19.0.0"
+  }
+}

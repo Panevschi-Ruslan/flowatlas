@@ -1,0 +1,389 @@
+{
+  "schemaVersion": 5,
+  "repo": "nest-addressing",
+  "generatedAt": "2026-09-27T09:26:33.897Z",
+  "nodes": [
+    {
+      "id": "entry:nest-addressing:http:GET:/api/.well-known/health",
+      "type": "entry",
+      "label": "GET /api/.well-known/health",
+      "repo": "nest-addressing",
+      "file": "src/health/health.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/.well-known/health",
+        "rawPath": "/api/.well-known/health",
+        "globalPrefix": "api",
+        "controller": "HealthController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-addressing:http:GET:/api/v1/legacy",
+      "type": "entry",
+      "label": "GET /api/v1/legacy",
+      "repo": "nest-addressing",
+      "file": "src/legacy/legacy.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/v1/legacy",
+        "rawPath": "/api/v1/legacy",
+        "globalPrefix": "api",
+        "version": "1",
+        "controller": "LegacyController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-addressing:http:GET:/api/v1/topics",
+      "type": "entry",
+      "label": "GET /api/v1/topics",
+      "repo": "nest-addressing",
+      "file": "src/topics/topics.v1.controller.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/v1/topics",
+        "rawPath": "/api/v1/topics",
+        "globalPrefix": "api",
+        "version": "1",
+        "controller": "TopicsV1Controller",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-addressing:http:GET:/api/v1/topics/:param",
+      "type": "entry",
+      "label": "GET /api/v1/topics/:param",
+      "repo": "nest-addressing",
+      "file": "src/topics/topics.v1.controller.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/v1/topics/:param",
+        "rawPath": "/api/v1/topics/:id",
+        "globalPrefix": "api",
+        "version": "1",
+        "controller": "TopicsV1Controller",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-addressing:http:GET:/api/v2/topics",
+      "type": "entry",
+      "label": "GET /api/v2/topics",
+      "repo": "nest-addressing",
+      "file": "src/topics/topics.v2.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/v2/topics",
+        "rawPath": "/api/v2/topics",
+        "globalPrefix": "api",
+        "version": "2",
+        "controller": "TopicsV2Controller",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-addressing:http:GET:/api/v2/topics/:param",
+      "type": "entry",
+      "label": "GET /api/v2/topics/:param",
+      "repo": "nest-addressing",
+      "file": "src/topics/topics.v2.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/v2/topics/:param",
+        "rawPath": "/api/v2/topics/:id",
+        "globalPrefix": "api",
+        "version": "2",
+        "controller": "TopicsV2Controller",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-addressing:http:POST:/api/v1/legacy/replay",
+      "type": "entry",
+      "label": "POST /api/v1/legacy/replay",
+      "repo": "nest-addressing",
+      "file": "src/legacy/legacy.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/v1/legacy/replay",
+        "rawPath": "/api/v1/legacy/replay",
+        "globalPrefix": "api",
+        "version": "1",
+        "controller": "LegacyController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:nest-addressing:http:POST:/api/v2/legacy/replay",
+      "type": "entry",
+      "label": "POST /api/v2/legacy/replay",
+      "repo": "nest-addressing",
+      "file": "src/legacy/legacy.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/v2/legacy/replay",
+        "rawPath": "/api/v2/legacy/replay",
+        "globalPrefix": "api",
+        "version": "2",
+        "controller": "LegacyController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-addressing#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-addressing",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "HealthController",
+          "LegacyController",
+          "TopicsV1Controller",
+          "TopicsV2Controller"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-addressing#src/health/health.controller.ts:HealthController",
+      "type": "provider",
+      "label": "HealthController",
+      "repo": "nest-addressing",
+      "file": "src/health/health.controller.ts",
+      "line": 12,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-addressing#src/health/health.controller.ts:HealthController.ping",
+      "type": "method",
+      "label": "HealthController.ping",
+      "repo": "nest-addressing",
+      "file": "src/health/health.controller.ts",
+      "line": 14
+    },
+    {
+      "id": "nest-addressing#src/legacy/legacy.controller.ts:LegacyController",
+      "type": "provider",
+      "label": "LegacyController",
+      "repo": "nest-addressing",
+      "file": "src/legacy/legacy.controller.ts",
+      "line": 11,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-addressing#src/legacy/legacy.controller.ts:LegacyController.list",
+      "type": "method",
+      "label": "LegacyController.list",
+      "repo": "nest-addressing",
+      "file": "src/legacy/legacy.controller.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-addressing#src/legacy/legacy.controller.ts:LegacyController.replay",
+      "type": "method",
+      "label": "LegacyController.replay",
+      "repo": "nest-addressing",
+      "file": "src/legacy/legacy.controller.ts",
+      "line": 18
+    },
+    {
+      "id": "nest-addressing#src/topics/topics.v1.controller.ts:TopicsV1Controller",
+      "type": "provider",
+      "label": "TopicsV1Controller",
+      "repo": "nest-addressing",
+      "file": "src/topics/topics.v1.controller.ts",
+      "line": 10,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-addressing#src/topics/topics.v1.controller.ts:TopicsV1Controller.list",
+      "type": "method",
+      "label": "TopicsV1Controller.list",
+      "repo": "nest-addressing",
+      "file": "src/topics/topics.v1.controller.ts",
+      "line": 12
+    },
+    {
+      "id": "nest-addressing#src/topics/topics.v1.controller.ts:TopicsV1Controller.one",
+      "type": "method",
+      "label": "TopicsV1Controller.one",
+      "repo": "nest-addressing",
+      "file": "src/topics/topics.v1.controller.ts",
+      "line": 17
+    },
+    {
+      "id": "nest-addressing#src/topics/topics.v2.controller.ts:TopicsV2Controller",
+      "type": "provider",
+      "label": "TopicsV2Controller",
+      "repo": "nest-addressing",
+      "file": "src/topics/topics.v2.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-addressing#src/topics/topics.v2.controller.ts:TopicsV2Controller.list",
+      "type": "method",
+      "label": "TopicsV2Controller.list",
+      "repo": "nest-addressing",
+      "file": "src/topics/topics.v2.controller.ts",
+      "line": 6
+    },
+    {
+      "id": "nest-addressing#src/topics/topics.v2.controller.ts:TopicsV2Controller.one",
+      "type": "method",
+      "label": "TopicsV2Controller.one",
+      "repo": "nest-addressing",
+      "file": "src/topics/topics.v2.controller.ts",
+      "line": 11
+    },
+    {
+      "id": "repo:nest-addressing",
+      "type": "repo",
+      "label": "nest-addressing",
+      "repo": "nest-addressing",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "globalPrefix": "api",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-addressing:http:GET:/api/.well-known/health",
+      "to": "nest-addressing#src/health/health.controller.ts:HealthController.ping",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/health/health.controller.ts",
+      "line": 14,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-addressing:http:GET:/api/v1/legacy",
+      "to": "nest-addressing#src/legacy/legacy.controller.ts:LegacyController.list",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/legacy/legacy.controller.ts",
+      "line": 13,
+      "params": [],
+      "returns": "string[]"
+    },
+    {
+      "from": "entry:nest-addressing:http:GET:/api/v1/topics",
+      "to": "nest-addressing#src/topics/topics.v1.controller.ts:TopicsV1Controller.list",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/topics/topics.v1.controller.ts",
+      "line": 12,
+      "params": [],
+      "returns": "string[]"
+    },
+    {
+      "from": "entry:nest-addressing:http:GET:/api/v1/topics/:param",
+      "to": "nest-addressing#src/topics/topics.v1.controller.ts:TopicsV1Controller.one",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/topics/topics.v1.controller.ts",
+      "line": 17,
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-addressing:http:GET:/api/v2/topics",
+      "to": "nest-addressing#src/topics/topics.v2.controller.ts:TopicsV2Controller.list",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/topics/topics.v2.controller.ts",
+      "line": 6,
+      "params": [],
+      "returns": "string[]"
+    },
+    {
+      "from": "entry:nest-addressing:http:GET:/api/v2/topics/:param",
+      "to": "nest-addressing#src/topics/topics.v2.controller.ts:TopicsV2Controller.one",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/topics/topics.v2.controller.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-addressing:http:POST:/api/v1/legacy/replay",
+      "to": "nest-addressing#src/legacy/legacy.controller.ts:LegacyController.replay",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/legacy/legacy.controller.ts",
+      "line": 18,
+      "params": [],
+      "returns": "string"
+    },
+    {
+      "from": "entry:nest-addressing:http:POST:/api/v2/legacy/replay",
+      "to": "nest-addressing#src/legacy/legacy.controller.ts:LegacyController.replay",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/legacy/legacy.controller.ts",
+      "line": 18,
+      "params": [],
+      "returns": "string"
+    }
+  ],
+  "types": {},
+  "unresolved": []
+}

@@ -75,9 +75,14 @@ exercise the same grouping code with different strings in it.
 ## Two tokens in one group (R35)
 
 `OrdersService`'s constructor asks for two tokens nothing provides,
-`EVENTS_CLIENT` and `AUDIT_CLIENT`. That makes one `di-token-unknown` group
+`LEDGER_CLIENT` and `AUDIT_CLIENT`. That makes one `di-token-unknown` group
 whose two rows say different things, which is the shape a heading can be wrong
 about: the heading has to say what the *kind* means and name neither token,
 and each row's own sentence has to read as belonging to the site it sits under.
 A group whose rows all say one thing cannot catch that, which is why there are
 two.
+
+Until R150 the first of the two was `EVENTS_CLIENT`, which is not unprovided:
+`ClientsModule.register([{ name: 'EVENTS_CLIENT', … }])` in `AppModule` provides
+it, and the group held only because the module reader read `providers:` alone.
+The group now names a token that really is provided by nothing.

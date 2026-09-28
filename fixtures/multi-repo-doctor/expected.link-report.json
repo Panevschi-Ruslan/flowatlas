@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 3,
-  "builtAt": "2026-09-21T15:52:23.253Z",
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T09:26:33.295Z",
   "configHash": "9376cf8f01b0",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 783
     },
     {
       "name": "gateway",
@@ -21,9 +21,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 25,
       "edges": 19,
-      "types": 2,
+      "types": 4,
       "unresolved": 7,
-      "durationMs": 0
+      "durationMs": 887
     },
     {
       "name": "orders",
@@ -31,10 +31,10 @@
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 50,
-      "edges": 46,
+      "edges": 38,
       "types": 3,
       "unresolved": 17,
-      "durationMs": 0
+      "durationMs": 785
     }
   ],
   "httpOut": {
@@ -70,7 +70,7 @@
     "duplicated": []
   },
   "types": {
-    "total": 6,
+    "total": 8,
     "sharedPackage": 0
   },
   "unresolved": [
@@ -115,7 +115,7 @@
       "file": "src/orders/orders.controller.ts",
       "line": 11,
       "reason": "route-unguarded",
-      "message": "POST /orders has no guard in front of it and reaches Order.",
+      "message": "POST /orders has no guard in front of it and reaches stored data.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
       "symbol": "POST /orders"
     },
@@ -124,7 +124,7 @@
       "file": "src/orders/orders.controller.ts",
       "line": 16,
       "reason": "route-unguarded",
-      "message": "POST /orders/legacy has no guard in front of it and reaches Order.",
+      "message": "POST /orders/legacy has no guard in front of it and reaches stored data.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
       "symbol": "POST /orders/legacy"
     },
@@ -133,15 +133,15 @@
       "file": "src/orders/orders.controller.ts",
       "line": 21,
       "reason": "route-unguarded",
-      "message": "GET /orders/:param has no guard in front of it and reaches Order.",
+      "message": "GET /orders/:param has no guard in front of it and reaches stored data.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
       "symbol": "GET /orders/:param"
     }
   ],
   "totals": {
     "nodes": 85,
-    "edges": 77,
-    "types": 6,
+    "edges": 69,
+    "types": 8,
     "unresolved": 31
   }
 }

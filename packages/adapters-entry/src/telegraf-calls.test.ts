@@ -276,6 +276,30 @@ describe('a bot that registers outside any class', () => {
   });
 });
 
+describe('a method every object has, called on a bot', () => {
+  // The registration table is asked about every method name in the repository.
+  // Written as an object literal it answered these with the language's own
+  // values, and `makeEntryId` threw on the first one: the whole repository
+  // read as nothing (R130).
+  it.each(['toString', 'valueOf', 'constructor', 'hasOwnProperty', '__proto__'])(
+    '`%s` registers nothing, and the bot still reads',
+    (method) => {
+      const { ctx, entries } = extract(`
+        export class Bot {
+          private bot = new Telegraf();
+          setup() {
+            this.bot.${method}();
+            this.bot.command('orders', (ctx) => this.show(ctx));
+          }
+          show(ctx: unknown) {}
+        }
+      `);
+      expect(ids(entries)).toEqual(['entry:bot:bot_command:orders']);
+      expect(ctx.builder.unresolved).toEqual([]);
+    },
+  );
+});
+
 describe('a bot with no way in', () => {
   it('says so once, rather than reading as a bot without buttons', () => {
     const { ctx, entries } = extract(`

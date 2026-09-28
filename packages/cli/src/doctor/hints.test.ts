@@ -257,3 +257,25 @@ describe('a row an annotation has already answered', () => {
     }
   });
 });
+
+/**
+ * The catalogues are keyed by a reason, and a reason arrives from a graph or from
+ * a configuration rather than from a list written beside them - so they can be
+ * asked about any word at all, including the ones the language puts on every
+ * object. `HINTS['constructor']` used to answer with `Object`, and the row then
+ * printed whatever `Object(row, context)` returned where its advice should be.
+ * Nothing writes those reasons today, which is when to close it (R130).
+ */
+describe('a reason spelled like a method every object has', () => {
+  const UNIVERSAL = ['constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__'];
+
+  for (const reason of UNIVERSAL) {
+    it(`is not a reason the catalogue knows: ${reason}`, () => {
+      expect(isKnownReason(reason)).toBe(false);
+      expect(kindHint(reason)).toBeUndefined();
+      const advice = hintFor({ reason, file: 'src/a.ts', line: 1 });
+      expect(typeof advice).toBe('string');
+      expect(advice).toContain('unknown reason');
+    });
+  }
+});

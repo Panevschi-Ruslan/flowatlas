@@ -15,7 +15,8 @@ Type-checked, never executed:
 ./node_modules/.bin/tsc -p fixtures/multi-repo-analytics/admin/tsconfig.json   --noEmit
 ```
 
-All four are clean. `web/` is not type-checked and is never opened by the tool.
+All four are clean. `web/` is not type-checked; the tool reads it with the
+Angular extractor, and what it finds there is one request.
 
 Built, from the repository root:
 
@@ -31,7 +32,7 @@ pnpm flowatlas build --config fixtures/multi-repo-analytics/flowatlas.config.jso
 | `orders` | `./orders` | nestjs | `["ORDERS_URL"]` | the other half of every loop, and everything `dead` is meant to find |
 | `billing` | `./billing` | nestjs | `["BILLING_URL"]` | the far end of the message loop and a handler for a channel nobody publishes |
 | `admin` | `./admin` | nestjs | — | a `cron` entry, which must never be reported dead, and the third caller of the hotspot |
-| `web` | `./web` | angular | — | skipped, `no-extractor`; every analysis has to cope with a service that contributes nothing |
+| `web` | `./web` | angular | — | one service making one request, `fetch('/orders', { method: 'POST' })`, the only caller of the gateway's `POST /orders` |
 
 ## The two cross-service cycles
 
@@ -79,17 +80,28 @@ the default edge set: left in, this shape would bury the two above.
 | Row | Where | Why it is not proof |
 |---|---|---|
 | `entry:gateway:http:GET:/internal/legacy` | `gateway/src/orders/legacy.controller.ts` | a route with no internal callers may still be a public API |
-| `entry:gateway:http:POST:/orders` | `gateway/src/orders/orders.controller.ts` | `web` posts to it; there is no Angular extractor until P08, so no `hits` edge exists yet |
 | `entry:billing:event:orphan.in` | `billing/src/invoices/orphan.consumer.ts` | the publisher could live in a repository the configuration does not name |
 | `channel:audit.log` | published by `orders/src/audit/audit.service.ts` | same: a handler may exist outside the graph |
 | `channel:orphan.in` | handled by `billing/src/invoices/orphan.consumer.ts` | same, from the other side |
-| `UnusedService` | `orders/src/orders/unused.service.ts` | `orders` has unresolved `@Inject` tokens; one of them could be this |
+| `UnusedService` | `orders/src/orders/unused.service.ts` | `orders` has an unresolved `@Inject` token (`ORDERS_DB` in `OrdersRepository`, which no module provides); it could be this |
+| `OrdersApiService` | `web/src/app/orders-api.service.ts` | `web` is this one file, with no component to inject it; in a real front end something would |
+
+Until R150 the unresolved tokens behind `UnusedService`'s doubt were the three
+`@Inject('EVENTS_CLIENT')`s, which are not unresolved: `ClientsModule.register`
+in each `AppModule` provides that token, and the module reader did not read it.
+`ORDERS_DB` is a token nothing here provides.
 
 `entry:admin:cron:SyncJob.hourly` is **never** listed. A clock starts it, and
 nothing inside the graph ever will.
 
-`fields` is empty and carries the warning `contracts-unavailable`: the checker
-lives in `@flowatlas/contracts`, which does not exist until P10.
+`entry:gateway:http:POST:/orders` is not listed either. It used to be, while
+nothing read `web`, and then for a while after the Angular reader landed, because
+that reader read `HttpClient` and not the `fetch` this service is written with —
+so the route was reported uncalled with nothing saying why (R140). The request
+is now read, the `hits` edge exists, and the route has its caller.
+
+`fields` names the two fields sent to `POST /orders/create` that its handler
+never declares: `draft` from `gateway` and `orderId` from `billing`.
 
 ## What `config "POST /orders"` collects
 
@@ -131,10 +143,12 @@ pnpm flowatlas config   "POST /orders" --config fixtures/multi-repo-analytics/fl
 pnpm flowatlas hotspots --config fixtures/multi-repo-analytics/flowatlas.config.json --top 10 --format json > fixtures/multi-repo-analytics/expected.hotspots.json
 ```
 
-There is deliberately no `expected.project-graph.json` here. `multi-repo`
-already pins what a build produces, and a second full build snapshot would make
-every later extractor phase regenerate two files instead of one for no extra
-coverage. What this fixture pins is the four answers above.
+`expected.project-graph.json` and `expected.link-report.json` pin what the build
+itself writes, and `expected.contracts-report.json` what `contracts` writes after
+it; `scripts/fixtures-check.mjs` compares all three. This README once said a
+build snapshot here would buy nothing over `multi-repo`'s. R138 showed otherwise:
+the silent `fetch` above was visible only in the build, and no answer above
+would have moved for it, because a route nobody calls was already expected.
 
 ## `node_modules` in this fixture
 

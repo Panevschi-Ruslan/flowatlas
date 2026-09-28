@@ -1,6 +1,6 @@
 import { Project, SyntaxKind, type CallExpression, type SourceFile } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
-import { knexDescriptor, tableLocators } from './index.js';
+import { knexDescriptor, tableReadings } from './index.js';
 import { locateTable, type TableLocator } from './table.js';
 
 /**
@@ -48,7 +48,12 @@ declare function model<T>(collection: string, schema: Schema<T>): MongooseModel<
 declare class SequelizeModel {
   static init(attributes: unknown, options: unknown): void;
   static findAll(): Promise<unknown[]>;
+  static findByPk(id: string): Promise<unknown>;
+  static scope(name: string): typeof SequelizeModel;
+  static unscoped(): typeof SequelizeModel;
+  save(): Promise<unknown>;
 }
+declare function Table(options: unknown): ClassDecorator;
 declare const connection: { define(name: string, attributes: unknown): typeof SequelizeModel };
 `;
 
@@ -73,12 +78,13 @@ const callTo = (file: SourceFile, method: string): CallExpression => {
 const isKnexOperation = (method: string): boolean => knexDescriptor.operations[method] !== undefined;
 
 const table = (source: string, method: string, locators: readonly TableLocator[]): string | null =>
-  locateTable(callTo(parse(source), method), locators, isKnexOperation);
+  locateTable(callTo(parse(source), method), locators, { isOperation: isKnexOperation });
 
-const DRIZZLE = tableLocators['drizzle-orm']!;
-const KNEX = tableLocators['knex']!;
-const MONGOOSE = tableLocators['mongoose']!;
-const SEQUELIZE = tableLocators['sequelize']!;
+const DRIZZLE = tableReadings.get('drizzle-orm')!.locators;
+const KNEX = tableReadings.get('knex')!.locators;
+const MONGOOSE = tableReadings.get('mongoose')!.locators;
+const SEQUELIZE = tableReadings.get('sequelize')!.locators;
+const KYSELY = tableReadings.get('kysely')!.locators;
 
 describe('finding the table a drizzle call touches', () => {
   const schema = `const orders = pgTable('orders', {});\n`;
@@ -89,6 +95,13 @@ describe('finding the table a drizzle call touches', () => {
 
   it('reads the argument of the from that follows a select', () => {
     expect(table(`${schema}db.select().from(orders).limit(1);`, 'select', DRIZZLE)).toBe('orders');
+  });
+
+  it('reads no table out of the columns a select is handed', () => {
+    // One entry, like a knex alias object, but its value is a column rather than
+    // a string, so the from is what names the table.
+    const source = `${schema}db.select({ id: orders }).from(orders).limit(1);`;
+    expect(table(source, 'select', DRIZZLE)).toBe('orders');
   });
 
   it('finds the from however long the chain after it is', () => {
@@ -144,6 +157,24 @@ describe('finding the table a knex chain started from', () => {
     expect(table(`knexdb.select('id').from('sessions as s').first();`, 'first', KNEX)).toBe(
       'sessions',
     );
+  });
+
+  it('reads the table out of an alias written as an object', () => {
+    // `{ il: 'inventory_level' }` is `'inventory_level as il'`: the key is the
+    // alias, the value the table. How the inventory repository of a real
+    // repository writes every one of its queries (R149).
+    expect(table(`knex({ il: 'inventory_level' }).select('id');`, 'select', KNEX)).toBe(
+      'inventory_level',
+    );
+    expect(table(`knexdb.select('id').from({ r: 'reservation' }).first();`, 'first', KNEX)).toBe(
+      'reservation',
+    );
+  });
+
+  it('reads no table out of an object that names several, or names none', () => {
+    expect(table(`knex({ a: 'orders', b: 'users' }).select('id');`, 'select', KNEX)).toBeNull();
+    expect(table(`knex({}).select('id');`, 'select', KNEX)).toBeNull();
+    expect(table(`knex({ n: 1 }).select('id');`, 'select', KNEX)).toBeNull();
   });
 
   it('answers with nothing when the chain starts from an operation rather than a table', () => {
@@ -225,5 +256,116 @@ describe('finding the table a sequelize model stands for', () => {
       function go(n: string) { return models[n].findAll(); }
     `;
     expect(table(source, 'findAll', SEQUELIZE)).toBeNull();
+  });
+
+  /**
+   * The decorated form, which is how a TypeScript project declares a sequelize
+   * model. Nothing in the class body states the table and no `init` is ever
+   * written; the decorator is the only statement of it.
+   */
+  it('reads the table name a Table decorator stated', () => {
+    const source = `
+      @Table({ tableName: 'documents', modelName: 'document' })
+      class Note extends SequelizeModel {}
+      Note.findByPk('1');
+    `;
+    expect(table(source, 'findByPk', SEQUELIZE)).toBe('documents');
+  });
+
+  it('prefers the table the decorator names over the model name beside it', () => {
+    const source = `
+      @Table({ modelName: 'document', tableName: 'documents' })
+      class Note extends SequelizeModel {}
+      Note.findAll();
+    `;
+    expect(table(source, 'findAll', SEQUELIZE)).toBe('documents');
+  });
+
+  /**
+   * A scope narrows one model and hands the same model back, so the table is
+   * still the model's. The receiver is a call rather than a name, which is the
+   * whole of what used to make it unreadable.
+   */
+  it('reads through a scope to the model it was taken on', () => {
+    const source = `
+      @Table({ tableName: 'documents' })
+      class Note extends SequelizeModel {}
+      Note.scope('withOwner').findAll();
+    `;
+    expect(table(source, 'findAll', SEQUELIZE)).toBe('documents');
+  });
+
+  it('reads through a chain of scopes', () => {
+    const source = `
+      @Table({ tableName: 'documents' })
+      class Note extends SequelizeModel {}
+      Note.unscoped().scope('withOwner').findAll();
+    `;
+    expect(table(source, 'findAll', SEQUELIZE)).toBe('documents');
+  });
+
+  it('does not read through a call that is not a narrowing one', () => {
+    // `findAll` answers with rows, and rows are not a table to store in. A rule
+    // that looked through any call at all would have said they were.
+    const source = `
+      @Table({ tableName: 'documents' })
+      class Note extends SequelizeModel {}
+      Note.findAll().map((row) => row);
+    `;
+    expect(table(source, 'map', SEQUELIZE)).toBeNull();
+  });
+
+  /**
+   * An instance, where the table is written nowhere in the call. The class the
+   * receiver is typed as is the only statement of it, and the core has already
+   * resolved which class that is by the time this is asked.
+   */
+  it('reads the declaration of the receiver type when the call names nothing', () => {
+    const file = parse(`
+      @Table({ tableName: 'documents' })
+      class Note extends SequelizeModel {}
+      declare const note: Note;
+      note.save();
+    `);
+    const call = callTo(file, 'save');
+    const declaration = file.getClassOrThrow('Note');
+    expect(
+      locateTable(call, SEQUELIZE, { isOperation: isKnexOperation, typeDeclaration: declaration }),
+    ).toBe('documents');
+  });
+});
+
+/**
+ * Kysely names its table in the first argument of every call that starts a
+ * query, and names the whole schema in the type argument of the connection. The
+ * first is the answer; the second is the trap the descriptor's
+ * `entityInTypeArgs: false` exists to keep out of the graph.
+ */
+describe('finding the table a kysely query starts from', () => {
+  it.each([
+    ['selectFrom', `db.selectFrom('asset').selectAll().execute();`],
+    ['insertInto', `db.insertInto('asset').values({}).execute();`],
+    ['updateTable', `db.updateTable('asset').set({}).execute();`],
+    ['deleteFrom', `db.deleteFrom('asset').where('id', '=', 1).execute();`],
+  ])('reads the argument of %s', (method, source) => {
+    expect(table(source, method, KYSELY)).toBe('asset');
+  });
+
+  it('reads the table out of a constant the query was written with', () => {
+    const source = `const ASSET = 'asset';
+db.selectFrom(ASSET).selectAll().execute();`;
+    expect(table(source, 'selectFrom', KYSELY)).toBe('asset');
+  });
+
+  it('drops an alias local to the query', () => {
+    const source = `db.selectFrom('asset as a').selectAll().execute();`;
+    expect(table(source, 'selectFrom', KYSELY)).toBe('asset');
+  });
+
+  it('answers with nothing when the query selects from a subquery', () => {
+    // Real, and unreadable on purpose: a photo server builds a fifth of its reads this
+    // way, and there is no stored table named in the call at all.
+    const source = `db.selectFrom((eb) => eb.selectFrom('asset').as('t')).selectAll().execute();`;
+    expect(table(source, 'selectFrom', KYSELY)).toBeNull();
   });
 });

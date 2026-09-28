@@ -1,0 +1,11 @@
+{
+  "name": "@rendered-mail/sdk",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A client for the platform, with a provider for applications that render with React. React is a peer: whoever uses the provider supplies it, and the API does not.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}

@@ -17,10 +17,28 @@
  *                | "'" text "'" | number | 'true' | 'false'  literal
  *                | 'type:' <repo> '#' <Name> ( '<' args '>' )?
  *                | name ( '<' args '>' )?                    primitive or generic
- *   field       := name '?'? ':' ref
+ *   field       := key '?'? ':' ref
+ *   key         := name | quoted
+ *   quoted      := "'" ( text | '\' any )* "'"
  *
  * Primitives are written verbatim. A promise never appears: an asynchronous
  * return is unwrapped before it is recorded.
+ *
+ * A key is quoted whenever it is not a name, and that rule exists because the
+ * writer used to emit keys as they were written and the reader refused them.
+ * An object with a key of `<=` is ordinary in anything that carries a rule or a
+ * filter as data — `{ '<=': number }` is one JsonLogic operator — and such a
+ * type reached the registry as `{<=:number}`, which is text this grammar cannot
+ * read. Nothing noticed until a dependency declared one and every command that
+ * parses a reference threw on it. So the two halves are written against one
+ * another here: `formatFieldKey` quotes exactly what `#name` could not read
+ * back, and a property test over the writer's own output holds them to it.
+ *
+ * Quoted text carries a backslash escape, for the same reason: without one
+ * there is no way to write a key or a literal containing a quote. The cost is
+ * that a backslash in text written before this change reads as an escape now.
+ * That is the one direction the change is not backwards compatible in, and it
+ * is the narrow one: a literal type whose value contains a backslash.
  */
 
 export type TypeRef = string;
@@ -120,6 +138,32 @@ class Parser {
     if (!this.#eat(char)) this.#fail(`expected ${JSON.stringify(char)}`);
   }
 
+  /**
+   * Text between quotes, with the escapes undone.
+   *
+   * One reading for both places quotes appear — a string literal and a key that
+   * is not a name — because they are the same lexeme and two readings of it
+   * would differ the first time one of them was changed.
+   */
+  #quoted(): string {
+    this.#at += 1;
+    let out = '';
+    for (;;) {
+      const char = this.#text[this.#at];
+      if (char === undefined) this.#fail('unterminated quoted text');
+      this.#at += 1;
+      if (char === "'") return out;
+      if (char !== '\\') {
+        out += char;
+        continue;
+      }
+      const escaped = this.#text[this.#at];
+      if (escaped === undefined) this.#fail('unterminated escape');
+      this.#at += 1;
+      out += escaped;
+    }
+  }
+
   #union(): TypeRefAst {
     const members = [this.#intersection()];
     while (this.#eat('|')) members.push(this.#intersection());
@@ -208,7 +252,11 @@ class Parser {
       const fields: TypeRefField[] = [];
       if (!this.#eat('}')) {
         for (;;) {
-          const name = this.#name();
+          // A key the writer had to quote, or a bare name. Asked in this order
+          // because a quote can never open a name: `formatFieldKey` quotes every
+          // key that starts with one, so a key read here as quoted text was
+          // written as quoted text.
+          const name = this.#peek() === "'" ? this.#quoted() : this.#name();
           const optional = this.#eat('?');
           this.#expect(':');
           fields.push({ name, optional, type: this.#union() });
@@ -223,14 +271,7 @@ class Parser {
       return { kind: 'object', fields };
     }
 
-    if (next === "'") {
-      this.#at += 1;
-      const start = this.#at;
-      while (this.#at < this.#text.length && this.#text[this.#at] !== "'") this.#at += 1;
-      const value = this.#text.slice(start, this.#at);
-      this.#expect("'");
-      return { kind: 'literal', value };
-    }
+    if (next === "'") return { kind: 'literal', value: this.#quoted() };
 
     if (/[0-9-]/.test(next)) {
       const start = this.#at;
@@ -264,12 +305,31 @@ export const parseTypeRef = (ref: TypeRef): TypeRefAst => new Parser(ref).parse(
 const needsParens = (ast: TypeRefAst): boolean =>
   ast.kind === 'union' || ast.kind === 'intersection';
 
+/** Text between quotes, with a backslash in front of anything that would end it. */
+const quoteText = (value: string): string => `'${value.replace(/[\\']/g, '\\$&')}'`;
+
+/**
+ * A key the reader can read back, which is not always the key as it was written.
+ *
+ * A name is anything `#name` will read as one: a run of characters holding none
+ * of the grammar's delimiters, no whitespace, and no quote — a quote is excluded
+ * because a key that merely began with one would otherwise be written bare and
+ * read back as quoted text, which is the same bug in the other direction.
+ * Everything else is quoted, and that is most of what a rule engine, a query
+ * language or a header map declares: `<=`, `$in`, `a.b`, `content-type`, the
+ * empty string.
+ */
+const PLAIN_KEY = /^[^<>,;:?[\]{}|&()'\\\s]+$/;
+
+export const formatFieldKey = (name: string): string =>
+  PLAIN_KEY.test(name) ? name : quoteText(name);
+
 export const formatTypeRef = (ast: TypeRefAst): TypeRef => {
   switch (ast.kind) {
     case 'primitive':
       return ast.name;
     case 'literal':
-      return typeof ast.value === 'string' ? `'${ast.value}'` : String(ast.value);
+      return typeof ast.value === 'string' ? quoteText(ast.value) : String(ast.value);
     case 'id':
       return ast.args === undefined || ast.args.length === 0
         ? ast.id
@@ -288,7 +348,10 @@ export const formatTypeRef = (ast: TypeRefAst): TypeRef => {
       return `${ast.name}<${ast.args.map(formatTypeRef).join(',')}>`;
     case 'object':
       return `{${ast.fields
-        .map((field) => `${field.name}${field.optional ? '?' : ''}:${formatTypeRef(field.type)}`)
+        .map(
+          (field) =>
+            `${formatFieldKey(field.name)}${field.optional ? '?' : ''}:${formatTypeRef(field.type)}`,
+        )
         .join(';')}}`;
   }
 };

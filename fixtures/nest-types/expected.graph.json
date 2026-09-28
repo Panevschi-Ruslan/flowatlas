@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "repo": "nest-types",
-  "generatedAt": "2026-09-14T12:13:07.790Z",
+  "generatedAt": "2026-09-28T06:20:30.248Z",
   "nodes": [
     {
       "id": "entry:nest-types:http:GET:/catalog/categories",
@@ -501,6 +501,8 @@
       "meta": {
         "stats": {
           "files": 18,
+          "filesRead": 18,
+          "filesUnreadable": 0,
           "classes": 10,
           "skippedExternalCalls": {
             "@nestjs/common": 1
@@ -1412,36 +1414,6 @@
         "T"
       ]
     },
-    "type:nest-types#Paginated<T>": {
-      "name": "Paginated",
-      "kind": "object",
-      "declaredIn": "nest-types#src/types/paginated.ts",
-      "structuralHash": "772e379432ce5e34",
-      "fields": [
-        {
-          "name": "items",
-          "type": "T[]",
-          "optional": false
-        },
-        {
-          "name": "total",
-          "type": "number",
-          "optional": false
-        },
-        {
-          "name": "page",
-          "type": "number",
-          "optional": false
-        }
-      ],
-      "meta": {
-        "declKind": "interface",
-        "exported": true,
-        "typeArgs": [
-          "T"
-        ]
-      }
-    },
     "type:nest-types#Paginated<type:nest-types#Order>": {
       "name": "Paginated",
       "kind": "object",
@@ -1551,6 +1523,13 @@
       "symbol": "T",
       "level": "info",
       "sites": 2
+    },
+    {
+      "file": "src/orders/dto/create-order.dto.ts",
+      "line": 43,
+      "reason": "decorator-arg-dynamic",
+      "hint": "A function rewrites this field, so what it carries on the wire is not read. The field is compared as its declared type.",
+      "symbol": "CreateOrderDto.couponCode"
     },
     {
       "file": "src/orders/orders.service.ts",

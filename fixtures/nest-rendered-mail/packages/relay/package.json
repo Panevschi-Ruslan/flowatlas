@@ -1,0 +1,8 @@
+{
+  "name": "@rendered-mail/relay",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Hands a rendered message to the mail relay. Server code with no React anywhere near it.",
+  "type": "module",
+  "main": "./src/index.ts"
+}

@@ -152,3 +152,195 @@ describe('a chain that carries two operations', () => {
     expect(graph.unresolved.filter((row) => row.reason === 'db-package-unread')).toEqual([]);
   });
 });
+
+/**
+ * The tables are asked about words from the source, so they are asked about
+ * every word - including the four the language puts on every object whether a
+ * program wrote them or not. A lookup written as an object literal answers for
+ * those, and one did: `value.toString()` on a receiver of a described package
+ * found `Object.prototype.toString`, and two `db_query` nodes labelled
+ * `function toString() { [native code] }` went into a notification service's graph (R122).
+ *
+ * Asserted as "no node anywhere names this file" rather than as "no `db_query`
+ * for this call", because the failure is a node minted from a value nobody read
+ * and there is no reason to assume the next one will have the type the last one
+ * had. Both fixture files hold module-level functions only, so a body there
+ * earns a node exactly when a leaf is found in it and nothing else can make the
+ * file appear.
+ */
+describe('a method every object has', () => {
+  const NAMED_BY_NOBODY = [
+    ['fn-data-layer', 'src/orders/prototype-names.ts'],
+    ['nest-leaves', 'src/orders/prototype-names.ts'],
+  ] as const;
+
+  for (const [fixture, file] of NAMED_BY_NOBODY) {
+    it(`produces no node anywhere in ${fixture}'s graph`, async () => {
+      const graph = await graphOf(fixture);
+      expect(graph.nodes.filter((node) => node.file === file)).toEqual([]);
+    });
+  }
+});
+
+/**
+ * `knex.raw(sql)` is a statement when it runs on its own and a fragment of
+ * another query when a builder takes it (R155).
+ *
+ * Before R155 every one of these calls was counted and nothing else: `raw` is
+ * not an operation of the knex descriptor, so its SQL was never read. The text
+ * is read with the reader the `pg` descriptor already uses, and where the call
+ * sits decides whether it is a query at all.
+ */
+describe('the SQL handed to knex.raw', () => {
+  const FILE = 'src/reports/reports.service.ts';
+
+  it('reads each statement on its own, and each builder query once', async () => {
+    const graph = await graphOf('nest-knex-raw');
+    const read = queriesIn(graph, FILE).map((node) => [
+      node.line,
+      node.label,
+      node.meta?.['tables'],
+    ]);
+    expect(read).toEqual([
+      [14, 'read orders', ['orders']],
+      [20, 'delete order_events', ['order_events']],
+      [27, 'read orders', ['orders', 'customers']],
+      [36, 'read orders', ['orders']],
+      [44, 'read orders', ['orders']],
+      [45, 'read refunds', ['refunds']],
+      [52, 'access ?', []],
+      [67, 'read orders', ['orders']],
+      [78, 'read customers', ['customers']],
+      [86, 'write orders', ['orders']],
+      [98, 'read orders', ['orders', 'refunds']],
+    ]);
+  });
+
+  it('says a statement whose table is computed could not be read, and nothing else', async () => {
+    const graph = await graphOf('nest-knex-raw');
+    // The call graph's own rows about the builder chain are another reader's.
+    const rows = graph.unresolved
+      .filter((row) => row.file === FILE && row.reason !== 'call-dynamic-receiver')
+      .map((row) => [row.line, row.reason]);
+    expect(rows).toEqual([[52, 'sql-parse-failed']]);
+  });
+});
+
+/**
+ * A statement read in full that names no table is counted, and is not a
+ * failure, whichever driver takes it (R162).
+ *
+ * `knex.raw('SELECT 1')` was counted after R155, while `pool.query('SELECT 1')`,
+ * `pool.query('BEGIN')` and `pool.query('COMMIT')` each wrote
+ * `sql-parse-failed`, whose hint says the text "is not a literal". Only the
+ * statement whose table is computed is one the reader could not read.
+ */
+describe('a pg statement that names no table', () => {
+  const FILE = 'src/orders/orders.service.ts';
+
+  it('draws the statements that name a table, and nothing for the rest', async () => {
+    const graph = await graphOf('pg-no-table');
+    const read = queriesIn(graph, FILE).map((node) => [node.line, node.label]);
+    expect(read).toEqual([
+      [10, 'read orders'],
+      [24, 'write orders'],
+      [31, 'access ?'],
+    ]);
+  });
+
+  it('writes a row only for the statement whose table is computed', async () => {
+    const graph = await graphOf('pg-no-table');
+    const rows = graph.unresolved
+      .filter((row) => row.file === FILE)
+      .map((row) => [row.line, row.reason]);
+    expect(rows).toEqual([[31, 'sql-parse-failed']]);
+  });
+});
+
+/**
+ * A call written against a method's name belongs to the method it dispatches
+ * to (R158).
+ *
+ * Two providers implement one interface, each builds its address from `uid`,
+ * and each calls itself through `this`. The compiler's references of one
+ * provider's `deleteEvent` take in the interface member and, through it, the
+ * other provider's calls, so basecamp's request was forwarded to zoho's
+ * `this.deleteEvent('stale')` and to the manager's call through the interface,
+ * and basecamp's own request went missing. On a scheduling app that was seven `GET ?`
+ * rows at the wrong calendars and no `PUT .../trashed.json` at all.
+ */
+describe('a parameter forwarded through an interface method', () => {
+  const requests = async (): Promise<string[]> => {
+    const graph = await graphOf('nest-interface-dispatch');
+    const byId = new Map(graph.nodes.map((node) => [node.id, node]));
+    return graph.edges
+      .filter((edge) => edge.type === 'calls' && byId.get(edge.to)?.type === 'http_out')
+      .map((edge) => `${edge.from.split(':').pop()} -> ${byId.get(edge.to)?.label}`)
+      .sort();
+  };
+
+  it('reaches only the callers that run this implementation, and keeps its own request', async () => {
+    expect(await requests()).toEqual(
+      [
+        // Called through the interface: either provider may run, so each keeps
+        // the request it writes, with the hole where `uid` goes.
+        'BasecampCalendarService.deleteEvent -> PUT /schedule_entries/:param/trashed.json',
+        'ZohoCalendarService.deleteEvent -> DELETE /events/:param',
+        // Called through `this`: the class's own implementation, and only it.
+        'BasecampCalendarService.updateEvent -> PUT /schedule_entries/draft/trashed.json',
+        'ZohoCalendarService.updateEvent -> DELETE /events/stale',
+        // Called through the concrete class from elsewhere.
+        'CalendarManagerService.archive -> PUT /schedule_entries/archived/trashed.json',
+      ].sort(),
+    );
+  });
+});
+
+/**
+ * A request credited to the caller that fills in its address keeps the verb
+ * and the host it states itself (R161).
+ *
+ * Only the address used to be rebuilt at the caller. The verb came from the
+ * caller's call - its name, or GET - so `fetch(url, { method: 'PUT' })` read as
+ * GET, and a caller of a client method named `get` turned `axios.delete` into
+ * GET. The host was read as the first segment of a path, `/https:/host/…`.
+ */
+describe('a request forwarded to its callers', () => {
+  const requests = async (): Promise<string[]> => {
+    const graph = await graphOf('nest-forwarded-verb');
+    const byId = new Map(graph.nodes.map((node) => [node.id, node]));
+    return graph.edges
+      .filter((edge) => edge.type === 'calls' && byId.get(edge.from)?.type === 'http_out')
+      .map((edge) => {
+        const request = byId.get(edge.from);
+        const caller = graph.edges.find((item) => item.to === edge.from)?.from.split(':').pop();
+        return `${caller} -> ${request?.label} @ ${byId.get(edge.to)?.label}`;
+      })
+      .sort();
+  };
+
+  it('keeps the verb and the host the request states', async () => {
+    expect(await requests()).toEqual(
+      [
+        'ItemsService.restore -> PUT /items/featured @ api.example.com',
+        'StockService.refill -> PUT /items/restocked @ api.example.com',
+        // Through a client method named `get`: the request says DELETE.
+        'ItemsService.purge -> DELETE /items/expired @ api.example.com',
+        'StockService.retire -> DELETE /items/retired @ api.example.com',
+        // `{ method: 'GET', ...init }` is a default the caller's settings
+        // replace, so the caller's verb is the one sent.
+        'StockService.archive -> POST /items/archive @ api.example.com',
+      ].sort(),
+    );
+  });
+
+  it('reads no body from a caller whose request carries its own settings', async () => {
+    const graph = await graphOf('nest-forwarded-verb');
+    const bodies = graph.nodes
+      .filter((node) => node.type === 'http_out')
+      .map((node) => node.meta?.bodyType ?? null);
+    // The caller's second argument is `reason`, or the settings it hands
+    // over; neither is a body.
+    expect(bodies).toEqual([null, null, null, null, null]);
+  });
+});

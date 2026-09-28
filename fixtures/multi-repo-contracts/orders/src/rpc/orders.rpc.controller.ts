@@ -6,9 +6,9 @@ import type { GetOrderQuery, OrderDto } from '../orders/dto';
 /**
  * The question this service answers over a channel rather than a route.
  *
- * `billing` asks it with a shape of its own, which is what makes the payload
- * direction of an rpc pair worth checking. The answer is not checked: nothing
- * records what the asking side expects back (see §15).
+ * `billing` asks it with a shape of its own and reads the answer as one too,
+ * so both directions of the rpc pair are worth checking: the payload, and the
+ * `OrderDto` answered here against the one `billing` expects back (R151).
  */
 @Controller()
 export class OrdersRpcController {

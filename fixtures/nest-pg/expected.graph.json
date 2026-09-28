@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "repo": "nest-pg",
-  "generatedAt": "2026-09-09T22:29:15.045Z",
+  "generatedAt": "2026-09-27T09:26:45.525Z",
   "nodes": [
     {
       "id": "db_query:nest-pg#src/orders/orders.service.ts:10:12",
@@ -316,6 +316,8 @@
       "meta": {
         "stats": {
           "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
           "classes": 3,
           "skippedExternalCalls": {
             "pg": 8

@@ -1,0 +1,777 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T13:52:15.408Z",
+  "services": [
+    {
+      "name": "app",
+      "repo": ".",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+      "type": "ui_component",
+      "label": "DocumentsPanel",
+      "repo": "app",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 10,
+      "kind": "function"
+    },
+    {
+      "id": "app#src/app/api-client.ts:ApiClient",
+      "type": "provider",
+      "label": "ApiClient",
+      "repo": "app",
+      "file": "src/app/api-client.ts",
+      "line": 34,
+      "kind": "injectable"
+    },
+    {
+      "id": "app#src/app/api-client.ts:ApiClient.get",
+      "type": "method",
+      "label": "ApiClient.get",
+      "repo": "app",
+      "file": "src/app/api-client.ts",
+      "line": 55
+    },
+    {
+      "id": "app#src/app/api-client.ts:ApiClient.post",
+      "type": "method",
+      "label": "ApiClient.post",
+      "repo": "app",
+      "file": "src/app/api-client.ts",
+      "line": 58
+    },
+    {
+      "id": "app#src/app/api-client.ts:ApiClient.send",
+      "type": "method",
+      "label": "ApiClient.send",
+      "repo": "app",
+      "file": "src/app/api-client.ts",
+      "line": 42
+    },
+    {
+      "id": "app#src/app/documents.ts:readDocument",
+      "type": "function",
+      "label": "readDocument",
+      "repo": "app",
+      "file": "src/app/documents.ts",
+      "line": 10
+    },
+    {
+      "id": "app#src/app/documents.ts:registerPasskey",
+      "type": "function",
+      "label": "registerPasskey",
+      "repo": "app",
+      "file": "src/app/documents.ts",
+      "line": 30
+    },
+    {
+      "id": "app#src/app/documents.ts:renameDocument",
+      "type": "function",
+      "label": "renameDocument",
+      "repo": "app",
+      "file": "src/app/documents.ts",
+      "line": 13
+    },
+    {
+      "id": "app#src/app/documents.ts:reportOpened",
+      "type": "function",
+      "label": "reportOpened",
+      "repo": "app",
+      "file": "src/app/documents.ts",
+      "line": 17
+    },
+    {
+      "id": "app#src/app/documents.ts:verifyPasskey",
+      "type": "function",
+      "label": "verifyPasskey",
+      "repo": "app",
+      "file": "src/app/documents.ts",
+      "line": 33
+    },
+    {
+      "id": "app#src/server/app.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "app",
+      "file": "src/server/app.ts",
+      "line": 15,
+      "kind": "function"
+    },
+    {
+      "id": "app#src/server/auth.routes.ts:POST /passkeys.generateRegistrationOptions@15",
+      "type": "function",
+      "label": "POST /passkeys.generateRegistrationOptions@15",
+      "repo": "app",
+      "file": "src/server/auth.routes.ts",
+      "line": 15
+    },
+    {
+      "id": "app#src/server/documents.routes.ts:POST /documents.info@12",
+      "type": "function",
+      "label": "POST /documents.info@12",
+      "repo": "app",
+      "file": "src/server/documents.routes.ts",
+      "line": 12
+    },
+    {
+      "id": "app#src/server/documents.routes.ts:POST /documents.update@16",
+      "type": "function",
+      "label": "POST /documents.update@16",
+      "repo": "app",
+      "file": "src/server/documents.routes.ts",
+      "line": 16
+    },
+    {
+      "id": "entry:app:http:POST:/api/documents.info",
+      "type": "entry",
+      "label": "POST /api/documents.info",
+      "repo": "app",
+      "file": "src/server/documents.routes.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/documents.info",
+        "rawPath": "/api/documents.info",
+        "adapter": "express-routes",
+        "registration": "documentsRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:app:http:POST:/api/documents.update",
+      "type": "entry",
+      "label": "POST /api/documents.update",
+      "repo": "app",
+      "file": "src/server/documents.routes.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/documents.update",
+        "rawPath": "/api/documents.update",
+        "adapter": "express-routes",
+        "registration": "documentsRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
+      "type": "entry",
+      "label": "POST /auth/passkeys.generateRegistrationOptions",
+      "repo": "app",
+      "file": "src/server/auth.routes.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/auth/passkeys.generateRegistrationOptions",
+        "rawPath": "/auth/passkeys.generateRegistrationOptions",
+        "adapter": "express-routes",
+        "registration": "authRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "external_api:telemetry.example.com",
+      "type": "external_api",
+      "label": "telemetry.example.com",
+      "repo": "app",
+      "meta": {
+        "host": "telemetry.example.com"
+      }
+    },
+    {
+      "id": "http_out:app#src/app/api-client.ts:56:5",
+      "type": "http_out",
+      "label": "GET ?",
+      "repo": "app",
+      "file": "src/app/api-client.ts",
+      "line": 56,
+      "meta": {
+        "method": "GET",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:app#src/app/api-client.ts:59:5",
+      "type": "http_out",
+      "label": "POST ?",
+      "repo": "app",
+      "file": "src/app/api-client.ts",
+      "line": 59,
+      "meta": {
+        "method": "POST",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "string",
+        "bodyFrom": "type"
+      }
+    },
+    {
+      "id": "repo:app",
+      "type": "repo",
+      "label": "app",
+      "repo": "app",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {
+            "express": 6
+          },
+          "functions": 9,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_action:app#src/app/DocumentsPanel.tsx:19:15",
+      "type": "ui_action",
+      "label": "onClick={open}",
+      "repo": "app",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "open",
+        "component": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:app#src/app/DocumentsPanel.tsx:20:15",
+      "type": "ui_action",
+      "label": "onClick={rename}",
+      "repo": "app",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "rename",
+        "component": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:app#src/app/DocumentsPanel.tsx:21:15",
+      "type": "ui_action",
+      "label": "onClick={report}",
+      "repo": "app",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "report",
+        "component": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:app#src/app/DocumentsPanel.tsx:22:15",
+      "type": "ui_action",
+      "label": "onClick={register}",
+      "repo": "app",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 22,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "register",
+        "component": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:app#src/app/DocumentsPanel.tsx:23:15",
+      "type": "ui_action",
+      "label": "onClick={verify}",
+      "repo": "app",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 23,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "verify",
+        "component": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:app#src/app/documents.ts:11:3",
+      "type": "ui_api_call",
+      "label": "POST /api/documents.info",
+      "repo": "app",
+      "file": "src/app/documents.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/documents.info",
+        "path": "/api/documents.info",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{id:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "id"
+        ],
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal",
+        "targetService": "app"
+      }
+    },
+    {
+      "id": "ui_api_call:app#src/app/documents.ts:14:3",
+      "type": "ui_api_call",
+      "label": "POST /api/documents.update",
+      "repo": "app",
+      "file": "src/app/documents.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/documents.update",
+        "path": "/api/documents.update",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{id:string;title:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "id",
+          "title"
+        ],
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal",
+        "targetService": "app"
+      }
+    },
+    {
+      "id": "ui_api_call:app#src/app/documents.ts:18:3",
+      "type": "ui_api_call",
+      "label": "POST /events",
+      "repo": "app",
+      "file": "src/app/documents.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "https://telemetry.example.com/events",
+        "path": "/events",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{id:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "id"
+        ],
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal",
+        "host": "telemetry.example.com"
+      }
+    },
+    {
+      "id": "ui_api_call:app#src/app/documents.ts:31:3",
+      "type": "ui_api_call",
+      "label": "POST /auth/passkeys.generateRegistrationOptions",
+      "repo": "app",
+      "file": "src/app/documents.ts",
+      "line": 31,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/auth/passkeys.generateRegistrationOptions",
+        "path": "/auth/passkeys.generateRegistrationOptions",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{id:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "id"
+        ],
+        "package": null,
+        "client": "ApiClient",
+        "baseFrom": "call",
+        "localClient": "recognised",
+        "via": "literal",
+        "targetService": "app"
+      }
+    },
+    {
+      "id": "ui_api_call:app#src/app/documents.ts:34:3",
+      "type": "ui_api_call",
+      "label": "POST /passkeys.verify",
+      "repo": "app",
+      "file": "src/app/documents.ts",
+      "line": 34,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/passkeys.verify",
+        "path": "/passkeys.verify",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{id:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "id"
+        ],
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+      "to": "app#src/app/documents.ts:readDocument",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 11
+    },
+    {
+      "from": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+      "to": "app#src/app/documents.ts:registerPasskey",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 14
+    },
+    {
+      "from": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+      "to": "app#src/app/documents.ts:renameDocument",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 12
+    },
+    {
+      "from": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+      "to": "app#src/app/documents.ts:reportOpened",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 13
+    },
+    {
+      "from": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+      "to": "app#src/app/documents.ts:verifyPasskey",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 15
+    },
+    {
+      "from": "app#src/app/api-client.ts:ApiClient.get",
+      "to": "app#src/app/api-client.ts:ApiClient.send",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/api-client.ts",
+      "line": 56
+    },
+    {
+      "from": "app#src/app/api-client.ts:ApiClient.get",
+      "to": "http_out:app#src/app/api-client.ts:56:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/app/api-client.ts",
+      "line": 56
+    },
+    {
+      "from": "app#src/app/api-client.ts:ApiClient.post",
+      "to": "app#src/app/api-client.ts:ApiClient.send",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/api-client.ts",
+      "line": 59
+    },
+    {
+      "from": "app#src/app/api-client.ts:ApiClient.post",
+      "to": "http_out:app#src/app/api-client.ts:59:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/app/api-client.ts",
+      "line": 59
+    },
+    {
+      "from": "app#src/app/documents.ts:readDocument",
+      "to": "ui_api_call:app#src/app/documents.ts:11:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/documents.ts",
+      "line": 11
+    },
+    {
+      "from": "app#src/app/documents.ts:registerPasskey",
+      "to": "ui_api_call:app#src/app/documents.ts:31:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/documents.ts",
+      "line": 31
+    },
+    {
+      "from": "app#src/app/documents.ts:renameDocument",
+      "to": "ui_api_call:app#src/app/documents.ts:14:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/documents.ts",
+      "line": 14
+    },
+    {
+      "from": "app#src/app/documents.ts:reportOpened",
+      "to": "ui_api_call:app#src/app/documents.ts:18:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/documents.ts",
+      "line": 18
+    },
+    {
+      "from": "app#src/app/documents.ts:verifyPasskey",
+      "to": "ui_api_call:app#src/app/documents.ts:34:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/documents.ts",
+      "line": 34
+    },
+    {
+      "from": "entry:app:http:POST:/api/documents.info",
+      "to": "app#src/server/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/app.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:app:http:POST:/api/documents.info",
+      "to": "app#src/server/documents.routes.ts:POST /documents.info@12",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/documents.routes.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:app:http:POST:/api/documents.update",
+      "to": "app#src/server/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/app.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:app:http:POST:/api/documents.update",
+      "to": "app#src/server/documents.routes.ts:POST /documents.update@16",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/documents.routes.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
+      "to": "app#src/server/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/app.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
+      "to": "app#src/server/auth.routes.ts:POST /passkeys.generateRegistrationOptions@15",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/auth.routes.ts",
+      "line": 15
+    },
+    {
+      "from": "ui_action:app#src/app/DocumentsPanel.tsx:19:15",
+      "to": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 19
+    },
+    {
+      "from": "ui_action:app#src/app/DocumentsPanel.tsx:20:15",
+      "to": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 20
+    },
+    {
+      "from": "ui_action:app#src/app/DocumentsPanel.tsx:21:15",
+      "to": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 21
+    },
+    {
+      "from": "ui_action:app#src/app/DocumentsPanel.tsx:22:15",
+      "to": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 22
+    },
+    {
+      "from": "ui_action:app#src/app/DocumentsPanel.tsx:23:15",
+      "to": "app#src/app/DocumentsPanel.tsx:DocumentsPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/DocumentsPanel.tsx",
+      "line": 23
+    },
+    {
+      "from": "ui_api_call:app#src/app/documents.ts:11:3",
+      "to": "entry:app:http:POST:/api/documents.info",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/documents.ts",
+      "line": 11,
+      "params": [
+        "{id:string}"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "app"
+      }
+    },
+    {
+      "from": "ui_api_call:app#src/app/documents.ts:14:3",
+      "to": "entry:app:http:POST:/api/documents.update",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/documents.ts",
+      "line": 14,
+      "params": [
+        "{id:string;title:string}"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "app"
+      }
+    },
+    {
+      "from": "ui_api_call:app#src/app/documents.ts:18:3",
+      "to": "external_api:telemetry.example.com",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/documents.ts",
+      "line": 18
+    },
+    {
+      "from": "ui_api_call:app#src/app/documents.ts:31:3",
+      "to": "entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/documents.ts",
+      "line": 31,
+      "params": [
+        "{id:string}"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "app"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/app/api-client.ts",
+      "line": 56,
+      "reason": "dynamic-http-url",
+      "hint": "The address is built at run time. Annotate the call with the service and route it reaches.",
+      "symbol": "this.send(path, 'GET', undefined, options?.baseUrl)",
+      "service": "app"
+    },
+    {
+      "file": "src/app/api-client.ts",
+      "line": 59,
+      "reason": "dynamic-http-url",
+      "hint": "The address is built at run time. Annotate the call with the service and route it reaches.",
+      "symbol": "this.send(path, 'POST', body, options?.baseUrl)",
+      "service": "app"
+    },
+    {
+      "service": "app",
+      "file": "src/app/documents.ts",
+      "line": 18,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /events",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /events */.",
+      "symbol": "ui_api_call:app#src/app/documents.ts:18:3"
+    },
+    {
+      "file": "src/app/documents.ts",
+      "line": 34,
+      "reason": "api-base-override-unread",
+      "hint": "The call writes baseUrl of its own and it could not be read, so the address is recorded as the path alone rather than under the client's default, which this call says is not the base. Write the base as a literal or a constant.",
+      "symbol": "client.post('/passkeys.verify', { id }, { baseUrl: where })",
+      "service": "app"
+    },
+    {
+      "service": "app",
+      "file": "src/app/documents.ts",
+      "line": 34,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /passkeys.verify",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /passkeys.verify */.",
+      "symbol": "ui_api_call:app#src/app/documents.ts:34:3"
+    }
+  ]
+}

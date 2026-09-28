@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T19:28:55.436Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./apps/web",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:web:http:GET:/api/bookings",
+      "type": "entry",
+      "label": "GET /api/bookings",
+      "repo": "web",
+      "file": "app/api/bookings/route.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/bookings",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {},
+          "functions": 2,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nestjs-http",
+            "nextjs-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "web#../../packages/platform-types/src/index.ts:BookingOutputMapper",
+      "type": "provider",
+      "label": "BookingOutputMapper",
+      "repo": "web",
+      "file": "../../packages/platform-types/src/index.ts",
+      "line": 9,
+      "kind": "injectable"
+    },
+    {
+      "id": "web#../../packages/platform-types/src/index.ts:BookingOutputMapper.map",
+      "type": "method",
+      "label": "BookingOutputMapper.map",
+      "repo": "web",
+      "file": "../../packages/platform-types/src/index.ts",
+      "line": 11
+    },
+    {
+      "id": "web#../../packages/platform-types/src/index.ts:toBookingOutput",
+      "type": "function",
+      "label": "toBookingOutput",
+      "repo": "web",
+      "file": "../../packages/platform-types/src/index.ts",
+      "line": 16
+    },
+    {
+      "id": "web#app/api/bookings/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "web",
+      "file": "app/api/bookings/route.ts",
+      "line": 8
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:web:http:GET:/api/bookings",
+      "to": "web#app/api/bookings/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/bookings/route.ts",
+      "line": 8
+    },
+    {
+      "from": "web#../../packages/platform-types/src/index.ts:toBookingOutput",
+      "to": "web#../../packages/platform-types/src/index.ts:BookingOutputMapper.map",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{id:number;title:string}"
+      ],
+      "returns": "type:@sibling-types/platform-types#BookingOutput",
+      "file": "../../packages/platform-types/src/index.ts",
+      "line": 17
+    },
+    {
+      "from": "web#app/api/bookings/route.ts:GET",
+      "to": "web#../../packages/platform-types/src/index.ts:toBookingOutput",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/bookings/route.ts",
+      "line": 9
+    }
+  ],
+  "types": {
+    "type:@sibling-types/platform-types#BookingOutput": {
+      "name": "BookingOutput",
+      "kind": "external",
+      "declaredIn": "@sibling-types/platform-types",
+      "structuralHash": "5bc39111b0e14dfe",
+      "meta": {
+        "declKind": "external",
+        "package": "@sibling-types/platform-types"
+      }
+    }
+  },
+  "unresolved": []
+}

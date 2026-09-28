@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "repo": "fn-data-layer",
-  "generatedAt": "2026-09-24T22:21:51.109Z",
+  "generatedAt": "2026-09-27T14:20:49.869Z",
   "nodes": [
     {
       "id": "db_query:fn-data-layer#src/orders/orders.class.ts:17:12",
@@ -268,10 +268,16 @@
       "repo": "fn-data-layer",
       "meta": {
         "stats": {
-          "files": 5,
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
           "classes": 3,
           "skippedExternalCalls": {
-            "typeorm": 4
+            "typeorm": 4,
+            "typeorm.toString": 1,
+            "typeorm.constructor": 1,
+            "typeorm.valueOf": 1,
+            "typeorm.hasOwnProperty": 1
           }
         },
         "adapters": {

@@ -92,14 +92,15 @@ export const templatesPass = definePass('templates', (ctx) => {
    * The component itself for a bare call, and whatever it injects for a call
    * through a property. Undefined covers everything that never named a method of
    * a class this repository declares: an assignment, a signal, an emitter, a
-   * form, the event object, a template reference, a class from a package.
+   * form, the event object, a name the template itself bound, a class from a
+   * package.
    */
   const handlerOwner = (
     owner: ClassDeclaration,
     handler: TemplateHandler,
   ): ClassDeclaration | undefined => {
     if (handler.kind === 'method') return owner;
-    if (handler.kind === 'other') return undefined;
+    if (handler.kind !== 'member') return undefined;
     const entry = ctx.di.lookup(owner, handler.property);
     return entry?.resolution.kind === 'class' ? entry.resolution.declaration : undefined;
   };
@@ -109,7 +110,7 @@ export const templatesPass = definePass('templates', (ctx) => {
     owner: ClassDeclaration,
     handler: TemplateHandler,
   ): ClassMethod | undefined => {
-    if (handler.kind === 'other') return undefined;
+    if (handler.kind === 'other' || handler.kind === 'local') return undefined;
     const target = handlerOwner(owner, handler);
     return target === undefined ? undefined : inheritedMethod(target, handler.method);
   };
@@ -220,6 +221,24 @@ export const templatesPass = definePass('templates', (ctx) => {
     if (handled) return;
     const only = event.handlers[0];
     const symbol = `${indexed.name} (${event.name})="${event.source}"`;
+
+    // A name the template bound is not a member of anything. Looking for it on
+    // the component finds nothing, and saying so accused every `let-` context
+    // field and every `#ref` on a video platform of being a method somebody had
+    // deleted - 35 rows, all of them wrong (R105). It is the nothing-to-point-at
+    // case, and the row says which local it was so a reader recognises it
+    // without opening the template.
+    if (only?.kind === 'local') {
+      ctx.report({
+        file: template.file,
+        line: event.line,
+        reason: 'handler-not-a-method',
+        level: 'nothing',
+        hint: `${only.local} is bound by the template itself - a let- context field, a #ref, a @for item, an @if alias or an @let - so no method of ${indexed.name} answers it.`,
+        symbol,
+      });
+      return;
+    }
 
     // A binding that names a method of a class the extractor can see, and does
     // not find one, is a template calling something that is gone. That is worth

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 3,
-  "builtAt": "2026-09-21T15:52:23.253Z",
+  "schemaVersion": 5,
+  "builtAt": "2026-09-27T09:26:33.295Z",
   "services": [
     {
       "name": "gateway",
@@ -293,172 +293,154 @@
     {
       "id": "db_query:orders#src/orders/orders.service.ts:101:11",
       "type": "db_query",
-      "label": "access Order",
+      "label": "access ?",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 101,
       "meta": {
         "op": null,
-        "table": "Order",
-        "tables": [
-          "Order"
-        ],
+        "table": null,
+        "tables": [],
         "package": "fake-orm",
         "method": "drop",
         "receiver": "this.rows",
-        "source": "type-arg"
+        "source": "none"
       }
     },
     {
       "id": "db_query:orders#src/orders/orders.service.ts:135:11",
       "type": "db_query",
-      "label": "access Order",
+      "label": "access ?",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 135,
       "meta": {
         "op": null,
-        "table": "Order",
-        "tables": [
-          "Order"
-        ],
+        "table": null,
+        "tables": [],
         "package": "fake-orm",
         "method": "find",
         "receiver": "this.rows",
-        "source": "type-arg"
+        "source": "none"
       }
     },
     {
       "id": "db_query:orders#src/orders/orders.service.ts:144:12",
       "type": "db_query",
-      "label": "access Order",
+      "label": "access ?",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 144,
       "meta": {
         "op": null,
-        "table": "Order",
-        "tables": [
-          "Order"
-        ],
+        "table": null,
+        "tables": [],
         "package": "fake-orm",
         "method": "find",
         "receiver": "this.rows",
-        "source": "type-arg"
+        "source": "none"
       }
     },
     {
       "id": "db_query:orders#src/orders/orders.service.ts:148:25",
       "type": "db_query",
-      "label": "access Order",
+      "label": "access ?",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 148,
       "meta": {
         "op": null,
-        "table": "Order",
-        "tables": [
-          "Order"
-        ],
+        "table": null,
+        "tables": [],
         "package": "fake-orm",
         "method": "find",
         "receiver": "this.rows",
-        "source": "type-arg"
+        "source": "none"
       }
     },
     {
       "id": "db_query:orders#src/orders/orders.service.ts:46:23",
       "type": "db_query",
-      "label": "access Order",
+      "label": "access ?",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 46,
       "meta": {
         "op": null,
-        "table": "Order",
-        "tables": [
-          "Order"
-        ],
+        "table": null,
+        "tables": [],
         "package": "fake-orm",
         "method": "persist",
         "receiver": "this.rows",
-        "source": "type-arg"
+        "source": "none"
       }
     },
     {
       "id": "db_query:orders#src/orders/orders.service.ts:57:11",
       "type": "db_query",
-      "label": "access Order",
+      "label": "access ?",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 57,
       "meta": {
         "op": null,
-        "table": "Order",
-        "tables": [
-          "Order"
-        ],
+        "table": null,
+        "tables": [],
         "package": "fake-orm",
         "method": "find",
         "receiver": "this.rows",
-        "source": "type-arg"
+        "source": "none"
       }
     },
     {
       "id": "db_query:orders#src/orders/orders.service.ts:70:11",
       "type": "db_query",
-      "label": "access Order",
+      "label": "access ?",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 70,
       "meta": {
         "op": null,
-        "table": "Order",
-        "tables": [
-          "Order"
-        ],
+        "table": null,
+        "tables": [],
         "package": "fake-orm",
         "method": "find",
         "receiver": "this.rows",
-        "source": "type-arg"
+        "source": "none"
       }
     },
     {
       "id": "db_query:orders#src/orders/orders.service.ts:80:11",
       "type": "db_query",
-      "label": "access Order",
+      "label": "access ?",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 80,
       "meta": {
         "op": null,
-        "table": "Order",
-        "tables": [
-          "Order"
-        ],
+        "table": null,
+        "tables": [],
         "package": "fake-orm",
         "method": "find",
         "receiver": "this.rows",
-        "source": "type-arg"
+        "source": "none"
       }
     },
     {
       "id": "db_query:orders#src/orders/orders.service.ts:91:11",
       "type": "db_query",
-      "label": "access Order",
+      "label": "access ?",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 91,
       "meta": {
         "op": null,
-        "table": "Order",
-        "tables": [
-          "Order"
-        ],
+        "table": null,
+        "tables": [],
         "package": "fake-orm",
         "method": "find",
         "receiver": "this.rows",
-        "source": "type-arg"
+        "source": "none"
       }
     },
     {
@@ -866,6 +848,18 @@
       }
     },
     {
+      "id": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "provider",
+      "label": "ClientProxy",
+      "repo": "orders",
+      "file": "node_modules/@nestjs/microservices",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/microservices",
+        "external": true
+      }
+    },
+    {
       "id": "orders#node_modules/@nestjs/microservices:ClientsModule",
       "type": "module",
       "label": "ClientsModule",
@@ -1265,6 +1259,8 @@
       "meta": {
         "stats": {
           "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
           "classes": 3,
           "skippedExternalCalls": {}
         },
@@ -1285,6 +1281,8 @@
       "meta": {
         "stats": {
           "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
           "classes": 2,
           "skippedExternalCalls": {
             "@nestjs/axios": 8,
@@ -1307,9 +1305,12 @@
       "meta": {
         "stats": {
           "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
           "classes": 5,
           "skippedExternalCalls": {
             "fake-orm": 9,
+            "@nestjs/microservices": 6,
             "@nestjs/config": 5
           }
         },
@@ -1321,12 +1322,6 @@
           ]
         }
       }
-    },
-    {
-      "id": "table:orders#Order",
-      "type": "table",
-      "label": "Order",
-      "repo": "orders"
     }
   ],
   "edges": [
@@ -1383,78 +1378,6 @@
       "confidence": "marker",
       "file": "src/invoices/invoices.service.ts",
       "line": 18
-    },
-    {
-      "from": "db_query:orders#src/orders/orders.service.ts:101:11",
-      "to": "table:orders#Order",
-      "type": "queries",
-      "confidence": "heuristic",
-      "file": "src/orders/orders.service.ts",
-      "line": 101
-    },
-    {
-      "from": "db_query:orders#src/orders/orders.service.ts:135:11",
-      "to": "table:orders#Order",
-      "type": "queries",
-      "confidence": "heuristic",
-      "file": "src/orders/orders.service.ts",
-      "line": 135
-    },
-    {
-      "from": "db_query:orders#src/orders/orders.service.ts:144:12",
-      "to": "table:orders#Order",
-      "type": "queries",
-      "confidence": "heuristic",
-      "file": "src/orders/orders.service.ts",
-      "line": 144
-    },
-    {
-      "from": "db_query:orders#src/orders/orders.service.ts:148:25",
-      "to": "table:orders#Order",
-      "type": "queries",
-      "confidence": "heuristic",
-      "file": "src/orders/orders.service.ts",
-      "line": 148
-    },
-    {
-      "from": "db_query:orders#src/orders/orders.service.ts:46:23",
-      "to": "table:orders#Order",
-      "type": "queries",
-      "confidence": "heuristic",
-      "file": "src/orders/orders.service.ts",
-      "line": 46
-    },
-    {
-      "from": "db_query:orders#src/orders/orders.service.ts:57:11",
-      "to": "table:orders#Order",
-      "type": "queries",
-      "confidence": "heuristic",
-      "file": "src/orders/orders.service.ts",
-      "line": 57
-    },
-    {
-      "from": "db_query:orders#src/orders/orders.service.ts:70:11",
-      "to": "table:orders#Order",
-      "type": "queries",
-      "confidence": "heuristic",
-      "file": "src/orders/orders.service.ts",
-      "line": 70
-    },
-    {
-      "from": "db_query:orders#src/orders/orders.service.ts:80:11",
-      "to": "table:orders#Order",
-      "type": "queries",
-      "confidence": "heuristic",
-      "file": "src/orders/orders.service.ts",
-      "line": 80
-    },
-    {
-      "from": "db_query:orders#src/orders/orders.service.ts:91:11",
-      "to": "table:orders#Order",
-      "type": "queries",
-      "confidence": "heuristic",
-      "file": "src/orders/orders.service.ts",
-      "line": 91
     },
     {
       "from": "entry:billing:event:order.created",
@@ -1829,6 +1752,14 @@
       "line": 37
     },
     {
+      "from": "orders#src/orders/orders.service.ts:OrdersService",
+      "to": "orders#node_modules/@nestjs/microservices:ClientProxy",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 36
+    },
+    {
       "from": "orders#src/orders/orders.service.ts:OrdersService.archive",
       "to": "db_query:orders#src/orders/orders.service.ts:101:11",
       "type": "calls",
@@ -2057,6 +1988,26 @@
     }
   ],
   "types": {
+    "type:axios#AxiosResponse<type:gateway#OrderDto>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:axios#AxiosResponse<unknown>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
     "type:billing#OrderCreatedEvent": {
       "name": "OrderCreatedEvent",
       "kind": "object",
@@ -2301,7 +2252,7 @@
       "file": "src/orders/orders.controller.ts",
       "line": 11,
       "reason": "route-unguarded",
-      "message": "POST /orders has no guard in front of it and reaches Order.",
+      "message": "POST /orders has no guard in front of it and reaches stored data.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
       "symbol": "POST /orders"
     },
@@ -2310,7 +2261,7 @@
       "file": "src/orders/orders.controller.ts",
       "line": 16,
       "reason": "route-unguarded",
-      "message": "POST /orders/legacy has no guard in front of it and reaches Order.",
+      "message": "POST /orders/legacy has no guard in front of it and reaches stored data.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
       "symbol": "POST /orders/legacy"
     },
@@ -2319,7 +2270,7 @@
       "file": "src/orders/orders.controller.ts",
       "line": 21,
       "reason": "route-unguarded",
-      "message": "GET /orders/:param has no guard in front of it and reaches Order.",
+      "message": "GET /orders/:param has no guard in front of it and reaches stored data.",
       "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
       "symbol": "GET /orders/:param"
     },
@@ -2327,7 +2278,7 @@
       "file": "src/orders/orders.service.ts",
       "line": 24,
       "reason": "di-token-unknown",
-      "hint": "No module in this repository provides EVENTS_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
+      "hint": "No module in this repository provides LEDGER_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
       "symbol": "OrdersService.constructor[0]",
       "service": "orders"
     },

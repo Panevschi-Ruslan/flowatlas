@@ -1,0 +1,33 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 5,
+  "generatedAt": "2026-09-27T17:30:39.541Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "channel:order.updated",
+        "to": "consumer:angular-basic#src/app/orders-api.service.ts:OrdersApiService.onOrderUpdated",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:order.updated|consumes|consumer:angular-basic#src/app/orders-api.service.ts:OrdersApiService.onOrderUpdated",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:order.updated is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 1,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}
