@@ -11,7 +11,7 @@ import {
   workspaceRootOf,
   workspaceRootsAbove,
 } from './workspace.js';
-import { readResolvedPackageJson } from './adapters/manifest.js';
+import { hasDependency, readResolvedPackageJson, suppliedWith } from './adapters/manifest.js';
 
 const temporary: string[] = [];
 
@@ -292,5 +292,90 @@ describe('one discoverer', () => {
     const resolved = readResolvedPackageJson(api);
     expect(resolved?.dependencies?.['pkg-inner']).toBe('2.0.0');
     expect(resolved?.dependencies?.['pkg-outer']).toBe('10.0.0');
+  });
+});
+
+/**
+ * A workspace shaped like a server whose mail library renders with a view
+ * library: the server declares none of it, the mail package installs it, a kit
+ * of pieces the templates use takes it as a peer, an SDK takes it as a peer and
+ * is depended on by the server alone, and a transport never mentions it (R145).
+ */
+const renderingServer = (): { root: string; api: string } => {
+  const root = makeRoot();
+  writePackage(root, { name: 'root', workspaces: ['apps/*', 'packages/*'] });
+  const api = writePackage(join(root, 'apps', 'api'), {
+    name: '@x/api',
+    dependencies: { '@x/mail': '*', '@x/sdk': '*', '@x/transport': '*' },
+  });
+  writePackage(join(root, 'packages', 'mail'), {
+    name: '@x/mail',
+    dependencies: { 'view-lib': '^1', '@x/kit': '*', '@x/transport': '*' },
+  });
+  writePackage(join(root, 'packages', 'kit'), { name: '@x/kit', peerDependencies: { 'view-lib': '^1' } });
+  writePackage(join(root, 'packages', 'sdk'), { name: '@x/sdk', peerDependencies: { 'view-lib': '^1' } });
+  writePackage(join(root, 'packages', 'transport'), { name: '@x/transport' });
+  writePackage(join(root, 'packages', 'tooling'), { name: '@x/tooling', devDependencies: { 'view-lib': '^1' } });
+  return { root, api };
+};
+
+const declaresViewLib = (pkg: Parameters<typeof hasDependency>[0]): boolean => hasDependency(pkg, 'view-lib');
+
+describe('suppliedWith', () => {
+  it('reads a file only where the package holding it is supplied the framework', () => {
+    const { root, api } = renderingServer();
+    const reads = suppliedWith(api, declaresViewLib);
+    expect(reads(join(root, 'packages', 'mail', 'src', 'Receipt.tsx'))).toBe(true);
+    // A peer, satisfied by the mail package that depends on it.
+    expect(reads(join(root, 'packages', 'kit', 'src', 'Button.tsx'))).toBe(true);
+    // A peer whose only dependent is the server, which supplies nothing.
+    expect(reads(join(root, 'packages', 'sdk', 'src', 'Provider.tsx'))).toBe(false);
+    // Reached through a supplied package, but supplied nothing itself.
+    expect(reads(join(root, 'packages', 'transport', 'src', 'index.ts'))).toBe(false);
+    expect(reads(join(api, 'src', 'e2e', 'helpers.ts'))).toBe(false);
+  });
+
+  it('supplies every file when the service itself declares the framework', () => {
+    const { root, api } = renderingServer();
+    writePackage(api, { name: '@x/api', dependencies: { 'view-lib': '^1', '@x/transport': '*' } });
+    const reads = suppliedWith(api, declaresViewLib);
+    expect(reads(join(api, 'src', 'page.tsx'))).toBe(true);
+    expect(reads(join(root, 'packages', 'transport', 'src', 'index.ts'))).toBe(true);
+  });
+
+  it('reads every file of a directory with no manifest, which has no packages to tell apart', () => {
+    const dir = makeRoot();
+    expect(suppliedWith(dir, declaresViewLib)(join(dir, 'src', 'page.tsx'))).toBe(true);
+  });
+
+  it("takes a member's devDependencies as supplying nothing", () => {
+    const root = makeRoot();
+    writePackage(root, { name: 'root', workspaces: ['apps/*', 'packages/*'] });
+    const api = writePackage(join(root, 'apps', 'api'), { name: '@y/api', dependencies: { '@y/mailer': '*' } });
+    writePackage(join(root, 'packages', 'mailer'), { name: '@y/mailer', devDependencies: { 'view-lib': '^1' } });
+    expect(suppliedWith(api, declaresViewLib)(join(root, 'packages', 'mailer', 'src', 'Preview.tsx'))).toBe(false);
+  });
+});
+
+describe('readResolvedPackageJson and the extent agree on a member (R145)', () => {
+  it("widens by a member's runtime sections and not by its devDependencies", () => {
+    const root = makeRoot();
+    writePackage(root, { name: 'root', workspaces: ['apps/*', 'packages/*'] });
+    const api = writePackage(join(root, 'apps', 'api'), {
+      name: '@z/api',
+      dependencies: { '@z/mailer': '*' },
+      devDependencies: { 'own-test-lib': '^1' },
+    });
+    writePackage(join(root, 'packages', 'mailer'), {
+      name: '@z/mailer',
+      dependencies: { 'smtp-lib': '^1' },
+      peerDependencies: { 'shared-runtime': '^1' },
+      devDependencies: { 'view-lib': '^1' },
+    });
+    const widened = readResolvedPackageJson(api) ?? {};
+    expect(hasDependency(widened, 'smtp-lib')).toBe(true);
+    expect(hasDependency(widened, 'shared-runtime')).toBe(true);
+    expect(hasDependency(widened, 'own-test-lib')).toBe(true);
+    expect(hasDependency(widened, 'view-lib')).toBe(false);
   });
 });

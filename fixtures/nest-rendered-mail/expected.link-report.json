@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-28T06:21:44.912Z",
+  "configHash": "168204fe61cf",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./apps/api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 17,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 659
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 3,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 0,
+    "uncalled": [
+      "entry:api:http:POST:/orders"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "api",
+      "file": "../../packages/relay/src/index.ts",
+      "line": 3,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares MAIL_RELAY_URL",
+      "hint": "Add MAIL_RELAY_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:api#../../packages/relay/src/index.ts:3:9"
+    },
+    {
+      "service": "api",
+      "file": "../../packages/sdk/src/http.ts",
+      "line": 3,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares PLATFORM_URL",
+      "hint": "Add PLATFORM_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:api#../../packages/sdk/src/http.ts:3:3"
+    },
+    {
+      "service": "api",
+      "file": "src/e2e/helpers.ts",
+      "line": 6,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares E2E_API_URL",
+      "hint": "Add E2E_API_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:api#src/e2e/helpers.ts:6:3"
+    }
+  ],
+  "totals": {
+    "nodes": 17,
+    "edges": 7,
+    "types": 0,
+    "unresolved": 3
+  }
+}

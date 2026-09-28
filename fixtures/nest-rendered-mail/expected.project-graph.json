@@ -1,0 +1,325 @@
+{
+  "schemaVersion": 5,
+  "builtAt": "2026-09-28T06:21:44.912Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./apps/api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#../../packages/mail/src/Receipt.tsx:Layout",
+      "type": "ui_component",
+      "label": "Layout",
+      "repo": "api",
+      "file": "../../packages/mail/src/Receipt.tsx",
+      "line": 4,
+      "kind": "function"
+    },
+    {
+      "id": "api#../../packages/mail/src/Receipt.tsx:Receipt",
+      "type": "ui_component",
+      "label": "Receipt",
+      "repo": "api",
+      "file": "../../packages/mail/src/Receipt.tsx",
+      "line": 17,
+      "kind": "function"
+    },
+    {
+      "id": "api#../../packages/relay/src/index.ts:relay",
+      "type": "function",
+      "label": "relay",
+      "repo": "api",
+      "file": "../../packages/relay/src/index.ts",
+      "line": 2
+    },
+    {
+      "id": "api#../../packages/sdk/src/http.ts:request",
+      "type": "function",
+      "label": "request",
+      "repo": "api",
+      "file": "../../packages/sdk/src/http.ts",
+      "line": 2
+    },
+    {
+      "id": "api#../../packages/ui/src/index.tsx:ButtonLink",
+      "type": "ui_component",
+      "label": "ButtonLink",
+      "repo": "api",
+      "file": "../../packages/ui/src/index.tsx",
+      "line": 2,
+      "kind": "function"
+    },
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 4,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/e2e/helpers.ts:placeOrder",
+      "type": "function",
+      "label": "placeOrder",
+      "repo": "api",
+      "file": "src/e2e/helpers.ts",
+      "line": 5
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/orders/orders.controller.ts:OrdersController.place",
+      "type": "method",
+      "label": "OrdersController.place",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13
+    },
+    {
+      "id": "config_key:api#E2E_API_URL",
+      "type": "config_key",
+      "label": "E2E_API_URL",
+      "repo": "api",
+      "file": "src/e2e/helpers.ts",
+      "line": 6,
+      "meta": {
+        "key": "E2E_API_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:api#MAIL_RELAY_URL",
+      "type": "config_key",
+      "label": "MAIL_RELAY_URL",
+      "repo": "api",
+      "file": "../../packages/relay/src/index.ts",
+      "line": 3,
+      "meta": {
+        "key": "MAIL_RELAY_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:api#PLATFORM_URL",
+      "type": "config_key",
+      "label": "PLATFORM_URL",
+      "repo": "api",
+      "file": "../../packages/sdk/src/http.ts",
+      "line": 3,
+      "meta": {
+        "key": "PLATFORM_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "http_out:api#../../packages/relay/src/index.ts:3:9",
+      "type": "http_out",
+      "label": "POST /send",
+      "repo": "api",
+      "file": "../../packages/relay/src/index.ts",
+      "line": 3,
+      "meta": {
+        "method": "POST",
+        "url": "${MAIL_RELAY_URL}/send",
+        "path": "/send",
+        "baseUrlEnv": "MAIL_RELAY_URL",
+        "responseType": null,
+        "bodyType": "RequestInit",
+        "bodyFrom": "type"
+      }
+    },
+    {
+      "id": "http_out:api#../../packages/sdk/src/http.ts:3:3",
+      "type": "http_out",
+      "label": "GET /${…}",
+      "repo": "api",
+      "file": "../../packages/sdk/src/http.ts",
+      "line": 3,
+      "meta": {
+        "method": "GET",
+        "url": "${PLATFORM_URL}${…}",
+        "path": "/${…}",
+        "baseUrlEnv": "PLATFORM_URL",
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:api#src/e2e/helpers.ts:6:3",
+      "type": "http_out",
+      "label": "POST /orders",
+      "repo": "api",
+      "file": "src/e2e/helpers.ts",
+      "line": 6,
+      "meta": {
+        "method": "POST",
+        "url": "${E2E_API_URL}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "E2E_API_URL",
+        "responseType": null,
+        "bodyType": "RequestInit",
+        "bodyFrom": "type"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 11,
+          "filesRead": 11,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {},
+          "functions": 4,
+          "components": 3,
+          "hooks": 0
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#../../packages/relay/src/index.ts:relay",
+      "to": "config_key:api#MAIL_RELAY_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "../../packages/relay/src/index.ts",
+      "line": 3
+    },
+    {
+      "from": "api#../../packages/relay/src/index.ts:relay",
+      "to": "http_out:api#../../packages/relay/src/index.ts:3:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../../packages/relay/src/index.ts",
+      "line": 3
+    },
+    {
+      "from": "api#../../packages/sdk/src/http.ts:request",
+      "to": "config_key:api#PLATFORM_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "../../packages/sdk/src/http.ts",
+      "line": 3
+    },
+    {
+      "from": "api#../../packages/sdk/src/http.ts:request",
+      "to": "http_out:api#../../packages/sdk/src/http.ts:3:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../../packages/sdk/src/http.ts",
+      "line": 3
+    },
+    {
+      "from": "api#src/e2e/helpers.ts:placeOrder",
+      "to": "config_key:api#E2E_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/e2e/helpers.ts",
+      "line": 6
+    },
+    {
+      "from": "api#src/e2e/helpers.ts:placeOrder",
+      "to": "http_out:api#src/e2e/helpers.ts:6:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/e2e/helpers.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:api:http:POST:/orders",
+      "to": "api#src/orders/orders.controller.ts:OrdersController.place",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{id:string;email:string}"
+      ],
+      "returns": "{id:string}",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "meta": {
+        "body": "{id:string;email:string}"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "service": "api",
+      "file": "../../packages/relay/src/index.ts",
+      "line": 3,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares MAIL_RELAY_URL",
+      "hint": "Add MAIL_RELAY_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:api#../../packages/relay/src/index.ts:3:9"
+    },
+    {
+      "service": "api",
+      "file": "../../packages/sdk/src/http.ts",
+      "line": 3,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares PLATFORM_URL",
+      "hint": "Add PLATFORM_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:api#../../packages/sdk/src/http.ts:3:3"
+    },
+    {
+      "service": "api",
+      "file": "src/e2e/helpers.ts",
+      "line": 6,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares E2E_API_URL",
+      "hint": "Add E2E_API_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:api#src/e2e/helpers.ts:6:3"
+    }
+  ]
+}

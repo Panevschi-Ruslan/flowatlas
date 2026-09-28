@@ -178,6 +178,11 @@ export interface BuildFunctionIndexOptions {
   project: Project;
   repo: string;
   repoDir: string;
+  /**
+   * Which of the project's files are this framework's code, by absolute path.
+   * Every file when absent; see `extractReact` for the rule that fills it.
+   */
+  reads?: (file: string) => boolean;
 }
 
 /**
@@ -244,11 +249,11 @@ const defaultExportFunction = (sourceFile: SourceFile, file: string): NamedFunct
 export const buildReactFunctionIndex = (
   options: BuildFunctionIndexOptions,
 ): ReactFunctionIndex => {
-  const { project, repo, repoDir } = options;
+  const { project, repo, repoDir, reads = () => true } = options;
   const index = new ReactFunctionIndex({ repo, repoDir });
 
   for (const sourceFile of project.getSourceFiles()) {
-    if (!isRepoFile(sourceFile)) continue;
+    if (!isRepoFile(sourceFile) || !reads(sourceFile.getFilePath())) continue;
     const file = normalizeFilePath(sourceFile.getFilePath(), repoDir);
     const found = [...moduleFunctions(sourceFile), ...builtExportFunctions(sourceFile)];
     const anonymous = defaultExportFunction(sourceFile, file);

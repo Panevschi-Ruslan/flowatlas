@@ -151,6 +151,7 @@ export {
   hasDependency,
   readPackageJson,
   readResolvedPackageJson,
+  suppliedWith,
 } from './adapters/manifest.js';
 export type { PackageJson } from './adapters/manifest.js';
 
@@ -230,12 +231,13 @@ export type { Location, Reach } from './location.js';
 
 export {
   isServiceSource,
+  serviceExtent,
   serviceSourceDirs,
   workspaceGlobs,
   workspacePackages,
   workspaceRootOf,
 } from './workspace.js';
-export type { WorkspacePackage } from './workspace.js';
+export type { ExtentPackage, WorkspacePackage } from './workspace.js';
 
 export {
   countSources,
