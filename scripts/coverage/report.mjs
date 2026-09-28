@@ -425,6 +425,20 @@ const unplacedOutput = (gate) => {
   return `\n\n${gate.unplaced.length} output(s) of the graph could not be placed in any file of this clone - ${counts} - because no service this run configured can be named for them. They count for no file.`;
 };
 
+/**
+ * What the gate set aside because a document, not source, produced it (R160).
+ *
+ * Said only when there was some, and never as a failure: a service declared by
+ * a document has no file the counting rule can count, so its output answers for
+ * none, and the report says how much was left out rather than leaving it out in
+ * silence.
+ */
+const documentOnlyOutput = (gate) => {
+  const aside = gate.documentOnly;
+  if (aside === undefined || aside.services.length === 0) return '';
+  return `\n\n${aside.nodes} node(s), ${aside.edges} edge(s) and ${aside.rows} row(s) of ${aside.services.length} service(s) declared only by a document (${aside.services.map((name) => `\`${name}\``).join(', ')}) were set aside: a document is not source, so they speak for no file.`;
+};
+
 const readGateSection = (result) => {
   const { gate } = result;
   if (gate === undefined) return '';
@@ -445,6 +459,7 @@ const readGateSection = (result) => {
       ? ''
       : `\n\n${gate.stale.length} exemption(s) in \`read-gate.mjs\` are no longer needed and should be deleted.`;
   const unplaced = unplacedOutput(gate);
+  const aside = documentOnlyOutput(gate);
   const known = gate.known === undefined ? '' : knownRed(gate);
   const blind = blindSection(gate);
   if (gate.missing.length === 0 && gate.stale.length === 0 && drift === '' && unplaced === '') {
@@ -452,7 +467,7 @@ const readGateSection = (result) => {
 ## Files with sites and no output
 
 None beyond what is baselined. Every other file the counting rule found a
-declaration site in yielded a node of that family, or a row naming the file.
+declaration site in yielded a node of that family, or a row naming the file.${aside}
 ${known}${blind}`;
   }
   const rows = gate.missing
@@ -472,7 +487,7 @@ for; a limit somebody has decided to accept belongs in the exemption list with a
 sentence beside it, and a limit somebody has decided to live with belongs in the
 baseline with a count and a ticket.
 
-${rows.length === 0 ? '' : table(['file', 'family', 'sites'], rows)}${rest}${drift}${stale}${unplaced}
+${rows.length === 0 ? '' : table(['file', 'family', 'sites'], rows)}${rest}${drift}${stale}${unplaced}${aside}
 ${known}${blind}`;
 };
 

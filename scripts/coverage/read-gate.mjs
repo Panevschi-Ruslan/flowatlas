@@ -51,16 +51,18 @@
  *   node scripts/coverage/read-gate.mjs            # over every fixture
  *   node scripts/coverage/read-gate.mjs --fixture nest-basic
  *
- * Over the fixtures it reads each one's committed `expected.graph.json`, which
- * is ground truth this repository already maintains, so the gate costs a second
+ * Over the fixtures it reads every expected graph each one commits -
+ * `expected.graph.json`, `expected.project-graph.json`, or both - which is
+ * ground truth this repository already maintains, so the gate costs a second
  * and needs nothing cloned. The harness applies the same function to the
  * coverage targets, where the tree is somebody else's repository and the graph
  * is the one just built.
  *
- * Every fixture it reads is one service at the root of its tree, where a path
- * relative to the service and a path relative to the clone are one string, so
- * the translation between them is tested on its own, with services that are not
- * at `.` (`read-gate.test.mjs`, run by `pnpm fixtures:check`):
+ * A project graph places each service at the directory its own `services`
+ * names, as the harness does; a repository graph is one service at the root.
+ * The translation, the table of what speaks for which family and the rule for
+ * a service declared only by a document are tested on their own, with graphs
+ * built by hand (`read-gate.test.mjs`, run by `pnpm fixtures:check`):
  *
  *   node --test scripts/coverage/read-gate.test.mjs
  */
@@ -91,14 +93,146 @@ const FIXTURES = join(ROOT, 'fixtures');
  * anywhere and no node anywhere is a failure, one file's worth of silence is not
  * visible and is not claimed to be. Recording which family is gated at which
  * strength beats a gate whose reach nobody can look up.
+ *
+ * ## What speaks for a family, and nothing else (R160)
+ *
+ * A node answers the family its `type` belongs to. An **edge** answers the
+ * family its kind belongs to, and only through a node of that family at one of
+ * its ends: `handles` is the routes family's kind when it runs from an entry and
+ * the clicks family's when it runs from a button, and a message consumer's
+ * `handles` answers neither. A **row** answers the family its `reason` belongs
+ * to: the reader of that family was in the file and said why it could not
+ * finish. Anything else said about a file - a call, an injection, a config read,
+ * a row about a receiver's type - says a reader was there and nothing about
+ * whether the reader of *this* family was. Before R160 it spoke for every family
+ * of the file, and about 174 of cal.com's data files passed on calls alone.
+ *
+ * `edges` and `reasons` are the whole of that judgement, one row per family, and
+ * a kind or a reason written under no family speaks for nothing. A reason is an
+ * open word, so one this table has never heard of speaks for nothing too, which
+ * fails loudly rather than passing a file on a sentence nobody classified.
+ * `models` owns no edge and no reason because nothing is asked of it per file.
  */
 const GATED = {
-  routes: { types: new Set(['entry']), perFile: true },
-  screens: { types: new Set(['ui_component']), perFile: true },
-  clicks: { types: new Set(['ui_action']), perFile: true },
-  data: { types: new Set(['db_query', 'cache_op']), perFile: true },
-  models: { types: new Set(['table']), perFile: false },
+  routes: {
+    types: ['entry'],
+    edges: ['handles', 'guarded_by'],
+    reasons: [
+      // A route read, and something about it that could not be.
+      'route-path-dynamic',
+      'route-handler-anonymous',
+      'route-handler-unread',
+      'route-verb-unread',
+      'route-mount-unread',
+      'route-registry-unread',
+      'route-file-not-served',
+      'route-unguarded',
+      'route-guard-skipped',
+      'route-shadowed',
+      'server-action-unread',
+      // The application or module the routes hang from.
+      'application-root-unread',
+      'bootstrap-not-found',
+      'module-controllers-unread',
+      'global-wrapper-dynamic',
+      'middleware-route-dynamic',
+      'middleware-matcher-unread',
+      // A description of the routes that was there and could not be matched.
+      'entry-http-routes-unmatched',
+      'entry-http-routes-unplaced',
+      'entry-http-types-unmatched',
+      'entry-http-description-inactive',
+      // A procedure router, which is a way in over HTTP too.
+      'procedure-router-unread',
+      'procedure-branch-unread',
+      'procedure-key-dynamic',
+      'entry-procedures-description-inactive',
+    ],
+    perFile: true,
+  },
+  screens: {
+    types: ['ui_component'],
+    edges: [],
+    reasons: ['route-config-unread', 'route-loader-unread'],
+    perFile: true,
+  },
+  clicks: {
+    types: ['ui_action'],
+    edges: ['handles', 'triggers'],
+    reasons: [
+      'handler-not-found',
+      'handler-not-a-method',
+      'template-not-found',
+      'template-not-parsed',
+      'route-link-dynamic',
+      'route-screen-unread',
+      'route-target-unresolved',
+    ],
+    perFile: true,
+  },
+  data: {
+    types: ['db_query', 'cache_op'],
+    edges: ['queries', 'caches'],
+    reasons: [
+      'unknown-db-package',
+      'unknown-db-operation',
+      'db-package-unread',
+      'db-layer-unread',
+      'db-receiver-name-only',
+      'db-call-at-module-level',
+      'dynamic-table-name',
+      'dynamic-cache-key',
+      'sql-parse-failed',
+    ],
+    perFile: true,
+  },
+  models: { types: ['table'], edges: [], reasons: [], perFile: false },
 };
+
+/**
+ * The two rows of the table that belong to no one family.
+ *
+ * `nothing` names every edge kind of the model no family owns, so that the table
+ * names the model's whole list (`EDGE_TYPES`, `packages/core/src/model/edges.ts`)
+ * and a kind added there fails the gate's tests until somebody decides where it
+ * goes. `every` is the one reason that speaks for the whole file: the parser
+ * could not read it, so no reader of any family got in, and the row saying so
+ * is the honest answer for all of them.
+ */
+const UNOWNED = {
+  nothing: {
+    edges: ['imports', 'injects', 'calls', 'emits', 'consumes', 'http_calls', 'hits', 'reads_config'],
+  },
+  every: { reasons: ['file-not-parsed'] },
+};
+
+/**
+ * The table turned round for lookup: which families a node type, an edge kind or
+ * a row's reason speaks for. Maps, because every key is a word read out of a
+ * graph, and `constructor` is a word too.
+ */
+const ownersOf = (field, seed) => {
+  const owners = new Map(seed);
+  for (const [family, entry] of Object.entries(GATED)) {
+    for (const word of entry[field]) owners.set(word, [...(owners.get(word) ?? []), family]);
+  }
+  return owners;
+};
+
+export const SPOKEN_FOR_BY = {
+  types: ownersOf('types', []),
+  edges: ownersOf(
+    'edges',
+    UNOWNED.nothing.edges.map((kind) => [kind, []]),
+  ),
+  reasons: ownersOf(
+    'reasons',
+    UNOWNED.every.reasons.map((reason) => [reason, Object.keys(GATED)]),
+  ),
+};
+
+/** The table's entries by family, a Map for the same reason. */
+const FAMILY = new Map(Object.entries(GATED));
 
 /**
  * Files that legitimately yield neither a node nor a row, with the reason.
@@ -146,8 +280,9 @@ export const EXEMPT = [
   // file with a site, `bootstrap-app.ts`, carries `calls` and `reads_config`
   // edges, which count for the file once an edge's site is read relative to the
   // service that drew it rather than to the clone. Still no entry is minted for
-  // its `/health`, which is what the exemption defended; what now speaks for the
-  // file is `BLIND` R154, not a node.
+  // its `/health`, which is what the exemption defended. Since R160 neither edge
+  // speaks for routes, so the file is red again and reported as red rather than
+  // excused a second time.
   {
     where: 'medusa',
     path: 'packages/medusa/src/migration-scripts/**',
@@ -239,25 +374,12 @@ export const BLIND = [
       'A graph was broken on purpose - two applications collided and one ' +
       'controller’s file contributed nothing - and the gate answered `read gate ok`. ' +
       'The mechanism is structural rather than a tuning problem: the surviving entry ' +
-      'takes a `handles` edge to *each* controller’s method, an edge recorded at a ' +
-      'site counts as the reader having read that line, so `spokenFor` contains the ' +
-      'losing file and the gate skips it. Strength 2 asks whether anything was said ' +
+      'takes a `handles` edge to *each* controller’s method, a `handles` edge from ' +
+      'an entry speaks for the routes of the file it is recorded in (R160 narrowed ' +
+      'this to its own family and left it true), so the losing file is answered and ' +
+      'the gate skips it. Strength 2 asks whether anything was said ' +
       'about a file; a collision is two files having the same thing said about them. ' +
       'R119 needed a snapshot fixture for exactly this reason.',
-  },
-  {
-    what: 'A family unread in a file where the reader said something of another kind.',
-    ticket: 'R154',
-    measured:
-      'Anything said about a file - a row, or an edge recorded at a site in it - ' +
-      'speaks for every family the counting rule found there, not for the one it ' +
-      'is about. Once edges were read relative to the service that drew them, 123 ' +
-      'of cal.com’s 242 fresh-clone misses stopped being misses (176 of 235 with ' +
-      'its dependencies installed): files with data sites and no query node, and ' +
-      '2 with route sites and no entry, each ' +
-      'spoken for by `calls`, `reads_config`, `handles` or `guarded_by` edges and ' +
-      'by none of the kinds that answer its family. The rule is right that the ' +
-      'reader was in the file; it cannot say whether the data reader was.',
   },
   {
     what: 'A wrong value.',
@@ -407,8 +529,51 @@ const serviceOfEdge = (edge, nodes) => {
 };
 
 /**
- * What one graph says about each file: which families it yielded, and whether
- * anything at all was said about it.
+ * The service type a build gives a service it knows only from a document.
+ *
+ * `DECLARED_SERVICE_TYPE` in `packages/core/src/config.ts`: a service written
+ * with an `openapi` or `document` field and no repository is summarised in the
+ * graph's `services` with this type, and it is the only thing the graph states
+ * about it that says there is no source behind it.
+ */
+const DOCUMENT_ONLY = 'declared';
+
+/**
+ * The services of a graph that have no source to read (R160).
+ *
+ * **A service declared only by a document has no file the counting rule can
+ * count, so nothing it contributes can speak for one, and nothing it contributes
+ * is unplaced either.** Its nodes, its rows and the edges it drew are filed at
+ * the document - `contracts/billing.json` - which is not source, under a
+ * directory that is wherever the document happens to live and that two such
+ * services may share. Placing them would either land on no file or, worse, on a
+ * real one that shares the path; calling them unplaced would fail a project for
+ * reading a document it was asked to read. So they are set aside, and counted,
+ * because a gate that drops something should say how much.
+ *
+ * The rule is stated from what the graph records - a service's `type` in the
+ * build's own summary - and never from a fixture's or a target's name. A repository
+ * graph has no `services`, and nothing in it is set aside.
+ */
+const documentOnlyServices = (graph) =>
+  new Set(
+    (graph.services ?? [])
+      .filter((service) => service.type === DOCUMENT_ONLY)
+      .map((service) => service.name),
+  );
+
+/** Which families one edge speaks for: its kind's, through a node of that family. */
+const familiesOfEdge = (edge, nodes) => {
+  const owners = SPOKEN_FOR_BY.edges.get(edge.type) ?? [];
+  if (owners.length === 0) return owners;
+  const touched = new Set(
+    [edge.from, edge.to].flatMap((id) => SPOKEN_FOR_BY.types.get(nodes.get(id)?.type) ?? []),
+  );
+  return owners.filter((family) => touched.has(family));
+};
+
+/**
+ * What one graph says about each file: which families something in it answers.
  *
  * `toPath` turns a path as the graph spells it into a path as the counting rule
  * spells it. They differ whenever a service is not the root of the tree being
@@ -421,42 +586,53 @@ const serviceOfEdge = (edge, nodes) => {
  * with its `repo`, a row with its `service`, and an edge with the service of
  * the end that belongs to one (`serviceOfEdge`). Whatever cannot be placed is
  * listed in `unplaced` and counts for no file, because the one place it could
- * have defaulted to - the clone's root - is a place it was not read from.
+ * have defaulted to - the clone's root - is a place it was not read from. An
+ * edge or a row that speaks for no family is still placed, so that one nobody
+ * can place is still reported. What a document-only service contributed is
+ * neither: it is counted in `documentOnly` and read no further.
+ *
+ * What each one answers is `SPOKEN_FOR_BY`, which is the table beside `GATED`
+ * and nothing else (R160).
  */
 const readingOf = (graph, toPath) => {
-  const nodes = new Map();
-  const families = new Map();
+  const nodes = new Map((graph.nodes ?? []).map((node) => [node.id, node]));
+  const declared = documentOnlyServices(graph);
+  const documentOnly = { services: [...declared].sort(), nodes: 0, edges: 0, rows: 0 };
+  const answered = new Map();
   const unplaced = [];
-  for (const node of graph.nodes ?? []) {
-    nodes.set(node.id, node);
-    if (node.file === undefined) continue;
-    const path = toPath(node.file, node.repo);
-    if (path === undefined) {
-      unplaced.push({ what: 'node', file: node.file, service: node.repo });
-      continue;
+  const place = (what, file, service, families) => {
+    if (declared.has(service)) {
+      documentOnly[`${what}s`] += 1;
+      return;
     }
-    const found = families.get(path) ?? new Set();
-    found.add(node.type);
-    families.set(path, found);
+    const path = toPath(file, service);
+    if (path === undefined) {
+      unplaced.push({ what, file, service });
+      return;
+    }
+    const found = answered.get(path) ?? new Set();
+    for (const family of families) found.add(family);
+    answered.set(path, found);
+  };
+  for (const node of nodes.values()) {
+    if (node.file === undefined) continue;
+    place('node', node.file, node.repo, SPOKEN_FOR_BY.types.get(node.type) ?? []);
   }
-  const spokenFor = new Set();
   for (const row of graph.unresolved ?? []) {
     if (typeof row.file !== 'string') continue;
-    const path = toPath(row.file, row.service);
-    if (path === undefined) unplaced.push({ what: 'row', file: row.file, service: row.service });
-    else spokenFor.add(path);
+    place('row', row.file, row.service, SPOKEN_FOR_BY.reasons.get(row.reason) ?? []);
   }
   // An edge recorded at a site is the reader saying it read that line, even
-  // where the node it drew from lives in another file. A file whose only output
-  // is an edge is read, not skipped - in the service that drew it (R154).
+  // where the node it drew from lives in another file - in the service that
+  // drew it (R154), and for the family its kind belongs to (R160).
   for (const edge of graph.edges ?? []) {
     if (typeof edge.file !== 'string') continue;
     const service = serviceOfEdge(edge, nodes);
-    const path = service === undefined ? undefined : toPath(edge.file, service);
-    if (path === undefined) unplaced.push({ what: 'edge', file: edge.file, service });
-    else spokenFor.add(path);
+    // No default for an edge whose service cannot be named: not even the root.
+    if (service === undefined) unplaced.push({ what: 'edge', file: edge.file, service });
+    else place('edge', edge.file, service, familiesOfEdge(edge, nodes));
   }
-  return { families, spokenFor, unplaced };
+  return { answered, unplaced, documentOnly };
 };
 
 /**
@@ -506,20 +682,19 @@ const againstBaseline = (where, state, missing) => {
  * on whether anybody ran an install.
  */
 export const readGate = ({ where, state = null, perFile, graph, toPath }) => {
-  const { families, spokenFor, unplaced } = readingOf(graph, toPath);
+  const { answered, unplaced, documentOnly } = readingOf(graph, toPath);
   const missing = [];
   const used = new Set();
-  const total = {};
+  const total = new Map();
   for (const [path, sites] of perFile) {
     for (const [family, count] of Object.entries(sites)) {
-      total[family] = (total[family] ?? 0) + count;
+      total.set(family, (total.get(family) ?? 0) + count);
     }
-    if (spokenFor.has(path)) continue;
-    const types = families.get(path) ?? new Set();
+    const spoken = answered.get(path) ?? new Set();
     for (const [family, count] of Object.entries(sites)) {
-      const gated = GATED[family];
+      const gated = FAMILY.get(family);
       if (gated === undefined || !gated.perFile) continue;
-      if ([...types].some((type) => gated.types.has(type))) continue;
+      if (spoken.has(family)) continue;
       const exemption = exemptionFor(where, path, family);
       if (exemption !== undefined) {
         used.add(exemptionKey(exemption));
@@ -530,15 +705,15 @@ export const readGate = ({ where, state = null, perFile, graph, toPath }) => {
   }
   // The families no file-level question can be asked about, at strength 1.
   const present = new Set((graph.nodes ?? []).map((node) => node.type));
-  for (const [family, gated] of Object.entries(GATED)) {
-    if (gated.perFile || (total[family] ?? 0) === 0) continue;
-    if ([...gated.types].some((type) => present.has(type))) continue;
+  for (const [family, gated] of FAMILY) {
+    if (gated.perFile || (total.get(family) ?? 0) === 0) continue;
+    if (gated.types.some((type) => present.has(type))) continue;
     const exemption = exemptionFor(where, '(anywhere)', family);
     if (exemption !== undefined) {
       used.add(exemptionKey(exemption));
       continue;
     }
-    missing.push({ path: '(anywhere)', family, sites: total[family] });
+    missing.push({ path: '(anywhere)', family, sites: total.get(family) });
   }
   missing.sort((a, b) =>
     a.path === b.path ? (a.family < b.family ? -1 : 1) : a.path < b.path ? -1 : 1,
@@ -556,6 +731,7 @@ export const readGate = ({ where, state = null, perFile, graph, toPath }) => {
     drift: split.drift,
     stale,
     unplaced,
+    documentOnly,
     blind: BLIND.length,
   };
 };
@@ -588,15 +764,43 @@ const sourceUnder = (dir) => {
   return files;
 };
 
-/** The gate over one fixture, read from its committed expected graph. */
+/**
+ * The graphs a fixture keeps, and how each spells a path.
+ *
+ * A repository graph is one service at the root of the fixture, so a path in it
+ * is already a path in the tree. A project graph links every service the
+ * fixture's configuration names, each at its own directory, and says where in
+ * its own `services`: that directory is relative to the configuration, which
+ * sits at the fixture's root, so `clonePaths` places each path exactly as the
+ * harness places a target's. Until R160 only the first kind was gated, and 36
+ * fixtures that keep only the second were skipped in silence.
+ */
+const EXPECTED_GRAPHS = [
+  ['expected.graph.json', () => (file) => file],
+  ['expected.project-graph.json', (graph) => clonePaths(graph.services ?? [])],
+];
+
+/** The gate over one fixture: one result per expected graph it keeps. */
 const overFixture = (name, fixtures = FIXTURES) => {
   const dir = join(fixtures, name);
-  const expected = join(dir, 'expected.graph.json');
-  if (!existsSync(expected)) return undefined;
-  const graph = JSON.parse(readFileSync(expected, 'utf8'));
+  const kept = EXPECTED_GRAPHS.filter(([file]) => existsSync(join(dir, file)));
+  if (kept.length === 0) return [];
   const { perFile } = measureSites(sourceUnder(dir));
-  return readGate({ where: name, perFile, graph, toPath: (file) => file });
+  return kept.map(([file, pathsOf]) => {
+    const graph = JSON.parse(readFileSync(join(dir, file), 'utf8'));
+    return { ...readGate({ where: name, perFile, graph, toPath: pathsOf(graph) }), graph: file };
+  });
 };
+
+/**
+ * An exemption is stale for a fixture only when none of its graphs used it: a
+ * fixture that keeps both graphs reads the same tree twice, and an exemption one
+ * of them needs is not an exemption the other has made stale.
+ */
+const staleInEvery = (results) =>
+  results
+    .map((result) => result.stale)
+    .reduce((left, right) => left.filter((entry) => right.includes(entry)));
 
 const main = () => {
   const argv = process.argv.slice(2);
@@ -627,29 +831,38 @@ const main = () => {
           .sort();
   let failed = 0;
   let checked = 0;
+  let fixturesChecked = 0;
+  const setAside = { services: 0, outputs: 0 };
   for (const name of names) {
-    const result = overFixture(name, fixtures);
-    if (result === undefined) continue;
-    checked += 1;
-    for (const row of result.missing) {
-      console.error(
-        `    ${name}: ${row.path} has ${row.sites} ${row.family} site(s) and yielded no ${row.family} node and no row`,
-      );
-      failed += 1;
+    const results = overFixture(name, fixtures);
+    if (results.length === 0) continue;
+    fixturesChecked += 1;
+    for (const result of results) {
+      checked += 1;
+      const where = results.length === 1 ? name : `${name} (${result.graph})`;
+      const aside = result.documentOnly;
+      setAside.services += aside.services.length;
+      setAside.outputs += aside.nodes + aside.edges + aside.rows;
+      for (const row of result.missing) {
+        console.error(
+          `    ${where}: ${row.path} has ${row.sites} ${row.family} site(s) and yielded no ${row.family} node and no row`,
+        );
+        failed += 1;
+      }
+      for (const row of result.drift) {
+        console.error(
+          `    ${where}: the baseline for ${row.path} (${row.family}) says ${row.files} file(s) and the run found ${row.found}` +
+            `${row.found === 0 ? ' - it is no longer needed, delete it' : ''}`,
+        );
+        failed += 1;
+      }
+      for (const row of result.unplaced) {
+        console.error(`    ${where}: the ${row.what} at ${row.file} belongs to no service the gate can name`);
+        failed += 1;
+      }
     }
-    for (const row of result.drift) {
-      console.error(
-        `    ${name}: the baseline for ${row.path} (${row.family}) says ${row.files} file(s) and the run found ${row.found}` +
-          `${row.found === 0 ? ' - it is no longer needed, delete it' : ''}`,
-      );
-      failed += 1;
-    }
-    for (const row of result.stale) {
+    for (const row of staleInEvery(results)) {
       console.error(`    ${name}: exemption for ${row.path} (${row.family}) is no longer needed`);
-      failed += 1;
-    }
-    for (const row of result.unplaced) {
-      console.error(`    ${name}: the ${row.what} at ${row.file} belongs to no service the gate can name`);
       failed += 1;
     }
   }
@@ -663,10 +876,12 @@ const main = () => {
   // broken on purpose; saying how many failures this gate is known not to see,
   // every time it passes, is what stops "ok" from being read as "read".
   console.log(
-    `read gate ok over ${checked} fixture(s); ${BLIND.length} kind(s) of failure it cannot see (BLIND in ${relative(ROOT, fileURLToPath(import.meta.url))})`,
+    `read gate ok over ${checked} graph(s) of ${fixturesChecked} fixture(s); ` +
+      `${setAside.outputs} output(s) of ${setAside.services} document-only service(s) set aside; ` +
+      `${BLIND.length} kind(s) of failure it cannot see (BLIND in ${relative(ROOT, fileURLToPath(import.meta.url))})`,
   );
 };
 
 if (resolve(process.argv[1] ?? '') === resolve(fileURLToPath(import.meta.url))) main();
 
-export { overFixture, sourceUnder };
+export { overFixture, serviceOfEdge, sourceUnder };

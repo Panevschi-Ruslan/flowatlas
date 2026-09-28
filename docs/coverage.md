@@ -151,6 +151,30 @@ Every measurement is also an assertion, held in
 **A file the counting rule found sites of a family in must yield, for that
 family, a node, or a row naming the file.**
 
+*For that family* is meant literally (R160). Each family has one row in the
+`GATED` table in `read-gate.mjs` saying what answers it: the node types, the
+edge kinds and the row reasons that belong to it. That table is the authority;
+this is a summary of it.
+
+| family | nodes | edges (through a node of the family) | row reasons |
+|---|---|---|---|
+| `routes` | `entry` | `handles`, `guarded_by` | a route, its application or module, its description, a procedure router (`route-path-dynamic`, `route-handler-unread`, `module-controllers-unread`, `procedure-router-unread`, ...) |
+| `screens` | `ui_component` | none | `route-config-unread`, `route-loader-unread` |
+| `clicks` | `ui_action` | `handles`, `triggers` | a template or its handler (`template-not-found`, `handler-not-found`, `route-link-dynamic`, ...) |
+| `data` | `db_query`, `cache_op` | `queries`, `caches` | the database reader (`unknown-db-package`, `dynamic-table-name`, `sql-parse-failed`, ...) |
+| `models` | `table` | not asked per file | not asked per file |
+
+An edge speaks for a family only when its kind is that family's *and* one of its
+ends is a node of that family, so `handles` from an entry answers routes, from a
+button answers clicks, and from a message consumer answers neither. Every other
+edge kind (`calls`, `injects`, `imports`, `reads_config`, `emits`, `consumes`,
+`http_calls`, `hits`) speaks for nothing, and so does a row whose reason belongs
+to no family or that the table has never heard of. One reason speaks for every
+family: `file-not-parsed`, because a file the parser could not read was read by
+no reader at all. Before R160 anything said about a file spoke for all of its
+families, and about 174 of cal.com's data files passed on a call between two of
+their functions.
+
 That is all it asks. A reader that saw a file and could say nothing useful about
 it is allowed to say so; a reader that said nothing at all is the defect. It
 catches the failure no count can: two controllers lost inside a repository whose
@@ -160,9 +184,12 @@ question asked file by file notices them. `routes`, `screens`, `clicks` and
 because a table node carries no file in this graph model: it records where a
 table is used, never where it is declared.
 
-It runs in two places. Over the fixtures it reads each one's committed expected
-graph, costs a second, needs nothing cloned, and is the last step of
-`pnpm fixtures:check`, so `pnpm check` fails on it. Over a coverage target it
+It runs in two places. Over the fixtures it reads every expected graph a fixture
+commits - `expected.graph.json`, `expected.project-graph.json`, or both - costs a
+second, needs nothing cloned, and is the last step of `pnpm fixtures:check`, so
+`pnpm check` fails on it. A project graph places each service at the directory its
+own `services` summary names, exactly as the harness places a target's. Until
+R160 a fixture keeping only a project graph was skipped. Over a coverage target it
 reads the graph just built and fails the run.
 
 Over a target the graph and the rule spell a path differently: the rule names a
@@ -171,8 +198,18 @@ node, row and edge is translated with its own service - an edge with the service
 of the end that belongs to one, since a channel or a third party is shared by the
 whole project. Output that no configured service can be named for is placed in no
 file and fails the run, rather than being taken as read at the clone's root. That
-translation is tested on its own in `scripts/coverage/read-gate.test.mjs`, because
-every fixture is a single service at its root, where the two spellings agree.
+translation is tested on its own in `scripts/coverage/read-gate.test.mjs`, with
+services that are not at the root.
+
+**A service declared only by a document has no source, so its output is set
+aside.** The build summarises such a service (an `openapi` or `document` entry
+with no repository) with `type: "declared"`. Its nodes, rows and the edges it drew
+are filed at the document, which the counting rule does not count, under a
+directory two such services may share. They are neither placed, which could land
+on a real file with the same path, nor reported as unplaced, which would fail a
+project for reading the document it was asked to read. They are counted: the
+gate prints how many outputs of how many document-only services it set aside.
+The rule reads the graph's own `services`, never a fixture's or a target's name.
 
 Three lists in that file say what the assertion does not cover, each entry with
 a reason beside it:
@@ -194,11 +231,10 @@ a reason beside it:
   measured. The gate prints how many there are beside `read gate ok`, and a
   report renders the same list, because `ok` is a sentence about one assertion
   and a reader who is never told what it excludes is the person it misleads.
-  Today there are five: a family written in a style the rule has no probe for,
+  Today there are four: a family written in a style the rule has no probe for,
   where the check is vacuous; two applications colliding, where the file that
-  loses is still named by an edge and so counts as spoken for; a family unread in
-  a file where the reader said something of another kind, because anything said
-  about a file speaks for all its families; a wrong value,
+  loses is still named by a `handles` edge from an entry and so counts as spoken
+  for its routes; a wrong value,
   such as a route placed at the wrong address, which is a node in the right file
   for the right family; and one of several declarations in a file being dropped,
   which would need a per-file comparison of sites against nodes and is recorded
