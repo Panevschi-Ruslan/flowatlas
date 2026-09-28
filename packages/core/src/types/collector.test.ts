@@ -289,3 +289,63 @@ export class Api {
     expect(collect(SOURCE, true)('partial')).toContain('note?:null|string');
   });
 });
+
+describe('a generic used with nothing but type parameters', () => {
+  const SOURCE = `
+export interface Paginated<T> { items: T[]; total: number }
+export interface Pair<A, B> { left: A; right: B }
+export interface Order { id: string }
+export class Api {
+  wrap<T>(items: T[]): Paginated<T> { return null as never }
+  rename<U>(items: U[]): Paginated<U> { return null as never }
+  half<T>(): Pair<string, T> { return null as never }
+  known(): Paginated<Order> { return null as never }
+}
+`;
+  const setup = () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const file = project.createSourceFile('api.ts', SOURCE);
+    const builder = new GraphBuilder({ repo: 'orders', generatedAt: '2026-01-01T00:00:00.000Z' });
+    const rows: Unresolved[] = [];
+    const collector = new TypeCollector({ builder, repo: 'orders', report: (row) => rows.push(row) });
+    const returns = (name: string): string =>
+      collector.collectSignature(file.getClassOrThrow('Api').getMethodOrThrow(name)).returns;
+    const registry = () => {
+      collector.finalize();
+      return builder.build().types;
+    };
+    return { returns, registry, rows };
+  };
+
+  // Nothing is substituted, so there is no instantiation to register: an entry
+  // for `Paginated<T>` would be the template again under the name the site's
+  // parameter happens to have, and `Paginated<U>` a third copy of it (R148).
+  it('names the template, whatever the parameter is called at the site', () => {
+    const { returns } = setup();
+    expect(returns('wrap')).toBe('type:orders#Paginated');
+    expect(returns('rename')).toBe('type:orders#Paginated');
+  });
+
+  it('registers the template once and no instantiation beside it', () => {
+    const { returns, registry } = setup();
+    returns('wrap');
+    returns('rename');
+    const ids = Object.keys(registry()).filter((id) => id.includes('#Paginated'));
+    expect(ids).toEqual(['type:orders#Paginated']);
+  });
+
+  it('still says the argument was not known at the site', () => {
+    const { returns, rows } = setup();
+    returns('wrap');
+    expect(rows.map((row) => row.reason)).toContain('type-generic-uninstantiated');
+  });
+
+  it('keeps an instantiation that substitutes anything at all', () => {
+    const { returns, registry } = setup();
+    expect(returns('half')).toBe('type:orders#Pair<string,T>');
+    expect(returns('known')).toBe('type:orders#Paginated<type:orders#Order>');
+    const types = registry();
+    expect(types['type:orders#Pair<string,T>']?.kind).toBe('object');
+    expect(types['type:orders#Paginated']?.kind).toBe('generic');
+  });
+});

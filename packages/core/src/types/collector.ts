@@ -416,7 +416,20 @@ export class TypeCollector {
     if (owner === undefined) this.#idOwner.set(baseId, declarationFile);
     else if (owner !== declarationFile) baseId = `${baseId}@${declarationFile}`;
 
-    const args = type.getTypeArguments().map((argument) => this.collectType(argument, site, depth));
+    const typeArguments = type.getTypeArguments();
+    const args = typeArguments.map((argument) => this.collectType(argument, site, depth));
+
+    // A generic used with nothing but type parameters substitutes nothing, so
+    // there is no instantiation to register: an entry for `Paginated<T>` would
+    // be the template again, spelled with whatever the site's parameter happens
+    // to be called, and `Paginated<U>` a third copy of the same declaration. The
+    // reference names the template, and the row each parameter already wrote
+    // says that the argument was not known here (R148). Anything substituted
+    // at all - `Pair<string, T>` - is still an instantiation of its own.
+    if (!external && args.length > 0 && typeArguments.every((argument) => argument.isTypeParameter())) {
+      return this.#registerTemplate(baseId, symbol, declaration, declaredIn, site, depth);
+    }
+
     const id = args.length === 0 ? baseId : `${baseId}<${args.join(',')}>`;
 
     if (this.#started.has(id)) return id;
@@ -436,7 +449,7 @@ export class TypeCollector {
     // The template of a generic is worth registering too: a reader asking what
     // the type is called wants the declaration, not only one instantiation.
     if (args.length > 0) {
-      this.#registerTemplate(symbol, declaration, scope, declaredIn, site, depth);
+      this.#registerTemplate(baseId, symbol, declaration, declaredIn, site, depth);
     }
 
     const entry = this.#buildEntry(type, declaration, name, declaredIn, site, depth, args);
@@ -444,17 +457,21 @@ export class TypeCollector {
     return id;
   }
 
+  /**
+   * The declaration of a generic, under the id its instantiations are built on,
+   * so that a second declaration of the same name in another file keeps its
+   * own template rather than being answered with the first one's.
+   */
   #registerTemplate(
+    id: TypeRef,
     symbol: TsSymbol,
     declaration: TsNode,
-    scope: string,
     declaredIn: string,
     site: TsNode,
     depth: number,
-  ): void {
+  ): TypeRef {
     const name = symbol.getName();
-    const id = makeTypeId(scope, name);
-    if (this.#started.has(id)) return;
+    if (this.#started.has(id)) return id;
     this.#started.add(id);
     const declared = symbol.getDeclaredType();
     const entry = this.#buildEntry(declared, declaration, name, declaredIn, site, depth, []);
@@ -467,6 +484,7 @@ export class TypeCollector {
       ...entry,
       ...(typeParams.length > 0 ? { kind: 'generic' as const, typeParams } : {}),
     });
+    return id;
   }
 
   #buildEntry(

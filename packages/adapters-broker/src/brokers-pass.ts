@@ -147,6 +147,29 @@ export const extractBrokers = (ctx: PassContext): void => {
   };
 
   /**
+   * Whether the entry reader has already refused this handler's decorator.
+   *
+   * A pattern decorator's argument is read once, by the framework's entry
+   * reader, and a consumer reuses that reading as its channel name (D1). Where
+   * the entry reader could not read it, it has written a row at the handler
+   * saying so, and the consumer, having read the same argument of the same
+   * decorator, has nothing to add but a second row at one site for one thing to
+   * fix. Worse than redundant for `@EventPattern()` with nothing in it: there
+   * is no channel at all, and the channel row's advice - annotate with
+   * `@Consumes` - would claim one for a handler the framework delivers nothing
+   * to (R148). A decorator no entry reader knows - `@RabbitSubscribe`,
+   * `@Process` - wrote no such row, so its consumer still reports its own.
+   */
+  const entryReaderRefused = (file: string, line: number, symbol: string): boolean =>
+    ctx.builder.unresolved.some(
+      (row) =>
+        row.reason === 'decorator-arg-dynamic' &&
+        row.file === file &&
+        row.line === line &&
+        row.symbol === symbol,
+    );
+
+  /**
    * The endpoint the channels sit under is stated, and it cannot be read.
    *
    * Reported once per call site rather than once per class, because a call site
@@ -496,7 +519,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     if (names.length === 0) {
       const symbol = `${className}.${method.getName()}`;
       if (isUnreadable(shaping)) reportEndpoint(shaping, spec, file, line, symbol);
-      else reportChannel(resolution, file, line, symbol);
+      else if (!entryReaderRefused(file, line, symbol)) reportChannel(resolution, file, line, symbol);
       return;
     }
     // One edge per channel the address reaches: a hole holding a closed set of

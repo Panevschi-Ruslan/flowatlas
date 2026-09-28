@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "repo": "nest-types",
-  "generatedAt": "2026-09-27T19:31:50.818Z",
+  "generatedAt": "2026-09-28T06:20:30.248Z",
   "nodes": [
     {
       "id": "entry:nest-types:http:GET:/catalog/categories",
@@ -1413,36 +1413,6 @@
       "typeParams": [
         "T"
       ]
-    },
-    "type:nest-types#Paginated<T>": {
-      "name": "Paginated",
-      "kind": "object",
-      "declaredIn": "nest-types#src/types/paginated.ts",
-      "structuralHash": "772e379432ce5e34",
-      "fields": [
-        {
-          "name": "items",
-          "type": "T[]",
-          "optional": false
-        },
-        {
-          "name": "total",
-          "type": "number",
-          "optional": false
-        },
-        {
-          "name": "page",
-          "type": "number",
-          "optional": false
-        }
-      ],
-      "meta": {
-        "declKind": "interface",
-        "exported": true,
-        "typeArgs": [
-          "T"
-        ]
-      }
     },
     "type:nest-types#Paginated<type:nest-types#Order>": {
       "name": "Paginated",
