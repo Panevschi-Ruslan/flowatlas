@@ -408,6 +408,23 @@ ${BLIND.map((entry) => `**${entry.ticket} - ${entry.what}**\n\n${entry.measured}
 `;
 };
 
+/**
+ * What the gate was handed and could not put in any file (R154).
+ *
+ * A node, a row or an edge whose service is not one the harness configured, or
+ * an edge neither end of which belongs to a service. Each is output that speaks
+ * for no file, so a file it was about would be reported unread; saying how many
+ * there were, and of which kind, is what keeps that from reading as a reader's
+ * silence.
+ */
+const unplacedOutput = (gate) => {
+  if (gate.unplaced === undefined || gate.unplaced.length === 0) return '';
+  const byWhat = new Map();
+  for (const row of gate.unplaced) byWhat.set(row.what, (byWhat.get(row.what) ?? 0) + 1);
+  const counts = [...byWhat.entries()].map(([what, count]) => `${count} ${what}(s)`).join(', ');
+  return `\n\n${gate.unplaced.length} output(s) of the graph could not be placed in any file of this clone - ${counts} - because no service this run configured can be named for them. They count for no file.`;
+};
+
 const readGateSection = (result) => {
   const { gate } = result;
   if (gate === undefined) return '';
@@ -427,9 +444,10 @@ const readGateSection = (result) => {
     gate.stale.length === 0
       ? ''
       : `\n\n${gate.stale.length} exemption(s) in \`read-gate.mjs\` are no longer needed and should be deleted.`;
+  const unplaced = unplacedOutput(gate);
   const known = gate.known === undefined ? '' : knownRed(gate);
   const blind = blindSection(gate);
-  if (gate.missing.length === 0 && gate.stale.length === 0 && drift === '') {
+  if (gate.missing.length === 0 && gate.stale.length === 0 && drift === '' && unplaced === '') {
     return `
 ## Files with sites and no output
 
@@ -454,7 +472,7 @@ for; a limit somebody has decided to accept belongs in the exemption list with a
 sentence beside it, and a limit somebody has decided to live with belongs in the
 baseline with a count and a ticket.
 
-${rows.length === 0 ? '' : table(['file', 'family', 'sites'], rows)}${rest}${drift}${stale}
+${rows.length === 0 ? '' : table(['file', 'family', 'sites'], rows)}${rest}${drift}${stale}${unplaced}
 ${known}${blind}`;
 };
 

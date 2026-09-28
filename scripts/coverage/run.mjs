@@ -69,7 +69,7 @@ import { fileURLToPath } from 'node:url';
 import { byFamily, isSourceFile, measureSites } from './counting-rule.mjs';
 import { extentOfTarget } from './extent.mjs';
 import { figuresFrom } from './figures.mjs';
-import { readGate } from './read-gate.mjs';
+import { clonePaths, readGate } from './read-gate.mjs';
 import { renderReport } from './report.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -590,17 +590,12 @@ const measure = async (target, cloneDir, state, log, timeoutMs) => {
  * and the graph names it relative to the service that read it, which for a
  * declared package is `../../packages/lib/…`. A service that is not in the list
  * is a service the harness did not configure, and a node of one is not evidence
- * about a file the rule counted.
+ * about a file the rule counted: `clonePaths` places it nowhere and the gate
+ * says how many it could not place.
  */
 const gate = (target, state, services, perFile, graph) => {
   if (graph === undefined) return undefined;
-  const byService = new Map(services.map((service) => [service.name, service.repo]));
-  const toPath = (file, repo) => {
-    const base = repo === undefined ? undefined : byService.get(repo);
-    const from = base === undefined || base === '.' ? '' : base;
-    // Only the graph's own separator and `..` need normalising; `join` does both.
-    return join(from, file).split('\\').join('/');
-  };
+  const toPath = clonePaths(services);
   // The state goes in because the baseline is keyed on it: outline is 45 files
   // unread on a fresh clone and none with its dependencies installed, and one
   // number covering both would be stale in whichever of the two it was not
@@ -616,9 +611,11 @@ const gate = (target, state, services, perFile, graph) => {
  * is precisely the kind of drift this harness exists to make visible in other
  * people's code.
  *
- * Three failures, in the order a reader wants them. Files nobody has an excuse
+ * Four failures, in the order a reader wants them. Files nobody has an excuse
  * for first: that is the new red R124 is about. Then a baseline whose count no
- * longer matches, in either direction. Then an exemption nobody has re-read. The
+ * longer matches, in either direction. Then an exemption nobody has re-read.
+ * And last, output the gate could not place in any file (R154), which is rarer
+ * than the other three and would otherwise surface as a file wrongly unread. The
  * known red is not here at all - it is written in the report, named with the
  * ticket it belongs to, and it is the whole reason the first clause can be
  * trusted.
@@ -633,6 +630,11 @@ const whyGateFails = (result) => {
     );
   }
   if (result.stale.length > 0) said.push(`${result.stale.length} exemption(s) no longer needed`);
+  // Output no configured service can be named for speaks for no file, so it
+  // fails the run rather than being taken as read at the clone's root (R154).
+  if ((result.unplaced ?? []).length > 0) {
+    said.push(`${result.unplaced.length} output(s) of the graph placed in no file`);
+  }
   return said.length === 0 ? undefined : said.join('; ');
 };
 

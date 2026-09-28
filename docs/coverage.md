@@ -165,6 +165,15 @@ graph, costs a second, needs nothing cloned, and is the last step of
 `pnpm fixtures:check`, so `pnpm check` fails on it. Over a coverage target it
 reads the graph just built and fails the run.
 
+Over a target the graph and the rule spell a path differently: the rule names a
+file relative to the clone, the graph relative to the service that read it. Each
+node, row and edge is translated with its own service - an edge with the service
+of the end that belongs to one, since a channel or a third party is shared by the
+whole project. Output that no configured service can be named for is placed in no
+file and fails the run, rather than being taken as read at the clone's root. That
+translation is tested on its own in `scripts/coverage/read-gate.test.mjs`, because
+every fixture is a single service at its root, where the two spellings agree.
+
 Three lists in that file say what the assertion does not cover, each entry with
 a reason beside it:
 
@@ -185,9 +194,11 @@ a reason beside it:
   measured. The gate prints how many there are beside `read gate ok`, and a
   report renders the same list, because `ok` is a sentence about one assertion
   and a reader who is never told what it excludes is the person it misleads.
-  Today there are four: a family written in a style the rule has no probe for,
+  Today there are five: a family written in a style the rule has no probe for,
   where the check is vacuous; two applications colliding, where the file that
-  loses is still named by an edge and so counts as spoken for; a wrong value,
+  loses is still named by an edge and so counts as spoken for; a family unread in
+  a file where the reader said something of another kind, because anything said
+  about a file speaks for all its families; a wrong value,
   such as a route placed at the wrong address, which is a node in the right file
   for the right family; and one of several declarations in a file being dropped,
   which would need a per-file comparison of sites against nodes and is recorded
