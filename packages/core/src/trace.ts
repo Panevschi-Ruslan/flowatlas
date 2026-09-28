@@ -533,7 +533,13 @@ const defaulted = (node: TsNode): StaticValue => {
   if (operator !== SyntaxKind.BarBarToken && operator !== SyntaxKind.QuestionQuestionToken) {
     return direct;
   }
-  return defaulted(node.getRight());
+  const fallback = defaulted(node.getRight());
+  // An empty fallback is not a value: `restaurantId() ?? ''` says there is no
+  // id, not that the id is empty, and folding it into an address wrote
+  // `/admin//staff-prefs` where the source has `/admin/${id}/staff-prefs` - an
+  // address nothing serves, joined to a catch-all instead of its route. The
+  // expression stays unread, which is the hole it was before.
+  return fallback.resolved && fallback.value === '' ? direct : fallback;
 };
 
 /**
