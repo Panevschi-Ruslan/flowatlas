@@ -414,15 +414,25 @@ describe('building a project', () => {
     const config = join(FIXTURES, 'next-hollow', 'flowatlas.config.json');
     const result = await buildProject({ config, builtAt: FIXED, cache: false });
 
-    // Six ways in, one of which declares its handler in place. Every other
-    // spelling in that fixture is a way in with nothing behind it, and each one
-    // is a row (R94).
+    // Seven ways in: one declares its handler in place, one is built by a
+    // factory this repository declares and is read through it (R153). Every
+    // other spelling in that fixture is a way in with nothing behind it, and
+    // each one is a row (R94).
     expect(summariseBuild(result).join('\n')).toContain(
-      'ways in: 6 found, 1 with a handler that was read, 5 without',
+      'ways in: 7 found, 2 with a handler that was read, 5 without',
     );
-    expect(
-      result.project.unresolved.filter((row) => row.reason === 'route-handler-unread').length,
-    ).toBe(5);
+    const unread = result.project.unresolved.filter((row) => row.reason === 'route-handler-unread');
+    expect(unread).toHaveLength(5);
+    expect(unread.map((row) => row.symbol)).not.toContain('GET /api/products');
+    const products = result.project.nodes.find((node) => node.id === 'entry:shop:http:GET:/api/products');
+    expect(products?.meta?.['handlerVia']).toBe('call');
+    expect(result.project.edges).toContainEqual(
+      expect.objectContaining({
+        from: 'entry:shop:http:GET:/api/products',
+        to: 'shop#lib/products.ts:handlerBuilder',
+        type: 'handles',
+      }),
+    );
   }, 240_000);
 
   it('writes the graph, the report and a database that agree with each other', async () => {

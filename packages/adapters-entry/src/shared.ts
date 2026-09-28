@@ -250,6 +250,95 @@ export const repoFunctionOf = (node: TsNode | undefined): NamedFunction | undefi
   return origin.kind === 'local' ? namedFunction(origin.declaration) : undefined;
 };
 
+/** A function written where a value was expected. */
+export const isWrittenFunction = (node: TsNode): boolean =>
+  Node.isArrowFunction(node) || Node.isFunctionExpression(node);
+
+/**
+ * Whether an argument hands a call work to run rather than a value to build with.
+ *
+ * Work is a function written in place, a function this repository declares
+ * named by reference, or a list - whatever is in it: `asyncMiddleware([check,
+ * run])` runs each in turn, and no one of them is the answer. Anything else is
+ * a value, and following it would be the same guess in a longer form.
+ *
+ * One answer for every reader that asks, because two ask: a route registered by
+ * a call, and a verb a file-system router exports as the value a call built.
+ * They used to ask it twice, and the second copy had forgotten the list.
+ */
+export const handsOverWork = (argument: TsNode): boolean => {
+  const value = unwrapValue(argument);
+  return (
+    isWrittenFunction(value) ||
+    Node.isArrayLiteralExpression(value) ||
+    repoFunctionOf(value) !== undefined
+  );
+};
+
+/**
+ * The factory of this repository that built a handler, when a call to one is
+ * what answers a way in.
+ *
+ * `getAccountVideoRateFactory('like')` in a registration, and
+ * `export const GET = REST_GET(config)` in a route file, are one thing written
+ * in two places: a function of this repository called with values, and the
+ * handler is the function it returns. The factory's body holds that function,
+ * so a walk from the route into the factory reaches what the handler reaches -
+ * and whatever the factory does once while it builds, which is the over-reach
+ * accepted here because the alternative is no body at all (R137, R153).
+ *
+ * The function called is what decides it, not what it was handed. Asking only
+ * the arguments is how payload's two hundred and fifty-nine routes read as
+ * "nothing declared in this repository was handed to that call" while the
+ * function they call, `handlerBuilder`, is declared in the repository and is a
+ * body anybody can open (R153).
+ *
+ * A call handed work is not read as one of these, because it cannot be told
+ * from a wrapper: `listFactory(res => res.locals.account)` builds a handler out
+ * of a function, and `asyncMiddleware(getVideo)` wraps one, and pointing at a
+ * wrapper would name one shared function as the body of every route it wraps.
+ * What a reader does with such a call is its own business - a registration
+ * keeps no handler, a verb export points at the call it can see. A function
+ * called that resolves into a package is not followed either: its body is not
+ * in the repository, and that is the row a reader still writes.
+ */
+export const builtByFactory = (value: TsNode | undefined): NamedFunction | undefined => {
+  if (value === undefined) return undefined;
+  const node = unwrapValue(value);
+  if (!Node.isCallExpression(node)) return undefined;
+  if (node.getArguments().some(handsOverWork)) return undefined;
+  return factoryNamed(node.getExpression(), 0);
+};
+
+/** How far a factory written as another name is followed. */
+const FACTORY_ALIAS_DEPTH = 4;
+
+/**
+ * The function of this repository a called name stands for, through the names
+ * it was bound to.
+ *
+ * payload's `REST_GET` is `GET` re-exported under another name, and `GET` is
+ * `export const GET = handlerBuilder`: a name bound to a name, which is how one
+ * factory is handed out under five verbs. `repoFunctionOf` stops at the first
+ * binding, because a `const` whose value is a name is not a function declared
+ * there - and it is right to, for every reader that asks what was declared.
+ * What was *called* is another question, and the answer is whatever the chain
+ * of names ends at. Followed a few links and then abandoned, as a verb written
+ * as another verb's name is.
+ */
+const factoryNamed = (callee: TsNode, depth: number): NamedFunction | undefined => {
+  const fn = repoFunctionOf(callee);
+  if (fn !== undefined || depth >= FACTORY_ALIAS_DEPTH) return fn;
+  const origin = originOfValue(callee);
+  if (origin.kind !== 'local' || !Node.isVariableDeclaration(origin.declaration)) return undefined;
+  const initializer = origin.declaration.getInitializer();
+  if (initializer === undefined) return undefined;
+  const bound = unwrapValue(initializer);
+  return Node.isIdentifier(bound) || Node.isPropertyAccessExpression(bound)
+    ? factoryNamed(bound, depth + 1)
+    : undefined;
+};
+
 /** A function written where a handler was expected, or undefined for anything else. */
 const inlineFunction = (argument: TsNode | undefined): TsNode | undefined =>
   argument !== undefined &&

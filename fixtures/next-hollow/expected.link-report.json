@@ -49,13 +49,14 @@
     "noProducers": []
   },
   "routes": {
-    "total": 6,
+    "total": 7,
     "called": 0,
     "uncalled": [
       "entry:shop:http:ALL:/api/legacy",
       "entry:shop:http:DELETE:/api/exports",
       "entry:shop:http:GET:/api/invoices",
       "entry:shop:http:GET:/api/orders",
+      "entry:shop:http:GET:/api/products",
       "entry:shop:http:POST:/api/reports",
       "entry:shop:http:PUT:/api/exports"
     ],

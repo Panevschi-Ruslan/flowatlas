@@ -14,7 +14,7 @@ import {
 } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
-import { builtExportFunction, repoFunctionOf, unwrapValue } from './shared.js';
+import { builtByFactory, builtExportFunction, handsOverWork, unwrapValue } from './shared.js';
 
 /**
  * A router whose address space is the file system, described rather than
@@ -434,6 +434,14 @@ export interface VerbReading {
   fn: NamedFunction;
   /** False when the node points at a call that was handed nothing to read. */
   bodyRead: boolean;
+  /**
+   * `function` when the function is the verb's own - declared under that name,
+   * or the call it was built by, with the work handed to it; `call` when it is a
+   * factory of this repository that the verb's call ran, whose body holds the
+   * handler it returned (R153). The same two words a registration's `handlerVia`
+   * uses, and for the same two facts.
+   */
+  via: 'function' | 'call';
 }
 
 /** The named function a declaration stands for, wherever it was exported from. */
@@ -492,21 +500,13 @@ const aliasedFunction = (declaration: TsNode, depth: number): VerbReading | unde
  * of routes nobody had read: seventeen of seventeen, where two of nine reached a
  * body that calls anything.
  *
- * What counts as work: a function written in the call, or an argument that
- * resolves to a function declared in this repository. Nothing else is followed,
- * because anything else is the same guess in a longer form.
+ * What counts as work is `handsOverWork`'s answer, the one a registration's
+ * reader gets too. A call handed none is not yet the end of it: the function
+ * called may itself be this repository's, and that is `builtByFactory`'s
+ * question, asked first in `verbReading` (R153).
  */
-const callHandedWork = (body: TsNode): boolean => {
-  if (!Node.isCallExpression(body)) return true;
-  return body.getArguments().some((argument) => {
-    const value = unwrapValue(argument);
-    return (
-      Node.isArrowFunction(value) ||
-      Node.isFunctionExpression(value) ||
-      repoFunctionOf(value) !== undefined
-    );
-  });
-};
+const callHandedWork = (body: TsNode): boolean =>
+  !Node.isCallExpression(body) || body.getArguments().some(handsOverWork);
 
 /**
  * What a verb export stands for: a function written here, one a call built, or
@@ -540,17 +540,28 @@ const callHandedWork = (body: TsNode): boolean => {
  * the signal to read the builder chain, which names the action inside the call
  * and records which library built it. That is a finer answer than this one and it
  * would be lost if this rule answered first.
+ *
+ * A value a call built is read one of three ways, and which is decided by the
+ * call. Handed work, the call is a wrapper round a handler written or named in
+ * it, and the node the index gave the export is the answer. Handed only values,
+ * by a function this repository declares - payload's `REST_GET(config)` - the
+ * handler is what that factory returns and its body is the factory's, so the
+ * factory is the answer: the reading a registration gets from the same shared
+ * `builtByFactory` (R137, R153). Handed only values by a package, nothing
+ * behind the way in is in this repository, and that is the row.
  */
 export const verbReading = (declaration: TsNode, depth = 0): VerbReading | undefined => {
   const written = exportedFunction(declaration);
   // A function declared here: its body is the body, and there is nothing to
   // doubt about whether it was read.
-  if (written !== undefined) return { fn: written, bodyRead: true };
+  if (written !== undefined) return { fn: written, bodyRead: true, via: 'function' };
   const built = builtExportFunction(declaration);
+  if (built === undefined) return aliasedFunction(declaration, depth);
+  const factory = builtByFactory(built.body);
+  if (factory !== undefined) return { fn: factory, bodyRead: true, via: 'call' };
   // A value a call handed back: what the node points at is the call, so whether
   // anything was read depends on what the call was handed.
-  if (built !== undefined) return { fn: built, bodyRead: callHandedWork(built.body) };
-  return aliasedFunction(declaration, depth);
+  return { fn: built, bodyRead: callHandedWork(built.body), via: 'function' };
 };
 
 /**
@@ -564,7 +575,7 @@ const UNREAD_HANDLER: Readonly<Record<'none' | 'built', (where: string) => strin
   none: (where) =>
     `${where} is exported and nothing this could read is behind it, so the way in has no handler.`,
   built: (where) =>
-    `${where} is the value a call handed back, and nothing declared in this repository was handed to that call, so the way in has no handler that could be read.`,
+    `${where} is the value a call handed back, and neither the function called nor anything handed to it is declared in this repository, so the way in has no handler that could be read.`,
 });
 
 /**
@@ -613,6 +624,13 @@ export interface FsRouteVerb {
    */
   at: Reach;
   handler?: NamedFunction;
+  /**
+   * How the handler was named, as the entry's `handlerVia` says it: `unread`
+   * where there is none, `call` where it is a factory the verb's call ran (R153).
+   * Decided here rather than by each reader, which is how two readers of one
+   * route file would come to say two things about it.
+   */
+  handlerVia: VerbReading['via'] | 'unread';
   /** False when a handler was named and there is nothing behind the name. */
   bodyRead: boolean;
 }
@@ -656,6 +674,7 @@ export const readVerbFile = (
       path: options.path,
       at,
       ...(reading === undefined ? {} : { handler: reading.fn }),
+      handlerVia: reading?.via ?? 'unread',
       bodyRead: read,
     });
     // The entry is still emitted, and the handler with it where there was one:
