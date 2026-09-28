@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T19:28:54.450Z",
+  "builtAt": "2026-09-28T07:58:47.865Z",
   "services": [
     {
       "name": "api",
@@ -164,6 +164,14 @@
       "type": "calls",
       "confidence": "static",
       "file": "../../packages/mailer/src/index.ts",
+      "line": 9
+    },
+    {
+      "from": "api#src/orders/orders.controller.ts:OrdersController.place",
+      "to": "api#../../packages/mailer/src/index.ts:sendReceipt",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
       "line": 9
     },
     {

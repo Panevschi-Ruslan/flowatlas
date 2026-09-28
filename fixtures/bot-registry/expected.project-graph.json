@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "builtAt": "2026-09-27T18:35:21.140Z",
+  "builtAt": "2026-09-28T07:58:13.084Z",
   "services": [
     {
       "name": "bot-registry",
@@ -118,6 +118,14 @@
       "repo": "bot-registry",
       "file": "src/commands/menu.command.ts",
       "line": 14
+    },
+    {
+      "id": "bot-registry#src/commands/menu.command.ts:registerMenuHandlers",
+      "type": "function",
+      "label": "registerMenuHandlers",
+      "repo": "bot-registry",
+      "file": "src/commands/menu.command.ts",
+      "line": 11
     },
     {
       "id": "bot-registry#src/commands/menu.command.ts:showMenu",
@@ -400,6 +408,14 @@
     },
     {
       "from": "bot-registry#src/bot.ts:Bot.setup",
+      "to": "bot-registry#src/commands/menu.command.ts:registerMenuHandlers",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/bot.ts",
+      "line": 24
+    },
+    {
+      "from": "bot-registry#src/bot.ts:Bot.setup",
       "to": "bot-registry#src/commands/order-commands.ts:orderCommands.myOrders",
       "type": "calls",
       "confidence": "static",
@@ -417,6 +433,14 @@
       "returns": "string",
       "file": "src/commands/menu.command.ts",
       "line": 15
+    },
+    {
+      "from": "bot-registry#src/commands/menu.command.ts:registerMenuHandlers",
+      "to": "bot-registry#src/commands/menu.command.ts:showMenu",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/commands/menu.command.ts",
+      "line": 12
     },
     {
       "from": "bot-registry#src/commands/menu.command.ts:showMenu",

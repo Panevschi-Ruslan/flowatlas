@@ -476,6 +476,13 @@ README says what it exists to prove.
   or not anything calls it. A query at the top level of a module, which belongs
   to no function, is a `db-call-at-module-level` row (`fn-data-layer`,
   `fn-broker`).
+- A call into a function that holds a request, a query or a setting is drawn.
+  Such a function was a node with nothing calling it and nothing it called:
+  the call walk runs before the leaf readers and follows a function by name only
+  from an entry point's handler. A call to a function of the service is now
+  drawn when that function leads to something the graph holds, from a method, a
+  function or a handler alike, and a helper that reaches nothing held stays out
+  (`nest-held-calls`).
 - A write records the document it stores whether or not the entity's name had a
   wrapper suffix to strip. `Repository<OrderEntity>` recorded it and
   `Repository<Order>` did not, so `stripImpact` answered `unknown` — the answer

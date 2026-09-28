@@ -13,6 +13,7 @@ export {
   extractRepo,
   createRepoProject,
   BUILT_IN_PASSES,
+  CLOSING_PASSES,
   defaultOutputPath,
 } from './extract-repo.js';
 export type { ExtractRepoOptions } from './extract-repo.js';

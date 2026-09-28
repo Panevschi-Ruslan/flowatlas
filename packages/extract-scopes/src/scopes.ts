@@ -68,6 +68,15 @@ export interface Scope extends Holder {
    * guess about which node a block hangs under.
    */
   method?: ClassMethod;
+  /**
+   * The function the body is, when it is one.
+   *
+   * Carried for the same reason as `method`: a call names a function by its
+   * declaration, and a reader that joins a call to the body it lands in needs
+   * that declaration rather than an id, which a function of the same name
+   * declared inside another one would share (R156).
+   */
+  fn?: NamedFunction;
 }
 
 /**
@@ -121,6 +130,7 @@ const scopeOf = (ctx: ScopeContext, fn: NamedFunction): Scope => ({
   id: ctx.functionIdOf(fn),
   file: ctx.fileOf(fn.declaration),
   body: fn.body,
+  fn,
   ensure: () => {
     ctx.ensureFunctionNode(fn);
   },

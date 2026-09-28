@@ -24,6 +24,7 @@ import { applicationsPass } from './passes/applications.js';
 import { callsPass } from './passes/calls.js';
 import { diPass } from './passes/di.js';
 import { entriesPass } from './passes/entries.js';
+import { heldCallsPass } from './passes/held-calls.js';
 import { modulesPass } from './passes/modules.js';
 import { providersPass } from './passes/providers.js';
 import { typesPass } from './passes/types-pass.js';
@@ -79,6 +80,14 @@ export const BUILT_IN_PASSES: readonly NestExtractorPass[] = [
   typesPass,
   wrappingEdgesPass,
 ];
+
+/**
+ * The steps that run after every other one, the caller's extra steps included.
+ *
+ * What they read is what the others made: calls into a function are drawn once
+ * every reader that can make that function a node has had its turn (R156).
+ */
+export const CLOSING_PASSES: readonly NestExtractorPass[] = [heldCallsPass];
 
 /** Parses a repository, honouring the tsconfig the caller or the service names. */
 export const createRepoProject = (options: ExtractRepoOptions): Project => {
@@ -243,7 +252,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     ...(options.typesDepth === undefined ? {} : { maxDepth: options.typesDepth }),
   });
 
-  const passes = [...BUILT_IN_PASSES, ...(options.extraPasses ?? [])].filter(
+  const passes = [...BUILT_IN_PASSES, ...(options.extraPasses ?? []), ...CLOSING_PASSES].filter(
     (pass) => options.noTypes !== true || pass.name !== 'types',
   );
   for (const pass of passes) {
