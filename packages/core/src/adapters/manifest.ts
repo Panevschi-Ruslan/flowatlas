@@ -1,3 +1,5 @@
+import { readdirSync, type Dirent } from 'node:fs';
+import { join } from 'node:path';
 import { extentDeclared, serviceExtent, workspaceMemberDirs, workspaceRootsAbove } from '../workspace.js';
 import { readPackageJson, type PackageJson } from '../package-json.js';
 
@@ -59,6 +61,64 @@ export const hasDependency = (pkg: PackageJson, name: string): boolean =>
 export const hasAnyDependency = (pkg: PackageJson, names: readonly string[]): boolean => {
   const deps = allDependencies(pkg);
   return names.some((name) => Object.hasOwn(deps, name));
+};
+
+// ------------------------------------------------------------- below the root
+
+/** Directories that hold no manifest of the repository's own. */
+const NOT_THE_REPOSITORYS = new Set(['node_modules', 'dist', 'build', 'coverage', 'tmp']);
+
+/** How deep below the root a manifest is looked for, and how many directories at most. */
+const DEEPEST = 4;
+const MOST_DIRECTORIES = 2000;
+
+/**
+ * Every manifest inside a directory other than its own, nearest first.
+ *
+ * A repository of functions is one program with a manifest per function: each
+ * function's directory declares the clients that function uses and the root
+ * declares none of them, or has no manifest at all. That is not a workspace -
+ * nothing at the root lists the directories - so the chain above never reads
+ * them, and a reader that asks only the root is switched off on exactly the
+ * repositories written this way.
+ *
+ * This is offered to the adapter that needs it rather than folded into what
+ * every adapter is asked, and on purpose: in a repository that is not written
+ * this way, a manifest below the root is as often an example, a fixture or a
+ * tool's own package, and widening every adapter's answer with it would make
+ * a service look like everything its repository happens to keep. An adapter
+ * that asks has decided its own package is evidence wherever it is declared.
+ *
+ * Hidden directories and the ones that hold installed or built output are not
+ * walked, and the walk is bounded in depth and in size, so a repository that is
+ * mostly something else costs little.
+ */
+export const manifestsWithin = (dir: string): PackageJson[] => {
+  const found: PackageJson[] = [];
+  let level = [dir];
+  let visited = 0;
+  for (let depth = 0; depth < DEEPEST && level.length > 0; depth += 1) {
+    const next: string[] = [];
+    for (const parent of level) {
+      let entries: Dirent[];
+      try {
+        entries = readdirSync(parent, { withFileTypes: true });
+      } catch {
+        continue;
+      }
+      for (const entry of entries) {
+        if (!entry.isDirectory() || entry.name.startsWith('.') || NOT_THE_REPOSITORYS.has(entry.name)) continue;
+        visited += 1;
+        if (visited > MOST_DIRECTORIES) return found;
+        const child = join(parent, entry.name);
+        const manifest = readPackageJson(child);
+        if (manifest !== undefined) found.push(manifest);
+        next.push(child);
+      }
+    }
+    level = next;
+  }
+  return found;
 };
 
 // ------------------------------------------------------------------ the chain

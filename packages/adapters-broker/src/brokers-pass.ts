@@ -6,7 +6,6 @@ import {
   findDecorators,
   forEachCall,
   getDecorator,
-  locatedExpressions,
   isEntryKind,
   makeChannelId,
   narrowUnionByLiteral,
@@ -32,7 +31,17 @@ import { scopesOf, type Holder, type PassContext, type Scope } from '@flowatlas/
 import type { CallExpression, ClassDeclaration, MethodDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { brokerAdapters, createCustomBrokerAdapter, type BrokerSpec, type ConsumerPattern } from './adapters/index.js';
-import { hasAcknowledgement, methodMatches, receiverIsFrom, replyAt, targetOfHandler } from './call-site.js';
+import {
+  hasAcknowledgement,
+  functionEvidence,
+  methodMatches,
+  receiverEvidence,
+  receiverIsFrom,
+  replyAt,
+  targetOfHandler,
+  type ReceiverEvidence,
+} from './call-site.js';
+import { addressOf, appliesAt, collapsed, readAddress, type AddressedElement } from './address.js';
 import { payloadParameter, typeAtPath } from './payload.js';
 import { isResolved, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
 import { endpointShapingAt, isUnreadable, unreadableEndpointRow, type EndpointShaping } from './endpoint.js';
@@ -40,21 +49,6 @@ import { pairKey, readBrokerMarkers } from './markers.js';
 
 const lineColOf = (node: TsNode): { line: number; column: number } =>
   node.getSourceFile().getLineAndColumnAtPos(node.getStart());
-
-/**
- * Where a description says its channel is written.
- *
- * The one place `channelArg` is turned into a locator, which is what keeps the
- * shorthand and the list from ever disagreeing: `channelArg: n` *is*
- * `[{ kind: 'argument', index: n }]`, and `-1` has always meant "not an argument
- * at all", which now reads as "whatever `channel` says" instead of as a flag a
- * second field had to be consulted about.
- */
-const channelLocators = (pattern: {
-  readonly channel?: readonly NameLocator[];
-  readonly channelArg: number;
-}): readonly NameLocator[] =>
-  pattern.channel ?? (pattern.channelArg < 0 ? [] : [{ kind: 'argument', index: pattern.channelArg }]);
 
 /**
  * The channel a site is addressed to, read through the locators of its pattern.
@@ -68,23 +62,29 @@ const channelLocators = (pattern: {
  * The fold rather than the walk is what lives here: the walk is the core's and is
  * shared with the side of the graph that reads stored collections, while what
  * counts as a name differs — a channel that cannot be read is a refusal with a
- * reason attached, and a table is simply absent.
+ * reason attached, and a table is simply absent. A locator that walks a list
+ * reaches a channel per element, and a handler registered with one is a
+ * handler of all of them.
  */
 const channelAt = (
   site: LocatorSite,
-  locators: readonly NameLocator[],
+  pattern: { readonly channel?: readonly NameLocator[]; readonly channelArg: number },
   context: LocatorContext,
   config: Parameters<typeof resolveChannelName>[1],
   fallback: string,
-): ChannelResolution => {
-  const resolutions = locatedExpressions(site, locators, context).map((expression) =>
-    resolveChannelName(expression, config),
-  );
-  return (
-    resolutions.find(isResolved) ??
-    resolutions[0] ?? { unresolved: 'channel-dynamic', text: fallback }
-  );
-};
+): ChannelResolution =>
+  collapsed(readAddress(site, addressOf(pattern), undefined, context, config, fallback));
+
+/**
+ * What to do about a channel named by an environment variable.
+ *
+ * The variable is the one thing the code says, and the value is set by whatever
+ * deploys it, so the row names the variable and where its value is: no channel
+ * is drawn, because the variable's name is not the channel's.
+ */
+const environmentHint = (variable: string): string =>
+  `The channel is the value of the environment variable ${variable}, which is set where this code is deployed and not in it, so no channel is drawn. ` +
+  `Reading it from the deployment - the environment block of the function's Terraform - is not done yet; until it is, this publisher has no channel.`;
 
 /** Every adapter that applies: the detected ones plus any described in configuration. */
 export const brokerSpecsFor = (ctx: PassContext): BrokerSpec[] => {
@@ -141,8 +141,12 @@ export const extractBrokers = (ctx: PassContext): void => {
       file,
       line,
       reason: resolution.unresolved,
-      hint: `The channel name cannot be read here. Annotate ${symbol} with the channel it uses.`,
+      hint:
+        resolution.variable === undefined
+          ? `The channel name cannot be read here. Annotate ${symbol} with the channel it uses.`
+          : environmentHint(resolution.variable),
       symbol: `${symbol} -> ${resolution.text.slice(0, 60)}`,
+      ...(resolution.variable === undefined ? {} : { meta: { variable: resolution.variable } }),
     });
   };
 
@@ -222,6 +226,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     spec: BrokerSpec,
     holder: Holder,
     owner: ClassDeclaration | undefined,
+    evidence: ReceiverEvidence,
   ): boolean => {
     const { id: methodId, file } = holder;
     const args = call.getArguments();
@@ -229,15 +234,20 @@ export const extractBrokers = (ctx: PassContext): void => {
     const callee = call.getExpression();
     const receiver = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
 
-    const resolution = channelAt(
+    // One element per address the call is sent to: one for an ordinary publish,
+    // one per entry for a call that sends a list of them.
+    const elements = readAddress(
       call,
-      channelLocators(pattern),
+      addressOf(pattern),
+      pattern.payload,
       contextOf(receiver, owner),
       ctx.config,
       // A receiver that is the channel and names nothing readable is best shown
       // as the receiver: `queue.add(job)` says nothing, and `queue` is the thing
       // a reader has to go and look at.
-      pattern.channel === undefined ? call.getText().slice(0, 60) : receiver.getText(),
+      pattern.channel !== undefined && pattern.address === undefined
+        ? receiver.getText()
+        : call.getText().slice(0, 60),
     );
 
     const jobNameArg = pattern.nameArg === undefined ? undefined : args[pattern.nameArg];
@@ -258,48 +268,72 @@ export const extractBrokers = (ctx: PassContext): void => {
             return value.resolved && typeof value.value === 'string' ? value.value : null;
           })();
 
-    const payloadArg = pattern.payloadArg === undefined ? undefined : args[pattern.payloadArg];
-    // What the channel carries is what the publishing method declares it takes.
-    // The shape of one argument is only an instance of that, and is used only
-    // when the declaration promises nothing.
-    const declaredWide =
-      pattern.payloadArg === undefined
-        ? undefined
-        : declaredParameterType(call, pattern.payloadArg, ctx.checker);
-    // A bus declares every event it can carry; this call sends one of them.
-    const declared =
-      declaredWide !== undefined && payloadArg !== undefined
-        ? narrowUnionByLiteral(declaredWide, payloadArg)
-        : declaredWide;
-    // Whichever of the two was read, the description says where in it the
-    // message sits: the same value is a message on one transport and a record
-    // carrying one on the next, and only the description knows which.
-    const carried =
-      declared !== undefined
-        ? { type: declared, site: call as TsNode }
-        : payloadArg === undefined
+    /**
+     * What the call carries, read from an argument.
+     *
+     * What the channel carries is what the publishing method declares it takes.
+     * The shape of one argument is only an instance of that, and is used only
+     * when the declaration promises nothing.
+     */
+    const argumentPayload = (): string | undefined => {
+      const payloadArg = pattern.payloadArg === undefined ? undefined : args[pattern.payloadArg];
+      const declaredWide =
+        pattern.payloadArg === undefined
           ? undefined
-          : { type: payloadArg.getType(), site: payloadArg };
-    const carriedPayload =
-      carried === undefined
-        ? undefined
-        : typeAtPath(carried.type, pattern.payloadPath ?? [], carried.site);
-    const payloadType =
-      carried === undefined || carriedPayload === undefined
+          : declaredParameterType(call, pattern.payloadArg, ctx.checker);
+      // A bus declares every event it can carry; this call sends one of them.
+      const declared =
+        declaredWide !== undefined && payloadArg !== undefined
+          ? narrowUnionByLiteral(declaredWide, payloadArg)
+          : declaredWide;
+      // Whichever of the two was read, the description says where in it the
+      // message sits: the same value is a message on one transport and a record
+      // carrying one on the next, and only the description knows which.
+      const carried =
+        declared !== undefined
+          ? { type: declared, site: call as TsNode }
+          : payloadArg === undefined
+            ? undefined
+            : { type: payloadArg.getType(), site: payloadArg };
+      const carriedPayload =
+        carried === undefined
+          ? undefined
+          : typeAtPath(carried.type, pattern.payloadPath ?? [], carried.site);
+      return carried === undefined || carriedPayload === undefined
         ? undefined
         : ctx.types.collectType(carriedPayload, carried.site);
+    };
+    // A description that says where the message is written reads it per
+    // element, as an expression; one that names an argument reads it once.
+    const shared = pattern.payload === undefined ? argumentPayload() : undefined;
+    const payloadOf = (element: AddressedElement): string | undefined =>
+      pattern.payload === undefined
+        ? shared
+        : element.payload === undefined
+          ? undefined
+          : ctx.types.collectType(element.payload.getType(), element.payload);
 
     // The transport has the last word on the name the call wrote: an endpoint
     // the class declares is part of it, and a name the transport keeps for its
     // own signalling is not a channel at all.
     const shaping = endpointShapingAt(spec, owner, receiver);
-    const names = isResolved(resolution) && !isUnreadable(shaping)
-      ? shapeChannelNames(resolution.names, shaping)
-      : [];
+    const readable = !isUnreadable(shaping);
+    /** Every channel reached, once, with the first element that reached it. */
+    const reached = new Map<string, AddressedElement>();
+    if (readable) {
+      for (const element of elements) {
+        if (!isResolved(element.resolution)) continue;
+        for (const name of shapeChannelNames(element.resolution.names, shaping)) {
+          if (!reached.has(name)) reached.set(name, element);
+        }
+      }
+    }
+    const names = [...reached.keys()];
+    const unread = elements.filter((element) => !isResolved(element.resolution));
     // Every name this call wrote belongs to the transport rather than to the
     // application, so there is nothing here to draw and nothing to report: the
     // library signalling to itself is not a publish.
-    if (isResolved(resolution) && !isUnreadable(shaping) && names.length === 0) return true;
+    if (unread.length === 0 && readable && names.length === 0) return true;
 
     // A call that hands over somewhere to send the answer is a request, not a
     // publish, and the graph should not call the two the same thing.
@@ -316,7 +350,15 @@ export const extractBrokers = (ctx: PassContext): void => {
 
     const producerId = makeLeafId('producer', ctx.repo, file, line, column);
     const channelName = names[0] ?? null;
-    const channelVia = isResolved(resolution) ? resolution.via : 'unresolved';
+    const firstRead = elements.map((element) => element.resolution).find(isResolved);
+    const channelVia = firstRead === undefined ? 'unresolved' : firstRead.via;
+    // An address one environment variable away from being read, said in the
+    // shape a reader of the deployment completes it in: the parts it has, and
+    // the variable standing in for each part it has not.
+    const awaiting = unread.flatMap((element) => (element.awaiting === undefined ? [] : [element.awaiting]));
+    // A receiver known only from what the source says it is constructed from
+    // is what the author meant rather than what a compiler checked.
+    const confidence = evidence === 'checked' ? 'static' : 'heuristic';
     // The label names every channel the address reaches, which is how the
     // marker path already spells a producer of several (R38). `name` is the
     // representative pattern and stays the dedupe key, but showing it alone
@@ -342,51 +384,67 @@ export const extractBrokers = (ctx: PassContext): void => {
         method: pattern.method,
         ...(jobName === undefined ? {} : { jobName }),
         ...(exchange === undefined ? {} : { exchange }),
+        ...(awaiting.length === 0 ? {} : { awaiting }),
       },
     });
     ctx.builder.addEdge({
       from: methodId,
       to: producerId,
       type: 'calls',
-      confidence: channelName === null ? 'heuristic' : 'static',
+      confidence: channelName === null ? 'heuristic' : confidence,
       file,
       line,
     });
 
-    if (channelName === null) {
-      // The label the graph gives the body, which is what `doctor` joins a row
-      // to when it asks whether an annotation here is justified. Asking the
-      // node rather than spelling `Class.method` again is what lets a function
-      // be named as a function rather than as a method of nothing.
-      const symbol = ctx.builder.getNode(methodId)?.label ?? methodId;
-      if (isUnreadable(shaping)) reportEndpoint(shaping, spec, file, line, symbol);
-      else reportChannel(resolution, file, line, symbol);
-      return true;
+    // The label the graph gives the body, which is what `doctor` joins a row
+    // to when it asks whether an annotation here is justified. Asking the
+    // node rather than spelling `Class.method` again is what lets a function
+    // be named as a function rather than as a method of nothing.
+    const symbol = ctx.builder.getNode(methodId)?.label ?? methodId;
+    if (!readable) {
+      if (channelName === null) reportEndpoint(shaping, spec, file, line, symbol);
+    } else {
+      // One row per thing to fix: two entries refused for the same reason at
+      // the same expression are one row.
+      const reported = new Set<string>();
+      for (const element of unread) {
+        const key = JSON.stringify(element.resolution);
+        if (reported.has(key)) continue;
+        reported.add(key);
+        reportChannel(element.resolution, file, line, symbol);
+      }
     }
+    if (channelName === null) return true;
 
     // One edge per channel the address reaches. `alreadyStatic` records each of
     // them, so an `@Emits` naming any is recognised as saying what the code
     // already said rather than adding a second edge (R42).
-    for (const name of names) {
+    let carriesAny = false;
+    for (const [name, element] of reached) {
       const channel = channelNodeOf(name, spec, file, line);
       alreadyStatic.add(pairKey(methodId, name));
+      const payloadType = payloadOf(element);
+      carriesAny ||= payloadType !== undefined;
       ctx.builder.addEdge({
         from: producerId,
         to: channel.id,
         type: 'emits',
-        confidence: 'static',
+        confidence,
         file,
         line,
         ...(payloadType === undefined ? {} : { params: [payloadType] }),
         ...(replyType === undefined ? {} : { returns: replyType }),
       });
     }
-    if (payloadType === undefined) {
+    if (!carriesAny) {
       ctx.report({
         file,
         line,
         reason: 'payload-type-unknown',
-        hint: 'The call carries no payload argument, so nothing describes what travels on this channel.',
+        hint:
+          pattern.payload === undefined
+            ? 'The call carries no payload argument, so nothing describes what travels on this channel.'
+            : 'The message is not written out where the description says it is, so nothing describes what travels on this channel.',
         symbol: channelName,
       });
     }
@@ -423,7 +481,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     return {
       resolution: channelAt(
         site,
-        pattern.channel,
+        { channel: pattern.channel, channelArg: -1 },
         {},
         ctx.config,
         // What a reader has to go and look at is the decorator that was supposed
@@ -672,7 +730,7 @@ export const extractBrokers = (ctx: PassContext): void => {
           const args = call.getArguments();
           const resolution = channelAt(
             call,
-            channelLocators(pattern),
+            pattern,
             contextOf(callee.getExpression(), owner),
             ctx.config,
             call.getText().slice(0, 60),
@@ -782,8 +840,24 @@ export const extractBrokers = (ctx: PassContext): void => {
     }
   };
 
-  const matches = (pattern: CallPattern, receiver: TsNode, method: string): boolean =>
-    methodMatches(method, pattern.method) && receiverIsFrom(receiver, pattern);
+  /**
+   * How a publishing call is known to be one a pattern describes, if it is.
+   *
+   * The method and the receiver, as for every call, or the function's own name
+   * for a helper written as a function; and for a pattern that names the
+   * command it sends, that command, because the same method sends every other
+   * kind too.
+   */
+  const evidenceFor = (pattern: CallPattern, call: CallExpression): ReceiverEvidence | undefined => {
+    const callee = call.getExpression();
+    const evidence =
+      pattern.calledAs === 'function'
+        ? functionEvidence(callee, pattern.method)
+        : Node.isPropertyAccessExpression(callee) && methodMatches(callee.getName(), pattern.method)
+          ? receiverEvidence(callee.getExpression(), pattern)
+          : undefined;
+    return evidence !== undefined && appliesAt(call, pattern) ? evidence : undefined;
+  };
 
   /**
    * Receiving, for a body that is a method of an indexed class.
@@ -842,14 +916,11 @@ export const extractBrokers = (ctx: PassContext): void => {
   for (const scope of scopesOf(ctx)) {
     forEachCall(scope.body, (call) => {
       const expression = call as unknown as CallExpression;
-      const callee = expression.getExpression();
-      if (!Node.isPropertyAccessExpression(callee)) return;
-      const receiver = callee.getExpression();
-      const name = callee.getName();
       for (const spec of specs) {
         for (const pattern of spec.producerPatterns) {
-          if (!matches(pattern, receiver, name)) continue;
-          emitProducer(expression, pattern, spec, scope, scope.owner);
+          const evidence = evidenceFor(pattern, expression);
+          if (evidence === undefined) continue;
+          emitProducer(expression, pattern, spec, scope, scope.owner, evidence);
           return;
         }
       }

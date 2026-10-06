@@ -10,6 +10,7 @@ import {
 } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
+import { environmentVariableOf } from './environment.js';
 
 /**
  * Reading the name a call is addressed to.
@@ -35,8 +36,18 @@ export interface ResolvedChannel {
 }
 
 export interface UnresolvedChannel {
-  readonly unresolved: 'channel-from-config' | 'channel-dynamic' | 'channel-const-unresolved';
+  readonly unresolved:
+    | 'channel-from-config'
+    | 'channel-from-environment'
+    | 'channel-dynamic'
+    | 'channel-const-unresolved';
   readonly text: string;
+  /**
+   * The environment variable the name is the value of, for
+   * `channel-from-environment`: the one thing the code says about it, and the
+   * key a reader of the deployment looks the value up by.
+   */
+  readonly variable?: string;
 }
 
 export type ChannelResolution = ResolvedChannel | UnresolvedChannel;
@@ -168,6 +179,11 @@ export const resolveChannelName = (
   }
 
   if (isConfigRead(expr)) return { unresolved: 'channel-from-config', text };
+
+  // Set by whoever deploys the code, and not in it. Told apart from a name built
+  // at run time because the remedy differs: the deployment states the value.
+  const variable = environmentVariableOf(expr);
+  if (variable !== undefined) return { unresolved: 'channel-from-environment', text, variable };
 
   // A channel addressed per entity is written as a template. The family it
   // belongs to is fixed even though the instance is not, and the family is what

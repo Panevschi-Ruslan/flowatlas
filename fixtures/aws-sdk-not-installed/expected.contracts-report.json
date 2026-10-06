@@ -1,0 +1,57 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-06T14:56:38.590Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:catalogue#src/catalogue-events.ts:21:11",
+        "to": "channel:eventbridge/library-events/library.catalogue/ItemCatalogued",
+        "type": "emits"
+      },
+      "edgeKey": "channel:eventbridge/library-events/library.catalogue/ItemCatalogued|emits|producer:catalogue#src/catalogue-events.ts:21:11",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:eventbridge/library-events/library.catalogue/ItemCatalogued is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:catalogue#src/catalogue-events.ts:48:9",
+        "to": "channel:sns/catalogue-withdrawals",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sns/catalogue-withdrawals|emits|producer:catalogue#src/catalogue-events.ts:48:9",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sns/catalogue-withdrawals is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:catalogue#src/catalogue-events.ts:38:9",
+        "to": "channel:sqs/library-shelving",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/library-shelving|emits|producer:catalogue#src/catalogue-events.ts:38:9",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/library-shelving is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 3,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

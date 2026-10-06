@@ -1,6 +1,7 @@
 import { methodNamedOn, resolveTypeOrigin, type ClassMethod, type TypeOrigin } from '@flowatlas/core';
 import type { CallExpression, ClassDeclaration, Node as TsNode, Type } from 'ts-morph';
 import { Node } from 'ts-morph';
+import { statedOrigin } from './stated-origin.js';
 
 /**
  * Reading one publishing or subscribing call site.
@@ -34,18 +35,61 @@ export const methodMatches = (name: string, method: string | readonly string[]):
  * rather than yes: a method name alone is not evidence of anything.
  */
 export const receiverMatches = (
-  origin: TypeOrigin | null,
+  origin: Pick<TypeOrigin, 'package' | 'typeName'> | null,
   pattern: { receiverType?: string | readonly string[]; receiverPackages?: readonly string[] },
 ): boolean => {
-  if (pattern.receiverType !== undefined) {
-    const names =
-      typeof pattern.receiverType === 'string' ? [pattern.receiverType] : pattern.receiverType;
-    return origin !== null && names.includes(origin.typeName);
-  }
-  if (pattern.receiverPackages !== undefined) {
-    return origin?.package != null && pattern.receiverPackages.includes(origin.package);
-  }
-  return false;
+  if (pattern.receiverType === undefined && pattern.receiverPackages === undefined) return false;
+  if (origin === null) return false;
+  // Both, where a pattern names both: a library declares many classes, and the
+  // same method name on two of them is two different calls.
+  const typeMatches =
+    pattern.receiverType === undefined ||
+    (typeof pattern.receiverType === 'string' ? [pattern.receiverType] : pattern.receiverType).includes(
+      origin.typeName,
+    );
+  const packageMatches =
+    pattern.receiverPackages === undefined ||
+    (origin.package != null && pattern.receiverPackages.includes(origin.package));
+  return typeMatches && packageMatches;
+};
+
+/**
+ * How a receiver is known to be the one a pattern names, if it is.
+ *
+ * `checked` where the checker resolved its type, `stated` where it resolved
+ * nothing and the source says what the receiver is constructed from - the case
+ * of every client of a library a fresh clone has not installed. A receiver the
+ * checker did resolve, to something else, is not asked a second time: the
+ * source's statement is a fallback for silence, not a second opinion.
+ */
+export type ReceiverEvidence = 'checked' | 'stated';
+
+export const receiverEvidence = (
+  receiver: TsNode,
+  pattern: { receiverType?: string | readonly string[]; receiverPackages?: readonly string[] },
+): ReceiverEvidence | undefined => {
+  const origin = resolveTypeOrigin(receiver);
+  if (origin !== null) return receiverMatches(origin, pattern) ? 'checked' : undefined;
+  return receiverMatches(statedOrigin(receiver) ?? null, pattern) ? 'stated' : undefined;
+};
+
+/**
+ * How a call of a function by its name is known to be the one a pattern names.
+ *
+ * By the name the function is declared with, so an import that renames it is
+ * still it: `checked` where the name leads to a declaration, `stated` where it
+ * leads to an import nothing resolves - a helper package that is not
+ * installed, named by the import alone.
+ */
+export const functionEvidence = (callee: TsNode, name: string): ReceiverEvidence | undefined => {
+  if (!Node.isIdentifier(callee)) return undefined;
+  const symbol = callee.getSymbol();
+  const declaration = symbol?.getDeclarations()[0];
+  const declared =
+    declaration !== undefined && Node.isImportSpecifier(declaration) ? declaration.getName() : callee.getText();
+  if (declared !== name) return undefined;
+  const target = symbol?.getAliasedSymbol() ?? symbol;
+  return (target?.getDeclarations().length ?? 0) > 0 ? 'checked' : 'stated';
 };
 
 /** The same question asked of the expression rather than of its resolved origin. */

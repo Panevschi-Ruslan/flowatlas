@@ -199,6 +199,15 @@ export const evaluateExpression = (expr: TsNode, depth = 0): StaticValue => {
     }
   }
 
+  // A property of a value bound at run time is bound at run time too:
+  // `event.detail.type` read off a parameter is whatever each caller handed in,
+  // and calling it a constant nobody could read is the same wrong advice R140
+  // removed for the parameter itself.
+  if (Node.isPropertyAccessExpression(node)) {
+    const owner = evaluateExpression(node.getExpression(), depth + 1);
+    if (!owner.resolved && RUN_TIME.has(owner.reason)) return unresolvedValue(node.getText(), owner.reason);
+  }
+
   return unresolvedValue(node.getText());
 };
 

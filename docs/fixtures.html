@@ -66,14 +66,30 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>109 fixtures</span>
-    <span>209 snapshot files</span>
-    <span>12 areas</span>
+    <span>112 fixtures</span>
+    <span>218 snapshot files</span>
+    <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
   <section data-area>
-    <h2>Channels and messages <span class="count" data-total="13">13</span></h2>
+    <h2>Channels and messages <span class="count" data-total="15">15</span></h2>
     <ul>
+      <li class="fixture" data-search="aws-sdk-not-installed channels and messages a library catalogue that publishes through the aws sdk in a clone nobody has installed, which is how a serverless repository is usually first read: there is no `node_modules`, so every client is `any` to the checker and none of them can say which package declared it.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/aws-sdk-not-installed">aws-sdk-not-installed</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A library catalogue that publishes through the AWS SDK in a clone nobody has installed, which is how a serverless repository is usually first read: there is no <code>node_modules</code>, so every client is <code>any</code> to the checker and none of them can say which package declared it.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="aws-sdk-publishers channels and messages a lending library's api that publishes through the aws sdk: plain express handlers that put events on eventbridge, send to sqs queues and, in two functions kept beside it with their own manifests, publish to sns and send with version 2 of the sdk.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/aws-sdk-publishers">aws-sdk-publishers</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A lending library's API that publishes through the AWS SDK: plain Express handlers that put events on EventBridge, send to SQS queues and, in two functions kept beside it with their own manifests, publish to SNS and send with version 2 of the SDK.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="fn-broker channels and messages one service publishes the same kind of event from four different kinds of body; another subscribes to what it sends.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/fn-broker">fn-broker</a>
@@ -379,6 +395,19 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>Three repositories sharing one REST API: two hang their routes from a point of it the third, a repository of nothing but Terraform, publishes.</p>
         <p class="snapshots"><code>expected.doctor.txt</code> <code>expected.flow.post-loans.tree.txt</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+    </ul>
+  </section>
+  <section data-area>
+    <h2>State machines <span class="count" data-total="1">1</span></h2>
+    <ul>
+      <li class="fixture" data-search="stepfunctions-asl-files state machines three state machine definitions kept as files beside the code that runs with them, in two repositories, and one workflow that starts a workflow in the other.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/stepfunctions-asl-files">stepfunctions-asl-files</a>
+          <span class="kind">2 services</span>
+        </div>
+        <p>Three state machine definitions kept as files beside the code that runs with them, in two repositories, and one workflow that starts a workflow in the other.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
     </ul>
   </section>

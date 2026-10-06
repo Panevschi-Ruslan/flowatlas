@@ -713,7 +713,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-shadowed` |
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
 | The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key` |
-| Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `consumer-handler-unresolved`, `payload-type-unknown` |
+| Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `channel-from-environment`, `consumer-handler-unresolved`, `payload-type-unknown` |
 | Settings | `dynamic-config-key` |
 | Bots and handler tables | `bot-handlers-not-found`, `dynamic-bot-trigger`, `entry-registry-unconfigured`, `registry-key-dynamic`, `registry-handler-anonymous`, `orphan-scene-decorator`, `orphan-update-decorator`, `wizard-step-conflict` |
 | Annotations | `marker-route-not-found`, `marker-service-unknown`, `marker-unknown-arg`, `marker-arg-not-a-name`, `marker-names-nothing` |
@@ -1228,6 +1228,131 @@ readable name wins. `channel` replaces `channelArg` where both are given.
 | `{ "kind": "provider-decorator", "decorator": "InjectQueue", "index": 0 }` | argument 0 of that decorator on the constructor parameter that provided the receiver |
 | `{ "kind": "chain-call", "method": "from", "index": 0 }` | argument 0 of `from(...)` anywhere in the same chain |
 | `{ "kind": "chain-root-argument", "index": 0 }` | argument 0 of the call the chain started from |
+| `{ "kind": "argument-path", "index": 0, "path": ["Entries", "*", "DetailType"] }` | a path of properties inside argument 0; `*` is every element of an array |
+| `{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "DetailType"] }` | the same path inside what `PutEventsCommand` is constructed with, where the construction is an argument of the call — built in the call or in a `const` before it. `"index": 1` starts the path in the constructor's second argument |
+
+**A path through a list is one name per element.** `["Entries", "*", "DetailType"]`
+over two entries is two channels, not one, and every part of an address that
+walks the same list is read at the same element. A path also goes through a
+record or a list kept in a `const`. Where the list is built at run time —
+`entries.map(...)` — or a spread may supply the key, the walk stops there and the
+row names that expression; a key that is simply not written is *nothing written*,
+which an address part may fill with `absent`.
+
+**`constructed-argument-path` is a condition as well as a place.** A client that
+sends commands sends every kind of them through one method, and a call handed some
+other command is not a publish whose channel could not be read: the description
+does not apply to it, and it produces nothing. A command the checker can see is an
+instance of the class but whose construction is somewhere else — a parameter — is
+of the shape, and is reported as a channel that cannot be read.
+
+### An address in parts, and a message inside the input
+
+Some transports name a message with several words that only together say where it
+goes. A producer may then take `address` instead of `channel`: a list of parts,
+joined with `/` into the channel's name. Each part is a word the description
+states, `{ "literal": "eventbridge" }`, or a place the call writes it:
+
+| Key | Says |
+|---|---|
+| `at` | locators, tried in order, as for `channel` |
+| `absent` | what the part is when the call writes nothing there, because the library fills it in. Never used for a value that is written and cannot be read |
+| `forms` | longer spellings the name may be written inside — a URL, an ARN — each a regular expression whose first group is the name |
+
+`channel` is a one-part address written short, and `channelArg` is a one-part
+address of one plain argument. A part that is written and cannot be read leaves
+the whole address unread: half an address joins nothing it should.
+
+`payload` is where the message is written, as locators, for a call whose message
+is a property of its input rather than an argument of its own; it overrides
+`payloadArg`. It is read at the same element as the address, and a message sent
+as `JSON.stringify(value)` is read as the value, because that is what the receiver
+parses back out.
+
+A project's own helper around the AWS SDK, described so that each call lands on
+the channel the SDK itself would have named:
+
+```jsonc
+{
+  "name": "library-events",
+  "channelKind": "topic",
+  "producers": [
+    {
+      "receiverType": "LibraryEventBus",
+      "method": "put",                      // libraryEvents.put(new LibraryEvent({ type, detail }))
+      "address": [
+        { "literal": "eventbridge" },
+        { "literal": "library-events" },    // the bus the helper always uses
+        { "literal": "library.returns" },   // and its source
+        { "at": [{ "kind": "constructed-argument-path", "class": "LibraryEvent", "path": ["type"] }] }
+      ],
+      "payload": [{ "kind": "constructed-argument-path", "class": "LibraryEvent", "path": ["detail"] }],
+      "kind": "event"
+    }
+  ]
+}
+```
+
+**A helper written as a function** has no receiver to name. A producer may give
+`function` — the name the function is declared with, whatever an import renames it
+to — in place of `receiverType` and `method`. A helper that sends whatever command
+it is handed, `publishEvent(new PutEventsCommand({ Entries: [...] }))`, is
+described with the same locator the SDK's own description uses:
+
+```jsonc
+{
+  "function": "publishEvent",
+  "address": [
+    { "literal": "eventbridge" },
+    { "at": [{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "EventBusName"] }], "absent": "default" },
+    { "at": [{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "Source"] }] },
+    { "at": [{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "DetailType"] }] }
+  ],
+  "payload": [{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "Detail"] }],
+  "kind": "event"
+}
+```
+
+The helper's own call to the SDK is still read, and has no channel: the command
+it sends was built by its caller, which is what the description is for.
+
+### The AWS SDK
+
+Publishing through EventBridge, SQS and SNS is read without configuration, from
+`@aws-sdk/client-eventbridge`, `@aws-sdk/client-sqs`, `@aws-sdk/client-sns` and
+`aws-sdk` (version 2). The package may be declared in the repository's own
+manifest or in any manifest below it, for a repository that keeps one per
+function. Three shapes of call are read for each operation: a command sent with
+`client.send(new XCommand(input))`, built in the call or in a `const`; version 3's
+aggregated client, `client.putEvents(input)`; and version 2,
+`service.putEvents(input).promise()`.
+
+| Operation | Channel | Message |
+|---|---|---|
+| EventBridge `PutEvents` | `eventbridge/<bus>/<source>/<detail type>`, one per entry; an entry with no `EventBusName` is on `default` | `Detail` |
+| SQS `SendMessage`, `SendMessageBatch` | `sqs/<queue name>`, from `QueueUrl` | `MessageBody` |
+| SNS `Publish`, `PublishBatch` | `sns/<topic name>`, from `TopicArn` | `Message` |
+
+A channel is named by the deployed name, never by the URL or ARN the code holds:
+`https://sqs.eu-west-1.amazonaws.com/111122223333/returns` is `sqs/returns`, and
+a bus's ARN is the bus's name. The service comes first because a queue and a topic
+are often given the same name and are not the same channel. A subscriber read from
+the deployment arrives at the same name, so the two meet on one node.
+
+These are descriptions in the vocabulary above: each operation is the locators and
+parts a configuration could write, plus the one thing a configuration cannot say,
+the package the client comes from (`fixtures/aws-sdk-publishers`). With nothing
+installed, a client is recognised by its construction and the import beside it,
+and every edge read that way is `heuristic` (`fixtures/aws-sdk-not-installed`).
+
+**A queue, topic or bus named by `process.env` has no channel.** The variable's
+name is not the resource's, and its value is set where the code is deployed. The
+publisher is drawn with no channel and a `channel-from-environment` row naming
+the variable; the producer keeps the address it is waiting on in
+`meta.awaiting`, each missing part named by its variable. Who receives — a rule,
+a subscription, a mapping from a queue to a function — is declared in the
+deployment and is not read yet, so every channel from the SDK has a publisher and
+no handler for now.
 
 A bus that addresses jobs as an options object and wraps each queue in a class of
 its own is described like this — and note that the handler needs describing the

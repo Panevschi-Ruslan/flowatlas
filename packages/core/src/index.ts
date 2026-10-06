@@ -172,6 +172,7 @@ export {
   allDependencies,
   hasAnyDependency,
   hasDependency,
+  manifestsWithin,
   readPackageJson,
   readResolvedPackageJson,
   suppliedWith,
@@ -221,9 +222,21 @@ export {
   writtenObjectLiteral,
 } from './origin.js';
 export type { BodyRead, Origin, ResolveOriginOptions, TypeOrigin } from './origin.js';
-export type { BrokerAdapter, CallPattern, ChannelKind } from './adapters/broker.js';
-export { locatedExpressions } from './adapters/locator.js';
-export type { IsOperation, LocatorContext, LocatorSite, NameLocator } from './adapters/locator.js';
+export type { AddressPart, BrokerAdapter, CallPattern, ChannelKind } from './adapters/broker.js';
+export {
+  EVERY_ELEMENT,
+  locatedExpressions,
+  locatedSlots,
+  locatorApplies,
+  locatorIsCondition,
+} from './adapters/locator.js';
+export type {
+  IsOperation,
+  LocatedSlot,
+  LocatorContext,
+  LocatorSite,
+  NameLocator,
+} from './adapters/locator.js';
 export type { FrontendAdapter, FrontendExtractOptions } from './adapters/frontend.js';
 
 export { ADAPTER_SLOTS, AdapterRegistry, noAdapters } from './adapters/registry.js';

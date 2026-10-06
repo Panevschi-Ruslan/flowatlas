@@ -60,18 +60,54 @@ only one of them moved.
   (`fixtures/stepfunctions-asl-files`).
 - **`flow workflow:<name>`** walks a state machine's steps in order and into
   each handler.
+- **Publishing through the AWS SDK.** EventBridge `PutEvents`, SQS
+  `SendMessage` and `SendMessageBatch`, and SNS `Publish` and `PublishBatch` are
+  read as producers, whether the call sends a command (`client.send(new
+  PutEventsCommand(input))`, built in the call or in a `const` before it), uses
+  version 3's aggregated client, or uses version 2 with `.promise()`. Each entry
+  of a `PutEvents` is an event of its own, on
+  `eventbridge/<bus>/<source>/<detail type>`, and an entry that names no bus is
+  on `default`. Queues and topics are `sqs/<name>` and `sns/<name>`, by the name
+  inside the URL or ARN the code holds. The message is `Detail`, `MessageBody`
+  or `Message`, read past `JSON.stringify`. The client's package may be declared
+  in any manifest of the repository, for one that keeps a manifest per function
+  (`fixtures/aws-sdk-publishers`). With nothing installed, a client is
+  recognised by its construction and its import, at `heuristic`
+  (`fixtures/aws-sdk-not-installed`). Who receives is declared in the
+  deployment and is not read yet, so these channels have publishers and no
+  handlers for now.
+- **A name read from `process.env` is said to be one.** A channel named by an
+  environment variable is a publisher with no channel and a new row,
+  `channel-from-environment`, naming the variable, rather than a name the tool
+  could not read. A queue's URL is usually written this way, and its value is
+  set by the deployment.
+- **Two locators and an address in parts, for describing a bus in
+  configuration.** `argument-path` reads a path of properties inside an
+  argument and `constructed-argument-path` reads one inside what a class is
+  constructed with; `*` in a path is every element of a list, one channel each.
+  A producer may give `address`, a list of parts joined with `/` - stated words,
+  located names, a default for a part nothing writes, and the longer spellings
+  a name may be written inside - and `payload`, where its message is written,
+  and may be a `function` of the project's own rather than a method on a
+  receiver. The AWS SDK is read through exactly these, so a project's own
+  helper around it, a class or a function, is described the same way.
 
 ### Changed
 
 - **The graph's schema version is 6**, for the `invoke` and `workflow` entry
-  kinds. A database
-  built by an earlier version is refused with a message to rebuild.
+  kinds. A database built by an earlier version is refused with a message to
+  rebuild.
 - **A `.tf` or `.tfvars` change re-reads the service.** The build cache stamps
   the files that describe a deployment beside the sources, so changing a
   function's name in Terraform alone is no longer answered with `0 files
   changed`.
 
 ### Fixed
+
+- **A property of a parameter is no longer reported as a constant nobody could
+  read.** `event.detail.type` read off a parameter is decided by each caller,
+  and its row now says the channel is built at run time, as the parameter's own
+  row does.
 
 - **`build` no longer writes into the repositories it reads.** Each service's
   own graph and file hashes went to `<repo>/.flowatlas/`, which the

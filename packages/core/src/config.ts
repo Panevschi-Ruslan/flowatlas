@@ -216,6 +216,49 @@ const nameLocatorSchema = z.discriminatedUnion('kind', [
     decorator: z.string().min(1),
     index: z.number().int().min(0),
   }),
+  z.strictObject({
+    kind: z.literal('argument-path'),
+    index: z.number().int().min(0),
+    /** Properties from the argument inwards; `*` is every element of an array. */
+    path: z.array(z.string().min(1)).min(1),
+  }),
+  z.strictObject({
+    kind: z.literal('constructed-argument-path'),
+    /** The class whose construction is an argument of the call. */
+    class: z.string().min(1),
+    /** Properties from the constructor's argument inwards; `*` is every element. */
+    path: z.array(z.string().min(1)),
+    /** Which argument of the constructor the path starts in. The first by default. */
+    index: z.number().int().min(0).optional(),
+  }),
+]);
+
+/** A regular expression, refused here rather than when the first call is read. */
+const patternSchema = z.string().min(1).refine((source) => {
+  try {
+    new RegExp(source);
+    return true;
+  } catch {
+    return false;
+  }
+}, 'not a regular expression');
+
+/**
+ * One part of an address written in several, described in configuration.
+ *
+ * Either a word every address starts with, or a place the call writes the part,
+ * with what it is when nothing is written there and the longer spellings it may
+ * be written inside. The parts are joined with `/` into the channel's name, so a
+ * description of a bus of one's own lands on the same node as a description of
+ * the library it wraps, when both say the same parts.
+ */
+const addressPartSchema = z.union([
+  z.strictObject({ literal: z.string().min(1) }),
+  z.strictObject({
+    at: z.array(nameLocatorSchema).min(1),
+    absent: z.string().min(1).optional(),
+    forms: z.array(patternSchema).min(1).optional(),
+  }),
 ]);
 
 /**
@@ -231,12 +274,31 @@ export const customProducerSchema = z.strictObject({
    * Type the call is made on. A list, because the same bus is often reached
    * through an interface at one call site and the class itself at another.
    */
-  receiverType: z.union([z.string().min(1), z.array(z.string().min(1))]),
-  method: z.string().min(1),
+  receiverType: z.union([z.string().min(1), z.array(z.string().min(1))]).optional(),
+  method: z.string().min(1).optional(),
+  /**
+   * A function of the project's own that publishes, called by its name rather
+   * than on a receiver: `publishEvent(new SendCommand({ ... }))`. In place
+   * of `receiverType` and `method`, because a helper written as a function is
+   * as ordinary a wrapper as one written as a class, and has no receiver to
+   * name. The name is the one the function is declared with, whatever an
+   * import renames it to.
+   */
+  function: z.string().min(1).optional(),
   /** Shorthand for a channel written as one plain argument. */
   channelArg: z.number().int().min(0).default(0),
   /** Where the channel is written, tried in order. Overrides `channelArg`. */
   channel: z.array(nameLocatorSchema).min(1).optional(),
+  /**
+   * The address in parts, for a call that names a message with several words.
+   * Overrides `channel`, which is a one-part address written short.
+   */
+  address: z.array(addressPartSchema).min(1).optional(),
+  /**
+   * Where the message is written, as an expression, tried in order. Overrides
+   * `payloadArg`, for a message that is a property of the call's input.
+   */
+  payload: z.array(nameLocatorSchema).min(1).optional(),
   payloadArg: z.number().int().min(0).optional(),
   /**
    * Where the message sits inside that argument, when the argument wraps it.
@@ -249,6 +311,21 @@ export const customProducerSchema = z.strictObject({
    */
   payloadPath: z.array(z.string().min(1)).min(1).optional(),
   kind: z.string().min(1).default('event'),
+}).superRefine((producer, ctx) => {
+  const onReceiver = producer.receiverType !== undefined || producer.method !== undefined;
+  if (producer.function !== undefined && onReceiver) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['function'],
+      message: 'a producer is either a function, or a method with its receiverType, not both.',
+    });
+  } else if (producer.function === undefined && (producer.receiverType === undefined || producer.method === undefined)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: [producer.receiverType === undefined ? 'receiverType' : 'method'],
+      message: 'a producer names the receiverType and method it is called as, or the function it is.',
+    });
+  }
 });
 
 /**

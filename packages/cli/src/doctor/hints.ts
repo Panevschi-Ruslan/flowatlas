@@ -349,6 +349,7 @@ export const MARKER_ANSWERS: Readonly<Record<string, AnswerTest>> = Object.freez
   'api-method-dynamic': annotatedBeside,
   // @Emits / @Consumes
   'channel-from-config': publishesOrConsumes,
+  'channel-from-environment': publishesOrConsumes,
   'channel-dynamic': publishesOrConsumes,
   'channel-const-unresolved': publishesOrConsumes,
   // @FlowEntry
@@ -512,6 +513,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   // Channels (adapters-broker)
   'channel-from-config': (row) =>
     `The channel name is read from settings, so it cannot be followed. Annotate ${named(row)} with @Emits('<channel>') or @Consumes('<channel>').`,
+  'channel-from-environment': (row) =>
+    `The channel is the value of ${typeof row.meta?.['variable'] === 'string' ? `the environment variable ${row.meta['variable']}` : 'an environment variable'}, set where the code is deployed and not in it, so no channel is drawn. Reading it from the deployment is not done yet.`,
   'channel-dynamic': (row) =>
     `The channel name is built at run time. Annotate ${named(row)} with @Emits('<channel>') or @Consumes('<channel>').`,
   'channel-const-unresolved': (row) =>
@@ -714,6 +717,8 @@ export const KIND_HINTS: Readonly<Record<string, string>> = Object.freeze({
     'The wrapper is not registered with a class from this repository, so what it wraps cannot be read.',
   'channel-from-config':
     "The channel name is read from settings, so it cannot be followed. Annotate the method with @Emits('<channel>') or @Consumes('<channel>').",
+  'channel-from-environment':
+    'The channel is the value of an environment variable, set where the code is deployed and not in it, so no channel is drawn. Reading it from the deployment is not done yet.',
   'channel-dynamic':
     "The channel name is built at run time. Annotate the method with @Emits('<channel>') or @Consumes('<channel>').",
   'channel-const-unresolved':

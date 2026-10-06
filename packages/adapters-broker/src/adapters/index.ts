@@ -1,4 +1,5 @@
 import { hasAnyDependency, type CustomBrokerConfig, type NameLocator } from '@flowatlas/core';
+import { awsBrokerAdapters } from './aws.js';
 import type { BrokerSpec, ConsumerPattern, SubscriberPattern } from './types.js';
 
 /**
@@ -278,7 +279,14 @@ const socketio: BrokerSpec = {
   channelKind: 'channel',
 };
 
-export const brokerAdapters: readonly BrokerSpec[] = [kafka, rabbitmq, bullmq, redisPubSub, socketio];
+export const brokerAdapters: readonly BrokerSpec[] = [
+  kafka,
+  rabbitmq,
+  bullmq,
+  redisPubSub,
+  socketio,
+  ...awsBrokerAdapters,
+];
 
 /**
  * One described handler, from either spelling.
@@ -313,12 +321,17 @@ export const createCustomBrokerAdapter = (config: CustomBrokerConfig): BrokerSpe
   name: config.name,
   detect: () => true,
   producerPatterns: config.producers.map((producer) => ({
-    method: producer.method,
+    // A function of the project's own is named by itself; a method by the
+    // type it is called on. The schema has already refused anything else.
+    ...(producer.function === undefined
+      ? { method: producer.method ?? '', receiverType: producer.receiverType }
+      : { method: producer.function, calledAs: 'function' as const }),
     channelArg: producer.channelArg,
     ...(producer.channel === undefined ? {} : { channel: producer.channel }),
+    ...(producer.address === undefined ? {} : { address: producer.address }),
+    ...(producer.payload === undefined ? {} : { payload: producer.payload }),
     ...(producer.payloadArg === undefined ? {} : { payloadArg: producer.payloadArg }),
     ...(producer.payloadPath === undefined ? {} : { payloadPath: producer.payloadPath }),
-    receiverType: producer.receiverType,
     kind: producer.kind,
   })),
   consumerDecorators: config.consumers.map(consumerOf).map((each) => each.decorator),
@@ -338,4 +351,13 @@ export const createCustomBrokerAdapter = (config: CustomBrokerConfig): BrokerSpe
 });
 
 export { bullmq, kafka, rabbitmq, redisPubSub, socketio };
+export {
+  AWS_SERVICE_PREFIX,
+  DEFAULT_EVENT_BUS,
+  DEPLOYED_FORMS,
+  awsBrokerAdapters,
+  eventChannel,
+  queueChannel,
+  topicChannel,
+} from './aws.js';
 export type { BrokerSpec, ChannelPrefix, ConsumerPattern, EndpointCarrier, SubscriberPattern } from './types.js';

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T14:56:39.422Z",
+  "configHash": "4f646bdd07da",
+  "services": [
+    {
+      "name": "loans",
+      "repo": "./loans",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 55,
+      "edges": 51,
+      "types": 6,
+      "unresolved": 7,
+      "durationMs": 535
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 9,
+    "linked": 0,
+    "noConsumers": [
+      "channel:eventbridge/default/library.holds/HoldPlaced",
+      "channel:eventbridge/library-events/library.holds/HoldCancelled",
+      "channel:eventbridge/library-events/library.holds/HoldQueued",
+      "channel:eventbridge/library-events/library.loans/LoanCreated",
+      "channel:eventbridge/library-events/library.loans/LoanRenewed",
+      "channel:eventbridge/library-events/library.returns/ItemReturned",
+      "channel:sns/borrower-notifications",
+      "channel:sqs/library-reminders",
+      "channel:sqs/library-returns"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 7,
+    "called": 0,
+    "uncalled": [
+      "entry:loans:http:POST:/holds",
+      "entry:loans:http:POST:/holds/cancellations",
+      "entry:loans:http:POST:/loans",
+      "entry:loans:http:POST:/loans/:param/renewals",
+      "entry:loans:http:POST:/returns",
+      "entry:loans:http:POST:/returns/batch",
+      "entry:loans:http:POST:/returns/overdue"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 6,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 55,
+    "edges": 51,
+    "types": 6,
+    "unresolved": 7
+  }
+}

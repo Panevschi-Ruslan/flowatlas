@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T14:56:38.304Z",
+  "configHash": "207cd8675ce6",
+  "services": [
+    {
+      "name": "catalogue",
+      "repo": "./catalogue",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 18,
+      "edges": 14,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 497
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 3,
+    "linked": 0,
+    "noConsumers": [
+      "channel:eventbridge/library-events/library.catalogue/ItemCatalogued",
+      "channel:sns/catalogue-withdrawals",
+      "channel:sqs/library-shelving"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:catalogue:http:DELETE:/items/:param",
+      "entry:catalogue:http:POST:/items"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 18,
+    "edges": 14,
+    "types": 1,
+    "unresolved": 1
+  }
+}
