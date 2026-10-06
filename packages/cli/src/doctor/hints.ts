@@ -524,6 +524,14 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'consumer-handler-unresolved': () =>
     'The listener does more than delegate, so the chain stops at the method that registered it. Delegate to a named method.',
 
+  // Starting a workflow or a function by its deployed name (adapters-broker, P24)
+  'start-from-environment': () =>
+    'What this call starts is the value of an environment variable, set where the code is deployed and not in it. It is completed from the value each function that runs the code is deployed with; this row is left where nothing deployed is known to run it.',
+  'start-name-unread': () =>
+    'The name of the workflow or function this call starts is not written where it can be read. Write the deployed name or its ARN, or a value of the environment the deployment sets; where the code names it some other way, say how in the `names` table of a starter description (adapters.starters).',
+  'starter-undescribed': () =>
+    'A deployed function calls into a package that is not installed, handing it a name: the shape of a helper that starts a workflow or invokes a function by its deployed name. If it is one, describe it under adapters.starters, as the row says; or install the package, so its source is read.',
+
   // Data layer (core/adapters/db, adapters-db)
   'unknown-db-package': () =>
     'Add a descriptor for the package to packages/adapters-db, so its methods are recorded as reads or writes.',

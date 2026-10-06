@@ -30,11 +30,20 @@ export declare class SQSClient { constructor(config: object); send(command: unkn
 export declare class PublishCommand { constructor(input: { TopicArn?: string; Message?: string }); }
 export declare class PublishBatchCommand { constructor(input: { TopicArn?: string; PublishBatchRequestEntries: { Id: string; Message?: string }[] }); }
 export declare class SNSClient { constructor(config: object); send(command: unknown): Promise<unknown>; }`,
+  '@aws-sdk/client-sfn': `
+export declare class StartExecutionCommand { constructor(input: { stateMachineArn?: string; input?: string }); }
+export declare class SendTaskSuccessCommand { constructor(input: { taskToken?: string; output?: string }); }
+export declare class DescribeExecutionCommand { constructor(input: { executionArn?: string }); }
+export declare class SFNClient { constructor(config: object); send(command: unknown): Promise<unknown>; }`,
+  '@aws-sdk/client-lambda': `
+export declare class InvokeCommand { constructor(input: { FunctionName?: string; InvocationType?: string; Payload?: Uint8Array }); }
+export declare class LambdaClient { constructor(config: object); send(command: unknown): Promise<unknown>; }`,
   'aws-sdk': `
 declare class Request<T> { promise(): Promise<T>; }
 export declare class SQS { sendMessage(input: { QueueUrl: string; MessageBody: string }): Request<unknown>; }
 export declare class SNS { publish(input: { TopicArn?: string; Message: string }): Request<unknown>; }
-declare const AWS: { SQS: typeof SQS; SNS: typeof SNS };
+export declare class StepFunctions { startExecution(input: { stateMachineArn: string; input?: string }): Request<unknown>; }
+declare const AWS: { SQS: typeof SQS; SNS: typeof SNS; StepFunctions: typeof StepFunctions };
 export default AWS;`,
 };
 
@@ -60,6 +69,7 @@ interface Read {
   readonly evidence: ReceiverEvidence;
   readonly names: string[];
   readonly payloads: (string | undefined)[];
+  readonly starts?: CallPattern['starts'];
 }
 
 /** What the descriptions read at the one call to `method`: the pattern the pass would take, and its addresses. */
@@ -90,6 +100,7 @@ const readCall = (file: SourceFile, method: string, specs: readonly BrokerSpec[]
         evidence,
         names: elements.flatMap((element) => (isResolved(element.resolution) ? [...element.resolution.names] : [])),
         payloads: elements.map((element) => element.payload?.getText()),
+        ...(pattern.starts === undefined ? {} : { starts: pattern.starts }),
       };
     }
   }
@@ -390,6 +401,57 @@ publish(new PutEventsCommand({ Entries: [{ Source: 'library.holds', DetailType: 
         },
       }),
     ).toThrow(/regular expression/);
+  });
+});
+
+describe('an operation that starts something by its deployed name', () => {
+  it('reads a state machine by the name inside its ARN, as a workflow to start', () => {
+    const file = project(
+      true,
+      `import { SFNClient, StartExecutionCommand } from '@aws-sdk/client-sfn';
+const sfn = new SFNClient({});
+sfn.send(new StartExecutionCommand({ stateMachineArn: 'arn:aws:states:eu-west-1:111122223333:stateMachine:loan-approval', input: '{}' }));`,
+    );
+    expect(readCall(file, 'send')).toMatchObject({ adapter: 'aws-stepfunctions', names: ['loan-approval'], starts: { entry: 'workflow' } });
+  });
+
+  it('reads a function by its name, its alias dropped, and says where the call says whether it waits', () => {
+    const file = project(
+      true,
+      `import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda';
+const lambda = new LambdaClient({});
+lambda.send(new InvokeCommand({ FunctionName: 'notify-borrower:live', InvocationType: 'Event' }));`,
+    );
+    expect(readCall(file, 'send')).toMatchObject({
+      adapter: 'aws-lambda-invoke',
+      names: ['notify-borrower'],
+      starts: { entry: 'invoke', kindAt: { kinds: { Event: 'invoke-async' } } },
+    });
+  });
+
+  it('reads version 2, where Step Functions is a class of another name', () => {
+    const file = project(
+      true,
+      `import AWS from 'aws-sdk';
+new AWS.StepFunctions().startExecution({ stateMachineArn: 'arn:aws:states:eu-west-1:111122223333:stateMachine:loan-approval' }).promise();`,
+    );
+    expect(readCall(file, 'startExecution')).toMatchObject({ adapter: 'aws-stepfunctions', evidence: 'checked', names: ['loan-approval'] });
+  });
+
+  it('reads an answer to a waiting task as resuming, and nothing at a command that neither starts nor resumes', () => {
+    const answered = project(
+      true,
+      `import { SFNClient, SendTaskSuccessCommand } from '@aws-sdk/client-sfn';
+declare const token: string;
+new SFNClient({}).send(new SendTaskSuccessCommand({ taskToken: token, output: '{}' }));`,
+    );
+    expect(readCall(answered, 'send')?.starts).toEqual({ entry: 'workflow', resumes: true });
+    const described = project(
+      true,
+      `import { DescribeExecutionCommand, SFNClient } from '@aws-sdk/client-sfn';
+new SFNClient({}).send(new DescribeExecutionCommand({ executionArn: 'x' }));`,
+    );
+    expect(readCall(described, 'send')).toBeUndefined();
   });
 });
 

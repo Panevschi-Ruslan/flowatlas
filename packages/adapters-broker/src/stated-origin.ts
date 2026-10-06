@@ -39,7 +39,7 @@ const MOST_STEPS = 6;
  * imported, because the two copies live in packages this one does not depend
  * on; moving the rule into the core is one change for all three.
  */
-const packageOfSpecifier = (specifier: string): string | undefined => {
+export const packageOfSpecifier = (specifier: string): string | undefined => {
   if (specifier === '' || specifier.startsWith('.') || specifier.startsWith('/')) return undefined;
   const [first, second] = specifier.split('/');
   if (first === undefined || first === '') return undefined;
@@ -106,7 +106,7 @@ const requiredModule = (node: TsNode | undefined): string | undefined => {
  * or a namespace import is the module itself, and the class is the last name
  * written after it, so `exported` is left to the caller.
  */
-const importOf = (binding: TsNode): { module: string; exported?: string } | undefined => {
+export const importOf = (binding: TsNode): { module: string; exported?: string } | undefined => {
   const declaration = binding.getSymbol()?.getDeclarations()[0];
   if (declaration === undefined) return undefined;
   if (Node.isImportSpecifier(declaration)) {

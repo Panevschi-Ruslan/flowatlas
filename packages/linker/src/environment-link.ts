@@ -2,8 +2,12 @@ import {
   AWAITING_META,
   CONFIDENCE_RANK,
   ENVIRONMENT_META,
+  isDeployedEntryKind,
   makeChannelId,
+  makeDeployedReference,
   nameWithin,
+  REACHES_META,
+  STARTS_META,
   type AwaitedAddress,
   type Confidence,
   type EnvironmentValue,
@@ -72,6 +76,9 @@ const environmentOf = (fn: GraphNode): Readonly<Record<string, EnvironmentValue>
 
 const isConfidence = (value: unknown): value is Confidence => typeof value === 'string' && value in CONFIDENCE_RANK;
 
+/** The rows a reader writes for an address that waits on the environment, which a completion answers. */
+const WAITING = new Set(['channel-from-environment', 'start-from-environment']);
+
 /** The call a publisher is, as a reader finds it in the file. */
 const callAt = (producer: GraphNode): string => `the call at ${producer.file ?? '?'}:${producer.line ?? '?'}`;
 
@@ -131,6 +138,9 @@ export const completeFromEnvironment = (
     // was drawn weak only because there was no channel yet to put it on.
     const stated = producer.meta?.['confidence'];
     const calledAt: Confidence = isConfidence(stated) ? stated : 'static';
+    // A start's address names the entry it starts, not a channel (P24).
+    const starts = producer.meta?.[STARTS_META];
+    const said = isDeployedEntryKind(starts) ? { verb: 'starts', what: 'what it starts' } : { verb: 'sends to', what: 'where it sends' };
     const reachedChannels = new Map<string, { functions: Set<string>; variables: Set<string>; payload?: string }>();
     const reported = new Set<string>();
     for (const address of addresses) {
@@ -152,7 +162,7 @@ export const completeFromEnvironment = (
             ? {
                 ...at(producer),
                 reason: 'environment-not-set',
-                message: `${callAt(producer)} sends to the value of ${variable}; ${fn.label} runs it and is not deployed with ${variable}, so where it sends from there is not known`,
+                message: `${callAt(producer)} ${said.verb} the value of ${variable}; ${fn.label} runs it and is not deployed with ${variable}, so ${said.what} from there is not known`,
                 hint: `Set ${variable} in the environment ${fn.label} is deployed with, or correct the name the code reads.`,
                 symbol: producer.id,
                 meta: { function: fn.id, variable },
@@ -160,7 +170,7 @@ export const completeFromEnvironment = (
             : {
                 ...at(producer),
                 reason: 'environment-value-unread',
-                message: `${callAt(producer)} sends to the value of ${variable}, which ${fn.label} is deployed with as ${done.value.written}, and that is not read: ${done.value.unread ?? 'it is not known from the files'}`,
+                message: `${callAt(producer)} ${said.verb} the value of ${variable}, which ${fn.label} is deployed with as ${done.value.written}, and that is not read: ${done.value.unread ?? 'it is not known from the files'}`,
                 hint:
                   done.value.files !== undefined
                     ? `The variable files set it differently (${Object.keys(done.value.files).join(', ')}). Choose the environment to read under services[].infra.vars.`
@@ -177,7 +187,7 @@ export const completeFromEnvironment = (
     // sends; a function runs it, so the rows above say exactly what is.
     for (let index = rows.length - 1; index >= 0; index -= 1) {
       const row = rows[index] as Unresolved;
-      if (row.reason === 'channel-from-environment' && row.service === producer.repo && row.file === producer.file && row.line === producer.line) {
+      if (WAITING.has(row.reason) && row.service === producer.repo && row.file === producer.file && row.line === producer.line) {
         rows.splice(index, 1);
       }
     }
@@ -187,6 +197,12 @@ export const completeFromEnvironment = (
     producer.label = `${kind} ${names.join(', ')}`;
     producer.meta = { ...producer.meta, channelVia: 'environment' };
     for (const edge of callsInto.get(producer.id) ?? []) edge.confidence = calledAt;
+    if (isDeployedEntryKind(starts)) {
+      // Joined by its deployed name with every other reference, later.
+      const reaches = (producer.meta[REACHES_META] as string[] | undefined) ?? [];
+      producer.meta = { ...producer.meta, [REACHES_META]: [...new Set([...reaches, ...names.map((name) => makeDeployedReference(starts, name))])] };
+      continue;
+    }
     for (const name of names) {
       const found = reachedChannels.get(name) as { functions: Set<string>; variables: Set<string>; payload?: string };
       const id = makeChannelId(name);

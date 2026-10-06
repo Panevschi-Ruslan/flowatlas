@@ -52,6 +52,13 @@ describe('joinReferences', () => {
     expect(join([caller, target]).edges.map((edge) => edge.to)).toEqual(['entry:returns@desk:workflow:returns']);
   });
 
+  it('is no stronger than what the caller says of the name it holds', () => {
+    const caller: GraphNode = { ...step('loans', 'start', ['workflow:reserve-copies']), type: 'producer', meta: { [REACHES_META]: ['workflow:reserve-copies'], confidence: 'declared' } };
+    expect(join([caller, workflow('loans', 'reserve-copies')]).edges[0]?.confidence).toBe('declared');
+    const named = workflow('loans', 'reserve-copies', { nameConfidence: 'heuristic' });
+    expect(join([caller, named]).edges[0]?.confidence).toBe('heuristic');
+  });
+
   it('is no stronger than the name it joins on', () => {
     const caller = step('circulation', 'NotifyBorrower', ['workflow:borrower-notifications']);
     const named = workflow('notifications', 'borrower-notifications', { nameConfidence: 'heuristic' });

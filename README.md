@@ -711,6 +711,25 @@ prove, and the path is given so you can run it.
   OpenAPI or AsyncAPI document, and joins and compares like any other end at
   `declared` confidence (`fixtures/multi-repo-declared`,
   `fixtures/multi-repo-asyncapi`).
+- **Serverless on AWS, wired in Terraform.** Lambda functions and the API
+  Gateway routes in front of them are read from the `.tf` files that deploy
+  them, through local modules and the public ones that ship described, with
+  each function named by what it is deployed as (`fixtures/lambda-terraform-rest`,
+  `fixtures/lambda-terraform-modules`, `fixtures/multi-repo-lambda`,
+  `fixtures/lambda-wrapped-handlers`). A Step Functions state machine is a way
+  in whose states are its steps, read from `*.asl.json` or from however the
+  Terraform writes its definition (`fixtures/stepfunctions-asl-files`,
+  `fixtures/stepfunctions-terraform`, `fixtures/multi-repo-stepfunctions`).
+  Publishing through the SDK to EventBridge, SQS and SNS meets the rule,
+  subscription or mapping the deployment declares, and a queue named by
+  `process.env` is completed from the function's environment block
+  (`fixtures/aws-sdk-publishers`, `fixtures/aws-sdk-not-installed`,
+  `fixtures/eventbridge-terraform`, `fixtures/sqs-sns-terraform`,
+  `fixtures/multi-repo-events`). Code that starts a workflow or invokes a
+  function by its deployed name is joined to it, whether it calls the SDK or a
+  helper of the project's own, read or described, so a route leads into the
+  workflow it starts (`fixtures/start-workflow-sdk`,
+  `fixtures/start-workflow-helper`).
 - **Guards.** Everything in front of a way in is a node and an ordered
   `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
   middleware, a procedure's `.use(…)`, a file-system router's declarative list —

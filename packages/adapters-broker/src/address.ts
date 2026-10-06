@@ -5,6 +5,7 @@ import {
   locatorApplies,
   locatorIsCondition,
   MOST_CHOICES,
+  parameterBehind,
   type AddressPart,
   type FlowatlasConfig,
   type LocatedSlot,
@@ -12,7 +13,7 @@ import {
   type LocatorSite,
   type NameLocator,
 } from '@flowatlas/core';
-import { Node, VariableDeclarationKind, type Node as TsNode } from 'ts-morph';
+import { Node, VariableDeclarationKind, type Node as TsNode, type ParameterDeclaration } from 'ts-morph';
 import {
   isResolved,
   resolveChannelName,
@@ -102,6 +103,14 @@ export interface AddressedElement {
    * but environment variables stood in the way.
    */
   readonly awaiting?: readonly AwaitedPart[];
+  /**
+   * The parameter of the enclosing function a one-part address is, where it is
+   * one: the address is decided by whoever calls that function, and is read
+   * there rather than here.
+   */
+  readonly parameter?: ParameterDeclaration;
+  /** A one-part address as it is written, for a reader that keys on the writing. */
+  readonly written?: string;
 }
 
 /**
@@ -264,6 +273,25 @@ const payloadAt = (
 };
 
 /**
+ * The parameter a value written in an address is, if it is one.
+ *
+ * `{ stateMachineArn }` names the value it copies through a symbol of its own,
+ * which asking the property would miss.
+ */
+const parameterOf = (expression: TsNode): ParameterDeclaration | undefined => {
+  const parent = expression.getParent();
+  if (parent !== undefined && Node.isShorthandPropertyAssignment(parent)) {
+    const declaration = parent.getValueSymbol()?.getDeclarations()[0];
+    return declaration !== undefined && Node.isParameterDeclaration(declaration) ? declaration : undefined;
+  }
+  return parameterBehind(expression);
+};
+
+/** The one place a one-part address is written at an element, when it is written. */
+const writtenAt = (located: readonly (readonly LocatedSlot[])[], index: number): TsNode | undefined =>
+  located.map((slots) => slotAt(slots, index)).find((slot) => slot !== undefined)?.expression;
+
+/**
  * Every address a call is sent to, one per element, with the message it carries.
  *
  * As many elements as the longest list a part's locators walked, and one when
@@ -290,12 +318,35 @@ export const readAddress = (
     );
     const message = payloadAt(payloads, index);
     const awaiting = awaitingOf(parts, readings);
+    const resolution = joined(readings, fallback);
+    const written = parts.length === 1 ? writtenAt(located[0] ?? [], index) : undefined;
+    const parameter = written === undefined || isResolved(resolution) ? undefined : parameterOf(written);
     return {
-      resolution: joined(readings, fallback),
+      resolution,
       ...(message === undefined ? {} : { payload: message }),
       ...(awaiting === undefined ? {} : { awaiting }),
+      ...(parameter === undefined ? {} : { parameter }),
+      ...(written === undefined ? {} : { written: written.getText() }),
     };
   });
+};
+
+/**
+ * A one-part address read where a caller wrote it: the argument the caller
+ * passed for the parameter the address is, read as the address would have been.
+ */
+export const readWritten = (
+  expression: TsNode,
+  part: AddressPart,
+  config: Pick<FlowatlasConfig, 'sharedPackages'>,
+): AddressedElement => {
+  const readings = [readPart(part, [[{ expression, reached: true }]], 0, config, expression.getText().slice(0, 60))];
+  const awaiting = awaitingOf([part], readings);
+  return {
+    resolution: joined(readings, expression.getText().slice(0, 60)),
+    ...(awaiting === undefined ? {} : { awaiting }),
+    written: expression.getText(),
+  };
 };
 
 /**

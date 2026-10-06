@@ -1,6 +1,7 @@
 import type { NameLocator } from './locator.js';
 import type { FlowatlasConfig } from '../config.js';
 import type { PackageJson } from './manifest.js';
+import type { DeployedEntryKind } from '../ids.js';
 
 /** What the transport calls the thing a message is addressed to. */
 export type ChannelKind = 'topic' | 'queue' | 'exchange' | 'channel';
@@ -131,8 +132,53 @@ export interface CallPattern {
    * method that happens to share its name.
    */
   receiverPackages?: string[];
+  /**
+   * For a function: the package it is imported from. The call is then the
+   * function called by its name, or as a member of anything imported from the
+   * package - `run(...)` and `orchestrator.run(...)` alike - which is how a
+   * package of helpers is written. Matched on the import, so a package that is
+   * not installed is matched as readily as one that is.
+   */
+  module?: string;
   /** Recorded on the producer node, e.g. `event`, `rpc`, `job`, `message`. */
   kind?: string;
+  /**
+   * What the call starts, for a call that is not a publish at all: its address
+   * is the deployed name of an entry, and the call reaches that entry rather
+   * than a channel of that name (P24).
+   */
+  starts?: StartedEntry;
+}
+
+/**
+ * The entry a call starts by its deployed name, and what the call says about it.
+ *
+ * Starting a workflow or invoking a function has exactly one receiver, named
+ * by the deployment, and the caller often waits for it. Read as a channel, it
+ * would make every workflow a channel and every function a consumer of one, so
+ * the producer records a reference to the entry instead and the linker joins it
+ * by name like any other.
+ */
+export interface StartedEntry {
+  readonly entry: DeployedEntryKind;
+  /**
+   * What the code says, to the name it is deployed under, where the two differ.
+   * A key is what the address reads as, or the expression written there when
+   * that cannot be read (`Process.LoanApproval`). Somebody stated the mapping
+   * and nothing here can check it, so a join through it is `declared`.
+   */
+  readonly names?: Readonly<Record<string, string>>;
+  /**
+   * Where the call says whether it waits, and the kind each value written
+   * there makes it; nothing written, or a value not listed, leaves `kind`.
+   */
+  readonly kindAt?: { readonly at: readonly NameLocator[]; readonly kinds: Readonly<Record<string, string>> };
+  /**
+   * The call hands a run that is waiting its result rather than starting one.
+   * It names the run by a token and no workflow at all, so it is a leaf, and
+   * nothing is joined.
+   */
+  readonly resumes?: boolean;
 }
 
 export interface BrokerAdapter {

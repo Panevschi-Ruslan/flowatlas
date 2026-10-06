@@ -300,6 +300,36 @@ export const makeEntryReference = (kind: EntryKind, key: string): string =>
  */
 export const REACHES_META = 'reaches';
 
+/** The kinds of entry a deployed name is the whole address of. */
+export type DeployedEntryKind = Extract<EntryKind, 'invoke' | 'workflow'>;
+
+const DEPLOYED_KEYS: Readonly<Record<DeployedEntryKind, (name: string) => string>> = {
+  invoke: makeInvokeEntryKey,
+  workflow: makeWorkflowEntryKey,
+};
+
+export const isDeployedEntryKind = (value: unknown): value is DeployedEntryKind =>
+  typeof value === 'string' && Object.hasOwn(DEPLOYED_KEYS, value);
+
+/**
+ * The reference to whatever is deployed under `name` as an entry of `kind`,
+ * its key built by the helper that builds the entry's own.
+ */
+export const makeDeployedReference = (kind: DeployedEntryKind, name: string): string =>
+  makeEntryReference(kind, DEPLOYED_KEYS[kind](name));
+
+/**
+ * The key of a node's `meta` that says what it starts: the kind of entry the
+ * deployed name its address reads is the name of (P24).
+ *
+ * Code that starts a workflow or invokes a function addresses it the way code
+ * that publishes addresses a channel, often by a value of its environment, so
+ * its address waits on the deployment in the same shape (`meta.awaiting`). This
+ * says that the address, once complete, is a {@link REACHES_META} reference
+ * rather than a channel.
+ */
+export const STARTS_META = 'starts';
+
 /**
  * The reference an entry id answers to, or `undefined` for an id that is not
  * an entry's.

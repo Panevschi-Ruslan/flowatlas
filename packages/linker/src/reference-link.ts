@@ -1,5 +1,6 @@
 import {
   CONFIDENCE_LEVELS,
+  CONFIDENCE_RANK,
   entryReferenceOf,
   REACHES_META,
   type Confidence,
@@ -44,13 +45,17 @@ const isConfidence = (value: unknown): value is Confidence =>
  * How far a join on an entry's name can be trusted.
  *
  * `static` unless the entry says its own name is less certain than that - a
- * name taken from a file name rather than from what deploys it - in which case
- * a join on the name is no stronger than the name.
+ * name taken from a file name rather than from what deploys it - or the caller
+ * says the name it holds is, in which case a join on the name is no stronger
+ * than the weaker of the two.
  */
-const confidenceOf = (target: GraphNode): Confidence => {
+const confidenceOf = (caller: GraphNode, target: GraphNode): Confidence => {
   const named = target.meta?.['nameConfidence'];
-  // `static` is the strongest there is, so the weaker of the two is the name's.
-  return isConfidence(named) ? named : 'static';
+  // What the caller says of its own name - read from code it could only
+  // recognise by the source, or taken from a table somebody wrote (P24).
+  const stated = caller.meta?.['confidence'];
+  // `static` is the strongest there is, so the weakest of the three wins.
+  return [named, stated].filter(isConfidence).reduce<Confidence>((weakest, each) => (CONFIDENCE_RANK[each] < CONFIDENCE_RANK[weakest] ? each : weakest), 'static');
 };
 
 export const joinReferences = (
@@ -81,7 +86,7 @@ export const joinReferences = (
           from: caller.id,
           to: target.id,
           type: 'calls',
-          confidence: confidenceOf(target),
+          confidence: confidenceOf(caller, target),
           ...(caller.file === undefined ? {} : { file: caller.file }),
           ...(caller.line === undefined ? {} : { line: caller.line }),
           meta: { via: 'deployed-name', reference },

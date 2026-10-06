@@ -387,6 +387,63 @@ export const customBrokerSchema = z.strictObject({
 });
 
 /**
+ * A call that starts a workflow or invokes a function by the name it is
+ * deployed under, described in configuration (P24).
+ *
+ * The usual case is a helper from a package shared between a project's
+ * services - `orchestrator.run(Process.LoanApproval, input)` - whose source is
+ * not here to read: a private registry, a repository nobody here has cloned.
+ * The description says which call it is, where the name is written, what kind
+ * of thing it starts, and, where what the code says is not the deployed name,
+ * a table from one to the other.
+ *
+ * A fourth kind of description rather than a `broker.custom` producer, because
+ * the thing described is not a message. A start has exactly one receiver,
+ * addressed by a name the deployment owns, and the caller often waits for it;
+ * described as a publish, every workflow would be a channel and every function
+ * a consumer of one, and `dead` and the reverse walk would answer about them in
+ * channel terms.
+ */
+export const starterSchema = z
+  .strictObject({
+    /** The package the helper is imported from. */
+    module: z.string().min(1).optional(),
+    /** The function, called by its name or as a member of what `module` exports. */
+    function: z.string().min(1).optional(),
+    /** Or the type the call is made on, and the method, as for a producer. */
+    receiverType: z.union([z.string().min(1), z.array(z.string().min(1))]).optional(),
+    method: z.string().min(1).optional(),
+    /** What the call starts: a workflow, or a function by its deployed name. */
+    target: z.enum(['workflow', 'invoke']),
+    /** Where the name is written, tried in order. */
+    name: z.array(nameLocatorSchema).min(1),
+    /**
+     * What the code says, to the name it is deployed under: a value the name
+     * reads as, or the expression written there when it cannot be read. A join
+     * through it is `declared`, because nothing here can check it.
+     */
+    names: z.record(z.string().min(1), z.string().min(1)).optional(),
+    /** Recorded on the node the call is drawn as. `start` or `invoke` by default. */
+    kind: z.string().min(1).optional(),
+  })
+  .superRefine((starter, ctx) => {
+    const onReceiver = starter.receiverType !== undefined || starter.method !== undefined;
+    if (starter.function !== undefined && onReceiver) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['function'],
+        message: 'a starter is either a function, or a method with its receiverType, not both.',
+      });
+    } else if (starter.function === undefined && (starter.receiverType === undefined || starter.method === undefined)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [starter.receiverType === undefined ? 'receiverType' : 'method'],
+        message: 'a starter names the function it is, or the receiverType and method it is called as.',
+      });
+    }
+  });
+
+/**
  * A table of handlers the project keeps itself.
  *
  * A bot that registers its buttons through its own `register('key', fn)` has no
@@ -769,6 +826,8 @@ export const flowatlasConfigSchema = z
             custom: z.array(customBrokerSchema).default([]),
           })
           .default({ custom: [] }),
+        /** Calls that start a workflow or invoke a function by its deployed name. */
+        starters: z.array(starterSchema).default([]),
         /**
          * What a repository's infrastructure is read with, where its ways in are
          * declared there.
@@ -830,6 +889,7 @@ export const flowatlasConfigSchema = z
         force: {},
         entry: { registries: [], http: [], procedures: [] },
         broker: { custom: [] },
+        starters: [],
         infra: { modules: [] },
         db: { localBaseClasses: [] },
         frontend: { localClientClasses: [] },
@@ -952,6 +1012,7 @@ export const flowatlasConfigSchema = z
   });
 
 export type CustomBrokerConfig = z.infer<typeof customBrokerSchema>;
+export type StarterConfig = z.infer<typeof starterSchema>;
 export type EntryHttpConfig = z.infer<typeof entryHttpSchema>;
 /**
  * A description as it is written, before the schema fills in what it leaves out.

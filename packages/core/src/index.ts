@@ -27,7 +27,10 @@ export {
   holeIn,
   PARAM_PLACEHOLDER,
   REACHES_META,
+  STARTS_META,
   isChannelId,
+  isDeployedEntryKind,
+  makeDeployedReference,
   isEntryId,
   isHttpMethod,
   isTypeId,
@@ -53,7 +56,7 @@ export {
   UNREAD_SPAN,
   wasRead,
 } from './ids.js';
-export type { HttpMethod, SiteLeafType } from './ids.js';
+export type { DeployedEntryKind, HttpMethod, SiteLeafType } from './ids.js';
 
 export { ENTRY_KINDS, NODE_TYPES, isEntryKind } from './model/nodes.js';
 export { wayInBodyRead } from './model/way-in.js';
@@ -129,6 +132,7 @@ export {
   loadConfig,
   parseConfig,
   serviceConfigSchema,
+  starterSchema,
 } from './config.js';
 export type {
   LocalBaseClass,
@@ -145,6 +149,7 @@ export type {
   InfraModuleConfig,
   InfraModuleDescription,
   LoadConfigOptions,
+  StarterConfig,
   LoadedConfig,
   ServiceConfig,
 } from './config.js';
@@ -250,7 +255,7 @@ export {
   writtenObjectLiteral,
 } from './origin.js';
 export type { BodyRead, Origin, ResolveOriginOptions, TypeOrigin } from './origin.js';
-export type { AddressPart, BrokerAdapter, CallPattern, ChannelKind } from './adapters/broker.js';
+export type { AddressPart, BrokerAdapter, CallPattern, ChannelKind, StartedEntry } from './adapters/broker.js';
 export {
   EVERY_ELEMENT,
   locatedExpressions,

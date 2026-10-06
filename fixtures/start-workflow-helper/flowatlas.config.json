@@ -1,0 +1,17 @@
+{
+  "services": [
+    { "name": "lending", "repo": "./loans", "type": "lambda" }
+  ],
+  "adapters": {
+    "starters": [
+      {
+        "module": "@library/orchestration",
+        "function": "run",
+        "target": "workflow",
+        "name": [{ "kind": "argument", "index": 0 }],
+        "names": { "Process.ReserveCopies": "lending-reserve-copies" }
+      }
+    ]
+  },
+  "output": ".flowatlas"
+}

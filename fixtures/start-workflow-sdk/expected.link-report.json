@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T17:27:27.470Z",
+  "configHash": "f38fa4940897",
+  "services": [
+    {
+      "name": "lending",
+      "repo": ".",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 34,
+      "edges": 24,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 523
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 0,
+    "uncalled": [
+      "entry:lending:http:POST:/loans",
+      "entry:lending:http:POST:/loans/:param/renewals",
+      "entry:lending:http:POST:/reviews"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 34,
+    "edges": 31,
+    "types": 0,
+    "unresolved": 0
+  }
+}

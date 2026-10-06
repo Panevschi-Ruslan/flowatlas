@@ -1,7 +1,7 @@
 import { methodNamedOn, resolveTypeOrigin, type ClassMethod, type TypeOrigin } from '@flowatlas/core';
 import type { CallExpression, ClassDeclaration, Node as TsNode, Type } from 'ts-morph';
 import { Node } from 'ts-morph';
-import { statedOrigin } from './stated-origin.js';
+import { importOf, packageOfSpecifier, statedOrigin } from './stated-origin.js';
 
 /**
  * Reading one publishing or subscribing call site.
@@ -90,6 +90,26 @@ export const functionEvidence = (callee: TsNode, name: string): ReceiverEvidence
   if (declared !== name) return undefined;
   const target = symbol?.getAliasedSymbol() ?? symbol;
   return (target?.getDeclarations().length ?? 0) > 0 ? 'checked' : 'stated';
+};
+
+/**
+ * How a call of a function a package exports is known to be the one a pattern
+ * names, if it is.
+ *
+ * `run(...)` imported under that name, or `orchestrator.run(...)` on anything
+ * imported from the package - a namespace, a default, an object it exports.
+ * The import statement says which package a binding is from whether or not
+ * the package is installed, and the description says what its function does;
+ * nothing is inferred from a type, so the answer is `checked`.
+ */
+export const moduleFunctionEvidence = (callee: TsNode, module: string, name: string): ReceiverEvidence | undefined => {
+  const binding = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
+  if (!Node.isIdentifier(binding)) return undefined;
+  const imported = importOf(binding);
+  if (imported === undefined) return undefined;
+  if (imported.module !== module && packageOfSpecifier(imported.module) !== module) return undefined;
+  const called = Node.isPropertyAccessExpression(callee) ? callee.getName() : imported.exported;
+  return called === name ? 'checked' : undefined;
 };
 
 /** The same question asked of the expression rather than of its resolved origin. */

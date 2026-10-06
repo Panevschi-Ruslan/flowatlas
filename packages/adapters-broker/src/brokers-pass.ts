@@ -33,10 +33,12 @@ import { scopesOf, type Holder, type PassContext, type Scope } from '@flowatlas/
 import type { CallExpression, ClassDeclaration, MethodDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { brokerAdapters, createCustomBrokerAdapter, type BrokerSpec, type ConsumerPattern } from './adapters/index.js';
+import { createStarterAdapter } from './adapters/starters.js';
 import {
   hasAcknowledgement,
   functionEvidence,
   methodMatches,
+  moduleFunctionEvidence,
   receiverEvidence,
   receiverIsFrom,
   replyAt,
@@ -48,9 +50,16 @@ import { payloadParameter, typeAtPath } from './payload.js';
 import { isResolved, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
 import { endpointShapingAt, isUnreadable, unreadableEndpointRow, type EndpointShaping } from './endpoint.js';
 import { pairKey, readBrokerMarkers } from './markers.js';
+import { isStartPattern, startReader } from './starts.js';
 
 const lineColOf = (node: TsNode): { line: number; column: number } =>
   node.getSourceFile().getLineAndColumnAtPos(node.getStart());
+
+/** What a call is made on: the receiver of a method, or the function itself. */
+const receiverOf = (call: CallExpression): TsNode => {
+  const callee = call.getExpression();
+  return Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
+};
 
 /**
  * The channel a site is addressed to, read through the locators of its pattern.
@@ -93,7 +102,12 @@ const environmentHint = (variable: string): string =>
 export const brokerSpecsFor = (ctx: PassContext): BrokerSpec[] => {
   const detected = new Set(ctx.adapters.broker.map((adapter) => adapter.name));
   const specs = brokerAdapters.filter((spec) => detected.has(spec.name));
-  return [...specs, ...ctx.config.adapters.broker.custom.map(createCustomBrokerAdapter)];
+  const { starters } = ctx.config.adapters;
+  return [
+    ...specs,
+    ...ctx.config.adapters.broker.custom.map(createCustomBrokerAdapter),
+    ...(starters.length === 0 ? [] : [createStarterAdapter(starters)]),
+  ];
 };
 
 /**
@@ -108,7 +122,9 @@ export const brokerSpecsFor = (ctx: PassContext): BrokerSpec[] => {
  */
 export const extractBrokers = (ctx: PassContext): void => {
   const specs = brokerSpecsFor(ctx);
-  if (specs.length === 0) return;
+  // Nothing to read with, and no deployed function whose undescribed helper
+  // calls are worth naming.
+  if (specs.length === 0 && !ctx.entries.some((entry) => ctx.builder.getNode(entry.node.id)?.kind === 'invoke')) return;
 
   /** Method and channel pairs the code itself already states. */
   const alreadyStatic = new Set<string>();
@@ -863,7 +879,9 @@ export const extractBrokers = (ctx: PassContext): void => {
   const evidenceFor = (pattern: CallPattern, call: CallExpression): ReceiverEvidence | undefined => {
     const callee = call.getExpression();
     const evidence =
-      pattern.calledAs === 'function'
+      pattern.module !== undefined
+        ? moduleFunctionEvidence(callee, pattern.module, pattern.method)
+        : pattern.calledAs === 'function'
         ? functionEvidence(callee, pattern.method)
         : Node.isPropertyAccessExpression(callee) && methodMatches(callee.getName(), pattern.method)
           ? receiverEvidence(callee.getExpression(), pattern)
@@ -925,17 +943,33 @@ export const extractBrokers = (ctx: PassContext): void => {
   // `@flowatlas/extract-scopes` rather than copied here, because two copies of
   // the judgement "what counts as a body" diverge the first time one of them is
   // reconsidered (R54).
-  for (const scope of scopesOf(ctx)) {
+  const scopes = [...scopesOf(ctx)];
+  const bodies = new Map<TsNode, Scope>(scopes.map((scope) => [scope.body, scope]));
+  /** The body a call is written in, for a start whose name its caller decides. */
+  const holderAt = (site: TsNode): Scope | undefined => {
+    for (let at: TsNode | undefined = site; at !== undefined; at = at.getParent()) {
+      const scope = bodies.get(at);
+      if (scope !== undefined) return scope;
+    }
+    return undefined;
+  };
+  const starts = startReader(ctx, holderAt);
+
+  for (const scope of scopes) {
     forEachCall(scope.body, (call) => {
       const expression = call as unknown as CallExpression;
       for (const spec of specs) {
         for (const pattern of spec.producerPatterns) {
           const evidence = evidenceFor(pattern, expression);
           if (evidence === undefined) continue;
-          emitProducer(expression, pattern, spec, scope, scope.owner, evidence);
+          // A start is read through the same pattern and address, and names an
+          // entry rather than a channel.
+          if (isStartPattern(pattern)) starts.read(expression, pattern, spec, scope, contextOf(receiverOf(expression), scope.owner), evidence);
+          else emitProducer(expression, pattern, spec, scope, scope.owner, evidence);
           return;
         }
       }
+      starts.notice(expression, scope);
     });
 
     readReceiving(scope);

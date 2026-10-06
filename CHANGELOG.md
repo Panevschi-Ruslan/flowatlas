@@ -142,6 +142,27 @@ only one of them moved.
   variable files dispute is an `environment-value-unread` row naming them, and
   `services[].infra.vars` chooses. A settings key a function sets says where its
   value comes from on the `reads_config` edge (`setBy`).
+- **Code that starts a workflow or invokes a function, joined to it.** Step
+  Functions `StartExecution` and `StartSyncExecution` and Lambda `Invoke`,
+  versions 3 and 2, are rows of the SDK's table: the call is a producer
+  labelled `start`, `start-sync`, `invoke` or `invoke-async` (`InvocationType:
+  'Event'`) that reaches the `workflow` or `invoke` entry deployed under the name
+  it reads - a literal, an ARN, or a variable the function's Terraform sets - and
+  never a channel. So `flow 'POST /loans'` goes on from the handler into the
+  workflow it starts and the functions that workflow invokes.
+  `SendTaskSuccess` and `SendTaskFailure` are a leaf on the handler, joined to
+  nothing (`fixtures/start-workflow-sdk`).
+- **A helper that starts something, read or described.** Where the name is the
+  parameter of a method whose source is read, the start is drawn at each call of
+  it with the name its caller passes. A helper from a package that is not here
+  is described under `adapters.starters` - its `module`, its `function` (or
+  `receiverType` and `method`), its `target` (`workflow` or `invoke`), where the
+  `name` is written, and an optional `names` table from what the code says to
+  the deployed name. A join through `names` is `declared`, never `static`. An
+  undescribed call into a package that is not installed, from a deployed
+  function, handed a string or an enum member, is one `starter-undescribed` row
+  naming the package and the function, with the description to write
+  (`fixtures/start-workflow-helper`).
 
 ### Changed
 

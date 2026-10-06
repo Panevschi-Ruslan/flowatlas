@@ -286,6 +286,28 @@ const NAMESPACE_CASES = [
 ];
 
 /**
+ * Code that starts a workflow or invokes a function by its deployed name (P24),
+ * walked from the route a person calls into the workflow it starts and the
+ * functions that workflow invokes: the SDK called directly, then a helper whose
+ * source is read and one whose package is absent and described.
+ */
+const sdkStartsPlain = plainFor('start-workflow-sdk');
+const helperStartsPlain = plainFor('start-workflow-helper');
+
+const SDK_START_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...sdkStartsPlain, format: 'tree' }, io)],
+  ['flow.post-reviews.tree.txt', (io) => runFlow('POST /reviews', { ...sdkStartsPlain, format: 'tree' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: sdkStartsPlain.config }, io)],
+];
+
+const HELPER_START_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...helperStartsPlain, format: 'tree' }, io)],
+  ['flow.post-loans.json.l2.json', (io) => runFlow('POST /loans', { ...helperStartsPlain, format: 'json', detail: '2' }, io)],
+  ['flow.renew-loan.tree.txt', (io) => runFlow('POST /loans/:param/renewals', { ...helperStartsPlain, format: 'tree' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: helperStartsPlain.config }, io)],
+];
+
+/**
  * Sets of recordings, in several places.
  *
  * The first owns its folder, so an answer nobody asks for any more is swept
@@ -307,6 +329,8 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'sqs-sns-terraform', 'expected.cli'), owned: true, cases: QUEUE_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-events', 'expected.cli'), owned: true, cases: MULTI_EVENT_CASES },
   { dir: join(root, 'fixtures', 'lambda-namespace-handlers', 'expected.cli'), owned: true, cases: NAMESPACE_CASES },
+  { dir: join(root, 'fixtures', 'start-workflow-sdk', 'expected.cli'), owned: true, cases: SDK_START_CASES },
+  { dir: join(root, 'fixtures', 'start-workflow-helper', 'expected.cli'), owned: true, cases: HELPER_START_CASES },
 ];
 
 /**

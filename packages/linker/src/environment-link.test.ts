@@ -1,4 +1,13 @@
-import { AWAITING_META, ENVIRONMENT_META, type EnvironmentValue, type GraphEdge, type GraphNode, type Unresolved } from '@flowatlas/core';
+import {
+  AWAITING_META,
+  ENVIRONMENT_META,
+  REACHES_META,
+  STARTS_META,
+  type EnvironmentValue,
+  type GraphEdge,
+  type GraphNode,
+  type Unresolved,
+} from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import { completeFromEnvironment } from './environment-link.js';
 import { edgeKey } from './order.js';
@@ -138,5 +147,34 @@ describe('completeFromEnvironment', () => {
     expect(completeFromEnvironment(nodes, edges, rows)).toEqual([]);
     expect(rows).toHaveLength(1);
     expect(edges.size).toBe(0);
+  });
+
+  it('completes what a start waits on into a reference to the entry it names, and no channel', () => {
+    const starter: GraphNode = {
+      id: 'producer:loans#src/create-loan.ts:12:9',
+      type: 'producer',
+      label: 'start ?',
+      repo: 'loans',
+      file: 'src/create-loan.ts',
+      line: 12,
+      kind: 'start',
+      meta: { kind: 'start', [STARTS_META]: 'workflow', confidence: 'static', [AWAITING_META]: [{ parts: [{ environment: 'LOAN_APPROVAL_ARN' }] }] },
+    };
+    const deployed: GraphNode = {
+      ...fn('lending-create-loan', { LOAN_APPROVAL_ARN: { written: 'aws_sfn_state_machine.loan_approval.arn', value: 'lending-loan-approval', kind: 'workflow' } }),
+      repo: 'loans',
+    };
+    const handler: GraphNode = { id: 'loans#src/create-loan.ts:handler', type: 'function', label: 'handler', repo: 'loans' };
+    const nodes = new Map([deployed, handler, starter].map((node) => [node.id, structuredClone(node)]));
+    const edges = new Map(
+      [edge(deployed.id, handler.id, 'handles'), edge(handler.id, starter.id, 'calls', 'heuristic')].map((each) => [edgeKey(each), each]),
+    );
+    const rows: Unresolved[] = [{ service: 'loans', file: 'src/create-loan.ts', line: 12, reason: 'start-from-environment' }];
+    expect(completeFromEnvironment(nodes, edges, rows)).toEqual([]);
+    expect(rows).toEqual([]);
+    expect(nodes.get(starter.id)?.meta?.[REACHES_META]).toEqual(['workflow:lending-loan-approval']);
+    expect(nodes.get(starter.id)?.label).toBe('start lending-loan-approval');
+    expect([...nodes.values()].filter((node) => node.type === 'channel')).toEqual([]);
+    expect([...edges.values()].find((each) => each.to === starter.id)?.confidence).toBe('static');
   });
 });

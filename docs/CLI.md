@@ -729,6 +729,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
 | The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key` |
 | Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `channel-from-environment`, `consumer-handler-unresolved`, `payload-type-unknown` |
+| Starting a workflow or a function by its deployed name | `start-from-environment`, `start-name-unread`, `starter-undescribed` |
 | Settings | `dynamic-config-key` |
 | Bots and handler tables | `bot-handlers-not-found`, `dynamic-bot-trigger`, `entry-registry-unconfigured`, `registry-key-dynamic`, `registry-handler-anonymous`, `orphan-scene-decorator`, `orphan-update-decorator`, `wizard-step-conflict` |
 | Annotations | `marker-route-not-found`, `marker-service-unknown`, `marker-unknown-arg`, `marker-arg-not-a-name`, `marker-names-nothing` |
@@ -1028,6 +1029,7 @@ it.
 | `db.localBaseClasses` | (string \| object)[] | `[]` | classes of your own that behave like a repository, so calls through them are data access — including classes a workspace package of yours declares. An entry may be `{ "name": "BaseRepository", "tableProperty": "collectionName" }` to say which property each class extending it sets to its table |
 | `frontend.localClientClasses` | string[] | `[]` | classes of your own that make HTTP requests, so `get`/`post`/… called on them are requests |
 | `broker.custom` | object[] | `[]` | an in-house message bus, described so its publishers and handlers are found |
+| `starters` | object[] | `[]` | a helper of your own that starts a workflow or invokes a function by its deployed name, described so the start is joined to what it starts (see [Code that starts a workflow or a function](#code-that-starts-a-workflow-or-a-function)) |
 | `entry.registries` | object[] | `[]` | a table of handlers you keep yourself, described so each registration is a way in |
 | `entry.http` | object[] | `[]` | an HTTP framework nothing here ships an adapter for, described so its routes are read |
 | `entry.procedures` | object[] | `[]` | a framework whose ways in are the keys of a tree of object literals, described so each one is read |
@@ -1362,6 +1364,13 @@ parts a configuration could write, plus the one thing a configuration cannot say
 the package the client comes from (`fixtures/aws-sdk-publishers`). With nothing
 installed, a client is recognised by its construction and the import beside it,
 and every edge read that way is `heuristic` (`fixtures/aws-sdk-not-installed`).
+
+Starting a workflow and invoking a function are rows of the same table, read
+the same three ways from `@aws-sdk/client-sfn`, `@aws-sdk/client-lambda` and
+`aws-sdk` (where Step Functions is `StepFunctions`): Step Functions
+`StartExecution` and `StartSyncExecution` by `stateMachineArn`, and Lambda
+`Invoke` by `FunctionName`. They name no channel; see [Code that starts a
+workflow or a function](#code-that-starts-a-workflow-or-a-function).
 
 **A queue, topic or bus named by `process.env` is completed from the
 deployment.** The variable's name is not the resource's, and its value is set
@@ -2101,6 +2110,90 @@ longest way through it, and the usual eight beyond that, into whatever the
 deepest step reaches; `--max-nodes` still bounds what is printed. `impact` is
 not lengthened in the same way: a walk back up from a handler stops at its
 usual depth.
+
+### Code that starts a workflow or a function
+
+A handler that starts a state machine or invokes another function names it by
+the name it is deployed under, and the call is joined to the `workflow` or
+`invoke` entry of that name, in whichever service deploys it, the way a step of
+a workflow is. So `flow 'POST /loans'` goes on from the handler into the
+workflow it starts and every function that workflow invokes. The call is drawn
+as a producer labelled with what it does and the name - `start
+lending-loan-approval`, `invoke lending-hold-copies` - that carries a reference
+(`meta.reaches`) the linker joins, and never as a channel: a workflow or a
+function has exactly one receiver, which the deployment names.
+
+**Through the SDK** (see [The AWS SDK](#the-aws-sdk)):
+
+| Operation | Starts | Name from | Recorded as |
+|---|---|---|---|
+| Step Functions `StartExecution` | the workflow | `stateMachineArn`, its version or alias dropped | `start` |
+| Step Functions `StartSyncExecution` | the workflow, and waits for it | `stateMachineArn` | `start-sync` |
+| Lambda `Invoke` | the function | `FunctionName`: a name, a partial or a full ARN, a `name:alias` | `invoke`, or `invoke-async` where `InvocationType` is `Event` (`invoke-dry-run` for `DryRun`) |
+| Step Functions `SendTaskSuccess`, `SendTaskFailure` | nothing: it answers a run waiting on a `.waitForTaskToken` step | - | `task-success`, `task-failure`, a leaf on the handler that joins nothing, because a token names a run and no workflow |
+
+A name read from `process.env` is completed from the deployment exactly as a
+queue's is: the call waits on the variable (`meta.awaiting`, and a
+`start-from-environment` row), and where a function whose Terraform sets it -
+`LOAN_APPROVAL_ARN = aws_sfn_state_machine.loan_approval.arn` - runs the call,
+the name is that workflow's and the row goes (`fixtures/start-workflow-sdk`).
+
+**Through a helper whose source is read.** Where the call is inside a method of
+the project's own - a workspace package, or one installed - and the name it
+starts is that method's parameter, the start is the caller's: each call of the
+method is followed out, the argument passed there is read as the name would
+have been, and the start is drawn at that call, in the caller. A caller that is
+itself handing the name on is followed further. Nothing is drawn inside the
+helper unless nothing calls it, or a call may land in another implementation.
+This is the forwarding a shared HTTP client's requests already get, and it
+follows methods, not module-level functions.
+
+**Through a helper whose source is not here, described.** A package shared by
+a project's services is often not installed where someone first reads one: a
+private registry, a repository nobody here has cloned. `adapters.starters`
+describes its call:
+
+```jsonc
+"starters": [{
+  "module": "@library/orchestration",   // the package the helper is imported from
+  "function": "run",                    // or "receiverType" and "method"
+  "target": "workflow",                 // or "invoke"
+  "name": [{ "kind": "argument", "index": 0 }],
+  "names": { "Process.LoanApproval": "lending-loan-approval" }
+}]
+```
+
+| Key | Means |
+|---|---|
+| `module` | the package. With `function`, the call is `run(...)` imported under that name or `orchestrator.run(...)` on anything imported from the package, matched on the import, so an absent package is matched as readily as an installed one. With `receiverType` and `method`, it is the package the receiver's class comes from |
+| `function`, or `receiverType` and `method` | which call it is, as for a [`broker.custom`](#adapters) producer |
+| `target` | `workflow` or `invoke`: what the name is the deployed name of |
+| `name` | where the name is written, in any [locator](#where-the-channel-name-is-written), tried in order |
+| `names` | optional: what the code says, to the deployed name, where the two differ. A key is what the name reads as, or the expression as written where that cannot be read - an enum member of a package that is not here is `Process.LoanApproval` |
+| `kind` | optional: what the call is recorded as; `start` or `invoke` by default |
+
+**How far each join is trusted.** A name the code states and the deployment
+confirms is `static`, whether the SDK, a read helper or a described one states
+it. A name taken from a `names` table is `declared`: somebody wrote the mapping,
+nothing here can check it, and a stale table must not read as proof - the same
+level a service read from its OpenAPI document has. A deployed name is never
+guessed from an enum member's spelling; a convention can be written in `names`,
+and is never inferred.
+
+It is a description of its own rather than a `broker.custom` producer because
+what it describes is not a message. Described as a publish, every state machine
+would be a channel and every function a consumer of one, and `dead` and the
+reverse walk would answer about them in channel terms.
+
+**`doctor` says which helper to describe.** A call into a package that is not
+installed, from the handler of a deployed function, handed a string or a member
+of an enum, has the shape of a start nobody has described. It is one
+`starter-undescribed` row per package and function, at the first call, with the
+description to write in the hint and in `meta.description`; filling in the
+deployed name, and `"target": "invoke"` for a function, is left to you. A call
+another reader already drew - a request, a query - is not reported. Installing
+the package, so its source is read, answers the row as well
+(`fixtures/start-workflow-helper`).
 
 ---
 

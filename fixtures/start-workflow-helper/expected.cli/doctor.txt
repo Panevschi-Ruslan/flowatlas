@@ -1,0 +1,22 @@
+unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+
+unresolved: 1 to act on over 2 rows, and 3 places static reading cannot see, folded into 1
+  starter-undescribed: 1 row
+    @library/scheduling is not installed, so what schedule does is not read, and it is called from a deployed function with Reminder.LoanDue. If it starts a workflow or invokes a function by its deployed name, describe it under adapters.starters as {"module":"@library/scheduling","function":"schedule","target":"workflow","name":[{"kind":"argument","index":0}],"names":{"Reminder.LoanDue":"<deployed name>"}} (`"target": "invoke"` for a function); or install the package, so its source is read.
+      loans/src/handlers/renew-loan.ts:13  @library/scheduling schedule
+  call-dynamic-receiver (info): 1 row over 3 places
+    The receiver has no single class type; inject a class to make the edge visible.
+      loans/src/handlers/create-loan.ts:16  handler -> orchestrator.run
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 0 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 1 now, +1)
+  no baseline at <root>/fixtures/start-workflow-helper/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  starter-undescribed: 0 → 1 (+1)
+  new (1):
+    lending|src/handlers/renew-loan.ts|@library/scheduling schedule|starter-undescribed

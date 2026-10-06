@@ -4,17 +4,20 @@ import {
   type AddressPart,
   type CallPattern,
   type ChannelKind,
+  type DeployedEntryKind,
   type ChannelPattern,
   type MessagePattern,
   type MessageTarget,
   type NameLocator,
   type PackageJson,
+  type StartedEntry,
 } from '@flowatlas/core';
 import { ADDRESS_SEPARATOR } from '../address.js';
 import type { BrokerSpec } from './types.js';
 
 /**
- * The AWS SDK's three messaging clients, as descriptions.
+ * The AWS SDK's three messaging clients, and the two that start something by
+ * its deployed name, as descriptions.
  *
  * Each operation is a row: the command it is sent as, the method it is called
  * as, where its input names the address and where it carries the message. The
@@ -22,8 +25,10 @@ import type { BrokerSpec } from './types.js';
  * compiles into, using the same locators a person can write there -
  * `constructed-argument-path` for a command, `argument-path` for a method's
  * input - so the SDK is read by nothing a project wrapping it could not describe
- * for itself. The one thing a description in configuration cannot say is
- * `receiverPackages`: it names a client by its class alone.
+ * for itself. What configuration cannot say is a publisher's
+ * `receiverPackages` - `broker.custom` names a client by its class alone - and,
+ * of a start, which value of the input makes it one nobody waits for, or that
+ * it answers a waiting run rather than starting one.
  *
  * Three shapes of call reach each operation, and every row reads all three:
  *
@@ -33,9 +38,14 @@ import type { BrokerSpec } from './types.js';
  * - `service.putEvents(input).promise()`, version 2 - the same method, the same
  *   input, the client declared in `aws-sdk`.
  *
- * Only publishing is read here. Who receives - a rule, a subscription, a
- * mapping from a queue to a function - is declared in the deployment and not
- * in code, and is read from there.
+ * Only publishing and starting are read here. Who receives - a rule, a
+ * subscription, a mapping from a queue to a function - is declared in the
+ * deployment and not in code, and is read from there.
+ *
+ * Starting a workflow and invoking a function are rows of the same table
+ * (P24): an operation that `starts` reads its address as the deployed name of
+ * an entry rather than of a channel, so the same three shapes of call, the
+ * same locators and the same completion from the environment serve both.
  */
 
 /**
@@ -70,6 +80,13 @@ export const DEPLOYED_FORMS = {
   queue: ['^https?://[^/]+/[^/]+/([^/?#]+)/?$', '^arn:[^:]+:sqs:[^:]*:[^:]*:([^:]+)$'],
   topic: ['^arn:[^:]+:sns:[^:]*:[^:]*:([^:]+)$'],
   bus: ['^arn:[^:]+:events:[^:]*:[^:]*:event-bus/(.+)$'],
+  // Any version or alias after the name is dropped: the name is what is deployed.
+  stateMachine: ['^arn:[^:]+:states:[^:]*:[^:]*:stateMachine:([^:]+)(?::[^:]+)?$'],
+  function: [
+    '^arn:[^:]+:lambda:[^:]*:[^:]*:function:([^:]+)(?::[^:]+)?$',
+    '^(?:[^:]+:)?function:([^:]+)(?::[^:]+)?$',
+    '^([^:]+):[^:]+$',
+  ],
 } as const;
 
 export const queueChannel = (name: string): string =>
@@ -136,21 +153,33 @@ type InputPart =
       readonly forms?: readonly string[];
     };
 
-/** One operation that publishes. */
+/** What an operation that starts something starts, written against its input. */
+interface Starts {
+  readonly entry: DeployedEntryKind;
+  /** Where the input says whether the caller waits, and the kind each value makes the call. */
+  readonly kindAt?: { readonly path: readonly string[]; readonly kinds: Readonly<Record<string, string>> };
+  readonly resumes?: boolean;
+}
+
+/** One operation that publishes, or starts something. */
 interface Operation {
   /** The command class version 3 sends it as. */
   readonly command: string;
   /** The method both clients that take the input directly call it as. */
   readonly method: string;
   readonly address: readonly InputPart[];
-  /** Where in the input the message is. */
-  readonly payload: readonly string[];
+  /** Where in the input the message is, for an operation that sends one. */
+  readonly payload?: readonly string[];
+  /** What it is recorded as, where that is not the service's word. */
+  readonly kind?: string;
+  readonly starts?: Starts;
 }
 
-/** One service: its package, its clients, and what it publishes. */
+/** One service: its package, its clients, and what it publishes or starts. */
 interface Service {
   readonly adapter: string;
-  readonly channelKind: ChannelKind;
+  /** Absent for a service that publishes to no channel at all. */
+  readonly channelKind?: ChannelKind;
   /** What a publish is recorded as. */
   readonly kind: string;
   /** The version 3 package. */
@@ -159,6 +188,8 @@ interface Service {
   readonly client: string;
   /** The class version 3's aggregated client and version 2's client share. */
   readonly service: string;
+  /** The class version 2 names the service by, where it is not version 3's. */
+  readonly v2Service?: string;
   readonly operations: readonly Operation[];
 }
 
@@ -174,6 +205,11 @@ const TOPIC: readonly InputPart[] = [
   { literal: AWS_SERVICE_PREFIX.sns },
   { path: ['TopicArn'], forms: DEPLOYED_FORMS.topic },
 ];
+
+const STATE_MACHINE: readonly InputPart[] = [{ path: ['stateMachineArn'], forms: DEPLOYED_FORMS.stateMachine }];
+
+/** A task token names a waiting run, and no workflow: where it is read, nothing is. */
+const TASK_TOKEN: readonly InputPart[] = [{ path: ['taskToken'] }];
 
 const SERVICES: readonly Service[] = [
   {
@@ -229,6 +265,54 @@ const SERVICES: readonly Service[] = [
       },
     ],
   },
+  {
+    adapter: 'aws-stepfunctions',
+    kind: 'start',
+    package: '@aws-sdk/client-sfn',
+    client: 'SFNClient',
+    service: 'SFN',
+    v2Service: 'StepFunctions',
+    operations: [
+      { command: 'StartExecutionCommand', method: 'startExecution', address: STATE_MACHINE, starts: { entry: 'workflow' } },
+      {
+        command: 'StartSyncExecutionCommand',
+        method: 'startSyncExecution',
+        address: STATE_MACHINE,
+        kind: 'start-sync',
+        starts: { entry: 'workflow' },
+      },
+      {
+        command: 'SendTaskSuccessCommand',
+        method: 'sendTaskSuccess',
+        address: TASK_TOKEN,
+        kind: 'task-success',
+        starts: { entry: 'workflow', resumes: true },
+      },
+      {
+        command: 'SendTaskFailureCommand',
+        method: 'sendTaskFailure',
+        address: TASK_TOKEN,
+        kind: 'task-failure',
+        starts: { entry: 'workflow', resumes: true },
+      },
+    ],
+  },
+  {
+    adapter: 'aws-lambda-invoke',
+    kind: 'invoke',
+    package: '@aws-sdk/client-lambda',
+    client: 'LambdaClient',
+    service: 'Lambda',
+    operations: [
+      {
+        command: 'InvokeCommand',
+        method: 'invoke',
+        address: [{ path: ['FunctionName'], forms: DEPLOYED_FORMS.function }],
+        // Left out, the caller waits for the answer; `Event` hands the call over and returns.
+        starts: { entry: 'invoke', kindAt: { path: ['InvocationType'], kinds: { Event: 'invoke-async', DryRun: 'invoke-dry-run' } } },
+      },
+    ],
+  },
 ];
 
 /** A path into the input, as a locator for one shape of call. */
@@ -251,6 +335,12 @@ const addressAt = (parts: readonly InputPart[], locate: InputLocator): AddressPa
         },
   );
 
+const startsAt = (starts: Starts, locate: InputLocator): StartedEntry => ({
+  entry: starts.entry,
+  ...(starts.kindAt === undefined ? {} : { kindAt: { at: [locate(starts.kindAt.path)], kinds: starts.kindAt.kinds } }),
+  ...(starts.resumes === undefined ? {} : { resumes: starts.resumes }),
+});
+
 /** The two patterns one operation is read through: a command sent, and a method called. */
 const patternsOf = (service: Service, operation: Operation): CallPattern[] => {
   const shapes: readonly { method: string; locate: InputLocator; receiverType: string[]; receiverPackages: string[] }[] = [
@@ -264,7 +354,7 @@ const patternsOf = (service: Service, operation: Operation): CallPattern[] => {
     {
       method: operation.method,
       locate: viaInput,
-      receiverType: [service.service],
+      receiverType: [service.service, ...(service.v2Service === undefined ? [] : [service.v2Service])],
       receiverPackages: [service.package, V2_PACKAGE],
     },
   ];
@@ -272,10 +362,11 @@ const patternsOf = (service: Service, operation: Operation): CallPattern[] => {
     method,
     channelArg: -1,
     address: addressAt(operation.address, locate),
-    payload: [locate(operation.payload)],
+    ...(operation.payload === undefined ? {} : { payload: [locate(operation.payload)] }),
     receiverType,
     receiverPackages,
-    kind: service.kind,
+    kind: operation.kind ?? service.kind,
+    ...(operation.starts === undefined ? {} : { starts: startsAt(operation.starts, locate) }),
   }));
 };
 
@@ -296,7 +387,8 @@ const specOf = (service: Service): BrokerSpec => ({
   producerPatterns: service.operations.flatMap((operation) => patternsOf(service, operation)),
   consumerDecorators: [],
   consumerPatterns: [],
-  channelKind: service.channelKind,
+  // A service that only starts things names no channel, and this is never read.
+  channelKind: service.channelKind ?? 'channel',
 });
 
 export const awsBrokerAdapters: readonly BrokerSpec[] = SERVICES.map(specOf);
