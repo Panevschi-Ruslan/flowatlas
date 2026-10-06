@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-held-calls",
-  "generatedAt": "2026-10-06T11:32:01.768Z",
+  "generatedAt": "2026-10-06T18:24:05.455Z",
   "nodes": [
     {
       "id": "config_key:nest-held-calls#GITHUB_API_TOKEN",
@@ -57,15 +57,15 @@
       }
     },
     {
-      "id": "http_out:nest-held-calls#src/skills/github-bundle.ts:19:26",
+      "id": "http_out:nest-held-calls#src/skills/skills.service.ts:12:12",
       "type": "http_out",
       "label": "GET /repos/:param/tarball",
       "repo": "nest-held-calls",
-      "file": "src/skills/github-bundle.ts",
-      "line": 19,
+      "file": "src/skills/skills.service.ts",
+      "line": 12,
       "meta": {
         "method": "GET",
-        "url": "https://api.github.com/repos/${…}/tarball",
+        "url": "https://api.github.com/repos/:param/tarball",
         "path": "/repos/:param/tarball",
         "baseUrlEnv": null,
         "responseType": null,
@@ -229,12 +229,12 @@
       "returns": "boolean"
     },
     {
-      "from": "http_out:nest-held-calls#src/skills/github-bundle.ts:19:26",
+      "from": "http_out:nest-held-calls#src/skills/skills.service.ts:12:12",
       "to": "external_api:api.github.com",
       "type": "calls",
       "confidence": "static",
-      "file": "src/skills/github-bundle.ts",
-      "line": 19
+      "file": "src/skills/skills.service.ts",
+      "line": 12
     },
     {
       "from": "nest-held-calls#src/skills/github-bundle.ts:buildGithubHeaders",
@@ -259,14 +259,6 @@
       "confidence": "static",
       "file": "src/skills/github-bundle.ts",
       "line": 33
-    },
-    {
-      "from": "nest-held-calls#src/skills/github-bundle.ts:streamTarball",
-      "to": "http_out:nest-held-calls#src/skills/github-bundle.ts:19:26",
-      "type": "calls",
-      "confidence": "static",
-      "file": "src/skills/github-bundle.ts",
-      "line": 19
     },
     {
       "from": "nest-held-calls#src/skills/github-bundle.ts:streamTarball",
@@ -305,6 +297,14 @@
       "line": 11,
       "params": [],
       "returns": "boolean"
+    },
+    {
+      "from": "nest-held-calls#src/skills/skills.service.ts:SkillsService.bundle",
+      "to": "http_out:nest-held-calls#src/skills/skills.service.ts:12:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/skills/skills.service.ts",
+      "line": 12
     },
     {
       "from": "nest-held-calls#src/skills/skills.service.ts:SkillsService.bundle",

@@ -1,4 +1,4 @@
-import { choosesASegment, constantPropertyValue, holeIn, normalizePath, UNREAD_SPAN } from '@flowatlas/core';
+import { choosesASegment, constantPropertyValue, holeIn, normalizePath, PARAM_PLACEHOLDER, UNREAD_SPAN } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { evaluateExpression } from '@flowatlas/extractor-nestjs';
@@ -128,6 +128,11 @@ const ORIGIN = /^([a-z][a-z0-9+.-]*:\/\/([^/?#]+))/i;
  * host written outright - belongs to the request, and the caller only fills the
  * hole (R161). Reading the host as the first segment of a path is how
  * `https://host/items/${id}` used to become `/https:/host/items/…`.
+ *
+ * A caller whose value is not read leaves a hole that fills one segment a route
+ * parameter, as the request read where it is written would have: following the
+ * request out to its caller says who made it, and must not cost the address the
+ * request itself states (R175).
  */
 export const composeAddress = (info: UrlInfo, split?: SplitAddress): UrlInfo => {
   if (split === undefined) return info;
@@ -135,7 +140,9 @@ export const composeAddress = (info: UrlInfo, split?: SplitAddress): UrlInfo => 
   const origin = ORIGIN.exec(split.before);
   const stated = origin?.[1] ?? '';
   const before = split.before.slice(stated.length);
-  const path = info.path === null ? null : routePathOf(before + info.path + split.after);
+  const unread = info.url === null && holeIn(before, split.after, true) === PARAM_PLACEHOLDER;
+  const filled = info.path ?? (unread ? PARAM_PLACEHOLDER : null);
+  const path = filled === null ? null : routePathOf(before + filled + split.after);
   if (origin !== null) {
     return {
       url: path === null ? info.url : `${stated}${path}`,

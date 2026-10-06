@@ -15,6 +15,7 @@ import type { Unresolved } from './model/graph.js';
 import { readPackageJson } from './package-json.js';
 import { isTestDirectory, isTestName } from './test-files.js';
 import {
+  serviceExtent,
   serviceSourceDirs,
   workspaceGlobs,
   workspacePackages,
@@ -785,7 +786,9 @@ export const createProject = (options: CreateProjectOptions): Project => {
     skipped.set(dir, [...(skipped.get(dir) ?? []), ...files]);
   });
   const tsConfigFilePath = findTsconfig(rootDir, tsconfig);
-  const packages = serviceSourceDirs(rootDir).slice(1);
+  // Every package of the extent, one nested in the service's directory too: a
+  // package whose files may be opened is one whose aliases are honoured (R115).
+  const packages = extentMembers(rootDir);
   const aliases = packages.flatMap((dir) => aliasesOf(dir) ?? []);
   const members = namedMembersOf(rootDir);
 
@@ -822,10 +825,11 @@ export const createProject = (options: CreateProjectOptions): Project => {
   // "Directory not found". The list comes from the file system and holds only
   // files that are there. It is also the list `listRepoSources` makes from the
   // same roots, so what a build stamps and what this opens are one answer (R170).
-  for (const file of sourceFilesUnder(rootDir, tests, sourceRootsOf(rootDir, options))) {
+  const roots = sourceRootsOf(rootDir, options);
+  for (const file of sourceFilesUnder(rootDir, tests, roots)) {
     project.addSourceFileAtPath(join(rootDir, file));
   }
-  for (const dir of packages) {
+  for (const dir of membersBeyond(rootDir, roots)) {
     for (const file of sourceFilesUnder(dir, tests)) project.addSourceFileAtPath(join(dir, file));
   }
   SKIPPED_TEST_DIRECTORIES.set(
@@ -1037,10 +1041,37 @@ export const listRepoSources = (
   // workspace package the service reads is a change to the service. Without
   // that, editing a handler body in a sibling package would leave the graph of
   // the service that calls it on disk unchanged and out of date.
-  const out = serviceSourceDirs(rootDir).flatMap((dir) => {
-    const prefix = relative(rootDir, dir).split(sep).join('/');
-    if (prefix === '') return sourceFilesUnder(dir, tests, sourceRootsOf(dir, roots));
-    return sourceFilesUnder(dir, tests).map((file) => `${prefix}/${file}`);
-  });
+  const own = sourceRootsOf(rootDir, roots);
+  const out = [
+    ...sourceFilesUnder(rootDir, tests, own),
+    ...membersBeyond(rootDir, own).flatMap((dir) => {
+      const prefix = relative(rootDir, dir).split(sep).join('/');
+      return sourceFilesUnder(dir, tests).map((file) => `${prefix}/${file}`);
+    }),
+  ];
   return out.sort();
 };
+
+/**
+ * Every workspace package of a service's extent, its own directory aside,
+ * including a member nested inside that directory.
+ */
+const extentMembers = (rootDir: string): string[] =>
+  serviceExtent(rootDir)
+    .slice(1)
+    .map((pkg) => pkg.dir)
+    .sort();
+
+/**
+ * The workspace packages of a service whose files its own roots do not already
+ * list: every one outside its directory, and one inside it that is not under a
+ * root, such as `packages/workflows` beside the `src/` a tsconfig names (R175).
+ * One answer for {@link createProject} and {@link listRepoSources}, so a file is
+ * walked once and both list the same files.
+ */
+const membersBeyond = (rootDir: string, roots: readonly string[]): string[] =>
+  extentMembers(rootDir).filter((dir) => {
+    const rel = relative(rootDir, dir).split(sep).join('/');
+    if (rel === '..' || rel.startsWith('../') || isAbsolute(rel)) return true;
+    return !roots.some((root) => root === WHOLE || rel === root || rel.startsWith(`${root}/`));
+  });

@@ -373,7 +373,13 @@ because its devDependencies are its own build and tests, and a member's in
 member's devDependencies are never installed for whoever depends on it
 (`fixtures/nest-dev-sibling`). Each package is compiled with its own `paths`, so
 an alias only that package's `tsconfig.json` defines resolves inside it
-(`fixtures/workspace-package-paths`).
+(`fixtures/workspace-package-paths`). A service that is itself the root of a
+workspace — functions in its own `src/`, the client they share in
+`packages/workflows` — takes in the members of its own workspace it declares,
+wherever they sit: a member inside the service's directory is read even though
+the service's own code is read from `src/` only, and a member it does not
+declare is not (`fixtures/lambda-workspace-root`). A workspace root that
+declares none of its members is read as it always was.
 
 ### `flowatlas extract <repo>`
 
@@ -1851,6 +1857,13 @@ landing is trusted follows what could be read of the wrapper:
   why. A wrapper of this repository that hands the function to such a package is
   no surer than the package.
 
+A wrapper called by another name is the wrapper it names: taken off a namespace
+into a `const` (`const traced = tracing.traced`, `tracing['withRetry']`), a
+name of such a name, imported under another name (`import { traced as t }`), or
+re-exported by a barrel under one. Each is read through the same reading of a
+name as a re-exported handler, so a factory called by another name is still a
+factory and lands nowhere (`fixtures/lambda-wrapper-alias`).
+
 A call handed two or more functions — `firstOf(fromCache, fromTable)` — is not a
 wrapper of any of them, because which one runs is not in the call, and stays a
 `function-handler-unread` row naming the call (`fixtures/lambda-wrapped-handlers`).
@@ -2033,6 +2046,19 @@ naming both; a value two variable files set differently is an
 `environment-value-unread` row naming the files, and `services[].infra.vars`
 chooses. Every settings key a function sets says where its value comes from on
 the `reads_config` edge that reads it (`setBy`).
+
+**A default the code writes beside the variable** —
+`process.env.RETURNS_QUEUE_URL ?? '<url>'`, `|| DEFAULT_TOPIC` with a `const`,
+`const { BUS = 'library' } = process.env` — is where the code sends from a
+function deployed without the variable. The address still waits on the
+deployment, and the deployment's value wins where it is set; a function that
+does not set it sends to the default, read through the same URL and ARN forms,
+instead of being an `environment-not-set` row. The edge's `defaults` names the
+variables the code's default stood in for, beside the `variables` the
+deployment set. A value the deployment sets and the files do not settle is
+still a row: the default is not what runs there. A default that is not one
+name — an empty string, a pattern, or one behind a second variable — is not
+taken (`fixtures/sqs-environment-fallback`).
 
 `terraform-aws-modules/eventbridge/aws`, `terraform-aws-modules/sqs/aws` and
 `terraform-aws-modules/sns/aws` ship described, beside the function and route
@@ -2244,15 +2270,20 @@ queue's is: the call waits on the variable (`meta.awaiting`, and a
 `LOAN_APPROVAL_ARN = aws_sfn_state_machine.loan_approval.arn` - runs the call,
 the name is that workflow's and the row goes (`fixtures/start-workflow-sdk`).
 
-**Through a helper whose source is read.** Where the call is inside a method of
-the project's own - a workspace package, or one installed - and the name it
-starts is that method's parameter, the start is the caller's: each call of the
-method is followed out, the argument passed there is read as the name would
-have been, and the start is drawn at that call, in the caller. A caller that is
-itself handing the name on is followed further. Nothing is drawn inside the
-helper unless nothing calls it, or a call may land in another implementation.
-This is the forwarding a shared HTTP client's requests already get, and it
-follows methods, not module-level functions.
+**Through a helper whose source is read.** Where the call is inside a method or
+a function of the project's own - in a workspace package, one installed, or the
+service itself - and the name it starts is that helper's parameter, the start is
+the caller's: each call of the helper is followed out, the argument passed there
+is read as the name would have been, and the start is drawn at that call, in the
+caller. A caller that is itself handing the name on is followed further. Nothing
+is drawn inside the helper unless nothing calls it, or a call may land in
+another implementation. This is the forwarding every reader shares - a shared
+HTTP client's requests get it too - and it follows a method through its
+receiver, and a function written `function start(arn)` or `const start = (arn)
+=> …` called by its name, by a name it was imported as, or through its module's
+namespace (`fixtures/start-workflow-function-helper`). A request followed out to
+a caller whose value is not read keeps the address it states: a hole that fills
+one segment stays a route parameter.
 
 **Through a helper whose source is not here, described.** A package shared by
 a project's services is often not installed where someone first reads one: a

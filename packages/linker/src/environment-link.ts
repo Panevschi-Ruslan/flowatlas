@@ -83,27 +83,52 @@ const WAITING = new Set(['channel-from-environment', 'start-from-environment']);
 const callAt = (producer: GraphNode): string => `the call at ${producer.file ?? '?'}:${producer.line ?? '?'}`;
 
 /** What one function makes of one address: the channel's name, or what stopped it. */
+/**
+ * What one function makes of one address: the channel's name, with the
+ * variables the deployment set and those it left to the code's own fallback
+ * (`defaults`), or what stopped it.
+ */
 type Completion =
-  | { readonly name: string; readonly variables: readonly string[] }
+  | { readonly name: string; readonly variables: readonly string[]; readonly defaults: readonly string[] }
   | { readonly missing: string }
   | { readonly unread: string; readonly value: EnvironmentValue };
 
+/**
+ * A variable the function is deployed with decides its part; one it is not
+ * deployed with is the code's fallback where the code wrote one (R175), and
+ * stops the address where it did not. A value the deployment sets and the files
+ * do not settle stops it either way: the fallback is not what runs there.
+ */
 const complete = (address: AwaitedAddress, environment: Readonly<Record<string, EnvironmentValue>>): Completion => {
   const parts: string[] = [];
   const variables: string[] = [];
+  const defaults: string[] = [];
   for (const part of address.parts) {
     if (typeof part === 'string') {
       parts.push(part);
       continue;
     }
     const value = environment[part.environment];
-    if (value === undefined) return { missing: part.environment };
+    if (value === undefined) {
+      if (part.otherwise === undefined) return { missing: part.environment };
+      parts.push(part.otherwise);
+      defaults.push(part.environment);
+      continue;
+    }
     if (value.value === undefined) return { unread: part.environment, value };
     parts.push(value.kind === undefined ? nameWithin(value.value, part.forms) : value.value);
     variables.push(part.environment);
   }
-  return { name: parts.join('/'), variables };
+  return { name: parts.join('/'), variables, defaults };
 };
+
+/** One channel an address reached, and for whom: the functions, the variables they set, and those left to the code's fallback. */
+interface Reached {
+  readonly functions: Set<string>;
+  readonly variables: Set<string>;
+  readonly defaults: Set<string>;
+  readonly payload?: string;
+}
 
 const at = (node: GraphNode): Pick<Unresolved, 'service' | 'file' | 'line'> => ({
   service: node.repo,
@@ -141,15 +166,16 @@ export const completeFromEnvironment = (
     // A start's address names the entry it starts, not a channel (P24).
     const starts = producer.meta?.[STARTS_META];
     const said = isDeployedEntryKind(starts) ? { verb: 'starts', what: 'what it starts' } : { verb: 'sends to', what: 'where it sends' };
-    const reachedChannels = new Map<string, { functions: Set<string>; variables: Set<string>; payload?: string }>();
+    const reachedChannels = new Map<string, Reached>();
     const reported = new Set<string>();
     for (const address of addresses) {
       for (const fn of runners) {
         const done = complete(address, environmentOf(fn));
         if ('name' in done) {
-          const found = reachedChannels.get(done.name) ?? { functions: new Set(), variables: new Set(), ...(address.payload === undefined ? {} : { payload: address.payload }) };
+          const found: Reached = reachedChannels.get(done.name) ?? { functions: new Set(), variables: new Set(), defaults: new Set(), ...(address.payload === undefined ? {} : { payload: address.payload }) };
           found.functions.add(fn.label);
           for (const variable of done.variables) found.variables.add(variable);
+          for (const variable of done.defaults) found.defaults.add(variable);
           reachedChannels.set(done.name, found);
           continue;
         }
@@ -204,7 +230,7 @@ export const completeFromEnvironment = (
       continue;
     }
     for (const name of names) {
-      const found = reachedChannels.get(name) as { functions: Set<string>; variables: Set<string>; payload?: string };
+      const found = reachedChannels.get(name) as Reached;
       const id = makeChannelId(name);
       const adapter = producer.meta?.['adapter'];
       const existing = nodes.get(id);
@@ -225,7 +251,12 @@ export const completeFromEnvironment = (
         ...(producer.file === undefined ? {} : { file: producer.file }),
         ...(producer.line === undefined ? {} : { line: producer.line }),
         ...(found.payload === undefined ? {} : { params: [found.payload] }),
-        meta: { via: 'environment', variables: [...found.variables].sort(cmp), functions: [...found.functions].sort(cmp) },
+        meta: {
+          via: 'environment',
+          variables: [...found.variables].sort(cmp),
+          ...(found.defaults.size === 0 ? {} : { defaults: [...found.defaults].sort(cmp) }),
+          functions: [...found.functions].sort(cmp),
+        },
       };
       edges.set(edgeKey(edge), edge);
     }

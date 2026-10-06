@@ -212,7 +212,13 @@ const awaitingOf = (
     }
     if (reading.unresolved !== 'channel-from-environment' || reading.variable === undefined) return undefined;
     const forms = part === undefined || 'literal' in part ? undefined : part.forms;
-    awaited.push(forms === undefined ? { environment: reading.variable } : { environment: reading.variable, forms });
+    // The fallback is read as the part would have been, URL or ARN and all.
+    const otherwise = reading.otherwise === undefined ? undefined : nameWithin(reading.otherwise, forms);
+    awaited.push({
+      environment: reading.variable,
+      ...(forms === undefined ? {} : { forms }),
+      ...(otherwise === undefined ? {} : { otherwise }),
+    });
   }
   return awaited.some((each) => typeof each !== 'string') ? awaited : undefined;
 };

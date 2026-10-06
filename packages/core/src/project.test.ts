@@ -312,5 +312,37 @@ describe('the source roots of a service', () => {
     expect([...skippedTestDirectories(project).keys()].map((dir) => dir.slice(root.length + 1))).toEqual(['e2e']);
     expect(listRepoSources(root)).toEqual(['src/holds.ts']);
   });
+
+  /**
+   * A service at the root of its own workspace: functions in `src/`, the client
+   * they share in `packages/` (R175). The members it declares are read wherever
+   * they sit, and a member its own roots already cover is listed once.
+   */
+  describe('of a service that is the root of a workspace', () => {
+    const rooted = (files: Record<string, string | object> = {}): string =>
+      repository({
+        'package.json': { name: 'loans', workspaces: ['packages/*'], dependencies: { '@lib/workflows': 'workspace:*' } },
+        'packages/workflows/package.json': { name: '@lib/workflows', main: './src/index.ts' },
+        'packages/workflows/src/index.ts': 'export const start = 1;\n',
+        'packages/tools/package.json': { name: '@lib/tools', main: './src/index.ts' },
+        'packages/tools/src/index.ts': 'export const reindex = 1;\n',
+        ...files,
+      });
+
+    it('reads a member it declares beside its own src, and not one it does not', () => {
+      const root = rooted({ 'tsconfig.json': { ...TSCONFIG, include: ['src'] } });
+      const files = ['packages/workflows/src/index.ts', 'src/holds.ts'];
+      expect(opened(root)).toEqual(files);
+      expect(listRepoSources(root)).toEqual(files);
+    });
+
+    it('lists a member once when the service is read whole', () => {
+      const root = rooted({ 'tsconfig.json': { ...TSCONFIG, include: ['**/*.ts'] } });
+      const files = listRepoSources(root);
+      expect(files).toEqual([...new Set(files)]);
+      expect(files).toContain('packages/workflows/src/index.ts');
+      expect(opened(root)).toEqual(files);
+    });
+  });
 });
 

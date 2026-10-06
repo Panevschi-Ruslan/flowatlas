@@ -218,6 +218,34 @@ only one of them moved.
 
 ### Fixed
 
+- **Four names followed through** (R175):
+  - A helper written as a module function — `export const startWorkflow =
+    (arn, input) => …`, `function notifyFunction(name, event)` — hands its
+    caller's value on as a method does. The forwarding every reader shares
+    follows it out to each call, by its name, a name it was imported as, or its
+    module's namespace, so a start, an invocation or a request is drawn at the
+    caller that decides its address rather than inside the helper as
+    `start ?` with a `start-name-unread` row. A call through a namespace import,
+    `functions.notifyFunction(…)`, is drawn as a call instead of a
+    `call-dynamic-receiver` row. A request followed out to a caller whose value
+    is not read keeps a hole that fills one segment as a route parameter
+    (`fixtures/start-workflow-function-helper`; `fixtures/nest-held-calls` now
+    draws GitHub's tarball request on `SkillsService.bundle`, which decides it).
+  - A wrapper called by another name — `const traced = tracing.traced`,
+    `tracing['withRetry']`, `import { traced as t }` — is read as the wrapper it
+    names: `static` where it was `heuristic`, and a factory under another name is
+    no longer landed on the function it was handed
+    (`fixtures/lambda-wrapper-alias`).
+  - A service at the root of its own workspace reads the members it declares
+    inside its own directory: functions in `src/` and their client in
+    `packages/workflows` were read without the client, and the start it makes
+    was missing with no row (`fixtures/lambda-workspace-root`).
+  - An address read from the environment with a default beside it,
+    `process.env.QUEUE_URL ?? '<url>'`, sends to the default from a function
+    deployed without the variable, instead of being an `environment-not-set`
+    row; the deployment's value wins where it is set, and the edge's `defaults`
+    says which variables the default stood in for
+    (`fixtures/sqs-environment-fallback`).
 - **A definition loaded through a local or a variable is watched.** The files a
   Terraform configuration loads are stamped by the paths `file()` and
   `templatefile()` were evaluated with, not read off the `.tf` text, so editing

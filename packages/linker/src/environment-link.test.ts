@@ -45,9 +45,9 @@ const producer: GraphNode = {
 const edge = (from: string, to: string, type: GraphEdge['type'], confidence: GraphEdge['confidence'] = 'static'): GraphEdge => ({ from, to, type, confidence });
 
 /** Two functions running the one helper, and the row the extractor left at the call. */
-const graph = (functions: GraphNode[]) => {
+const graph = (functions: GraphNode[], sender: GraphNode = producer) => {
   const handlers = functions.map((each): GraphNode => ({ id: `returns#src/${each.label}.ts:handler`, type: 'function', label: 'handler', repo: 'returns' }));
-  const nodes = new Map([...functions, ...handlers, helper, producer, { id: 'config_key:returns#RETURNS_QUEUE_URL', type: 'config_key', label: 'RETURNS_QUEUE_URL', repo: 'returns', meta: { key: 'RETURNS_QUEUE_URL' } } as GraphNode].map((node) => [node.id, structuredClone(node)]));
+  const nodes = new Map([...functions, ...handlers, helper, sender,{ id: 'config_key:returns#RETURNS_QUEUE_URL', type: 'config_key', label: 'RETURNS_QUEUE_URL', repo: 'returns', meta: { key: 'RETURNS_QUEUE_URL' } } as GraphNode].map((node) => [node.id, structuredClone(node)]));
   const list = [
     ...functions.flatMap((each, index) => [
       edge(each.id, (handlers[index] as GraphNode).id, 'handles'),
@@ -122,6 +122,42 @@ describe('completeFromEnvironment', () => {
         meta: { function: 'entry:returns:invoke:library-bulk-return', variable: 'RETURNS_QUEUE_URL' },
       }),
     ]);
+  });
+
+  /** `process.env.RETURNS_QUEUE_URL ?? '<url>'`: the deployment's value where it sets one, the code's otherwise (R175). */
+  describe('an address with a fallback the code writes', () => {
+    const withFallback: GraphNode = {
+      ...producer,
+      meta: {
+        ...producer.meta,
+        [AWAITING_META]: [{ parts: ['sqs', { environment: 'RETURNS_QUEUE_URL', forms: QUEUE_FORMS, otherwise: 'library-returns' }] }],
+      },
+    };
+
+    it('sends to the deployment value where it is set and to the fallback where it is not, and says which', () => {
+      const { edges, rows, found } = graph(
+        [
+          fn('library-record-return', { RETURNS_QUEUE_URL: { written: 'a', value: 'library-priority-returns', kind: 'queue' } }),
+          fn('library-bulk-return', { BATCH_SIZE: { written: '"25"', value: '25' } }),
+        ],
+        withFallback,
+      );
+      expect(found).toEqual([]);
+      expect(rows).toEqual([]);
+      expect(edges.filter((each) => each.type === 'emits').map((each) => [each.to, each.meta])).toEqual([
+        ['channel:sqs/library-priority-returns', { via: 'environment', variables: ['RETURNS_QUEUE_URL'], functions: ['library-record-return'] }],
+        ['channel:sqs/library-returns', { via: 'environment', variables: [], defaults: ['RETURNS_QUEUE_URL'], functions: ['library-bulk-return'] }],
+      ]);
+    });
+
+    it('does not stand the fallback in for a value the deployment sets and the files do not settle', () => {
+      const { edges, found } = graph(
+        [fn('library-record-return', { RETURNS_QUEUE_URL: { written: 'var.queue', unread: 'it differs', variable: 'queue' } })],
+        withFallback,
+      );
+      expect(edges.filter((each) => each.type === 'emits')).toEqual([]);
+      expect(found).toEqual([expect.objectContaining({ reason: 'environment-value-unread' })]);
+    });
   });
 
   it('names the files where the value is disputed, and draws no channel', () => {

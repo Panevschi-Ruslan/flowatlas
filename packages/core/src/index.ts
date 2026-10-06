@@ -463,6 +463,7 @@ export type {
   FiniteLookup,
   Forwarded,
   ForwardedCall,
+  Forwarder,
   RootSettingOptions,
   SettingAddress,
   SplitAddress,

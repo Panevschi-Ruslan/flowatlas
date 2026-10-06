@@ -326,6 +326,32 @@ const RECORD_START_CASES = [
 ];
 
 /**
+ * Names followed through (R175): a start handed in through a module function, a
+ * client in a workspace package beside the functions' own `src/`, and an
+ * address the deployment sets with a default for when it does not.
+ */
+const functionStartsPlain = plainFor('start-workflow-function-helper');
+const workspaceRootPlain = plainFor('lambda-workspace-root');
+const fallbackPlain = plainFor('sqs-environment-fallback');
+
+const FUNCTION_START_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...functionStartsPlain, format: 'tree' }, io)],
+  ['flow.renew-loan.tree.txt', (io) => runFlow('POST /loans/:param/renewals', { ...functionStartsPlain, format: 'tree' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: functionStartsPlain.config }, io)],
+];
+
+const WORKSPACE_ROOT_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...workspaceRootPlain, format: 'tree' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: workspaceRootPlain.config }, io)],
+];
+
+const FALLBACK_CASES = [
+  ['flow.post-returns.tree.txt', (io) => runFlow('POST /returns', { ...fallbackPlain, format: 'tree', depth: '24' }, io)],
+  ['flow.post-returns-bulk.tree.txt', (io) => runFlow('POST /returns/bulk', { ...fallbackPlain, format: 'tree', depth: '24' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: fallbackPlain.config }, io)],
+];
+
+/**
  * Sets of recordings, in several places.
  *
  * The first owns its folder, so an answer nobody asks for any more is swept
@@ -350,6 +376,9 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'start-workflow-sdk', 'expected.cli'), owned: true, cases: SDK_START_CASES },
   { dir: join(root, 'fixtures', 'start-workflow-helper', 'expected.cli'), owned: true, cases: HELPER_START_CASES },
   { dir: join(root, 'fixtures', 'start-workflow-by-record', 'expected.cli'), owned: true, cases: RECORD_START_CASES },
+  { dir: join(root, 'fixtures', 'start-workflow-function-helper', 'expected.cli'), owned: true, cases: FUNCTION_START_CASES },
+  { dir: join(root, 'fixtures', 'lambda-workspace-root', 'expected.cli'), owned: true, cases: WORKSPACE_ROOT_CASES },
+  { dir: join(root, 'fixtures', 'sqs-environment-fallback', 'expected.cli'), owned: true, cases: FALLBACK_CASES },
 ];
 
 /**

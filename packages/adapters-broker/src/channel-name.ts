@@ -10,7 +10,7 @@ import {
 } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
-import { environmentVariableOf } from './environment.js';
+import { environmentReadOf } from './environment.js';
 
 /**
  * Reading the name a call is addressed to.
@@ -48,9 +48,25 @@ export interface UnresolvedChannel {
    * key a reader of the deployment looks the value up by.
    */
   readonly variable?: string;
+  /**
+   * For `channel-from-environment`, the one name the code falls back to where
+   * the variable is not set: `process.env.QUEUE_URL ?? '<url>'` waits on the
+   * deployment, and sends to `<url>` from a function deployed without it.
+   */
+  readonly otherwise?: string;
 }
 
 export type ChannelResolution = ResolvedChannel | UnresolvedChannel;
+
+/**
+ * A fallback as a name, when it is one: a single name, written in full. An
+ * empty one (`?? ''`) names nothing, and a pattern or several names are not
+ * one place the code sends to.
+ */
+const fallbackName = (resolution: ChannelResolution): string | undefined =>
+  isResolved(resolution) && resolution.names.length === 1 && resolution.via !== 'template' && resolution.name !== ''
+    ? resolution.name
+    : undefined;
 
 const CONFIG_METHODS = new Set(['get', 'getOrThrow', 'require']);
 
@@ -182,8 +198,16 @@ export const resolveChannelName = (
 
   // Set by whoever deploys the code, and not in it. Told apart from a name built
   // at run time because the remedy differs: the deployment states the value.
-  const variable = environmentVariableOf(expr);
-  if (variable !== undefined) return { unresolved: 'channel-from-environment', text, variable };
+  const read = environmentReadOf(expr);
+  if (read !== undefined) {
+    const otherwise = read.otherwise === undefined ? undefined : fallbackName(resolveChannelName(read.otherwise, config));
+    return {
+      unresolved: 'channel-from-environment',
+      text,
+      variable: read.variable,
+      ...(otherwise === undefined ? {} : { otherwise }),
+    };
+  }
 
   // A channel addressed per entity is written as a template. The family it
   // belongs to is fixed even though the instance is not, and the family is what

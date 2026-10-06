@@ -257,13 +257,18 @@ const handsOn = (fn: FunctionLike, parameter: ParameterDeclaration, depth: numbe
 /**
  * The function a declaration of this repository is, through the names it was
  * bound to; undefined when the wrapper is a value something built at run time.
+ *
+ * `const traced = tracing.traced`, `const retried = tracing['withRetry']` and a
+ * name of a name are the wrapper they name, read through the core's
+ * `boundDeclaration` like every other `const` bound to a name (R168, R175).
  */
 const wrapperFunction = (declaration: TsNode, depth: number): FunctionLike | undefined => {
-  if (Node.isFunctionDeclaration(declaration) || Node.isMethodDeclaration(declaration)) return declaration;
-  const initializer = Node.isExportAssignment(declaration)
-    ? declaration.getExpression()
-    : Node.isVariableDeclaration(declaration) || Node.isPropertyAssignment(declaration)
-      ? declaration.getInitializer()
+  const bound = boundDeclaration(declaration);
+  if (Node.isFunctionDeclaration(bound) || Node.isMethodDeclaration(bound)) return bound;
+  const initializer = Node.isExportAssignment(bound)
+    ? bound.getExpression()
+    : Node.isVariableDeclaration(bound) || Node.isPropertyAssignment(bound)
+      ? bound.getInitializer()
       : undefined;
   const value = initializer === undefined ? undefined : unwrapValue(initializer);
   if (value === undefined) return undefined;

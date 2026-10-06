@@ -8,8 +8,11 @@ const isProcessEnv = (node: TsNode): boolean =>
   node.getName() === 'env' &&
   node.getExpression().getText() === 'process';
 
-/** What an expression evaluates to before the wrappers that leave it alone. */
-const unwrapped = (node: TsNode): TsNode => {
+/**
+ * What an expression evaluates to before the wrappers that leave it alone, with
+ * every fallback met on the way collected into `fallbacks`.
+ */
+const unwrapped = (node: TsNode, fallbacks: TsNode[] = []): TsNode => {
   let current = node;
   for (let step = 0; step < MOST_STEPS; step += 1) {
     if (
@@ -27,6 +30,7 @@ const unwrapped = (node: TsNode): TsNode => {
     if (Node.isBinaryExpression(current)) {
       const operator = current.getOperatorToken().getKind();
       if (operator === SyntaxKind.QuestionQuestionToken || operator === SyntaxKind.BarBarToken) {
+        fallbacks.push(current.getRight());
         current = current.getLeft();
         continue;
       }
@@ -36,14 +40,19 @@ const unwrapped = (node: TsNode): TsNode => {
   return current;
 };
 
-/** The variable a binding element takes out of `process.env`, when it does. */
-const destructuredVariable = (declaration: TsNode): string | undefined => {
+/**
+ * The variable a binding element takes out of `process.env`, when it does; a
+ * default written on the element (`{ BUS = 'library' }`) is a fallback.
+ */
+const destructuredVariable = (declaration: TsNode, fallbacks: TsNode[]): string | undefined => {
   if (!Node.isBindingElement(declaration)) return undefined;
   const pattern = declaration.getParent();
   const variable = pattern?.getParent();
   if (variable === undefined || !Node.isVariableDeclaration(variable)) return undefined;
   const source = variable.getInitializer();
   if (source === undefined || !isProcessEnv(unwrapped(source))) return undefined;
+  const fallback = declaration.getInitializer();
+  if (fallback !== undefined) fallbacks.push(fallback);
   return declaration.getPropertyNameNode()?.getText() ?? declaration.getName();
 };
 
@@ -63,6 +72,20 @@ const boundValue = (declaration: TsNode): TsNode | undefined => {
   return undefined;
 };
 
+/** An environment variable a value is read from, and what the code uses when it is unset. */
+export interface EnvironmentRead {
+  readonly variable: string;
+  /**
+   * The one fallback written beside the read - `process.env.X ?? 'default'`,
+   * `|| DEFAULT`, a default in a destructuring - as written. None where there
+   * are two, since which one stands in then depends on a second variable.
+   */
+  readonly otherwise?: TsNode;
+}
+
+const readOf = (variable: string, fallbacks: readonly TsNode[]): EnvironmentRead =>
+  fallbacks.length === 1 ? { variable, otherwise: fallbacks[0] as TsNode } : { variable };
+
 /**
  * Which environment variable an expression is the value of, when it is one.
  *
@@ -77,30 +100,32 @@ const boundValue = (declaration: TsNode): TsNode | undefined => {
  * The shapes a variable is read in:
  *
  * - `process.env.NAME` and `process.env['NAME']`;
- * - the same with a fallback after it (`?? ''`, `|| ''`), asserted (`!`,
- *   `as string`) or parenthesised - the variable still decides the value;
+ * - the same with a fallback after it (`?? 'returns'`, `|| DEFAULT`), asserted
+ *   (`!`, `as string`) or parenthesised - the variable decides the value where
+ *   it is set, and the fallback where it is not;
  * - a `const` bound to any of those, a property of a `const` record holding
  *   one, and a name taken out of `process.env` by destructuring.
  *
  * Anything else is not the value of a variable, and the answer is nothing.
  */
-export const environmentVariableOf = (expression: TsNode): string | undefined => {
+export const environmentReadOf = (expression: TsNode): EnvironmentRead | undefined => {
+  const fallbacks: TsNode[] = [];
   let current = expression;
   for (let step = 0; step < MOST_STEPS; step += 1) {
-    const value = unwrapped(current);
+    const value = unwrapped(current, fallbacks);
     if (Node.isPropertyAccessExpression(value) && isProcessEnv(value.getExpression())) {
-      return value.getName();
+      return readOf(value.getName(), fallbacks);
     }
     if (Node.isElementAccessExpression(value) && isProcessEnv(value.getExpression())) {
       const key = value.getArgumentExpression();
       return key !== undefined && (Node.isStringLiteral(key) || Node.isNoSubstitutionTemplateLiteral(key))
-        ? key.getLiteralValue()
+        ? readOf(key.getLiteralValue(), fallbacks)
         : undefined;
     }
     const declaration = declarationOf(value);
     if (declaration === undefined) return undefined;
-    const destructured = destructuredVariable(declaration);
-    if (destructured !== undefined) return destructured;
+    const destructured = destructuredVariable(declaration, fallbacks);
+    if (destructured !== undefined) return readOf(destructured, fallbacks);
     const bound = boundValue(declaration);
     if (bound === undefined) return undefined;
     current = bound;

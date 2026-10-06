@@ -153,3 +153,37 @@ describe('wrappers inside wrappers, inline and through a const', () => {
     expect(through.map((step) => step.confidence)).toEqual(['static', 'heuristic']);
   });
 });
+
+/** A wrapper called by another name is the wrapper it names (R175). */
+describe('a wrapper reached through a name bound to it', () => {
+  const aliased = (main: string): { argument?: string; confidence?: string } => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: true } });
+    project.createSourceFile('/src/wrappers.ts', WRAPPERS);
+    const file = project.createSourceFile(
+      '/src/main.ts',
+      `import * as wrappers from './wrappers';\nimport { traced as t } from './wrappers';\n` +
+        `async function createLoan(event: unknown): Promise<unknown> { return event; }\n${main}`,
+    );
+    const handler = file.getVariableDeclarationOrThrow('handler').getInitializerIfKindOrThrow(SyntaxKind.CallExpression);
+    const wrapped = wrappedBy(handler);
+    return wrapped === undefined ? {} : { argument: wrapped.argument.getText(), confidence: wrapped.confidence };
+  };
+
+  it('taken off a namespace into a const, by name and in brackets, and named again', () => {
+    expect(aliased(`const traced = wrappers.traced;\nconst handler = traced('createLoan', createLoan);`)).toEqual({
+      argument: 'createLoan',
+      confidence: 'static',
+    });
+    expect(
+      aliased(`const retrying = wrappers['withRetry'];\nconst retried = retrying;\nconst handler = retried({ attempts: 3 }, createLoan);`),
+    ).toEqual({ argument: 'createLoan', confidence: 'static' });
+  });
+
+  it('imported under another name', () => {
+    expect(aliased(`const handler = t('createLoan', createLoan);`)).toEqual({ argument: 'createLoan', confidence: 'static' });
+  });
+
+  it('a factory under another name is still not a wrapper', () => {
+    expect(aliased(`const listOf = wrappers.listFactory;\nconst handler = listOf((event) => String(event));`)).toEqual({});
+  });
+});

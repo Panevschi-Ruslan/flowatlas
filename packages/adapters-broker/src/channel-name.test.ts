@@ -88,11 +88,17 @@ export class Publisher {
   fromEnvironmentConst() { return ENV_TOPIC }
   fromDestructured() { return RETURNS_QUEUE_URL }
   fromEnvironmentRecord() { return SETTINGS.queueUrl }
+  fromFallbackConst() { return process.env.ORDER_TOPIC || DEFAULT_TOPIC }
+  fromFallbackEmpty() { return process.env.ORDER_TOPIC ?? '' }
+  fromTwoVariables() { return process.env.ORDER_TOPIC ?? process.env.OTHER_TOPIC ?? 'orders' }
+  fromDestructuredDefault() { return BUS }
 }
 declare const process: { env: Record<string, string | undefined> };
 const ENV_TOPIC = (process.env.ORDER_TOPIC as string) ?? 'orders';
 const { RETURNS_QUEUE_URL } = process.env;
 const SETTINGS = { queueUrl: process.env.SETTINGS_QUEUE_URL };
+const DEFAULT_TOPIC = 'orders.default';
+const { BUS = 'library' } = process.env;
 `;
 
 const config = parseConfig({ sharedPackages: ['@project/events'] });
@@ -345,6 +351,20 @@ describe('resolving which channel a call addresses', () => {
 
     it('reads a property of a constant record holding one', () => {
       expect(of('fromEnvironmentRecord')).toMatchObject({ variable: 'SETTINGS_QUEUE_URL' });
+    });
+
+    // The deployment's value wins where it is set, and the code's fallback is
+    // where it sends otherwise (R175).
+    it('keeps the one name the code falls back to, written or a const', () => {
+      expect(of('fromEnvironmentConst')).toMatchObject({ variable: 'ORDER_TOPIC', otherwise: 'orders' });
+      expect(of('fromFallbackConst')).toMatchObject({ variable: 'ORDER_TOPIC', otherwise: 'orders.default' });
+      expect(of('fromDestructuredDefault')).toMatchObject({ variable: 'BUS', otherwise: 'library' });
+    });
+
+    it('keeps no fallback that names nothing, nor one behind a second variable', () => {
+      expect(of('fromFallbackEmpty')).not.toHaveProperty('otherwise');
+      expect(of('fromTwoVariables')).not.toHaveProperty('otherwise');
+      expect(of('fromEnvironment')).not.toHaveProperty('otherwise');
     });
   });
 });

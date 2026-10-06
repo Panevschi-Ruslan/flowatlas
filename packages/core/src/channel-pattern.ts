@@ -45,9 +45,13 @@ export const AWAITING_META = 'awaiting';
 /**
  * One part of an address: written in the code, or the value of an environment
  * variable with the longer spellings the name may be written inside (`forms`,
- * each a regular expression whose first group is the name).
+ * each a regular expression whose first group is the name), and the name the
+ * code falls back to where the variable is not set (`otherwise`, from
+ * `process.env.X ?? 'default'`; R175).
  */
-export type AwaitedPart = string | { readonly environment: string; readonly forms?: readonly string[] };
+export type AwaitedPart =
+  | string
+  | { readonly environment: string; readonly forms?: readonly string[]; readonly otherwise?: string };
 
 /**
  * The name inside a longer spelling of it.

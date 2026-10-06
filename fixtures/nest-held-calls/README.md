@@ -22,7 +22,7 @@ followed into from a handler is a node, and holds nothing.
 
 | Caller | Callee | Drawn | Shape |
 |---|---|---|---|
-| `streamTarball` (holds a request) | `buildGithubHeaders` (holds a config read) | yes | two held functions |
+| `streamTarball` (makes a request) | `buildGithubHeaders` (holds a config read) | yes | a function calling a held one |
 | `SkillsService.hasToken` | `buildGithubHeaders` | yes | a method calling a held function by name |
 | `SkillsService.bundle` | `fetchSkillBundle` (holds nothing) | yes | a helper between a method and a held function |
 | `fetchSkillBundle` | `streamTarball` | yes | the same helper's own call |
@@ -32,3 +32,10 @@ followed into from a handler is a node, and holds nothing.
 
 Before the fix the graph had `buildGithubHeaders` and `streamTarball` as nodes and
 not one call into either.
+
+The request `streamTarball` makes, `GET https://api.github.com/repos/:param/tarball`,
+is drawn on `SkillsService.bundle`. Its address is handed in as `slug`, through
+`fetchSkillBundle`, by the method that decides it, and a parameter of a module
+function is followed out to its callers as a method's is (R175). The slug is
+`repoSlug(repository)`, which is not read, and it fills one segment, so it is the
+route parameter it was where the request is written.

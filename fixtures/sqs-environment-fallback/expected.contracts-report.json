@@ -1,0 +1,69 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-06T18:25:29.466Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:returns#src/returns/process-return.ts:28:11",
+        "to": "channel:eventbridge/library-circulation/library.returns/ItemReturned",
+        "type": "emits"
+      },
+      "edgeKey": "channel:eventbridge/library-circulation/library.returns/ItemReturned|emits|producer:returns#src/returns/process-return.ts:28:11",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:eventbridge/library-circulation/library.returns/ItemReturned is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:returns#src/returns/process-return.ts:22:11",
+        "to": "channel:sns/library-item-returned",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sns/library-item-returned|emits|producer:returns#src/returns/process-return.ts:22:11",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sns/library-item-returned is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:returns#src/lib/returns-queue.ts:18:9",
+        "to": "consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_priority_returns",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#src/lib/returns-queue.ts:18:9|emits|consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_priority_returns",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_priority_returns declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:returns#src/lib/returns-queue.ts:18:9",
+        "to": "consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_returns",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#src/lib/returns-queue.ts:18:9|emits|consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_returns",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_returns declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 4,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

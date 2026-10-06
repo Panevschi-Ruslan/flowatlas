@@ -1,0 +1,6 @@
+{
+  "services": [
+    { "name": "lending", "repo": ".", "type": "lambda" }
+  ],
+  "output": ".flowatlas"
+}

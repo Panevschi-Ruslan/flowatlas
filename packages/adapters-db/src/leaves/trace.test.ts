@@ -7,6 +7,7 @@ import {
   settingReader,
   splitAtParameterIn,
 } from './trace.js';
+import { composeAddress } from './url.js';
 
 const splitAtParameter = (node: Parameters<typeof splitAtParameterIn>[0]) =>
   splitAtParameterIn(node, settingReader);
@@ -263,6 +264,78 @@ describe('following a parameter out to the calls that run the method', () => {
         const clear = (store: Store) => store.remove('all');
       `),
     ).toEqual({ calls: [], undecided: true });
+  });
+});
+
+/**
+ * A helper written as a function of a module hands its caller's value on as a
+ * method does (R175): called by its name, by a name it was imported as, or
+ * through the namespace of its module.
+ */
+describe('following a parameter out of a function of a module', () => {
+  const callersIn = (client: string, callers: string) => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const file = project.createSourceFile('client.ts', `${HEADER}${client}`);
+    project.createSourceFile('callers.ts', callers);
+    const split = splitAtParameter(address(file));
+    const found = forwardedFrom(split!.parameter);
+    return { calls: found.calls.map((caller) => caller.argument.getText()).sort(), undecided: found.undecided };
+  };
+  const callers = `
+    import { get } from './client';
+    import { get as fetchOne } from './client';
+    import * as client from './client';
+    export const byName = () => get('orders');
+    export const byAlias = () => fetchOne('items');
+    export const byNamespace = () => client.get('holds');
+    export const handedOn = (path: string) => get(path);
+    export const outer = () => handedOn('loans');
+    export const passed = [get];
+  `;
+
+  it('follows a const arrow out to every call of it, and a caller handing its own parameter on further', () => {
+    expect(callersIn('export const get = (path: string) => fetch(`/api/${path}`);', callers)).toEqual({
+      calls: ["'holds'", "'items'", "'loans'", "'orders'"],
+      undecided: false,
+    });
+  });
+
+  it('follows a function declaration the same way', () => {
+    expect(
+      callersIn('export function get(path: string) { return fetch(`/api/${path}`); }', callers).calls,
+    ).toEqual(["'holds'", "'items'", "'loans'", "'orders'"]);
+  });
+
+  it('follows no `let`, which may hold another function by the time it is called', () => {
+    expect(callersIn('export let get = (path: string) => fetch(`/api/${path}`);', callers)).toEqual({
+      calls: [],
+      undecided: false,
+    });
+  });
+});
+
+/**
+ * A caller whose value is not read still fills the segment the request leaves
+ * it, so following a request out to its caller never costs the address the
+ * request itself states (R175).
+ */
+describe('putting an address back together around a value nobody read', () => {
+  const unread = { url: null, path: null, baseUrlEnv: null, host: null };
+  const around = (before: string, after: string) =>
+    composeAddress(unread, { parameter: undefined as never, baseUrlEnv: null, before, after });
+
+  it('keeps a hole that fills one segment a route parameter', () => {
+    expect(around('https://api.example.com/repos/', '/tarball')).toEqual({
+      url: 'https://api.example.com/repos/:param/tarball',
+      path: '/repos/:param/tarball',
+      baseUrlEnv: null,
+      host: 'api.example.com',
+    });
+  });
+
+  it('leaves an address whose hole may span segments unread', () => {
+    expect(around('/repos', '/tarball').path).toBeNull();
+    expect(around('', '').path).toBeNull();
   });
 });
 
