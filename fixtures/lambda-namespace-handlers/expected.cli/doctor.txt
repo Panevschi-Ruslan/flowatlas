@@ -4,7 +4,7 @@ unresolved: 0 to act on over 1 row, and 1 place static reading cannot see, folde
   ways in: 13 found, 11 with a handler that was read, 2 without
   function-handler-unread (info): 1 row
     A handler is read when it is a function, a function wrapped by calls each handed exactly one function wherever it sits among their arguments, or a function a factory of this repository returns.
-      desk/infra/functions.tf:70  entry:desk:invoke:library-desk-archive-loan
+      desk/infra/functions.tf:70  library-desk-archive-loan runs handlers/consumers.archiveLoan, and src/operations/archive.ts builds that export with batchHandler({ table: 'library-desk-loan-archive', batchSize: 25 }), which names no function of this repository
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked

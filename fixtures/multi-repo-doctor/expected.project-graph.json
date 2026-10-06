@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:52.573Z",
+  "builtAt": "2026-10-06T21:45:44.578Z",
   "services": [
     {
       "name": "gateway",
@@ -2318,8 +2318,9 @@
       "file": "src/orders/orders.service.ts",
       "line": 71,
       "reason": "channel-from-config",
+      "message": "OrdersService.tally -> this.config.get('SWEEP_CHANNEL')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.tally with the channel it uses.",
-      "symbol": "OrdersService.tally -> this.config.get('SWEEP_CHANNEL')",
+      "symbol": "producer:orders#src/orders/orders.service.ts:71:5",
       "service": "orders"
     },
     {
@@ -2334,8 +2335,9 @@
       "file": "src/orders/orders.service.ts",
       "line": 81,
       "reason": "channel-from-config",
+      "message": "OrdersService.sweep -> this.config.get('SWEEP_CHANNEL')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.sweep with the channel it uses.",
-      "symbol": "OrdersService.sweep -> this.config.get('SWEEP_CHANNEL')",
+      "symbol": "producer:orders#src/orders/orders.service.ts:81:5",
       "service": "orders"
     },
     {
@@ -2350,8 +2352,9 @@
       "file": "src/orders/orders.service.ts",
       "line": 92,
       "reason": "channel-from-config",
+      "message": "OrdersService.hold -> this.config.get('SWEEP_CHANNEL')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.hold with the channel it uses.",
-      "symbol": "OrdersService.hold -> this.config.get('SWEEP_CHANNEL')",
+      "symbol": "producer:orders#src/orders/orders.service.ts:92:5",
       "service": "orders"
     },
     {
@@ -2366,16 +2369,18 @@
       "file": "src/orders/orders.service.ts",
       "line": 113,
       "reason": "channel-from-config",
+      "message": "OrdersService.refund -> this.config.get('REFUND_CHANNEL')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.refund with the channel it uses.",
-      "symbol": "OrdersService.refund -> this.config.get('REFUND_CHANNEL')",
+      "symbol": "producer:orders#src/orders/orders.service.ts:113:5",
       "service": "orders"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 126,
       "reason": "channel-from-config",
+      "message": "OrdersService.drain -> this.config.get('DRAIN_CHANNEL')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.drain with the channel it uses.",
-      "symbol": "OrdersService.drain -> this.config.get('DRAIN_CHANNEL')",
+      "symbol": "producer:orders#src/orders/orders.service.ts:126:5",
       "service": "orders"
     },
     {

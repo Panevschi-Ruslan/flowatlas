@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T17:31:30.854Z",
+  "builtAt": "2026-10-06T21:45:07.143Z",
   "services": [
     {
       "name": "loans",
@@ -1428,24 +1428,27 @@
       "file": "api/events/library-events.ts",
       "line": 18,
       "reason": "channel-dynamic",
+      "message": "LibraryEventBus.put -> event.init.type",
       "hint": "The channel name cannot be read here. Annotate LibraryEventBus.put with the channel it uses.",
-      "symbol": "LibraryEventBus.put -> event.init.type",
+      "symbol": "producer:loans#api/events/library-events.ts:18:11",
       "service": "loans"
     },
     {
       "file": "api/events/publish.ts",
       "line": 11,
       "reason": "channel-dynamic",
+      "message": "publishEvent -> command",
       "hint": "The channel name cannot be read here. Annotate publishEvent with the channel it uses.",
-      "symbol": "publishEvent -> command",
+      "symbol": "producer:loans#api/events/publish.ts:11:9",
       "service": "loans"
     },
     {
       "file": "api/loans/loan-events.ts",
       "line": 54,
       "reason": "channel-from-environment",
+      "message": "auditLoan -> process.env.AUDIT_BUS_NAME",
       "hint": "The channel is the value of the environment variable AUDIT_BUS_NAME, which is set where this code is deployed and not in it. Where the code runs in a function whose deployment is read, the linker completes the channel from the value that function is deployed with, and this row goes; it stays when nothing deployed is known to run this code.",
-      "symbol": "auditLoan -> process.env.AUDIT_BUS_NAME",
+      "symbol": "producer:loans#api/loans/loan-events.ts:54:9",
       "meta": {
         "variable": "AUDIT_BUS_NAME"
       },
@@ -1463,8 +1466,9 @@
       "file": "api/returns/returns-queue.ts",
       "line": 40,
       "reason": "channel-from-environment",
+      "message": "queueOverdue -> process.env.OVERDUE_QUEUE_URL",
       "hint": "The channel is the value of the environment variable OVERDUE_QUEUE_URL, which is set where this code is deployed and not in it. Where the code runs in a function whose deployment is read, the linker completes the channel from the value that function is deployed with, and this row goes; it stays when nothing deployed is known to run this code.",
-      "symbol": "queueOverdue -> process.env.OVERDUE_QUEUE_URL",
+      "symbol": "producer:loans#api/returns/returns-queue.ts:40:9",
       "meta": {
         "variable": "OVERDUE_QUEUE_URL"
       },
@@ -1474,8 +1478,9 @@
       "file": "functions/notify-borrower/src/handler.ts",
       "line": 27,
       "reason": "channel-from-environment",
+      "message": "handler -> process.env.ESCALATIONS_TOPIC_ARN",
       "hint": "The channel is the value of the environment variable ESCALATIONS_TOPIC_ARN, which is set where this code is deployed and not in it. Where the code runs in a function whose deployment is read, the linker completes the channel from the value that function is deployed with, and this row goes; it stays when nothing deployed is known to run this code.",
-      "symbol": "handler -> process.env.ESCALATIONS_TOPIC_ARN",
+      "symbol": "producer:loans#functions/notify-borrower/src/handler.ts:27:9",
       "meta": {
         "variable": "ESCALATIONS_TOPIC_ARN"
       },

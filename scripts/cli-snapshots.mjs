@@ -326,6 +326,17 @@ const RECORD_START_CASES = [
 ];
 
 /**
+ * A publish whose name is the value of an environment variable nothing deployed
+ * here sets (R177): its row names the producer, which the walk from the route
+ * passes, so the path counts it.
+ */
+const sdkPublishersPlain = plainFor('aws-sdk-publishers');
+
+const SDK_PUBLISHER_CASES = [
+  ['flow.post-returns-overdue.tree.txt', (io) => runFlow('POST /returns/overdue', { ...sdkPublishersPlain, format: 'tree' }, io)],
+];
+
+/**
  * Names followed through (R175): a start handed in through a module function, a
  * client in a workspace package beside the functions' own `src/`, and an
  * address the deployment sets with a default for when it does not.
@@ -406,6 +417,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'start-workflow-sdk', 'expected.cli'), owned: true, cases: SDK_START_CASES },
   { dir: join(root, 'fixtures', 'start-workflow-helper', 'expected.cli'), owned: true, cases: HELPER_START_CASES },
   { dir: join(root, 'fixtures', 'start-workflow-by-record', 'expected.cli'), owned: true, cases: RECORD_START_CASES },
+  { dir: join(root, 'fixtures', 'aws-sdk-publishers', 'expected.cli'), owned: true, cases: SDK_PUBLISHER_CASES },
   { dir: join(root, 'fixtures', 'start-workflow-function-helper', 'expected.cli'), owned: true, cases: FUNCTION_START_CASES },
   { dir: join(root, 'fixtures', 'lambda-workspace-root', 'expected.cli'), owned: true, cases: WORKSPACE_ROOT_CASES },
   { dir: join(root, 'fixtures', 'sqs-environment-fallback', 'expected.cli'), owned: true, cases: FALLBACK_CASES },

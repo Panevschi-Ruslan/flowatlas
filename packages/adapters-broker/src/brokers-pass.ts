@@ -50,6 +50,7 @@ import { payloadParameter, typeAtPath } from './payload.js';
 import { isResolved, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
 import { endpointShapingAt, isUnreadable, unreadableEndpointRow, type EndpointShaping } from './endpoint.js';
 import { pairKey, readBrokerMarkers } from './markers.js';
+import { rowAbout, type RowSite } from './row-site.js';
 import { isStartPattern, startReader } from './starts.js';
 
 const lineColOf = (node: TsNode): { line: number; column: number } =>
@@ -164,7 +165,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     resolution: ChannelResolution,
     file: string,
     line: number,
-    symbol: string,
+    site: RowSite,
   ): void => {
     if (isResolved(resolution)) return;
     ctx.report({
@@ -173,9 +174,9 @@ export const extractBrokers = (ctx: PassContext): void => {
       reason: resolution.unresolved,
       hint:
         resolution.variable === undefined
-          ? `The channel name cannot be read here. Annotate ${symbol} with the channel it uses.`
+          ? `The channel name cannot be read here. Annotate ${site.named} with the channel it uses.`
           : environmentHint(resolution.variable),
-      symbol: `${symbol} -> ${resolution.text.slice(0, 60)}`,
+      ...rowAbout(site, resolution.text),
       ...(resolution.variable === undefined ? {} : { meta: { variable: resolution.variable } }),
     });
   };
@@ -215,9 +216,9 @@ export const extractBrokers = (ctx: PassContext): void => {
     spec: BrokerSpec,
     file: string,
     line: number,
-    symbol: string,
+    site: RowSite,
   ): void => {
-    if (isUnreadable(shaping)) ctx.report(unreadableEndpointRow(shaping, spec, file, line, symbol));
+    if (isUnreadable(shaping)) ctx.report(unreadableEndpointRow(shaping, spec, file, line, site));
   };
 
   /**
@@ -435,13 +436,13 @@ export const extractBrokers = (ctx: PassContext): void => {
       line,
     });
 
-    // The label the graph gives the body, which is what `doctor` joins a row
-    // to when it asks whether an annotation here is justified. Asking the
-    // node rather than spelling `Class.method` again is what lets a function
-    // be named as a function rather than as a method of nothing.
-    const symbol = ctx.builder.getNode(methodId)?.label ?? methodId;
+    // The row sits on the producer, which a walk through the body passes, and
+    // names the body by the label the graph gives it: asking the node rather
+    // than spelling `Class.method` again is what lets a function be named as a
+    // function rather than as a method of nothing.
+    const site: RowSite = { named: ctx.builder.getNode(methodId)?.label ?? methodId, node: producerId };
     if (!readable) {
-      if (channelName === null) reportEndpoint(shaping, spec, file, line, symbol);
+      if (channelName === null) reportEndpoint(shaping, spec, file, line, site);
     } else {
       // One row per thing to fix: two entries refused for the same reason at
       // the same expression are one row.
@@ -450,7 +451,7 @@ export const extractBrokers = (ctx: PassContext): void => {
         const key = JSON.stringify(element.resolution);
         if (reported.has(key)) continue;
         reported.add(key);
-        reportChannel(element.resolution, file, line, symbol);
+        reportChannel(element.resolution, file, line, site);
       }
     }
     if (channelName === null) return true;
@@ -622,8 +623,8 @@ export const extractBrokers = (ctx: PassContext): void => {
 
     if (names.length === 0) {
       const symbol = `${className}.${method.getName()}`;
-      if (isUnreadable(shaping)) reportEndpoint(shaping, spec, file, line, symbol);
-      else if (!entryReaderRefused(file, line, symbol)) reportChannel(resolution, file, line, symbol);
+      if (isUnreadable(shaping)) reportEndpoint(shaping, spec, file, line, { named: symbol });
+      else if (!entryReaderRefused(file, line, symbol)) reportChannel(resolution, file, line, { named: symbol });
       return;
     }
     // One edge per channel the address reaches: a hole holding a closed set of
@@ -855,8 +856,8 @@ export const extractBrokers = (ctx: PassContext): void => {
 
           if (names.length === 0) {
             const symbol = `${className}.${method.getName()}`;
-            if (isUnreadable(shaping)) reportEndpoint(shaping, spec, file, line, symbol);
-            else reportChannel(resolution, file, line, symbol);
+            if (isUnreadable(shaping)) reportEndpoint(shaping, spec, file, line, { named: symbol });
+            else reportChannel(resolution, file, line, { named: symbol });
             continue;
           }
           // Recorded against the handler, which is the method a `@Consumes`

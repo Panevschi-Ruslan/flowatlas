@@ -16,4 +16,4 @@ baseline: missing (0 accepted, 1 now, +1)
   no baseline at <root>/fixtures/eventbridge-terraform/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   channel-dynamic: 0 → 1 (+1)
   new (1):
-    circulation|src/lib/events.ts|publishLibraryEvent -> detailType|channel-dynamic
+    circulation|src/lib/events.ts|producer:circulation#src/lib/events.ts:15:9|channel-dynamic

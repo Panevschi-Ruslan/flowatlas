@@ -499,3 +499,55 @@ describe('what makes doctor fail a build', () => {
     expect(report.verdict.exitCode).toBe(0);
   });
 });
+
+describe('what a row is printed as', () => {
+  // A row about a node names it by id, so a walk counts it and a baseline keys
+  // it (R173, R177); the person reading the report reads its message instead,
+  // and the id stays in the JSON and in the key.
+  const producer = 'producer:orders#src/orders.service.ts:71:5';
+  const reportWith = (): ReturnType<typeof runDoctor> =>
+    runDoctor(
+      {
+        db: dbOf(),
+        unresolved: [
+          row({ reason: 'channel-from-config', symbol: producer, message: "OrdersService.tally -> this.config.get('SWEEP')" }),
+          row({
+            reason: 'workflow-named-by-file',
+            symbol: 'entry:orders:workflow:refunds',
+            message: 'the workflow in refunds.asl.json is named refunds after its file',
+          }),
+          row({
+            reason: 'reference-not-found',
+            symbol: 'orders#flows/refunds.asl.json:refunds/Pay',
+            message: 'Pay reaches the function pay, which no configured service declares',
+          }),
+          row({ reason: 'channel-dynamic', symbol: 'producer:orders#src/orders.service.ts:80:5' }),
+          row({ reason: 'dynamic-http-url', symbol: 'this.#http.get(`x:${id}`)', message: 'an address built at run time' }),
+        ],
+      },
+      { contracts: false, baseline: { status: 'missing', note: 'no baseline' }, baselinePath: '/x' },
+    );
+
+  it('prints the message where the symbol is the id of a node, and the source text otherwise', () => {
+    const text = renderDoctorText(reportWith());
+    expect(text).toContain("src/orders.service.ts:12  OrdersService.tally -> this.config.get('SWEEP')");
+    expect(text).toContain('src/orders.service.ts:12  the workflow in refunds.asl.json is named refunds after its file');
+    expect(text).toContain('src/orders.service.ts:12  Pay reaches the function pay, which no configured service declares');
+    expect(text).toContain('src/orders.service.ts:12  this.#http.get(`x:${id}`)');
+    // With no message of its own, a row has nothing better to say than its id.
+    expect(text).toContain('src/orders.service.ts:12  producer:orders#src/orders.service.ts:80:5');
+    expect(text).not.toContain(`:12  ${producer}`);
+  });
+
+  it('keeps the id in the baseline key and in the JSON', () => {
+    const report = reportWith();
+    expect(renderDoctorText(report)).toContain(`orders|src/orders.service.ts|${producer}|channel-from-config`);
+    const rows = report.unresolved.byReason.flatMap((group) => group.rows);
+    expect(rows.map((each) => each.symbol)).toContain(producer);
+  });
+
+  it('is printed the same way in the report a workflow annotates', () => {
+    const report = reportWith();
+    expect(renderDoctorGithub(report)).toContain(renderDoctorText(report));
+  });
+});

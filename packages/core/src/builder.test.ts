@@ -163,6 +163,15 @@ describe('GraphBuilder', () => {
     expect(b.build().unresolved).toHaveLength(2);
   });
 
+  it('keeps two rows about one node at one site apart by what each says was not read (R177)', () => {
+    const b = builder();
+    const at = { file: 'src/a.ts', line: 3, reason: 'channel-from-environment', symbol: 'producer:orders#src/a.ts:3:5' };
+    b.addUnresolved({ ...at, message: 'publish -> process.env.BUS' });
+    b.addUnresolved({ ...at, message: 'publish -> process.env.TOPIC' });
+    b.addUnresolved({ ...at, message: 'publish -> process.env.BUS' });
+    expect(b.unresolved.map((row) => row.message)).toEqual(['publish -> process.env.BUS', 'publish -> process.env.TOPIC']);
+  });
+
   it('folds rows below action by reason and by level, never across the two', () => {
     // One reason raising both levels is not a case any pass makes today, and a
     // fold keyed on the reason alone would answer it by inventing a number:

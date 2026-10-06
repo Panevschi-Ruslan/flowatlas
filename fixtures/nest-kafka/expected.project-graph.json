@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:04.485Z",
+  "builtAt": "2026-10-06T21:46:01.188Z",
   "services": [
     {
       "name": "nest-kafka",
@@ -1619,40 +1619,45 @@
       "file": "src/orders/orders.service.ts",
       "line": 85,
       "reason": "channel-const-unresolved",
+      "message": "OrdersService.emitRegional -> REGION_TOPIC",
       "hint": "The channel name cannot be read here. Annotate OrdersService.emitRegional with the channel it uses.",
-      "symbol": "OrdersService.emitRegional -> REGION_TOPIC",
+      "symbol": "producer:nest-kafka#src/orders/orders.service.ts:85:5",
       "service": "nest-kafka"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 104,
       "reason": "channel-dynamic",
+      "message": "OrdersService.checksum -> { name: 'order.checksum', data: {} }",
       "hint": "The channel name cannot be read here. Annotate OrdersService.checksum with the channel it uses.",
-      "symbol": "OrdersService.checksum -> { name: 'order.checksum', data: {} }",
+      "symbol": "producer:nest-kafka#src/orders/orders.service.ts:104:5",
       "service": "nest-kafka"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 112,
       "reason": "channel-from-config",
+      "message": "OrdersService.emitConfigured -> this.config.get('ORDER_TOPIC')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.emitConfigured with the channel it uses.",
-      "symbol": "OrdersService.emitConfigured -> this.config.get('ORDER_TOPIC')",
+      "symbol": "producer:nest-kafka#src/orders/orders.service.ts:112:5",
       "service": "nest-kafka"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 117,
       "reason": "channel-dynamic",
+      "message": "OrdersService.emitDynamic -> topic",
       "hint": "The channel name cannot be read here. Annotate OrdersService.emitDynamic with the channel it uses.",
-      "symbol": "OrdersService.emitDynamic -> topic",
+      "symbol": "producer:nest-kafka#src/orders/orders.service.ts:117:5",
       "service": "nest-kafka"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 123,
       "reason": "channel-dynamic",
+      "message": "OrdersService.emitSpread -> ...args",
       "hint": "The channel name cannot be read here. Annotate OrdersService.emitSpread with the channel it uses.",
-      "symbol": "OrdersService.emitSpread -> ...args",
+      "symbol": "producer:nest-kafka#src/orders/orders.service.ts:123:5",
       "service": "nest-kafka"
     }
   ]

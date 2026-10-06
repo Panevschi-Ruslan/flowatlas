@@ -3,7 +3,7 @@ unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · con
 unresolved: 0 to act on over 1 row, and 1 place static reading cannot see, folded into 1
   subscription-matches-nothing (info): 1 row
     A rule for events nothing here puts is a way in from outside - another account, a partner, the platform itself - or its publisher is in a repository the configuration does not name. Nothing to fix if it is the first.
-      routing/rules.tf:79  consumer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles
+      routing/rules.tf:79  rule library-partner-titles takes events by a pattern that no publisher in the configured services matches
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked

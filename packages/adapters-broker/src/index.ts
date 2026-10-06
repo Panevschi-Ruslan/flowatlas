@@ -29,6 +29,8 @@ export type {
 export { endpointShapingAt, isUnreadable, unreadableEndpointRow } from './endpoint.js';
 export type { Endpoint, EndpointShaping } from './endpoint.js';
 export { pairKey, readBrokerMarkers } from './markers.js';
+export { rowAbout } from './row-site.js';
+export type { RowSite } from './row-site.js';
 
 import type { AdapterRegistry } from '@flowatlas/core';
 import { brokerAdapters } from './adapters/index.js';

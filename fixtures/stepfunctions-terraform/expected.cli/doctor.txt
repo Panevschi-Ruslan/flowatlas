@@ -3,7 +3,7 @@ unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · con
 unresolved: 1 to act on over 1 row
   workflow-template-unbound: 1 row
     Whatever deploys this definition fills the placeholder in first. Read the definition from the file that deploys it, so its values are known, or write the name in place.
-      lending statemachine/loan-renewal.asl.json:66  lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ApplyBranchPolicy
+      lending statemachine/loan-renewal.asl.json:66  ApplyBranchPolicy invokes a function named by ${branch_policy_arn}, and nothing here says what ${branch_policy_arn} stands for
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked

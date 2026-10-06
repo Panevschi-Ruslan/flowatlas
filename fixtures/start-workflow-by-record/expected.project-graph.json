@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T21:13:56.466Z",
+  "builtAt": "2026-10-06T21:46:48.096Z",
   "services": [
     {
       "name": "lending",
@@ -500,8 +500,9 @@
       "file": "src/handlers/resume-run.ts",
       "line": 7,
       "reason": "start-name-unread",
+      "message": "handler -> orchestrator.start({ runId: event.pathParameters?.['runId'] ",
       "hint": "The name of the workflow this starts is not written where it can be read. Write the deployed name or its ARN, or a value of the environment the deployment sets; where the code names it some other way, say how in the `names` table of a starter description.",
-      "symbol": "producer:lending#src/handlers/resume-run.ts:7:9 -> orchestrator.start({ runId: event.pathParameters?.['runId'] ",
+      "symbol": "producer:lending#src/handlers/resume-run.ts:7:9",
       "service": "lending"
     },
     {

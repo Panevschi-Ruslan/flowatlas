@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:27.392Z",
+  "builtAt": "2026-10-06T21:46:33.801Z",
   "services": [
     {
       "name": "api",
@@ -889,8 +889,9 @@
       "file": "src/orders/orders.service.ts",
       "line": 52,
       "reason": "channel-dynamic",
+      "message": "OrdersService.perTenant -> tenantTopic()",
       "hint": "The channel name cannot be read here. Annotate OrdersService.perTenant with the channel it uses.",
-      "symbol": "OrdersService.perTenant -> tenantTopic()",
+      "symbol": "producer:api#src/orders/orders.service.ts:52:5",
       "service": "api"
     },
     {

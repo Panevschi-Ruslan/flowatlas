@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T20:53:51.754Z",
+  "builtAt": "2026-10-06T21:45:11.163Z",
   "services": [
     {
       "name": "circulation",
@@ -1409,8 +1409,9 @@
       "file": "src/lib/events.ts",
       "line": 15,
       "reason": "channel-dynamic",
+      "message": "publishLibraryEvent -> detailType",
       "hint": "The channel name cannot be read here. Annotate publishLibraryEvent with the channel it uses.",
-      "symbol": "publishLibraryEvent -> detailType",
+      "symbol": "producer:circulation#src/lib/events.ts:15:9",
       "service": "circulation"
     }
   ]

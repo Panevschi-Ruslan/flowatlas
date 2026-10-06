@@ -112,6 +112,16 @@ describe('a start addressed by a record made one call earlier (R171)', () => {
     ]);
   });
 
+  it('puts the row on the producer the handler calls, where a walk passes, and says what was not read in its message (R177)', () => {
+    const [row] = byRecord.unresolved.filter((each) => each.reason === 'start-name-unread');
+    const called = byRecord.edges
+      .filter((edge) => edge.type === 'calls' && edge.from === 'lending#src/handlers/resume-run.ts:handler')
+      .map((edge) => edge.to);
+    expect(row?.symbol).toBe('producer:lending#src/handlers/resume-run.ts:7:9');
+    expect(called).toContain(row?.symbol);
+    expect(row?.message).toMatch(/^handler -> orchestrator\.start\(/);
+  });
+
   it('offers a description to the calls shaped like a start, and none to an error builder or the call that made the record', () => {
     const rows = byRecord.unresolved.filter((row) => row.reason === 'starter-undescribed');
     expect(rows.map((row) => [row.file, row.line, row.symbol])).toEqual([

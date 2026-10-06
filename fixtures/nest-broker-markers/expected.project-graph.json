@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:55.504Z",
+  "builtAt": "2026-10-06T21:45:50.513Z",
   "services": [
     {
       "name": "nest-broker-markers",
@@ -1521,56 +1521,63 @@
       "file": "src/orders/orders.service.ts",
       "line": 57,
       "reason": "channel-dynamic",
+      "message": "OrdersService.archive -> this.channelFor('archived')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.archive with the channel it uses.",
-      "symbol": "OrdersService.archive -> this.channelFor('archived')",
+      "symbol": "producer:nest-broker-markers#src/orders/orders.service.ts:57:5",
       "service": "nest-broker-markers"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 74,
       "reason": "channel-dynamic",
+      "message": "OrdersService.severalArguments -> this.channelFor('held-or-released')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.severalArguments with the channel it uses.",
-      "symbol": "OrdersService.severalArguments -> this.channelFor('held-or-released')",
+      "symbol": "producer:nest-broker-markers#src/orders/orders.service.ts:74:5",
       "service": "nest-broker-markers"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 79,
       "reason": "channel-dynamic",
+      "message": "OrdersService.aListInPlace -> this.channelFor('split-or-merged')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.aListInPlace with the channel it uses.",
-      "symbol": "OrdersService.aListInPlace -> this.channelFor('split-or-merged')",
+      "symbol": "producer:nest-broker-markers#src/orders/orders.service.ts:79:5",
       "service": "nest-broker-markers"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 84,
       "reason": "channel-dynamic",
+      "message": "OrdersService.aCatalogue -> this.channelFor('shipping')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.aCatalogue with the channel it uses.",
-      "symbol": "OrdersService.aCatalogue -> this.channelFor('shipping')",
+      "symbol": "producer:nest-broker-markers#src/orders/orders.service.ts:84:5",
       "service": "nest-broker-markers"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 92,
       "reason": "channel-dynamic",
+      "message": "OrdersService.stacked -> this.channelFor('refunded-or-reopened')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.stacked with the channel it uses.",
-      "symbol": "OrdersService.stacked -> this.channelFor('refunded-or-reopened')",
+      "symbol": "producer:nest-broker-markers#src/orders/orders.service.ts:92:5",
       "service": "nest-broker-markers"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 100,
       "reason": "channel-dynamic",
+      "message": "OrdersService.namesNothing -> this.channelFor('nothing')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.namesNothing with the channel it uses.",
-      "symbol": "OrdersService.namesNothing -> this.channelFor('nothing')",
+      "symbol": "producer:nest-broker-markers#src/orders/orders.service.ts:100:5",
       "service": "nest-broker-markers"
     },
     {
       "file": "src/orders/orders.service.ts",
       "line": 106,
       "reason": "channel-dynamic",
+      "message": "OrdersService.notAName -> this.channelFor('number')",
       "hint": "The channel name cannot be read here. Annotate OrdersService.notAName with the channel it uses.",
-      "symbol": "OrdersService.notAName -> this.channelFor('number')",
+      "symbol": "producer:nest-broker-markers#src/orders/orders.service.ts:106:5",
       "service": "nest-broker-markers"
     }
   ]

@@ -43,7 +43,10 @@ variable's name is not the queue's, and the value is set by the deployment. The
 linker completes it from the `environment` block of each function whose
 deployment runs the code (`fixtures/sqs-sns-terraform`); nothing deploys this
 Express application, so each such call stays a producer with no channel and one
-row that names the variable.
+row that names the variable. The row is recorded against that producer, so a
+walk from the route counts it: `expected.cli/` holds `flow` for
+`POST /returns/overdue`, which ends at `queueOverdue`'s `message ?` with
+`unresolved on this path: 1` (R177).
 
 The application is in `api/` rather than `src/` because the reader opens `src/`
 alone when there is one, and the two functions beside it have to be read as

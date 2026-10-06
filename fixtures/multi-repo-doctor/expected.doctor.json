@@ -116,30 +116,30 @@
             "service": "orders",
             "file": "src/orders/orders.service.ts",
             "line": 71,
-            "symbol": "OrdersService.tally -> this.config.get('SWEEP_CHANNEL')",
+            "symbol": "producer:orders#src/orders/orders.service.ts:71:5",
             "level": "action",
             "sites": 1,
-            "message": "channel-from-config",
+            "message": "OrdersService.tally -> this.config.get('SWEEP_CHANNEL')",
             "hint": "The channel name cannot be read here. Annotate OrdersService.tally with the channel it uses."
           },
           {
             "service": "orders",
             "file": "src/orders/orders.service.ts",
             "line": 81,
-            "symbol": "OrdersService.sweep -> this.config.get('SWEEP_CHANNEL')",
+            "symbol": "producer:orders#src/orders/orders.service.ts:81:5",
             "level": "action",
             "sites": 1,
-            "message": "channel-from-config",
+            "message": "OrdersService.sweep -> this.config.get('SWEEP_CHANNEL')",
             "hint": "The channel name cannot be read here. Annotate OrdersService.sweep with the channel it uses."
           },
           {
             "service": "orders",
             "file": "src/orders/orders.service.ts",
             "line": 126,
-            "symbol": "OrdersService.drain -> this.config.get('DRAIN_CHANNEL')",
+            "symbol": "producer:orders#src/orders/orders.service.ts:126:5",
             "level": "action",
             "sites": 1,
-            "message": "channel-from-config",
+            "message": "OrdersService.drain -> this.config.get('DRAIN_CHANNEL')",
             "hint": "The channel name cannot be read here. Annotate OrdersService.drain with the channel it uses."
           }
         ]
@@ -426,20 +426,20 @@
             "service": "orders",
             "file": "src/orders/orders.service.ts",
             "line": 92,
-            "symbol": "OrdersService.hold -> this.config.get('SWEEP_CHANNEL')",
+            "symbol": "producer:orders#src/orders/orders.service.ts:92:5",
             "level": "info",
             "sites": 1,
-            "message": "channel-from-config",
+            "message": "OrdersService.hold -> this.config.get('SWEEP_CHANNEL')",
             "hint": "An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here."
           },
           {
             "service": "orders",
             "file": "src/orders/orders.service.ts",
             "line": 113,
-            "symbol": "OrdersService.refund -> this.config.get('REFUND_CHANNEL')",
+            "symbol": "producer:orders#src/orders/orders.service.ts:113:5",
             "level": "info",
             "sites": 1,
-            "message": "channel-from-config",
+            "message": "OrdersService.refund -> this.config.get('REFUND_CHANNEL')",
             "hint": "An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here."
           }
         ]
@@ -755,7 +755,7 @@
   },
   "baseline": {
     "status": "ok",
-    "note": "accepted against graph schema 3, and this graph is 6; the counts are still comparable, but a schema change can move them on its own",
+    "note": null,
     "total": {
       "baseline": 26,
       "current": 26,

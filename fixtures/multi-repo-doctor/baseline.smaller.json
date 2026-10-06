@@ -1,6 +1,6 @@
 {
   "baselineFormatVersion": 1,
-  "schemaVersion": 3,
+  "schemaVersion": 6,
   "flowatlasVersion": "0.0.0",
   "acceptedAt": "2026-09-09T20:14:00.000Z",
   "acceptedBy": "fixture",
@@ -21,7 +21,7 @@
   "unresolved": {
     "total": 25,
     "byReason": {
-      "channel-from-config": 2,
+      "channel-from-config": 3,
       "di-token-unknown": 2,
       "dynamic-http-url": 2,
       "marker-route-not-found": 1,
@@ -30,7 +30,7 @@
       "route-unguarded": 3,
       "target-route-not-found": 1,
       "unknown-base-url-env": 1,
-      "unknown-db-package": 9
+      "unknown-db-package": 8
     },
     "byService": {
       "gateway": 8,
@@ -94,11 +94,15 @@
         "count": 1
       },
       {
-        "key": "orders|src/orders/orders.service.ts|OrdersService.sweep -> this.config.get('SWEEP_CHANNEL')|channel-from-config",
+        "key": "orders|src/orders/orders.service.ts|producer:orders#src/orders/orders.service.ts:126:5|channel-from-config",
         "count": 1
       },
       {
-        "key": "orders|src/orders/orders.service.ts|OrdersService.tally -> this.config.get('SWEEP_CHANNEL')|channel-from-config",
+        "key": "orders|src/orders/orders.service.ts|producer:orders#src/orders/orders.service.ts:71:5|channel-from-config",
+        "count": 1
+      },
+      {
+        "key": "orders|src/orders/orders.service.ts|producer:orders#src/orders/orders.service.ts:81:5|channel-from-config",
         "count": 1
       },
       {
@@ -107,7 +111,7 @@
       },
       {
         "key": "orders|src/orders/orders.service.ts|this.rows.find|unknown-db-package",
-        "count": 7
+        "count": 6
       },
       {
         "key": "orders|src/orders/orders.service.ts|this.rows.persist|unknown-db-package",

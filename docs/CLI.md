@@ -499,7 +499,13 @@ deployment declares name the node drawn for it: a function's `invoke` entry, a
 route's entry, the consumer a rule, mapping or subscription delivers to. A route
 integrated straight with a function whose handler is not read reaches that
 function's entry, so the walk from the route counts the same row a path through
-a queue to it does.
+a queue to it does. A publish or a start whose name could not be read is still
+drawn, as a producer the body calls, and its row names that producer: a walk
+through the body counts it, and what was not read — the body, then the
+expression, `queueOverdue -> process.env.OVERDUE_QUEUE_URL` — is the row's
+`message` (`fixtures/aws-sdk-publishers`, `fixtures/start-workflow-by-record`).
+A handler whose channel could not be read is on no channel and under no entry,
+so no walk passes it, and its row names the method as it is written.
 
 ### `flowatlas impact <symbol>`
 
@@ -831,6 +837,19 @@ members' own where they all say one thing, and otherwise the kind's, written
 once. A member's own sentence sits under that member, marked `↳`. Groups are
 keyed by reason *and* level, so a group's level is every member's rather than
 its loudest member's.
+
+A row is keyed in the baseline by what it names: the node it is recorded
+against where it is about one, and the source text otherwise. It is shown in
+words a reader finds at its place: where it names a node, by its message -
+`OrdersService.tally -> this.config.get('SWEEP_CHANNEL')`, not
+`producer:orders#src/orders/orders.service.ts:71:5` - and the id is in
+`doctor.json` and in the key. A key is
+service, file, that name and the reason; it carries no line of its own, and only
+the total decides `--strict`, so a key that moves is named under `new` and
+`gone` and fails nothing. A row about a publish or a start whose name could not
+be read names the producer drawn for the call, whose id is its place in the file;
+a baseline accepted before that release lists those rows under the
+`method -> expression` they were named by, and `--accept` writes them again.
 
 Where a repository was read without its dependencies, the report opens with the
 one sentence that says so, described under [`build`](#flowatlas-build-dir),

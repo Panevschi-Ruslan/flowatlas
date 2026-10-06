@@ -55,8 +55,8 @@ from the configuration and rebuilding:
 
 | Removed | What happens |
 |---|---|
-| the producer's `argument-property` | 4 channels → 3, 2 joined → 1; three rows name the whole record — `OrdersService.place -> { name: 'thumbnail.generate', data: { orderId } }` |
-| the producer's `base-constructor-argument` | 4 channels → 3, `channel:digest.send` disappears; the rows name the *payload* the fallback index pointed at |
+| the producer's `argument-property` | 4 channels → 3, 2 joined → 1; three rows whose messages name the whole record — `OrdersService.place -> { name: 'thumbnail.generate', data: { orderId } }` |
+| the producer's `base-constructor-argument` | 4 channels → 3, `channel:digest.send` disappears; the rows' messages name the *payload* the fallback index pointed at |
 | the consumer's `argument-property` | 4 channels → **6**, 2 joined → **0**: `channel:{"name":"mail.send","queue":"mail"}` and `channel:{"name":"thumbnail.generate","queue":"thumbnails"}` appear beside the real nodes. This is R86's cost reproduced exactly — a message layer present and unusable, every channel with one end. |
 | the producer's `payloadPath` | `contracts` goes from `identical=2 errors=0` to `drift=2 errors=2`, twice `error missing_required: receiver worker requires orderId; sender api does not send it`, and twice `info extra_field: sender api sends data`. The envelope compared as though it were the message — a limit of static reading reported as somebody's mistake, at **error** severity (R133). |
 

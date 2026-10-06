@@ -3,21 +3,21 @@ unresolved: total=5 (missing) · markers: errors=0 warnings=0 · desync=0 · con
 unresolved: 5 to act on over 9 rows, and 5 places static reading cannot see, folded into 4
   reference-not-found: 4 rows
     Add the repository that deploys it to the configuration, so this step reaches its code.
-      circulation/statemachine/loan-approval.asl.json:14  circulation#statemachine/loan-approval.asl.json:loan-approval/CheckBorrowerStanding
-      circulation/statemachine/loan-approval.asl.json:155  circulation#statemachine/loan-approval.asl.json:loan-approval/ScoreBorrower
-      notifications/workflows/borrower-notifications.asl.yaml:14  notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail
-      notifications/workflows/borrower-notifications.asl.yaml:22  notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText
+      circulation/statemachine/loan-approval.asl.json:14  CheckBorrowerStanding [Task lambda:invoke] reaches the function check-borrower-standing, which no configured service declares
+      circulation/statemachine/loan-approval.asl.json:155  ScoreBorrower [Task function] reaches the function score-borrower, which no configured service declares
+      notifications/workflows/borrower-notifications.asl.yaml:14  SendEmail [Task lambda:invoke] reaches the function send-borrower-email, which no configured service declares
+      notifications/workflows/borrower-notifications.asl.yaml:22  SendText [Task lambda:invoke] reaches the function send-borrower-text, which no configured service declares
   workflow-template-unbound: 1 row
     Whatever deploys this definition fills the placeholder in first. Read the definition from the file that deploys it, so its values are known, or write the name in place.
-      circulation/statemachine/loan-approval.asl.json:216  circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy
+      circulation/statemachine/loan-approval.asl.json:216  ApplyLateFeePolicy invokes a function named by ${LateFeePolicyFunctionArn}, and nothing here says what ${LateFeePolicyFunctionArn} stands for
   workflow-named-by-file (info): 2 rows over 3 places
     A definition read on its own carries no deployed name, so anything joined to it by that name is drawn as heuristic. Read it from the file that deploys it to make the name certain.
-      circulation/statemachine/loan-approval.asl.json:1  entry:circulation:workflow:loan-approval
-      notifications/workflows/borrower-notifications.asl.yaml:1  entry:notifications:workflow:borrower-notifications
+      circulation/statemachine/loan-approval.asl.json:1  the workflow in statemachine/loan-approval.asl.json is named loan-approval after its file; nothing here says the name it is deployed under
+      notifications/workflows/borrower-notifications.asl.yaml:1  the workflow in workflows/borrower-notifications.asl.yaml is named borrower-notifications after its file; nothing here says the name it is deployed under
   workflow-target-dynamic (info): 2 rows
     The definition chooses this at run time, so no edge is drawn for it. Nothing to fix here.
-      circulation/statemachine/loan-approval.asl.json:206  circulation#statemachine/loan-approval.asl.json:loan-approval/LookUpBranchPolicy
-      notifications/workflows/overdue-reminders.asl.json:27  notifications#workflows/overdue-reminders.asl.json:overdue-reminders/SendReminder
+      circulation/statemachine/loan-approval.asl.json:206  LookUpBranchPolicy invokes a function chosen when the state runs: FunctionName is $.branch.policyFunction
+      notifications/workflows/overdue-reminders.asl.json:27  SendReminder invokes a function chosen when the state runs: FunctionName is {% $states.input.reminderFunction %}
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked

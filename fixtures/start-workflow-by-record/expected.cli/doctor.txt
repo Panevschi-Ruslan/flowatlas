@@ -9,7 +9,7 @@ unresolved: 3 to act on over 4 rows, and 3 places static reading cannot see, fol
         ↳ @library/jobs is not installed, so what submit does is not read. It is called from a deployed function and it is handed job.id, read off what prepare returned earlier in the same body. If it starts a workflow or invokes a function by its deployed name, describe it under adapters.starters as {"module":"@library/jobs","function":"submit","target":"workflow","name":[{"kind":"origin-call-argument","call":"prepare","path":["kind"]}],"names":{"Job.OverdueNotices":"<deployed name>"}} (`"target": "invoke"` for a function); or install the package, so its source is read.
   start-name-unread: 1 row
     The name of the workflow this starts is not written where it can be read. Write the deployed name or its ARN, or a value of the environment the deployment sets; where the code names it some other way, say how in the `names` table of a starter description.
-      lending src/handlers/resume-run.ts:7  producer:lending#src/handlers/resume-run.ts:7:9 -> orchestrator.start({ runId: event.pathParameters…
+      lending src/handlers/resume-run.ts:7  handler -> orchestrator.start({ runId: event.pathParameters?.['runId']
   call-dynamic-receiver (info): 1 row over 3 places
     The receiver has no single class type; inject a class to make the edge visible.
       lending src/handlers/create-loan.ts:18  handler -> orchestrator.create
@@ -27,5 +27,5 @@ baseline: missing (0 accepted, 3 now, +3)
   starter-undescribed: 0 → 2 (+2)
   new (3):
     lending|src/handlers/create-loan.ts|@library/notify send|starter-undescribed
-    lending|src/handlers/resume-run.ts|producer:lending#src/handlers/resume-run.ts:7:9 -> orchestrator.start({ runId: event.pathParameters?.['runId']|start-name-unread
+    lending|src/handlers/resume-run.ts|producer:lending#src/handlers/resume-run.ts:7:9|start-name-unread
     lending|src/handlers/send-overdue-notices.ts|@library/jobs submit|starter-undescribed

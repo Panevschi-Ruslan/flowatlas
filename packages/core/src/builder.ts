@@ -29,8 +29,14 @@ const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 const edgeKey = (edge: GraphEdge): string => `${edge.from}${SEP}${edge.type}${SEP}${edge.to}`;
 
+/**
+ * One row per thing to fix at one site. The message is in because a row about a
+ * node names the node and says in its message what about it was not read: two
+ * names of one call refused for the same reason are two rows on one producer
+ * (R177).
+ */
 const unresolvedKey = (row: Unresolved): string =>
-  `${row.file}${SEP}${row.line}${SEP}${row.reason}${SEP}${row.symbol ?? ''}`;
+  `${row.file}${SEP}${row.line}${SEP}${row.reason}${SEP}${row.symbol ?? ''}${SEP}${row.message ?? ''}`;
 
 /**
  * Folds every row below `action` to one per reason, counting the rest.

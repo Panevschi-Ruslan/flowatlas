@@ -29,7 +29,7 @@ import {
   kindHint,
   type HintContext,
 } from './hints.js';
-import { validateMarkers, type MarkerIssue } from './markers.js';
+import { callerOfProducer, validateMarkers, type MarkerIssue } from './markers.js';
 import { mostlyUnread, noWayInSentence, waysInByService, waysInTotal, type WaysIn } from './ways-in.js';
 import {
   DOCTOR_FORMAT_VERSION,
@@ -509,11 +509,12 @@ export const withAnsweredDemoted = (
   /**
    * Methods by the name a row calls them, within the file they are declared in.
    *
-   * A row names its symbol as it is written rather than by id, and for a
-   * channel that is `OrdersService.publish -> channel`: the method, then what
-   * about it could not be read. The line is the line of the *call*, not of the
-   * method, so the join is the name and the file — the same join `doctor`
-   * already makes to put a marker issue on a row.
+   * A row read off one repository names its symbol as it is written rather
+   * than by id: the method, then what about it could not be read. The line is
+   * the line of the *call*, not of the method, so the join is the name and the
+   * file — the same join `doctor` already makes to put a marker issue on a row.
+   * A row about a publish names the producer instead, and its method is the one
+   * that calls it (R177).
    */
   const methodsAt = new Map<string, GraphNode>();
   for (const node of db.allNodes()) {
@@ -521,7 +522,7 @@ export const withAnsweredDemoted = (
     methodsAt.set(`${node.repo}|${node.file ?? ''}|${node.label}`, node);
   }
   const idFor = (row: Unresolved): string | undefined => {
-    if (row.symbol !== undefined && db.node(row.symbol) !== undefined) return row.symbol;
+    if (row.symbol !== undefined && db.node(row.symbol) !== undefined) return callerOfProducer(db, row.symbol) ?? row.symbol;
     const here = callsAt.get(`${row.service ?? ''}|${row.file}|${row.line}`);
     if (here !== undefined) return here.id;
     if (row.symbol === undefined) return undefined;

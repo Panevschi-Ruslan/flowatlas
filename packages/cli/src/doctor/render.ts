@@ -8,10 +8,11 @@
  */
 import { resolve } from 'node:path';
 import type { ContractFinding } from '@flowatlas/contracts';
+import { NODE_TYPES } from '@flowatlas/core';
 import { isInstalled, partialReadNotice, type ReadRepo } from '../partial-read.js';
 import { moreRows, renderTable, section } from '../format/table.js';
 import type { MarkerIssue } from './markers.js';
-import type { DoctorReport } from './schema.js';
+import type { DoctorReport, DoctorRow } from './schema.js';
 import { noWayInSentence } from './ways-in.js';
 
 /** `… 12 more rows; the whole list is in <file>` — never a silent cut (I9). */
@@ -97,6 +98,37 @@ export const placeOf = (symbol: string): { file: string; line: number } | undefi
   return { file, line: line === null ? 0 : Number(line[1]) };
 };
 
+/**
+ * Whether a row's symbol is the id of a node rather than text from the source.
+ *
+ * The two forms the identifier grammar in `@flowatlas/core` gives a node a row
+ * can be about: a typed id, `producer:orders#src/x.ts:71:5` or
+ * `entry:billing:workflow:refunds`, and a symbol id, `<repo>#<file>:<symbol>`,
+ * whose file ends in an extension. Source text has a space or a parenthesis
+ * where an id has neither, so `this.#cache.get(key)` is not taken for one.
+ */
+const TYPED_ID = new RegExp(`^(?:${NODE_TYPES.join('|')}):[^\\s:]`);
+const SYMBOL_ID = /^[^\s#]+#[^\s:#]+\.\w+:\S/;
+const isNodeId = (symbol: string): boolean => TYPED_ID.test(symbol) || SYMBOL_ID.test(symbol);
+
+/**
+ * What a row is about, in words a person can find at its place.
+ *
+ * A row names the node it is about by the node's id, so a walk through that
+ * node counts it and a baseline keys it (R173, R177). An id is not what anybody
+ * reads in the file the line already points at: it says the place a second
+ * time and the thing not at all. The row's message says the thing - the body
+ * and the expression of a publish whose name could not be read, the rule or
+ * the subscription a deployment declares - so where the symbol is an id, the
+ * message is what is printed. Whole, because a sentence cut short says less
+ * than it should; the id stays in `doctor.json` and in the baseline key.
+ */
+const shownAs = (row: DoctorRow, reason: string): string | undefined => {
+  if (row.symbol === null) return undefined;
+  if (isNodeId(row.symbol) && row.message !== reason) return oneLine(row.message, Infinity);
+  return oneLine(row.symbol);
+};
+
 /** What a group of one level is marked with, where it is not the ordinary case. */
 const LEVEL_TAG = {
   action: '',
@@ -143,7 +175,8 @@ const unresolvedSection = (
     );
     for (const row of group.rows) {
       const place = where(row.service, row.file, row.line, repoDirs);
-      lines.push(`      ${place}${row.symbol === null ? '' : `  ${oneLine(row.symbol)}`}`);
+      const what = shownAs(row, group.reason);
+      lines.push(`      ${place}${what === undefined ? '' : `  ${what}`}`);
       // The heading says what the kind means; this says what this place is.
       // Marked, because an unmarked sentence between two sites is read as
       // belonging to the one below it (R35), and indentation alone was not

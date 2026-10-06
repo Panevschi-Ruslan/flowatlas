@@ -356,6 +356,36 @@ only one of them moved.
   Baselines that accepted one of the moved rows see it as new under its node.
   `fixtures/lambda-namespace-handlers`, `sqs-sns-terraform`,
   `eventbridge-terraform`, `start-workflow-helper`, `multi-repo-doctor`.
+- **A row about a publish or a start names the producer, so `flow` counts it.**
+  A publish whose channel, or a start whose workflow or function, could not be
+  read is drawn as a producer its body calls, and its row named
+  `OrdersService.publish -> topic` or `producer:<id> -> <text>`, which is no
+  node, so a path through it printed `unresolved on this path: 0` (R177). The
+  rows the broker, socket and starter readers write about a call -
+  `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`,
+  `channel-from-environment`, `start-name-unread`, `start-from-environment` -
+  now name the producer by its id, as the linker's `environment-not-set` rows
+  already did, and say what was not read in their `message`. A route into a
+  start whose name was recorded elsewhere, or a publish to an environment
+  variable nothing deployed sets, counts 1. A handler whose channel could not be
+  read keeps naming the method: it is on no channel and under no entry, so no
+  walk passes it. `doctor` still answers such a row from an `@Emits` on the
+  method that calls the producer.
+  **Baseline keys change for these rows**: a key now names the producer, whose
+  id is its place in the file, where it named `method -> expression`. A
+  baseline accepted before this lists them under `gone` and their new keys under
+  `new`; the total is unchanged, so `--strict` still passes, and
+  `doctor --accept` writes the new keys. `fixtures/aws-sdk-publishers`,
+  `start-workflow-by-record`, `multi-repo-doctor`.
+- **`doctor` prints what a row is about, not the id it is keyed by.** A row
+  about a node names it by id, and the text report and `--format github`
+  printed that id beside the place: `producer:orders#src/orders/orders.service.ts:71:5`
+  where a reader used to see `OrdersService.tally -> this.config.get('SWEEP_CHANNEL')`.
+  Where a row's symbol is a node id, the report prints the row's message in its
+  place - the body and the expression of a publish or a start, the rule or the
+  subscription a deployment declares, the step of a workflow, the request the
+  linker could not join. `doctor.json` and the baseline keys still carry the id;
+  only what is printed changed.
 
 - **A property of a parameter is no longer reported as a constant nobody could
   read.** `event.detail.type` read off a parameter is decided by each caller,

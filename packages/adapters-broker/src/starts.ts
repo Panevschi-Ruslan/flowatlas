@@ -25,6 +25,7 @@ import { STARTING_CLIENTS, type StartingClient } from './adapters/aws.js';
 import type { BrokerSpec } from './adapters/types.js';
 import type { ReceiverEvidence } from './call-site.js';
 import { isResolved } from './channel-name.js';
+import { rowAbout, type RowSite } from './row-site.js';
 import { importOf } from './stated-origin.js';
 
 /**
@@ -370,6 +371,7 @@ export const startReader = (ctx: PassContext, holderAt: (site: TsNode) => Holder
       line,
     });
     const noun = NOUNS[starts.entry];
+    const at: RowSite = { named: ctx.builder.getNode(holder.id)?.label ?? holder.id, node: id };
     const reported = new Set<string>();
     for (const element of unread) {
       const key = JSON.stringify(element.resolution);
@@ -385,7 +387,7 @@ export const startReader = (ctx: PassContext, holderAt: (site: TsNode) => Holder
               hint:
                 `The ${noun} this starts is the value of the environment variable ${variable}, set where the code is deployed and not in it. ` +
                 'Where a function whose deployment is read runs this code, it is completed from the value that function is deployed with and this row goes.',
-              symbol: `${id} -> ${text.slice(0, 60)}`,
+              ...rowAbout(at, text),
               meta: { variable },
             }
           : {
@@ -395,7 +397,7 @@ export const startReader = (ctx: PassContext, holderAt: (site: TsNode) => Holder
               hint:
                 `The name of the ${noun} this starts is not written where it can be read. Write the deployed name or its ARN, or a value of the environment the deployment sets; ` +
                 'where the code names it some other way, say how in the `names` table of a starter description.',
-              symbol: `${id} -> ${text.slice(0, 60)}`,
+              ...rowAbout(at, text),
             },
       );
     }
