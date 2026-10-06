@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T16:41:40.555Z",
+  "configHash": "fb8d35696f3a",
+  "services": [
+    {
+      "name": "circulation",
+      "repo": "./circulation",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 45,
+      "edges": 40,
+      "types": 3,
+      "unresolved": 1,
+      "durationMs": 520
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 5,
+    "linked": 4,
+    "noConsumers": [],
+    "noProducers": [
+      "channel:eventbridge/default/aws.s3/Object Created"
+    ]
+  },
+  "routes": {
+    "total": 4,
+    "called": 0,
+    "uncalled": [
+      "entry:circulation:http:POST:/holds",
+      "entry:circulation:http:POST:/loans",
+      "entry:circulation:http:POST:/loans/:param/renewals",
+      "entry:circulation:http:POST:/returns"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 3,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 45,
+    "edges": 43,
+    "types": 3,
+    "unresolved": 1
+  }
+}

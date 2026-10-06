@@ -729,6 +729,8 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Terraform files and modules | `infra-file-unparsed`, `infra-file-unread` (info), `infra-module-missing`, `infra-module-undescribed` (info unless its inputs name a handler, a function or a route), `infra-module-description-invalid` |
 | Joining a deployment across repositories | `route-root-not-found`, `route-root-ambiguous`, `invoke-target-not-found`, `invoke-target-ambiguous` |
 | Workflows written as state machines | `workflow-definition-unreadable`, `workflow-definition-invalid`, `workflow-definition-not-loaded`, `workflow-name-unread`, `workflow-named-by-file` (info), `workflow-name-duplicate`, `workflow-target-dynamic` (info), `workflow-template-unbound`, `workflow-target-unreadable`, `workflow-channel-not-joined` (info), `reference-not-found`, `reference-ambiguous` |
+| Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info) |
+| Values a deployment gives the code | `environment-not-set`, `environment-value-unread` |
 
 Three of these are worth knowing before they are met, because each is the
 tool declining to guess:
@@ -1353,14 +1355,16 @@ the package the client comes from (`fixtures/aws-sdk-publishers`). With nothing
 installed, a client is recognised by its construction and the import beside it,
 and every edge read that way is `heuristic` (`fixtures/aws-sdk-not-installed`).
 
-**A queue, topic or bus named by `process.env` has no channel.** The variable's
-name is not the resource's, and its value is set where the code is deployed. The
-publisher is drawn with no channel and a `channel-from-environment` row naming
-the variable; the producer keeps the address it is waiting on in
-`meta.awaiting`, each missing part named by its variable. Who receives — a rule,
-a subscription, a mapping from a queue to a function — is declared in the
-deployment and is not read yet, so every channel from the SDK has a publisher and
-no handler for now.
+**A queue, topic or bus named by `process.env` is completed from the
+deployment.** The variable's name is not the resource's, and its value is set
+where the code is deployed. The extractor draws the publisher with no channel
+and a `channel-from-environment` row naming the variable, and the producer keeps
+the address it is waiting on in `meta.awaiting` — each missing part named by its
+variable, with the message it carries. Where a function whose deployment is read
+runs the call, the linker completes the address from the value that function is
+deployed with and the row goes; where nothing deployed runs it, the row stays.
+Who receives — a rule, a subscription, a mapping from a queue to a function — is
+read from the deployment too (see *Subscribers declared in Terraform* below).
 
 A bus that addresses jobs as an options object and wraps each queue in a class of
 its own is described like this — and note that the handler needs describing the
@@ -1841,6 +1845,79 @@ The only infrastructure reader is Terraform. SAM, the Serverless Framework, the
 CDK and CloudFormation are named when a repository is written for one
 (`deployment-unread`), and are a second implementation of the reader interface
 the adapter is written against, not a change to it.
+
+### Subscribers declared in Terraform
+
+The publishing half of an AWS channel is a call in a handler; the receiving half
+is in Terraform, and is read from there, onto the channel the publisher names in
+the grammar above. The two meet on one node, across repositories, by name.
+
+| Declared as | Read as |
+|---|---|
+| `aws_cloudwatch_event_rule` with an `event_pattern` (`jsonencode`, heredoc or a string), and each of its `aws_cloudwatch_event_target`s | a consumer of every `eventbridge/<bus>/<source>/<detail type>` the pattern selects, reaching the target |
+| a rule with a `schedule_expression`, and `aws_scheduler_schedule` | a `cron` entry on its target, the entry keyed by the rule's or the schedule's name |
+| `aws_lambda_event_source_mapping` from a queue | a consumer of `sqs/<queue>` reaching the function |
+| the same from a DynamoDB table's stream or a Kinesis stream | an `event` entry, `dynamodb/<table>` or `kinesis/<stream>`, on the function |
+| `aws_sns_topic_subscription` with protocol `lambda` or `sqs` | a consumer of `sns/<topic>` reaching the function or the queue; any other protocol is read and not followed (`info`) |
+| `redrive_policy` on `aws_sqs_queue`, and `aws_sqs_queue_redrive_policy` | a `triggers` edge from the queue to a publisher onto its dead-letter queue — not a reader, so a queue nothing reads is still one `dead` reports |
+| `aws_pipes_pipe` | a consumer of its source reaching its target; a bus target with `eventbridge_event_bus_parameters` publishes exactly that event |
+| an API Gateway integration with SQS (`arn:aws:apigateway:<region>:sqs:path/<account>/<queue>`, `sqs:action/SendMessage`), SNS (`sns:action/Publish`) or EventBridge (`events:action/PutEvents`, the HTTP API subtypes `SQS-SendMessage` and `EventBridge-PutEvents`) | the route is the way in and a publisher onto that channel: no function runs |
+
+**A target** is reached by what it is. A function this deployment creates is
+reached through its own `invoke` entry; a schedule or a stream runs it as an
+entry onto its handler, the way a route in front of it does. A function or a
+workflow deployed elsewhere is a reference by its deployed name, joined to the
+one entry in any service that answers to it (`reference-not-found` where none
+does). A queue, a topic or a bus is a publisher of its own onto that channel; a
+rule that takes events by name and puts them on another bus forwards each under
+the same source and detail type. Each is named by a reference to what the
+configuration declares or looks up, by an ARN or URL written out, or by a
+template whose name part is written out — `"arn:aws:lambda:${var.region}:${local.account}:function:library-notify"`
+names its function even though neither the region nor the account is known.
+
+**Matching an event to a rule.** A pattern is a filter, not a name. Where it
+names `source` and `detail-type` exactly, every combination is a channel, and
+the join is `static`. Anything else — `prefix`, `suffix`, `anything-but`,
+`exists`, `wildcard`, `equals-ignore-case`, or a field the pattern leaves out —
+is matched as written against every channel the project publishes, and the join
+is `heuristic`, with the reason on the edge, which `--format json` shows:
+
+```json
+"edge": {
+  "type": "consumes",
+  "confidence": "heuristic",
+  "because": ["source \"library.loans\" matches prefix \"library.\""],
+  "notMatchedOn": ["detail"]
+}
+```
+
+A filter on `detail`, on any other field, or a subscription's `filter_policy` and
+a mapping's `filter_criteria`, is recorded (`notMatchedOn`) and not matched on.
+An unnamed bus is `default` on both sides. A pattern that selects nothing any
+configured service publishes is one `subscription-matches-nothing` row at `info`:
+a rule for events from outside — another account, a partner, the platform — is a
+way in with no producer, not a fault. So is a rule that names its events exactly
+and has no publisher here: its channel is drawn with a consumer and no producer,
+and `dead --kind channels` lists it.
+
+**Values a function is deployed with.** Every variable of a function's
+`environment` block is kept on its `invoke` entry, as written, as text where the
+files settle it, and as the deployed thing it names (`aws_sqs_queue.returns.url`
+names the queue `library-returns` though its URL is not known until the queue
+exists). The linker asks, per function, which code that function's handler
+reaches, and completes every address waiting on the environment from that
+function's values: two functions that run one helper and set its queue
+differently send to two queues, each edge saying for which function. A function
+that runs the code and does not set the variable is an `environment-not-set` row
+naming both; a value two variable files set differently is an
+`environment-value-unread` row naming the files, and `services[].infra.vars`
+chooses. Every settings key a function sets says where its value comes from on
+the `reads_config` edge that reads it (`setBy`).
+
+`terraform-aws-modules/eventbridge/aws`, `terraform-aws-modules/sqs/aws` and
+`terraform-aws-modules/sns/aws` ship described, beside the function and route
+modules (`fixtures/eventbridge-terraform`, `fixtures/sqs-sns-terraform`,
+`fixtures/multi-repo-events`).
 
 ### Procedures
 

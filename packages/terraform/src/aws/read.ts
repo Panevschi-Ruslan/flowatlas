@@ -3,6 +3,7 @@ import {
   makeHttpEntryKey,
   normalizePath,
   UNREAD_SPAN,
+  type DeployedDelivery,
   type DeployedFunction,
   type DeployedHandler,
   type DeployedRoute,
@@ -12,12 +13,17 @@ import {
   type RouteTarget,
   type Unresolved,
 } from '@flowatlas/core';
-import { attributeOf } from '../hcl/ast.js';
-import { referencesIn } from '../hcl/walk.js';
-import { attributeOfInstance, evaluate } from '../eval/evaluate.js';
-import { asText, describe, type Because, type Instance, type Value } from '../eval/values.js';
+import { attributeOfInstance } from '../eval/evaluate.js';
+import { describe, type Because, type Instance, type Value } from '../eval/values.js';
 import { stateAddress, type Configuration } from '../configuration/load.js';
 import { readStateMachineInstance } from './state-machines.js';
+import { argument, referencesOf, siteOf, textOf, whyNot } from './arguments.js';
+import { environmentOf } from './environment.js';
+import { EVENT_READERS } from './events.js';
+import { sentBy } from './integrations.js';
+import { PIPE_READERS } from './pipes.js';
+import { QUEUE_READERS } from './queues.js';
+import type { ResourceReading } from './reading.js';
 
 /**
  * Functions and the routes in front of them, read out of a configuration.
@@ -28,39 +34,6 @@ import { readStateMachineInstance } from './state-machines.js';
  * resource tree and an HTTP API route are and nothing about how their arguments
  * were evaluated.
  */
-
-/** Where an instance is declared from the repository's point of view. */
-const siteOf = (instance: Instance): { file: string; line: number } => {
-  const at = instance.module.site ?? instance.block.pos;
-  return { file: at.file, line: at.line };
-};
-
-const argument = (instance: Instance, name: string): Value | undefined => instance.module.argument(instance, name);
-
-const textOf = (value: Value | undefined): string | undefined => (value === undefined ? undefined : asText(value));
-
-/** Why a value is not a string, as a `Because`. */
-const whyNot = (value: Value | undefined, what: string): Because => {
-  if (value === undefined) return { reason: 'absent', text: `${what} is not set` };
-  if (value.kind === 'unknown') return value.because;
-  if (value.kind === 'ref') return { reason: 'computed', text: `${what} is ${describe(value)}, known only once it has been created` };
-  return { reason: 'not-a-string', text: `${what} is ${describe(value)}` };
-};
-
-/**
- * Every reference written inside an argument, each evaluated on its own.
- *
- * `"arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${aws_lambda_function.x.arn}/invocations"`
- * is a string nobody can finish, and it names a function as plainly as an
- * argument that is only the reference. Asking each reference separately is how
- * the function is still found.
- */
-const referencesOf = (instance: Instance, name: string): Value[] => {
-  const attribute = attributeOf(instance.block.body, name);
-  if (attribute === undefined) return [];
-  const scope = instance.module.scopeOf(instance);
-  return [...referencesIn(attribute.expression)].map((reference) => evaluate(reference, scope));
-};
 
 const FUNCTION_ARN = /:function:([A-Za-z0-9_-]+)/;
 
@@ -83,11 +56,16 @@ type PathResult =
 
 const nameOfApi = (instance: Instance): string | undefined => textOf(argument(instance, 'name'));
 
-export class DeploymentReading {
+/** What answers a route, as opposed to why nothing could be read as answering it. */
+const isRouteTarget = (target: RouteTarget | Because): target is RouteTarget =>
+  'function' in target || 'name' in target || 'sends' in target;
+
+export class DeploymentReading implements ResourceReading {
   readonly functions: DeployedFunction[] = [];
   readonly routes: DeployedRoute[] = [];
   readonly roots: PublishedRoot[] = [];
   readonly workflows: DeployedWorkflow[] = [];
+  readonly deliveries: DeployedDelivery[] = [];
   readonly rows: Unresolved[] = [];
   readonly #functionIndex = new Map<Instance, number>();
   readonly #instances: Instance[];
@@ -100,12 +78,22 @@ export class DeploymentReading {
     return this.#instances.filter((instance) => instance.mode === mode && instance.type === type);
   }
 
+  ofType(mode: 'managed' | 'data', type: string): readonly Instance[] {
+    return this.#ofType(mode, type);
+  }
+
+  functionIndex(instance: Instance): number | undefined {
+    return this.#functionIndex.get(instance);
+  }
+
   /**
    * What each resource type is read as, in the order they are read.
    *
    * A table rather than a run of loops, so that a resource type the next ticket
    * reads - a state machine, a rule, an event-source mapping - is a row here.
    * Functions come first because a route names one by its position among them.
+   * The subscribers (P23) are rows of their own modules, each handed the
+   * narrower `ResourceReading` this class is.
    */
   readonly #readers: ReadonlyArray<readonly [type: string, read: (instance: Instance) => void]> = [
     ['aws_lambda_function', (instance) => this.#function(instance)],
@@ -113,6 +101,9 @@ export class DeploymentReading {
     ['aws_apigatewayv2_route', (instance) => this.#httpRoute(instance)],
     ['aws_api_gateway_rest_api', (instance) => this.#restApi(instance)],
     ['aws_sfn_state_machine', (instance) => this.#workflow(instance)],
+    ...[...EVENT_READERS, ...QUEUE_READERS, ...PIPE_READERS].map(
+      ([type, read]) => [type, (instance: Instance) => read(instance, this)] as const,
+    ),
   ];
 
   read(): Deployment {
@@ -125,6 +116,7 @@ export class DeploymentReading {
       routes: this.routes,
       roots: this.roots,
       workflows: this.workflows,
+      deliveries: this.deliveries,
       rows: [...this.configuration.rows, ...this.rows],
     };
   }
@@ -179,12 +171,14 @@ export class DeploymentReading {
       });
     }
     this.#functionIndex.set(instance, this.functions.length);
+    const environment = environmentOf(instance, this);
     this.functions.push({
       ...at,
       ...(name === undefined ? {} : { name }),
       address: instance.address,
       ...(handler === undefined ? {} : { handler }),
       ...(runtime === undefined ? {} : { runtime }),
+      ...(environment === undefined ? {} : { environment }),
       meta: {
         declaredAs: instance.address,
         ...(name === undefined ? { nameUnread: whyNot(nameValue, 'function_name').text } : {}),
@@ -416,16 +410,16 @@ export class DeploymentReading {
       });
       return;
     }
-    if (target !== undefined && !('function' in target) && !('name' in target)) {
+    if (target !== undefined && !isRouteTarget(target)) {
       this.rows.push({
         ...at,
         reason: 'route-target-unread',
-        message: `which function answers ${method} ${path.kind === 'path' ? path.path : `${UNREAD_SPAN}${path.below}`} is not read: ${target.text}`,
-        hint: 'Point the integration at a function the files declare, or at one by a name they settle.',
+        message: `what answers ${method} ${path.kind === 'path' ? path.path : `${UNREAD_SPAN}${path.below}`} is not read: ${target.text}`,
+        hint: 'Point the integration at a function, a queue, a topic or a bus the files declare, or at one by a name they settle.',
         symbol: instance.address,
       });
     }
-    const resolvedTarget = target !== undefined && ('function' in target || 'name' in target) ? target : undefined;
+    const resolvedTarget = target !== undefined && isRouteTarget(target) ? target : undefined;
     const fullPath = path.kind === 'path' ? normalizePath(path.path) : normalizePath(`${UNREAD_SPAN}${path.below}`);
     const routeApi = path.kind === 'path' ? (path.api ?? api) : api;
     this.routes.push({
@@ -465,7 +459,8 @@ export class DeploymentReading {
     });
     const type = integration === undefined ? undefined : textOf(argument(integration, 'type'));
     const proxied = type === undefined || type === 'AWS_PROXY' || type === 'AWS';
-    const target = integration === undefined || !proxied ? undefined : this.#targetOf(integration, 'uri');
+    const sends = integration === undefined ? undefined : sentBy(integration, 'rest', this);
+    const target = sends ?? (integration === undefined || !proxied ? undefined : this.#targetOf(integration, 'uri'));
     const rawPath = path.kind === 'path' ? path.path : path.kind === 'root' ? path.below : '?';
     this.#pushRoute(instance, method, path, rawPath, target, api, this.#guards(instance, 'authorization'));
   }
@@ -501,10 +496,12 @@ export class DeploymentReading {
       .map((value) => (value.kind === 'ref' ? value.target : value.kind === 'instance' ? value.instance : undefined))
       .find((target) => target?.type === 'aws_apigatewayv2_integration');
     const type = integration === undefined ? undefined : textOf(argument(integration, 'integration_type'));
+    const sends = integration === undefined ? undefined : sentBy(integration, 'http', this);
     const target =
-      integration === undefined || (type !== undefined && type !== 'AWS_PROXY')
+      sends ??
+      (integration === undefined || (type !== undefined && type !== 'AWS_PROXY')
         ? undefined
-        : this.#targetOf(integration, 'integration_uri');
+        : this.#targetOf(integration, 'integration_uri'));
     const api = this.#apiName(apiValue);
     this.#pushRoute(instance, method, { kind: 'path', path: joinSegments('/', rawPath) }, rawPath, target, api, this.#guards(instance, 'authorization_type'));
   }

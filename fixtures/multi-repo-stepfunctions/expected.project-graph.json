@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T16:02:51.442Z",
+  "builtAt": "2026-10-06T16:42:08.952Z",
   "services": [
     {
       "name": "circulation",
@@ -285,6 +285,7 @@
         "handler": "reserve-copy.handler",
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
+        "environment": {},
         "adapter": "aws-lambda"
       }
     },
@@ -305,6 +306,7 @@
         "handler": "reshelve.handler",
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
+        "environment": {},
         "adapter": "aws-lambda"
       }
     },
@@ -366,6 +368,7 @@
         "handler": "check-standing.handler",
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
+        "environment": {},
         "adapter": "aws-lambda"
       }
     },
@@ -386,6 +389,7 @@
         "handler": "send-notice.handler",
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
+        "environment": {},
         "adapter": "aws-lambda"
       }
     },

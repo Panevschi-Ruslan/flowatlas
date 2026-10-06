@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>114 fixtures</span>
-    <span>220 snapshot files</span>
+    <span>119 fixtures</span>
+    <span>238 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -370,8 +370,16 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, wired in Terraform <span class="count" data-total="4">4</span></h2>
+    <h2>Serverless, wired in Terraform <span class="count" data-total="7">7</span></h2>
     <ul>
+      <li class="fixture" data-search="eventbridge-terraform serverless, wired in terraform a lending library's circulation service: lambda functions behind an http api that talk to each other over an eventbridge bus.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/eventbridge-terraform">eventbridge-terraform</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A lending library's circulation service: Lambda functions behind an HTTP API that talk to each other over an EventBridge bus.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="lambda-terraform-modules serverless, wired in terraform the same kind of service declared through modules: one of the repository's own, the public `terraform-aws-modules/lambda/aws` and `terraform-aws-modules/apigateway-v2/aws`, and a module from another repository that the configuration describes.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-terraform-modules">lambda-terraform-modules</a>
@@ -396,6 +404,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>Lambda handlers each wrapped by a helper that takes the function as a later argument, which is how a project that instruments every handler writes them (R167).</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
+      <li class="fixture" data-search="multi-repo-events serverless, wired in terraform a publisher, its rules and its consumers in three repositories, on a bus a fourth repository owns.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/multi-repo-events">multi-repo-events</a>
+          <span class="kind">4 services</span>
+        </div>
+        <p>A publisher, its rules and its consumers in three repositories, on a bus a fourth repository owns.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="multi-repo-lambda serverless, wired in terraform three repositories sharing one rest api: two hang their routes from a point of it the third, a repository of nothing but terraform, publishes.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/multi-repo-lambda">multi-repo-lambda</a>
@@ -404,17 +420,41 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>Three repositories sharing one REST API: two hang their routes from a point of it the third, a repository of nothing but Terraform, publishes.</p>
         <p class="snapshots"><code>expected.doctor.txt</code> <code>expected.flow.post-loans.tree.txt</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="sqs-sns-terraform serverless, wired in terraform a lending library's returns service: lambda functions behind a rest api, joined by sqs queues and an sns topic.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/sqs-sns-terraform">sqs-sns-terraform</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A lending library's returns service: Lambda functions behind a REST API, joined by SQS queues and an SNS topic.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
     </ul>
   </section>
   <section data-area>
-    <h2>State machines <span class="count" data-total="1">1</span></h2>
+    <h2>State machines <span class="count" data-total="3">3</span></h2>
     <ul>
+      <li class="fixture" data-search="multi-repo-stepfunctions state machines a state machine in one repository that invokes functions two other repositories deploy, starts a state machine a third deploys, and writes a table of its own: the joins p22 makes across repositories by a deployed name.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/multi-repo-stepfunctions">multi-repo-stepfunctions</a>
+          <span class="kind">3 services</span>
+        </div>
+        <p>A state machine in one repository that invokes functions two other repositories deploy, starts a state machine a third deploys, and writes a table of its own: the joins P22 makes across repositories by a deployed name.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="stepfunctions-asl-files state machines three state machine definitions kept as files beside the code that runs with them, in two repositories, and one workflow that starts a workflow in the other.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/stepfunctions-asl-files">stepfunctions-asl-files</a>
           <span class="kind">2 services</span>
         </div>
         <p>Three state machine definitions kept as files beside the code that runs with them, in two repositories, and one workflow that starts a workflow in the other.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="stepfunctions-terraform state machines four state machines deployed with terraform over the lambda functions of one lending library, each with its definition written a different way.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/stepfunctions-terraform">stepfunctions-terraform</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>Four state machines deployed with Terraform over the Lambda functions of one lending library, each with its definition written a different way.</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
     </ul>

@@ -1,0 +1,8 @@
+@  POST /holds                                              circulation/infra/api.tf:74
+  ~  event eventbridge/library/library.holds/HoldRequested  circulation/infra/api.tf:74
+    ~  eventbridge/library/library.holds/HoldRequested      infra/api.tf:74
+      ~  rule library-hold-requested                        circulation/infra/rules.tf:29
+        @  library-notify-borrower                          circulation/infra/functions.tf:28
+          -> handler                                        circulation/src/notices/notify-borrower.ts:8
+            -> sendNotice                                   circulation/src/lib/notices.ts:8
+unresolved on this path: 0

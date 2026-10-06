@@ -4,6 +4,9 @@ import {
   type AddressPart,
   type CallPattern,
   type ChannelKind,
+  type ChannelPattern,
+  type MessagePattern,
+  type MessageTarget,
   type NameLocator,
   type PackageJson,
 } from '@flowatlas/core';
@@ -78,6 +81,52 @@ export const topicChannel = (name: string): string =>
 export const eventChannel = (bus: string | undefined, source: string, detailType: string): string =>
   [AWS_SERVICE_PREFIX.eventbridge, bus ?? DEFAULT_EVENT_BUS, source, detailType].join(ADDRESS_SEPARATOR);
 
+/**
+ * The two fields of an event its channel is named by, as an event pattern
+ * spells them. Every other field a pattern filters on - `detail`, `account`,
+ * `resources` - is recorded and not matched on (P23).
+ */
+export const EVENT_NAME_FIELDS = ['source', 'detail-type'] as const;
+
+/**
+ * The channel a message sent to a deployed target lands on, in the grammar
+ * above; `undefined` for an event whose fields do not name one exactly.
+ */
+export const channelOfTarget = (target: MessageTarget): string | undefined => {
+  switch (target.kind) {
+    case 'queue':
+      return queueChannel(target.name);
+    case 'topic':
+      return topicChannel(target.name);
+    case 'bus': {
+      const [source, detailType] = EVENT_NAME_FIELDS.map((field) => target.fields?.[field]);
+      return source === undefined || detailType === undefined ? undefined : eventChannel(target.name, source, detailType);
+    }
+  }
+};
+
+/**
+ * Events on a bus that a pattern selects, as a pattern over channel names.
+ *
+ * The parts are the grammar's: the service, the bus, the source, the detail
+ * type. A field the pattern does not filter matches any value.
+ */
+export const eventChannelPattern = (bus: string, pattern: MessagePattern): ChannelPattern => ({
+  parts: [
+    { name: 'service', filters: [{ equals: AWS_SERVICE_PREFIX.eventbridge }] },
+    { name: 'bus', filters: [{ equals: bus }] },
+    ...EVENT_NAME_FIELDS.map((field) => ({ name: field, filters: pattern.fields[field] ?? [] })),
+  ],
+});
+
+/** The adapter and the kind of channel a deployed queue, topic or bus is read as. */
+// Many rules may match one event, and nothing queues it for them: a bus is a topic.
+export const DEPLOYED_CHANNELS: Readonly<Record<MessageTarget['kind'], { adapter: string; channelKind: ChannelKind }>> = {
+  queue: { adapter: 'aws-sqs', channelKind: 'queue' },
+  topic: { adapter: 'aws-sns', channelKind: 'topic' },
+  bus: { adapter: 'aws-eventbridge', channelKind: 'topic' },
+};
+
 /** A part of an address, written against the operation's input rather than a call. */
 type InputPart =
   | { readonly literal: string }
@@ -128,9 +177,7 @@ const TOPIC: readonly InputPart[] = [
 
 const SERVICES: readonly Service[] = [
   {
-    adapter: 'aws-eventbridge',
-    // Many rules may match one event, and nothing queues it for them.
-    channelKind: 'topic',
+    ...DEPLOYED_CHANNELS.bus,
     kind: 'event',
     package: '@aws-sdk/client-eventbridge',
     client: 'EventBridgeClient',
@@ -151,8 +198,7 @@ const SERVICES: readonly Service[] = [
     ],
   },
   {
-    adapter: 'aws-sqs',
-    channelKind: 'queue',
+    ...DEPLOYED_CHANNELS.queue,
     kind: 'message',
     package: '@aws-sdk/client-sqs',
     client: 'SQSClient',
@@ -168,8 +214,7 @@ const SERVICES: readonly Service[] = [
     ],
   },
   {
-    adapter: 'aws-sns',
-    channelKind: 'topic',
+    ...DEPLOYED_CHANNELS.topic,
     kind: 'message',
     package: '@aws-sdk/client-sns',
     client: 'SNSClient',

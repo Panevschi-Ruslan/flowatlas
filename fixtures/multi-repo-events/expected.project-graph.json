@@ -1,0 +1,1028 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T16:22:23.563Z",
+  "services": [
+    {
+      "name": "platform-events",
+      "repo": "./platform-events",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "loans",
+      "repo": "./loans",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "routing",
+      "repo": "./routing",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "notifications",
+      "repo": "./notifications",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:eventbridge/library/library.loans/LoanCreated",
+      "type": "channel",
+      "label": "eventbridge/library/library.loans/LoanCreated",
+      "repo": "routing",
+      "file": "rules.tf",
+      "line": 45,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:eventbridge/library/library.loans/LoanReturned",
+      "type": "channel",
+      "label": "eventbridge/library/library.loans/LoanReturned",
+      "repo": "loans",
+      "file": "src/return-loan.ts",
+      "line": 8,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:sqs/library-audit",
+      "type": "channel",
+      "label": "sqs/library-audit",
+      "repo": "platform-events",
+      "file": "main.tf",
+      "line": 19,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/library-loan-digest",
+      "type": "channel",
+      "label": "sqs/library-loan-digest",
+      "repo": "routing",
+      "file": "rules.tf",
+      "line": 63,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:loans#EVENT_BUS_NAME",
+      "type": "config_key",
+      "label": "EVENT_BUS_NAME",
+      "repo": "loans",
+      "file": "src/create-loan.ts",
+      "line": 15,
+      "meta": {
+        "key": "EVENT_BUS_NAME",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.loan_digest",
+      "repo": "notifications",
+      "file": "infra/main.tf",
+      "line": 61,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.loan_digest",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+      "type": "consumer",
+      "label": "rule audit-rule",
+      "repo": "platform-events",
+      "file": "main.tf",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+        "deployedBy": "terraform",
+        "name": "audit-rule",
+        "rule": "module.library_bus.aws_cloudwatch_event_rule.this[\"audit\"]",
+        "channelPattern": {
+          "parts": [
+            {
+              "name": "service",
+              "filters": [
+                {
+                  "equals": "eventbridge"
+                }
+              ]
+            },
+            {
+              "name": "bus",
+              "filters": [
+                {
+                  "equals": "library"
+                }
+              ]
+            },
+            {
+              "name": "source",
+              "filters": [
+                {
+                  "prefix": "library."
+                }
+              ]
+            },
+            {
+              "name": "detail-type",
+              "filters": []
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "consumer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest",
+      "type": "consumer",
+      "label": "rule library-loan-activity",
+      "repo": "routing",
+      "file": "rules.tf",
+      "line": 63,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.loan_digest",
+        "deployedBy": "terraform",
+        "name": "library-loan-activity",
+        "rule": "aws_cloudwatch_event_rule.loan_activity",
+        "channelPattern": {
+          "parts": [
+            {
+              "name": "service",
+              "filters": [
+                {
+                  "equals": "eventbridge"
+                }
+              ]
+            },
+            {
+              "name": "bus",
+              "filters": [
+                {
+                  "equals": "library"
+                }
+              ]
+            },
+            {
+              "name": "source",
+              "filters": [
+                {
+                  "equals": "library.loans"
+                }
+              ]
+            },
+            {
+              "name": "detail-type",
+              "filters": [
+                {
+                  "anythingBut": [
+                    {
+                      "equals": "LoanCreated"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "consumer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles",
+      "type": "consumer",
+      "label": "rule library-partner-titles",
+      "repo": "routing",
+      "file": "rules.tf",
+      "line": 79,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.partner_titles",
+        "deployedBy": "terraform",
+        "name": "library-partner-titles",
+        "rule": "aws_cloudwatch_event_rule.partner_titles",
+        "channelPattern": {
+          "parts": [
+            {
+              "name": "service",
+              "filters": [
+                {
+                  "equals": "eventbridge"
+                }
+              ]
+            },
+            {
+              "name": "bus",
+              "filters": [
+                {
+                  "equals": "library"
+                }
+              ]
+            },
+            {
+              "name": "source",
+              "filters": [
+                {
+                  "prefix": "partner."
+                }
+              ]
+            },
+            {
+              "name": "detail-type",
+              "filters": []
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "consumer:routing#rules.tf:aws_cloudwatch_event_target.welcome_borrower",
+      "type": "consumer",
+      "label": "rule library-loan-created",
+      "repo": "routing",
+      "file": "rules.tf",
+      "line": 45,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.welcome_borrower",
+        "deployedBy": "terraform",
+        "name": "library-loan-created",
+        "rule": "aws_cloudwatch_event_rule.loan_created",
+        "reaches": [
+          "invoke:library-welcome-borrower"
+        ]
+      }
+    },
+    {
+      "id": "entry:loans:http:POST:/loans",
+      "type": "entry",
+      "label": "POST /loans",
+      "repo": "loans",
+      "file": "infra/main.tf",
+      "line": 86,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "deployedBy": "terraform",
+        "api": "library-loans",
+        "function": "library-create-loan",
+        "declaredAs": "aws_apigatewayv2_route.create_loan",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:loans:http:POST:/loans/:param/return",
+      "type": "entry",
+      "label": "POST /loans/:param/return",
+      "repo": "loans",
+      "file": "infra/main.tf",
+      "line": 99,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans/:param/return",
+        "rawPath": "/loans/{loanId}/return",
+        "deployedBy": "terraform",
+        "api": "library-loans",
+        "function": "library-return-loan",
+        "declaredAs": "aws_apigatewayv2_route.return_loan",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:loans:invoke:library-create-loan",
+      "type": "entry",
+      "label": "library-create-loan",
+      "repo": "loans",
+      "file": "infra/main.tf",
+      "line": 44,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-create-loan",
+        "deployedBy": "terraform",
+        "name": "library-create-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.create_loan",
+        "handler": "create-loan.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "EVENT_BUS_NAME": {
+            "written": "data.aws_cloudwatch_event_bus.library.name",
+            "value": "library",
+            "kind": "bus"
+          }
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:loans:invoke:library-return-loan",
+      "type": "entry",
+      "label": "library-return-loan",
+      "repo": "loans",
+      "file": "infra/main.tf",
+      "line": 59,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-return-loan",
+        "deployedBy": "terraform",
+        "name": "library-return-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.return_loan",
+        "handler": "return-loan.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "EVENT_BUS_NAME": {
+            "written": "data.aws_cloudwatch_event_bus.library.arn",
+            "value": "library",
+            "kind": "bus"
+          }
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:notifications:invoke:library-loan-digest",
+      "type": "entry",
+      "label": "library-loan-digest",
+      "repo": "notifications",
+      "file": "infra/main.tf",
+      "line": 48,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-loan-digest",
+        "deployedBy": "terraform",
+        "name": "library-loan-digest",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.loan_digest",
+        "handler": "loan-digest.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:notifications:invoke:library-welcome-borrower",
+      "type": "entry",
+      "label": "library-welcome-borrower",
+      "repo": "notifications",
+      "file": "infra/main.tf",
+      "line": 39,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-welcome-borrower",
+        "deployedBy": "terraform",
+        "name": "library-welcome-borrower",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.welcome_borrower",
+        "handler": "welcome-borrower.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "loans#src/create-loan.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "loans",
+      "file": "src/create-loan.ts",
+      "line": 9
+    },
+    {
+      "id": "loans#src/return-loan.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "loans",
+      "file": "src/return-loan.ts",
+      "line": 6
+    },
+    {
+      "id": "notifications#src/loan-digest.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "notifications",
+      "file": "src/loan-digest.ts",
+      "line": 5
+    },
+    {
+      "id": "notifications#src/outbox.ts:deliver",
+      "type": "function",
+      "label": "deliver",
+      "repo": "notifications",
+      "file": "src/outbox.ts",
+      "line": 3
+    },
+    {
+      "id": "notifications#src/welcome-borrower.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "notifications",
+      "file": "src/welcome-borrower.ts",
+      "line": 10
+    },
+    {
+      "id": "producer:loans#src/create-loan.ts:11:9",
+      "type": "producer",
+      "label": "event eventbridge/library/library.loans/LoanCreated",
+      "repo": "loans",
+      "file": "src/create-loan.ts",
+      "line": 11,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "eventbridge",
+              {
+                "environment": "EVENT_BUS_NAME",
+                "forms": [
+                  "^arn:[^:]+:events:[^:]*:[^:]*:event-bus/(.+)$"
+                ]
+              },
+              "library.loans",
+              "LoanCreated"
+            ],
+            "payload": "type:loans#Loan"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:loans#src/return-loan.ts:8:9",
+      "type": "producer",
+      "label": "event eventbridge/library/library.loans/LoanReturned",
+      "repo": "loans",
+      "file": "src/return-loan.ts",
+      "line": 8,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "eventbridge",
+              {
+                "environment": "EVENT_BUS_NAME",
+                "forms": [
+                  "^arn:[^:]+:events:[^:]*:[^:]*:event-bus/(.+)$"
+                ]
+              },
+              "library.loans",
+              "LoanReturned"
+            ],
+            "payload": "type:loans#Loan"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+      "type": "producer",
+      "label": "message sqs/library-audit",
+      "repo": "platform-events",
+      "file": "main.tf",
+      "line": 19,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "rule",
+        "declaredAs": "module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "producer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest",
+      "type": "producer",
+      "label": "message sqs/library-loan-digest",
+      "repo": "routing",
+      "file": "rules.tf",
+      "line": 63,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.loan_digest",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "producer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles",
+      "type": "producer",
+      "label": "message sqs/library-loan-digest",
+      "repo": "routing",
+      "file": "rules.tf",
+      "line": 79,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.partner_titles",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "repo:loans",
+      "type": "repo",
+      "label": "loans",
+      "repo": "loans",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-eventbridge": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:notifications",
+      "type": "repo",
+      "label": "notifications",
+      "repo": "notifications",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:platform-events",
+      "type": "repo",
+      "label": "platform-events",
+      "repo": "platform-events",
+      "meta": {
+        "stats": {
+          "files": 0,
+          "filesRead": 0,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:routing",
+      "type": "repo",
+      "label": "routing",
+      "repo": "routing",
+      "meta": {
+        "stats": {
+          "files": 0,
+          "filesRead": 0,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:eventbridge/library/library.loans/LoanCreated",
+      "to": "consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "main.tf",
+      "line": 19,
+      "meta": {
+        "via": "pattern",
+        "because": [
+          "source \"library.loans\" matches prefix \"library.\"",
+          "detail-type is not filtered"
+        ]
+      }
+    },
+    {
+      "from": "channel:eventbridge/library/library.loans/LoanCreated",
+      "to": "consumer:routing#rules.tf:aws_cloudwatch_event_target.welcome_borrower",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "rules.tf",
+      "line": 45,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:eventbridge/library/library.loans/LoanReturned",
+      "to": "consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "main.tf",
+      "line": 19,
+      "meta": {
+        "via": "pattern",
+        "because": [
+          "source \"library.loans\" matches prefix \"library.\"",
+          "detail-type is not filtered"
+        ]
+      }
+    },
+    {
+      "from": "channel:eventbridge/library/library.loans/LoanReturned",
+      "to": "consumer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "rules.tf",
+      "line": 63,
+      "meta": {
+        "via": "pattern",
+        "because": [
+          "detail-type \"LoanReturned\" matches anything but \"LoanCreated\""
+        ]
+      }
+    },
+    {
+      "from": "channel:sqs/library-loan-digest",
+      "to": "consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 61,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+      "to": "entry:notifications:invoke:library-loan-digest",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 61,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+      "to": "producer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+      "type": "calls",
+      "confidence": "static",
+      "file": "main.tf",
+      "line": 19,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest",
+      "to": "producer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest",
+      "type": "calls",
+      "confidence": "static",
+      "file": "rules.tf",
+      "line": 63,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles",
+      "to": "producer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles",
+      "type": "calls",
+      "confidence": "static",
+      "file": "rules.tf",
+      "line": 79,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:routing#rules.tf:aws_cloudwatch_event_target.welcome_borrower",
+      "to": "entry:notifications:invoke:library-welcome-borrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "rules.tf",
+      "line": 45,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:library-welcome-borrower"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/loans",
+      "to": "loans#src/create-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/create-loan.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:loans:http:POST:/loans/:param/return",
+      "to": "loans#src/return-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/return-loan.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:loans:invoke:library-create-loan",
+      "to": "loans#src/create-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/create-loan.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:loans:invoke:library-return-loan",
+      "to": "loans#src/return-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/return-loan.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:notifications:invoke:library-loan-digest",
+      "to": "notifications#src/loan-digest.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loan-digest.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:notifications:invoke:library-welcome-borrower",
+      "to": "notifications#src/welcome-borrower.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/welcome-borrower.ts",
+      "line": 10
+    },
+    {
+      "from": "loans#src/create-loan.ts:handler",
+      "to": "config_key:loans#EVENT_BUS_NAME",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/create-loan.ts",
+      "line": 15,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-create-loan",
+            "written": "data.aws_cloudwatch_event_bus.library.name",
+            "value": "library"
+          }
+        ]
+      }
+    },
+    {
+      "from": "loans#src/create-loan.ts:handler",
+      "to": "producer:loans#src/create-loan.ts:11:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/create-loan.ts",
+      "line": 11
+    },
+    {
+      "from": "loans#src/return-loan.ts:handler",
+      "to": "config_key:loans#EVENT_BUS_NAME",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/return-loan.ts",
+      "line": 12,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-return-loan",
+            "written": "data.aws_cloudwatch_event_bus.library.arn",
+            "value": "library"
+          }
+        ]
+      }
+    },
+    {
+      "from": "loans#src/return-loan.ts:handler",
+      "to": "producer:loans#src/return-loan.ts:8:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/return-loan.ts",
+      "line": 8
+    },
+    {
+      "from": "notifications#src/loan-digest.ts:handler",
+      "to": "notifications#src/outbox.ts:deliver",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loan-digest.ts",
+      "line": 8
+    },
+    {
+      "from": "notifications#src/welcome-borrower.ts:handler",
+      "to": "notifications#src/outbox.ts:deliver",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/welcome-borrower.ts",
+      "line": 11
+    },
+    {
+      "from": "producer:loans#src/create-loan.ts:11:9",
+      "to": "channel:eventbridge/library/library.loans/LoanCreated",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/create-loan.ts",
+      "line": 11,
+      "params": [
+        "type:loans#Loan"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "EVENT_BUS_NAME"
+        ],
+        "functions": [
+          "library-create-loan"
+        ]
+      }
+    },
+    {
+      "from": "producer:loans#src/return-loan.ts:8:9",
+      "to": "channel:eventbridge/library/library.loans/LoanReturned",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/return-loan.ts",
+      "line": 8,
+      "params": [
+        "type:loans#Loan"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "EVENT_BUS_NAME"
+        ],
+        "functions": [
+          "library-return-loan"
+        ]
+      }
+    },
+    {
+      "from": "producer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+      "to": "channel:sqs/library-audit",
+      "type": "emits",
+      "confidence": "static",
+      "file": "main.tf",
+      "line": 19,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest",
+      "to": "channel:sqs/library-loan-digest",
+      "type": "emits",
+      "confidence": "static",
+      "file": "rules.tf",
+      "line": 63,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles",
+      "to": "channel:sqs/library-loan-digest",
+      "type": "emits",
+      "confidence": "static",
+      "file": "rules.tf",
+      "line": 79,
+      "meta": {
+        "via": "deployment"
+      }
+    }
+  ],
+  "types": {
+    "type:loans#Loan": {
+      "name": "Loan",
+      "kind": "object",
+      "declaredIn": "loans#src/loan-events.ts",
+      "structuralHash": "5cd4a5f4f04642e1",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "routing",
+      "file": "rules.tf",
+      "line": 79,
+      "reason": "subscription-matches-nothing",
+      "level": "info",
+      "message": "rule library-partner-titles takes events by a pattern that no publisher in the configured services matches",
+      "hint": "A rule for events nothing here puts is a way in from outside - another account, a partner, the platform itself - or its publisher is in a repository the configuration does not name. Nothing to fix if it is the first.",
+      "symbol": "consumer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles"
+    }
+  ]
+}

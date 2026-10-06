@@ -89,9 +89,8 @@ only one of them moved.
   in any manifest of the repository, for one that keeps a manifest per function
   (`fixtures/aws-sdk-publishers`). With nothing installed, a client is
   recognised by its construction and its import, at `heuristic`
-  (`fixtures/aws-sdk-not-installed`). Who receives is declared in the
-  deployment and is not read yet, so these channels have publishers and no
-  handlers for now.
+  (`fixtures/aws-sdk-not-installed`). Who receives is read from the
+  deployment (below).
 - **A name read from `process.env` is said to be one.** A channel named by an
   environment variable is a publisher with no channel and a new row,
   `channel-from-environment`, naming the variable, rather than a name the tool
@@ -107,6 +106,42 @@ only one of them moved.
   and may be a `function` of the project's own rather than a method on a
   receiver. The AWS SDK is read through exactly these, so a project's own
   helper around it, a class or a function, is described the same way.
+- **Subscribers declared in Terraform.** Every channel the AWS SDK publishes
+  to now has its subscriber read from the deployment, on the same node:
+  `aws_cloudwatch_event_rule` and its targets (a function, a workflow, a queue,
+  a topic or another bus), `aws_lambda_event_source_mapping` from a queue,
+  `aws_sns_topic_subscription` to a function or a queue, `aws_pipes_pipe`, and
+  a queue's redrive policy as a `triggers` edge to its dead-letter queue. A
+  rule's `schedule_expression` and `aws_scheduler_schedule` are `cron` entries
+  on their target, and a mapping from a DynamoDB or Kinesis stream is an
+  `event` entry on its function. A target deployed in another repository is
+  joined by its deployed name. `terraform-aws-modules/eventbridge/aws`,
+  `.../sqs/aws` and `.../sns/aws` ship described
+  (`fixtures/eventbridge-terraform`, `fixtures/sqs-sns-terraform`).
+- **An event pattern matched as written.** Exact `source` and `detail-type`
+  values join their channels `static`; `prefix`, `anything-but`, `exists`,
+  `wildcard` and a field left out are matched against every channel the
+  project publishes and join `heuristic`, with the reason on the edge, which
+  `flow` and `channel` show in `--format json` (`because`). Filters on
+  `detail`, a subscription's filter policy and a mapping's filter criteria are
+  recorded (`notMatchedOn`) and not matched on. A pattern that selects nothing
+  published here is a way in from outside, one `subscription-matches-nothing`
+  row at `info` (`fixtures/multi-repo-events`).
+- **A route integrated with a queue, a topic or a bus** - an API Gateway REST
+  integration with `sqs:path/<account>/<queue>`, `sqs:action/SendMessage`,
+  `sns:action/Publish` or `events:action/PutEvents`, an HTTP API integration of
+  subtype `SQS-SendMessage` or `EventBridge-PutEvents` - is the way in and the
+  publisher onto that channel, where it was a `route-target-unread` row.
+- **A name read from the environment, completed from the deployment.** Each
+  function's `environment` block is kept on its `invoke` entry, and the linker
+  completes every address the code reaches by a variable from the value each
+  function that runs it is deployed with: `process.env.RETURNS_QUEUE_URL` set to
+  `aws_sqs_queue.returns.url` is `sqs/library-returns`, and the
+  `channel-from-environment` row goes. A function that runs the code and does
+  not set the variable is an `environment-not-set` row naming both; a value the
+  variable files dispute is an `environment-value-unread` row naming them, and
+  `services[].infra.vars` chooses. A settings key a function sets says where its
+  value comes from on the `reads_config` edge (`setBy`).
 
 ### Changed
 

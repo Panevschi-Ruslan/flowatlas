@@ -1,4 +1,5 @@
 import {
+  AWAITING_META,
   declaredParameterType,
   decoratorArgs,
   definePass,
@@ -13,6 +14,7 @@ import {
   makeLeafId,
   makeSymbolId,
   resolveTypeOrigin,
+  type AwaitedAddress,
   type CallPattern,
   type ClassMethod,
   type EntryKind,
@@ -83,8 +85,9 @@ const channelAt = (
  * is drawn, because the variable's name is not the channel's.
  */
 const environmentHint = (variable: string): string =>
-  `The channel is the value of the environment variable ${variable}, which is set where this code is deployed and not in it, so no channel is drawn. ` +
-  `Reading it from the deployment - the environment block of the function's Terraform - is not done yet; until it is, this publisher has no channel.`;
+  `The channel is the value of the environment variable ${variable}, which is set where this code is deployed and not in it. ` +
+  `Where the code runs in a function whose deployment is read, the linker completes the channel from the value that function is deployed with, and this row goes; ` +
+  `it stays when nothing deployed is known to run this code.`;
 
 /** Every adapter that applies: the detected ones plus any described in configuration. */
 export const brokerSpecsFor = (ctx: PassContext): BrokerSpec[] => {
@@ -353,9 +356,14 @@ export const extractBrokers = (ctx: PassContext): void => {
     const firstRead = elements.map((element) => element.resolution).find(isResolved);
     const channelVia = firstRead === undefined ? 'unresolved' : firstRead.via;
     // An address one environment variable away from being read, said in the
-    // shape a reader of the deployment completes it in: the parts it has, and
-    // the variable standing in for each part it has not.
-    const awaiting = unread.flatMap((element) => (element.awaiting === undefined ? [] : [element.awaiting]));
+    // shape a reader of the deployment completes it in: the parts it has, the
+    // variable standing in for each part it has not, and the message it carries
+    // there, so the channel it turns out to be is compared like any other.
+    const awaiting: AwaitedAddress[] = unread.flatMap((element) => {
+      if (element.awaiting === undefined) return [];
+      const payload = payloadOf(element);
+      return [{ parts: element.awaiting, ...(payload === undefined ? {} : { payload }) }];
+    });
     // A receiver known only from what the source says it is constructed from
     // is what the author meant rather than what a compiler checked.
     const confidence = evidence === 'checked' ? 'static' : 'heuristic';
@@ -384,7 +392,11 @@ export const extractBrokers = (ctx: PassContext): void => {
         method: pattern.method,
         ...(jobName === undefined ? {} : { jobName }),
         ...(exchange === undefined ? {} : { exchange }),
-        ...(awaiting.length === 0 ? {} : { awaiting }),
+        // The kind of channel it will be, for whoever completes the address:
+        // only the transport knows it, and the deployment does not say.
+        // How far the call can be trusted once the address is complete, which
+        // its edge cannot say while there is no channel to put it on.
+        ...(awaiting.length === 0 ? {} : { [AWAITING_META]: awaiting, channelKind: spec.channelKind, confidence }),
       },
     });
     ctx.builder.addEdge({

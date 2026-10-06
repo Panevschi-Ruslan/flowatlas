@@ -15,9 +15,11 @@ export const EXTERNALLY_TRIGGERED = [
   'bot_callback',
   'bot_event',
   'scene_step',
-  // A function the platform invokes. Until whatever invokes it is read - a rule,
-  // a schedule, a queue, another account (P23, P24) - nothing in the graph
-  // reaching it says nothing about whether anything does.
+  // A function the platform invokes. The rules, schedules, queues and topics
+  // that invoke it are read from its deployment (P23), but code that invokes it
+  // by name (P24), another account and a person at a console are not, so
+  // nothing in the graph reaching it still says nothing about whether anything
+  // does.
   'invoke',
 ] as const;
 

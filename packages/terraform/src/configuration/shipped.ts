@@ -1,4 +1,5 @@
 import { infraModuleSchema, type InfraModuleConfig, type InfraModuleDescription } from '@flowatlas/core';
+import { MESSAGING_MODULES } from './shipped-messaging.js';
 
 /**
  * Descriptions of the public modules most projects declare functions, routes
@@ -22,6 +23,7 @@ const LAMBDA: InfraModuleDescription = {
     create_function: 'true',
     create_layer: 'false',
     package_type: '"Zip"',
+    environment_variables: '{}',
   },
   resources: {
     'aws_lambda_function.this': {
@@ -126,6 +128,6 @@ const STEP_FUNCTIONS: InfraModuleDescription = {
 };
 
 /** The shipped descriptions, parsed by the schema configuration is parsed by. */
-export const SHIPPED_MODULES: readonly InfraModuleConfig[] = [LAMBDA, HTTP_API, STEP_FUNCTIONS].map((description) =>
+export const SHIPPED_MODULES: readonly InfraModuleConfig[] = [LAMBDA, HTTP_API, STEP_FUNCTIONS, ...MESSAGING_MODULES].map((description) =>
   infraModuleSchema.parse(description),
 );

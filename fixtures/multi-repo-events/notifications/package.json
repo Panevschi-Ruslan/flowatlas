@@ -1,0 +1,12 @@
+{
+  "name": "lending-library-notifications",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Notifications for a lending library: a welcome for every new loan, and a digest of everything else.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

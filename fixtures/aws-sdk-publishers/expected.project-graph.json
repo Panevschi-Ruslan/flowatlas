@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T14:56:39.422Z",
+  "builtAt": "2026-10-06T16:21:54.269Z",
   "services": [
     {
       "name": "loans",
@@ -590,18 +590,23 @@
         "channelVia": "unresolved",
         "method": "send",
         "awaiting": [
-          [
-            "eventbridge",
-            {
-              "environment": "AUDIT_BUS_NAME",
-              "forms": [
-                "^arn:[^:]+:events:[^:]*:[^:]*:event-bus/(.+)$"
-              ]
-            },
-            "library.loans",
-            "LoanAudited"
-          ]
-        ]
+          {
+            "parts": [
+              "eventbridge",
+              {
+                "environment": "AUDIT_BUS_NAME",
+                "forms": [
+                  "^arn:[^:]+:events:[^:]*:[^:]*:event-bus/(.+)$"
+                ]
+              },
+              "library.loans",
+              "LoanAudited"
+            ],
+            "payload": "{loanId:string}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
       }
     },
     {
@@ -648,17 +653,22 @@
         "channelVia": "unresolved",
         "method": "send",
         "awaiting": [
-          [
-            "sqs",
-            {
-              "environment": "OVERDUE_QUEUE_URL",
-              "forms": [
-                "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
-                "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:]+)$"
-              ]
-            }
-          ]
-        ]
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "OVERDUE_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:]+)$"
+                ]
+              }
+            ],
+            "payload": "type:loans#ReturnedItem"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
       }
     },
     {
@@ -705,16 +715,21 @@
         "channelVia": "unresolved",
         "method": "send",
         "awaiting": [
-          [
-            "sns",
-            {
-              "environment": "ESCALATIONS_TOPIC_ARN",
-              "forms": [
-                "^arn:[^:]+:sns:[^:]*:[^:]*:([^:]+)$"
-              ]
-            }
-          ]
-        ]
+          {
+            "parts": [
+              "sns",
+              {
+                "environment": "ESCALATIONS_TOPIC_ARN",
+                "forms": [
+                  "^arn:[^:]+:sns:[^:]*:[^:]*:([^:]+)$"
+                ]
+              }
+            ],
+            "payload": "type:notify-borrower#LoanDue"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
       }
     },
     {
@@ -1378,6 +1393,16 @@
         "exported": true
       }
     },
+    "type:notify-borrower#LoanDue": {
+      "name": "LoanDue",
+      "kind": "external",
+      "declaredIn": "notify-borrower",
+      "structuralHash": "0e887b2ed02239c7",
+      "meta": {
+        "declKind": "external",
+        "package": "notify-borrower"
+      }
+    },
     "type:send-reminder#Reminder": {
       "name": "Reminder",
       "kind": "external",
@@ -1419,7 +1444,7 @@
       "file": "api/loans/loan-events.ts",
       "line": 54,
       "reason": "channel-from-environment",
-      "hint": "The channel is the value of the environment variable AUDIT_BUS_NAME, which is set where this code is deployed and not in it, so no channel is drawn. Reading it from the deployment - the environment block of the function's Terraform - is not done yet; until it is, this publisher has no channel.",
+      "hint": "The channel is the value of the environment variable AUDIT_BUS_NAME, which is set where this code is deployed and not in it. Where the code runs in a function whose deployment is read, the linker completes the channel from the value that function is deployed with, and this row goes; it stays when nothing deployed is known to run this code.",
       "symbol": "auditLoan -> process.env.AUDIT_BUS_NAME",
       "meta": {
         "variable": "AUDIT_BUS_NAME"
@@ -1438,7 +1463,7 @@
       "file": "api/returns/returns-queue.ts",
       "line": 40,
       "reason": "channel-from-environment",
-      "hint": "The channel is the value of the environment variable OVERDUE_QUEUE_URL, which is set where this code is deployed and not in it, so no channel is drawn. Reading it from the deployment - the environment block of the function's Terraform - is not done yet; until it is, this publisher has no channel.",
+      "hint": "The channel is the value of the environment variable OVERDUE_QUEUE_URL, which is set where this code is deployed and not in it. Where the code runs in a function whose deployment is read, the linker completes the channel from the value that function is deployed with, and this row goes; it stays when nothing deployed is known to run this code.",
       "symbol": "queueOverdue -> process.env.OVERDUE_QUEUE_URL",
       "meta": {
         "variable": "OVERDUE_QUEUE_URL"
@@ -1449,7 +1474,7 @@
       "file": "functions/notify-borrower/src/handler.ts",
       "line": 27,
       "reason": "channel-from-environment",
-      "hint": "The channel is the value of the environment variable ESCALATIONS_TOPIC_ARN, which is set where this code is deployed and not in it, so no channel is drawn. Reading it from the deployment - the environment block of the function's Terraform - is not done yet; until it is, this publisher has no channel.",
+      "hint": "The channel is the value of the environment variable ESCALATIONS_TOPIC_ARN, which is set where this code is deployed and not in it. Where the code runs in a function whose deployment is read, the linker completes the channel from the value that function is deployed with, and this row goes; it stays when nothing deployed is known to run this code.",
       "symbol": "handler -> process.env.ESCALATIONS_TOPIC_ARN",
       "meta": {
         "variable": "ESCALATIONS_TOPIC_ARN"

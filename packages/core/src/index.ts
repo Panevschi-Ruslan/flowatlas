@@ -151,16 +151,39 @@ export type {
 export type {
   DefinitionPosition,
   DeployedDefinition,
+  DeployedDelivery,
   DeployedFunction,
   DeployedHandler,
+  DeployedKind,
   DeployedRoute,
   DeployedWorkflow,
+  DeployedSetting,
+  DeliveryKind,
+  DeliverySource,
+  DeliveryTarget,
   Deployment,
   DeploymentReader,
   DeploymentReadOptions,
+  MessagePattern,
+  MessageTarget,
   PublishedRoot,
   RouteTarget,
+  ValueFilter,
 } from './adapters/deployment.js';
+export {
+  AWAITING_META,
+  CHANNEL_PATTERN_META,
+  ENVIRONMENT_META,
+  matchChannelPattern,
+  nameWithin,
+} from './channel-pattern.js';
+export type {
+  AwaitedAddress,
+  AwaitedPart,
+  ChannelPattern,
+  EnvironmentValue,
+  PatternMatch,
+} from './channel-pattern.js';
 
 export {
   applicationOfFile,

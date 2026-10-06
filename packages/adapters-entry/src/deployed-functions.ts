@@ -20,6 +20,7 @@ import {
 } from '@flowatlas/core';
 import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
 import { Node, ts, type CallExpression, type Node as TsNode, type SourceFile } from 'ts-morph';
+import { drawDeliveries, drawRouteSends, environmentMeta } from './deployed-channels.js';
 import { drawDeployedWorkflows } from './deployed-workflows.js';
 import { builtByFactory, fileOfNode, isWrittenFunction, repoFunctionOf, unwrapValue } from './shared.js';
 import { boundCall, evidenceOf, functionArguments, wrappedBy, type Wrapped } from './wrapped-work.js';
@@ -480,6 +481,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
             ...(fn.runtime === undefined ? {} : { runtime: fn.runtime }),
             ...fn.meta,
             ...reading.meta,
+            ...environmentMeta(fn),
           },
         });
       });
@@ -500,8 +502,15 @@ export const deployedFunctionsAdapter: EntryAdapter = {
         }));
         const wrapping = [...guards, ...(reading?.wrapping ?? [])];
         const key = makeHttpEntryKey(route.method, route.path);
+        const id = makeEntryId(ctx.repo, 'http', key);
+        // A route that sends the request to a queue, a topic or a bus itself is
+        // its own publisher: no function runs, and the channel is the next step.
+        const sends =
+          target !== undefined && 'sends' in target
+            ? drawRouteSends(ctx, id, { file: route.file, line: route.line, address: String(route.meta?.['declaredAs'] ?? id) }, target.sends, reader.name)
+            : undefined;
         entries.push({
-          id: makeEntryId(ctx.repo, 'http', key),
+          id,
           kind: 'http',
           label: `${route.method} ${route.path}`,
           key,
@@ -521,9 +530,26 @@ export const deployedFunctionsAdapter: EntryAdapter = {
             ...(route.root === undefined ? {} : { root: route.root.key, below: route.root.below }),
             ...(route.meta === undefined ? {} : { declaredAs: route.meta['declaredAs'] }),
             ...(target === undefined ? { integration: 'none' } : {}),
+            ...(target !== undefined && 'sends' in target ? { integration: target.sends.kind, ...(sends === undefined ? {} : { sends }) } : {}),
           },
         });
       }
+
+      // The subscribers the deployment declares: rules, subscriptions,
+      // mappings, schedules, pipes and redrives, onto the channels code
+      // publishes to (P23).
+      entries.push(
+        ...drawDeliveries(ctx, deployment, reader.name, rows, (index) => {
+          const reading = resolved[index];
+          return reading?.handler === undefined
+            ? undefined
+            : {
+                handler: reading.handler,
+                ...(reading.confidence === undefined ? {} : { handlerConfidence: reading.confidence }),
+                ...(reading.wrapping.length === 0 ? {} : { wrapping: reading.wrapping }),
+              };
+        }),
+      );
 
       for (const root of deployment.roots) roots.push({ ...root, deployedBy: reader.name });
       drawDeployedWorkflows(ctx, deployment.workflows, reader.name, DEPLOYED_FUNCTIONS);

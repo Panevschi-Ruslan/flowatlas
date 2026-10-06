@@ -60,6 +60,137 @@ export interface DeployedFunction {
   readonly handler?: DeployedHandler;
   /** The runtime, as written, when it was read. */
   readonly runtime?: string;
+  /**
+   * The values it is deployed with, by the name the code reads each under.
+   *
+   * Code very often names what it sends to by a variable rather than by a
+   * literal - `process.env.RETURNS_QUEUE_URL` - and the value is set here and
+   * nowhere else. Every variable the deployment sets is listed, read or not,
+   * because a variable that is set to something unreadable and one that is not
+   * set at all are two different things to tell the reader (P23).
+   */
+  readonly environment?: Readonly<Record<string, DeployedSetting>>;
+  readonly meta?: Record<string, unknown>;
+}
+
+/**
+ * The kinds of deployed thing a value, a source or a target can name, in words
+ * that are the same on every platform.
+ *
+ * `bus` carries events selected by a pattern rather than addressed by a name;
+ * `stream` is an ordered log a reader walks; a `table`'s changes can be read in
+ * order as well.
+ */
+export type DeployedKind = 'function' | 'workflow' | 'queue' | 'topic' | 'bus' | 'table' | 'stream';
+
+/** One value a function is deployed with. */
+export interface DeployedSetting {
+  /**
+   * What the value is written as, for a reader: the reference
+   * (`aws_sqs_queue.returns.url`) or the literal. Never parsed.
+   */
+  readonly written: string;
+  /** The value, when it is text the files settle. */
+  readonly text?: string;
+  /**
+   * What the value is an attribute of, when it is one of something deployed:
+   * its URL, its ARN, its name. The name is the deployed name, which is what
+   * everything joins on, so it is given even where the value itself - an ARN
+   * the provider assigns - is not known until the thing is created.
+   */
+  readonly names?: { readonly kind: DeployedKind; readonly name: string };
+  /** Why the value is not read, when it is not. */
+  readonly unread?: {
+    readonly text: string;
+    /** The input variable it depends on, when that is the cause. */
+    readonly variable?: string;
+    /** Variable files and what each sets, when they disagree. */
+    readonly files?: Readonly<Record<string, string>>;
+  };
+}
+
+/**
+ * Where a message is sent, by what the deployment names.
+ *
+ * An event put on a bus is named by the bus and by fields of the event itself
+ * (`fields`, as the deployment's own pattern language spells them), because a
+ * bus routes on what an event says rather than on where it was sent.
+ */
+export type MessageTarget =
+  | { readonly kind: 'queue'; readonly name: string }
+  | { readonly kind: 'topic'; readonly name: string }
+  | { readonly kind: 'bus'; readonly name: string; readonly fields?: Readonly<Record<string, string>> };
+
+/** What a delivery hands its messages to. */
+export type DeliveryTarget =
+  /** A function this deployment creates, by its position in `functions`. */
+  | { readonly kind: 'function'; readonly function: number }
+  /** A function deployed somewhere else, by its deployed name. */
+  | { readonly kind: 'function'; readonly name: string }
+  /** A workflow, by its deployed name: whoever declares it, here or elsewhere. */
+  | { readonly kind: 'workflow'; readonly name: string }
+  | MessageTarget;
+
+/**
+ * One filter on one value, as a deployment writes it.
+ *
+ * Alternatives in a list are any-of. `unread` is a filter this reading does not
+ * evaluate - a numeric range, an address block - kept as written, which matches
+ * nothing rather than everything.
+ */
+export type ValueFilter =
+  | { readonly equals: string }
+  | { readonly prefix: string }
+  | { readonly suffix: string }
+  | { readonly equalsIgnoreCase: string }
+  | { readonly wildcard: string }
+  | { readonly anythingBut: readonly ValueFilter[] }
+  | { readonly exists: boolean }
+  | { readonly unread: string };
+
+/** The messages on a bus a pattern selects. */
+export interface MessagePattern {
+  /** Each field filtered, with its alternatives. A field not named is not filtered. */
+  readonly fields: Readonly<Record<string, readonly ValueFilter[]>>;
+  /** Filters on fields that are not matched on, as written. */
+  readonly unmatched?: Readonly<Record<string, unknown>>;
+}
+
+/** Where a delivery takes its messages from. */
+export type DeliverySource =
+  | { readonly kind: 'queue'; readonly name: string }
+  | { readonly kind: 'topic'; readonly name: string }
+  | { readonly kind: 'bus'; readonly name: string; readonly pattern: MessagePattern }
+  /** A clock: `expression` as the deployment writes it, when read. */
+  | { readonly kind: 'schedule'; readonly expression?: string }
+  /** The changes to a table, or the records of a stream, read in order. */
+  | { readonly kind: 'changes'; readonly of: 'table' | 'stream'; readonly name: string };
+
+/** What declares a delivery. */
+export type DeliveryKind = 'rule' | 'subscription' | 'mapping' | 'schedule' | 'pipe' | 'redrive';
+
+/**
+ * One way messages reach something: a rule's target, a subscription, a mapping
+ * from a queue or a stream to a function, a schedule, a pipe, a queue's
+ * redrive to the queue its failures go to.
+ *
+ * These are the subscribers code never states: the publishing half of a
+ * channel is a call in a handler, and this half is in the deployment.
+ */
+export interface DeployedDelivery {
+  readonly file: string;
+  readonly line: number;
+  /** Where it is declared, in the deployment's own terms: unique per deployment. */
+  readonly address: string;
+  readonly by: DeliveryKind;
+  /** The name the deployment gives the rule, schedule or pipe, when read. */
+  readonly name?: string;
+  readonly from: DeliverySource;
+  /**
+   * Absent when the target was not read; a row says why. The source is still
+   * drawn as having a reader, because something does read it.
+   */
+  readonly to?: DeliveryTarget;
   readonly meta?: Record<string, unknown>;
 }
 
@@ -68,7 +199,12 @@ export type RouteTarget =
   /** A function this deployment creates, by its position in `functions`. */
   | { readonly function: number }
   /** A function created somewhere else, by the name it is deployed under. */
-  | { readonly name: string };
+  | { readonly name: string }
+  /**
+   * A queue, a topic or a bus the route sends the request to itself, with no
+   * function in between: the route is the way in and a publisher (P23).
+   */
+  | { readonly sends: MessageTarget };
 
 /** One HTTP route the deployment exposes. */
 export interface DeployedRoute {
@@ -176,6 +312,8 @@ export interface Deployment {
   readonly routes: readonly DeployedRoute[];
   readonly roots: readonly PublishedRoot[];
   readonly workflows: readonly DeployedWorkflow[];
+  /** The subscribers it declares (P23). */
+  readonly deliveries: readonly DeployedDelivery[];
   /** What could not be read, with repo-relative files. */
   readonly rows: readonly Unresolved[];
 }

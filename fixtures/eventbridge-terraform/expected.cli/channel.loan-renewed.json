@@ -1,0 +1,197 @@
+{
+  "channel": "channel:eventbridge/library/library.loans/LoanRenewed",
+  "producers": 1,
+  "consumers": 1,
+  "root": {
+    "node": {
+      "id": "channel:eventbridge/library/library.loans/LoanRenewed",
+      "type": "channel",
+      "label": "eventbridge/library/library.loans/LoanRenewed",
+      "loc": "src/loans/renew-loan.ts:29",
+      "service": "circulation"
+    },
+    "children": [
+      {
+        "node": {
+          "id": "channel:eventbridge/library/library.loans/LoanRenewed#producers",
+          "type": "group",
+          "label": "producers (1)"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "producer:circulation#src/loans/renew-loan.ts:29:9",
+              "type": "producer",
+              "label": "event eventbridge/library/library.loans/LoanRenewed",
+              "loc": "src/loans/renew-loan.ts:29",
+              "service": "circulation",
+              "kind": "event"
+            },
+            "edge": {
+              "type": "emits",
+              "confidence": "static",
+              "params": [
+                "type:circulation#Renewal"
+              ]
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "node": {
+          "id": "channel:eventbridge/library/library.loans/LoanRenewed#consumers",
+          "type": "group",
+          "label": "consumers (1)"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.review_renewal",
+              "type": "consumer",
+              "label": "rule library-renewal-review",
+              "loc": "infra/rules.tf:67",
+              "service": "circulation",
+              "kind": "event"
+            },
+            "edge": {
+              "type": "consumes",
+              "confidence": "heuristic",
+              "because": [
+                "source \"library.loans\" matches prefix \"library.\""
+              ],
+              "notMatchedOn": [
+                "detail"
+              ]
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "entry:circulation:workflow:loan-review",
+                  "type": "entry",
+                  "label": "workflow loan-review",
+                  "loc": "statemachines/loan-review.asl.json:1",
+                  "service": "circulation",
+                  "kind": "workflow"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "circulation#statemachines/loan-review.asl.json:loan-review/ReviewLoan",
+                      "type": "function",
+                      "label": "ReviewLoan [Task lambda:invoke]",
+                      "loc": "statemachines/loan-review.asl.json:5",
+                      "service": "circulation",
+                      "kind": "state"
+                    },
+                    "edge": {
+                      "type": "handles",
+                      "confidence": "static"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "entry:circulation:invoke:library-review-loan",
+                          "type": "entry",
+                          "label": "library-review-loan",
+                          "loc": "infra/functions.tf:37",
+                          "service": "circulation",
+                          "kind": "invoke"
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static"
+                        },
+                        "children": [
+                          {
+                            "node": {
+                              "id": "circulation#src/reviews/review-loan.ts:handler",
+                              "type": "function",
+                              "label": "handler",
+                              "loc": "src/reviews/review-loan.ts:9",
+                              "service": "circulation"
+                            },
+                            "edge": {
+                              "type": "handles",
+                              "confidence": "static"
+                            },
+                            "children": [
+                              {
+                                "node": {
+                                  "id": "circulation#src/lib/loans-table.ts:findLoan",
+                                  "type": "function",
+                                  "label": "findLoan",
+                                  "loc": "src/lib/loans-table.ts:15",
+                                  "service": "circulation"
+                                },
+                                "edge": {
+                                  "type": "calls",
+                                  "confidence": "static"
+                                },
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "node": {
+                          "id": "circulation#statemachines/loan-review.asl.json:loan-review/Approved?",
+                          "type": "function",
+                          "label": "Approved? [Choice]",
+                          "loc": "statemachines/loan-review.asl.json:19",
+                          "service": "circulation",
+                          "kind": "state"
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static"
+                        },
+                        "children": [
+                          {
+                            "node": {
+                              "id": "circulation#statemachines/loan-review.asl.json:loan-review/Renewed",
+                              "type": "function",
+                              "label": "Renewed [Succeed]",
+                              "loc": "statemachines/loan-review.asl.json:30",
+                              "service": "circulation",
+                              "kind": "state"
+                            },
+                            "edge": {
+                              "type": "calls",
+                              "confidence": "static"
+                            },
+                            "children": []
+                          },
+                          {
+                            "node": {
+                              "id": "circulation#statemachines/loan-review.asl.json:loan-review/Refused",
+                              "type": "function",
+                              "label": "Refused [Fail]",
+                              "loc": "statemachines/loan-review.asl.json:33",
+                              "service": "circulation",
+                              "kind": "state"
+                            },
+                            "edge": {
+                              "type": "calls",
+                              "confidence": "static"
+                            },
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

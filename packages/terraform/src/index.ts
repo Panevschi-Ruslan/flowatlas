@@ -20,11 +20,27 @@ export { SHIPPED_MODULES } from './configuration/shipped.js';
 export { describedModule, normaliseSource } from './configuration/sources.js';
 
 /**
- * Resource types a reading of functions, routes and workflows has a use for. A repository
- * whose configuration declares none of these, and calls no module described as
- * declaring them, is not one this reader reads anything from.
+ * Resource types a reading of functions, routes, workflows and their subscribers
+ * has a use for. A repository whose configuration declares none of these, and calls no
+ * module described as declaring them, is not one this reader reads anything
+ * from. A bus, a queue or a topic counts on its own: a repository of nothing
+ * but shared messaging infrastructure is where other repositories' channels
+ * meet (P23).
  */
-const READ_TYPES = /"aws_(?:lambda_function|api_gateway_[a-z_]+|apigatewayv2_[a-z_]+|sfn_state_machine)"/;
+const READ_TYPES = new RegExp(
+  `"aws_(?:${[
+    'lambda_function',
+    'api_gateway_[a-z_]+',
+    'apigatewayv2_[a-z_]+',
+    'cloudwatch_event_(?:rule|target|bus)',
+    'scheduler_schedule',
+    'lambda_event_source_mapping',
+    'sns_topic(?:_subscription)?',
+    'sqs_queue(?:_redrive_policy)?',
+    'pipes_pipe',
+    'sfn_state_machine',
+  ].join('|')})"`,
+);
 
 const MODULE_SOURCE = /\bsource\s*=\s*"([^"]+)"/g;
 

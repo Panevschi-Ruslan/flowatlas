@@ -1,0 +1,1364 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T16:26:06.987Z",
+  "services": [
+    {
+      "name": "returns",
+      "repo": "./returns",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:sns/library-item-returned",
+      "type": "channel",
+      "label": "sns/library-item-returned",
+      "repo": "returns",
+      "file": "infra/topics.tf",
+      "line": 6,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 1,
+        "consumers": 3
+      }
+    },
+    {
+      "id": "channel:sqs/library-hold-requests",
+      "type": "channel",
+      "label": "sqs/library-hold-requests",
+      "repo": "returns",
+      "file": "infra/api.tf",
+      "line": 57,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/library-reminders",
+      "type": "channel",
+      "label": "sqs/library-reminders",
+      "repo": "returns",
+      "file": "infra/mappings.tf",
+      "line": 13,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/library-restock",
+      "type": "channel",
+      "label": "sqs/library-restock",
+      "repo": "returns",
+      "file": "infra/mappings.tf",
+      "line": 8,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/library-restock-dlq",
+      "type": "channel",
+      "label": "sqs/library-restock-dlq",
+      "repo": "returns",
+      "file": "infra/queues.tf",
+      "line": 19,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/library-returns",
+      "type": "channel",
+      "label": "sqs/library-returns",
+      "repo": "returns",
+      "file": "infra/mappings.tf",
+      "line": 1,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/library-returns-dlq",
+      "type": "channel",
+      "label": "sqs/library-returns-dlq",
+      "repo": "returns",
+      "file": "infra/queues.tf",
+      "line": 1,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "config_key:returns#AUDIT_QUEUE_URL",
+      "type": "config_key",
+      "label": "AUDIT_QUEUE_URL",
+      "repo": "returns",
+      "file": "src/returns/process-return.ts",
+      "line": 28,
+      "meta": {
+        "key": "AUDIT_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:returns#ITEM_RETURNED_TOPIC_ARN",
+      "type": "config_key",
+      "label": "ITEM_RETURNED_TOPIC_ARN",
+      "repo": "returns",
+      "file": "src/returns/process-return.ts",
+      "line": 23,
+      "meta": {
+        "key": "ITEM_RETURNED_TOPIC_ARN",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:returns#RETURNS_QUEUE_URL",
+      "type": "config_key",
+      "label": "RETURNS_QUEUE_URL",
+      "repo": "returns",
+      "file": "src/lib/returns-queue.ts",
+      "line": 19,
+      "meta": {
+        "key": "RETURNS_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.place_holds",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.place_holds",
+      "repo": "returns",
+      "file": "infra/mappings.tf",
+      "line": 25,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.place_holds",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.process_returns",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.process_returns",
+      "repo": "returns",
+      "file": "infra/mappings.tf",
+      "line": 1,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.process_returns",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.restock",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.restock",
+      "repo": "returns",
+      "file": "infra/mappings.tf",
+      "line": 8,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.restock",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.send_reminders",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.send_reminders",
+      "repo": "returns",
+      "file": "infra/mappings.tf",
+      "line": 13,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.send_reminders",
+        "deployedBy": "terraform",
+        "unmatched": {
+          "filter": [
+            "{\"body\":{\"borrowerId\":[{\"exists\":true}]}}"
+          ]
+        },
+        "notMatchedOn": [
+          "filter"
+        ]
+      }
+    },
+    {
+      "id": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.branch_inbox",
+      "type": "consumer",
+      "label": "subscription aws_sns_topic_subscription.branch_inbox",
+      "repo": "returns",
+      "file": "infra/topics.tf",
+      "line": 25,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "aws_sns_topic_subscription.branch_inbox",
+        "deployedBy": "terraform",
+        "protocol": "email"
+      }
+    },
+    {
+      "id": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.notify_borrower",
+      "type": "consumer",
+      "label": "subscription aws_sns_topic_subscription.notify_borrower",
+      "repo": "returns",
+      "file": "infra/topics.tf",
+      "line": 13,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "aws_sns_topic_subscription.notify_borrower",
+        "deployedBy": "terraform",
+        "protocol": "lambda",
+        "unmatched": {
+          "filter_policy": "{\"branchId\":[\"central\"]}"
+        },
+        "notMatchedOn": [
+          "filter_policy"
+        ]
+      }
+    },
+    {
+      "id": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.restock",
+      "type": "consumer",
+      "label": "subscription aws_sns_topic_subscription.restock",
+      "repo": "returns",
+      "file": "infra/topics.tf",
+      "line": 6,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "aws_sns_topic_subscription.restock",
+        "deployedBy": "terraform",
+        "protocol": "sqs",
+        "raw": true
+      }
+    },
+    {
+      "id": "entry:returns:http:POST:/holds",
+      "type": "entry",
+      "label": "POST /holds",
+      "repo": "returns",
+      "file": "infra/api.tf",
+      "line": 57,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/holds",
+        "rawPath": "/holds",
+        "deployedBy": "terraform",
+        "api": "library-returns",
+        "declaredAs": "aws_api_gateway_method.request_hold",
+        "integration": "queue",
+        "sends": "sqs/library-hold-requests",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:returns:http:POST:/returns",
+      "type": "entry",
+      "label": "POST /returns",
+      "repo": "returns",
+      "file": "infra/api.tf",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/returns",
+        "rawPath": "/returns",
+        "deployedBy": "terraform",
+        "api": "library-returns",
+        "function": "library-record-return",
+        "declaredAs": "aws_api_gateway_method.record_return",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:returns:http:POST:/returns/bulk",
+      "type": "entry",
+      "label": "POST /returns/bulk",
+      "repo": "returns",
+      "file": "infra/api.tf",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/returns/bulk",
+        "rawPath": "/returns/bulk",
+        "deployedBy": "terraform",
+        "api": "library-returns",
+        "function": "library-bulk-return",
+        "declaredAs": "aws_api_gateway_method.bulk_return",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:returns:invoke:library-bulk-return",
+      "type": "entry",
+      "label": "library-bulk-return",
+      "repo": "returns",
+      "file": "infra/functions.tf",
+      "line": 17,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-bulk-return",
+        "deployedBy": "terraform",
+        "name": "library-bulk-return",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.bulk_return",
+        "handler": "returns/bulk-return.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "BATCH_SIZE": {
+            "written": "\"25\"",
+            "value": "25"
+          }
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:returns:invoke:library-notify-borrower",
+      "type": "entry",
+      "label": "library-notify-borrower",
+      "repo": "returns",
+      "file": "infra/functions.tf",
+      "line": 57,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-notify-borrower",
+        "deployedBy": "terraform",
+        "name": "library-notify-borrower",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.notify_borrower",
+        "handler": "notices/notify-borrower.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:returns:invoke:library-place-hold",
+      "type": "entry",
+      "label": "library-place-hold",
+      "repo": "returns",
+      "file": "infra/functions.tf",
+      "line": 75,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-place-hold",
+        "deployedBy": "terraform",
+        "name": "library-place-hold",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.place_hold",
+        "handler": "holds/place-hold.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:returns:invoke:library-process-return",
+      "type": "entry",
+      "label": "library-process-return",
+      "repo": "returns",
+      "file": "infra/functions.tf",
+      "line": 32,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-process-return",
+        "deployedBy": "terraform",
+        "name": "library-process-return",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.process_return",
+        "handler": "returns/process-return.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "AUDIT_QUEUE_URL": {
+            "written": "a value depending on var.audit_queue_url",
+            "unread": "var.audit_queue_url is \"https://sqs.eu-west-1.amazonaws.com/111122223333/library-audit-dev\" in infra/env/dev.tfvars and \"https://sqs.eu-west-1.amazonaws.com/444455556666/library-audit\" in infra/env/prod.tfvars",
+            "variable": "audit_queue_url",
+            "files": {
+              "infra/env/dev.tfvars": "\"https://sqs.eu-west-1.amazonaws.com/111122223333/library-audit-dev\"",
+              "infra/env/prod.tfvars": "\"https://sqs.eu-west-1.amazonaws.com/444455556666/library-audit\""
+            }
+          },
+          "ITEM_RETURNED_TOPIC_ARN": {
+            "written": "aws_sns_topic.item_returned.arn",
+            "value": "library-item-returned",
+            "kind": "topic"
+          }
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:returns:invoke:library-record-return",
+      "type": "entry",
+      "label": "library-record-return",
+      "repo": "returns",
+      "file": "infra/functions.tf",
+      "line": 1,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-record-return",
+        "deployedBy": "terraform",
+        "name": "library-record-return",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.record_return",
+        "handler": "returns/record-return.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "RETURNS_QUEUE_URL": {
+            "written": "aws_sqs_queue.returns.url",
+            "value": "library-returns",
+            "kind": "queue"
+          }
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:returns:invoke:library-restock",
+      "type": "entry",
+      "label": "library-restock",
+      "repo": "returns",
+      "file": "infra/functions.tf",
+      "line": 48,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-restock",
+        "deployedBy": "terraform",
+        "name": "library-restock",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.restock",
+        "handler": "stock/restock.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:returns:invoke:library-send-reminder",
+      "type": "entry",
+      "label": "library-send-reminder",
+      "repo": "returns",
+      "file": "infra/functions.tf",
+      "line": 66,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-send-reminder",
+        "deployedBy": "terraform",
+        "name": "library-send-reminder",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.send_reminder",
+        "handler": "notices/send-reminder.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "producer:returns#infra/api.tf:aws_api_gateway_method.request_hold",
+      "type": "producer",
+      "label": "message sqs/library-hold-requests",
+      "repo": "returns",
+      "file": "infra/api.tf",
+      "line": 57,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "route",
+        "declaredAs": "aws_api_gateway_method.request_hold",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "producer:returns#infra/queues.tf:aws_sqs_queue.returns",
+      "type": "producer",
+      "label": "message sqs/library-returns-dlq",
+      "repo": "returns",
+      "file": "infra/queues.tf",
+      "line": 1,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "redrive",
+        "declaredAs": "aws_sqs_queue.returns",
+        "deployedBy": "terraform",
+        "maxReceiveCount": 4
+      }
+    },
+    {
+      "id": "producer:returns#infra/queues.tf:module.restock_queue.aws_sqs_queue_redrive_policy.this[0]",
+      "type": "producer",
+      "label": "message sqs/library-restock-dlq",
+      "repo": "returns",
+      "file": "infra/queues.tf",
+      "line": 19,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "redrive",
+        "declaredAs": "module.restock_queue.aws_sqs_queue_redrive_policy.this[0]",
+        "deployedBy": "terraform",
+        "maxReceiveCount": 5
+      }
+    },
+    {
+      "id": "producer:returns#infra/topics.tf:aws_sns_topic_subscription.restock",
+      "type": "producer",
+      "label": "message sqs/library-restock",
+      "repo": "returns",
+      "file": "infra/topics.tf",
+      "line": 6,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "subscription",
+        "declaredAs": "aws_sns_topic_subscription.restock",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "producer:returns#src/lib/returns-queue.ts:17:9",
+      "type": "producer",
+      "label": "message sqs/library-returns",
+      "repo": "returns",
+      "file": "src/lib/returns-queue.ts",
+      "line": 17,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "RETURNS_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:]+)$"
+                ]
+              }
+            ],
+            "payload": "type:returns#ReturnedItem"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:returns#src/notices/notify-borrower.ts:20:11",
+      "type": "producer",
+      "label": "message sqs/library-reminders",
+      "repo": "returns",
+      "file": "src/notices/notify-borrower.ts",
+      "line": 20,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "literal",
+        "method": "sendMessage"
+      }
+    },
+    {
+      "id": "producer:returns#src/returns/process-return.ts:21:11",
+      "type": "producer",
+      "label": "message sns/library-item-returned",
+      "repo": "returns",
+      "file": "src/returns/process-return.ts",
+      "line": 21,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sns",
+              {
+                "environment": "ITEM_RETURNED_TOPIC_ARN",
+                "forms": [
+                  "^arn:[^:]+:sns:[^:]*:[^:]*:([^:]+)$"
+                ]
+              }
+            ],
+            "payload": "type:returns#ReturnedItem"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:returns#src/returns/process-return.ts:28:11",
+      "type": "producer",
+      "label": "message ?",
+      "repo": "returns",
+      "file": "src/returns/process-return.ts",
+      "line": 28,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "unresolved",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "AUDIT_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:]+)$"
+                ]
+              }
+            ],
+            "payload": "type:returns#AuditEntry"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "repo:returns",
+      "type": "repo",
+      "label": "returns",
+      "repo": "returns",
+      "meta": {
+        "stats": {
+          "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sns": 1,
+            "@aws-sdk/client-sqs": 2,
+            "aws-sdk": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "returns#src/holds/place-hold.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "returns",
+      "file": "src/holds/place-hold.ts",
+      "line": 11
+    },
+    {
+      "id": "returns#src/lib/returns-queue.ts:queueReturn",
+      "type": "function",
+      "label": "queueReturn",
+      "repo": "returns",
+      "file": "src/lib/returns-queue.ts",
+      "line": 16
+    },
+    {
+      "id": "returns#src/notices/notify-borrower.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "returns",
+      "file": "src/notices/notify-borrower.ts",
+      "line": 16
+    },
+    {
+      "id": "returns#src/notices/send-reminder.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "returns",
+      "file": "src/notices/send-reminder.ts",
+      "line": 7
+    },
+    {
+      "id": "returns#src/returns/bulk-return.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "returns",
+      "file": "src/returns/bulk-return.ts",
+      "line": 8
+    },
+    {
+      "id": "returns#src/returns/process-return.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "returns",
+      "file": "src/returns/process-return.ts",
+      "line": 18
+    },
+    {
+      "id": "returns#src/returns/record-return.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "returns",
+      "file": "src/returns/record-return.ts",
+      "line": 5
+    },
+    {
+      "id": "returns#src/stock/restock.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "returns",
+      "file": "src/stock/restock.ts",
+      "line": 7
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:sns/library-item-returned",
+      "to": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.branch_inbox",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/topics.tf",
+      "line": 25,
+      "meta": {
+        "by": "subscription"
+      }
+    },
+    {
+      "from": "channel:sns/library-item-returned",
+      "to": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.notify_borrower",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/topics.tf",
+      "line": 13,
+      "meta": {
+        "by": "subscription",
+        "notMatchedOn": [
+          "filter_policy"
+        ]
+      }
+    },
+    {
+      "from": "channel:sns/library-item-returned",
+      "to": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.restock",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/topics.tf",
+      "line": 6,
+      "meta": {
+        "by": "subscription"
+      }
+    },
+    {
+      "from": "channel:sqs/library-hold-requests",
+      "to": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.place_holds",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 25,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/library-reminders",
+      "to": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.send_reminders",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 13,
+      "meta": {
+        "by": "mapping",
+        "notMatchedOn": [
+          "filter"
+        ]
+      }
+    },
+    {
+      "from": "channel:sqs/library-restock",
+      "to": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.restock",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 8,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/library-restock",
+      "to": "producer:returns#infra/queues.tf:module.restock_queue.aws_sqs_queue_redrive_policy.this[0]",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/queues.tf",
+      "line": 19,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "channel:sqs/library-returns",
+      "to": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.process_returns",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 1,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/library-returns",
+      "to": "producer:returns#infra/queues.tf:aws_sqs_queue.returns",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/queues.tf",
+      "line": 1,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.place_holds",
+      "to": "entry:returns:invoke:library-place-hold",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 25,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.process_returns",
+      "to": "entry:returns:invoke:library-process-return",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 1,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.restock",
+      "to": "entry:returns:invoke:library-restock",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 8,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.send_reminders",
+      "to": "entry:returns:invoke:library-send-reminder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 13,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.notify_borrower",
+      "to": "entry:returns:invoke:library-notify-borrower",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/topics.tf",
+      "line": 13,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.restock",
+      "to": "producer:returns#infra/topics.tf:aws_sns_topic_subscription.restock",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/topics.tf",
+      "line": 6,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:returns:http:POST:/holds",
+      "to": "producer:returns#infra/api.tf:aws_api_gateway_method.request_hold",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/api.tf",
+      "line": 57,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:returns:http:POST:/returns",
+      "to": "returns#src/returns/record-return.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/record-return.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:returns:http:POST:/returns/bulk",
+      "to": "returns#src/returns/bulk-return.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/bulk-return.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:returns:invoke:library-bulk-return",
+      "to": "returns#src/returns/bulk-return.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/bulk-return.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:returns:invoke:library-notify-borrower",
+      "to": "returns#src/notices/notify-borrower.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/notices/notify-borrower.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:returns:invoke:library-place-hold",
+      "to": "returns#src/holds/place-hold.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/holds/place-hold.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:returns:invoke:library-process-return",
+      "to": "returns#src/returns/process-return.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/process-return.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:returns:invoke:library-record-return",
+      "to": "returns#src/returns/record-return.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/record-return.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:returns:invoke:library-restock",
+      "to": "returns#src/stock/restock.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stock/restock.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:returns:invoke:library-send-reminder",
+      "to": "returns#src/notices/send-reminder.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/notices/send-reminder.ts",
+      "line": 7
+    },
+    {
+      "from": "producer:returns#infra/api.tf:aws_api_gateway_method.request_hold",
+      "to": "channel:sqs/library-hold-requests",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/api.tf",
+      "line": 57,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:returns#infra/queues.tf:aws_sqs_queue.returns",
+      "to": "channel:sqs/library-returns-dlq",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/queues.tf",
+      "line": 1,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:returns#infra/queues.tf:module.restock_queue.aws_sqs_queue_redrive_policy.this[0]",
+      "to": "channel:sqs/library-restock-dlq",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/queues.tf",
+      "line": 19,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:returns#infra/topics.tf:aws_sns_topic_subscription.restock",
+      "to": "channel:sqs/library-restock",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/topics.tf",
+      "line": 6,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:returns#src/lib/returns-queue.ts:17:9",
+      "to": "channel:sqs/library-returns",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/lib/returns-queue.ts",
+      "line": 17,
+      "params": [
+        "type:returns#ReturnedItem"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "RETURNS_QUEUE_URL"
+        ],
+        "functions": [
+          "library-record-return"
+        ]
+      }
+    },
+    {
+      "from": "producer:returns#src/notices/notify-borrower.ts:20:11",
+      "to": "channel:sqs/library-reminders",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:returns#Reminder"
+      ],
+      "file": "src/notices/notify-borrower.ts",
+      "line": 20
+    },
+    {
+      "from": "producer:returns#src/returns/process-return.ts:21:11",
+      "to": "channel:sns/library-item-returned",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/returns/process-return.ts",
+      "line": 21,
+      "params": [
+        "type:returns#ReturnedItem"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ITEM_RETURNED_TOPIC_ARN"
+        ],
+        "functions": [
+          "library-process-return"
+        ]
+      }
+    },
+    {
+      "from": "returns#src/lib/returns-queue.ts:queueReturn",
+      "to": "config_key:returns#RETURNS_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/lib/returns-queue.ts",
+      "line": 19,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-record-return",
+            "written": "aws_sqs_queue.returns.url",
+            "value": "library-returns"
+          }
+        ]
+      }
+    },
+    {
+      "from": "returns#src/lib/returns-queue.ts:queueReturn",
+      "to": "producer:returns#src/lib/returns-queue.ts:17:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/lib/returns-queue.ts",
+      "line": 17
+    },
+    {
+      "from": "returns#src/notices/notify-borrower.ts:handler",
+      "to": "producer:returns#src/notices/notify-borrower.ts:20:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/notices/notify-borrower.ts",
+      "line": 20
+    },
+    {
+      "from": "returns#src/returns/bulk-return.ts:handler",
+      "to": "returns#src/lib/returns-queue.ts:queueReturn",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/returns/bulk-return.ts",
+      "line": 10
+    },
+    {
+      "from": "returns#src/returns/process-return.ts:handler",
+      "to": "config_key:returns#AUDIT_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/returns/process-return.ts",
+      "line": 28,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-process-return",
+            "written": "a value depending on var.audit_queue_url"
+          }
+        ]
+      }
+    },
+    {
+      "from": "returns#src/returns/process-return.ts:handler",
+      "to": "config_key:returns#ITEM_RETURNED_TOPIC_ARN",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/returns/process-return.ts",
+      "line": 23,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-process-return",
+            "written": "aws_sns_topic.item_returned.arn",
+            "value": "library-item-returned"
+          }
+        ]
+      }
+    },
+    {
+      "from": "returns#src/returns/process-return.ts:handler",
+      "to": "producer:returns#src/returns/process-return.ts:21:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/returns/process-return.ts",
+      "line": 21
+    },
+    {
+      "from": "returns#src/returns/process-return.ts:handler",
+      "to": "producer:returns#src/returns/process-return.ts:28:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/returns/process-return.ts",
+      "line": 28
+    },
+    {
+      "from": "returns#src/returns/record-return.ts:handler",
+      "to": "returns#src/lib/returns-queue.ts:queueReturn",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/returns/record-return.ts",
+      "line": 6
+    }
+  ],
+  "types": {
+    "type:returns#AuditEntry": {
+      "name": "AuditEntry",
+      "kind": "object",
+      "declaredIn": "returns#src/returns/process-return.ts",
+      "structuralHash": "702e9a09b9d6c5c9",
+      "fields": [
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "action",
+          "type": "'returned'",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:returns#Reminder": {
+      "name": "Reminder",
+      "kind": "object",
+      "declaredIn": "returns#src/notices/notify-borrower.ts",
+      "structuralHash": "8fa338aefb21522f",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:returns#ReturnedItem": {
+      "name": "ReturnedItem",
+      "kind": "object",
+      "declaredIn": "returns#src/lib/returns-queue.ts",
+      "structuralHash": "aa786a039a839f49",
+      "fields": [
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "branchId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "returnedAt",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "infra/topics.tf",
+      "line": 25,
+      "reason": "subscription-target-unread",
+      "level": "info",
+      "message": "what aws_sns_topic_subscription.branch_inbox delivers to is not read: it delivers by email, which nothing here follows",
+      "hint": "It is read, and it is not a function, a workflow, a queue, a topic, a bus or a stream, so nothing is drawn past it. Nothing to fix unless it is one of those written in a form not recognised.",
+      "symbol": "aws_sns_topic_subscription.branch_inbox",
+      "adapter": "aws-lambda",
+      "meta": {
+        "because": "unplaced"
+      },
+      "service": "returns"
+    },
+    {
+      "service": "returns",
+      "file": "src/lib/returns-queue.ts",
+      "line": 17,
+      "reason": "environment-not-set",
+      "message": "the call at src/lib/returns-queue.ts:17 sends to the value of RETURNS_QUEUE_URL; library-bulk-return runs it and is not deployed with RETURNS_QUEUE_URL, so where it sends from there is not known",
+      "hint": "Set RETURNS_QUEUE_URL in the environment library-bulk-return is deployed with, or correct the name the code reads.",
+      "symbol": "producer:returns#src/lib/returns-queue.ts:17:9",
+      "meta": {
+        "function": "entry:returns:invoke:library-bulk-return",
+        "variable": "RETURNS_QUEUE_URL"
+      }
+    },
+    {
+      "service": "returns",
+      "file": "src/returns/process-return.ts",
+      "line": 28,
+      "reason": "environment-value-unread",
+      "message": "the call at src/returns/process-return.ts:28 sends to the value of AUDIT_QUEUE_URL, which library-process-return is deployed with as a value depending on var.audit_queue_url, and that is not read: var.audit_queue_url is \"https://sqs.eu-west-1.amazonaws.com/111122223333/library-audit-dev\" in infra/env/dev.tfvars and \"https://sqs.eu-west-1.amazonaws.com/444455556666/library-audit\" in infra/env/prod.tfvars",
+      "hint": "The variable files set it differently (infra/env/dev.tfvars, infra/env/prod.tfvars). Choose the environment to read under services[].infra.vars.",
+      "symbol": "producer:returns#src/returns/process-return.ts:28:11",
+      "meta": {
+        "function": "entry:returns:invoke:library-process-return",
+        "variable": "AUDIT_QUEUE_URL",
+        "files": {
+          "infra/env/dev.tfvars": "\"https://sqs.eu-west-1.amazonaws.com/111122223333/library-audit-dev\"",
+          "infra/env/prod.tfvars": "\"https://sqs.eu-west-1.amazonaws.com/444455556666/library-audit\""
+        }
+      }
+    }
+  ]
+}

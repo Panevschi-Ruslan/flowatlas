@@ -1,0 +1,105 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-06T16:22:23.852Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+        "to": "channel:sqs/library-audit",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/library-audit|emits|producer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/library-audit is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#src/create-loan.ts:11:9",
+        "to": "consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:loans#src/create-loan.ts:11:9|emits|consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"] declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#src/create-loan.ts:11:9",
+        "to": "consumer:routing#rules.tf:aws_cloudwatch_event_target.welcome_borrower",
+        "type": "emits"
+      },
+      "edgeKey": "producer:loans#src/create-loan.ts:11:9|emits|consumer:routing#rules.tf:aws_cloudwatch_event_target.welcome_borrower",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:routing#rules.tf:aws_cloudwatch_event_target.welcome_borrower declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#src/return-loan.ts:8:9",
+        "to": "consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:loans#src/return-loan.ts:8:9|emits|consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"]",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:platform-events#main.tf:module.library_bus.aws_cloudwatch_event_target.this[\"audit-audit-queue\"] declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:loans#src/return-loan.ts:8:9",
+        "to": "consumer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest",
+        "type": "emits"
+      },
+      "edgeKey": "producer:loans#src/return-loan.ts:8:9|emits|consumer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest",
+        "to": "consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+        "type": "emits"
+      },
+      "edgeKey": "producer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest|emits|consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "consumer:routing#rules.tf:aws_cloudwatch_event_target.loan_digest declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles",
+        "to": "consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+        "type": "emits"
+      },
+      "edgeKey": "producer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles|emits|consumer:notifications#infra/main.tf:aws_lambda_event_source_mapping.loan_digest",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "consumer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 7,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "lending-library-loans",
-  "generatedAt": "2026-10-06T11:31:48.923Z",
+  "generatedAt": "2026-10-06T16:24:58.711Z",
   "nodes": [
     {
       "id": "entry:lending-library-loans:http:GET:/loans/:param",
@@ -97,6 +97,13 @@
         "handler": "send-reminder.handler",
         "sourceDirectory": "src/reminders",
         "handlerVia": "function",
+        "environment": {
+          "CHANNEL": {
+            "written": "a value depending on var.reminder_channels",
+            "unread": "for_each = toset(var.reminder_channels) is not known: var.reminder_channels has no default and no variable file sets it",
+            "variable": "reminder_channels"
+          }
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -117,6 +124,12 @@
         "handler": "create-loan.handler",
         "sourceDirectory": "src/loans",
         "handlerVia": "wrapped",
+        "environment": {
+          "LOAN_DAYS": {
+            "written": "\"21\"",
+            "value": "21"
+          }
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -137,6 +150,7 @@
         "handler": "get-loan.handler",
         "sourceDirectory": "src/loans",
         "handlerVia": "function",
+        "environment": {},
         "adapter": "aws-lambda"
       }
     },
@@ -159,6 +173,7 @@
         "compiledBy": "tsconfig.json",
         "sourceDirectory": "src/returns",
         "handlerVia": "function",
+        "environment": {},
         "adapter": "aws-lambda"
       }
     },
@@ -179,6 +194,7 @@
         "handler": "renew-loan.handler",
         "sourceDirectory": "src/loans",
         "handlerVia": "inline",
+        "environment": {},
         "adapter": "aws-lambda"
       }
     },

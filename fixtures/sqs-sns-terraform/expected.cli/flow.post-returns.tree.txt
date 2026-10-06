@@ -1,0 +1,34 @@
+@  POST /returns                                                          returns/infra/api.tf:11
+  -> handler                                                              returns/src/returns/record-return.ts:5
+    -> queueReturn                                                        returns/src/lib/returns-queue.ts:16
+      ~  message sqs/library-returns                                      returns/src/lib/returns-queue.ts:17
+        ~  sqs/library-returns                                            infra/mappings.tf:1
+          ~  mapping aws_lambda_event_source_mapping.process_returns      returns/infra/mappings.tf:1
+            @  library-process-return                                     returns/infra/functions.tf:32
+              -> handler                                                  returns/src/returns/process-return.ts:18
+                ~  message sns/library-item-returned                      returns/src/returns/process-return.ts:21
+                  ~  sns/library-item-returned                            infra/topics.tf:6
+                    ~  subscription aws_sns_topic_subscription.restock    returns/infra/topics.tf:6
+                      ~  message sqs/library-restock                      returns/infra/topics.tf:6
+                        ~  sqs/library-restock                            infra/mappings.tf:8
+                          ~  mapping aws_lambda_event_source_mapping.restock  returns/infra/mappings.tf:8
+                            @  library-restock                            returns/infra/functions.tf:48
+                              -> handler                                  returns/src/stock/restock.ts:7
+                          ~  message sqs/library-restock-dlq              returns/infra/queues.tf:19
+                            ~  sqs/library-restock-dlq                    infra/queues.tf:19
+                    ~  subscription aws_sns_topic_subscription.notify_borrower  returns/infra/topics.tf:13
+                      @  library-notify-borrower                          returns/infra/functions.tf:57
+                        -> handler                                        returns/src/notices/notify-borrower.ts:16
+                          ~  message sqs/library-reminders                returns/src/notices/notify-borrower.ts:20
+                            ~  sqs/library-reminders                      infra/mappings.tf:13
+                              ~  mapping aws_lambda_event_source_mapping.send_reminders  returns/infra/mappings.tf:13
+                                @  library-send-reminder                  returns/infra/functions.tf:66
+                                  -> handler                              returns/src/notices/send-reminder.ts:7
+                    ~  subscription aws_sns_topic_subscription.branch_inbox  returns/infra/topics.tf:25
+                $  ITEM_RETURNED_TOPIC_ARN                                returns/src/returns/process-return.ts:23
+                $  AUDIT_QUEUE_URL                                        returns/src/returns/process-return.ts:28
+                ~  message ? ~heuristic                                   returns/src/returns/process-return.ts:28
+          ~  message sqs/library-returns-dlq                              returns/infra/queues.tf:1
+            ~  sqs/library-returns-dlq                                    infra/queues.tf:1
+      $  RETURNS_QUEUE_URL                                                returns/src/lib/returns-queue.ts:19
+unresolved on this path: 2

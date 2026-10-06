@@ -165,6 +165,7 @@
                         "handler": "send-overdue-reminder.handler",
                         "sourceDirectory": "src/handlers",
                         "handlerVia": "function",
+                        "environment": {},
                         "adapter": "aws-lambda"
                       }
                     },

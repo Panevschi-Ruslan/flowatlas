@@ -514,7 +514,7 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'channel-from-config': (row) =>
     `The channel name is read from settings, so it cannot be followed. Annotate ${named(row)} with @Emits('<channel>') or @Consumes('<channel>').`,
   'channel-from-environment': (row) =>
-    `The channel is the value of ${typeof row.meta?.['variable'] === 'string' ? `the environment variable ${row.meta['variable']}` : 'an environment variable'}, set where the code is deployed and not in it, so no channel is drawn. Reading it from the deployment is not done yet.`,
+    `The channel is the value of ${typeof row.meta?.['variable'] === 'string' ? `the environment variable ${row.meta['variable']}` : 'an environment variable'}, set where the code is deployed and not in it. Where a function whose deployment is read runs this code, the channel is completed from the value it is deployed with and this row goes; it is left where nothing deployed is known to run it.`,
   'channel-dynamic': (row) =>
     `The channel name is built at run time. Annotate ${named(row)} with @Emits('<channel>') or @Consumes('<channel>').`,
   'channel-const-unresolved': (row) =>
@@ -614,7 +614,15 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'route-path-unread': () =>
     'The path or verb of an API route depends on something the files do not settle, so the route cannot be joined to anything that calls it.',
   'route-target-unread': () =>
-    'Which function answers a route is not read. Point the integration at a function the files declare, or at one by a name they settle.',
+    'What answers a route is not read. Point the integration at a function, a queue, a topic or a bus the files declare, or at one by a name they settle.',
+  'subscription-source-unread': () =>
+    'What a rule, a subscription, a mapping or a pipe takes its messages from is not read, so it is drawn on no channel. Write the queue, topic, bus or stream so the files settle it: a reference to what the configuration declares, or its ARN. A source of a kind nothing here reads is said once, at info.',
+  'subscription-target-unread': () =>
+    'What a rule, a subscription, a mapping or a pipe hands its messages to is not read. A target of a kind nothing here follows - a container task, an e-mail address, an API destination - is said once at info and needs nothing; a function, workflow, queue, topic or bus whose name the files do not settle needs one.',
+  'subscription-forward-unread': () =>
+    'A rule puts the events it takes by a pattern on another bus, and which events those are is not named exactly, so no channel on that bus is drawn. Nothing to fix unless that bus has subscribers you expect to see.',
+  'event-pattern-unread': () =>
+    'A rule\'s event pattern is not read, so the rule is on no channel. Write it as JSON, a heredoc or jsonencode of what the files settle.',
   'api-body-unread': () =>
     'An API whose routes are an OpenAPI body is not read as routes. Declare the service with a document of kind openapi to read them.',
   'deployment-unread': () =>
@@ -697,6 +705,14 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'reference-ambiguous': () =>
     'More than one configured service declares the same deployed name, so nothing was joined. One of the declarations is stale, or two environments are configured as one project.',
 
+  // Values a deployment gives the code it runs, and filters on channels (linker)
+  'environment-not-set': () =>
+    'Code sends to the value of an environment variable, and a function that runs it is not deployed with that variable, so where it sends from that function is not known. Set the variable in the function\'s environment, or correct the name the code reads.',
+  'environment-value-unread': () =>
+    'Code sends to the value of an environment variable, and the value a function is deployed with is not read. Where the variable files disagree, choose the environment under services[].infra.vars; otherwise give the value something the files settle.',
+  'subscription-matches-nothing': () =>
+    'A rule takes events by a pattern that nothing the configured services publish matches. A rule for events from outside - another account, a partner, the platform itself - is a way in, not a fault. Nothing to fix if that is what it is.',
+
   // Boundaries nothing could be compared on (contracts)
   ...Object.fromEntries(
     Object.entries(UNCHECKED_HINTS).map(([reason, hint]) => [reason, () => hint]),
@@ -722,7 +738,7 @@ export const KIND_HINTS: Readonly<Record<string, string>> = Object.freeze({
   'channel-from-config':
     "The channel name is read from settings, so it cannot be followed. Annotate the method with @Emits('<channel>') or @Consumes('<channel>').",
   'channel-from-environment':
-    'The channel is the value of an environment variable, set where the code is deployed and not in it, so no channel is drawn. Reading it from the deployment is not done yet.',
+    'The channel is the value of an environment variable, set where the code is deployed and not in it. It is completed from the value each function that runs the code is deployed with; this row is left where nothing deployed is known to run it.',
   'channel-dynamic':
     "The channel name is built at run time. Annotate the method with @Emits('<channel>') or @Consumes('<channel>').",
   'channel-const-unresolved':

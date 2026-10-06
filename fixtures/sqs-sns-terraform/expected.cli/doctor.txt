@@ -1,0 +1,28 @@
+unresolved: total=2 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+
+unresolved: 2 to act on over 3 rows, and 1 place static reading cannot see, folded into 1
+  ways in: 10 found, 9 with a handler that was read, 1 without
+  environment-not-set: 1 row
+    Set RETURNS_QUEUE_URL in the environment library-bulk-return is deployed with, or correct the name the code reads.
+      returns/src/lib/returns-queue.ts:17  producer:returns#src/lib/returns-queue.ts:17:9
+  environment-value-unread: 1 row
+    The variable files set it differently (infra/env/dev.tfvars, infra/env/prod.tfvars). Choose the environment to read under services[].infra.vars.
+      returns/src/returns/process-return.ts:28  producer:returns#src/returns/process-return.ts:28:11
+  subscription-target-unread (info): 1 row
+    It is read, and it is not a function, a workflow, a queue, a topic, a bus or a stream, so nothing is drawn past it. Nothing to fix unless it is one of those written in a form not recognised.
+      returns/infra/topics.tf:25  aws_sns_topic_subscription.branch_inbox
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 9 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 2 now, +2)
+  no baseline at <root>/fixtures/sqs-sns-terraform/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  environment-not-set: 0 → 1 (+1)
+  environment-value-unread: 0 → 1 (+1)
+  new (2):
+    returns|src/lib/returns-queue.ts|producer:returns#src/lib/returns-queue.ts:17:9|environment-not-set
+    returns|src/returns/process-return.ts|producer:returns#src/returns/process-return.ts:28:11|environment-value-unread

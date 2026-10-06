@@ -4,11 +4,12 @@ A lending library's API that publishes through the AWS SDK: plain Express
 handlers that put events on EventBridge, send to SQS queues and, in two
 functions kept beside it with their own manifests, publish to SNS and send with
 version 2 of the SDK. It exists to prove the **publishing half** of a channel
-whose subscriber is declared in Terraform. The subscribers are not read yet, so
-every channel here has a publisher and no handler, and the link report says
-exactly that: nine channels, all nine with no handler (`noConsumers`), none
-joined. That is the honest answer until the deployment is read, not a defect
-of the fixture.
+whose subscriber is declared in Terraform. This repository holds no Terraform,
+so nothing here says who receives, and every channel has a publisher and no
+handler: the link report says nine channels, all nine with no handler
+(`noConsumers`), none joined. The subscribing half is
+`fixtures/eventbridge-terraform`, `fixtures/sqs-sns-terraform` and
+`fixtures/multi-repo-events`.
 
 The channel names follow one grammar, the one a subscriber read from the
 deployment will arrive at:
@@ -37,11 +38,12 @@ deployment will arrive at:
 | the second `PublishCommand` there | a row naming `ESCALATIONS_TOPIC_ARN` | `TopicArn: process.env.ESCALATIONS_TOPIC_ARN` |
 | `sqs.sendMessage({...}).promise()` in `functions/send-reminder` | `sqs/library-reminders`, carrying `Reminder` | version 2: `new AWS.SQS()` from `aws-sdk`, declared only in that function's manifest |
 
-A name read from `process.env` is never turned into a channel: the variable's
-name is not the queue's, and the value is set by the deployment. Resolving it
-through the function's Terraform `environment` block is the second half of
-this work, and until it lands each such call is a producer with no channel and
-one row that names the variable.
+A name read from `process.env` is never turned into a channel here: the
+variable's name is not the queue's, and the value is set by the deployment. The
+linker completes it from the `environment` block of each function whose
+deployment runs the code (`fixtures/sqs-sns-terraform`); nothing deploys this
+Express application, so each such call stays a producer with no channel and one
+row that names the variable.
 
 The application is in `api/` rather than `src/` because the reader opens `src/`
 alone when there is one, and the two functions beside it have to be read as

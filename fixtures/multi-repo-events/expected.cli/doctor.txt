@@ -1,0 +1,16 @@
+unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+
+unresolved: 0 to act on over 1 row, and 1 place static reading cannot see, folded into 1
+  subscription-matches-nothing (info): 1 row
+    A rule for events nothing here puts is a way in from outside - another account, a partner, the platform itself - or its publisher is in a repository the configuration does not name. Nothing to fix if it is the first.
+      routing/rules.tf:79  consumer:routing#rules.tf:aws_cloudwatch_event_target.partner_titles
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 7 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 0 now, +0)
+  no baseline at <root>/fixtures/multi-repo-events/flowatlas.baseline.json; run flowatlas doctor --accept to write one

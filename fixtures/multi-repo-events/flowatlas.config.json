@@ -1,0 +1,9 @@
+{
+  "services": [
+    { "name": "platform-events", "repo": "./platform-events", "type": "lambda" },
+    { "name": "loans", "repo": "./loans", "type": "lambda" },
+    { "name": "routing", "repo": "./routing", "type": "lambda" },
+    { "name": "notifications", "repo": "./notifications", "type": "lambda" }
+  ],
+  "output": ".flowatlas"
+}

@@ -1,5 +1,7 @@
 import {
   locatedSlots,
+  nameWithin,
+  type AwaitedPart,
   locatorApplies,
   locatorIsCondition,
   MOST_CHOICES,
@@ -85,9 +87,10 @@ export const appliesAt = (
  * The one refusal with a known remedy: a part that is the value of an
  * environment variable is read by whoever reads the deployment that sets it.
  * Recorded with the spellings the part may be written in, so that the reader
- * that finds the value arrives at the name this one would have.
+ * that finds the value arrives at the name this one would have. The shape is
+ * the core's, because the linker is what completes it (P23).
  */
-export type AwaitedPart = string | { readonly environment: string; readonly forms?: readonly string[] };
+export type { AwaitedPart };
 
 /** One address a call is sent to, and the message it carries there. */
 export interface AddressedElement {
@@ -102,20 +105,10 @@ export interface AddressedElement {
 }
 
 /**
- * The name inside a longer spelling of it.
- *
- * Each form is a regular expression whose first group is the name; the first
- * that matches answers, and a value none matches is the name as written. Applied
- * to a pattern as readily as to a name, because the part a pattern leaves open
- * is often exactly the part the form drops - a region, an account.
+ * The name inside a longer spelling of it - the core's, because the linker
+ * reads a value of the environment through the same forms (P23).
  */
-export const nameWithin = (value: string, forms: readonly string[] = []): string => {
-  for (const form of forms) {
-    const found = new RegExp(form).exec(value)?.[1];
-    if (found !== undefined && found !== '') return found;
-  }
-  return value;
-};
+export { nameWithin };
 
 const withForms = (resolved: ResolvedChannel, forms: readonly string[] | undefined): ResolvedChannel =>
   forms === undefined

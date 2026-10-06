@@ -1,0 +1,81 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-06T16:21:58.602Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "channel:eventbridge/default/aws.s3/Object Created",
+        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.import_cover",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:eventbridge/default/aws.s3/Object Created|consumes|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.import_cover",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:eventbridge/default/aws.s3/Object Created is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:circulation#infra/api.tf:aws_apigatewayv2_route.request_hold",
+        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_hold",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#infra/api.tf:aws_apigatewayv2_route.request_hold|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_hold",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "entry:circulation:http:POST:/holds declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:circulation#src/loans/renew-loan.ts:29:9",
+        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.review_renewal",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/renew-loan.ts:29:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.review_renewal",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.review_renewal declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:circulation#src/returns/record-return.ts:13:9",
+        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/returns/record-return.ts:13:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 5,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

@@ -103,6 +103,9 @@ importers:
 
   packages/adapters-entry:
     dependencies:
+      '@flowatlas/adapters-broker':
+        specifier: workspace:*
+        version: link:../adapters-broker
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core

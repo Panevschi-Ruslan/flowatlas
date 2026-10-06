@@ -240,6 +240,39 @@ const MULTI_REPO_WORKFLOW_CASES = [
 ];
 
 /**
+ * Channels whose subscriber is declared in Terraform (P23), walked from the
+ * route a person calls into whatever the subscriber runs.
+ *
+ * One fixture each for a bus, for queues and a topic, and for both halves in
+ * different repositories. The channel is recorded as JSON because that is where
+ * a join that is less than proven says why.
+ */
+const plainFor = (name) => ({ config: join(root, 'fixtures', name, 'flowatlas.config.json'), color: false, ascii: true });
+const eventsPlain = plainFor('eventbridge-terraform');
+const queuesPlain = plainFor('sqs-sns-terraform');
+const multiEventsPlain = plainFor('multi-repo-events');
+
+const EVENT_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...eventsPlain, format: 'tree' }, io)],
+  ['flow.renew-loan.tree.txt', (io) => runFlow('POST /loans/:param/renewals', { ...eventsPlain, format: 'tree', depth: '24' }, io)],
+  ['flow.post-holds.tree.txt', (io) => runFlow('POST /holds', { ...eventsPlain, format: 'tree' }, io)],
+  ['channel.loan-renewed.json', (io) => runChannel('eventbridge/library/library.loans/LoanRenewed', { ...eventsPlain, format: 'json' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: eventsPlain.config }, io)],
+];
+
+const QUEUE_CASES = [
+  ['flow.post-returns.tree.txt', (io) => runFlow('POST /returns', { ...queuesPlain, format: 'tree', depth: '24' }, io)],
+  ['flow.post-holds.tree.txt', (io) => runFlow('POST /holds', { ...queuesPlain, format: 'tree' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: queuesPlain.config }, io)],
+];
+
+const MULTI_EVENT_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...multiEventsPlain, format: 'tree' }, io)],
+  ['channel.loan-returned.json', (io) => runChannel('eventbridge/library/library.loans/LoanReturned', { ...multiEventsPlain, format: 'json' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: multiEventsPlain.config }, io)],
+];
+
+/**
  * Sets of recordings, in several places.
  *
  * The first owns its folder, so an answer nobody asks for any more is swept
@@ -257,6 +290,9 @@ const SUITES = [
   { dir: join(workflowsFixture, 'expected.cli'), owned: true, cases: WORKFLOW_CASES },
   { dir: join(deployedWorkflowsFixture, 'expected.cli'), owned: true, cases: DEPLOYED_WORKFLOW_CASES },
   { dir: join(multiRepoWorkflowsFixture, 'expected.cli'), owned: true, cases: MULTI_REPO_WORKFLOW_CASES },
+  { dir: join(root, 'fixtures', 'eventbridge-terraform', 'expected.cli'), owned: true, cases: EVENT_CASES },
+  { dir: join(root, 'fixtures', 'sqs-sns-terraform', 'expected.cli'), owned: true, cases: QUEUE_CASES },
+  { dir: join(root, 'fixtures', 'multi-repo-events', 'expected.cli'), owned: true, cases: MULTI_EVENT_CASES },
 ];
 
 /**

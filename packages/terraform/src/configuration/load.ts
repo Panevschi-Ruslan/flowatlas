@@ -604,11 +604,14 @@ class Module implements ModuleInstance {
     const description = describedModule(written, this.context.options.descriptions);
     if (description !== undefined) return this.context.described(description, block.pos);
     const inputs = block.body.attributes.filter((attribute) => !CALL_META.has(attribute.name)).map((attribute) => attribute.name);
-    // A module whose inputs carry a handler, a function's name or a route is a
-    // module a way in is declared through, and leaving it undescribed leaves
-    // ways in out of the graph; anything else is infrastructure this reading
-    // has no use for, and is said once at the level that says so.
-    const relevant = inputs.some((input) => /handler|function|lambda|route|http_method|path_part|integration|invoke/i.test(input));
+    // A module whose inputs carry a handler, a function's name, a route, or a
+    // queue, topic, rule or subscription is a module a way in or a subscriber
+    // is declared through, and leaving it undescribed leaves those out of the
+    // graph; anything else is infrastructure this reading has no use for, and
+    // is said once at the level that says so.
+    const relevant = inputs.some((input) =>
+      /handler|function|lambda|route|http_method|path_part|integration|invoke|queue|topic|rule|bus|subscription|target|schedule|pipe/i.test(input),
+    );
     this.context.row(`undescribed:${block.pos.file}:${block.pos.line}`, {
       file: block.pos.file,
       line: block.pos.line,

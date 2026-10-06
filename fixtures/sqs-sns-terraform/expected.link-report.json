@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T16:26:06.987Z",
+  "configHash": "462b9b0bf7ba",
+  "services": [
+    {
+      "name": "returns",
+      "repo": "./returns",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 44,
+      "edges": 39,
+      "types": 3,
+      "unresolved": 4,
+      "durationMs": 513
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 7,
+    "linked": 5,
+    "noConsumers": [
+      "channel:sqs/library-restock-dlq",
+      "channel:sqs/library-returns-dlq"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 0,
+    "uncalled": [
+      "entry:returns:http:POST:/holds",
+      "entry:returns:http:POST:/returns",
+      "entry:returns:http:POST:/returns/bulk"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 3,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "returns",
+      "file": "src/lib/returns-queue.ts",
+      "line": 17,
+      "reason": "environment-not-set",
+      "message": "the call at src/lib/returns-queue.ts:17 sends to the value of RETURNS_QUEUE_URL; library-bulk-return runs it and is not deployed with RETURNS_QUEUE_URL, so where it sends from there is not known",
+      "hint": "Set RETURNS_QUEUE_URL in the environment library-bulk-return is deployed with, or correct the name the code reads.",
+      "symbol": "producer:returns#src/lib/returns-queue.ts:17:9",
+      "meta": {
+        "function": "entry:returns:invoke:library-bulk-return",
+        "variable": "RETURNS_QUEUE_URL"
+      }
+    },
+    {
+      "service": "returns",
+      "file": "src/returns/process-return.ts",
+      "line": 28,
+      "reason": "environment-value-unread",
+      "message": "the call at src/returns/process-return.ts:28 sends to the value of AUDIT_QUEUE_URL, which library-process-return is deployed with as a value depending on var.audit_queue_url, and that is not read: var.audit_queue_url is \"https://sqs.eu-west-1.amazonaws.com/111122223333/library-audit-dev\" in infra/env/dev.tfvars and \"https://sqs.eu-west-1.amazonaws.com/444455556666/library-audit\" in infra/env/prod.tfvars",
+      "hint": "The variable files set it differently (infra/env/dev.tfvars, infra/env/prod.tfvars). Choose the environment to read under services[].infra.vars.",
+      "symbol": "producer:returns#src/returns/process-return.ts:28:11",
+      "meta": {
+        "function": "entry:returns:invoke:library-process-return",
+        "variable": "AUDIT_QUEUE_URL",
+        "files": {
+          "infra/env/dev.tfvars": "\"https://sqs.eu-west-1.amazonaws.com/111122223333/library-audit-dev\"",
+          "infra/env/prod.tfvars": "\"https://sqs.eu-west-1.amazonaws.com/444455556666/library-audit\""
+        }
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 44,
+    "edges": 41,
+    "types": 3,
+    "unresolved": 3
+  }
+}

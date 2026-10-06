@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:53.147Z",
+  "builtAt": "2026-10-06T16:22:24.720Z",
   "services": [
     {
       "name": "platform",
@@ -88,6 +88,7 @@
         "compiledBy": "tsconfig.json",
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
+        "environment": {},
         "adapter": "aws-lambda"
       }
     },
@@ -111,6 +112,7 @@
         "compiledBy": "tsconfig.json",
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
+        "environment": {},
         "adapter": "aws-lambda"
       }
     },
@@ -177,6 +179,7 @@
         "handler": "index.handler",
         "sourceDirectory": "functions/create-loan",
         "handlerVia": "wrapped",
+        "environment": {},
         "adapter": "aws-lambda"
       }
     },
@@ -197,6 +200,7 @@
         "handler": "index.handler",
         "sourceDirectory": "functions/get-loan",
         "handlerVia": "function",
+        "environment": {},
         "adapter": "aws-lambda"
       }
     },
@@ -217,6 +221,7 @@
         "handler": "index.handler",
         "sourceDirectory": "functions/list-borrower-loans",
         "handlerVia": "function",
+        "environment": {},
         "adapter": "aws-lambda"
       }
     },

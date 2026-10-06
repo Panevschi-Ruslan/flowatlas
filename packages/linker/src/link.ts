@@ -25,6 +25,7 @@ import {
   type RouteIndex,
 } from './http-link.js';
 import { joinDeployments } from './deployment-link.js';
+import { completeFromEnvironment } from './environment-link.js';
 import { mergeGraphs } from './merge.js';
 import {
   isProcedureEntry,
@@ -34,6 +35,7 @@ import {
   type ProcedureIndex,
   type ProcedureOutcome,
 } from './procedure-link.js';
+import { joinChannelPatterns } from './pattern-link.js';
 import { joinReferences } from './reference-link.js';
 import { auditRoutes } from './route-audit.js';
 import { answeredOnlyByWildcard } from './route-match.js';
@@ -424,6 +426,11 @@ export const linkGraphs = (
   // Before anything reads a route's address: a route hanging from another
   // repository's API only has its full path once both repositories are here.
   const found: Unresolved[] = joinDeployments(nodes, edges, merged.unresolved);
+  // An address read from the environment, completed from the values each
+  // function that runs it is deployed with; then every rule that takes its
+  // channels by a pattern, matched against every channel, those included (P23).
+  found.push(...completeFromEnvironment(nodes, edges, merged.unresolved));
+  found.push(...joinChannelPatterns(nodes, edges));
   const httpOut = emptyHttpOut();
   const ui = emptyUi();
 

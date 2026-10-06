@@ -236,6 +236,9 @@ describe('sources', () => {
       'terraform-aws-modules/lambda/aws',
       'terraform-aws-modules/apigateway-v2/aws',
       'terraform-aws-modules/step-functions/aws',
+      'terraform-aws-modules/eventbridge/aws',
+      'terraform-aws-modules/sqs/aws',
+      'terraform-aws-modules/sns/aws',
     ]);
   });
 });
