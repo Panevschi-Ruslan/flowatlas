@@ -189,12 +189,14 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
         continue;
       }
 
+      // Every node the walk reaches is on the path, the ones past the budget
+      // and the entry a path ends at included: a function deployed with no body
+      // to read is where its path stops, and the row saying so is why (R168).
       const target = db.node(edge.to);
+      if (target === undefined || db.unresolvedFor(edge.to).length > 0) unresolvedIds.add(edge.to);
+
       let child: FlowNode | undefined;
       if (room) {
-        if (target === undefined) unresolvedIds.add(edge.to);
-        else if (db.unresolvedFor(edge.to).length > 0) unresolvedIds.add(edge.to);
-
         child = {
           node: target === undefined ? missingNode(edge.to) : projectDetail(target, detail),
           edge: projectEdge(edge, detail),

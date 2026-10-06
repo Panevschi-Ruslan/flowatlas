@@ -1,0 +1,836 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T17:14:29.491Z",
+  "services": [
+    {
+      "name": "desk",
+      "repo": "./desk",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:sqs/library-desk-loans-opened",
+      "type": "channel",
+      "label": "sqs/library-desk-loans-opened",
+      "repo": "desk",
+      "file": "infra/queues.tf",
+      "line": 11,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/library-desk-returns",
+      "type": "channel",
+      "label": "sqs/library-desk-returns",
+      "repo": "desk",
+      "file": "infra/queues.tf",
+      "line": 17,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:desk#LOANS_OPENED_QUEUE_URL",
+      "type": "config_key",
+      "label": "LOANS_OPENED_QUEUE_URL",
+      "repo": "desk",
+      "file": "src/operations/loans.ts",
+      "line": 21,
+      "meta": {
+        "key": "LOANS_OPENED_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:desk#RETURNS_QUEUE_URL",
+      "type": "config_key",
+      "label": "RETURNS_QUEUE_URL",
+      "repo": "desk",
+      "file": "src/operations/returns.ts",
+      "line": 17,
+      "meta": {
+        "key": "RETURNS_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:desk#infra/queues.tf:aws_lambda_event_source_mapping.archive_loans",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.archive_loans",
+      "repo": "desk",
+      "file": "infra/queues.tf",
+      "line": 11,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.archive_loans",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "consumer:desk#infra/queues.tf:aws_lambda_event_source_mapping.process_returns",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.process_returns",
+      "repo": "desk",
+      "file": "infra/queues.tf",
+      "line": 17,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.process_returns",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "desk#src/lib/http.ts:json",
+      "type": "function",
+      "label": "json",
+      "repo": "desk",
+      "file": "src/lib/http.ts",
+      "line": 3
+    },
+    {
+      "id": "desk#src/operations/holds.ts:placeHold",
+      "type": "function",
+      "label": "placeHold",
+      "repo": "desk",
+      "file": "src/operations/holds.ts",
+      "line": 5
+    },
+    {
+      "id": "desk#src/operations/holds.ts:withdrawHold",
+      "type": "function",
+      "label": "withdrawHold",
+      "repo": "desk",
+      "file": "src/operations/holds.ts",
+      "line": 9
+    },
+    {
+      "id": "desk#src/operations/loans.ts:createLoan",
+      "type": "function",
+      "label": "createLoan",
+      "repo": "desk",
+      "file": "src/operations/loans.ts",
+      "line": 17
+    },
+    {
+      "id": "desk#src/operations/loans.ts:renewLoan",
+      "type": "function",
+      "label": "renewLoan",
+      "repo": "desk",
+      "file": "src/operations/loans.ts",
+      "line": 29
+    },
+    {
+      "id": "desk#src/operations/returns.ts:processReturns",
+      "type": "function",
+      "label": "processReturns",
+      "repo": "desk",
+      "file": "src/operations/returns.ts",
+      "line": 25
+    },
+    {
+      "id": "desk#src/operations/returns.ts:recordReturn",
+      "type": "function",
+      "label": "recordReturn",
+      "repo": "desk",
+      "file": "src/operations/returns.ts",
+      "line": 13
+    },
+    {
+      "id": "entry:desk:http:DELETE:/holds/:param",
+      "type": "entry",
+      "label": "DELETE /holds/:param",
+      "repo": "desk",
+      "file": "infra/api.tf",
+      "line": 87,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/holds/:param",
+        "rawPath": "/holds/{holdId}",
+        "deployedBy": "terraform",
+        "api": "library-desk-api",
+        "function": "library-desk-cancel-hold",
+        "declaredAs": "aws_api_gateway_method.cancel_hold",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:desk:http:POST:/holds",
+      "type": "entry",
+      "label": "POST /holds",
+      "repo": "desk",
+      "file": "infra/api.tf",
+      "line": 65,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/holds",
+        "rawPath": "/holds",
+        "deployedBy": "terraform",
+        "api": "library-desk-api",
+        "function": "library-desk-place-hold",
+        "declaredAs": "aws_api_gateway_method.place_hold",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:desk:http:POST:/loans",
+      "type": "entry",
+      "label": "POST /loans",
+      "repo": "desk",
+      "file": "infra/api.tf",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "deployedBy": "terraform",
+        "api": "library-desk-api",
+        "function": "library-desk-create-loan",
+        "declaredAs": "aws_api_gateway_method.create_loan",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:desk:http:POST:/loans/:param/renewals",
+      "type": "entry",
+      "label": "POST /loans/:param/renewals",
+      "repo": "desk",
+      "file": "infra/api.tf",
+      "line": 41,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans/:param/renewals",
+        "rawPath": "/loans/{loanId}/renewals",
+        "deployedBy": "terraform",
+        "api": "library-desk-api",
+        "function": "library-desk-renew-loan",
+        "declaredAs": "aws_api_gateway_method.renew_loan",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:desk:http:POST:/returns",
+      "type": "entry",
+      "label": "POST /returns",
+      "repo": "desk",
+      "file": "infra/api.tf",
+      "line": 111,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/returns",
+        "rawPath": "/returns",
+        "deployedBy": "terraform",
+        "api": "library-desk-api",
+        "function": "library-desk-record-return",
+        "declaredAs": "aws_api_gateway_method.record_return",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:desk:invoke:library-desk-archive-loan",
+      "type": "entry",
+      "label": "library-desk-archive-loan",
+      "repo": "desk",
+      "file": "infra/functions.tf",
+      "line": 70,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-desk-archive-loan",
+        "deployedBy": "terraform",
+        "name": "library-desk-archive-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.archive_loan",
+        "handler": "handlers/consumers.archiveLoan",
+        "sourceDirectory": "src",
+        "handlerVia": "unread",
+        "environment": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:desk:invoke:library-desk-cancel-hold",
+      "type": "entry",
+      "label": "library-desk-cancel-hold",
+      "repo": "desk",
+      "file": "infra/functions.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-desk-cancel-hold",
+        "deployedBy": "terraform",
+        "name": "library-desk-cancel-hold",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.cancel_hold",
+        "handler": "handlers/holds.cancelHold",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:desk:invoke:library-desk-create-loan",
+      "type": "entry",
+      "label": "library-desk-create-loan",
+      "repo": "desk",
+      "file": "infra/functions.tf",
+      "line": 4,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-desk-create-loan",
+        "deployedBy": "terraform",
+        "name": "library-desk-create-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.create_loan",
+        "handler": "handlers/loans.createLoan",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "LOANS_OPENED_QUEUE_URL": {
+            "written": "aws_sqs_queue.loans_opened.url",
+            "value": "library-desk-loans-opened",
+            "kind": "queue"
+          }
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:desk:invoke:library-desk-place-hold",
+      "type": "entry",
+      "label": "library-desk-place-hold",
+      "repo": "desk",
+      "file": "infra/functions.tf",
+      "line": 28,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-desk-place-hold",
+        "deployedBy": "terraform",
+        "name": "library-desk-place-hold",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.place_hold",
+        "handler": "handlers/holds.placeHold",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:desk:invoke:library-desk-process-returns",
+      "type": "entry",
+      "label": "library-desk-process-returns",
+      "repo": "desk",
+      "file": "infra/functions.tf",
+      "line": 61,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-desk-process-returns",
+        "deployedBy": "terraform",
+        "name": "library-desk-process-returns",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.process_returns",
+        "handler": "handlers/consumers.processReturns",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:desk:invoke:library-desk-record-return",
+      "type": "entry",
+      "label": "library-desk-record-return",
+      "repo": "desk",
+      "file": "infra/functions.tf",
+      "line": 46,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-desk-record-return",
+        "deployedBy": "terraform",
+        "name": "library-desk-record-return",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.record_return",
+        "handler": "handlers/returns.recordReturn",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "RETURNS_QUEUE_URL": {
+            "written": "aws_sqs_queue.returns.url",
+            "value": "library-desk-returns",
+            "kind": "queue"
+          }
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:desk:invoke:library-desk-renew-loan",
+      "type": "entry",
+      "label": "library-desk-renew-loan",
+      "repo": "desk",
+      "file": "infra/functions.tf",
+      "line": 19,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-desk-renew-loan",
+        "deployedBy": "terraform",
+        "name": "library-desk-renew-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.renew_loan",
+        "handler": "handlers/loans.renewLoan",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "producer:desk#src/operations/loans.ts:19:9",
+      "type": "producer",
+      "label": "message sqs/library-desk-loans-opened",
+      "repo": "desk",
+      "file": "src/operations/loans.ts",
+      "line": 19,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "LOANS_OPENED_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:]+)$"
+                ]
+              }
+            ],
+            "payload": "type:desk#LoanOpened"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:desk#src/operations/returns.ts:15:9",
+      "type": "producer",
+      "label": "message sqs/library-desk-returns",
+      "repo": "desk",
+      "file": "src/operations/returns.ts",
+      "line": 15,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "RETURNS_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:]+)$"
+                ]
+              }
+            ],
+            "payload": "type:desk#ReturnedItem"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "repo:desk",
+      "type": "repo",
+      "label": "desk",
+      "repo": "desk",
+      "meta": {
+        "stats": {
+          "files": 11,
+          "filesRead": 11,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sqs": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:sqs/library-desk-loans-opened",
+      "to": "consumer:desk#infra/queues.tf:aws_lambda_event_source_mapping.archive_loans",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/queues.tf",
+      "line": 11,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/library-desk-returns",
+      "to": "consumer:desk#infra/queues.tf:aws_lambda_event_source_mapping.process_returns",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/queues.tf",
+      "line": 17,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:desk#infra/queues.tf:aws_lambda_event_source_mapping.archive_loans",
+      "to": "entry:desk:invoke:library-desk-archive-loan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/queues.tf",
+      "line": 11,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:desk#infra/queues.tf:aws_lambda_event_source_mapping.process_returns",
+      "to": "entry:desk:invoke:library-desk-process-returns",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/queues.tf",
+      "line": 17,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "desk#src/operations/holds.ts:placeHold",
+      "to": "desk#src/lib/http.ts:json",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/operations/holds.ts",
+      "line": 6
+    },
+    {
+      "from": "desk#src/operations/holds.ts:withdrawHold",
+      "to": "desk#src/lib/http.ts:json",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/operations/holds.ts",
+      "line": 10
+    },
+    {
+      "from": "desk#src/operations/loans.ts:createLoan",
+      "to": "config_key:desk#LOANS_OPENED_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/operations/loans.ts",
+      "line": 21,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-desk-create-loan",
+            "written": "aws_sqs_queue.loans_opened.url",
+            "value": "library-desk-loans-opened"
+          }
+        ]
+      }
+    },
+    {
+      "from": "desk#src/operations/loans.ts:createLoan",
+      "to": "desk#src/lib/http.ts:json",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/operations/loans.ts",
+      "line": 25
+    },
+    {
+      "from": "desk#src/operations/loans.ts:createLoan",
+      "to": "producer:desk#src/operations/loans.ts:19:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/operations/loans.ts",
+      "line": 19
+    },
+    {
+      "from": "desk#src/operations/loans.ts:renewLoan",
+      "to": "desk#src/lib/http.ts:json",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/operations/loans.ts",
+      "line": 30
+    },
+    {
+      "from": "desk#src/operations/returns.ts:recordReturn",
+      "to": "config_key:desk#RETURNS_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/operations/returns.ts",
+      "line": 17,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-desk-record-return",
+            "written": "aws_sqs_queue.returns.url",
+            "value": "library-desk-returns"
+          }
+        ]
+      }
+    },
+    {
+      "from": "desk#src/operations/returns.ts:recordReturn",
+      "to": "desk#src/lib/http.ts:json",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/operations/returns.ts",
+      "line": 21
+    },
+    {
+      "from": "desk#src/operations/returns.ts:recordReturn",
+      "to": "producer:desk#src/operations/returns.ts:15:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/operations/returns.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:desk:http:DELETE:/holds/:param",
+      "to": "desk#src/operations/holds.ts:withdrawHold",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/operations/holds.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:desk:http:POST:/holds",
+      "to": "desk#src/operations/holds.ts:placeHold",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/operations/holds.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:desk:http:POST:/loans",
+      "to": "desk#src/operations/loans.ts:createLoan",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/operations/loans.ts",
+      "line": 17
+    },
+    {
+      "from": "entry:desk:http:POST:/loans/:param/renewals",
+      "to": "desk#src/operations/loans.ts:renewLoan",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/operations/loans.ts",
+      "line": 29
+    },
+    {
+      "from": "entry:desk:http:POST:/returns",
+      "to": "desk#src/operations/returns.ts:recordReturn",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/operations/returns.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:desk:invoke:library-desk-cancel-hold",
+      "to": "desk#src/operations/holds.ts:withdrawHold",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/operations/holds.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:desk:invoke:library-desk-create-loan",
+      "to": "desk#src/operations/loans.ts:createLoan",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/operations/loans.ts",
+      "line": 17
+    },
+    {
+      "from": "entry:desk:invoke:library-desk-place-hold",
+      "to": "desk#src/operations/holds.ts:placeHold",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/operations/holds.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:desk:invoke:library-desk-process-returns",
+      "to": "desk#src/operations/returns.ts:processReturns",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/operations/returns.ts",
+      "line": 25
+    },
+    {
+      "from": "entry:desk:invoke:library-desk-record-return",
+      "to": "desk#src/operations/returns.ts:recordReturn",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/operations/returns.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:desk:invoke:library-desk-renew-loan",
+      "to": "desk#src/operations/loans.ts:renewLoan",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/operations/loans.ts",
+      "line": 29
+    },
+    {
+      "from": "producer:desk#src/operations/loans.ts:19:9",
+      "to": "channel:sqs/library-desk-loans-opened",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/operations/loans.ts",
+      "line": 19,
+      "params": [
+        "type:desk#LoanOpened"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "LOANS_OPENED_QUEUE_URL"
+        ],
+        "functions": [
+          "library-desk-create-loan"
+        ]
+      }
+    },
+    {
+      "from": "producer:desk#src/operations/returns.ts:15:9",
+      "to": "channel:sqs/library-desk-returns",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/operations/returns.ts",
+      "line": 15,
+      "params": [
+        "type:desk#ReturnedItem"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "RETURNS_QUEUE_URL"
+        ],
+        "functions": [
+          "library-desk-record-return"
+        ]
+      }
+    }
+  ],
+  "types": {
+    "type:desk#LoanOpened": {
+      "name": "LoanOpened",
+      "kind": "object",
+      "declaredIn": "desk#src/operations/loans.ts",
+      "structuralHash": "bd702c4c86fc3b76",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "dueOn",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:desk#ReturnedItem": {
+      "name": "ReturnedItem",
+      "kind": "object",
+      "declaredIn": "desk#src/operations/returns.ts",
+      "structuralHash": "1e4a38f46990e1ac",
+      "fields": [
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "returnedAt",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "infra/functions.tf",
+      "line": 70,
+      "reason": "function-handler-unread",
+      "level": "info",
+      "message": "library-desk-archive-loan runs handlers/consumers.archiveLoan, and src/operations/archive.ts builds that export with batchHandler({ table: 'library-desk-loan-archive', batchSize: 25 }), which names no function of this repository",
+      "hint": "A handler is read when it is a function, a function wrapped by calls each handed exactly one function wherever it sits among their arguments, or a function a factory of this repository returns.",
+      "symbol": "entry:desk:invoke:library-desk-archive-loan",
+      "adapter": "aws-lambda",
+      "service": "desk"
+    }
+  ]
+}

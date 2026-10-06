@@ -203,6 +203,22 @@ only one of them moved.
   were read, and `heuristic` with the reason in `wrapperUnread` where its package
   is not installed. A call handed two functions is still a row naming the call.
   `fixtures/lambda-wrapped-handlers`, `fixtures/express-traced-handlers`.
+- **A handler re-exported through a namespace lands on the function.**
+  `export const processReturns = operations.processReturns` with
+  `import * as operations`, the same in brackets, and a `const` bound to another
+  such name were read as an export that names no function, so a Lambda function
+  written that way had an entry and no body. They now land where the function is
+  declared, as `export { x } from` and `export *` already did, and the edge is
+  `static`. The reading is the core's, so a name in brackets with its key
+  written out (`TOPICS['opened']`) is also read as the constant it names, by
+  every reader. `fixtures/lambda-namespace-handlers`.
+- **`flow` counts the function a path ends at when its handler could not be
+  read.** A route through a queue to a function with no body printed
+  `unresolved on this path: 0`: the row was recorded against the function's
+  Terraform address rather than its `invoke` entry, which the walk arrives at.
+  The rows a function's handler leaves are now recorded against its entry, and
+  `doctor` names the entry; the count also takes in the nodes a walk reaches past
+  the `maxNodes` it shows. The CLI and the MCP `get_flow` give the same number.
 
 ## [0.5.1][] - 2026-09-28
 

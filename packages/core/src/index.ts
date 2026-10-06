@@ -235,6 +235,7 @@ export type {
   TableOverride,
 } from './adapters/db.js';
 export {
+  boundDeclaration,
   declaredParameterType,
   entityNameOf,
   narrowUnionByLiteral,

@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>119 fixtures</span>
-    <span>238 snapshot files</span>
+    <span>120 fixtures</span>
+    <span>242 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -370,7 +370,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, wired in Terraform <span class="count" data-total="7">7</span></h2>
+    <h2>Serverless, wired in Terraform <span class="count" data-total="8">8</span></h2>
     <ul>
       <li class="fixture" data-search="eventbridge-terraform serverless, wired in terraform a lending library's circulation service: lambda functions behind an http api that talk to each other over an eventbridge bus.">
         <div class="head">
@@ -378,6 +378,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>A lending library's circulation service: Lambda functions behind an HTTP API that talk to each other over an EventBridge bus.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="lambda-namespace-handlers serverless, wired in terraform the circulation desk of a lending library as lambda functions behind a rest api and two sqs queues, written the way a project that keeps its logic apart from its entry points often is: `src/operations` holds the functions, and each module under `src/handlers` re-exports some of them, in one of the ways a module can (r168).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-namespace-handlers">lambda-namespace-handlers</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>The circulation desk of a lending library as Lambda functions behind a REST API and two SQS queues, written the way a project that keeps its logic apart from its entry points often is: <code>src/operations</code> holds the functions, and each module under <code>src/handlers</code> re-exports some of them, in one of the ways a module can (R168).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="lambda-terraform-modules serverless, wired in terraform the same kind of service declared through modules: one of the repository's own, the public `terraform-aws-modules/lambda/aws` and `terraform-aws-modules/apigateway-v2/aws`, and a module from another repository that the configuration describes.">

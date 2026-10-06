@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T17:14:29.491Z",
+  "configHash": "8efb81aeaad3",
+  "services": [
+    {
+      "name": "desk",
+      "repo": "./desk",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 28,
+      "edges": 24,
+      "types": 2,
+      "unresolved": 3,
+      "durationMs": 556
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 5,
+    "called": 0,
+    "uncalled": [
+      "entry:desk:http:DELETE:/holds/:param",
+      "entry:desk:http:POST:/holds",
+      "entry:desk:http:POST:/loans",
+      "entry:desk:http:POST:/loans/:param/renewals",
+      "entry:desk:http:POST:/returns"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 28,
+    "edges": 26,
+    "types": 2,
+    "unresolved": 1
+  }
+}

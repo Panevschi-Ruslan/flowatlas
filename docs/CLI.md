@@ -426,6 +426,14 @@ entry:shop@examples/blog:http:GET:/api/orders
 
 `flow "GET /health"` there comes back as that choice, naming both.
 
+The last line, `unresolved on this path: N` (`unresolvedOnPath` in JSON and in
+the MCP `get_flow`), counts the nodes of the walk that something could not be
+read about: a node the graph names and does not hold, or one a `doctor` row is
+recorded against. Every node the walk reaches counts, the entry a path ends at
+included — a function deployed with a handler that could not be read is where a
+path through a queue to it stops, and its row is why — and so do nodes past the
+`maxNodes` the tree shows.
+
 ### `flowatlas impact <symbol>`
 
 Every entry point that can reach a symbol, and what lies between. The symbol can
@@ -1707,6 +1715,18 @@ handler, and a row otherwise. A handler wrapped in a chain —
 `middy(createLoan).use(jsonBodyParser())` — or by a wrapper lands on the function
 it wraps, with the chain and the wrappers as middleware in front of it, in the
 order they run. `flow invoke:<name>` starts from a function.
+
+**A handler re-exported lands where it is declared.** `export { processReturns }
+from './operations'` and `export * from './operations'` are followed to the
+declaration they re-export, and so is an export that is a name for something
+else: `export const processReturns = operations.processReturns` with
+`import * as operations`, the same in brackets (`operations['processReturns']`),
+or a `const` bound to another such name. The edge is `static`
+(`fixtures/lambda-namespace-handlers`). The same reading of a name serves every
+reader that follows one — a wrapper's argument, a factory, a constant — and only
+a `const` is followed, because a name assigned twice holds whatever was assigned
+last. A function whose handler could not be read is a row recorded against its
+`invoke` entry, so a `flow` that reaches it counts it.
 
 **A wrapper is a call handed exactly one function**, written in place, named, or
 a name for what another wrapper built, wherever it sits among the arguments:

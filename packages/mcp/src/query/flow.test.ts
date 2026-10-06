@@ -166,6 +166,48 @@ describe('walking outward from an entry', () => {
     expect(buildFlowTree(db, 'entry:orders:http:GET /a', {}).unresolvedOnPath).toBe(1);
     db.close();
   });
+
+  /** A route that sends to a queue whose consumer is a function with no body to read (R168). */
+  const toUnreadConsumer: TestGraph = {
+    nodes: [
+      entry('entry:desk:http:POST:/loans'),
+      node('desk#loans.ts:createLoan'),
+      node('channel:sqs/loans-opened', { type: 'channel' }),
+      node('consumer:desk#queues.tf:archive', { type: 'consumer' }),
+      entry('entry:desk:invoke:archive-loan', { kind: 'invoke' }),
+    ],
+    edges: [
+      edge('entry:desk:http:POST:/loans', 'desk#loans.ts:createLoan', { type: 'handles' }),
+      edge('desk#loans.ts:createLoan', 'channel:sqs/loans-opened', { type: 'emits' }),
+      edge('channel:sqs/loans-opened', 'consumer:desk#queues.tf:archive', { type: 'consumes' }),
+      edge('consumer:desk#queues.tf:archive', 'entry:desk:invoke:archive-loan'),
+    ],
+    unresolved: [
+      {
+        service: 'desk',
+        file: 'functions.tf',
+        line: 70,
+        reason: 'function-handler-unread',
+        level: 'info',
+        message: 'archive-loan runs consumers.archiveLoan, which names no function of this repository',
+        symbol: 'entry:desk:invoke:archive-loan',
+      },
+    ],
+  };
+
+  it('counts the entry a path ends at, whose handler could not be read', () => {
+    const db = buildTestDb(toUnreadConsumer);
+    expect(buildFlowTree(db, 'entry:desk:http:POST:/loans', {}).unresolvedOnPath).toBe(1);
+    db.close();
+  });
+
+  it('counts a node the walk reaches past the budget it shows', () => {
+    const db = buildTestDb(toUnreadConsumer);
+    const flow = buildFlowTree(db, 'entry:desk:http:POST:/loans', { maxNodes: 2 });
+    expect(flatten(flow.root).map((item) => item.node.id)).not.toContain('entry:desk:invoke:archive-loan');
+    expect(flow.unresolvedOnPath).toBe(1);
+    db.close();
+  });
 });
 
 describe('walking a workflow', () => {

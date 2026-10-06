@@ -7,6 +7,7 @@ import type {
   NamedFunction,
 } from '@flowatlas/core';
 import {
+  boundDeclaration,
   decoratorExportedName,
   decoratorModule,
   decoratorName,
@@ -307,11 +308,8 @@ export const builtByFactory = (value: TsNode | undefined): NamedFunction | undef
   const node = unwrapValue(value);
   if (!Node.isCallExpression(node)) return undefined;
   if (node.getArguments().some(handsOverWork)) return undefined;
-  return factoryNamed(node.getExpression(), 0);
+  return factoryNamed(node.getExpression());
 };
-
-/** How far a factory written as another name is followed. */
-const FACTORY_ALIAS_DEPTH = 4;
 
 /**
  * The function of this repository a called name stands for, through the names
@@ -323,20 +321,11 @@ const FACTORY_ALIAS_DEPTH = 4;
  * binding, because a `const` whose value is a name is not a function declared
  * there - and it is right to, for every reader that asks what was declared.
  * What was *called* is another question, and the answer is whatever the chain
- * of names ends at. Followed a few links and then abandoned, as a verb written
- * as another verb's name is.
+ * of names ends at, which `boundDeclaration` follows for every reader that asks.
  */
-const factoryNamed = (callee: TsNode, depth: number): NamedFunction | undefined => {
-  const fn = repoFunctionOf(callee);
-  if (fn !== undefined || depth >= FACTORY_ALIAS_DEPTH) return fn;
+const factoryNamed = (callee: TsNode): NamedFunction | undefined => {
   const origin = originOfValue(callee);
-  if (origin.kind !== 'local' || !Node.isVariableDeclaration(origin.declaration)) return undefined;
-  const initializer = origin.declaration.getInitializer();
-  if (initializer === undefined) return undefined;
-  const bound = unwrapValue(initializer);
-  return Node.isIdentifier(bound) || Node.isPropertyAccessExpression(bound)
-    ? factoryNamed(bound, depth + 1)
-    : undefined;
+  return origin.kind === 'local' ? namedFunction(boundDeclaration(origin.declaration)) : undefined;
 };
 
 /** A function written where a handler was expected, or undefined for anything else. */

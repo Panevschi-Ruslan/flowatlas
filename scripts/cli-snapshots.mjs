@@ -273,6 +273,19 @@ const MULTI_EVENT_CASES = [
 ];
 
 /**
+ * Handlers re-exported through a namespace and through `export … from` (R168):
+ * a route through a queue to a consumer that lands, and one through a queue to a
+ * consumer whose handler cannot be read, which the path counts.
+ */
+const namespacePlain = plainFor('lambda-namespace-handlers');
+
+const NAMESPACE_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...namespacePlain, format: 'tree' }, io)],
+  ['flow.post-returns.tree.txt', (io) => runFlow('POST /returns', { ...namespacePlain, format: 'tree' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: namespacePlain.config }, io)],
+];
+
+/**
  * Sets of recordings, in several places.
  *
  * The first owns its folder, so an answer nobody asks for any more is swept
@@ -293,6 +306,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'eventbridge-terraform', 'expected.cli'), owned: true, cases: EVENT_CASES },
   { dir: join(root, 'fixtures', 'sqs-sns-terraform', 'expected.cli'), owned: true, cases: QUEUE_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-events', 'expected.cli'), owned: true, cases: MULTI_EVENT_CASES },
+  { dir: join(root, 'fixtures', 'lambda-namespace-handlers', 'expected.cli'), owned: true, cases: NAMESPACE_CASES },
 ];
 
 /**

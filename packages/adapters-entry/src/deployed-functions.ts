@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import {
+  boundDeclaration,
   hasAnyDependency,
   makeEntryId,
   makeHttpEntryKey,
@@ -134,7 +135,7 @@ const label = (node: TsNode): string => {
 const workIn = (node: TsNode): TsNode | undefined => {
   const value = unwrapValue(node);
   if (isWrittenFunction(value)) return value;
-  if (Node.isIdentifier(value) && repoFunctionOf(value) !== undefined) return value;
+  if (repoFunctionOf(value) !== undefined) return value;
   return undefined;
 };
 
@@ -257,14 +258,23 @@ const sourcesNamed = (ctx: ExtractContext, module: string): SourceFile[] => {
 const exportedFrom = (sourceFile: SourceFile, name: string): TsNode | undefined =>
   sourceFile.getExportedDeclarations().get(name)?.[0];
 
-/** The entry handler a deployed function's handler string stands for. */
+/** The key of a function's `invoke` entry: its deployed name, or where it is declared. */
+const invokeKeyOf = (fn: DeployedFunction): string =>
+  fn.name === undefined ? makeUnnamedInvokeKey(fn.address) : makeInvokeEntryKey(fn.name);
+
+/**
+ * The entry handler a deployed function's handler string stands for.
+ *
+ * Every row it writes is about the function's `invoke` entry and names it by
+ * id, so a walk that arrives at the entry counts why it stops there (R168).
+ */
 const resolveHandler = (
   ctx: ExtractContext,
   fn: DeployedFunction,
   handler: DeployedHandler,
   rows: Unresolved[],
 ): ResolvedHandler => {
-  const at = { file: fn.file, line: fn.line };
+  const at = { file: fn.file, line: fn.line, symbol: makeEntryId(ctx.repo, 'invoke', invokeKeyOf(fn)) };
   const meta: Record<string, unknown> = { handler: handler.written };
   const who = fn.name ?? fn.address;
   let sourceFile: SourceFile | undefined;
@@ -278,7 +288,6 @@ const resolveHandler = (
         reason: 'function-source-unread',
         message: `${who} is packaged from ${directory}, outside this repository`,
         hint: 'Configure the repository that holds that directory as a service of its own.',
-        symbol: fn.address,
       });
       return { wrapping: [], meta };
     }
@@ -299,7 +308,6 @@ const resolveHandler = (
         reason: 'function-handler-not-found',
         message: `${who} runs ${handler.written} from ${directory}, and there is no ${handler.module}.ts there${meta['packagedFrom'] === undefined ? '' : ` (mapped from ${String(meta['packagedFrom'])} by ${String(meta['compiledBy'])})`}`,
         hint: 'Check the handler and the directory the deployment packages. Only TypeScript sources are read.',
-        symbol: fn.address,
       });
       return { wrapping: [], meta };
     }
@@ -319,7 +327,6 @@ const resolveHandler = (
             ? `${who} runs ${handler.written}, from a package the files do not say how to build, and no source file ${handler.module}.ts here exports ${handler.export}`
             : `${who} runs ${handler.written}, from a package the files do not say how to build, and ${found.length} source files could be it: ${found.map((candidate) => fileOfNode(candidate, ctx)).join(', ')}`,
         hint: 'Build the package from a directory the configuration names - an archive of a source directory - so the handler is read from where it is.',
-        symbol: fn.address,
       });
       return { wrapping: [], meta };
     }
@@ -329,15 +336,14 @@ const resolveHandler = (
   }
 
   if (sourceFile === undefined) return { wrapping: [], meta };
-  const declaration = exportedFrom(sourceFile, handler.export);
+  const exported = exportedFrom(sourceFile, handler.export);
   const file = fileOfNode(sourceFile, ctx);
-  if (declaration === undefined) {
+  if (exported === undefined) {
     rows.push({
       ...at,
       reason: 'function-handler-not-found',
       message: `${who} runs ${handler.written}, and ${file} exports nothing called ${handler.export}`,
       hint: 'Check the export name in the handler.',
-      symbol: fn.address,
     });
     return { wrapping: [], meta };
   }
@@ -355,6 +361,11 @@ const resolveHandler = (
     };
   };
 
+  // The export as the declaration it stands for: `export const handler =
+  // createLoanLogic`, `= operations.processReturns` or `= loans['renewLoan']`
+  // is whatever that name is declared as (R168). The checker has already
+  // followed `export { x } from` and `export *` to get here.
+  const declaration = boundDeclaration(exported);
   let unreadCall: CallExpression | undefined;
   if (Node.isFunctionDeclaration(declaration) && declaration.getName() !== undefined) {
     return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName() as string, line: declaration.getStartLineNumber() }, 'function');
@@ -365,13 +376,7 @@ const resolveHandler = (
     if (value !== undefined && isWrittenFunction(value)) {
       return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName(), line: declaration.getStartLineNumber() }, 'function');
     }
-    if (value !== undefined && Node.isIdentifier(value)) {
-      const named = repoFunctionOf(value);
-      if (named !== undefined) return done({ file: fileOfNode(named.declaration, ctx), functionName: named.name, line: named.line }, 'function');
-    }
-    // `export const handler = createLoanLogic`, a name for what a wrapper built,
-    // is read as the call it names.
-    const built = value === undefined ? undefined : Node.isCallExpression(value) ? value : boundCall(value);
+    const built = value !== undefined && Node.isCallExpression(value) ? value : undefined;
     if (built !== undefined) {
       const chain = unwrapChain(built, ctx);
       if (chain.inner !== undefined) {
@@ -402,9 +407,8 @@ const resolveHandler = (
     message:
       unreadCall === undefined
         ? `${who} runs ${handler.written}, and ${file} builds that export in a way that names no function of this repository`
-        : `${who} runs ${handler.written}, and ${file} builds that export with ${whyUnread(unreadCall)}`,
+        : `${who} runs ${handler.written}, and ${fileOfNode(unreadCall, ctx)} builds that export with ${whyUnread(unreadCall)}`,
     hint: 'A handler is read when it is a function, a function wrapped by calls each handed exactly one function wherever it sits among their arguments, or a function a factory of this repository returns.',
-    symbol: fn.address,
   });
   return { wrapping: [], meta: { ...meta, handlerVia: 'unread' } };
 };
@@ -463,7 +467,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
       );
       deployment.functions.forEach((fn, index) => {
         const reading = resolved[index] as ResolvedHandler;
-        const key = fn.name === undefined ? makeUnnamedInvokeKey(fn.address) : makeInvokeEntryKey(fn.name);
+        const key = invokeKeyOf(fn);
         entries.push({
           id: makeEntryId(ctx.repo, 'invoke', key),
           kind: 'invoke',

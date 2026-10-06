@@ -28,6 +28,8 @@ let modules: ProjectGraph;
 let multi: ProjectGraph;
 let multiConfig: string;
 let wrapped: RepoGraph;
+let namespaced: ProjectGraph;
+let namespacedConfig: string;
 
 beforeAll(async () => {
   rest = (await runExtract(copyOf('lambda-terraform-rest'), { config: NEUTRAL, cache: false })).graph;
@@ -35,6 +37,8 @@ beforeAll(async () => {
   modules = (await buildProject({ config: join(copyOf('lambda-terraform-modules'), 'flowatlas.config.json'), builtAt: FIXED })).project;
   multiConfig = join(copyOf('multi-repo-lambda'), 'flowatlas.config.json');
   multi = (await buildProject({ config: multiConfig, builtAt: FIXED })).project;
+  namespacedConfig = join(copyOf('lambda-namespace-handlers'), 'flowatlas.config.json');
+  namespaced = (await buildProject({ config: namespacedConfig, builtAt: FIXED })).project;
 }, 240_000);
 
 afterAll(() => rmSync(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
@@ -194,6 +198,44 @@ describe('a handler wrapped with the function second (R167)', () => {
     expect(edge(d('list-overdue'))).toBeUndefined();
     const rows = wrapped.unresolved.filter((row) => row.reason === 'function-handler-unread');
     expect(rows.map((row) => row.message)).toEqual([expect.stringContaining('firstOf(fromCache, fromTable), which is handed 2 functions')]);
+  });
+});
+
+describe('a handler re-exported through a namespace or `export … from` (R168)', () => {
+  const d = (key: string): string => `entry:desk:invoke:library-desk-${key}`;
+  const edge = (from: string) => namespaced.edges.find((each) => each.from === from && each.type === 'handles');
+
+  it('`export const x = ns.x` and `= ns[\'x\']` land on the function the namespace exports', () => {
+    expect(edge(d('create-loan'))).toMatchObject({ to: 'desk#src/operations/loans.ts:createLoan', confidence: 'static' });
+    expect(edge(d('renew-loan'))).toMatchObject({ to: 'desk#src/operations/loans.ts:renewLoan', confidence: 'static' });
+  });
+
+  it('`export { x } from`, under its own name and under another', () => {
+    expect(edge(d('place-hold'))).toMatchObject({ to: 'desk#src/operations/holds.ts:placeHold', confidence: 'static' });
+    expect(edge(d('cancel-hold'))).toMatchObject({ to: 'desk#src/operations/holds.ts:withdrawHold', confidence: 'static' });
+  });
+
+  it('`export *`, directly and behind a namespace import of a module that re-exports', () => {
+    expect(edge(d('record-return'))).toMatchObject({ to: 'desk#src/operations/returns.ts:recordReturn', confidence: 'static' });
+    expect(edge(d('process-returns'))).toMatchObject({ to: 'desk#src/operations/returns.ts:processReturns', confidence: 'static' });
+  });
+
+  it('a re-export of what a package builds is still a row, about the entry and naming where the call is', () => {
+    expect(edge(d('archive-loan'))).toBeUndefined();
+    const rows = namespaced.unresolved.filter((row) => row.reason === 'function-handler-unread');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ symbol: d('archive-loan'), file: 'infra/functions.tf' });
+    expect(rows[0]?.message).toContain('src/operations/archive.ts builds that export with batchHandler(');
+  });
+
+  it("flow from a route through a queue to that function counts the function's row", () => {
+    const counted = (route: string): unknown => {
+      let out = '';
+      runFlow(route, { config: namespacedConfig, format: 'json' }, { out: (text) => void (out += text), err: () => undefined });
+      return (JSON.parse(out) as { unresolvedOnPath: unknown }).unresolvedOnPath;
+    };
+    expect(counted('POST /loans')).toBe(1);
+    expect(counted('POST /returns')).toBe(0);
   });
 });
 

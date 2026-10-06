@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "lending-library-desk",
-  "generatedAt": "2026-10-06T16:41:56.383Z",
+  "generatedAt": "2026-10-06T17:14:32.051Z",
   "nodes": [
     {
       "id": "entry:lending-library-desk:invoke:library-desk-cancel-hold",
@@ -603,11 +603,11 @@
     {
       "file": "infra/functions.tf",
       "line": 58,
+      "symbol": "entry:lending-library-desk:invoke:library-desk-list-overdue",
       "reason": "function-handler-unread",
       "level": "info",
       "message": "library-desk-list-overdue runs list-overdue.handler, and src/handlers/list-overdue.ts builds that export with firstOf(fromCache, fromTable), which is handed 2 functions, so which of them runs is not in the call",
       "hint": "A handler is read when it is a function, a function wrapped by calls each handed exactly one function wherever it sits among their arguments, or a function a factory of this repository returns.",
-      "symbol": "aws_lambda_function.list_overdue",
       "adapter": "aws-lambda"
     }
   ]

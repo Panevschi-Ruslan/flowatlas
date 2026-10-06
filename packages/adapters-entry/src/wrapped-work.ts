@@ -1,4 +1,4 @@
-import { originOfValue, type Confidence, type Origin } from '@flowatlas/core';
+import { boundDeclaration, originOfValue, type Confidence, type Origin } from '@flowatlas/core';
 import {
   Node,
   VariableDeclarationKind,
@@ -78,18 +78,20 @@ const calleeText = (call: CallExpression): string => call.getExpression().getTex
  * `const createLoanLogic = traced('createLoan', async (event) => …)` and then
  * `middy(createLoanLogic)`: the name is the wrapped function as far as anything
  * that runs it is concerned. Only a `const`, because a name assigned twice holds
- * whichever value the program got to last.
+ * whichever value the program got to last. The name may be a member of a
+ * namespace, `middy(logic.createLoan)`, and may be bound to other names on the
+ * way to the call (R168).
  */
 export const boundCall = (node: TsNode): CallExpression | undefined => {
-  const value = unwrapValue(node);
-  if (!Node.isIdentifier(value)) return undefined;
-  const origin = originOfValue(value);
-  if (origin.kind !== 'local' || !Node.isVariableDeclaration(origin.declaration)) return undefined;
-  const list = origin.declaration.getParent();
+  const origin = originOfValue(unwrapValue(node));
+  if (origin.kind !== 'local') return undefined;
+  const declaration = boundDeclaration(origin.declaration);
+  if (!Node.isVariableDeclaration(declaration)) return undefined;
+  const list = declaration.getParent();
   if (!Node.isVariableDeclarationList(list) || list.getDeclarationKind() !== VariableDeclarationKind.Const) {
     return undefined;
   }
-  const initializer = origin.declaration.getInitializer();
+  const initializer = declaration.getInitializer();
   const bound = initializer === undefined ? undefined : unwrapValue(initializer);
   return bound !== undefined && Node.isCallExpression(bound) ? bound : undefined;
 };
