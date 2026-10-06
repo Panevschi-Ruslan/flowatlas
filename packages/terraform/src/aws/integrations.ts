@@ -1,7 +1,8 @@
+import { DEFAULT_EVENT_BUS } from '@flowatlas/aws';
 import type { MessageTarget } from '@flowatlas/core';
 import { asText, type Because, type Instance, type Value } from '../eval/values.js';
 import { argument, HOLE, referencesOf, textOf, textWithHoles, whyNot } from './arguments.js';
-import { busOf, DEFAULT_BUS, deployedOf, deployedOfValue, isBecause } from './deployed.js';
+import { busOf, deployedOf, deployedOfValue, isBecause } from './deployed.js';
 import type { ResourceReading } from './reading.js';
 
 /**
@@ -81,7 +82,7 @@ const eventInTemplate = (integration: Instance): Sent => {
   if (template === undefined) return whyNot(templates, 'the request template');
   const bus = templateField(template, 'EventBusName');
   return event(
-    typeof bus === 'string' || bus.reason !== 'absent' ? bus : DEFAULT_BUS,
+    typeof bus === 'string' || bus.reason !== 'absent' ? bus : DEFAULT_EVENT_BUS,
     templateField(template, 'Source'),
     templateField(template, 'DetailType'),
   );

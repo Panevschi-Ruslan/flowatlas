@@ -1,5 +1,5 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join, posix } from 'node:path';
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 /**
  * Directories that never hold configuration somebody wrote for this repository.
@@ -45,40 +45,3 @@ export const dirOf = (file: string): string => {
 /** Whether `dir` is `ancestor` or below it, both repo-relative. */
 export const isWithin = (dir: string, ancestor: string): boolean =>
   ancestor === '' || dir === ancestor || dir.startsWith(`${ancestor}/`);
-
-/** `file("...")` and `templatefile("...", ...)` with a path written out. */
-const LOADED = /\b(?:file|templatefile)\(\s*"([^"]+)"/g;
-
-/** `${path.module}/` in front of a path: the directory of the file that writes it. */
-const FROM_MODULE = /^\$\{path\.(?:module|root|cwd)\}\//;
-
-/**
- * Files the configuration reads by a path written in it: a state machine's
- * definition, a template.
- *
- * Read off the text rather than evaluated, because this answers which files a
- * build must watch: naming one file too many costs a reading, and one too few
- * serves an old workflow. A path is taken from the directory of the file that
- * writes it, which is what `${path.module}` says and what a root module's own
- * relative path means; a path with any other interpolation in it is not
- * listed, and neither is one that does not exist.
- */
-export const loadedFiles = (repoDir: string): string[] => {
-  const out = new Set<string>();
-  for (const file of infrastructureFiles(repoDir)) {
-    if (!file.endsWith('.tf')) continue;
-    let text: string;
-    try {
-      text = readFileSync(join(repoDir, file), 'utf8');
-    } catch {
-      continue;
-    }
-    for (const match of text.matchAll(LOADED)) {
-      const rest = (match[1] ?? '').replace(FROM_MODULE, '');
-      if (rest.includes('${')) continue;
-      const path = posix.normalize(posix.join(dirOf(file) || '.', rest));
-      if (!path.startsWith('../') && existsSync(join(repoDir, path))) out.add(path);
-    }
-  }
-  return [...out].sort();
-};

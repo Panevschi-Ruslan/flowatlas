@@ -339,7 +339,8 @@ export interface DeploymentReader {
   read(options: DeploymentReadOptions): Deployment;
   /**
    * Every file whose change can change what `read` returns, repo-relative, so a
-   * build that caches what it read knows when to read it again.
+   * build that caches what it read knows when to read it again. Offered what
+   * `read` is offered, because which files a reading loads can depend on it.
    */
-  files(repoDir: string): readonly string[];
+  files(repoDir: string, options?: Omit<DeploymentReadOptions, 'repoDir'>): readonly string[];
 }

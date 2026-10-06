@@ -1,4 +1,4 @@
-import type { DetailLevel, GraphEdge, GraphNode } from '@flowatlas/core';
+import { STEP_OF_META, STEPS_META, type DetailLevel, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import { projectDetail, projectEdge } from './detail.js';
 import { truncationMessage, type CompactNode, type FlowNode, type GuardRef } from './types.js';
@@ -45,6 +45,15 @@ export const REVERSE_EDGES = FORWARD_EDGES;
 /** How many hops a walk follows when nobody says. */
 export const DEFAULT_FLOW_DEPTH = 8;
 
+/** The steps a node that starts a chain says the chain holds (`STEPS_META`), or none. */
+const stepsOf = (node: Pick<GraphNode, 'meta'> | undefined): number => {
+  const steps = node?.meta?.[STEPS_META];
+  return typeof steps === 'number' && Number.isInteger(steps) && steps > 0 ? steps : 0;
+};
+
+/** Whether a node is one step of a chain (`STEP_OF_META`). */
+const isStep = (node: Pick<GraphNode, 'meta'>): boolean => node.meta?.[STEP_OF_META] !== undefined;
+
 /**
  * How far a walk from an entry goes when nobody says how far.
  *
@@ -52,14 +61,42 @@ export const DEFAULT_FLOW_DEPTH = 8;
  * with room to spare. An entry that is a chain of steps is not: every step is
  * a hop, and a workflow of a dozen steps would be cut off before its last one,
  * never mind the handlers its steps invoke. So an entry that says how many
- * steps it holds (`meta.states`) is walked one hop per step - the longest way
+ * steps it holds (`STEPS_META`) is walked one hop per step - the longest way
  * through without going round a loop visits each step once - and the usual
  * eight beyond that, into whatever the deepest step reaches. Nothing else is
  * walked further, and `maxNodes` still bounds what is returned (I9).
  */
-export const defaultFlowDepth = (entry: GraphNode | undefined): number => {
-  const steps = entry?.meta?.['states'];
-  return typeof steps === 'number' && Number.isInteger(steps) && steps > 0 ? DEFAULT_FLOW_DEPTH + steps : DEFAULT_FLOW_DEPTH;
+export const defaultFlowDepth = (entry: GraphNode | undefined): number => DEFAULT_FLOW_DEPTH + stepsOf(entry);
+
+/**
+ * How far a walk back towards the ways in goes when nobody says: the same rule,
+ * read the other way round.
+ *
+ * A walk down from a chain of steps is lengthened by the steps the chain holds,
+ * because it knows them before it starts. A walk back up from a handler does not:
+ * it arrives at a chain at whichever step reaches the handler and climbs from
+ * there, one hop per step, and the start that says how many steps there are is
+ * at the top of the climb, perhaps past where an unlengthened walk stops. So a
+ * walk back is lengthened by the steps it climbs (`STEP_OF_META`), each counted
+ * once however many paths reach it: it is walked again, further, whenever it
+ * climbed steps it was not lengthened for, until it climbs no new one. A longer
+ * walk reaches everything a shorter one did and a graph has so many steps, so
+ * this ends; and each walk is still bounded by its node limit (I9).
+ *
+ * `walk` takes a depth and returns what it reached; `base` is the depth a walk
+ * through no chain goes.
+ */
+export const walkBack = <T extends { readonly rows: readonly Pick<GraphNode, 'id' | 'meta'>[] }>(
+  base: number,
+  walk: (depth: number) => T,
+): T => {
+  let depth = base;
+  for (;;) {
+    const result = walk(depth);
+    const needed = base + new Set(result.rows.filter(isStep).map((row) => row.id)).size;
+    if (needed <= depth) return result;
+    depth = needed;
+  }
 };
 
 export interface FlowOptions {

@@ -1,3 +1,4 @@
+import { DEFAULT_EVENT_BUS, deployedNameIn } from '@flowatlas/aws';
 import type { DeployedKind, DeliveryTarget } from '@flowatlas/core';
 import { describe, type Because, type Instance, type Value } from '../eval/values.js';
 import { argument, HOLE, referencesOf, textOf, textWithHoles, unreadRow, whyNot } from './arguments.js';
@@ -60,30 +61,14 @@ const IDENTITY = new Set([
 const FUNCTION_ALIASES = new Set(['aws_lambda_alias']);
 
 /**
- * The spellings an ARN or a URL names each kind by, its name in the first
- * group. A region or an account the files leave open does not matter to which
- * thing it is; a hole in the name does, and fails the match.
+ * What an ARN or URL written out names, if it is one, in the forms
+ * `@flowatlas/aws` states for every reader. A region or an account the files
+ * leave open does not matter to which thing it is; a hole in the name does, and
+ * the text names nothing.
  */
-const SPELLINGS: ReadonlyArray<readonly [kind: DeployedKind, spelling: RegExp, changes?: boolean]> = [
-  ['function', /^arn:[^:]+:lambda:[^:]*:[^:]*:function:([^:]+)(?::[^:]+)?$/],
-  ['workflow', /^arn:[^:]+:states:[^:]*:[^:]*:stateMachine:([^:]+)$/],
-  ['queue', /^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$/],
-  ['queue', /^https?:\/\/[^/]+\/[^/]+\/([^/?#]+)\/?$/],
-  ['topic', /^arn:[^:]+:sns:[^:]*:[^:]*:([^:/]+)$/],
-  ['bus', /^arn:[^:]+:events:[^:]*:[^:]*:event-bus\/([^/]+)$/],
-  ['table', /^arn:[^:]+:dynamodb:[^:]*:[^:]*:table\/([^/]+)\/stream\/.+$/, true],
-  ['table', /^arn:[^:]+:dynamodb:[^:]*:[^:]*:table\/([^/]+)$/],
-  ['stream', /^arn:[^:]+:kinesis:[^:]*:[^:]*:stream\/([^/]+)$/],
-];
-
-/** What an ARN or URL written out names, if it is one. */
 export const deployedInText = (text: string): Deployed | undefined => {
-  for (const [kind, spelling, changes] of SPELLINGS) {
-    const name = spelling.exec(text)?.[1];
-    if (name === undefined || name.includes(HOLE)) continue;
-    return { kind, name, ...(changes === true ? { changes } : {}) };
-  }
-  return undefined;
+  const found = deployedNameIn(text);
+  return found === undefined || found.name.includes(HOLE) ? undefined : found;
 };
 
 const isBecause = (found: Deployed | Because): found is Because => 'reason' in found;
@@ -168,15 +153,12 @@ export const deployedOfValue = (
   return whyNot(value, what);
 };
 
-/** The bus an event goes to when nothing names one, as the service itself calls it. */
-export const DEFAULT_BUS = 'default';
-
 /**
  * A bus as written - a name, an ARN, a reference to a bus declared or looked up
  * - or why it is not read; `default` where nothing names one.
  */
 export const busOf = (value: Value | undefined, what: string, reading: Pick<ResourceReading, 'functionIndex'>): string | Because => {
-  if (value === undefined || value.kind === 'null') return DEFAULT_BUS;
+  if (value === undefined || value.kind === 'null') return DEFAULT_EVENT_BUS;
   const text = textOf(value);
   if (text !== undefined) return deployedInText(text)?.name ?? text;
   const found = deployedOf(value, reading);

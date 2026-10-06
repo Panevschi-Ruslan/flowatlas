@@ -169,7 +169,11 @@ describe('a message the task sends', () => {
       Parameters: { QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/123456789012/librarian-approvals', MessageBody: {} },
     });
     expect(found).toEqual(
-      expect.objectContaining({ kind: 'channel', transport: 'queue', targets: [{ name: expect.objectContaining(read('librarian-approvals')) }] }),
+      expect.objectContaining({
+        kind: 'channel',
+        transport: 'queue',
+        targets: [{ name: expect.objectContaining(read('librarian-approvals')), payload: { MessageBody: {} } }],
+      }),
     );
   });
 
@@ -179,7 +183,10 @@ describe('a message the task sends', () => {
       Parameters: { TopicArn: 'arn:aws:sns:eu-west-1:123456789012:loan-decisions.fifo', 'Message.$': '$' },
     });
     expect(found).toEqual(
-      expect.objectContaining({ transport: 'topic', targets: [{ name: expect.objectContaining(read('loan-decisions.fifo')) }] }),
+      expect.objectContaining({
+        transport: 'topic',
+        targets: [{ name: expect.objectContaining(read('loan-decisions.fifo')), payload: { 'Message.$': '$' } }],
+      }),
     );
   });
 

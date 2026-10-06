@@ -56,6 +56,8 @@ const nestjs: WarmExtractor<WarmRepo> = {
 export interface ServiceSession {
   readonly name: string;
   readonly repoDir: string;
+  /** What the repository's deployment is read with, for the files that reading loads. */
+  readonly reading: Pick<OpenOptions, 'config' | 'service'>;
   files(): string[];
   imports(): Record<string, string[]>;
   globalFiles(): string[];
@@ -70,6 +72,7 @@ const sessionOf = <Ctx>(extractor: WarmExtractor<Ctx>, options: OpenOptions): Se
   return {
     name: options.service.name,
     repoDir: options.repoDir,
+    reading: { config: options.config, service: options.service },
     files: () => extractor.files(ctx),
     imports: () => extractor.imports(ctx),
     globalFiles: () => extractor.globalFiles(ctx),

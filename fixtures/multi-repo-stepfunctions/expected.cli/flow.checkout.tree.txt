@@ -1,22 +1,42 @@
-@  workflow circulation-checkout                              circulation/statemachine/checkout.asl.json:1
-  -> CheckStanding [Task lambda:invoke]                       circulation/statemachine/checkout.asl.json:5
-    => members @  members-check-standing                      members/infra/main.tf:15
-      -> handler                                              members/src/handlers/check-standing.ts:8
-        -> lookUpStanding                                     members/src/handlers/check-standing.ts:5
-    -> IsInGoodStanding [Choice]                              circulation/statemachine/checkout.asl.json:20
-      -> ReserveCopy [Task function]                          circulation/statemachine/checkout.asl.json:31
-        => catalogue @  catalogue-reserve-copy                catalogue/infra/main.tf:16
-          -> handler                                          catalogue/src/handlers/reserve-copy.ts:7
-            -> firstFreeCopy                                  catalogue/src/handlers/reserve-copy.ts:5
-        -> WriteLoan [Task dynamodb:putItem]                  circulation/statemachine/checkout.asl.json:43
-          [] write circulation-loans                          circulation/statemachine/checkout.asl.json:43
+@  workflow circulation-checkout                                          circulation/statemachine/checkout.asl.json:1
+  -> CheckStanding [Task lambda:invoke]                                   circulation/statemachine/checkout.asl.json:5
+    => members @  members-check-standing                                  members/infra/main.tf:22
+      -> handler                                                          members/src/handlers/check-standing.ts:8
+        -> lookUpStanding                                                 members/src/handlers/check-standing.ts:5
+    -> IsInGoodStanding [Choice]                                          circulation/statemachine/checkout.asl.json:20
+      -> ReserveCopy [Task function]                                      circulation/statemachine/checkout.asl.json:31
+        => catalogue @  catalogue-reserve-copy                            catalogue/infra/main.tf:16
+          -> handler                                                      catalogue/src/handlers/reserve-copy.ts:7
+            -> firstFreeCopy                                              catalogue/src/handlers/reserve-copy.ts:5
+        -> WriteLoan [Task dynamodb:putItem]                              circulation/statemachine/checkout.asl.json:43
+          [] write circulation-loans                                      circulation/statemachine/checkout.asl.json:43
             #  circulation-loans
-          -> SendCheckoutNotice [Task states:startExecution]  circulation/statemachine/checkout.asl.json:63
-            => members @  workflow members-borrower-notices   members/statemachine/borrower-notices.asl.json:1
-              -> SendNotice [Task lambda:invoke]              members/statemachine/borrower-notices.asl.json:5
-                @  members-send-notice                        members/infra/main.tf:23
-                  -> handler                                  members/src/handlers/send-notice.ts:8
-                    -> subjectOf                              members/src/handlers/send-notice.ts:6
-        -> CheckoutRefused [Fail]                             circulation/statemachine/checkout.asl.json:75
-      -> CheckoutRefused [Fail]                               circulation/statemachine/checkout.asl.json:75
+          -> RequestCopyPull [Task sqs:sendMessage]                       circulation/statemachine/checkout.asl.json:63
+            ~  message sqs/catalogue-copy-pulls                           circulation/statemachine/checkout.asl.json:63
+              ~  sqs/catalogue-copy-pulls                                 statemachine/checkout.asl.json:63
+                => catalogue ~  mapping aws_lambda_event_source_mapping.copy_pulls  catalogue/infra/main.tf:49
+                  @  catalogue-pull-copy                                  catalogue/infra/main.tf:41
+                    -> handler                                            catalogue/src/handlers/pull-copy.ts:8
+                      -> shelfOf                                          catalogue/src/handlers/pull-copy.ts:5
+            -> PublishCheckout [Task sns:publish]                         circulation/statemachine/checkout.asl.json:76
+              ~  message sns/circulation-checkouts                        circulation/statemachine/checkout.asl.json:76
+                ~  sns/circulation-checkouts                              statemachine/checkout.asl.json:76
+                  => members ~  subscription aws_sns_topic_subscription.record_checkout  members/infra/main.tf:60
+                    @  members-record-checkout                            members/infra/main.tf:52
+                      -> handler                                          members/src/handlers/record-checkout.ts:8
+              -> AnnounceCheckout [Task events:putEvents]                 circulation/statemachine/checkout.asl.json:86
+                ~  event eventbridge/library/library.circulation/LoanCheckedOut  circulation/statemachine/checkout.asl.json:86
+                  ~  eventbridge/library/library.circulation/LoanCheckedOut  statemachine/checkout.asl.json:86
+                    => catalogue ~  rule catalogue-loan-checked-out       catalogue/infra/main.tf:79
+                      @  catalogue-update-availability                    catalogue/infra/main.tf:61
+                        -> handler                                        catalogue/src/handlers/update-availability.ts:10
+                          -> copiesLeft                                   catalogue/src/handlers/update-availability.ts:7
+                -> SendCheckoutNotice [Task states:startExecution]        circulation/statemachine/checkout.asl.json:105
+                  => members @  workflow members-borrower-notices         members/statemachine/borrower-notices.json:1
+                    -> SendNotice [Task lambda:invoke]                    members/statemachine/borrower-notices.json:5
+                      @  members-send-notice                              members/infra/main.tf:30
+                        -> handler                                        members/src/handlers/send-notice.ts:8
+                          -> subjectOf                                    members/src/handlers/send-notice.ts:6
+        -> CheckoutRefused [Fail]                                         circulation/statemachine/checkout.asl.json:117
+      -> CheckoutRefused [Fail]                                           circulation/statemachine/checkout.asl.json:117
 unresolved on this path: 0

@@ -1,5 +1,6 @@
 import { posix } from 'node:path';
-import type { DefinitionPosition, DeployedDefinition, DeployedWorkflow, Unresolved } from '@flowatlas/core';
+import { DEPLOYED_FORMS, deployedArn } from '@flowatlas/aws';
+import { nameWithin, type DefinitionPosition, type DeployedDefinition, type DeployedWorkflow, type Unresolved } from '@flowatlas/core';
 import { attributeOf, type Expression, type Position, type Step, type TemplatePart } from '../hcl/ast.js';
 import { HclSyntaxError, parseHclTemplate, templateText } from '../hcl/parse.js';
 import { evaluate, iterate, withNames, type Scope } from '../eval/evaluate.js';
@@ -57,7 +58,7 @@ interface Spelling {
 }
 
 const SPELLINGS: ReadonlyMap<string, Spelling> = new Map<string, Spelling>([
-  ['aws_lambda_function', { namedBy: 'function_name', spell: (name) => `arn:aws:lambda:::function:${name}` }],
+  ['aws_lambda_function', { namedBy: 'function_name', spell: (name) => deployedArn('function', name) }],
   [
     'aws_lambda_alias',
     {
@@ -66,16 +67,16 @@ const SPELLINGS: ReadonlyMap<string, Spelling> = new Map<string, Spelling>([
       spell: (alias, instance) => {
         const target = argument(instance, 'function_name');
         const written = target === undefined ? undefined : (asText(target) ?? addressOf(target));
-        const name = written?.replace(/^.*:function:/, '');
-        return name === undefined ? undefined : `arn:aws:lambda:::function:${name}:${alias}`;
+        const name = written === undefined ? undefined : nameWithin(written, DEPLOYED_FORMS.function);
+        return name === undefined ? undefined : deployedArn('function', `${name}:${alias}`);
       },
     },
   ],
-  ['aws_sfn_state_machine', { namedBy: 'name', spell: (name) => `arn:aws:states:::stateMachine:${name}` }],
-  ['aws_sqs_queue', { namedBy: 'name', spell: (name) => `arn:aws:sqs:::${name}` }],
-  ['aws_sns_topic', { namedBy: 'name', spell: (name) => `arn:aws:sns:::${name}` }],
-  ['aws_dynamodb_table', { namedBy: 'name', spell: (name) => `arn:aws:dynamodb:::table/${name}` }],
-  ['aws_cloudwatch_event_bus', { namedBy: 'name', spell: (name) => `arn:aws:events:::event-bus/${name}` }],
+  ['aws_sfn_state_machine', { namedBy: 'name', spell: (name) => deployedArn('workflow', name) }],
+  ['aws_sqs_queue', { namedBy: 'name', spell: (name) => deployedArn('queue', name) }],
+  ['aws_sns_topic', { namedBy: 'name', spell: (name) => deployedArn('topic', name) }],
+  ['aws_dynamodb_table', { namedBy: 'name', spell: (name) => deployedArn('table', name) }],
+  ['aws_cloudwatch_event_bus', { namedBy: 'name', spell: (name) => deployedArn('bus', name) }],
 ]);
 
 /** Attributes of a resource that address it, rather than describe it. */

@@ -1,8 +1,8 @@
 import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Deployment, DeploymentReader, FlowatlasConfig } from '@flowatlas/core';
+import { parseConfig, type Deployment, type DeploymentReadOptions, type DeploymentReader, type FlowatlasConfig } from '@flowatlas/core';
 import { DeploymentReading } from './aws/read.js';
-import { infrastructureFiles, loadedFiles } from './configuration/files.js';
+import { infrastructureFiles } from './configuration/files.js';
 import { loadConfiguration } from './configuration/load.js';
 import { SHIPPED_MODULES } from './configuration/shipped.js';
 import { describedModule } from './configuration/sources.js';
@@ -47,6 +47,21 @@ const MODULE_SOURCE = /\bsource\s*=\s*"([^"]+)"/g;
 /** What `declares` answered for a directory, for the life of the process. */
 const declared = new Map<string, boolean>();
 
+/**
+ * The configuration files and when each last changed, so an answer kept for a
+ * directory is asked afresh once one of them changes.
+ */
+const stampOf = (repoDir: string): string =>
+  infrastructureFiles(repoDir)
+    .map((file) => {
+      try {
+        return `${file}@${statSync(join(repoDir, file)).mtimeMs}`;
+      } catch {
+        return file;
+      }
+    })
+    .join('|');
+
 const declaresIn = (repoDir: string, config?: FlowatlasConfig): boolean => {
   const descriptions = [...(config?.adapters.infra.modules ?? []), ...SHIPPED_MODULES];
   for (const file of infrastructureFiles(repoDir)) {
@@ -67,6 +82,39 @@ const declaresIn = (repoDir: string, config?: FlowatlasConfig): boolean => {
 };
 
 /**
+ * The files each reading's evaluation opened, by what it was read with.
+ *
+ * Which files a configuration loads - a state machine's definition, a template -
+ * is what `file()` and `templatefile()` were handed once evaluated, and a path
+ * built through a local or a variable (`file("${local.dir}/x.json")`) is not
+ * written anywhere a reader of the text could find it. So the answer is the
+ * evaluator's, kept from the last reading of the same configuration: the paths
+ * can change only when a configuration file or what it is read with does, and a
+ * loaded file changing is what watching it is for, not a reason to look again.
+ */
+const loaded = new Map<string, readonly string[]>();
+
+const loadedKey = (options: DeploymentReadOptions): string =>
+  [
+    options.repoDir,
+    stampOf(options.repoDir),
+    JSON.stringify(options.config.adapters.infra.modules),
+    JSON.stringify(options.service?.infra?.vars ?? null),
+  ].join('\0');
+
+/** A reading, its loaded files kept under the stamp taken before it began: a save during it is then seen next time. */
+const readWith = (options: DeploymentReadOptions, key = loadedKey(options)): Deployment => {
+  const configuration = loadConfiguration({
+    repoDir: options.repoDir,
+    ...(options.service?.infra === undefined ? {} : { varFiles: options.service.infra.vars }),
+    descriptions: [...options.config.adapters.infra.modules, ...SHIPPED_MODULES],
+  });
+  const deployment = new DeploymentReading(configuration).read();
+  loaded.set(key, configuration.loadedFiles());
+  return deployment;
+};
+
+/**
  * Terraform, read from the checked-out files alone.
  *
  * Nothing here runs `terraform`, needs `terraform init`, or reads state. What a
@@ -79,29 +127,22 @@ export const terraformReader: DeploymentReader = {
   declares: (repoDir, config) => {
     // Keyed on the files and when each last changed as well as on the
     // descriptions, so a watch that adds a function is answered afresh.
-    const stamp = infrastructureFiles(repoDir).map((file) => {
-      try {
-        return `${file}@${statSync(join(repoDir, file)).mtimeMs}`;
-      } catch {
-        return file;
-      }
-    });
-    const key = `${repoDir}\0${stamp.join('|')}\0${config === undefined ? '' : JSON.stringify(config.adapters.infra.modules)}`;
+    const key = `${repoDir}\0${stampOf(repoDir)}\0${config === undefined ? '' : JSON.stringify(config.adapters.infra.modules)}`;
     const cached = declared.get(key);
     if (cached !== undefined) return cached;
     const answer = declaresIn(repoDir, config);
     declared.set(key, answer);
     return answer;
   },
-  read: (options): Deployment => {
-    const configuration = loadConfiguration({
-      repoDir: options.repoDir,
-      ...(options.service?.infra === undefined ? {} : { varFiles: options.service.infra.vars }),
-      descriptions: [...options.config.adapters.infra.modules, ...SHIPPED_MODULES],
-    });
-    return new DeploymentReading(configuration).read();
+  read: (options) => readWith(options),
+  files: (repoDir, options) => {
+    const infrastructure = infrastructureFiles(repoDir);
+    if (infrastructure.length === 0) return [];
+    const reading = { repoDir, config: options?.config ?? parseConfig({}), ...(options?.service === undefined ? {} : { service: options.service }) };
+    const key = loadedKey(reading);
+    if (!loaded.has(key)) readWith(reading, key);
+    return [...new Set([...infrastructure, ...(loaded.get(key) ?? [])])].sort();
   },
-  files: (repoDir) => [...new Set([...infrastructureFiles(repoDir), ...loadedFiles(repoDir)])].sort(),
 };
 export { UNREAD_DEPLOYMENTS, unreadDeploymentOf } from './unread.js';
 export { referencesIn } from './hcl/walk.js';

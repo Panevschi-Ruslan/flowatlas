@@ -1,3 +1,4 @@
+import { AWS_SERVICE_PREFIX, DEFAULT_EVENT_BUS, DEPLOYED_CHANNELS, DEPLOYED_FORMS, FUNCTION_NAME_FORMS } from '@flowatlas/aws';
 import {
   hasAnyDependency,
   manifestsWithin,
@@ -5,14 +6,10 @@ import {
   type CallPattern,
   type ChannelKind,
   type DeployedEntryKind,
-  type ChannelPattern,
-  type MessagePattern,
-  type MessageTarget,
   type NameLocator,
   type PackageJson,
   type StartedEntry,
 } from '@flowatlas/core';
-import { ADDRESS_SEPARATOR } from '../address.js';
 import type { BrokerSpec } from './types.js';
 
 /**
@@ -38,111 +35,17 @@ import type { BrokerSpec } from './types.js';
  * - `service.putEvents(input).promise()`, version 2 - the same method, the same
  *   input, the client declared in `aws-sdk`.
  *
- * Only publishing and starting are read here. Who receives - a rule, a
- * subscription, a mapping from a queue to a function - is declared in the
- * deployment and not in code, and is read from there.
+ * Only publishing and starting are read here. Who receives - a rule, a subscription, a
+ * mapping from a queue to a function - is declared in the deployment and not
+ * in code, and is read from there. Both ends spell the channel in the grammar
+ * `@flowatlas/aws` states, and read a `QueueUrl` or a `TopicArn` through the
+ * forms it states, so they meet on one node.
  *
  * Starting a workflow and invoking a function are rows of the same table
  * (P24): an operation that `starts` reads its address as the deployed name of
  * an entry rather than of a channel, so the same three shapes of call, the
  * same locators and the same completion from the environment serve both.
  */
-
-/**
- * How a channel of each service is named.
- *
- * The grammar both ends of a channel have to agree on, stated once: a publisher
- * read from code arrives at it through the descriptions below, and a subscriber
- * read from a deployment arrives at it through these functions, so the two land
- * on one node. Each name starts with its service, because a queue and a topic
- * are often given the same name and are not the same channel.
- *
- * - a queue is `sqs/<queue name>`;
- * - a topic is `sns/<topic name>`;
- * - an event is `eventbridge/<bus>/<source>/<detail type>`, and the bus an
- *   entry leaves out is the one the service calls `default`, written out.
- *
- * Names are the deployed names, never a URL or an ARN: `QueueUrl` and
- * `TopicArn` are read through `DEPLOYED_FORMS` to the name inside them, which
- * is what a deployment names the same resource by.
- */
-export const AWS_SERVICE_PREFIX = { sqs: 'sqs', sns: 'sns', eventbridge: 'eventbridge' } as const;
-
-/** The bus an event goes to when its entry names none. */
-export const DEFAULT_EVENT_BUS = 'default';
-
-/**
- * The longer spellings a deployed name is written inside, each with the name as
- * its first group: a queue's URL (the regional endpoint, the legacy one and a
- * local emulator's alike), and the ARN of a queue, a topic and a bus.
- */
-export const DEPLOYED_FORMS = {
-  queue: ['^https?://[^/]+/[^/]+/([^/?#]+)/?$', '^arn:[^:]+:sqs:[^:]*:[^:]*:([^:]+)$'],
-  topic: ['^arn:[^:]+:sns:[^:]*:[^:]*:([^:]+)$'],
-  bus: ['^arn:[^:]+:events:[^:]*:[^:]*:event-bus/(.+)$'],
-  // Any version or alias after the name is dropped: the name is what is deployed.
-  stateMachine: ['^arn:[^:]+:states:[^:]*:[^:]*:stateMachine:([^:]+)(?::[^:]+)?$'],
-  function: [
-    '^arn:[^:]+:lambda:[^:]*:[^:]*:function:([^:]+)(?::[^:]+)?$',
-    '^(?:[^:]+:)?function:([^:]+)(?::[^:]+)?$',
-    '^([^:]+):[^:]+$',
-  ],
-} as const;
-
-export const queueChannel = (name: string): string =>
-  [AWS_SERVICE_PREFIX.sqs, name].join(ADDRESS_SEPARATOR);
-
-export const topicChannel = (name: string): string =>
-  [AWS_SERVICE_PREFIX.sns, name].join(ADDRESS_SEPARATOR);
-
-export const eventChannel = (bus: string | undefined, source: string, detailType: string): string =>
-  [AWS_SERVICE_PREFIX.eventbridge, bus ?? DEFAULT_EVENT_BUS, source, detailType].join(ADDRESS_SEPARATOR);
-
-/**
- * The two fields of an event its channel is named by, as an event pattern
- * spells them. Every other field a pattern filters on - `detail`, `account`,
- * `resources` - is recorded and not matched on (P23).
- */
-export const EVENT_NAME_FIELDS = ['source', 'detail-type'] as const;
-
-/**
- * The channel a message sent to a deployed target lands on, in the grammar
- * above; `undefined` for an event whose fields do not name one exactly.
- */
-export const channelOfTarget = (target: MessageTarget): string | undefined => {
-  switch (target.kind) {
-    case 'queue':
-      return queueChannel(target.name);
-    case 'topic':
-      return topicChannel(target.name);
-    case 'bus': {
-      const [source, detailType] = EVENT_NAME_FIELDS.map((field) => target.fields?.[field]);
-      return source === undefined || detailType === undefined ? undefined : eventChannel(target.name, source, detailType);
-    }
-  }
-};
-
-/**
- * Events on a bus that a pattern selects, as a pattern over channel names.
- *
- * The parts are the grammar's: the service, the bus, the source, the detail
- * type. A field the pattern does not filter matches any value.
- */
-export const eventChannelPattern = (bus: string, pattern: MessagePattern): ChannelPattern => ({
-  parts: [
-    { name: 'service', filters: [{ equals: AWS_SERVICE_PREFIX.eventbridge }] },
-    { name: 'bus', filters: [{ equals: bus }] },
-    ...EVENT_NAME_FIELDS.map((field) => ({ name: field, filters: pattern.fields[field] ?? [] })),
-  ],
-});
-
-/** The adapter and the kind of channel a deployed queue, topic or bus is read as. */
-// Many rules may match one event, and nothing queues it for them: a bus is a topic.
-export const DEPLOYED_CHANNELS: Readonly<Record<MessageTarget['kind'], { adapter: string; channelKind: ChannelKind }>> = {
-  queue: { adapter: 'aws-sqs', channelKind: 'queue' },
-  topic: { adapter: 'aws-sns', channelKind: 'topic' },
-  bus: { adapter: 'aws-eventbridge', channelKind: 'topic' },
-};
 
 /** A part of an address, written against the operation's input rather than a call. */
 type InputPart =
@@ -206,7 +109,7 @@ const TOPIC: readonly InputPart[] = [
   { path: ['TopicArn'], forms: DEPLOYED_FORMS.topic },
 ];
 
-const STATE_MACHINE: readonly InputPart[] = [{ path: ['stateMachineArn'], forms: DEPLOYED_FORMS.stateMachine }];
+const STATE_MACHINE: readonly InputPart[] = [{ path: ['stateMachineArn'], forms: DEPLOYED_FORMS.workflow }];
 
 /** A task token names a waiting run, and no workflow: where it is read, nothing is. */
 const TASK_TOKEN: readonly InputPart[] = [{ path: ['taskToken'] }];
@@ -214,7 +117,6 @@ const TASK_TOKEN: readonly InputPart[] = [{ path: ['taskToken'] }];
 const SERVICES: readonly Service[] = [
   {
     ...DEPLOYED_CHANNELS.bus,
-    kind: 'event',
     package: '@aws-sdk/client-eventbridge',
     client: 'EventBridgeClient',
     service: 'EventBridge',
@@ -235,7 +137,6 @@ const SERVICES: readonly Service[] = [
   },
   {
     ...DEPLOYED_CHANNELS.queue,
-    kind: 'message',
     package: '@aws-sdk/client-sqs',
     client: 'SQSClient',
     service: 'SQS',
@@ -251,7 +152,6 @@ const SERVICES: readonly Service[] = [
   },
   {
     ...DEPLOYED_CHANNELS.topic,
-    kind: 'message',
     package: '@aws-sdk/client-sns',
     client: 'SNSClient',
     service: 'SNS',
@@ -307,7 +207,7 @@ const SERVICES: readonly Service[] = [
       {
         command: 'InvokeCommand',
         method: 'invoke',
-        address: [{ path: ['FunctionName'], forms: DEPLOYED_FORMS.function }],
+        address: [{ path: ['FunctionName'], forms: [...DEPLOYED_FORMS.function, ...FUNCTION_NAME_FORMS] }],
         // Left out, the caller waits for the answer; `Event` hands the call over and returns.
         starts: { entry: 'invoke', kindAt: { path: ['InvocationType'], kinds: { Event: 'invoke-async', DryRun: 'invoke-dry-run' } } },
       },

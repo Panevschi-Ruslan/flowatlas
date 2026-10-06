@@ -1,6 +1,6 @@
 {
   "entry": "entry:circulation:workflow:loan-approval",
-  "unresolvedOnPath": 9,
+  "unresolvedOnPath": 8,
   "root": {
     "node": {
       "id": "entry:circulation:workflow:loan-approval",
@@ -310,6 +310,9 @@
                                   "transport": "queue",
                                   "targets": [
                                     "librarian-approvals"
+                                  ],
+                                  "channels": [
+                                    "sqs/librarian-approvals"
                                   ]
                                 },
                                 "parameters": {
@@ -328,6 +331,51 @@
                               "confidence": "static"
                             },
                             "children": [
+                              {
+                                "node": {
+                                  "id": "producer:circulation#statemachine/loan-approval.asl.json:109:5",
+                                  "type": "producer",
+                                  "label": "message sqs/librarian-approvals",
+                                  "loc": "statemachine/loan-approval.asl.json:109",
+                                  "service": "circulation",
+                                  "kind": "message",
+                                  "meta": {
+                                    "kind": "message",
+                                    "adapter": "aws-sqs",
+                                    "channelVia": "definition",
+                                    "service": "sqs",
+                                    "action": "sendMessage"
+                                  }
+                                },
+                                "edge": {
+                                  "type": "calls",
+                                  "confidence": "static"
+                                },
+                                "children": [
+                                  {
+                                    "node": {
+                                      "id": "channel:sqs/librarian-approvals",
+                                      "type": "channel",
+                                      "label": "sqs/librarian-approvals",
+                                      "loc": "statemachine/loan-approval.asl.json:109",
+                                      "service": "circulation",
+                                      "meta": {
+                                        "channelKind": "queue",
+                                        "adapters": [
+                                          "aws-sqs"
+                                        ],
+                                        "producers": 1,
+                                        "consumers": 0
+                                      }
+                                    },
+                                    "edge": {
+                                      "type": "emits",
+                                      "confidence": "static"
+                                    },
+                                    "children": []
+                                  }
+                                ]
+                              },
                               {
                                 "node": {
                                   "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/RecordLoan",
@@ -784,9 +832,12 @@
                                               "service": "events",
                                               "action": "putEvents",
                                               "pattern": "request-response",
-                                              "transport": "event-bus",
+                                              "transport": "bus",
                                               "targets": [
                                                 "library-events"
+                                              ],
+                                              "channels": [
+                                                "eventbridge/library-events/library.circulation/LoanApproved"
                                               ]
                                             },
                                             "parameters": {
@@ -807,6 +858,51 @@
                                           "confidence": "static"
                                         },
                                         "children": [
+                                          {
+                                            "node": {
+                                              "id": "producer:circulation#statemachine/loan-approval.asl.json:179:5",
+                                              "type": "producer",
+                                              "label": "event eventbridge/library-events/library.circulation/LoanApproved",
+                                              "loc": "statemachine/loan-approval.asl.json:179",
+                                              "service": "circulation",
+                                              "kind": "event",
+                                              "meta": {
+                                                "kind": "event",
+                                                "adapter": "aws-eventbridge",
+                                                "channelVia": "definition",
+                                                "service": "events",
+                                                "action": "putEvents"
+                                              }
+                                            },
+                                            "edge": {
+                                              "type": "calls",
+                                              "confidence": "static"
+                                            },
+                                            "children": [
+                                              {
+                                                "node": {
+                                                  "id": "channel:eventbridge/library-events/library.circulation/LoanApproved",
+                                                  "type": "channel",
+                                                  "label": "eventbridge/library-events/library.circulation/LoanApproved",
+                                                  "loc": "statemachine/loan-approval.asl.json:179",
+                                                  "service": "circulation",
+                                                  "meta": {
+                                                    "channelKind": "topic",
+                                                    "adapters": [
+                                                      "aws-eventbridge"
+                                                    ],
+                                                    "producers": 1,
+                                                    "consumers": 0
+                                                  }
+                                                },
+                                                "edge": {
+                                                  "type": "emits",
+                                                  "confidence": "static"
+                                                },
+                                                "children": []
+                                              }
+                                            ]
+                                          },
                                           {
                                             "node": {
                                               "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/ArchiveApplication",
@@ -967,6 +1063,9 @@
                                       "transport": "topic",
                                       "targets": [
                                         "loan-decisions"
+                                      ],
+                                      "channels": [
+                                        "sns/loan-decisions"
                                       ]
                                     },
                                     "parameters": {
@@ -980,6 +1079,51 @@
                                   "confidence": "static"
                                 },
                                 "children": [
+                                  {
+                                    "node": {
+                                      "id": "producer:circulation#statemachine/loan-approval.asl.json:234:5",
+                                      "type": "producer",
+                                      "label": "message sns/loan-decisions",
+                                      "loc": "statemachine/loan-approval.asl.json:234",
+                                      "service": "circulation",
+                                      "kind": "message",
+                                      "meta": {
+                                        "kind": "message",
+                                        "adapter": "aws-sns",
+                                        "channelVia": "definition",
+                                        "service": "sns",
+                                        "action": "publish"
+                                      }
+                                    },
+                                    "edge": {
+                                      "type": "calls",
+                                      "confidence": "static"
+                                    },
+                                    "children": [
+                                      {
+                                        "node": {
+                                          "id": "channel:sns/loan-decisions",
+                                          "type": "channel",
+                                          "label": "sns/loan-decisions",
+                                          "loc": "statemachine/loan-approval.asl.json:234",
+                                          "service": "circulation",
+                                          "meta": {
+                                            "channelKind": "topic",
+                                            "adapters": [
+                                              "aws-sns"
+                                            ],
+                                            "producers": 1,
+                                            "consumers": 0
+                                          }
+                                        },
+                                        "edge": {
+                                          "type": "emits",
+                                          "confidence": "static"
+                                        },
+                                        "children": []
+                                      }
+                                    ]
+                                  },
                                   {
                                     "node": {
                                       "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanRejected",
@@ -1027,6 +1171,9 @@
                           "transport": "topic",
                           "targets": [
                             "loan-decisions"
+                          ],
+                          "channels": [
+                            "sns/loan-decisions"
                           ]
                         },
                         "parameters": {
@@ -1040,6 +1187,51 @@
                       "confidence": "static"
                     },
                     "children": [
+                      {
+                        "node": {
+                          "id": "producer:circulation#statemachine/loan-approval.asl.json:234:5",
+                          "type": "producer",
+                          "label": "message sns/loan-decisions",
+                          "loc": "statemachine/loan-approval.asl.json:234",
+                          "service": "circulation",
+                          "kind": "message",
+                          "meta": {
+                            "kind": "message",
+                            "adapter": "aws-sns",
+                            "channelVia": "definition",
+                            "service": "sns",
+                            "action": "publish"
+                          }
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static"
+                        },
+                        "children": [
+                          {
+                            "node": {
+                              "id": "channel:sns/loan-decisions",
+                              "type": "channel",
+                              "label": "sns/loan-decisions",
+                              "loc": "statemachine/loan-approval.asl.json:234",
+                              "service": "circulation",
+                              "meta": {
+                                "channelKind": "topic",
+                                "adapters": [
+                                  "aws-sns"
+                                ],
+                                "producers": 1,
+                                "consumers": 0
+                              }
+                            },
+                            "edge": {
+                              "type": "emits",
+                              "confidence": "static"
+                            },
+                            "children": []
+                          }
+                        ]
+                      },
                       {
                         "node": {
                           "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanRejected",
@@ -1083,6 +1275,9 @@
                       "transport": "topic",
                       "targets": [
                         "loan-decisions"
+                      ],
+                      "channels": [
+                        "sns/loan-decisions"
                       ]
                     },
                     "parameters": {
@@ -1096,6 +1291,51 @@
                   "confidence": "static"
                 },
                 "children": [
+                  {
+                    "node": {
+                      "id": "producer:circulation#statemachine/loan-approval.asl.json:234:5",
+                      "type": "producer",
+                      "label": "message sns/loan-decisions",
+                      "loc": "statemachine/loan-approval.asl.json:234",
+                      "service": "circulation",
+                      "kind": "message",
+                      "meta": {
+                        "kind": "message",
+                        "adapter": "aws-sns",
+                        "channelVia": "definition",
+                        "service": "sns",
+                        "action": "publish"
+                      }
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "channel:sns/loan-decisions",
+                          "type": "channel",
+                          "label": "sns/loan-decisions",
+                          "loc": "statemachine/loan-approval.asl.json:234",
+                          "service": "circulation",
+                          "meta": {
+                            "channelKind": "topic",
+                            "adapters": [
+                              "aws-sns"
+                            ],
+                            "producers": 1,
+                            "consumers": 0
+                          }
+                        },
+                        "edge": {
+                          "type": "emits",
+                          "confidence": "static"
+                        },
+                        "children": []
+                      }
+                    ]
+                  },
                   {
                     "node": {
                       "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanRejected",

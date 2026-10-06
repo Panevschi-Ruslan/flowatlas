@@ -1,4 +1,5 @@
-import type { DbOp } from '@flowatlas/core';
+import { DEFAULT_EVENT_BUS } from '@flowatlas/aws';
+import type { DbOp, MessageTarget } from '@flowatlas/core';
 import type { State } from './definition.js';
 import {
   eventBusName,
@@ -60,6 +61,8 @@ export interface ChannelTarget {
   readonly name: Reading;
   readonly source?: Reading;
   readonly detailType?: Reading;
+  /** The message, as the field that carries it is written: `{ "MessageBody.$": "$.notice" }`. */
+  readonly payload?: Readonly<Record<string, unknown>>;
 }
 
 /** What a task runs on, read from its parameters or its `Resource`. */
@@ -68,7 +71,8 @@ export type TaskTarget =
   | { readonly kind: 'workflow'; readonly name: Reading }
   | {
       readonly kind: 'channel';
-      readonly transport: 'queue' | 'topic' | 'event-bus';
+      /** What it sends to, as a deployment names the same thing. */
+      readonly transport: MessageTarget['kind'];
       readonly targets: readonly ChannelTarget[];
     }
   | { readonly kind: 'table'; readonly op: DbOp; readonly tables: readonly Reading[] }
@@ -130,29 +134,49 @@ const workflows: TaskClassifier = {
  *
  * Both name their channel in one field and differ only in which field and how a
  * name is cut out of it, so they are rows of a table rather than two classifiers
- * that would have to be kept alike by hand.
+ * that would have to be kept alike by hand. Each action carries its message in a
+ * field of its own: the message, or the list of entries a batch sends.
  */
 const SENDS: ReadonlyArray<{
   readonly services: readonly string[];
   readonly transport: 'queue' | 'topic';
-  readonly actions: readonly string[];
+  /** Each action that sends, and the field its message is in. */
+  readonly actions: Readonly<Record<string, string>>;
   readonly field: string;
   readonly name: (text: string) => string | undefined;
 }> = [
-  { services: ['sqs'], transport: 'queue', actions: ['sendMessage', 'sendMessageBatch'], field: 'QueueUrl', name: queueName },
-  { services: ['sns'], transport: 'topic', actions: ['publish', 'publishBatch'], field: 'TopicArn', name: topicName },
+  {
+    services: ['sqs'],
+    transport: 'queue',
+    actions: { sendMessage: 'MessageBody', sendMessageBatch: 'Entries' },
+    field: 'QueueUrl',
+    name: queueName,
+  },
+  {
+    services: ['sns'],
+    transport: 'topic',
+    actions: { publish: 'Message', publishBatch: 'PublishBatchRequestEntries' },
+    field: 'TopicArn',
+    name: topicName,
+  },
 ];
 
 const sends: readonly TaskClassifier[] = SENDS.map((send) => ({
   services: send.services,
-  classify: (call, parameters) =>
-    actionIs(...send.actions)(call)
-      ? { kind: 'channel', transport: send.transport, targets: [{ name: nameIn(parameters.read(send.field), send.name) }] }
-      : undefined,
+  classify: (call, parameters) => {
+    const payload = Object.entries(send.actions).find(([action]) => actionIs(action)(call))?.[1];
+    if (payload === undefined) return undefined;
+    const written = parameters.written(payload);
+    return {
+      kind: 'channel',
+      transport: send.transport,
+      targets: [{ name: nameIn(parameters.read(send.field), send.name), ...(written === undefined ? {} : { payload: written }) }],
+    };
+  },
 }));
 
 /** The default bus, named explicitly so an entry that leaves the bus out still names one. */
-const DEFAULT_BUS: Reading = { read: true, value: 'default', written: '' };
+const DEFAULT_BUS: Reading = { read: true, value: DEFAULT_EVENT_BUS, written: '' };
 
 const events: TaskClassifier = {
   services: ['events', 'eventbridge'],
@@ -161,15 +185,17 @@ const events: TaskClassifier = {
     const entries = parameters.raw('Entries');
     const target = (entry: unknown): ChannelTarget => {
       const bus = parameters.read('EventBusName', entry);
+      const payload = parameters.written('Detail', entry);
       return {
         name: bus.read === false && bus.cause === 'absent' ? DEFAULT_BUS : nameIn(bus, eventBusName),
         source: parameters.read('Source', entry),
         detailType: parameters.read('DetailType', entry),
+        ...(payload === undefined ? {} : { payload }),
       };
     };
     return {
       kind: 'channel',
-      transport: 'event-bus',
+      transport: 'bus',
       // A list written out is one channel per entry; anything else - a path
       // under `Entries.$`, an expression - is one target nobody could read.
       targets: Array.isArray(entries) ? entries.map(target) : [{ name: parameters.read('Entries') }],

@@ -1,6 +1,6 @@
 unresolved: total=5 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
 
-unresolved: 5 to act on over 10 rows, and 8 places static reading cannot see, folded into 5
+unresolved: 5 to act on over 9 rows, and 5 places static reading cannot see, folded into 4
   reference-not-found: 4 rows
     Add the repository that deploys it to the configuration, so this step reaches its code.
       circulation/statemachine/loan-approval.asl.json:14  circulation#statemachine/loan-approval.asl.json:loan-approval/CheckBorrowerStanding
@@ -10,9 +10,6 @@ unresolved: 5 to act on over 10 rows, and 8 places static reading cannot see, fo
   workflow-template-unbound: 1 row
     Whatever deploys this definition fills the placeholder in first. Read the definition from the file that deploys it, so its values are known, or write the name in place.
       circulation/statemachine/loan-approval.asl.json:216  circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy
-  workflow-channel-not-joined (info): 1 row over 3 places
-    A message sent from a workflow is recorded on its step and not yet joined to whatever handles it, which is read from where the subscription is deployed.
-      circulation/statemachine/loan-approval.asl.json:109  circulation#statemachine/loan-approval.asl.json:loan-approval/AwaitLibrarianApproval
   workflow-named-by-file (info): 2 rows over 3 places
     A definition read on its own carries no deployed name, so anything joined to it by that name is drawn as heuristic. Read it from the file that deploys it to make the name certain.
       circulation/statemachine/loan-approval.asl.json:1  entry:circulation:workflow:loan-approval
@@ -27,7 +24,7 @@ markers: none
 
 desync: none
 
-contracts: no errors, 0 excused, 0 boundary directions nothing could be compared on
+contracts: no errors, 0 excused, 3 boundary directions nothing could be compared on
 
 baseline: missing (0 accepted, 5 now, +5)
   no baseline at <root>/fixtures/stepfunctions-asl-files/flowatlas.baseline.json; run flowatlas doctor --accept to write one

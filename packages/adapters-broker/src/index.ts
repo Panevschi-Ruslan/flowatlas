@@ -9,18 +9,6 @@ export const PACKAGE_NAME = '@flowatlas/adapters-broker';
 
 export { brokerSpecsFor, brokersPass, extractBrokers } from './brokers-pass.js';
 export { brokerAdapters, createCustomBrokerAdapter, socketio } from './adapters/index.js';
-export {
-  AWS_SERVICE_PREFIX,
-  channelOfTarget,
-  DEFAULT_EVENT_BUS,
-  DEPLOYED_CHANNELS,
-  DEPLOYED_FORMS,
-  EVENT_NAME_FIELDS,
-  eventChannel,
-  eventChannelPattern,
-  queueChannel,
-  topicChannel,
-} from './adapters/aws.js';
 export { nameWithin } from './address.js';
 export type {
   BrokerSpec,

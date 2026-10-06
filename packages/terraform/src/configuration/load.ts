@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { isAbsolute, join, posix } from 'node:path';
+import { isAbsolute, join, posix, relative, sep } from 'node:path';
 import type { InfraModuleConfig, Unresolved } from '@flowatlas/core';
 import { attributeOf, blocksOf, type Attribute, type Block, type Body, type Expression, type HclFile, type Position } from '../hcl/ast.js';
 import { HclSyntaxError, parseHcl, parseHclExpression, templateText } from '../hcl/parse.js';
@@ -44,6 +44,12 @@ export interface Configuration {
   stateOf(root: ModuleInstance): string | undefined;
   /** What could not be read, including what walking the module tree raised. */
   readonly rows: readonly Unresolved[];
+  /**
+   * Every file of the repository a function has read so far - `file()`,
+   * `templatefile()`, `fileexists()` - repo-relative and sorted: the paths the
+   * evaluator was handed, however they were built.
+   */
+  loadedFiles(): readonly string[];
 }
 
 /** Arguments of a module call that configure the call rather than feed the module. */
@@ -150,6 +156,8 @@ export const stateAddress = (backend: string, settings: ReadonlyMap<string, Valu
 
 class Context {
   readonly rows: Unresolved[] = [];
+  /** Repo-relative paths a function read, for a build to watch. */
+  readonly loaded = new Set<string>();
   readonly #reported = new Set<string>();
   readonly #described = new Map<InfraModuleConfig, ModuleSource>();
 
@@ -649,12 +657,18 @@ class Module implements ModuleInstance {
   }
 
   readFile(path: string): string | undefined {
-    const absolute = isAbsolute(path) ? path : join(this.context.options.repoDir, this.rootDir, path);
+    const { repoDir } = this.context.options;
+    const absolute = isAbsolute(path) ? path : join(repoDir, this.rootDir, path);
+    let text: string;
     try {
-      return readFileSync(absolute, 'utf8');
+      text = readFileSync(absolute, 'utf8');
     } catch {
       return undefined;
     }
+    // Only a file of this repository: one outside it is not this build's to watch.
+    const within = relative(repoDir, absolute).split(sep).join('/');
+    if (within !== '' && !within.startsWith('../') && !isAbsolute(within)) this.context.loaded.add(within);
+    return text;
   }
 }
 
@@ -789,6 +803,7 @@ export const loadConfiguration = (options: LoadOptions): Configuration => {
     get rows() {
       return [...rows, ...context.rows];
     },
+    loadedFiles: () => [...context.loaded].sort(),
     stateOf: (root) => {
       const module = root as Module;
       for (const block of module.source.terraform) {

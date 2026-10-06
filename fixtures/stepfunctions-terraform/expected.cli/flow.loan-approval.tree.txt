@@ -9,6 +9,8 @@
           [] write lending-copies                         lending/statemachine/loan-approval.asl.json:56
             #  lending-copies
         -> AwaitLibrarianApproval [Task sqs:sendMessage]  lending/statemachine/loan-approval.asl.json:80
+          ~  message sqs/lending-librarian-approvals      lending/statemachine/loan-approval.asl.json:80
+            ~  sqs/lending-librarian-approvals            statemachine/loan-approval.asl.json:80
           -> RecordLoan [Parallel]                        lending/statemachine/loan-approval.asl.json:102
             -> WriteLoan [Task dynamodb:putItem]          lending/statemachine/loan-approval.asl.json:108
               [] write lending-loans                      lending/statemachine/loan-approval.asl.json:108
@@ -29,4 +31,4 @@
         -> LoanRejected [Fail]                            lending/statemachine/loan-approval.asl.json:159
     -> RejectLoan [Pass]                                  lending/statemachine/loan-approval.asl.json:152
       -> LoanRejected [Fail]                              lending/statemachine/loan-approval.asl.json:159
-unresolved on this path: 1
+unresolved on this path: 0

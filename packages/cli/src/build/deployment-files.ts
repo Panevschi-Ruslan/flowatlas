@@ -1,4 +1,5 @@
 import { DEPLOYMENT_READERS } from '@flowatlas/adapters-entry';
+import type { DeploymentReadOptions } from '@flowatlas/core';
 import { definitionFiles } from '@flowatlas/stepfunctions';
 
 /**
@@ -13,11 +14,14 @@ import { definitionFiles } from '@flowatlas/stepfunctions';
  * sources and counted as global, because what they say decides which handlers
  * are ways in at all and which steps reach into them, and that is not something
  * a partial read can redo.
+ *
+ * `reading` is what the deployment is read with - the configuration, the
+ * service - because a file a deployment loads is found by reading it.
  */
-export const deploymentFiles = (repoDir: string): string[] =>
+export const deploymentFiles = (repoDir: string, reading?: Omit<DeploymentReadOptions, 'repoDir'>): string[] =>
   [
     ...new Set([
-      ...DEPLOYMENT_READERS.flatMap((reader) => reader.files(repoDir)),
+      ...DEPLOYMENT_READERS.flatMap((reader) => reader.files(repoDir, reading)),
       ...definitionFiles(repoDir),
     ]),
   ].sort();

@@ -1,13 +1,14 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { eventChannel, queueChannel, topicChannel } from '@flowatlas/aws';
 import { parseConfig, type CallPattern } from '@flowatlas/core';
 import { Node, Project, SyntaxKind, type CallExpression, type SourceFile } from 'ts-morph';
 import { afterAll, describe, expect, it } from 'vitest';
 import { appliesAt, readAddress } from '../address.js';
 import { functionEvidence, methodMatches, receiverEvidence, type ReceiverEvidence } from '../call-site.js';
 import { isResolved } from '../channel-name.js';
-import { awsBrokerAdapters, eventChannel, queueChannel, topicChannel } from './aws.js';
+import { awsBrokerAdapters } from './aws.js';
 import { createCustomBrokerAdapter } from './index.js';
 import type { BrokerSpec } from './types.js';
 
@@ -106,14 +107,6 @@ const readCall = (file: SourceFile, method: string, specs: readonly BrokerSpec[]
   }
   return undefined;
 };
-
-describe('the channel grammar', () => {
-  it('names each service and the default bus explicitly', () => {
-    expect(queueChannel('returns')).toBe('sqs/returns');
-    expect(topicChannel('borrower-notifications')).toBe('sns/borrower-notifications');
-    expect(eventChannel(undefined, 'library.loans', 'LoanCreated')).toBe('eventbridge/default/library.loans/LoanCreated');
-  });
-});
 
 describe('a command sent to a client', () => {
   it('reads every entry of a PutEvents as an event of its own, on its own bus', () => {

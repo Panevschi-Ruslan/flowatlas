@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:54:26.779Z",
+  "builtAt": "2026-10-06T17:33:24.097Z",
   "services": [
     {
       "name": "circulation",
@@ -16,6 +16,54 @@
     }
   ],
   "nodes": [
+    {
+      "id": "channel:eventbridge/library-events/library.circulation/LoanApproved",
+      "type": "channel",
+      "label": "eventbridge/library-events/library.circulation/LoanApproved",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 179,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sns/loan-decisions",
+      "type": "channel",
+      "label": "sns/loan-decisions",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 234,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/librarian-approvals",
+      "type": "channel",
+      "label": "sqs/librarian-approvals",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 109,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
     {
       "id": "circulation#src/app.ts:express.json()",
       "type": "middleware",
@@ -102,6 +150,9 @@
           "transport": "queue",
           "targets": [
             "librarian-approvals"
+          ],
+          "channels": [
+            "sqs/librarian-approvals"
           ]
         },
         "parameters": {
@@ -305,9 +356,12 @@
           "service": "events",
           "action": "putEvents",
           "pattern": "request-response",
-          "transport": "event-bus",
+          "transport": "bus",
           "targets": [
             "library-events"
+          ],
+          "channels": [
+            "eventbridge/library-events/library.circulation/LoanApproved"
           ]
         },
         "parameters": {
@@ -356,6 +410,9 @@
           "transport": "topic",
           "targets": [
             "loan-decisions"
+          ],
+          "channels": [
+            "sns/loan-decisions"
           ]
         },
         "parameters": {
@@ -889,6 +946,54 @@
       }
     },
     {
+      "id": "producer:circulation#statemachine/loan-approval.asl.json:109:5",
+      "type": "producer",
+      "label": "message sqs/librarian-approvals",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 109,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "definition",
+        "service": "sqs",
+        "action": "sendMessage"
+      }
+    },
+    {
+      "id": "producer:circulation#statemachine/loan-approval.asl.json:179:5",
+      "type": "producer",
+      "label": "event eventbridge/library-events/library.circulation/LoanApproved",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 179,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "definition",
+        "service": "events",
+        "action": "putEvents"
+      }
+    },
+    {
+      "id": "producer:circulation#statemachine/loan-approval.asl.json:234:5",
+      "type": "producer",
+      "label": "message sns/loan-decisions",
+      "repo": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 234,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "definition",
+        "service": "sns",
+        "action": "publish"
+      }
+    },
+    {
       "id": "repo:circulation",
       "type": "repo",
       "label": "circulation",
@@ -1031,6 +1136,14 @@
           }
         ]
       }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/AwaitLibrarianApproval",
+      "to": "producer:circulation#statemachine/loan-approval.asl.json:109:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 109
     },
     {
       "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/CheckBorrowerStanding",
@@ -1195,6 +1308,14 @@
       }
     },
     {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/PublishLoanApproved",
+      "to": "producer:circulation#statemachine/loan-approval.asl.json:179:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 179
+    },
+    {
       "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/RecordLoan",
       "to": "circulation#statemachine/loan-approval.asl.json:loan-approval/NotifyBorrower",
       "type": "calls",
@@ -1259,6 +1380,14 @@
           }
         ]
       }
+    },
+    {
+      "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/RejectLoan",
+      "to": "producer:circulation#statemachine/loan-approval.asl.json:234:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 234
     },
     {
       "from": "circulation#statemachine/loan-approval.asl.json:loan-approval/ReserveCopies",
@@ -1574,6 +1703,49 @@
           }
         ]
       }
+    },
+    {
+      "from": "producer:circulation#statemachine/loan-approval.asl.json:109:5",
+      "to": "channel:sqs/librarian-approvals",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 109,
+      "meta": {
+        "payload": {
+          "MessageBody": {
+            "borrowerId.$": "$.borrowerId",
+            "itemIds.$": "$.itemIds",
+            "taskToken.$": "$$.Task.Token"
+          }
+        }
+      }
+    },
+    {
+      "from": "producer:circulation#statemachine/loan-approval.asl.json:179:5",
+      "to": "channel:eventbridge/library-events/library.circulation/LoanApproved",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 179,
+      "meta": {
+        "payload": {
+          "Detail.$": "$"
+        }
+      }
+    },
+    {
+      "from": "producer:circulation#statemachine/loan-approval.asl.json:234:5",
+      "to": "channel:sns/loan-decisions",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 234,
+      "meta": {
+        "payload": {
+          "Message.$": "$"
+        }
+      }
     }
   ],
   "types": {},
@@ -1599,21 +1771,6 @@
       "meta": {
         "reference": "invoke:check-borrower-standing"
       }
-    },
-    {
-      "file": "statemachine/loan-approval.asl.json",
-      "line": 109,
-      "reason": "workflow-channel-not-joined",
-      "level": "info",
-      "sites": 3,
-      "message": "AwaitLibrarianApproval sends to a queue: the queue librarian-approvals",
-      "hint": "A message sent from a workflow is recorded on its step and not yet joined to whatever handles it, which is read from where the subscription is deployed.",
-      "symbol": "circulation#statemachine/loan-approval.asl.json:loan-approval/AwaitLibrarianApproval",
-      "meta": {
-        "transport": "queue",
-        "name": "librarian-approvals"
-      },
-      "service": "circulation"
     },
     {
       "service": "circulation",

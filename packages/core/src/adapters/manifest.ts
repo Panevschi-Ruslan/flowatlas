@@ -63,6 +63,25 @@ export const hasAnyDependency = (pkg: PackageJson, names: readonly string[]): bo
   return names.some((name) => Object.hasOwn(deps, name));
 };
 
+/**
+ * The package a module specifier names, or undefined when it names a file.
+ *
+ * A subpath import of a package is an import of that package:
+ * `@scope/name/decorators` is `@scope/name`. A reader that matched the
+ * specifier exactly skipped every controller written the second way - on one
+ * notification service, 21 routes in 3 files, dropped with no row (R84). Stated
+ * here, where no reader owns it, because the entries side, the data layer and
+ * the transports each ask it of an import, and each had come to write it out
+ * for itself (R169).
+ */
+export const packageOfSpecifier = (specifier: string): string | undefined => {
+  if (specifier === '' || specifier.startsWith('.') || specifier.startsWith('/')) return undefined;
+  const [first, second] = specifier.split('/');
+  if (first === undefined || first === '') return undefined;
+  if (!first.startsWith('@')) return first;
+  return second === undefined || second === '' ? undefined : `${first}/${second}`;
+};
+
 // ------------------------------------------------------------- below the root
 
 /** Directories that hold no manifest of the repository's own. */

@@ -10,6 +10,8 @@
               [] write library-copies                                     circulation/statemachine/loan-approval.asl.json:85
                 #  library-copies
             -> AwaitLibrarianApproval [Task sqs:sendMessage]              circulation/statemachine/loan-approval.asl.json:109
+              ~  message sqs/librarian-approvals                          circulation/statemachine/loan-approval.asl.json:109
+                ~  sqs/librarian-approvals                                statemachine/loan-approval.asl.json:109
               -> RecordLoan [Parallel]                                    circulation/statemachine/loan-approval.asl.json:131
                 -> WriteLoan [Task dynamodb:putItem]                      circulation/statemachine/loan-approval.asl.json:137
                   [] write library-loans                                  circulation/statemachine/loan-approval.asl.json:137
@@ -27,15 +29,23 @@
                           [] write library-notices                        notifications/workflows/borrower-notifications.asl.yaml:30
                             #  library-notices
                   -> PublishLoanApproved [Task events:putEvents]          circulation/statemachine/loan-approval.asl.json:179
+                    ~  event eventbridge/library-events/library.circulation/LoanApproved  circulation/statemachine/loan-approval.asl.json:179
+                      ~  eventbridge/library-events/library.circulation/LoanApproved  statemachine/loan-approval.asl.json:179
                     -> ArchiveApplication [Task s3:putObject]             circulation/statemachine/loan-approval.asl.json:195
                       -> LookUpBranchPolicy [Task lambda:invoke]          circulation/statemachine/loan-approval.asl.json:206
                         -> ApplyLateFeePolicy [Task lambda:invoke]        circulation/statemachine/loan-approval.asl.json:216
                           -> WaitForPickupWindow [Wait]                   circulation/statemachine/loan-approval.asl.json:226
                             -> LoanApproved [Succeed]                     circulation/statemachine/loan-approval.asl.json:231
               -> RejectLoan [Task sns:publish]                            circulation/statemachine/loan-approval.asl.json:234
+                ~  message sns/loan-decisions                             circulation/statemachine/loan-approval.asl.json:234
+                  ~  sns/loan-decisions                                   statemachine/loan-approval.asl.json:234
                 -> LoanRejected [Fail]                                    circulation/statemachine/loan-approval.asl.json:243
         -> RejectLoan [Task sns:publish]                                  circulation/statemachine/loan-approval.asl.json:234
+          ~  message sns/loan-decisions                                   circulation/statemachine/loan-approval.asl.json:234
+            ~  sns/loan-decisions                                         statemachine/loan-approval.asl.json:234
           -> LoanRejected [Fail]                                          circulation/statemachine/loan-approval.asl.json:243
       -> RejectLoan [Task sns:publish]                                    circulation/statemachine/loan-approval.asl.json:234
+        ~  message sns/loan-decisions                                     circulation/statemachine/loan-approval.asl.json:234
+          ~  sns/loan-decisions                                           statemachine/loan-approval.asl.json:234
         -> LoanRejected [Fail]                                            circulation/statemachine/loan-approval.asl.json:243
-unresolved on this path: 9
+unresolved on this path: 8

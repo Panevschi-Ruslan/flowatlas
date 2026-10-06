@@ -12,6 +12,7 @@ import {
   type Confidence,
   type LocatorContext,
   type StartedEntry,
+  packageOfSpecifier,
 } from '@flowatlas/core';
 import type { Holder, PassContext } from '@flowatlas/extract-scopes';
 import { Node, type CallExpression, type Node as TsNode } from 'ts-morph';
@@ -19,7 +20,7 @@ import { addressOf, collapsed, readAddress, readWritten, type AddressedElement }
 import type { BrokerSpec } from './adapters/types.js';
 import type { ReceiverEvidence } from './call-site.js';
 import { isResolved } from './channel-name.js';
-import { importOf, packageOfSpecifier } from './stated-origin.js';
+import { importOf } from './stated-origin.js';
 
 /**
  * Calls that start something by the name it is deployed under (P24).

@@ -1,5 +1,5 @@
 {
-  "Comment": "Checks a title out to a borrower: asks the members service about the borrower, the catalogue for a copy, writes the loan, and starts the members service's notices.",
+  "Comment": "Checks a title out to a borrower: asks the members service about the borrower, the catalogue for a copy, writes the loan, tells the catalogue and the members service about it, and starts the members service's notices.",
   "StartAt": "CheckStanding",
   "States": {
     "CheckStanding": {
@@ -56,6 +56,48 @@
             "S.$": "$.copy.copyId"
           }
         }
+      },
+      "ResultPath": null,
+      "Next": "RequestCopyPull"
+    },
+    "RequestCopyPull": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sqs:sendMessage",
+      "Parameters": {
+        "QueueUrl": "${copy_pulls_url}",
+        "MessageBody": {
+          "copyId.$": "$.copy.copyId",
+          "borrowerId.$": "$.borrowerId"
+        }
+      },
+      "ResultPath": null,
+      "Next": "PublishCheckout"
+    },
+    "PublishCheckout": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${checkouts_topic_arn}",
+        "Message.$": "States.JsonToString($)"
+      },
+      "ResultPath": null,
+      "Next": "AnnounceCheckout"
+    },
+    "AnnounceCheckout": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::events:putEvents",
+      "Parameters": {
+        "Entries": [
+          {
+            "EventBusName": "${library_bus_name}",
+            "Source": "library.circulation",
+            "DetailType": "LoanCheckedOut",
+            "Detail": {
+              "titleId.$": "$.titleId",
+              "copyId.$": "$.copy.copyId"
+            }
+          }
+        ]
       },
       "ResultPath": null,
       "Next": "SendCheckoutNotice"

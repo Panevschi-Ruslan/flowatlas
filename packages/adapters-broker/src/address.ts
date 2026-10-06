@@ -1,4 +1,5 @@
 import {
+  ADDRESS_SEPARATOR,
   locatedSlots,
   nameWithin,
   type AwaitedPart,
@@ -38,9 +39,6 @@ import {
  * there were parts, which is what lets every description written before keep
  * reading as it did.
  */
-
-/** What joins the parts of an address into the name of its channel. */
-export const ADDRESS_SEPARATOR = '/';
 
 /**
  * Where a description says its address is written, from whichever spelling it uses.

@@ -57,17 +57,29 @@ export type AwaitedPart = string | { readonly environment: string; readonly form
  * to a pattern as readily as to a name, because the part a pattern leaves open
  * is often exactly the part the form drops - a region, an account.
  */
-export const nameWithin = (value: string, forms: readonly string[] = []): string => {
+export const nameWithin = (value: string, forms: readonly string[] = []): string => nameInForms(value, forms) ?? value;
+
+/** The name inside a longer spelling of it, or `undefined` when no form fits. */
+export const nameInForms = (value: string, forms: readonly string[]): string | undefined => {
   for (const form of forms) {
     const found = new RegExp(form).exec(value)?.[1];
     if (found !== undefined && found !== '') return found;
   }
-  return value;
+  return undefined;
 };
+
+/**
+ * What joins the parts of an address into the name of its channel.
+ *
+ * Stated once for every side that spells a name in parts: a publisher read
+ * from code joins what it read with it, a reader of a deployment joins the
+ * names it settled with it, and a pattern is matched against a name split on it.
+ */
+export const ADDRESS_SEPARATOR = '/';
 
 /** An address waiting on the environment, and the message sent to it. */
 export interface AwaitedAddress {
-  /** The channel's name in parts, joined by `/` once every part is known. */
+  /** The channel's name in parts, joined by `ADDRESS_SEPARATOR` once every part is known. */
   readonly parts: readonly AwaitedPart[];
   /** The type id of the message, when it was read. */
   readonly payload?: string;
@@ -81,7 +93,7 @@ export interface AwaitedAddress {
 export const CHANNEL_PATTERN_META = 'channelPattern';
 
 /**
- * A channel name as a filter: one entry per `/`-separated part of the name, in
+ * A channel name as a filter: one entry per `ADDRESS_SEPARATOR`-separated part of the name, in
  * order. A part with no filters matches any value; several are any-of.
  */
 export interface ChannelPattern {
@@ -134,7 +146,7 @@ const phrase = (filter: ValueFilter): string => {
  * is not filtered. A filter this reading does not evaluate matches nothing.
  */
 export const matchChannelPattern = (name: string, pattern: ChannelPattern): PatternMatch | undefined => {
-  const segments = name.split('/');
+  const segments = name.split(ADDRESS_SEPARATOR);
   if (segments.length !== pattern.parts.length) return undefined;
   const because: string[] = [];
   for (const [index, part] of pattern.parts.entries()) {

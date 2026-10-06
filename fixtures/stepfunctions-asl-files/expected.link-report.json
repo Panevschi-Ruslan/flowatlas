@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:54:26.779Z",
+  "builtAt": "2026-10-06T17:33:24.097Z",
   "configHash": "c75767e926fa",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./circulation",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 30,
-      "edges": 29,
+      "nodes": 36,
+      "edges": 35,
       "types": 0,
-      "unresolved": 4,
-      "durationMs": 513
+      "unresolved": 3,
+      "durationMs": 792
     },
     {
       "name": "notifications",
@@ -23,7 +23,7 @@
       "edges": 14,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 512
+      "durationMs": 791
     }
   ],
   "httpOut": {
@@ -43,9 +43,13 @@
     "byReason": {}
   },
   "channels": {
-    "total": 0,
+    "total": 3,
     "linked": 0,
-    "noConsumers": [],
+    "noConsumers": [
+      "channel:eventbridge/library-events/library.circulation/LoanApproved",
+      "channel:sns/loan-decisions",
+      "channel:sqs/librarian-approvals"
+    ],
     "noProducers": []
   },
   "routes": {
@@ -112,9 +116,9 @@
     }
   ],
   "totals": {
-    "nodes": 47,
-    "edges": 44,
+    "nodes": 53,
+    "edges": 50,
     "types": 0,
-    "unresolved": 10
+    "unresolved": 9
   }
 }

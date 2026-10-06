@@ -1,12 +1,17 @@
+import { channelOfTarget, DEPLOYED_CHANNELS } from '@flowatlas/aws';
 import {
+  makeChannelId,
   makeEntryId,
   makeLeafId,
   makeStateId,
   makeTableId,
   makeWorkflowEntryKey,
   REACHES_META,
+  STEP_OF_META,
+  STEPS_META,
   type GraphEdge,
   type GraphNode,
+  type MessageTarget,
   type Unresolved,
 } from '@flowatlas/core';
 import type { State, StateMachine, Transition } from './definition.js';
@@ -26,6 +31,9 @@ import { NO_TEMPLATE_VALUES, type Reading, type TemplateValues, type UnreadCause
  * - A task that invokes a function or starts a workflow names it in
  *   `meta.reaches`; the linker draws that edge, across services, by name.
  * - A task that reads or writes a table is a `db_query` on that table.
+ * - A task that sends to a queue, publishes to a topic or puts events on a bus
+ *   is a producer onto each channel it names, spelled the way the subscriber a
+ *   deployment declares spells it, so the two meet on one node.
  * - Anything that could not be read as written is a row, and no edge.
  *
  * Nothing here reads a file or a builder, so a definition found standing on
@@ -163,13 +171,11 @@ const reachedBy = (
     ? { ...NOTHING, reaches: [reference(reading.value)], task: { name: reading.value } }
     : { ...NOTHING, rows: [unreadRow(site, what, field, reading)], task: {} };
 
-const CHANNEL_WORDS: Readonly<Record<ChannelKind, { what: string; field: string; noun: string }>> = {
-  queue: { what: 'sends to a queue', field: 'QueueUrl', noun: 'the queue' },
-  topic: { what: 'publishes to a topic', field: 'TopicArn', noun: 'the topic' },
-  'event-bus': { what: 'puts events on a bus', field: 'EventBusName', noun: 'the event bus' },
+const CHANNEL_WORDS: Readonly<Record<MessageTarget['kind'], { what: string; field: string }>> = {
+  queue: { what: 'sends to a queue', field: 'QueueUrl' },
+  topic: { what: 'publishes to a topic', field: 'TopicArn' },
+  bus: { what: 'puts events on a bus', field: 'EventBusName' },
 };
-
-type ChannelKind = Extract<Task, { kind: 'channel' }>['transport'];
 
 const TABLE_WORDS: Readonly<Record<Extract<Task, { kind: 'table' }>['op'], string>> = {
   read: 'reads a table',
@@ -177,21 +183,106 @@ const TABLE_WORDS: Readonly<Record<Extract<Task, { kind: 'table' }>['op'], strin
   delete: 'deletes from a table',
 };
 
-const channelRow = (site: Site, transport: ChannelKind, target: ChannelTarget): Unresolved => {
+/**
+ * Where one target of a sending step goes, as a deployment would name it, or
+ * the rows that say why it cannot be named.
+ *
+ * An event is named by its bus, its source and its detail type together, so
+ * each of the three has to be read; any that is not is a row of its own.
+ */
+const messageTarget = (
+  site: Site,
+  transport: MessageTarget['kind'],
+  target: ChannelTarget,
+): { readonly sends: MessageTarget } | { readonly rows: Unresolved[] } => {
   const words = CHANNEL_WORDS[transport];
-  if (!target.name.read) return unreadRow(site, words.what, words.field, target.name);
-  const event = [target.source, target.detailType]
-    .map((reading) => (reading === undefined ? undefined : reading.read ? reading.value : reading.written))
-    .filter((part): part is string => part !== undefined && part !== '');
+  if (!target.name.read) return { rows: [unreadRow(site, words.what, words.field, target.name)] };
+  if (transport !== 'bus') return { sends: { kind: transport, name: target.name.value } };
+  const fields = [
+    ['Source', target.source],
+    ['DetailType', target.detailType],
+  ] as const;
+  const rows = fields.flatMap(([field, reading]) =>
+    reading === undefined || reading.read ? [] : [unreadRow(site, words.what, field, reading)],
+  );
+  const [source, detailType] = fields.map(([, reading]) => (reading?.read === true ? reading.value : undefined));
+  if (rows.length > 0 || source === undefined || detailType === undefined) return { rows };
+  return { sends: { kind: 'bus', name: target.name.value, fields: { source, 'detail-type': detailType } } };
+};
+
+/**
+ * A step that sends: one producer at the step, the way a call that sends is one
+ * producer in code, with an `emits` edge onto each channel it names carrying the
+ * message it is given as written. The channel is spelled by the grammar every
+ * reader of these services shares, so a subscriber a deployment declares - a
+ * mapping from the queue, a subscription to the topic, a rule on the bus - is
+ * drawn onto the same node and the linker joins the two by name.
+ */
+const channelEffects = (site: Site, target: Extract<Task, { kind: 'channel' }>): Effects => {
+  const rows: Unresolved[] = [];
+  const sends = new Map<string, Readonly<Record<string, unknown>> | undefined>();
+  for (const each of target.targets) {
+    const found = messageTarget(site, target.transport, each);
+    if ('rows' in found) {
+      rows.push(...found.rows);
+      continue;
+    }
+    const channel = channelOfTarget(found.sends);
+    if (channel !== undefined && !sends.has(channel)) sends.set(channel, each.payload);
+  }
+  const task = {
+    transport: target.transport,
+    targets: target.targets.map((each) => (each.name.read ? each.name.value : null)),
+  };
+  if (sends.size === 0) return { ...NOTHING, rows, task };
+
+  const { adapter, channelKind, kind } = DEPLOYED_CHANNELS[target.transport];
+  const id = makeLeafId('producer', site.repo, site.file, site.line, site.column);
+  const located = { file: site.file, line: site.line };
+  const producer: GraphNode = {
+    id,
+    type: 'producer',
+    kind,
+    label: `${kind} ${[...sends.keys()].join(', ')}`,
+    repo: site.repo,
+    ...located,
+    meta: {
+      kind,
+      adapter,
+      channelVia: 'definition',
+      ...(target.call === undefined ? {} : { service: target.call.service, action: target.call.action }),
+    },
+  };
   return {
-    file: site.file,
-    line: site.line,
-    reason: 'workflow-channel-not-joined',
-    level: 'info',
-    message: `${site.state.name} ${words.what}: ${words.noun} ${target.name.value}${event.length === 0 ? '' : `, ${event.join(' / ')}`}`,
-    hint: 'A message sent from a workflow is recorded on its step and not yet joined to whatever handles it, which is read from where the subscription is deployed.',
-    symbol: site.id,
-    meta: { transport, name: target.name.value, ...(event.length === 0 ? {} : { event }) },
+    reaches: [],
+    nodes: [
+      producer,
+      ...[...sends.keys()].map(
+        (channel): GraphNode => ({
+          id: makeChannelId(channel),
+          type: 'channel',
+          label: channel,
+          repo: site.repo,
+          ...located,
+          meta: { channelKind, adapters: [adapter] },
+        }),
+      ),
+    ],
+    edges: [
+      { from: site.id, to: id, type: 'calls', confidence: 'static', ...located },
+      ...[...sends].map(
+        ([channel, payload]): GraphEdge => ({
+          from: id,
+          to: makeChannelId(channel),
+          type: 'emits',
+          confidence: 'static',
+          ...located,
+          ...(payload === undefined ? {} : { meta: { payload } }),
+        }),
+      ),
+    ],
+    rows,
+    task: { ...task, channels: [...sends.keys()] },
   };
 };
 
@@ -247,14 +338,7 @@ const TARGET_EFFECTS: TargetEffects = {
     ),
   workflow: (site, target) => reachedBy(site, target.name, workflowReference, 'starts a workflow', 'StateMachineArn'),
   table: tableEffects,
-  channel: (site, target) => ({
-    ...NOTHING,
-    rows: target.targets.map((each) => channelRow(site, target.transport, each)),
-    task: {
-      transport: target.transport,
-      targets: target.targets.map((each) => (each.name.read ? each.name.value : null)),
-    },
-  }),
+  channel: channelEffects,
   service: () => ({ ...NOTHING, task: {} }),
   activity: (site, target) =>
     target.name.read
@@ -416,7 +500,7 @@ export const emitWorkflow = (machine: StateMachine, options: EmitOptions): Workf
       // A name taken from a file name is a convention, and a join on it says so.
       ...(nameFrom === 'file-name' ? { nameConfidence: 'heuristic' } : {}),
       startAt: machine.startAt,
-      states: machine.states.length,
+      [STEPS_META]: machine.states.length,
       queryLanguage: machine.queryLanguage,
       ...(machine.comment === undefined ? {} : { comment: machine.comment }),
       ...options.meta,
@@ -477,7 +561,7 @@ export const emitWorkflow = (machine: StateMachine, options: EmitOptions): Workf
       file,
       line,
       meta: {
-        workflow: name,
+        [STEP_OF_META]: name,
         stateType: state.type,
         ...(state.scope.length === 0 ? {} : { scope: state.scope }),
         ...(state.end ? { end: true } : {}),

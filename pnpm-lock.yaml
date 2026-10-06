@@ -75,6 +75,9 @@ importers:
 
   packages/adapters-broker:
     dependencies:
+      '@flowatlas/aws':
+        specifier: workspace:*
+        version: link:../aws
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core
@@ -103,9 +106,9 @@ importers:
 
   packages/adapters-entry:
     dependencies:
-      '@flowatlas/adapters-broker':
+      '@flowatlas/aws':
         specifier: workspace:*
-        version: link:../adapters-broker
+        version: link:../aws
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core
@@ -118,6 +121,12 @@ importers:
       ts-morph:
         specifier: ^28.0.0
         version: 28.0.0
+
+  packages/aws:
+    dependencies:
+      '@flowatlas/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/cli:
     dependencies:
@@ -290,6 +299,9 @@ importers:
 
   packages/stepfunctions:
     dependencies:
+      '@flowatlas/aws':
+        specifier: workspace:*
+        version: link:../aws
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core
@@ -299,6 +311,9 @@ importers:
 
   packages/terraform:
     dependencies:
+      '@flowatlas/aws':
+        specifier: workspace:*
+        version: link:../aws
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core

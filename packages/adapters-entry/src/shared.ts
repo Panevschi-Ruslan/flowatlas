@@ -15,6 +15,7 @@ import {
   namedFunction,
   normalizeFilePath,
   originOfValue,
+  packageOfSpecifier,
 } from '@flowatlas/core';
 import type {
   ClassDeclaration,
@@ -40,24 +41,6 @@ export const repoClasses = function* (ctx: ExtractContext): Generator<ClassDecla
 
 export const fileOfNode = (node: { getSourceFile(): SourceFile }, ctx: ExtractContext): string =>
   normalizeFilePath(node.getSourceFile().getFilePath(), ctx.repoDir);
-
-/**
- * The package a module specifier names, or undefined when it names a file.
- *
- * `@nestjs/common/decorators` is `@nestjs/common`: a subpath import of a package
- * is an import of that package, and a reader that matched the specifier exactly
- * skipped every controller written the second way. On a notification service that was 21 routes in
- * 3 files, dropped with no row to say so, while the classes and the methods
- * around them were read normally — so nothing in the output even hinted that a
- * file had been half read (R84).
- */
-export const packageOfSpecifier = (specifier: string): string | undefined => {
-  if (specifier === '' || specifier.startsWith('.') || specifier.startsWith('/')) return undefined;
-  const [first, second] = specifier.split('/');
-  if (first === undefined || first === '') return undefined;
-  if (!first.startsWith('@')) return first;
-  return second === undefined || second === '' ? undefined : `${first}/${second}`;
-};
 
 /**
  * The package the function a call names was imported from.

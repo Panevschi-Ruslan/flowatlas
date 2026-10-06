@@ -38,14 +38,14 @@ repositories - is therefore `heuristic`, not `static`.
 | `IsBorrowerInGoodStanding` | Choice | two `choice` edges and a `default`; the rule and the default that both go to `RejectLoan` are one edge listing both |
 | `CheckHolds` | Task, `aws-sdk:dynamodb:query` | a `db_query` reading `library-holds` |
 | `ReserveCopies` / `ReserveCopy` | Map with an `ItemProcessor` | an `item-processor` edge; a `db_query` writing `library-copies` |
-| `AwaitLibrarianApproval` | Task, `sqs:sendMessage.waitForTaskToken` | an informational row naming the queue `librarian-approvals` |
+| `AwaitLibrarianApproval` | Task, `sqs:sendMessage.waitForTaskToken` | a producer onto `sqs/librarian-approvals`, with the message it is given |
 | `RecordLoan` / `WriteLoan` / `ScoreBorrower` | Parallel | a `branch` edge per branch; `ScoreBorrower` names its function by ARN as the `Resource`, with an alias |
 | `NotifyBorrower` | Task, `states:startExecution.sync:2` | joined to `workflow:borrower-notifications` in `notifications` |
-| `PublishLoanApproved` | Task, `events:putEvents` | an informational row naming the bus, the source and the detail type |
+| `PublishLoanApproved` | Task, `events:putEvents` | a producer onto `eventbridge/library-events/library.circulation/LoanApproved` |
 | `ArchiveApplication` | Task, `aws-sdk:s3:putObject` | a step that says the service and the action, and joins nothing |
 | `LookUpBranchPolicy` | Task, `FunctionName.$` | `workflow-target-dynamic`: chosen at run time, no edge |
 | `ApplyLateFeePolicy` | Task, `${LateFeePolicyFunctionArn}` | `workflow-template-unbound`: a placeholder nothing here fills, no edge |
-| `WaitForPickupWindow`, `LoanApproved`, `RejectLoan`, `LoanRejected` | Wait, Succeed, Task `sns:publish`, Fail | steps; the topic is an informational row |
+| `WaitForPickupWindow`, `LoanApproved`, `RejectLoan`, `LoanRejected` | Wait, Succeed, Task `sns:publish`, Fail | steps; `RejectLoan` is a producer onto `sns/loan-decisions` |
 
 `borrower-notifications` names its two functions by a full ARN and by a partial
 one. `overdue-reminders` is written in JSONata, uses the older `Iterator` name
@@ -57,8 +57,8 @@ Every task that invokes a function is a `reference-not-found` row here: a
 function becomes an entry with a deployed name only once the deployment that
 creates it is read (P21). The references are in the graph already, so the day
 that reader lands these rows become edges with nothing in this fixture changed.
-Queues, topics and buses are recorded on their steps until their subscribers are
-read (P23).
+A step that sends is a producer onto its queue, topic or bus (R169); nothing in
+this fixture subscribes, so each channel is one nobody handles.
 
 ## Asked of it
 

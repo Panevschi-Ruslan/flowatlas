@@ -322,7 +322,7 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
   );
 
   const imports = importsOf(warm);
-  const deployed = deploymentFiles(rootDir);
+  const deployed = deploymentFiles(rootDir, { config, ...(options.service === undefined ? {} : { service: options.service }) });
   const files = stampFiles(rootDir, [...repoFiles(warm), ...deployed], undefined, {});
   for (const [file, stamp] of Object.entries(files)) stamp.deps = imports[file] ?? [];
 

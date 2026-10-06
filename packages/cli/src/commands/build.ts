@@ -309,7 +309,7 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
   const tsconfig = findTsconfig(repoDir, service.tsconfig);
   // Listed from disk even when the repository is already open: a file created
   // since it was opened is exactly the change the survey must not miss.
-  const deployed = extractor === null ? [] : deploymentFiles(repoDir);
+  const deployed = extractor === null ? [] : deploymentFiles(repoDir, { config, service });
   const files = [...listRepoSources(repoDir, service.readTestDirectories), ...deployed];
 
   return {
@@ -777,7 +777,8 @@ const factsFromSession = (
   previous?: RepoCache,
 ): FileFacts => {
   const imports = session.imports();
-  const held = [...new Set([...session.files(), ...deploymentFiles(session.repoDir)])].sort();
+  const deployed = deploymentFiles(session.repoDir, session.reading);
+  const held = [...new Set([...session.files(), ...deployed])].sort();
   const unseen = held.filter((file) => stamps[file] === undefined);
   const late = unseen.length === 0 ? {} : stampFiles(session.repoDir, unseen, previous?.files, {});
   const files: Record<string, FileStamp> = {};
@@ -785,7 +786,7 @@ const factsFromSession = (
     const stamp = stamps[file] ?? late[file];
     if (stamp !== undefined) files[file] = { ...stamp, deps: imports[file] ?? [] };
   }
-  return { files, globalFiles: [...session.globalFiles(), ...deploymentFiles(session.repoDir)] };
+  return { files, globalFiles: [...session.globalFiles(), ...deployed] };
 };
 
 const writeJson = async (path: string, value: unknown): Promise<void> => {

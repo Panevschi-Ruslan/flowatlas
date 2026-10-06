@@ -277,6 +277,20 @@ export const makeStateId = (repo: string, file: string, workflow: string, state:
   makeSymbolId(repo, file, `${required('workflow', workflow)}/${required('state', state)}`);
 
 /**
+ * The keys of `meta` that make a chain of steps a chain to a walk, without the
+ * walk asking what kind of thing it is walking (I8).
+ *
+ * `STEPS_META` is on the node a chain starts from, and says how many steps the
+ * chain holds; `STEP_OF_META` is on each step, and names the chain it is one
+ * step of. A walk goes one hop per step, and a chain longer than the hops a walk
+ * is allowed would be cut off part-way, so a walk is lengthened by the steps it
+ * goes through: down from the start by the count, back up by the steps it
+ * climbs.
+ */
+export const STEPS_META = 'states';
+export const STEP_OF_META = 'workflow';
+
+/**
  * `<kind>:<key>` — an entry named without the service it is in.
  *
  * Something that knows only the name a thing is deployed under - a step that

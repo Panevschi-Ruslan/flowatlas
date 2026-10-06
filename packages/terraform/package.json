@@ -44,6 +44,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@flowatlas/aws": "workspace:*",
     "@flowatlas/core": "workspace:*"
   },
   "private": true

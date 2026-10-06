@@ -1,3 +1,5 @@
+import { DEPLOYED_FORMS, deployedArn } from '@flowatlas/aws';
+import { nameInForms } from '@flowatlas/core';
 import type { State } from './definition.js';
 
 /**
@@ -120,6 +122,11 @@ export interface ParameterReader {
   read(key: string, within?: unknown): Reading;
   /** A field of the parameters as written, for a classifier walking into one. */
   raw(key: string): unknown;
+  /**
+   * A field kept as written, under the key it is written with - `key.$` where
+   * the service evaluates it - or `undefined` where it is not written at all.
+   */
+  written(key: string, within?: unknown): Readonly<Record<string, unknown>> | undefined;
 }
 
 export const parametersOf = (state: State, values: TemplateValues = NO_TEMPLATE_VALUES): ParameterReader => {
@@ -131,10 +138,16 @@ export const parametersOf = (state: State, values: TemplateValues = NO_TEMPLATE_
       : undefined;
   const record = fields['Arguments'] ?? fields['Parameters'];
   if (whole !== undefined && !whole.read) {
-    return { read: () => whole, raw: () => undefined };
+    return { read: () => whole, raw: () => undefined, written: () => undefined };
   }
   return {
     read: (key, within = record) => readField(within, key, values),
+    written: (key, within = record) => {
+      if (typeof within !== 'object' || within === null || Array.isArray(within)) return undefined;
+      const fields = within as Readonly<Record<string, unknown>>;
+      const written = [`${key}.$`, key].find((name) => Object.hasOwn(fields, name));
+      return written === undefined ? undefined : { [written]: fields[written] };
+    },
     raw: (key) =>
       typeof record === 'object' && record !== null && !Array.isArray(record)
         ? (record as Readonly<Record<string, unknown>>)[key]
@@ -170,63 +183,47 @@ export const nameIn = (reading: Reading, extract: (text: string) => string | und
   return name === undefined || name.includes(MASK) ? reading : { read: true, value: name, written: reading.written };
 };
 
-/** `arn:<partition>:<service>:<region>:<account>:<resource>`, region and account possibly empty. */
-const ARN = /^arn:[^:]+:([^:]+):([^:]*):([^:]*):(.+)$/;
+/**
+ * A name of one kind out of what a field holds.
+ *
+ * The ARN or URL it may be written inside is read in the forms every reader of
+ * a deployed name shares (`@flowatlas/aws`); `bare` reads the shorter ways a
+ * field of this kind also accepts, and `valid` is what a name of the kind may
+ * be made of, placeholders masked included, so text that only looks like one -
+ * a sentence, a path - names nothing.
+ */
+const named =
+  (kind: keyof typeof DEPLOYED_FORMS, valid: RegExp, bare?: (text: string) => string | undefined) =>
+  (text: string): string | undefined => {
+    const trimmed = text.trim();
+    const name = nameInForms(trimmed, DEPLOYED_FORMS[kind]) ?? bare?.(trimmed);
+    return name !== undefined && valid.test(name) ? name : undefined;
+  };
 
-const arnOf = (text: string, service: string): string | undefined => {
-  const match = ARN.exec(text.trim());
-  return match !== null && match[1] === service ? match[4] : undefined;
-};
+const NAME = /^[A-Za-z0-9_\uE000-]+$/;
+const QUEUE_OR_TOPIC = /^[A-Za-z0-9_\uE000-]+(?:\.fifo)?$/;
 
 /**
- * A function, from a name, a partial ARN or a full one; any version or alias
- * after it is dropped, since the name is what is deployed.
+ * A function, from its ARN or the shorter ways the service accepts -
+ * `123456789012:function:notify-borrower`, `function:notify-borrower`,
+ * `notify-borrower` - which are its ARN with the front left off; any version or
+ * alias after it is dropped, since the name is what is deployed.
  */
-export const functionName = (text: string): string | undefined => {
-  const trimmed = text.trim();
-  const resource =
-    // arn:aws:lambda:eu-west-1:123456789012:function:notify-borrower[:live]
-    arnOf(trimmed, 'lambda') ??
-    // 123456789012:function:notify-borrower[:live], or function:notify-borrower
-    /^(?:[^:]+:)?(function:.*)$/.exec(trimmed)?.[1] ??
-    // notify-borrower[:live]
-    `function:${trimmed}`;
-  const match = /^function:([A-Za-z0-9_\uE000-]+)(?::[A-Za-z0-9_$\uE000-]+)?$/.exec(resource);
-  return match?.[1];
-};
+export const functionName = named('function', NAME, (text) =>
+  nameInForms(deployedArn('function', text.replace(/^(?:[^:]+:)?function:/, '')), DEPLOYED_FORMS.function),
+);
 
 /** A state machine, from its ARN, with any version or alias after it dropped. */
-export const stateMachineName = (text: string): string | undefined => {
-  const match = /^stateMachine:([A-Za-z0-9_\uE000-]+)(?::[A-Za-z0-9_\uE000-]+)?$/.exec(arnOf(text, 'states') ?? '');
-  return match?.[1];
-};
+export const stateMachineName = named('workflow', NAME);
 
 /** A queue, from its URL or its ARN. */
-export const queueName = (text: string): string | undefined => {
-  const trimmed = text.trim();
-  const fromUrl = /^https?:\/\/[^/]+\/[^/]+\/([^/?#]+)$/.exec(trimmed)?.[1];
-  const name = fromUrl ?? arnOf(trimmed, 'sqs');
-  return name !== undefined && /^[A-Za-z0-9_\uE000-]+(?:\.fifo)?$/.test(name) ? name : undefined;
-};
+export const queueName = named('queue', QUEUE_OR_TOPIC);
 
 /** A topic, from its ARN. */
-export const topicName = (text: string): string | undefined => {
-  const name = arnOf(text, 'sns');
-  return name !== undefined && /^[A-Za-z0-9_\uE000-]+(?:\.fifo)?$/.test(name) ? name : undefined;
-};
+export const topicName = named('topic', QUEUE_OR_TOPIC);
 
 /** A table, from its name or its ARN. */
-export const tableName = (text: string): string | undefined => {
-  const trimmed = text.trim();
-  const fromArn = arnOf(trimmed, 'dynamodb');
-  const name = fromArn === undefined ? trimmed : /^table\/([^/]+)$/.exec(fromArn)?.[1];
-  return name !== undefined && /^[A-Za-z0-9_.\uE000-]+$/.test(name) ? name : undefined;
-};
+export const tableName = named('table', /^[A-Za-z0-9_.\uE000-]+$/, (text) => text);
 
 /** An event bus, from its name or its ARN. */
-export const eventBusName = (text: string): string | undefined => {
-  const trimmed = text.trim();
-  const fromArn = arnOf(trimmed, 'events');
-  const name = fromArn === undefined ? trimmed : /^event-bus\/(.+)$/.exec(fromArn)?.[1];
-  return name !== undefined && /^[A-Za-z0-9_./\uE000-]+$/.test(name) ? name : undefined;
-};
+export const eventBusName = named('bus', /^[A-Za-z0-9_./\uE000-]+$/, (text) => text);

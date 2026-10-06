@@ -6,7 +6,7 @@ import {
   eventChannelPattern,
   queueChannel,
   topicChannel,
-} from '@flowatlas/adapters-broker';
+} from '@flowatlas/aws';
 import {
   CHANNEL_PATTERN_META,
   ENVIRONMENT_META,
@@ -38,7 +38,7 @@ import {
  * to (P23).
  *
  * A publisher in code and a subscriber in a deployment meet on one channel node
- * because both spell the channel in the grammar `adapters-broker` states:
+ * because both spell the channel in the grammar `@flowatlas/aws` states:
  * `sqs/<queue>`, `sns/<topic>`, `eventbridge/<bus>/<source>/<detail type>`.
  * Everything here is that meeting, in two tables: what each kind of source
  * becomes - a consumer of a channel, a schedule, a stream read in order - and
@@ -258,18 +258,19 @@ interface Declared {
 /** A publisher a delivery or a route is, onto the channel it sends to. */
 const forward = (drawing: Canvas, way: WayIn, delivery: Declared, target: MessageTarget, channel: string): void => {
   const { ctx } = drawing;
+  const { adapter, kind } = DEPLOYED_CHANNELS[target.kind];
   const id = `producer:${makeSymbolId(ctx.repo, delivery.file, delivery.address)}`;
   ctx.builder.addNode({
     id,
     type: 'producer',
-    label: `${target.kind === 'bus' ? 'event' : 'message'} ${channel}`,
+    label: `${kind} ${channel}`,
     repo: ctx.repo,
     file: delivery.file,
     line: delivery.line,
-    kind: target.kind === 'bus' ? 'event' : 'message',
+    kind,
     meta: {
-      kind: target.kind === 'bus' ? 'event' : 'message',
-      adapter: DEPLOYED_CHANNELS[target.kind].adapter,
+      kind,
+      adapter,
       channelVia: 'deployment',
       by: delivery.by,
       declaredAs: delivery.address,

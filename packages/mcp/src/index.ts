@@ -15,6 +15,7 @@ export {
   buildFlowTree,
   DEFAULT_FLOW_DEPTH,
   defaultFlowDepth,
+  walkBack,
   flatten,
   FORWARD_EDGES,
   REVERSE_EDGES,

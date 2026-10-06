@@ -203,10 +203,8 @@ const WORKFLOW_CASES = [
  * Workflows read from the Terraform that deploys them (P22, part B).
  *
  * No case passes `--depth`: the default walks every step of a workflow and on
- * into each handler, and these are what show that it does. The impact with
- * entry points only is the exception, because a walk back up is not lengthened
- * by the workflows it passes through, and the chain from a handler up to the
- * checkout that starts its workflow is longer than eight hops.
+ * into each handler, and back up from a handler through every step it climbs,
+ * and these are what show that it does.
  */
 const deployedWorkflowsFixture = join(root, 'fixtures', 'stepfunctions-terraform');
 const deployedWorkflowsPlain = { config: join(deployedWorkflowsFixture, 'flowatlas.config.json'), color: false, ascii: true };
@@ -233,8 +231,11 @@ const MULTI_REPO_WORKFLOW_CASES = [
   ],
   [
     'impact.send-notice.entries-only.tree.txt',
-    (io) =>
-      runImpact('members#src/handlers/send-notice.ts:handler', { ...multiRepoWorkflowsPlain, format: 'tree', depth: '16', entriesOnly: true }, io),
+    (io) => runImpact('members#src/handlers/send-notice.ts:handler', { ...multiRepoWorkflowsPlain, format: 'tree', entriesOnly: true }, io),
+  ],
+  [
+    'channel.loan-checked-out.json',
+    (io) => runChannel('eventbridge/library/library.circulation/LoanCheckedOut', { ...multiRepoWorkflowsPlain, format: 'json' }, io),
   ],
   ['doctor.txt', (io) => runDoctorCommand({ config: multiRepoWorkflowsPlain.config }, io)],
 ];

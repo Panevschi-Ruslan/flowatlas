@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T16:02:51.442Z",
+  "builtAt": "2026-10-06T17:32:12.453Z",
   "configHash": "a7b646c99a88",
   "services": [
     {
@@ -8,33 +8,33 @@
       "repo": "./catalogue",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 10,
-      "edges": 6,
+      "nodes": 20,
+      "edges": 14,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 551
+      "durationMs": 665
     },
     {
       "name": "circulation",
       "repo": "./circulation",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 10,
-      "edges": 9,
+      "nodes": 21,
+      "edges": 19,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 386
+      "durationMs": 429
     },
     {
       "name": "members",
       "repo": "./members",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 9,
-      "edges": 5,
+      "nodes": 16,
+      "edges": 10,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 576
+      "durationMs": 674
     }
   ],
   "httpOut": {
@@ -54,15 +54,17 @@
     "byReason": {}
   },
   "channels": {
-    "total": 0,
-    "linked": 0,
+    "total": 4,
+    "linked": 4,
     "noConsumers": [],
     "noProducers": []
   },
   "routes": {
-    "total": 0,
+    "total": 1,
     "called": 0,
-    "uncalled": [],
+    "uncalled": [
+      "entry:members:http:POST:/checkouts"
+    ],
     "duplicated": []
   },
   "types": {
@@ -71,8 +73,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 29,
-    "edges": 25,
+    "nodes": 53,
+    "edges": 49,
     "types": 0,
     "unresolved": 1
   }

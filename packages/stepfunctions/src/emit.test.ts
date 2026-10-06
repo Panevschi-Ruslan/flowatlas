@@ -142,15 +142,55 @@ describe('emitWorkflow', () => {
 
   it('writes a row for each target it could not join, by why, and draws no edge for it', () => {
     expect(fragment.rows.map((row) => [row.reason, row.level ?? 'action', row.symbol])).toEqual([
-      ['workflow-channel-not-joined', 'info', stateId('Announce')],
       ['workflow-target-dynamic', 'info', stateId('PickPolicy')],
       ['workflow-template-unbound', 'action', stateId('ApplyPolicy')],
     ]);
-    expect(fragment.rows[2]?.meta).toEqual(
+    expect(fragment.rows[1]?.meta).toEqual(
       expect.objectContaining({ field: 'FunctionName', variables: ['PolicyFunctionArn'] }),
     );
     expect(node(stateId('PickPolicy'))?.meta?.[REACHES_META]).toBeUndefined();
     expect(node(stateId('ApplyPolicy'))?.meta?.[REACHES_META]).toBeUndefined();
+  });
+
+  it('draws a step that sends as a producer onto the channel a subscriber reads, with the message it is given', () => {
+    const sends = emit({
+      StartAt: 'QueuePull',
+      States: {
+        QueuePull: {
+          Type: 'Task',
+          Resource: 'arn:aws:states:::sqs:sendMessage',
+          Parameters: { QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/123456789012/holds-to-pull', 'MessageBody.$': '$.hold' },
+          Next: 'Announce',
+        },
+        Announce: {
+          Type: 'Task',
+          Resource: 'arn:aws:states:::events:putEvents',
+          Parameters: {
+            Entries: [
+              { EventBusName: 'library', Source: 'library.holds', DetailType: 'HoldPlaced', 'Detail.$': '$.hold' },
+              { Source: 'library.holds', 'DetailType.$': '$.kind' },
+            ],
+          },
+          End: true,
+        },
+      },
+    });
+    const producerOf = (state: string) =>
+      sends.edges.find((each) => each.from === stateId(state) && each.to.startsWith('producer:'))?.to ?? '';
+    const emitted = (state: string) => sends.edges.filter((each) => each.from === producerOf(state) && each.type === 'emits');
+
+    expect(sends.nodes.find((each) => each.id === producerOf('QueuePull'))).toEqual(
+      expect.objectContaining({ type: 'producer', kind: 'message', meta: expect.objectContaining({ adapter: 'aws-sqs', channelVia: 'definition' }) }),
+    );
+    expect(emitted('QueuePull')).toEqual([
+      expect.objectContaining({ to: 'channel:sqs/holds-to-pull', confidence: 'static', meta: { payload: { 'MessageBody.$': '$.hold' } } }),
+    ]);
+    expect(sends.nodes.find((each) => each.id === 'channel:sqs/holds-to-pull')?.meta).toEqual({ channelKind: 'queue', adapters: ['aws-sqs'] });
+    // The entry whose detail type is chosen at run time names no channel, and says why.
+    expect(emitted('Announce').map((each) => each.to)).toEqual(['channel:eventbridge/library/library.holds/HoldPlaced']);
+    expect(sends.rows).toEqual([
+      expect.objectContaining({ reason: 'workflow-target-dynamic', symbol: stateId('Announce'), meta: expect.objectContaining({ field: 'DetailType' }) }),
+    ]);
   });
 
   it('joins a placeholder once it is given what the placeholder stands for', () => {

@@ -379,7 +379,7 @@ the whole graph has no walk to bound, so it is not offered `--depth`.
 |---|---|---|
 | `--detail <0-3>` | `1` | 0 identity only, 1 adds location, 2 adds metadata, 3 is answered at 2 |
 | `--format <name>` | `tree` on a terminal, `json` in a pipe | one of `tree`, `json`, `mermaid` |
-| `--depth <n>` | `8` for `flow`, and one more per step when it starts at a workflow; `3` for `impact` | how many hops to follow |
+| `--depth <n>` | `8`, and one more per step: of the workflow `flow` starts at, of every workflow `impact` climbs through | how many hops to follow |
 | `--max-nodes <n>` | `150` | most nodes to print, after which it says how many it cut |
 | `--service <name>` | every service | narrow to one |
 | `--ascii` | off | plain prefixes instead of icons |
@@ -737,7 +737,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Functions and routes declared in Terraform | `function-name-unread`, `function-name-disputed`, `function-repeated-unread`, `function-handler-unread`, `function-handler-not-found`, `function-handler-ambiguous`, `function-source-unread`, `function-runtime-unread` (info), `function-image-unread` (info), `route-path-unread`, `route-target-unread`, `api-body-unread` (info), `deployment-unread` (info) |
 | Terraform files and modules | `infra-file-unparsed`, `infra-file-unread` (info), `infra-module-missing`, `infra-module-undescribed` (info unless its inputs name a handler, a function or a route), `infra-module-description-invalid` |
 | Joining a deployment across repositories | `route-root-not-found`, `route-root-ambiguous`, `invoke-target-not-found`, `invoke-target-ambiguous` |
-| Workflows written as state machines | `workflow-definition-unreadable`, `workflow-definition-invalid`, `workflow-definition-not-loaded`, `workflow-name-unread`, `workflow-named-by-file` (info), `workflow-name-duplicate`, `workflow-target-dynamic` (info), `workflow-template-unbound`, `workflow-target-unreadable`, `workflow-channel-not-joined` (info), `reference-not-found`, `reference-ambiguous` |
+| Workflows written as state machines | `workflow-definition-unreadable`, `workflow-definition-invalid`, `workflow-definition-not-loaded`, `workflow-name-unread`, `workflow-named-by-file` (info), `workflow-name-duplicate`, `workflow-target-dynamic` (info), `workflow-template-unbound`, `workflow-target-unreadable`, `reference-not-found`, `reference-ambiguous` |
 | Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info) |
 | Values a deployment gives the code | `environment-not-set`, `environment-value-unread` |
 
@@ -2020,9 +2020,18 @@ and each is drawn as a way in of kind `workflow`. Nothing to configure.
   `updateItem`, `deleteItem`, and through the SDK `query`, `scan` and the batch
   and transaction calls) is a `db_query` on that table.
 - **A task that sends a message** (`sqs:sendMessage`, `sns:publish`,
-  `events:putEvents`) names the queue, topic or bus in an informational
-  `workflow-channel-not-joined` row on its step. A message is joined to whatever
-  handles it only once the subscription is read from where it is deployed.
+  `events:putEvents`, their batch forms, and the `aws-sdk:` spellings) is a
+  producer at the step, the way a call that sends is one in code, `static`,
+  with an `emits` edge onto each channel it names: `sqs/<queue>`,
+  `sns/<topic>`, `eventbridge/<bus>/<source>/<detail type>`, the bus an entry
+  leaves out written `default`. The message it is given is kept as written on
+  that edge, `meta.payload` (`{ "MessageBody.$": "$.notice" }`). The channel is
+  spelled the way the subscriber a deployment declares spells it (see
+  [Subscribers declared in Terraform](#subscribers-declared-in-terraform)), so a
+  mapping from the queue, a subscription to the topic or a rule on the bus, in
+  any repository, is joined to the step by name. An event whose source or
+  detail type is chosen at run time names no channel and is a row, like any
+  other name that is not written.
 - **Any other integration** - `aws-sdk:s3:putObject`, `glue:startJobRun.sync` -
   is a step whose `meta.task` says the service, the action and how the state
   waits for it. It joins nothing, and is still in every walk.
@@ -2090,9 +2099,11 @@ that loads it, and not a second time under its file's name. A machine whose
 name is not read is drawn keyed by its declaration, which nothing can join to,
 beside a `workflow-name-unread` row saying what to set; a definition that
 cannot be read at all - a path or a directive the files do not settle - is one
-`workflow-definition-not-loaded` row and nothing else. A file the configuration
-loads by a path written in it is stamped with the sources, so changing it
-rebuilds the service (`fixtures/stepfunctions-terraform`,
+`workflow-definition-not-loaded` row and nothing else. Every file `file()`,
+`templatefile()` or `fileexists()` opened while the configuration was read is
+stamped with the sources, by the path the evaluator was handed - built through a
+local or a variable as readily as written out - so changing it rebuilds the
+service (`fixtures/stepfunctions-terraform`,
 `fixtures/multi-repo-stepfunctions`).
 
 What starts a machine - a schedule, an event rule, another service's code - is
@@ -2107,9 +2118,13 @@ the order it goes there: a `Parallel`'s branches, a `Map`'s processor, each
 written in the file. Without `--depth`, a walk from a workflow goes one hop per
 step the workflow has, which is enough to reach its last step along the
 longest way through it, and the usual eight beyond that, into whatever the
-deepest step reaches; `--max-nodes` still bounds what is printed. `impact` is
-not lengthened in the same way: a walk back up from a handler stops at its
-usual depth.
+deepest step reaches; `--max-nodes` still bounds what is printed. `impact`
+without `--depth` is lengthened the same way, read backwards: a walk up from a
+handler climbs a workflow one step at a time from whichever step reaches it, so
+it goes the usual eight hops and one more for every step it climbs, and reaches
+whatever starts the workflow - a route in another repository, a rule, another
+workflow - without being told how far (`fixtures/multi-repo-stepfunctions`).
+The `impact` tool of the graph server does the same from its own twelve.
 
 ### Code that starts a workflow or a function
 

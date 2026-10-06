@@ -30,8 +30,8 @@ under the name it is deployed with; neither is a second, file-named workflow.
 ## What each workflow shows
 
 - **`lending-loan-approval`**: `Choice`, a `Map` item processor writing a
-  table, a `.waitForTaskToken` send to a queue (an informational row until the
-  queue's consumer is read), a `Parallel` whose second branch names its
+  table, a `.waitForTaskToken` send to a queue (a producer onto the queue,
+  which nothing in this repository reads), a `Parallel` whose second branch names its
   function by ARN as the `Resource`, and a `Catch` written above its `Next`.
   `flow` walks the `Next` first and the `Catch` after it.
 - **`lending-loan-renewal`**: every function it invokes is a template variable

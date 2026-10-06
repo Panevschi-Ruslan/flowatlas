@@ -5,6 +5,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import {
   allDependencies,
   hasAnyDependency,
+  packageOfSpecifier,
   readPackageJson,
   readResolvedPackageJson,
 } from './manifest.js';
@@ -144,5 +145,22 @@ describe('readResolvedPackageJson', () => {
     });
     expect(readResolvedPackageJson(root)).toBeUndefined();
     expect(readResolvedPackageJson(join(root, 'api'))?.name).toBe('api');
+  });
+});
+
+describe('packageOfSpecifier', () => {
+  it('reads a subpath import as the package it is a subpath of', () => {
+    expect(packageOfSpecifier('@scope/name/decorators')).toBe('@scope/name');
+    expect(packageOfSpecifier('@scope/name')).toBe('@scope/name');
+    expect(packageOfSpecifier('router/lib/layer')).toBe('router');
+  });
+
+  it('answers with nothing for a module that names a file', () => {
+    expect(packageOfSpecifier('./framework/server')).toBeUndefined();
+    expect(packageOfSpecifier('../decorators')).toBeUndefined();
+    expect(packageOfSpecifier('/abs/path')).toBeUndefined();
+    expect(packageOfSpecifier('')).toBeUndefined();
+    // A scope with no package after it names nothing installable.
+    expect(packageOfSpecifier('@scope')).toBeUndefined();
   });
 });

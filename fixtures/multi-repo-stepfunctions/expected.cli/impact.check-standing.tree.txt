@@ -1,5 +1,9 @@
--> handler                                                members/src/handlers/check-standing.ts:8
-  @  members-check-standing                               members/infra/main.tf:15
-    => circulation -> CheckStanding [Task lambda:invoke]  circulation/statemachine/checkout.asl.json:5
-      @  workflow circulation-checkout                    circulation/statemachine/checkout.asl.json:1
-Reachable from: 1 invoke (members), 1 workflow (circulation)
+-> handler                                                                members/src/handlers/check-standing.ts:8
+  @  members-check-standing                                               members/infra/main.tf:22
+    => circulation -> CheckStanding [Task lambda:invoke]                  circulation/statemachine/checkout.asl.json:5
+      @  workflow circulation-checkout                                    circulation/statemachine/checkout.asl.json:1
+        ~  rule circulation-checkout-requested                            circulation/infra/main.tf:74
+          ~  eventbridge/library/library.members/CheckoutRequested        infra/main.tf:74
+            => members ~  event eventbridge/library/library.members/CheckoutRequested  members/infra/main.tf:92
+              @  POST /checkouts                                          members/infra/main.tf:92
+Reachable from: 1 http entry (members), 1 invoke (members), 1 workflow (circulation)

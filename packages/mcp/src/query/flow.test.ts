@@ -3,7 +3,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { buildTestDb, edge, entry, node, testDbDirectory, type TestGraph } from '../test-graph.js';
 import { projectDetail, truncate } from './detail.js';
 import { isResolved, resolveEntryRef } from './entry-ref.js';
-import { buildFlowTree, defaultFlowDepth, flatten } from './flow.js';
+import { buildFlowTree, defaultFlowDepth, flatten, walkBack } from './flow.js';
 import type { FlowNode } from './types.js';
 
 afterAll(() => rmSync(testDbDirectory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
@@ -266,6 +266,23 @@ describe('walking a workflow', () => {
     expect(defaultFlowDepth(undefined)).toBe(8);
     expect(defaultFlowDepth({ id: 'entry:a:http:GET /', type: 'entry', label: 'GET /', repo: 'a' })).toBe(8);
     expect(defaultFlowDepth({ id: 'entry:a:workflow:w', type: 'entry', kind: 'workflow', label: 'w', repo: 'a', meta: { states: 12 } })).toBe(20);
+  });
+
+  it('walks back further by every step it climbs, until it climbs no new one', () => {
+    // A chain of twelve steps above a handler, the step that reaches the handler
+    // last, and a route above the chain: twelve hops of climbing and four more.
+    const steps = Array.from({ length: 12 }, (_, index) => ({ id: `step${index}`, meta: { workflow: 'approval' } }));
+    const path = [{ id: 'handler' }, { id: 'invoke' }, ...[...steps].reverse(), { id: 'workflow', meta: { states: 12 } }, { id: 'route' }];
+    const asked: number[] = [];
+    const walk = (depth: number) => {
+      asked.push(depth);
+      // A second path to one step reaches it again, and it is still one step.
+      return { rows: [...path.slice(0, depth + 1), ...(depth >= 3 ? path.slice(2, 3) : [])] };
+    };
+    expect(walkBack(8, walk).rows.map((row) => row.id)).toContain('route');
+    expect(asked).toEqual([8, 15, 20]);
+    // A walk that climbs nothing goes the usual distance once.
+    expect(walkBack(8, () => ({ rows: [{ id: 'handler' }] })).rows).toHaveLength(1);
   });
 });
 

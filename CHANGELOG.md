@@ -46,8 +46,9 @@ only one of them moved.
   evaluated. `flow workflow:loan-approval` walks it.
 - **A step that starts another workflow is joined to it by name**, across
   services, the way a channel is. A step that reads or writes a table is a query
-  on that table; a step that sends to a queue, a topic or a bus says which, on
-  its step; any other integration is a step naming its service and action.
+  on that table; a step that sends to a queue, a topic or a bus is a publisher
+  onto that channel; any other integration is a step naming its service and
+  action.
 - **A name the definition does not state is a row, never a guess**: one chosen
   at run time by a path, an intrinsic or a JSONata expression
   (`workflow-target-dynamic`, nothing to fix), a `${...}` placeholder nothing
@@ -163,6 +164,16 @@ only one of them moved.
   function, handed a string or an enum member, is one `starter-undescribed` row
   naming the package and the function, with the description to write
   (`fixtures/start-workflow-helper`).
+- **A workflow step that sends is a publisher, joined to its subscriber.** A
+  task that sends to a queue, publishes to a topic or puts events on a bus -
+  `sqs:sendMessage`, `sns:publish`, `events:putEvents`, their batch forms and
+  the `aws-sdk:` spellings - is a producer at the step onto
+  `sqs/<queue>`, `sns/<topic>` or `eventbridge/<bus>/<source>/<detail type>`,
+  the names a subscriber read from Terraform lands on, so a mapping, a
+  subscription or a rule in any repository is joined to the step by name. The
+  message the step is given is kept as written on the edge (`meta.payload`).
+  The `workflow-channel-not-joined` row is gone
+  (`fixtures/multi-repo-stepfunctions`).
 
 ### Changed
 
@@ -175,6 +186,12 @@ only one of them moved.
   and then the usual eight, so the last step of a workflow longer than eight is
   reached, and so is the handler it invokes. `get_flow` does the same when it is
   not given a depth.
+- **`impact` climbs a workflow without `--depth`.** A walk back up from a
+  handler goes the usual eight hops and one more for every workflow step it
+  climbs, so a handler a workflow invokes is followed up to whatever starts the
+  workflow - a route in another repository, through a rule - where it used to
+  stop at eight and say the chain ended before an entry point. The graph
+  server's `impact` tool does the same.
 - **The graph's schema version is 6**, for the `invoke` and `workflow` entry
   kinds. A database built by an earlier version is refused with a message to
   rebuild.
@@ -184,6 +201,17 @@ only one of them moved.
   changed`.
 
 ### Fixed
+
+- **A definition loaded through a local or a variable is watched.** The files a
+  Terraform configuration loads are stamped by the paths `file()` and
+  `templatefile()` were evaluated with, not read off the `.tf` text, so editing
+  `file("${local.definitions}/notices.json")` re-reads the service instead of
+  answering `0 files changed`.
+- **One reading of an ARN or a URL for every reader.** Code publishing through
+  the SDK, a state machine definition and Terraform now read a deployed name out
+  of an ARN or a queue URL by the same forms: a state machine ARN with a version
+  or an alias names the machine in Terraform too, and a partner bus keeps the
+  slashes in its name everywhere.
 
 - **A property of a parameter is no longer reported as a constant nobody could
   read.** `event.detail.type` read off a parameter is decided by each caller,

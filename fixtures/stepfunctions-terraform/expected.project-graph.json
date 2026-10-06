@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T16:43:08.189Z",
+  "builtAt": "2026-10-06T17:33:25.335Z",
   "services": [
     {
       "name": "lending",
@@ -10,6 +10,22 @@
     }
   ],
   "nodes": [
+    {
+      "id": "channel:sqs/lending-librarian-approvals",
+      "type": "channel",
+      "label": "sqs/lending-librarian-approvals",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 80,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
     {
       "id": "db_query:lending#infra/workflows.tf:42:7",
       "type": "db_query",
@@ -563,6 +579,9 @@
           "transport": "queue",
           "targets": [
             "lending-librarian-approvals"
+          ],
+          "channels": [
+            "sqs/lending-librarian-approvals"
           ]
         },
         "parameters": {
@@ -1126,6 +1145,22 @@
       }
     },
     {
+      "id": "producer:lending#statemachine/loan-approval.asl.json:80:5",
+      "type": "producer",
+      "label": "message sqs/lending-librarian-approvals",
+      "repo": "lending",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 80,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "definition",
+        "service": "sqs",
+        "action": "sendMessage"
+      }
+    },
+    {
       "id": "repo:lending",
       "type": "repo",
       "label": "lending",
@@ -1489,6 +1524,14 @@
           }
         ]
       }
+    },
+    {
+      "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianApproval",
+      "to": "producer:lending#statemachine/loan-approval.asl.json:80:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 80
     },
     {
       "from": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrowerStanding",
@@ -2017,25 +2060,27 @@
           }
         ]
       }
+    },
+    {
+      "from": "producer:lending#statemachine/loan-approval.asl.json:80:5",
+      "to": "channel:sqs/lending-librarian-approvals",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 80,
+      "meta": {
+        "payload": {
+          "MessageBody": {
+            "borrowerId.$": "$.borrowerId",
+            "itemIds.$": "$.itemIds",
+            "taskToken.$": "$$.Task.Token"
+          }
+        }
+      }
     }
   ],
   "types": {},
   "unresolved": [
-    {
-      "file": "statemachine/loan-approval.asl.json",
-      "line": 80,
-      "reason": "workflow-channel-not-joined",
-      "level": "info",
-      "message": "AwaitLibrarianApproval sends to a queue: the queue lending-librarian-approvals",
-      "hint": "A message sent from a workflow is recorded on its step and not yet joined to whatever handles it, which is read from where the subscription is deployed.",
-      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianApproval",
-      "adapter": "aws-lambda",
-      "meta": {
-        "transport": "queue",
-        "name": "lending-librarian-approvals"
-      },
-      "service": "lending"
-    },
     {
       "file": "statemachine/loan-renewal.asl.json",
       "line": 66,

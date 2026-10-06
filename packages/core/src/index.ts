@@ -28,6 +28,8 @@ export {
   PARAM_PLACEHOLDER,
   REACHES_META,
   STARTS_META,
+  STEP_OF_META,
+  STEPS_META,
   isChannelId,
   isDeployedEntryKind,
   makeDeployedReference,
@@ -176,10 +178,12 @@ export type {
   ValueFilter,
 } from './adapters/deployment.js';
 export {
+  ADDRESS_SEPARATOR,
   AWAITING_META,
   CHANNEL_PATTERN_META,
   ENVIRONMENT_META,
   matchChannelPattern,
+  nameInForms,
   nameWithin,
 } from './channel-pattern.js';
 export type {
@@ -205,6 +209,7 @@ export {
   hasAnyDependency,
   hasDependency,
   manifestsWithin,
+  packageOfSpecifier,
   readPackageJson,
   readResolvedPackageJson,
   suppliedWith,

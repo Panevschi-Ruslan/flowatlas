@@ -1,0 +1,110 @@
+{
+  "channel": "channel:eventbridge/library/library.circulation/LoanCheckedOut",
+  "producers": 1,
+  "consumers": 1,
+  "root": {
+    "node": {
+      "id": "channel:eventbridge/library/library.circulation/LoanCheckedOut",
+      "type": "channel",
+      "label": "eventbridge/library/library.circulation/LoanCheckedOut",
+      "loc": "statemachine/checkout.asl.json:86",
+      "service": "circulation"
+    },
+    "children": [
+      {
+        "node": {
+          "id": "channel:eventbridge/library/library.circulation/LoanCheckedOut#producers",
+          "type": "group",
+          "label": "producers (1)"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "producer:circulation#statemachine/checkout.asl.json:86:5",
+              "type": "producer",
+              "label": "event eventbridge/library/library.circulation/LoanCheckedOut",
+              "loc": "statemachine/checkout.asl.json:86",
+              "service": "circulation",
+              "kind": "event"
+            },
+            "edge": {
+              "type": "emits",
+              "confidence": "static"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "node": {
+          "id": "channel:eventbridge/library/library.circulation/LoanCheckedOut#consumers",
+          "type": "group",
+          "label": "consumers (1)"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "consumer:catalogue#infra/main.tf:aws_cloudwatch_event_target.update_availability",
+              "type": "consumer",
+              "label": "rule catalogue-loan-checked-out",
+              "loc": "infra/main.tf:79",
+              "service": "catalogue",
+              "kind": "event"
+            },
+            "edge": {
+              "type": "consumes",
+              "confidence": "static"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "entry:catalogue:invoke:catalogue-update-availability",
+                  "type": "entry",
+                  "label": "catalogue-update-availability",
+                  "loc": "infra/main.tf:61",
+                  "service": "catalogue",
+                  "kind": "invoke"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "catalogue#src/handlers/update-availability.ts:handler",
+                      "type": "function",
+                      "label": "handler",
+                      "loc": "src/handlers/update-availability.ts:10",
+                      "service": "catalogue"
+                    },
+                    "edge": {
+                      "type": "handles",
+                      "confidence": "static"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "catalogue#src/handlers/update-availability.ts:copiesLeft",
+                          "type": "function",
+                          "label": "copiesLeft",
+                          "loc": "src/handlers/update-availability.ts:7",
+                          "service": "catalogue"
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

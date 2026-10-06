@@ -48,7 +48,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@flowatlas/adapters-broker": "workspace:*",
+    "@flowatlas/aws": "workspace:*",
     "@flowatlas/core": "workspace:*",
     "@flowatlas/stepfunctions": "workspace:*",
     "@flowatlas/terraform": "workspace:*",

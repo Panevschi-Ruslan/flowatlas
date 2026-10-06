@@ -1,15 +1,22 @@
 import { ENTRY_KINDS, type DetailLevel, type GraphNode } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import {
+  DEFAULT_FLOW_DEPTH,
   REVERSE_EDGES,
   projectDetail,
   projectEdge,
   truncationMessage,
+  walkBack,
   type FlowNode,
 } from '@flowatlas/mcp';
 
 export interface CallerOptions {
-  depth: number;
+  /**
+   * Hops to follow back. Absent, the walk goes the usual eight and one more per
+   * step of every workflow it climbs through (`walkBack`), so a handler a
+   * workflow invokes is followed up to whatever starts the workflow.
+   */
+  depth?: number;
   maxNodes: number;
   detail: DetailLevel;
   /** Keep only the entry points, hung straight off the target. */
@@ -46,13 +53,9 @@ const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
  * thing that would change and the leaves are the ways in.
  */
 export const callersOf = (db: GraphDb, target: GraphNode, options: CallerOptions): Callers => {
-  const walk = db.traverse({
-    from: target.id,
-    direction: 'in',
-    edgeTypes: REVERSE_EDGES,
-    maxDepth: options.depth,
-    maxNodes: options.maxNodes,
-  });
+  const traverse = (maxDepth: number) =>
+    db.traverse({ from: target.id, direction: 'in', edgeTypes: REVERSE_EDGES, maxDepth, maxNodes: options.maxNodes });
+  const walk = options.depth === undefined ? walkBack(DEFAULT_FLOW_DEPTH, traverse) : traverse(options.depth);
 
   const root: FlowNode = { node: projectDetail(target, options.detail), children: [] };
   const byPath = new Map<string, FlowNode>([[target.id, root]]);

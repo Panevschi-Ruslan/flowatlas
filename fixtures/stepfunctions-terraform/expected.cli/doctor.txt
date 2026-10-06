@@ -1,19 +1,16 @@
 unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
 
-unresolved: 1 to act on over 2 rows, and 1 place static reading cannot see, folded into 1
+unresolved: 1 to act on over 1 row
   workflow-template-unbound: 1 row
     Whatever deploys this definition fills the placeholder in first. Read the definition from the file that deploys it, so its values are known, or write the name in place.
       lending statemachine/loan-renewal.asl.json:66  lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ApplyBranchPolicy
-  workflow-channel-not-joined (info): 1 row
-    A message sent from a workflow is recorded on its step and not yet joined to whatever handles it, which is read from where the subscription is deployed.
-      lending statemachine/loan-approval.asl.json:80  lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianApproval
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked
 
 desync: none
 
-contracts: no errors, 0 excused, 0 boundary directions nothing could be compared on
+contracts: no errors, 0 excused, 1 boundary directions nothing could be compared on
 
 baseline: missing (0 accepted, 1 now, +1)
   no baseline at <root>/fixtures/stepfunctions-terraform/flowatlas.baseline.json; run flowatlas doctor --accept to write one

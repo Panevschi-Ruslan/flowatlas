@@ -1,3 +1,4 @@
+import { packageOfSpecifier } from '@flowatlas/core';
 import { Node, SyntaxKind, type Node as TsNode } from 'ts-morph';
 
 /**
@@ -30,22 +31,6 @@ export interface StatedOrigin {
 
 /** How many bindings are followed back to the statement of a type. */
 const MOST_STEPS = 6;
-
-/**
- * The package a module specifier names, or nothing when it names a file.
- *
- * The rule the data layer and the entry side each state for themselves: a
- * subpath of a package is that package. Written here a third time rather than
- * imported, because the two copies live in packages this one does not depend
- * on; moving the rule into the core is one change for all three.
- */
-export const packageOfSpecifier = (specifier: string): string | undefined => {
-  if (specifier === '' || specifier.startsWith('.') || specifier.startsWith('/')) return undefined;
-  const [first, second] = specifier.split('/');
-  if (first === undefined || first === '') return undefined;
-  if (!first.startsWith('@')) return first;
-  return second === undefined || second === '' ? undefined : `${first}/${second}`;
-};
 
 /** The expression a value's initialiser states its class with, when it constructs one. */
 const constructedBy = (initializer: TsNode | undefined): TsNode | undefined => {

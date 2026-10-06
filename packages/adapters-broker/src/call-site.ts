@@ -1,7 +1,7 @@
-import { methodNamedOn, resolveTypeOrigin, type ClassMethod, type TypeOrigin } from '@flowatlas/core';
+import { methodNamedOn, packageOfSpecifier, resolveTypeOrigin, type ClassMethod, type TypeOrigin } from '@flowatlas/core';
 import type { CallExpression, ClassDeclaration, Node as TsNode, Type } from 'ts-morph';
 import { Node } from 'ts-morph';
-import { importOf, packageOfSpecifier, statedOrigin } from './stated-origin.js';
+import { importOf, statedOrigin } from './stated-origin.js';
 
 /**
  * Reading one publishing or subscribing call site.

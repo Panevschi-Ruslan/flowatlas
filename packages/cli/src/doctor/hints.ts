@@ -700,8 +700,6 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The step names what it calls through a placeholder that whatever deploys the definition fills in. Read the definition from the file that deploys it, or write the name in place.',
   'workflow-target-unreadable': () =>
     'The step says it calls something and does not say what, or says it in a form that names nothing. Write the name or the ARN the service expects.',
-  'workflow-channel-not-joined': () =>
-    'A message a workflow sends is recorded on its step and is not yet joined to whatever handles it, which is read from where the subscription is deployed.',
   'workflow-name-unread': () =>
     'The name a workflow is deployed under depends on something the files do not settle, so nothing can start it by name. Its steps are still drawn. Give the variable a default or a variable file, or write the name out.',
   'workflow-definition-not-loaded': () =>

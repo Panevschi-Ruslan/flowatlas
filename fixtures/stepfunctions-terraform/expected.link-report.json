@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T16:04:15.391Z",
+  "builtAt": "2026-10-06T17:33:25.335Z",
   "configHash": "f38fa4940897",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": ".",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 61,
-      "edges": 58,
+      "nodes": 63,
+      "edges": 60,
       "types": 0,
-      "unresolved": 2,
-      "durationMs": 527
+      "unresolved": 1,
+      "durationMs": 559
     }
   ],
   "httpOut": {
@@ -32,9 +32,11 @@
     "byReason": {}
   },
   "channels": {
-    "total": 0,
+    "total": 1,
     "linked": 0,
-    "noConsumers": [],
+    "noConsumers": [
+      "channel:sqs/lending-librarian-approvals"
+    ],
     "noProducers": []
   },
   "routes": {
@@ -49,9 +51,9 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 61,
-    "edges": 68,
+    "nodes": 63,
+    "edges": 70,
     "types": 0,
-    "unresolved": 2
+    "unresolved": 1
   }
 }

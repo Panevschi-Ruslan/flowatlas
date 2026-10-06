@@ -48,6 +48,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@flowatlas/aws": "workspace:*",
     "@flowatlas/core": "workspace:*",
     "@flowatlas/extract-scopes": "workspace:*",
     "ts-morph": "^28.0.0"

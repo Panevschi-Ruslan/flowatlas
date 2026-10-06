@@ -3,7 +3,6 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { parseConfig, type DeployedWorkflow, type Deployment } from '@flowatlas/core';
-import { loadedFiles } from '../configuration/files.js';
 import { terraformReader } from '../index.js';
 
 const FIXTURES = resolve(import.meta.dirname, '../../../../fixtures');
@@ -100,7 +99,8 @@ describe('the state machines of the stepfunctions-terraform fixture', () => {
   });
 
   it('lists the definitions the configuration loads, so a build watches them', () => {
-    expect(loadedFiles(join(FIXTURES, 'stepfunctions-terraform'))).toEqual([
+    const files = terraformReader.files(join(FIXTURES, 'stepfunctions-terraform'), { config: parseConfig({}) });
+    expect(files.filter((file) => !/\.tf$/.test(file))).toEqual([
       'statemachine/loan-approval.asl.json',
       'statemachine/loan-renewal.asl.json',
     ]);
@@ -114,6 +114,24 @@ resource "aws_lambda_function" "renew" {
   handler       = "index.handler"
 }
 `;
+
+  it('lists a definition loaded through a local, by the path the evaluator was handed', () => {
+    const dir = repo({
+      'infra/main.tf': `
+locals {
+  definitions = "\${path.module}/../statemachine"
+}
+
+resource "aws_sfn_state_machine" "renew" {
+  name       = "renew"
+  role_arn   = "arn:aws:iam::000000000000:role/workflows"
+  definition = file("\${local.definitions}/renew.asl.json")
+}
+`,
+      'statemachine/renew.asl.json': JSON.stringify({ StartAt: 'Done', States: { Done: { Type: 'Succeed' } } }),
+    });
+    expect(terraformReader.files(dir, { config: parseConfig({}) })).toEqual(['infra/main.tf', 'statemachine/renew.asl.json']);
+  });
 
   it('reads a template whose directives the files settle', () => {
     const workflow = only(
