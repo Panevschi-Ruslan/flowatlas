@@ -1,0 +1,22 @@
+@  workflow circulation-checkout                              circulation/statemachine/checkout.asl.json:1
+  -> CheckStanding [Task lambda:invoke]                       circulation/statemachine/checkout.asl.json:5
+    => members @  members-check-standing                      members/infra/main.tf:15
+      -> handler                                              members/src/handlers/check-standing.ts:8
+        -> lookUpStanding                                     members/src/handlers/check-standing.ts:5
+    -> IsInGoodStanding [Choice]                              circulation/statemachine/checkout.asl.json:20
+      -> ReserveCopy [Task function]                          circulation/statemachine/checkout.asl.json:31
+        => catalogue @  catalogue-reserve-copy                catalogue/infra/main.tf:16
+          -> handler                                          catalogue/src/handlers/reserve-copy.ts:7
+            -> firstFreeCopy                                  catalogue/src/handlers/reserve-copy.ts:5
+        -> WriteLoan [Task dynamodb:putItem]                  circulation/statemachine/checkout.asl.json:43
+          [] write circulation-loans                          circulation/statemachine/checkout.asl.json:43
+            #  circulation-loans
+          -> SendCheckoutNotice [Task states:startExecution]  circulation/statemachine/checkout.asl.json:63
+            => members @  workflow members-borrower-notices   members/statemachine/borrower-notices.asl.json:1
+              -> SendNotice [Task lambda:invoke]              members/statemachine/borrower-notices.asl.json:5
+                @  members-send-notice                        members/infra/main.tf:23
+                  -> handler                                  members/src/handlers/send-notice.ts:8
+                    -> subjectOf                              members/src/handlers/send-notice.ts:6
+        -> CheckoutRefused [Fail]                             circulation/statemachine/checkout.asl.json:75
+      -> CheckoutRefused [Fail]                               circulation/statemachine/checkout.asl.json:75
+unresolved on this path: 0

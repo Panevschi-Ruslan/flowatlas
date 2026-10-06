@@ -661,7 +661,7 @@ class Parser {
     if (indented) content = dedent(content);
     const inner = new Parser(content, this.file, this.position(contentStart).line);
     const run = inner.template(false, new Set());
-    return { type: 'template', parts: run.parts, pos: this.position(start) };
+    return { type: 'template', parts: run.parts, pos: this.position(start), heredoc: true };
   }
 
   /**

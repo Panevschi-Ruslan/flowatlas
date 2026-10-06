@@ -60,6 +60,22 @@ only one of them moved.
   (`fixtures/stepfunctions-asl-files`).
 - **`flow workflow:<name>`** walks a state machine's steps in order and into
   each handler.
+- **A state machine declared in Terraform is read from there.**
+  `aws_sfn_state_machine` - directly, through a local module, or through
+  `terraform-aws-modules/step-functions/aws`, which now ships described - is a
+  `workflow` under the name it is deployed with, evaluated, and every join to it
+  is `static`. Its definition is read whether it is written with `file()`,
+  `templatefile()` with its variables, `jsonencode()`, a heredoc, or
+  `jsonencode(yamldecode(file()))`, and each state is placed on the line it is
+  written on. A template variable or a value inside the definition that holds a
+  reference - `aws_lambda_function.x.arn`, `module.f.lambda_function_arn`,
+  `aws_sfn_state_machine.y.arn`, a `data` block looked up by name - is filled
+  with the deployed name it addresses, so a task joins the function or the
+  workflow it names across repositories; a variable the files do not settle is a
+  `workflow-template-unbound` row on the step that uses it. A definition that
+  is also a standalone `*.asl.json` is read once, under the deployed name. New
+  rows: `workflow-name-unread`, `workflow-definition-not-loaded`.
+  `fixtures/stepfunctions-terraform`, `fixtures/multi-repo-stepfunctions`.
 - **Publishing through the AWS SDK.** EventBridge `PutEvents`, SQS
   `SendMessage` and `SendMessageBatch`, and SNS `Publish` and `PublishBatch` are
   read as producers, whether the call sends a command (`client.send(new
@@ -94,6 +110,15 @@ only one of them moved.
 
 ### Changed
 
+- **`flow` takes a workflow's steps in the order control moves**, not the
+  order they are written in: what a step does first, then its branches, its
+  `Choice` rules and `Default`, its `Next`, and its `Catch` last, even where the
+  `Catch` is written above the `Next`.
+- **`flow` from a workflow goes as far as the workflow does.** Without
+  `--depth`, a walk from an entry that is a chain of steps goes one hop per step
+  and then the usual eight, so the last step of a workflow longer than eight is
+  reached, and so is the handler it invokes. `get_flow` does the same when it is
+  not given a depth.
 - **The graph's schema version is 6**, for the `invoke` and `workflow` entry
   kinds. A database built by an earlier version is refused with a message to
   rebuild.

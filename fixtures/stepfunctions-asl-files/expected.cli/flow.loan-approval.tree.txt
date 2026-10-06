@@ -1,8 +1,6 @@
 @  workflow loan-approval                                                 circulation/statemachine/loan-approval.asl.json:1
   -> ShapeApplication [Pass]                                              circulation/statemachine/loan-approval.asl.json:5
     -> CheckBorrowerStanding [Task lambda:invoke]                         circulation/statemachine/loan-approval.asl.json:14
-      -> RejectLoan [Task sns:publish]                                    circulation/statemachine/loan-approval.asl.json:234
-        -> LoanRejected [Fail]                                            circulation/statemachine/loan-approval.asl.json:243
       -> IsBorrowerInGoodStanding [Choice]                                circulation/statemachine/loan-approval.asl.json:44
         -> CheckHolds [Task dynamodb:query]                               circulation/statemachine/loan-approval.asl.json:60
           [] read library-holds                                           circulation/statemachine/loan-approval.asl.json:60
@@ -12,8 +10,6 @@
               [] write library-copies                                     circulation/statemachine/loan-approval.asl.json:85
                 #  library-copies
             -> AwaitLibrarianApproval [Task sqs:sendMessage]              circulation/statemachine/loan-approval.asl.json:109
-              -> RejectLoan [Task sns:publish]                            circulation/statemachine/loan-approval.asl.json:234
-                -> LoanRejected [Fail]                                    circulation/statemachine/loan-approval.asl.json:243
               -> RecordLoan [Parallel]                                    circulation/statemachine/loan-approval.asl.json:131
                 -> WriteLoan [Task dynamodb:putItem]                      circulation/statemachine/loan-approval.asl.json:137
                   [] write library-loans                                  circulation/statemachine/loan-approval.asl.json:137
@@ -36,6 +32,10 @@
                         -> ApplyLateFeePolicy [Task lambda:invoke]        circulation/statemachine/loan-approval.asl.json:216
                           -> WaitForPickupWindow [Wait]                   circulation/statemachine/loan-approval.asl.json:226
                             -> LoanApproved [Succeed]                     circulation/statemachine/loan-approval.asl.json:231
+              -> RejectLoan [Task sns:publish]                            circulation/statemachine/loan-approval.asl.json:234
+                -> LoanRejected [Fail]                                    circulation/statemachine/loan-approval.asl.json:243
         -> RejectLoan [Task sns:publish]                                  circulation/statemachine/loan-approval.asl.json:234
           -> LoanRejected [Fail]                                          circulation/statemachine/loan-approval.asl.json:243
+      -> RejectLoan [Task sns:publish]                                    circulation/statemachine/loan-approval.asl.json:234
+        -> LoanRejected [Fail]                                            circulation/statemachine/loan-approval.asl.json:243
 unresolved on this path: 9

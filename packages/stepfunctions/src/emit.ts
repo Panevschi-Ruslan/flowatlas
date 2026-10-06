@@ -51,6 +51,13 @@ export interface EmitOptions {
   readonly nameFrom: NameSource;
   /** What a `${...}` placeholder in the definition stands for. */
   readonly resolve?: TemplateValues;
+  /**
+   * The entry's key, where it is not the name: a workflow whose deployed name
+   * was not read is keyed by where it is declared, so nothing joins to it.
+   */
+  readonly key?: string;
+  /** More to say on the entry: what declares the workflow, where its definition came from. */
+  readonly meta?: Readonly<Record<string, unknown>>;
 }
 
 export interface WorkflowFragment {
@@ -392,7 +399,8 @@ export const emitWorkflow = (machine: StateMachine, options: EmitOptions): Workf
     };
   }
 
-  const entryId = makeEntryId(repo, 'workflow', makeWorkflowEntryKey(name));
+  const key = options.key ?? makeWorkflowEntryKey(name);
+  const entryId = makeEntryId(repo, 'workflow', key);
   nodes.push({
     id: entryId,
     type: 'entry',
@@ -402,7 +410,7 @@ export const emitWorkflow = (machine: StateMachine, options: EmitOptions): Workf
     file,
     line: machineLine,
     meta: {
-      key: name,
+      key,
       name,
       nameFrom,
       // A name taken from a file name is a convention, and a join on it says so.
@@ -411,6 +419,7 @@ export const emitWorkflow = (machine: StateMachine, options: EmitOptions): Workf
       states: machine.states.length,
       queryLanguage: machine.queryLanguage,
       ...(machine.comment === undefined ? {} : { comment: machine.comment }),
+      ...options.meta,
     },
   });
 

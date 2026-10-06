@@ -42,7 +42,28 @@ const GUARD_EDGE = 'guarded_by';
  */
 export const REVERSE_EDGES = FORWARD_EDGES;
 
+/** How many hops a walk follows when nobody says. */
+export const DEFAULT_FLOW_DEPTH = 8;
+
+/**
+ * How far a walk from an entry goes when nobody says how far.
+ *
+ * Eight hops is a request through a controller, a service and a repository,
+ * with room to spare. An entry that is a chain of steps is not: every step is
+ * a hop, and a workflow of a dozen steps would be cut off before its last one,
+ * never mind the handlers its steps invoke. So an entry that says how many
+ * steps it holds (`meta.states`) is walked one hop per step - the longest way
+ * through without going round a loop visits each step once - and the usual
+ * eight beyond that, into whatever the deepest step reaches. Nothing else is
+ * walked further, and `maxNodes` still bounds what is returned (I9).
+ */
+export const defaultFlowDepth = (entry: GraphNode | undefined): number => {
+  const steps = entry?.meta?.['states'];
+  return typeof steps === 'number' && Number.isInteger(steps) && steps > 0 ? DEFAULT_FLOW_DEPTH + steps : DEFAULT_FLOW_DEPTH;
+};
+
 export interface FlowOptions {
+  /** Hops to follow; `defaultFlowDepth` of the entry when absent. */
   depth?: number;
   maxNodes?: number;
   detail?: DetailLevel;
@@ -62,8 +83,22 @@ const orderOf = (edge: GraphEdge): number => {
   return typeof order === 'number' ? order : Number.MAX_SAFE_INTEGER;
 };
 
-/** Call order, as written: by line where there is one, then by target. */
+const hasOrder = (edge: GraphEdge): boolean => typeof edge.meta?.['order'] === 'number';
+
+/**
+ * The order a node's edges are walked in: what it does itself, as written - by
+ * line, then by target - and then where control goes next, in the order the
+ * edges say it goes there.
+ *
+ * An edge carries `meta.order` where the order things happen in is not the
+ * order they are written in: a state's transitions, whose `Catch` may be
+ * written above its `Next` and is still the way out taken last, and every one
+ * of which leaves after the task the state runs. Line order would put the
+ * catch first and could put the task after both.
+ */
 const inCallOrder = (a: GraphEdge, b: GraphEdge): number =>
+  Number(hasOrder(a)) - Number(hasOrder(b)) ||
+  (hasOrder(a) ? orderOf(a) - orderOf(b) : 0) ||
   (a.line ?? Number.MAX_SAFE_INTEGER) - (b.line ?? Number.MAX_SAFE_INTEGER) ||
   (a.to < b.to ? -1 : a.to > b.to ? 1 : 0);
 
@@ -104,11 +139,11 @@ interface Pending {
  * followed, so a cycle ends the branch instead of the walk.
  */
 export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions = {}): FlowResult => {
-  const depth = options.depth ?? 8;
+  const start = db.node(entryId);
+  const depth = options.depth ?? defaultFlowDepth(start);
   const maxNodes = options.maxNodes ?? 150;
   const detail = options.detail ?? 1;
 
-  const start = db.node(entryId);
   const root: FlowNode = {
     node: start === undefined ? missingNode(entryId) : projectDetail(start, detail),
     children: [],

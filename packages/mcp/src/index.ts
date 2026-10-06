@@ -11,7 +11,14 @@ export { DbHandle } from './query/db.js';
 export type { DbHandleOptions, SourceRoots } from './query/db.js';
 export { resolveEntryRef, isResolved } from './query/entry-ref.js';
 export type { EntryRef } from './query/entry-ref.js';
-export { buildFlowTree, flatten, FORWARD_EDGES, REVERSE_EDGES } from './query/flow.js';
+export {
+  buildFlowTree,
+  DEFAULT_FLOW_DEPTH,
+  defaultFlowDepth,
+  flatten,
+  FORWARD_EDGES,
+  REVERSE_EDGES,
+} from './query/flow.js';
 export type { FlowOptions, FlowResult } from './query/flow.js';
 export { projectDetail, projectEdge, truncate, clampDetail, CLAMP_NOTE, MAX_DETAIL } from './query/detail.js';
 export type { Truncated } from './query/detail.js';

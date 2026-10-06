@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { GraphBuilder, silentLogger, type ExtractContext } from '@flowatlas/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { drawDeployedWorkflow } from './deployed.js';
 import { definitionFiles, formatOfDefinition, nameOfDefinition } from './files.js';
 import { extractWorkflows, readDefinitionFile } from './pass.js';
 
@@ -74,6 +75,45 @@ describe('extractWorkflows', () => {
     expect(graph.unresolved).toContainEqual(
       expect.objectContaining({ reason: 'workflow-name-duplicate', file: 'b/returns.asl.yaml' }),
     );
+  });
+
+  it('leaves a definition a deployment already drew to the deployment, and rows a file that takes its name', () => {
+    write('statemachine/loan-approval.asl.json', MACHINE);
+    write('other/lending-renewals.asl.json', MACHINE);
+    const builder = new GraphBuilder({ repo: 'circulation', generatedAt: '1970-01-01T00:00:00.000Z' });
+    const deployed = drawDeployedWorkflow(
+      {
+        file: 'infra/main.tf',
+        line: 3,
+        name: 'lending-loan-approval',
+        address: 'aws_sfn_state_machine.loan_approval',
+        definition: { kind: 'text', file: 'statemachine/loan-approval.asl.json', text: MACHINE, format: 'json', firstLine: 1 },
+        fill: () => undefined,
+      },
+      'circulation',
+    );
+    const renewals = drawDeployedWorkflow(
+      {
+        file: 'infra/main.tf',
+        line: 9,
+        name: 'lending-renewals',
+        address: 'aws_sfn_state_machine.renewals',
+        definition: { kind: 'value', file: 'infra/main.tf', value: JSON.parse(MACHINE), at: () => ({ line: 10, column: 3 }) },
+        fill: () => undefined,
+      },
+      'circulation',
+    );
+    for (const node of [...deployed.nodes, ...renewals.nodes]) builder.addNode(node);
+    for (const edge of [...deployed.edges, ...renewals.edges]) builder.addEdge(edge);
+    extractWorkflows({ repo: 'circulation', repoDir: repo, builder, logger: silentLogger } as unknown as ExtractContext);
+    const graph = builder.build();
+    expect(graph.nodes.filter((node) => node.kind === 'workflow').map((node) => node.id)).toEqual([
+      'entry:circulation:workflow:lending-loan-approval',
+      'entry:circulation:workflow:lending-renewals',
+    ]);
+    expect(graph.unresolved).toEqual([
+      expect.objectContaining({ reason: 'workflow-name-duplicate', file: 'other/lending-renewals.asl.json' }),
+    ]);
   });
 
   it('turns a file it cannot read into one row at the place it stopped, and nothing else', () => {

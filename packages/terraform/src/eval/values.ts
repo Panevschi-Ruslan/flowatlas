@@ -1,4 +1,4 @@
-import type { Block, Position } from '../hcl/ast.js';
+import type { Block, Expression, Position } from '../hcl/ast.js';
 import type { Scope } from './evaluate.js';
 
 /**
@@ -62,6 +62,12 @@ export interface Because {
   readonly files?: Readonly<Record<string, string>>;
 }
 
+/** An expression and the scope it is evaluated in: where a value is written. */
+export interface Written {
+  readonly expression: Expression;
+  readonly scope: Scope;
+}
+
 /** One instance of a resource or data block, in one module instance. */
 export interface Instance {
   readonly mode: 'managed' | 'data';
@@ -122,6 +128,14 @@ export interface ModuleInstance {
   nested(instance: Instance, name: string): readonly Value[];
   /** Reads a file relative to the root module's directory. */
   readFile(path: string): string | undefined;
+  /**
+   * Where `var.<name>` or `local.<name>` of this instance is written, for a
+   * reader that needs the expression rather than its value - which function a
+   * document was loaded with, say. `undefined` where the value is not one
+   * expression of the repository: a root module's variable, which a variable
+   * file may set.
+   */
+  written(kind: 'var' | 'local', name: string): Written | undefined;
 }
 
 export const str = (value: string, via?: Via): Value => (via === undefined ? { kind: 'string', value } : { kind: 'string', value, via });

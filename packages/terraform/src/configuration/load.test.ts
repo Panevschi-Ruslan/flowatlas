@@ -231,10 +231,11 @@ describe('sources', () => {
     expect(describedModule('terraform-aws-modules/lambda/aws//modules/alias', SHIPPED_MODULES)).toBeUndefined();
   });
 
-  it('ships the two public descriptions through the schema a person writes', () => {
+  it('ships the public descriptions through the schema a person writes', () => {
     expect(SHIPPED_MODULES.map((description) => description.source)).toEqual([
       'terraform-aws-modules/lambda/aws',
       'terraform-aws-modules/apigateway-v2/aws',
+      'terraform-aws-modules/step-functions/aws',
     ]);
   });
 });

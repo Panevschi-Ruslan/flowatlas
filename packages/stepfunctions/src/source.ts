@@ -239,6 +239,21 @@ export const fromValue = (value: unknown, position: Position): PositionedDocumen
   at: () => position,
 });
 
+/**
+ * A document read out of a larger file, placed where it sits in that file:
+ * text that starts `lines` lines further down than its own first line.
+ */
+export const shifted = (document: PositionedDocument, lines: number): PositionedDocument =>
+  lines === 0
+    ? document
+    : {
+        value: document.value,
+        at: (path) => {
+          const found = document.at(path);
+          return found === undefined ? undefined : { line: found.line + lines, column: found.column };
+        },
+      };
+
 /** The formats a definition file is written in, by what its name ends in. */
 export type DefinitionFormat = 'json' | 'yaml';
 

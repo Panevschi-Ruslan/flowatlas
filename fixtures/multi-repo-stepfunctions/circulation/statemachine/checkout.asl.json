@@ -1,0 +1,80 @@
+{
+  "Comment": "Checks a title out to a borrower: asks the members service about the borrower, the catalogue for a copy, writes the loan, and starts the members service's notices.",
+  "StartAt": "CheckStanding",
+  "States": {
+    "CheckStanding": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${check_standing_arn}",
+        "Payload": {
+          "borrowerId.$": "$.borrowerId"
+        }
+      },
+      "ResultSelector": {
+        "standing.$": "$.Payload.standing"
+      },
+      "ResultPath": "$.borrower",
+      "Next": "IsInGoodStanding"
+    },
+    "IsInGoodStanding": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.borrower.standing",
+          "StringEquals": "good",
+          "Next": "ReserveCopy"
+        }
+      ],
+      "Default": "CheckoutRefused"
+    },
+    "ReserveCopy": {
+      "Type": "Task",
+      "Resource": "${reserve_copy_arn}",
+      "ResultPath": "$.copy",
+      "Catch": [
+        {
+          "ErrorEquals": ["NoCopyAvailable"],
+          "Next": "CheckoutRefused"
+        }
+      ],
+      "Next": "WriteLoan"
+    },
+    "WriteLoan": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:putItem",
+      "Parameters": {
+        "TableName": "${loans_table}",
+        "Item": {
+          "loanId": {
+            "S.$": "$$.Execution.Name"
+          },
+          "borrowerId": {
+            "S.$": "$.borrowerId"
+          },
+          "copyId": {
+            "S.$": "$.copy.copyId"
+          }
+        }
+      },
+      "ResultPath": null,
+      "Next": "SendCheckoutNotice"
+    },
+    "SendCheckoutNotice": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn": "${borrower_notices_arn}",
+        "Input": {
+          "borrowerId.$": "$.borrowerId",
+          "notice": "checked-out"
+        }
+      },
+      "End": true
+    },
+    "CheckoutRefused": {
+      "Type": "Fail",
+      "Error": "CheckoutRefused"
+    }
+  }
+}

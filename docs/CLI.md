@@ -379,7 +379,7 @@ the whole graph has no walk to bound, so it is not offered `--depth`.
 |---|---|---|
 | `--detail <0-3>` | `1` | 0 identity only, 1 adds location, 2 adds metadata, 3 is answered at 2 |
 | `--format <name>` | `tree` on a terminal, `json` in a pipe | one of `tree`, `json`, `mermaid` |
-| `--depth <n>` | `8` for `flow`, `3` for `impact` | how many hops to follow |
+| `--depth <n>` | `8` for `flow`, and one more per step when it starts at a workflow; `3` for `impact` | how many hops to follow |
 | `--max-nodes <n>` | `150` | most nodes to print, after which it says how many it cut |
 | `--service <name>` | every service | narrow to one |
 | `--ascii` | off | plain prefixes instead of icons |
@@ -728,6 +728,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Functions and routes declared in Terraform | `function-name-unread`, `function-name-disputed`, `function-repeated-unread`, `function-handler-unread`, `function-handler-not-found`, `function-handler-ambiguous`, `function-source-unread`, `function-runtime-unread` (info), `function-image-unread` (info), `route-path-unread`, `route-target-unread`, `api-body-unread` (info), `deployment-unread` (info) |
 | Terraform files and modules | `infra-file-unparsed`, `infra-file-unread` (info), `infra-module-missing`, `infra-module-undescribed` (info unless its inputs name a handler, a function or a route), `infra-module-description-invalid` |
 | Joining a deployment across repositories | `route-root-not-found`, `route-root-ambiguous`, `invoke-target-not-found`, `invoke-target-ambiguous` |
+| Workflows written as state machines | `workflow-definition-unreadable`, `workflow-definition-invalid`, `workflow-definition-not-loaded`, `workflow-name-unread`, `workflow-named-by-file` (info), `workflow-name-duplicate`, `workflow-target-dynamic` (info), `workflow-template-unbound`, `workflow-target-unreadable`, `workflow-channel-not-joined` (info), `reference-not-found`, `reference-ambiguous` |
 
 Three of these are worth knowing before they are met, because each is the
 tool declining to guess:
@@ -1828,8 +1829,9 @@ A string is an expression, so a literal is written with its quotes
 (`"\"AWS_PROXY\""`); a number, `true`, `false` and `null` are themselves. A
 resource may repeat with `count` or `for_each` and use `each` like any other, and
 a description is read by exactly the code that reads a module whose source is
-present. `terraform-aws-modules/lambda/aws` and
-`terraform-aws-modules/apigateway-v2/aws` ship described; a description with the
+present. `terraform-aws-modules/lambda/aws`,
+`terraform-aws-modules/apigateway-v2/aws` and
+`terraform-aws-modules/step-functions/aws` ship described; a description with the
 same source in the configuration is tried first. A remote module nothing
 describes is one `infra-module-undescribed` row naming the module, its source
 and the inputs it was given — at `info` unless one of those inputs looks like a
@@ -1903,9 +1905,11 @@ and each is drawn as a way in of kind `workflow`. Nothing to configure.
   channel's name.
 - **A task that invokes a function** (`lambda:invoke` with `FunctionName` as a
   name, a partial ARN or a full one, or the function's ARN as the `Resource`)
-  carries a reference to the function by its deployed name, `invoke:<name>`. A
-  function becomes something a reference can reach once the deployment that
-  creates it is read; until then each is a `reference-not-found` row.
+  carries a reference to the function by its deployed name, `invoke:<name>`, and
+  the linker joins it to the `invoke` entry of that name in whichever service
+  deploys it (see [Functions and routes declared in
+  Terraform](#functions-and-routes-declared-in-terraform)). A name no configured
+  service deploys is a `reference-not-found` row.
 - **A task that reads or writes a table** (`dynamodb:getItem`, `putItem`,
   `updateItem`, `deleteItem`, and through the SDK `query`, `scan` and the batch
   and transaction calls) is a `db_query` on that table.
@@ -1940,6 +1944,66 @@ names a state that is not there is drawn as written beside a
 
 A definition file is stamped with the sources, so changing one rebuilds its
 service.
+
+#### A state machine declared in Terraform
+
+Where the repository's Terraform declares the machine -
+`aws_sfn_state_machine`, directly, through a local module, or through
+`terraform-aws-modules/step-functions/aws`, which ships described - the
+workflow is read from there, under the `name` the machine is deployed with,
+evaluated: `name = "${var.prefix}-loan-approval"` is `lending-loan-approval`,
+whatever the definition's file is called. Its entry says
+`meta.nameFrom: "deployment"`, `meta.declaredAs` and `meta.declaredIn` say
+where, and every join made to it by name is `static`. The definition is read
+however it is written, followed back through any variable or local that only
+hands it on:
+
+| Written as | Read as | Placed on the lines of |
+|---|---|---|
+| `file("${path.module}/loan-approval.asl.json")` | the file | the file |
+| `templatefile("loan-renewal.asl.json", { ... })` | the template, rendered with the variables it is handed, directives included | the template |
+| `jsonencode({ ... })` | the value | the `.tf` file, each state where its key is written |
+| a heredoc, or a quoted string | the text, rendered | the `.tf` file |
+| `jsonencode(yamldecode(file(...)))`, `jsondecode` likewise | the file, in the format the decoder names | the file |
+
+A value that is not text yet - a template variable holding
+`aws_lambda_function.x.arn`, `module.f.lambda_function_arn` or
+`aws_sfn_state_machine.y.arn`, a `Resource = aws_lambda_function.x.arn` inside
+`jsonencode`, an interpolation in a heredoc - is left in the definition as a
+placeholder, and the deployment fills it with what it addresses: the deployed
+name of the function, the workflow, the table, the queue, the topic or the bus
+it refers to, created or looked up by a `data` block. So a task names its
+function through Terraform as plainly as by a literal, and its edge is `static`
+where every name resolved. A placeholder the files do not settle - a variable
+with no default and no variable file - stays unfilled, and the step that uses
+it is one `workflow-template-unbound` row and no edge; the rest of the workflow
+is drawn.
+
+A definition that is also named `*.asl.json` is read once, by the deployment
+that loads it, and not a second time under its file's name. A machine whose
+name is not read is drawn keyed by its declaration, which nothing can join to,
+beside a `workflow-name-unread` row saying what to set; a definition that
+cannot be read at all - a path or a directive the files do not settle - is one
+`workflow-definition-not-loaded` row and nothing else. A file the configuration
+loads by a path written in it is stamped with the sources, so changing it
+rebuilds the service (`fixtures/stepfunctions-terraform`,
+`fixtures/multi-repo-stepfunctions`).
+
+What starts a machine - a schedule, an event rule, another service's code - is
+joined to the same entry, `workflow:<deployed name>`, as those are read.
+
+#### Walking a workflow
+
+`flow workflow:<name>` takes, at each step, what the step does first - the
+function it invokes, the table it writes - and then where control goes next in
+the order it goes there: a `Parallel`'s branches, a `Map`'s processor, each
+`Choice` rule and its `Default`, `Next`, and each `Catch` last, wherever each is
+written in the file. Without `--depth`, a walk from a workflow goes one hop per
+step the workflow has, which is enough to reach its last step along the
+longest way through it, and the usual eight beyond that, into whatever the
+deepest step reaches; `--max-nodes` still bounds what is printed. `impact` is
+not lengthened in the same way: a walk back up from a handler stops at its
+usual depth.
 
 ---
 

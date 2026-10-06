@@ -20,6 +20,7 @@ import {
 } from '@flowatlas/core';
 import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
 import { Node, ts, type CallExpression, type Node as TsNode, type SourceFile } from 'ts-morph';
+import { drawDeployedWorkflows } from './deployed-workflows.js';
 import { builtByFactory, fileOfNode, isWrittenFunction, repoFunctionOf, unwrapValue } from './shared.js';
 import { boundCall, evidenceOf, functionArguments, wrappedBy, type Wrapped } from './wrapped-work.js';
 
@@ -525,6 +526,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
       }
 
       for (const root of deployment.roots) roots.push({ ...root, deployedBy: reader.name });
+      drawDeployedWorkflows(ctx, deployment.workflows, reader.name, DEPLOYED_FUNCTIONS);
       reportRows(ctx, rows);
     }
 

@@ -36,29 +36,27 @@ export const readDefinitionFile = (repoDir: string, repo: string, file: string):
   try {
     text = readFileSync(join(repoDir, file), 'utf8');
   } catch (cause) {
-    return unreadable(file, 1, `${file} could not be opened: ${(cause as Error).message}`);
+    return unreadableDefinition(file, 1, `${file} could not be opened: ${(cause as Error).message}`);
   }
   try {
     const document = readDocument(text, formatOfDefinition(file));
     return emitWorkflow(readStateMachine(document), { service: repo, file, name, nameFrom: 'file-name' });
   } catch (cause) {
     if (!(cause instanceof DocumentSyntaxError)) throw cause;
-    return unreadable(file, cause.position.line, `${file} is not ${formatOfDefinition(file).toUpperCase()}: ${cause.message}`);
+    return unreadableDefinition(file, cause.position.line, `${file} is not ${formatOfDefinition(file).toUpperCase()}: ${cause.message}`);
   }
 };
 
-const unreadable = (file: string, line: number, message: string): WorkflowFragment => ({
+/** A definition that is not text of its format: one row where it stopped making sense. */
+export const unreadableDefinition = (
+  file: string,
+  line: number,
+  message: string,
+  hint = 'Nothing in this file was drawn. Fix the syntax, or rename the file if it is not a state machine definition.',
+): WorkflowFragment => ({
   nodes: [],
   edges: [],
-  rows: [
-    {
-      file,
-      line,
-      reason: 'workflow-definition-unreadable',
-      message,
-      hint: 'Nothing in this file was drawn. Fix the syntax, or rename the file if it is not a state machine definition.',
-    },
-  ],
+  rows: [{ file, line, reason: 'workflow-definition-unreadable', message, hint }],
 });
 
 /**
@@ -79,9 +77,37 @@ const duplicate = (file: string, name: string, first: string): WorkflowFragment 
   ],
 });
 
+/**
+ * The workflows a deployment of this service already drew, by the name each
+ * is deployed under and the file its definition is in.
+ *
+ * Asked of the graph being built because the reader of the deployment runs
+ * before this does and is the better reader of anything it loads: a definition
+ * file a deployment loads is read once, by the deployment, under the name it is
+ * deployed with, and not a second time under its file's name.
+ */
+const deployedWorkflows = (ctx: ExtractContext): { files: Set<string>; names: Map<string, string> } => {
+  const files = new Set<string>();
+  const names = new Map<string, string>();
+  for (const node of ctx.builder.nodes) {
+    if (node.type !== 'entry' || node.kind !== 'workflow' || node.meta?.['nameFrom'] !== 'deployment') continue;
+    if (node.file !== undefined) files.add(node.file);
+    const name = node.meta?.['name'];
+    if (typeof name === 'string' && node.meta?.['nameRead'] !== false) {
+      names.set(name, String(node.meta?.['declaredAs'] ?? node.file ?? name));
+    }
+  }
+  return { files, names };
+};
+
 export const extractWorkflows = (ctx: ExtractContext): void => {
-  const named = new Map<string, string>();
+  const deployed = deployedWorkflows(ctx);
+  const named = new Map<string, string>(deployed.names);
   for (const file of definitionFiles(ctx.repoDir)) {
+    if (deployed.files.has(file)) {
+      ctx.logger.debug(`workflow from ${file} is read by the deployment that loads it`);
+      continue;
+    }
     const name = nameOfDefinition(file);
     const first = named.get(name);
     if (first !== undefined) {

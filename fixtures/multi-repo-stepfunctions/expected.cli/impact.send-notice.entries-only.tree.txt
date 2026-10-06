@@ -1,0 +1,5 @@
+-> handler                                         members/src/handlers/send-notice.ts:8
+  => circulation @  workflow circulation-checkout  circulation/statemachine/checkout.asl.json:1
+  @  members-send-notice                           members/infra/main.tf:23
+  @  workflow members-borrower-notices             members/statemachine/borrower-notices.asl.json:1
+Reachable from: 1 invoke (members), 2 workflows (circulation, members)

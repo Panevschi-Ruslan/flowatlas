@@ -183,6 +183,14 @@ export class GraphBuilder {
     return this.#nodes.get(id);
   }
 
+  /**
+   * Every node collected so far, for a pass that must not draw again what an
+   * earlier one already drew.
+   */
+  get nodes(): readonly GraphNode[] {
+    return [...this.#nodes.values()];
+  }
+
   /** Every edge collected so far, for a pass that annotates them. */
   get edges(): readonly GraphEdge[] {
     return [...this.#edges.values()];

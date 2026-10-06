@@ -200,6 +200,46 @@ const WORKFLOW_CASES = [
 ];
 
 /**
+ * Workflows read from the Terraform that deploys them (P22, part B).
+ *
+ * No case passes `--depth`: the default walks every step of a workflow and on
+ * into each handler, and these are what show that it does. The impact with
+ * entry points only is the exception, because a walk back up is not lengthened
+ * by the workflows it passes through, and the chain from a handler up to the
+ * checkout that starts its workflow is longer than eight hops.
+ */
+const deployedWorkflowsFixture = join(root, 'fixtures', 'stepfunctions-terraform');
+const deployedWorkflowsPlain = { config: join(deployedWorkflowsFixture, 'flowatlas.config.json'), color: false, ascii: true };
+
+const DEPLOYED_WORKFLOW_CASES = [
+  ['flow.loan-approval.tree.txt', (io) => runFlow('workflow:lending-loan-approval', { ...deployedWorkflowsPlain, format: 'tree' }, io)],
+  ['flow.loan-renewal.tree.txt', (io) => runFlow('workflow:lending-loan-renewal', { ...deployedWorkflowsPlain, format: 'tree' }, io)],
+  ['flow.overdue-sweep.json.l2.json', (io) => runFlow('workflow:lending-overdue-sweep', { ...deployedWorkflowsPlain, format: 'json', detail: '2' }, io)],
+  [
+    'impact.notify-borrower.entries-only.tree.txt',
+    (io) => runImpact('lending#src/handlers/notify-borrower.ts:handler', { ...deployedWorkflowsPlain, format: 'tree', entriesOnly: true }, io),
+  ],
+  ['doctor.txt', (io) => runDoctorCommand({ config: deployedWorkflowsPlain.config }, io)],
+];
+
+const multiRepoWorkflowsFixture = join(root, 'fixtures', 'multi-repo-stepfunctions');
+const multiRepoWorkflowsPlain = { config: join(multiRepoWorkflowsFixture, 'flowatlas.config.json'), color: false, ascii: true };
+
+const MULTI_REPO_WORKFLOW_CASES = [
+  ['flow.checkout.tree.txt', (io) => runFlow('workflow:circulation-checkout', { ...multiRepoWorkflowsPlain, format: 'tree' }, io)],
+  [
+    'impact.check-standing.tree.txt',
+    (io) => runImpact('members#src/handlers/check-standing.ts:handler', { ...multiRepoWorkflowsPlain, format: 'tree' }, io),
+  ],
+  [
+    'impact.send-notice.entries-only.tree.txt',
+    (io) =>
+      runImpact('members#src/handlers/send-notice.ts:handler', { ...multiRepoWorkflowsPlain, format: 'tree', depth: '16', entriesOnly: true }, io),
+  ],
+  ['doctor.txt', (io) => runDoctorCommand({ config: multiRepoWorkflowsPlain.config }, io)],
+];
+
+/**
  * Sets of recordings, in several places.
  *
  * The first owns its folder, so an answer nobody asks for any more is swept
@@ -215,6 +255,8 @@ const SUITES = [
   { dir: socketFixture, owned: false, cases: SOCKET_CASES },
   { dir: lambdaFixture, owned: false, cases: LAMBDA_CASES },
   { dir: join(workflowsFixture, 'expected.cli'), owned: true, cases: WORKFLOW_CASES },
+  { dir: join(deployedWorkflowsFixture, 'expected.cli'), owned: true, cases: DEPLOYED_WORKFLOW_CASES },
+  { dir: join(multiRepoWorkflowsFixture, 'expected.cli'), owned: true, cases: MULTI_REPO_WORKFLOW_CASES },
 ];
 
 /**

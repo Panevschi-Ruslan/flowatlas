@@ -6,6 +6,7 @@ import {
   type DeployedFunction,
   type DeployedHandler,
   type DeployedRoute,
+  type DeployedWorkflow,
   type Deployment,
   type PublishedRoot,
   type RouteTarget,
@@ -16,6 +17,7 @@ import { referencesIn } from '../hcl/walk.js';
 import { attributeOfInstance, evaluate } from '../eval/evaluate.js';
 import { asText, describe, type Because, type Instance, type Value } from '../eval/values.js';
 import { stateAddress, type Configuration } from '../configuration/load.js';
+import { readStateMachineInstance } from './state-machines.js';
 
 /**
  * Functions and the routes in front of them, read out of a configuration.
@@ -85,6 +87,7 @@ export class DeploymentReading {
   readonly functions: DeployedFunction[] = [];
   readonly routes: DeployedRoute[] = [];
   readonly roots: PublishedRoot[] = [];
+  readonly workflows: DeployedWorkflow[] = [];
   readonly rows: Unresolved[] = [];
   readonly #functionIndex = new Map<Instance, number>();
   readonly #instances: Instance[];
@@ -109,6 +112,7 @@ export class DeploymentReading {
     ['aws_api_gateway_method', (instance) => this.#restRoute(instance)],
     ['aws_apigatewayv2_route', (instance) => this.#httpRoute(instance)],
     ['aws_api_gateway_rest_api', (instance) => this.#restApi(instance)],
+    ['aws_sfn_state_machine', (instance) => this.#workflow(instance)],
   ];
 
   read(): Deployment {
@@ -120,8 +124,16 @@ export class DeploymentReading {
       functions: this.functions,
       routes: this.routes,
       roots: this.roots,
+      workflows: this.workflows,
       rows: [...this.configuration.rows, ...this.rows],
     };
+  }
+
+  /** A state machine, read in `state-machines.ts`. */
+  #workflow(instance: Instance): void {
+    const { workflow, rows } = readStateMachineInstance(instance);
+    this.workflows.push(workflow);
+    this.rows.push(...rows);
   }
 
   #restApi(instance: Instance): void {

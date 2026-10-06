@@ -1,8 +1,8 @@
 import { infraModuleSchema, type InfraModuleConfig, type InfraModuleDescription } from '@flowatlas/core';
 
 /**
- * Descriptions of the public modules most projects declare functions and routes
- * through, shipped with the tool.
+ * Descriptions of the public modules most projects declare functions, routes
+ * and workflows through, shipped with the tool.
  *
  * Written in exactly the shape a person writes under `adapters.infra.modules`
  * and parsed by the same schema, so a field only configuration had ever used
@@ -99,7 +99,33 @@ const HTTP_API: InfraModuleDescription = {
   },
 };
 
+/**
+ * A state machine, its definition handed over as the module's input: a
+ * definition written as `templatefile(...)` in the call is read as one, with
+ * its variables, because the reading follows `var.definition` back to it.
+ */
+const STEP_FUNCTIONS: InfraModuleDescription = {
+  source: 'terraform-aws-modules/step-functions/aws',
+  variables: {
+    create: 'true',
+    type: '"STANDARD"',
+  },
+  resources: {
+    'aws_sfn_state_machine.this': {
+      count: 'var.create ? 1 : 0',
+      name: 'var.name',
+      definition: 'var.definition',
+      type: 'upper(var.type)',
+    },
+  },
+  outputs: {
+    state_machine_id: 'try(aws_sfn_state_machine.this[0].id, "")',
+    state_machine_arn: 'try(aws_sfn_state_machine.this[0].arn, "")',
+    state_machine_name: 'try(aws_sfn_state_machine.this[0].name, "")',
+  },
+};
+
 /** The shipped descriptions, parsed by the schema configuration is parsed by. */
-export const SHIPPED_MODULES: readonly InfraModuleConfig[] = [LAMBDA, HTTP_API].map((description) =>
+export const SHIPPED_MODULES: readonly InfraModuleConfig[] = [LAMBDA, HTTP_API, STEP_FUNCTIONS].map((description) =>
   infraModuleSchema.parse(description),
 );

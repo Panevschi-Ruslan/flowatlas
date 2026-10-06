@@ -9,9 +9,8 @@
  * - `emit`       the graph a definition becomes, as a pure function
  *
  * `pass` puts them together for the definition files a repository keeps on
- * their own. A reader of a deployment file that builds or loads a definition
- * calls `readStateMachine` and `emitWorkflow` itself, with the name the
- * deployment gives it and the values its template is rendered with.
+ * their own, and `deployed` for a definition a deployment hands over, with the
+ * name the deployment gives it and the values its placeholders are filled with.
  */
 export {
   isStateType,
@@ -26,9 +25,10 @@ export {
   type Transition,
   type TransitionKind,
 } from './definition.js';
+export { drawDeployedWorkflow } from './deployed.js';
 export { emitWorkflow, type EmitOptions, type NameSource, type WorkflowFragment } from './emit.js';
 export { definitionFiles, formatOfDefinition, nameOfDefinition } from './files.js';
-export { extractWorkflows, readDefinitionFile, workflowsPass } from './pass.js';
+export { extractWorkflows, readDefinitionFile, unreadableDefinition, workflowsPass } from './pass.js';
 export { functionReference, workflowReference } from './references.js';
 export {
   DocumentSyntaxError,
@@ -36,6 +36,7 @@ export {
   readDocument,
   readJson,
   readYaml,
+  shifted,
   type DefinitionFormat,
   type PathStep,
   type Position,

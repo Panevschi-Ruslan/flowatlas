@@ -2,7 +2,7 @@ import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Deployment, DeploymentReader, FlowatlasConfig } from '@flowatlas/core';
 import { DeploymentReading } from './aws/read.js';
-import { infrastructureFiles } from './configuration/files.js';
+import { infrastructureFiles, loadedFiles } from './configuration/files.js';
 import { loadConfiguration } from './configuration/load.js';
 import { SHIPPED_MODULES } from './configuration/shipped.js';
 import { describedModule } from './configuration/sources.js';
@@ -20,11 +20,11 @@ export { SHIPPED_MODULES } from './configuration/shipped.js';
 export { describedModule, normaliseSource } from './configuration/sources.js';
 
 /**
- * Resource types a reading of functions and routes has a use for. A repository
+ * Resource types a reading of functions, routes and workflows has a use for. A repository
  * whose configuration declares none of these, and calls no module described as
  * declaring them, is not one this reader reads anything from.
  */
-const READ_TYPES = /"aws_(?:lambda_function|api_gateway_[a-z_]+|apigatewayv2_[a-z_]+)"/;
+const READ_TYPES = /"aws_(?:lambda_function|api_gateway_[a-z_]+|apigatewayv2_[a-z_]+|sfn_state_machine)"/;
 
 const MODULE_SOURCE = /\bsource\s*=\s*"([^"]+)"/g;
 
@@ -85,7 +85,8 @@ export const terraformReader: DeploymentReader = {
     });
     return new DeploymentReading(configuration).read();
   },
-  files: (repoDir) => infrastructureFiles(repoDir),
+  files: (repoDir) => [...new Set([...infrastructureFiles(repoDir), ...loadedFiles(repoDir)])].sort(),
 };
 export { UNREAD_DEPLOYMENTS, unreadDeploymentOf } from './unread.js';
 export { referencesIn } from './hcl/walk.js';
+export { addressOf, deployedNameOf } from './aws/state-machines.js';

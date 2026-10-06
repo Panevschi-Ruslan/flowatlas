@@ -95,60 +95,6 @@
             "children": [
               {
                 "node": {
-                  "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/RejectLoan",
-                  "type": "function",
-                  "label": "RejectLoan [Task sns:publish]",
-                  "loc": "statemachine/loan-approval.asl.json:234",
-                  "service": "circulation",
-                  "kind": "state",
-                  "meta": {
-                    "workflow": "loan-approval",
-                    "stateType": "Task",
-                    "task": {
-                      "kind": "channel",
-                      "service": "sns",
-                      "action": "publish",
-                      "pattern": "request-response",
-                      "transport": "topic",
-                      "targets": [
-                        "loan-decisions"
-                      ]
-                    },
-                    "parameters": {
-                      "TopicArn": "arn:aws:sns:eu-west-1:123456789012:loan-decisions",
-                      "Message.$": "$"
-                    }
-                  }
-                },
-                "edge": {
-                  "type": "calls",
-                  "confidence": "static"
-                },
-                "children": [
-                  {
-                    "node": {
-                      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanRejected",
-                      "type": "function",
-                      "label": "LoanRejected [Fail]",
-                      "loc": "statemachine/loan-approval.asl.json:243",
-                      "service": "circulation",
-                      "kind": "state",
-                      "meta": {
-                        "workflow": "loan-approval",
-                        "stateType": "Fail",
-                        "end": true
-                      }
-                    },
-                    "edge": {
-                      "type": "calls",
-                      "confidence": "static"
-                    },
-                    "children": []
-                  }
-                ]
-              },
-              {
-                "node": {
                   "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/IsBorrowerInGoodStanding",
                   "type": "function",
                   "label": "IsBorrowerInGoodStanding [Choice]",
@@ -382,60 +328,6 @@
                               "confidence": "static"
                             },
                             "children": [
-                              {
-                                "node": {
-                                  "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/RejectLoan",
-                                  "type": "function",
-                                  "label": "RejectLoan [Task sns:publish]",
-                                  "loc": "statemachine/loan-approval.asl.json:234",
-                                  "service": "circulation",
-                                  "kind": "state",
-                                  "meta": {
-                                    "workflow": "loan-approval",
-                                    "stateType": "Task",
-                                    "task": {
-                                      "kind": "channel",
-                                      "service": "sns",
-                                      "action": "publish",
-                                      "pattern": "request-response",
-                                      "transport": "topic",
-                                      "targets": [
-                                        "loan-decisions"
-                                      ]
-                                    },
-                                    "parameters": {
-                                      "TopicArn": "arn:aws:sns:eu-west-1:123456789012:loan-decisions",
-                                      "Message.$": "$"
-                                    }
-                                  }
-                                },
-                                "edge": {
-                                  "type": "calls",
-                                  "confidence": "static"
-                                },
-                                "children": [
-                                  {
-                                    "node": {
-                                      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanRejected",
-                                      "type": "function",
-                                      "label": "LoanRejected [Fail]",
-                                      "loc": "statemachine/loan-approval.asl.json:243",
-                                      "service": "circulation",
-                                      "kind": "state",
-                                      "meta": {
-                                        "workflow": "loan-approval",
-                                        "stateType": "Fail",
-                                        "end": true
-                                      }
-                                    },
-                                    "edge": {
-                                      "type": "calls",
-                                      "confidence": "static"
-                                    },
-                                    "children": []
-                                  }
-                                ]
-                              },
                               {
                                 "node": {
                                   "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/RecordLoan",
@@ -1055,6 +947,60 @@
                                     ]
                                   }
                                 ]
+                              },
+                              {
+                                "node": {
+                                  "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/RejectLoan",
+                                  "type": "function",
+                                  "label": "RejectLoan [Task sns:publish]",
+                                  "loc": "statemachine/loan-approval.asl.json:234",
+                                  "service": "circulation",
+                                  "kind": "state",
+                                  "meta": {
+                                    "workflow": "loan-approval",
+                                    "stateType": "Task",
+                                    "task": {
+                                      "kind": "channel",
+                                      "service": "sns",
+                                      "action": "publish",
+                                      "pattern": "request-response",
+                                      "transport": "topic",
+                                      "targets": [
+                                        "loan-decisions"
+                                      ]
+                                    },
+                                    "parameters": {
+                                      "TopicArn": "arn:aws:sns:eu-west-1:123456789012:loan-decisions",
+                                      "Message.$": "$"
+                                    }
+                                  }
+                                },
+                                "edge": {
+                                  "type": "calls",
+                                  "confidence": "static"
+                                },
+                                "children": [
+                                  {
+                                    "node": {
+                                      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanRejected",
+                                      "type": "function",
+                                      "label": "LoanRejected [Fail]",
+                                      "loc": "statemachine/loan-approval.asl.json:243",
+                                      "service": "circulation",
+                                      "kind": "state",
+                                      "meta": {
+                                        "workflow": "loan-approval",
+                                        "stateType": "Fail",
+                                        "end": true
+                                      }
+                                    },
+                                    "edge": {
+                                      "type": "calls",
+                                      "confidence": "static"
+                                    },
+                                    "children": []
+                                  }
+                                ]
                               }
                             ]
                           }
@@ -1115,6 +1061,60 @@
                         "children": []
                       }
                     ]
+                  }
+                ]
+              },
+              {
+                "node": {
+                  "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/RejectLoan",
+                  "type": "function",
+                  "label": "RejectLoan [Task sns:publish]",
+                  "loc": "statemachine/loan-approval.asl.json:234",
+                  "service": "circulation",
+                  "kind": "state",
+                  "meta": {
+                    "workflow": "loan-approval",
+                    "stateType": "Task",
+                    "task": {
+                      "kind": "channel",
+                      "service": "sns",
+                      "action": "publish",
+                      "pattern": "request-response",
+                      "transport": "topic",
+                      "targets": [
+                        "loan-decisions"
+                      ]
+                    },
+                    "parameters": {
+                      "TopicArn": "arn:aws:sns:eu-west-1:123456789012:loan-decisions",
+                      "Message.$": "$"
+                    }
+                  }
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanRejected",
+                      "type": "function",
+                      "label": "LoanRejected [Fail]",
+                      "loc": "statemachine/loan-approval.asl.json:243",
+                      "service": "circulation",
+                      "kind": "state",
+                      "meta": {
+                        "workflow": "loan-approval",
+                        "stateType": "Fail",
+                        "end": true
+                      }
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static"
+                    },
+                    "children": []
                   }
                 ]
               }

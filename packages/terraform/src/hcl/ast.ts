@@ -71,7 +71,13 @@ export type BinaryOperator =
 
 export type Expression =
   | { readonly type: 'literal'; readonly value: string | number | boolean | null; readonly pos: Position }
-  | { readonly type: 'template'; readonly parts: TemplatePart[]; readonly pos: Position }
+  | {
+      readonly type: 'template';
+      readonly parts: TemplatePart[];
+      readonly pos: Position;
+      /** Written as a heredoc, so its text starts on the line after `pos`. */
+      readonly heredoc?: true;
+    }
   | { readonly type: 'tuple'; readonly items: Expression[]; readonly pos: Position }
   | { readonly type: 'object'; readonly items: ObjectItem[]; readonly pos: Position }
   | { readonly type: 'variable'; readonly name: string; readonly pos: Position }

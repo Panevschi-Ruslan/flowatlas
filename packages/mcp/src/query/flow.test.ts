@@ -3,7 +3,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { buildTestDb, edge, entry, node, testDbDirectory, type TestGraph } from '../test-graph.js';
 import { projectDetail, truncate } from './detail.js';
 import { isResolved, resolveEntryRef } from './entry-ref.js';
-import { buildFlowTree, flatten } from './flow.js';
+import { buildFlowTree, defaultFlowDepth, flatten } from './flow.js';
 import type { FlowNode } from './types.js';
 
 afterAll(() => rmSync(testDbDirectory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
@@ -165,6 +165,65 @@ describe('walking outward from an entry', () => {
     });
     expect(buildFlowTree(db, 'entry:orders:http:GET /a', {}).unresolvedOnPath).toBe(1);
     db.close();
+  });
+});
+
+describe('walking a workflow', () => {
+  const STEPS = 12;
+  const step = (index: number): string => `loans#flow.asl.json:approval/Step${index}`;
+
+  /**
+   * A chain of steps longer than the usual depth, the first of which invokes a
+   * function and catches into the last; the catch is written above the next
+   * step, on an earlier line.
+   */
+  const workflow = (): TestGraph => ({
+    nodes: [
+      entry('entry:loans:workflow:approval', { kind: 'workflow', label: 'approval', meta: { states: STEPS } }),
+      ...Array.from({ length: STEPS }, (_, index) => node(step(index), { kind: 'state', label: `Step${index}`, line: 10 * (index + 1) })),
+      entry('entry:loans:invoke:check', { kind: 'invoke', label: 'check' }),
+      node('loans#check.ts:handler', { label: 'handler' }),
+    ],
+    edges: [
+      edge('entry:loans:workflow:approval', step(0), { type: 'handles' }),
+      edge(step(0), 'entry:loans:invoke:check', { line: 10, meta: { via: 'deployed-name' } }),
+      edge(step(0), step(STEPS - 1), { line: 12, meta: { order: 1, transitions: [{ kind: 'catch' }] } }),
+      edge(step(0), step(1), { line: 15, meta: { order: 0, transitions: [{ kind: 'next' }] } }),
+      ...Array.from({ length: STEPS - 2 }, (_, index) =>
+        edge(step(index + 1), step(index + 2), { line: 10 * (index + 2), meta: { order: 0 } }),
+      ),
+      edge('entry:loans:invoke:check', 'loans#check.ts:handler', { type: 'handles' }),
+    ],
+  });
+
+  it('takes what a step does first, then where control goes, in the order it goes there', () => {
+    const db = buildTestDb(workflow());
+    const { root } = buildFlowTree(db, 'entry:loans:workflow:approval', {});
+    const first = root.children[0] as FlowNode;
+    expect(first.children.map((child) => child.node.id)).toEqual([
+      'entry:loans:invoke:check',
+      step(1),
+      step(STEPS - 1),
+    ]);
+    db.close();
+  });
+
+  it('goes, without being told how far, through every step and on into what the last one reaches', () => {
+    const db = buildTestDb(workflow());
+    const ids = flatten(buildFlowTree(db, 'entry:loans:workflow:approval', {}).root).map((item) => item.node.id);
+    // The step before the last is reached only along the chain, eleven hops in.
+    expect(ids).toContain(step(STEPS - 2));
+    expect(ids).toContain('loans#check.ts:handler');
+    // Told, it stops where it was told.
+    const short = flatten(buildFlowTree(db, 'entry:loans:workflow:approval', { depth: 8 }).root).map((item) => item.node.id);
+    expect(short).not.toContain(step(9));
+    db.close();
+  });
+
+  it('goes the usual eight hops from an entry that is not a chain of steps', () => {
+    expect(defaultFlowDepth(undefined)).toBe(8);
+    expect(defaultFlowDepth({ id: 'entry:a:http:GET /', type: 'entry', label: 'GET /', repo: 'a' })).toBe(8);
+    expect(defaultFlowDepth({ id: 'entry:a:workflow:w', type: 'entry', kind: 'workflow', label: 'w', repo: 'a', meta: { states: 12 } })).toBe(20);
   });
 });
 

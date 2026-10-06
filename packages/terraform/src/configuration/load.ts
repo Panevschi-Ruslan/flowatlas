@@ -20,6 +20,7 @@ import {
   type Instance,
   type ModuleInstance,
   type Value,
+  type Written,
 } from '../eval/values.js';
 import { dirOf, infrastructureFiles, isWithin } from './files.js';
 import { describedModule, isLocalSource } from './sources.js';
@@ -284,6 +285,12 @@ class Context {
   }
 }
 
+/** An input a caller hands a module: where it is written, and its value when first asked for. */
+interface Input {
+  readonly written: Written;
+  readonly value: () => Value;
+}
+
 /** One instance of a module. See `ModuleInstance`. */
 class Module implements ModuleInstance {
   readonly #variables = new Map<string, Value>();
@@ -300,7 +307,7 @@ class Module implements ModuleInstance {
     readonly root: Module | undefined,
     readonly pathModule: string,
     /** Inputs the caller hands over, evaluated when first asked for. */
-    readonly inputs: ReadonlyMap<string, () => Value> | undefined,
+    readonly inputs: ReadonlyMap<string, Input> | undefined,
     /** Where the call that created a described module is written. */
     readonly site: Position | undefined,
     readonly depth: number,
@@ -324,7 +331,7 @@ class Module implements ModuleInstance {
 
   #variable(name: string): Value {
     const input = this.inputs?.get(name);
-    if (input !== undefined) return input();
+    if (input !== undefined) return input.value();
     const declared = this.source.variables.get(name);
     if (this.root === undefined) return this.context.rootVariable(this, name);
     if (declared?.default !== undefined) return evaluate(declared.default, { module: this });
@@ -538,13 +545,16 @@ class Module implements ModuleInstance {
                   : typeof key === 'number'
                     ? { module: this, count: num(key) }
                     : { module: this };
-            const inputs = new Map<string, () => Value>();
+            const inputs = new Map<string, Input>();
             for (const attribute of block.body.attributes) {
               if (CALL_META.has(attribute.name)) continue;
               let memo: Value | undefined;
-              inputs.set(attribute.name, () => {
-                memo ??= evaluate(attribute.expression, callScope);
-                return memo;
+              inputs.set(attribute.name, {
+                written: { expression: attribute.expression, scope: callScope },
+                value: () => {
+                  memo ??= evaluate(attribute.expression, callScope);
+                  return memo;
+                },
               });
             }
             const pathModule =
@@ -619,6 +629,20 @@ class Module implements ModuleInstance {
       out.push(...(this.#calls.get(name)?.modules ?? []));
     }
     return out;
+  }
+
+  written(kind: 'var' | 'local', name: string): Written | undefined {
+    if (kind === 'local') {
+      const attribute = this.source.locals.get(name);
+      return attribute === undefined ? undefined : { expression: attribute.expression, scope: { module: this } };
+    }
+    const input = this.inputs?.get(name);
+    if (input !== undefined) return input.written;
+    // A root module's variable is whatever its variable files say, which is a
+    // value and not an expression of this repository.
+    if (this.root === undefined) return undefined;
+    const fallback = this.source.variables.get(name)?.default;
+    return fallback === undefined ? undefined : { expression: fallback, scope: { module: this } };
   }
 
   readFile(path: string): string | undefined {

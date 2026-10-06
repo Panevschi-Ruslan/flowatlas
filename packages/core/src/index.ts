@@ -44,6 +44,7 @@ export {
   makeStateId,
   makeSymbolId,
   makeUnnamedInvokeKey,
+  makeUnnamedWorkflowKey,
   makeTypeId,
   makeWorkflowEntryKey,
   normalizeFilePath,
@@ -148,9 +149,12 @@ export type {
   ServiceConfig,
 } from './config.js';
 export type {
+  DefinitionPosition,
+  DeployedDefinition,
   DeployedFunction,
   DeployedHandler,
   DeployedRoute,
+  DeployedWorkflow,
   Deployment,
   DeploymentReader,
   DeploymentReadOptions,

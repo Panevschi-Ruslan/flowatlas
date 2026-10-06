@@ -1,0 +1,9 @@
+{
+  "name": "lending-library-catalogue",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The copies a lending library holds, and where each of them is.",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

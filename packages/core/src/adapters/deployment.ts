@@ -108,11 +108,74 @@ export interface PublishedRoot {
   readonly line: number;
 }
 
+/** Where something inside a document is written, 1-based, as an editor counts. */
+export interface DefinitionPosition {
+  readonly line: number;
+  readonly column: number;
+}
+
+/**
+ * A workflow's definition, as the deployment hands it over.
+ *
+ * Either text in a format of its own - a definition file loaded by path, a
+ * template rendered with its variables, a document written in place - or a
+ * value the deployment's own language builds, which has no text and is placed
+ * by where each member of it is written. Both say which file a reader should
+ * open to see it.
+ */
+export type DeployedDefinition =
+  | {
+      readonly kind: 'text';
+      /** Repo-relative file the text is in: a definition, a template, or the deployment file itself. */
+      readonly file: string;
+      readonly text: string;
+      readonly format: 'json' | 'yaml';
+      /** The line of `file` the text's first line is on: 1 for a file of its own. */
+      readonly firstLine: number;
+    }
+  | {
+      readonly kind: 'value';
+      readonly file: string;
+      readonly value: unknown;
+      /** Where the member at `path` is written in `file`, or where the value is built. */
+      at(path: readonly (string | number)[]): DefinitionPosition | undefined;
+    };
+
+/** One workflow the deployment creates. */
+export interface DeployedWorkflow {
+  /** Repo-relative path of the file declaring it. */
+  readonly file: string;
+  readonly line: number;
+  /**
+   * The name it is deployed under, when every part of it was read: what a step
+   * of another workflow, a rule or a handler starts it by. Absent rather than
+   * partial, as a function's is.
+   */
+  readonly name?: string;
+  /** Where the declaration sits in its own format, for a person: unique per deployment. */
+  readonly address: string;
+  /** Absent when the definition could not be read; a row says why. */
+  readonly definition?: DeployedDefinition;
+  /**
+   * What a `${...}` placeholder left in the definition stands for, once the
+   * deployment fills it in, and `undefined` where the files do not say.
+   *
+   * A deployment fills some placeholders with names it knows only as references
+   * to what it creates - a function, another workflow - and this is the value
+   * the definition holds once they are filled, spelled the way the definition
+   * would spell it, so the reader of the definition needs no second way to read
+   * a name.
+   */
+  fill(placeholder: string): string | undefined;
+  readonly meta?: Record<string, unknown>;
+}
+
 /** Everything one reader found in one repository. */
 export interface Deployment {
   readonly functions: readonly DeployedFunction[];
   readonly routes: readonly DeployedRoute[];
   readonly roots: readonly PublishedRoot[];
+  readonly workflows: readonly DeployedWorkflow[];
   /** What could not be read, with repo-relative files. */
   readonly rows: readonly Unresolved[];
 }

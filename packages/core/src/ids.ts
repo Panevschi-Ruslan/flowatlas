@@ -13,6 +13,8 @@ import type { EntryKind } from './model/nodes.js';
  *            entry:<service>:invoke:${…}@<declaration>   — a function whose name
  *                                                        was not read
  *            entry:<service>:workflow:<deployed-name>
+ *            entry:<service>:workflow:${…}@<declaration>  — a workflow whose
+ *                                                        name was not read
  *   state    <repo>#<file>:<workflow>/<state>   — one step of a workflow; a
  *                                                symbol id whose symbol is the
  *                                                workflow's name and the step's
@@ -254,6 +256,14 @@ export const makeUnnamedInvokeKey = (declaration: string): string =>
  * never read each other can still agree on it.
  */
 export const makeWorkflowEntryKey = (name: string): string => required('name', name);
+
+/**
+ * The `key` of a `workflow` entry whose deployed name was not read, for the
+ * reason {@link makeUnnamedInvokeKey} gives: the steps are still worth drawing,
+ * and nothing may join to them by a name made of the parts that were read.
+ */
+export const makeUnnamedWorkflowKey = (declaration: string): string =>
+  `${UNREAD_SPAN}@${required('declaration', declaration)}`;
 
 /**
  * `<repo>#<file>:<workflow>/<state>` — one step of a workflow.

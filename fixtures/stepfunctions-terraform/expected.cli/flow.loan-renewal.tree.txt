@@ -1,0 +1,106 @@
+@  workflow lending-loan-renewal                                          lending/statemachine/loan-renewal.asl.json:1
+  -> CheckBorrowerStanding [Task lambda:invoke]                           lending/statemachine/loan-renewal.asl.json:5
+    @  lending-check-borrower                                             lending/infra/functions.tf:7
+      -> handler                                                          lending/src/handlers/check-borrower.ts:3
+        -> standingOf                                                     lending/src/lib/standing.ts:10
+    -> HasOverdueItems [Choice]                                           lending/statemachine/loan-renewal.asl.json:20
+      -> RenewalRefused [Fail]                                            lending/statemachine/loan-renewal.asl.json:152
+      -> AssessLateFee [Task lambda:invoke]                               lending/statemachine/loan-renewal.asl.json:36
+        @  lending-assess-late-fee                                        lending/infra/functions.tf:48
+          -> handler                                                      lending/src/handlers/assess-late-fee.ts:9
+            -> lateFee                                                    lending/src/lib/fees.ts:2
+        -> AwaitFeePayment [Task lambda:invoke]                           lending/statemachine/loan-renewal.asl.json:46
+          @  lending-notify-borrower                                      lending/infra/functions.tf:23
+            -> handler                                                    lending/src/handlers/notify-borrower.ts:10
+              -> composeNotice                                            lending/src/lib/notices.ts:8
+              -> sendNotice                                               lending/src/lib/notices.ts:19
+          -> ApplyBranchPolicy [Task lambda:invoke]                       lending/statemachine/loan-renewal.asl.json:66
+            -> ExtendLoans [Map]                                          lending/statemachine/loan-renewal.asl.json:76
+              -> ExtendLoan [Task dynamodb:updateItem]                    lending/statemachine/loan-renewal.asl.json:85
+                [] write lending-loans                                    lending/statemachine/loan-renewal.asl.json:85
+                  #  lending-loans
+              -> RecordRenewal [Parallel]                                 lending/statemachine/loan-renewal.asl.json:109
+                -> NotifyRenewal [Task lambda:invoke]                     lending/statemachine/loan-renewal.asl.json:115
+                  @  lending-notify-borrower                              lending/infra/functions.tf:23
+                    -> handler                                            lending/src/handlers/notify-borrower.ts:10
+                      -> composeNotice                                    lending/src/lib/notices.ts:8
+                      -> sendNotice                                       lending/src/lib/notices.ts:19
+                -> ReapproveFlaggedLoans [Task states:startExecution]     lending/statemachine/loan-renewal.asl.json:132
+                  @  workflow lending-loan-approval                       lending/statemachine/loan-approval.asl.json:1
+                    -> CheckBorrowerStanding [Task lambda:invoke]         lending/statemachine/loan-approval.asl.json:5
+                      @  lending-check-borrower                           lending/infra/functions.tf:7
+                        -> handler                                        lending/src/handlers/check-borrower.ts:3
+                          -> standingOf                                   lending/src/lib/standing.ts:10
+                      -> IsBorrowerInGoodStanding [Choice]                lending/statemachine/loan-approval.asl.json:35
+                        -> ReserveCopies [Map]                            lending/statemachine/loan-approval.asl.json:46
+                          -> ReserveCopy [Task dynamodb:updateItem]       lending/statemachine/loan-approval.asl.json:56
+                            [] write lending-copies                       lending/statemachine/loan-approval.asl.json:56
+                              #  lending-copies
+                          -> AwaitLibrarianApproval [Task sqs:sendMessage]  lending/statemachine/loan-approval.asl.json:80
+                            -> RecordLoan [Parallel]                      lending/statemachine/loan-approval.asl.json:102
+                              -> WriteLoan [Task dynamodb:putItem]        lending/statemachine/loan-approval.asl.json:108
+                                [] write lending-loans                    lending/statemachine/loan-approval.asl.json:108
+                                  #  lending-loans
+                              -> ScoreBorrower [Task function]            lending/statemachine/loan-approval.asl.json:126
+                                @  lending-score-borrower                 lending/infra/functions.tf:15
+                                  -> handler                              lending/src/handlers/score-borrower.ts:3
+                                    -> scoreOf                            lending/src/lib/standing.ts:16
+                              -> NotifyBorrower [Task lambda:invoke]      lending/statemachine/loan-approval.asl.json:137
+                                @  lending-notify-borrower                lending/infra/functions.tf:23
+                                  -> handler                              lending/src/handlers/notify-borrower.ts:10
+                                    -> composeNotice                      lending/src/lib/notices.ts:8
+                                    -> sendNotice                         lending/src/lib/notices.ts:19
+                                -> LoanApproved [Succeed]                 lending/statemachine/loan-approval.asl.json:149
+                            -> RejectLoan [Pass]                          lending/statemachine/loan-approval.asl.json:152
+                              -> LoanRejected [Fail]                      lending/statemachine/loan-approval.asl.json:159
+                        -> RejectLoan [Pass]                              lending/statemachine/loan-approval.asl.json:152
+                          -> LoanRejected [Fail]                          lending/statemachine/loan-approval.asl.json:159
+                      -> RejectLoan [Pass]                                lending/statemachine/loan-approval.asl.json:152
+                        -> LoanRejected [Fail]                            lending/statemachine/loan-approval.asl.json:159
+                -> RenewalComplete [Succeed]                              lending/statemachine/loan-renewal.asl.json:149
+          -> RenewalRefused [Fail]                                        lending/statemachine/loan-renewal.asl.json:152
+      -> ApplyBranchPolicy [Task lambda:invoke]                           lending/statemachine/loan-renewal.asl.json:66
+        -> ExtendLoans [Map]                                              lending/statemachine/loan-renewal.asl.json:76
+          -> ExtendLoan [Task dynamodb:updateItem]                        lending/statemachine/loan-renewal.asl.json:85
+            [] write lending-loans                                        lending/statemachine/loan-renewal.asl.json:85
+              #  lending-loans
+          -> RecordRenewal [Parallel]                                     lending/statemachine/loan-renewal.asl.json:109
+            -> NotifyRenewal [Task lambda:invoke]                         lending/statemachine/loan-renewal.asl.json:115
+              @  lending-notify-borrower                                  lending/infra/functions.tf:23
+                -> handler                                                lending/src/handlers/notify-borrower.ts:10
+                  -> composeNotice                                        lending/src/lib/notices.ts:8
+                  -> sendNotice                                           lending/src/lib/notices.ts:19
+            -> ReapproveFlaggedLoans [Task states:startExecution]         lending/statemachine/loan-renewal.asl.json:132
+              @  workflow lending-loan-approval                           lending/statemachine/loan-approval.asl.json:1
+                -> CheckBorrowerStanding [Task lambda:invoke]             lending/statemachine/loan-approval.asl.json:5
+                  @  lending-check-borrower                               lending/infra/functions.tf:7
+                    -> handler                                            lending/src/handlers/check-borrower.ts:3
+                      -> standingOf                                       lending/src/lib/standing.ts:10
+                  -> IsBorrowerInGoodStanding [Choice]                    lending/statemachine/loan-approval.asl.json:35
+                    -> ReserveCopies [Map]                                lending/statemachine/loan-approval.asl.json:46
+                      -> ReserveCopy [Task dynamodb:updateItem]           lending/statemachine/loan-approval.asl.json:56
+                        [] write lending-copies                           lending/statemachine/loan-approval.asl.json:56
+                          #  lending-copies
+                      -> AwaitLibrarianApproval [Task sqs:sendMessage]    lending/statemachine/loan-approval.asl.json:80
+                        -> RecordLoan [Parallel]                          lending/statemachine/loan-approval.asl.json:102
+                          -> WriteLoan [Task dynamodb:putItem]            lending/statemachine/loan-approval.asl.json:108
+                            [] write lending-loans                        lending/statemachine/loan-approval.asl.json:108
+                              #  lending-loans
+                          -> ScoreBorrower [Task function]                lending/statemachine/loan-approval.asl.json:126
+                            @  lending-score-borrower                     lending/infra/functions.tf:15
+                              -> handler                                  lending/src/handlers/score-borrower.ts:3
+                                -> scoreOf                                lending/src/lib/standing.ts:16
+                          -> NotifyBorrower [Task lambda:invoke]          lending/statemachine/loan-approval.asl.json:137
+                            @  lending-notify-borrower                    lending/infra/functions.tf:23
+                              -> handler                                  lending/src/handlers/notify-borrower.ts:10
+                                -> composeNotice                          lending/src/lib/notices.ts:8
+                                -> sendNotice                             lending/src/lib/notices.ts:19
+                            -> LoanApproved [Succeed]                     lending/statemachine/loan-approval.asl.json:149
+                        -> RejectLoan [Pass]                              lending/statemachine/loan-approval.asl.json:152
+                          -> LoanRejected [Fail]                          lending/statemachine/loan-approval.asl.json:159
+                    -> RejectLoan [Pass]                                  lending/statemachine/loan-approval.asl.json:152
+                      -> LoanRejected [Fail]                              lending/statemachine/loan-approval.asl.json:159
+                  -> RejectLoan [Pass]                                    lending/statemachine/loan-approval.asl.json:152
+                    -> LoanRejected [Fail]                                lending/statemachine/loan-approval.asl.json:159
+            -> RenewalComplete [Succeed]                                  lending/statemachine/loan-renewal.asl.json:149
+unresolved on this path: 2
