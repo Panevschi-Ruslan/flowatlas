@@ -217,10 +217,40 @@ Writes three files to the output directory, `.flowatlas` by default:
 `link-report.json` says what joined and what did not, `graph.db` is the same
 graph as SQLite and is what every query reads.
 
+Everything else it keeps is in the same directory, and nothing is written into
+the repositories it reads:
+
+```
+<output>/
+  project-graph.json   the whole graph
+  link-report.json     what joined and what did not
+  graph.db             the same graph as SQLite
+  cache.json           the file hashes the next build compares against
+  services/<name>/
+    graph.json         one service's own graph, reused when it has not changed
+    cache.json         that service's file hashes, for a server reader
+```
+
+`<name>` is the service's name, written so it is always one directory: lower-case
+letters, digits, `-`, `_` and an inner `.` are kept, and anything else, an
+upper-case letter included, is written as `%` and its code, so `@shop/Orders`
+is `services/%40shop%2F%4Frders/`. Two services never share a directory, even on
+a disk that ignores case. A service renamed or removed from the configuration
+has its directory removed by the next build, when nothing but the build's own
+files are in it.
+
+An earlier version wrote each service's graph and file hashes into
+`<repo>/.flowatlas/`. Where it finds those, `build` names them once, as safe to
+delete, and leaves them where they are; `--json` carries the same sentence in
+`notes`. A `.flowatlas` that is the configured output itself, which it is when
+the configuration sits at the root of the one repository it reads, is not
+named. Upgrading reads every repository once, with `cache-invalid:version`, and
+the build after that is incremental again.
+
 | Flag | Default | Does |
 |---|---|---|
 | `--config <path>` | found upward | which project to build |
-| `--out <dir>` | the configured `output` | where the three files go |
+| `--out <dir>` | the configured `output` | where everything above goes, `services/` included |
 | `--concurrency <n>` | processors minus one | how many repositories to read at once |
 | `--service <name>` | every service | read only this one and take the rest from the cache. Repeatable |
 | `--no-cache` | off | ignore the recorded file hashes and read everything again |
@@ -228,7 +258,7 @@ graph as SQLite and is what every query reads.
 | `--timing` | off | print how long each phase took, as JSON |
 | `--skip-frontend` | off | leave out the services a frontend extractor reads |
 | `--heap <megabytes>` | a share of the machine | heap limit for each repository read |
-| `--json` | off | print the report as JSON instead of a summary |
+| `--json` | off | print the report as JSON instead of a summary, with `notes` added when the summary would have said something beside it |
 
 A hash is recorded per source file, so a second build of unchanged sources reads
 nothing and still writes every output. Whether each repository's dependencies are
@@ -308,7 +338,11 @@ an alias only that package's `tsconfig.json` defines resolves inside it
 ### `flowatlas extract <repo>`
 
 Reads one repository on its own, without joining. Useful for looking at what a
-single service produces, and for a build that wants to parallelise itself.
+single service produces, and for a repository's own CI that wants its graph as a
+file. `build` runs it once per service with `--out` set to that service's
+directory under the build's output, which is the only reason `build` ever
+writes a `graph.json`; run on its own, `extract` writes to `--out`, which is
+`.flowatlas` in the repository unless you say otherwise.
 
 | Flag | Default | Does |
 |---|---|---|
@@ -836,7 +870,7 @@ worked example of a document that declares routes.
 | Key | Type | Default | Means |
 |---|---|---|---|
 | `sharedPackages` | string[] | `[]` | packages whose types are one declaration rather than two copies |
-| `output` | string | `.flowatlas` | where the three build outputs go |
+| `output` | string | `.flowatlas` | where everything a build writes goes, relative to this file: the three outputs, the cache and each service's own graph under `services/`. Nothing is written into the repositories |
 | `types.maxDepth` | number | `3` | how deep an anonymous shape is written out before it becomes a reference |
 | `contracts.depth` | number | `3` | how far into nested shapes `flowatlas contracts` compares |
 | `contracts.rules.disable` | string[] | `[]` | rules about the JSON wire this project's wire does not follow |

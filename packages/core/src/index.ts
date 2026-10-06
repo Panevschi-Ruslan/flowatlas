@@ -401,3 +401,4 @@ export {
   requestVerbOf,
 } from './platform-fetch.js';
 export type { OptionsRequestShape } from './platform-fetch.js';
+export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';

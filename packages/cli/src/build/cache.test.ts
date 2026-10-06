@@ -44,7 +44,7 @@ const repoEntry = (over: Partial<RepoCache> = {}): RepoCache => ({
     },
     'src/orders/order.dto.ts': { hash: 'sha1:two', size: 20, mtimeMs: 2, deps: [] },
   },
-  graphPath: '../orders/.flowatlas/graph.json',
+  graphPath: '.flowatlas/services/orders/graph.json',
   graphHash: 'sha1:graph',
   counts: { nodes: 1, edges: 2, types: 3, unresolved: 4 },
   ...over,

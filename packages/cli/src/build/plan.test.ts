@@ -64,7 +64,7 @@ const entry = (over: Partial<RepoCache> = {}): RepoCache => ({
   dependencies: installed(),
   globalFiles: ['src/main.ts', 'src/orders/orders.module.ts'],
   files: files(),
-  graphPath: '../orders/.flowatlas/graph.json',
+  graphPath: '.flowatlas/services/orders/graph.json',
   graphHash: 'sha1:graph',
   counts: { nodes: 0, edges: 0, types: 0, unresolved: 0 },
   ...over,
@@ -81,7 +81,7 @@ const survey = (over: Partial<RepoSurvey> = {}): RepoSurvey => ({
   dependencies: installed(),
   globalFiles: ['src/main.ts', 'src/orders/orders.module.ts'],
   files: files(),
-  graphPath: '../orders/.flowatlas/graph.json',
+  graphPath: '.flowatlas/services/orders/graph.json',
   graphHash: 'sha1:graph',
   ...over,
 });
@@ -223,7 +223,7 @@ describe('planning what to re-read', () => {
     expect(
       planRebuild([survey({ graphHash: null })], { cache: cacheOf(['orders', entry()]) }).orders
         ?.reason,
-    ).toBe('no graph at ../orders/.flowatlas/graph.json');
+    ).toBe('no graph at .flowatlas/services/orders/graph.json');
     expect(
       planRebuild([survey({ graphHash: 'sha1:by-hand' })], { cache: cacheOf(['orders', entry()]) })
         .orders?.reason,

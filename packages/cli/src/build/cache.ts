@@ -13,8 +13,14 @@ import { z } from 'zod';
  * `node_modules` was there when it was written, and every entry in it would have
  * to be re-read anyway; a version bump says so once, as `cache-invalid:version`,
  * rather than repeating it per repository.
+ *
+ * 3 moved every service's graph and file hashes out of its repository and under
+ * the build's output, `<output>/services/<name>/` (R166). Every `graphPath` an
+ * older cache records points at the old place, so the first build after the
+ * upgrade reads everything once, says `cache-invalid:version` for why, and is
+ * incremental again from the next.
  */
-export const CACHE_VERSION = 2;
+export const CACHE_VERSION = 3;
 
 export const CACHE_FILENAME = 'cache.json';
 

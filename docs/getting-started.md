@@ -177,7 +177,9 @@ Three lines are worth knowing about before they surprise you:
 
 `build` writes three files under `.flowatlas`: `project-graph.json`, the graph
 itself; `link-report.json`, what joined and why not; and `graph.db`, the same
-graph as SQLite, which every question below reads. A second build of unchanged
+graph as SQLite, which every question below reads. What it keeps between builds
+is there too, under `services/`; it writes nothing into the repositories it
+reads. A second build of unchanged
 sources reads nothing again, and `build --watch` keeps the project open and
 rebuilds on every save.
 

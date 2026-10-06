@@ -27,7 +27,7 @@ import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join, relative } from 'node:path';
 import { parseProjectGraph, parseRepoGraph } from '@flowatlas/core';
 import { parseContractReport } from '../packages/contracts/dist/index.js';
-import { fixtureDirs, layoutOf, outputDir, root } from './fixture-layout.mjs';
+import { fixtureDirs, layoutOf, outputDir, repoGraphPath, root } from './fixture-layout.mjs';
 
 const args = process.argv.slice(2);
 const update = args.includes('--update');
@@ -241,17 +241,23 @@ const UNHELD = {};
 /** The outputs an `UNHELD` entry holds back: everything a build writes. */
 const HELD_BACK = ['expected.project-graph.json', 'expected.link-report.json'];
 
-/** What a snapshot is compared against, one row per file the tool writes. */
+/**
+ * What a snapshot is compared against, one row per file the tool writes.
+ *
+ * The second column is where the file is, given the fixture: the repository
+ * graph of a project is under `services/` in the output rather than at its top.
+ */
+const atTop = (name) => (dir) => join(outputDir(dir), name);
 const SNAPSHOTS = [
-  ['expected.graph.json', 'graph.json', parseRepoGraph],
-  ['expected.project-graph.json', 'project-graph.json', parseProjectGraph],
-  ['expected.link-report.json', 'link-report.json', asReport],
+  ['expected.graph.json', repoGraphPath, parseRepoGraph],
+  ['expected.project-graph.json', atTop('project-graph.json'), parseProjectGraph],
+  ['expected.link-report.json', atTop('link-report.json'), asReport],
   // Not `expected.contracts.json`: in multi-repo-contracts that name already
   // holds what `contracts --format json` prints, which `cli-snapshots.mjs`
   // records, and the printed report is ordered for a reader while the file is
   // in the order the check produced it. Same findings, different bytes, so
   // the two cannot share a name.
-  ['expected.contracts-report.json', 'contracts.json', parseContractReport],
+  ['expected.contracts-report.json', atTop('contracts.json'), parseContractReport],
 ];
 
 const visited = new Set();
@@ -262,9 +268,8 @@ for (const dir of fixtureDirs(selected)) {
   // Where a run over this fixture writes, whatever its layout. A fixture of no
   // kind has no such directory, so its snapshot comes out uncompared and the
   // reconciliation below insists on a reason for it.
-  const out = outputDir(dir);
-  for (const [expected, actual, parse] of SNAPSHOTS) {
-    check(dir, `${label}/${expected}`, join(dir, expected), join(out, actual), parse);
+  for (const [expected, actualOf, parse] of SNAPSHOTS) {
+    check(dir, `${label}/${expected}`, join(dir, expected), actualOf(dir), parse);
   }
 }
 

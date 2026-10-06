@@ -8,7 +8,8 @@ import { openGraphDb } from '@flowatlas/linker';
 import { afterAll, describe, expect, it } from 'vitest';
 import { resolveNodeId } from '../../../../scripts/fixture-nodes.mjs';
 import { CACHE_VERSION, loadBuildCache } from '../build/cache.js';
-import { buildProject, inPools, summariseBuild, summariseRebuild, unresolvedLine } from './build.js';
+import { serviceOutputDir } from '@flowatlas/core';
+import { buildProject, inPools, serviceGraphPath, summariseBuild, summariseRebuild, unresolvedLine } from './build.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
 const FIXTURES = join(ROOT, 'fixtures');
@@ -567,22 +568,23 @@ describe('building only some of the repositories', () => {
     // A graph to reuse has to exist before one can be taken away; on a tree
     // nothing has been built in, every skipped repository is missing one and
     // the message could name any of them.
-    await buildProject({ config: configFor('no-graph-first', doomed), builtAt: FIXED });
-
-    const config = configFor('no-graph', doomed);
-    rmSync(join(DOOMED_FIXTURE, 'gateway', '.flowatlas'), {
+    const config = configFor('no-graph-first', doomed);
+    const first = await buildProject({ config, builtAt: FIXED });
+    rmSync(serviceOutputDir(first.outputDir, 'gateway'), {
       recursive: true,
       force: true,
       maxRetries: 10,
       retryDelay: 100,
     });
 
-    const graphPath = join(DOOMED_FIXTURE, 'orders', '.flowatlas', 'graph.json');
+    const graphPath = serviceGraphPath(first.outputDir, 'orders');
     const before = readFileSync(graphPath, 'utf8');
 
-    await expect(
-      buildProject({ config, builtAt: FIXED, service: ['orders'] }),
-    ).rejects.toThrow(/missing graph for gateway/);
+    // The message names where the graph was looked for, which is under the
+    // build's output and not in the repository.
+    const refused = buildProject({ config, builtAt: FIXED, service: ['orders'] });
+    await expect(refused).rejects.toThrow(/missing graph for gateway/);
+    await expect(refused).rejects.toThrow(serviceGraphPath(first.outputDir, 'gateway'));
 
     // The refusal costs two milliseconds and the extraction of `orders` it had
     // already started costs most of a second, so a build that returned without

@@ -242,6 +242,10 @@ place. Adding a sixth later is one more `link`.
 | `link-report.json` | what joined, what did not, and why |
 | `graph.db` | the same graph as SQLite, which every query reads |
 
+What it keeps between builds, each service's own graph and file hashes, is in the
+same directory under `services/`. Nothing is written into the repositories it
+reads.
+
 ---
 
 ## Commands

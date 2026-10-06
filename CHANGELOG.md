@@ -6,6 +6,32 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+### Fixed
+
+- **`build` no longer writes into the repositories it reads.** Each service's
+  own graph and file hashes went to `<repo>/.flowatlas/`, which the
+  documentation never said: it named three files in the output directory. Pointed
+  at somebody else's checkouts for a read-only look, a build left an untracked
+  `.flowatlas/` in every one of them, and two projects whose configurations name
+  the same repository shared one set of those files and overwrote each other's,
+  so each made the other's next build read everything again. Both now live under
+  the configured output, at `<output>/services/<name>/`, and follow `--out`. A
+  service name is written as one directory whatever it holds — `@shop/orders` is
+  `%40shop%2Forders` — and two names never share one, even on a disk that ignores
+  case. `flowatlas extract` on its own is unchanged and still writes where
+  `--out` says.
+- **The `.flowatlas/` an earlier version left in a repository is named, not
+  deleted.** `build` says once which of them nothing reads any more and that they
+  are safe to delete; `--json` carries the same sentence in `notes`. An output
+  directory configured inside a repository is not one of them.
+- **A watch no longer rebuilds for ever when its output is inside a repository
+  it reads.** The output was left alone because its default name starts with a
+  dot. Named anything else, every build's own writes came back as a change; it is
+  now left alone by where it is.
+- **The build cache is version 3.** The first build after upgrading reads every
+  repository once, says `cache-invalid:version`, and is incremental from the
+  next.
+
 ## [0.5.1][] - 2026-09-28
 
 `@flowatlas/cli` only: the npm page (README and keywords) brought up to date

@@ -1,8 +1,9 @@
-import { relative, sep } from 'node:path';
-import { loadConfig } from '@flowatlas/core';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { loadConfig, SERVICES_DIRECTORY } from '@flowatlas/core';
 import { watch, type FSWatcher } from 'chokidar';
 import {
   buildProject,
+  leftoversLine,
   summariseRebuild,
   type BuildOptions,
   type BuildResult,
@@ -33,16 +34,50 @@ export interface WatchHandle {
   last(): BuildResult | undefined;
 }
 
+/** True when `path` is `dir` or anywhere beneath it. */
+const isUnder = (dir: string, path: string): boolean => {
+  const rest = relative(dir, path);
+  return rest === '' || (rest !== '..' && !rest.startsWith(`..${sep}`) && !isAbsolute(rest));
+};
+
+/** Files a build writes at the top of its output directory, temporaries included. */
+const isBuildOutputFile = (name: string): boolean =>
+  /^(project-graph\.json|link-report\.json|cache\.json|graph\.db(-wal|-shm|-journal)?)$/.test(name) ||
+  name.endsWith('.tmp') ||
+  name.endsWith('.building');
+
+/**
+ * Whether a path is something the build writes, wherever the output is.
+ *
+ * By where it is rather than by what it is called. A configuration kept at the
+ * root of a repository it reads puts the output inside that repository, and an
+ * output named anything but a dot directory used to be watched: every build
+ * wrote into it, every write was a change, and the watch rebuilt for ever with
+ * nothing changed (R166).
+ *
+ * Usually the whole output directory. Not when the output directory holds the
+ * repository — `"output": "."` beside a service at `./api` — because then it
+ * holds the sources too; there only `services/` and the files a build writes at
+ * the top are the build's.
+ */
+const isOutput = (repoDir: string, path: string, outputDir: string): boolean => {
+  if (!isUnder(outputDir, path)) return false;
+  if (!isUnder(outputDir, repoDir)) return true;
+  if (isUnder(join(outputDir, SERVICES_DIRECTORY), path)) return true;
+  return dirname(path) === outputDir && isBuildOutputFile(basename(path));
+};
+
 /**
  * Whether a path is one of ours rather than one of the repository's.
  *
  * Judged on the path relative to the repository, because the repository itself
  * may well sit inside a directory whose name starts with a dot.
  */
-const isIgnored = (repoDir: string, path: string): boolean => {
+export const isIgnored = (repoDir: string, path: string, outputDir?: string): boolean => {
+  if (outputDir !== undefined && isOutput(repoDir, path, outputDir)) return true;
   const rest = relative(repoDir, path);
   if (rest === '') return false;
-  if (rest.startsWith('..')) return true;
+  if (rest === '..' || rest.startsWith(`..${sep}`) || isAbsolute(rest)) return true;
   return rest
     .split(sep)
     .some((segment) => IGNORED_DIRECTORIES.has(segment) || segment.startsWith('.'));
@@ -58,6 +93,8 @@ const isIgnored = (repoDir: string, path: string): boolean => {
  */
 export const watchProject = async (options: WatchOptions = {}): Promise<WatchHandle> => {
   const loaded = loadConfig(options.config ?? process.cwd());
+  // Resolved the way the build resolves it, so `--out` moves what is ignored too.
+  const outputDir = options.out === undefined ? loaded.outputDir : resolve(options.out);
   const print = options.print ?? ((line: string) => process.stderr.write(`${line}\n`));
   const debounceMs = options.debounceMs ?? DEBOUNCE_MS;
 
@@ -81,6 +118,11 @@ export const watchProject = async (options: WatchOptions = {}): Promise<WatchHan
   const rebuild = async (): Promise<void> => {
     const result = await buildProject({ ...options, sessions });
     print(summariseRebuild(result, previousUnresolved));
+    // Once, on the first build: the watch prints one line per rebuild, and a
+    // note about the disk repeated on every save would drown the line that
+    // says what the save did.
+    const leftovers = last === undefined ? leftoversLine(result.leftovers) : undefined;
+    if (leftovers !== undefined) print(leftovers);
     if (options.timing === true) print(JSON.stringify(result.timing));
     previousUnresolved = result.report.totals.unresolved;
     last = result;
@@ -127,7 +169,7 @@ export const watchProject = async (options: WatchOptions = {}): Promise<WatchHan
       const repoDir = loaded.repoDir(service);
       const watcher = watch(repoDir, {
         ignoreInitial: true,
-        ignored: (path: string) => isIgnored(repoDir, path),
+        ignored: (path: string) => isIgnored(repoDir, path, outputDir),
         awaitWriteFinish: { stabilityThreshold: 50, pollInterval: 10 },
       });
       await new Promise<void>((ready) => watcher.once('ready', () => ready()));
