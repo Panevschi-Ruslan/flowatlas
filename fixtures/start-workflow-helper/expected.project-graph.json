@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T17:27:26.355Z",
+  "builtAt": "2026-10-06T18:18:01.063Z",
   "services": [
     {
       "name": "lending",
@@ -720,32 +720,6 @@
       "sites": 3,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "handler -> orchestrator.run",
-      "service": "lending"
-    },
-    {
-      "file": "src/handlers/renew-loan.ts",
-      "line": 13,
-      "reason": "starter-undescribed",
-      "hint": "@library/scheduling is not installed, so what schedule does is not read, and it is called from a deployed function with Reminder.LoanDue. If it starts a workflow or invokes a function by its deployed name, describe it under adapters.starters as {\"module\":\"@library/scheduling\",\"function\":\"schedule\",\"target\":\"workflow\",\"name\":[{\"kind\":\"argument\",\"index\":0}],\"names\":{\"Reminder.LoanDue\":\"<deployed name>\"}} (`\"target\": \"invoke\"` for a function); or install the package, so its source is read.",
-      "symbol": "@library/scheduling schedule",
-      "meta": {
-        "package": "@library/scheduling",
-        "function": "schedule",
-        "description": {
-          "module": "@library/scheduling",
-          "function": "schedule",
-          "target": "workflow",
-          "name": [
-            {
-              "kind": "argument",
-              "index": 0
-            }
-          ],
-          "names": {
-            "Reminder.LoanDue": "<deployed name>"
-          }
-        }
-      },
       "service": "lending"
     }
   ]

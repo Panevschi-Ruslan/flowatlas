@@ -727,9 +727,10 @@ prove, and the path is given so you can run it.
   `fixtures/eventbridge-terraform`, `fixtures/sqs-sns-terraform`,
   `fixtures/multi-repo-events`). Code that starts a workflow or invokes a
   function by its deployed name is joined to it, whether it calls the SDK or a
-  helper of the project's own, read or described, so a route leads into the
-  workflow it starts (`fixtures/start-workflow-sdk`,
-  `fixtures/start-workflow-helper`).
+  helper of the project's own, read or described - one that records what to
+  start in one call and starts it by id in the next as well - so a route leads
+  into the workflow it starts (`fixtures/start-workflow-sdk`,
+  `fixtures/start-workflow-helper`, `fixtures/start-workflow-by-record`).
 - **Guards.** Everything in front of a way in is a node and an ordered
   `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
   middleware, a procedure's `.use(…)`, a file-system router's declarative list —

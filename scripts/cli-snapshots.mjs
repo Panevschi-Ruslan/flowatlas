@@ -309,6 +309,20 @@ const HELPER_START_CASES = [
 ];
 
 /**
+ * A start addressed by a record made one call earlier (R171): the described
+ * pair joined at `declared`, a start whose record was made elsewhere, and the
+ * hint offered to the calls shaped like a start and to nothing else.
+ */
+const recordStartsPlain = plainFor('start-workflow-by-record');
+
+const RECORD_START_CASES = [
+  ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...recordStartsPlain, format: 'tree' }, io)],
+  ['flow.post-loans.json.l2.json', (io) => runFlow('POST /loans', { ...recordStartsPlain, format: 'json', detail: '2' }, io)],
+  ['flow.resume-run.tree.txt', (io) => runFlow('POST /runs/:param/resume', { ...recordStartsPlain, format: 'tree' }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: recordStartsPlain.config }, io)],
+];
+
+/**
  * Sets of recordings, in several places.
  *
  * The first owns its folder, so an answer nobody asks for any more is swept
@@ -332,6 +346,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'lambda-namespace-handlers', 'expected.cli'), owned: true, cases: NAMESPACE_CASES },
   { dir: join(root, 'fixtures', 'start-workflow-sdk', 'expected.cli'), owned: true, cases: SDK_START_CASES },
   { dir: join(root, 'fixtures', 'start-workflow-helper', 'expected.cli'), owned: true, cases: HELPER_START_CASES },
+  { dir: join(root, 'fixtures', 'start-workflow-by-record', 'expected.cli'), owned: true, cases: RECORD_START_CASES },
 ];
 
 /**

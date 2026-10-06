@@ -1,0 +1,189 @@
+{
+  "entry": "entry:lending:http:POST:/loans",
+  "unresolvedOnPath": 0,
+  "root": {
+    "node": {
+      "id": "entry:lending:http:POST:/loans",
+      "type": "entry",
+      "label": "POST /loans",
+      "loc": "infra/api.tf:31",
+      "service": "lending",
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "deployedBy": "terraform",
+        "api": "lending-loans",
+        "function": "lending-create-loan",
+        "declaredAs": "aws_api_gateway_method.create_loan",
+        "adapter": "aws-lambda"
+      }
+    },
+    "children": [
+      {
+        "node": {
+          "id": "lending#src/handlers/create-loan.ts:handler",
+          "type": "function",
+          "label": "handler",
+          "loc": "src/handlers/create-loan.ts:8",
+          "service": "lending"
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "lending#src/lib/loans.ts:loanIdOf",
+              "type": "function",
+              "label": "loanIdOf",
+              "loc": "src/lib/loans.ts:6",
+              "service": "lending"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static"
+            },
+            "children": []
+          },
+          {
+            "node": {
+              "id": "producer:lending#src/handlers/create-loan.ts:19:9",
+              "type": "producer",
+              "label": "start lending-loan-approval",
+              "loc": "src/handlers/create-loan.ts:19",
+              "service": "lending",
+              "kind": "start",
+              "meta": {
+                "kind": "start",
+                "adapter": "starters",
+                "method": "start",
+                "starts": "workflow",
+                "confidence": "declared",
+                "reaches": [
+                  "workflow:lending-loan-approval"
+                ]
+              }
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "entry:lending:workflow:lending-loan-approval",
+                  "type": "entry",
+                  "label": "workflow lending-loan-approval",
+                  "loc": "statemachine/loan-approval.asl.json:1",
+                  "service": "lending",
+                  "kind": "workflow",
+                  "meta": {
+                    "key": "lending-loan-approval",
+                    "name": "lending-loan-approval",
+                    "nameFrom": "deployment",
+                    "startAt": "CheckBorrower",
+                    "states": 1,
+                    "queryLanguage": "JSONPath",
+                    "comment": "Approves a loan: checks the borrower.",
+                    "deployedBy": "terraform",
+                    "declaredAs": "aws_sfn_state_machine.loan_approval",
+                    "definitionFrom": "file",
+                    "declaredIn": "infra/main.tf:35"
+                  }
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "declared"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower",
+                      "type": "function",
+                      "label": "CheckBorrower [Task lambda:invoke]",
+                      "loc": "statemachine/loan-approval.asl.json:5",
+                      "service": "lending",
+                      "kind": "state",
+                      "meta": {
+                        "workflow": "lending-loan-approval",
+                        "stateType": "Task",
+                        "end": true,
+                        "task": {
+                          "kind": "function",
+                          "service": "lambda",
+                          "action": "invoke",
+                          "pattern": "request-response",
+                          "name": "lending-check-borrower"
+                        },
+                        "reaches": [
+                          "invoke:lending-check-borrower"
+                        ],
+                        "parameters": {
+                          "FunctionName": "lending-check-borrower",
+                          "Payload": {
+                            "borrowerId.$": "$.borrowerId"
+                          }
+                        }
+                      }
+                    },
+                    "edge": {
+                      "type": "handles",
+                      "confidence": "static"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "entry:lending:invoke:lending-check-borrower",
+                          "type": "entry",
+                          "label": "lending-check-borrower",
+                          "loc": "infra/functions.tf:31",
+                          "service": "lending",
+                          "kind": "invoke",
+                          "meta": {
+                            "key": "lending-check-borrower",
+                            "deployedBy": "terraform",
+                            "name": "lending-check-borrower",
+                            "runtime": "nodejs20.x",
+                            "declaredAs": "aws_lambda_function.check_borrower",
+                            "handler": "handlers/check-borrower.handler",
+                            "sourceDirectory": "src",
+                            "handlerVia": "function",
+                            "environment": {},
+                            "adapter": "aws-lambda"
+                          }
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static"
+                        },
+                        "children": [
+                          {
+                            "node": {
+                              "id": "lending#src/handlers/check-borrower.ts:handler",
+                              "type": "function",
+                              "label": "handler",
+                              "loc": "src/handlers/check-borrower.ts:3",
+                              "service": "lending"
+                            },
+                            "edge": {
+                              "type": "handles",
+                              "confidence": "static"
+                            },
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

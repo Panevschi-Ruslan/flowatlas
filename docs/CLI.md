@@ -1328,6 +1328,7 @@ readable name wins. `channel` replaces `channelArg` where both are given.
 | `{ "kind": "chain-root-argument", "index": 0 }` | argument 0 of the call the chain started from |
 | `{ "kind": "argument-path", "index": 0, "path": ["Entries", "*", "DetailType"] }` | a path of properties inside argument 0; `*` is every element of an array |
 | `{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "DetailType"] }` | the same path inside what `PutEventsCommand` is constructed with, where the construction is an argument of the call — built in the call or in a `const` before it. `"index": 1` starts the path in the constructor's second argument |
+| `{ "kind": "origin-call-argument", "call": "create", "path": ["process"] }` | the path inside the argument of the earlier `create(...)` that made a value this call is handed - `run.id` after `const run = await create(...)` - on the same receiver or from the same module, in the same body, through `const` bindings only. See [a start addressed by a record](#code-that-starts-a-workflow-or-a-function) |
 
 **A path through a list is one name per element.** `["Entries", "*", "DetailType"]`
 over two entries is two channels, not one, and every part of an address that
@@ -2265,6 +2266,41 @@ describes its call:
 | `names` | optional: what the code says, to the deployed name, where the two differ. A key is what the name reads as, or the expression as written where that cannot be read - an enum member of a package that is not here is `Process.LoanApproval` |
 | `kind` | optional: what the call is recorded as; `start` or `invoke` by default |
 
+**A start addressed by a record made one call earlier.** Some helpers record
+what to start in one call and start it in the next, by the record's id:
+
+```ts
+const run = await orchestrator.create({ process: Process.LoanApproval, loanId });
+await orchestrator.start({ runId: run.id });
+```
+
+The second call is the start, and its arguments do not hold the name. The
+`origin-call-argument` locator reads it from the first:
+
+```jsonc
+"starters": [{
+  "module": "@library/orchestration",
+  "function": "start",
+  "target": "workflow",
+  "name": [{ "kind": "origin-call-argument", "call": "create", "path": ["process"] }],
+  "names": { "Process.LoanApproval": "lending-loan-approval" }
+}]
+```
+
+| Key | Means |
+|---|---|
+| `call` | the call that made the record: a method on the same receiver as the start, or a function imported from the same module |
+| `path` | properties inside that call's argument, as for `argument-path`; empty is the argument itself |
+| `index` | optional: which argument of that call the path starts in, the first by default |
+
+A value the start is handed - `run.id`, `id` from `const { id } = await
+create(...)`, a `const` holding either - is followed back to the call that made
+it. Only within the body the start is written in, only through `const`
+bindings, and only to exactly one call of that name. Anything else - an id from
+the request, a `let`, a record made in another function, two records either of
+which could be the one, a path that ends at a parameter - reads as
+`start-name-unread`, and nothing is guessed (`fixtures/start-workflow-by-record`).
+
 **How far each join is trusted.** A name the code states and the deployment
 confirms is `static`, whether the SDK, a read helper or a described one states
 it. A name taken from a `names` table is `declared`: somebody wrote the mapping,
@@ -2278,15 +2314,25 @@ what it describes is not a message. Described as a publish, every state machine
 would be a channel and every function a consumer of one, and `dead` and the
 reverse walk would answer about them in channel terms.
 
-**`doctor` says which helper to describe.** A call into a package that is not
-installed, from the handler of a deployed function, handed a string or a member
-of an enum, has the shape of a start nobody has described. It is one
-`starter-undescribed` row per package and function, at the first call, with the
-description to write in the hint and in `meta.description`; filling in the
-deployed name, and `"target": "invoke"` for a function, is left to you. A call
-another reader already drew - a request, a query - is not reported. Installing
-the package, so its source is read, answers the row as well
-(`fixtures/start-workflow-helper`).
+**`doctor` says which helper to describe.** A call from the handler of a
+deployed function into a package whose source is not read has the shape of a
+start nobody has described when one of these holds, tried in order:
+
+| The package | The call |
+|---|---|
+| is not installed | is handed an id - `id`, `runId`, `executionArn` - read off what a call into the same package returned earlier in the same body |
+| is installed with its declared types only | is declared in types that import a client that starts something: Step Functions or Lambda, version 3 or 2 |
+
+A call handed a string or a member of an enum and nothing else is not enough:
+error builders, response mappers and code converters are handed exactly that,
+and start nothing. Each shape is one `starter-undescribed` row per package and
+function, at the first call, with the description to write in the hint and in
+`meta.description`: an `origin-call-argument` locator pointing at the call that
+made the id, where there is one, and the `target` the client's types say where
+they say one. Filling in the deployed name is left to you. A call another
+reader already drew - a request, a query - is not reported. Making the
+package's source readable here answers the row as well
+(`fixtures/start-workflow-by-record`).
 
 ---
 

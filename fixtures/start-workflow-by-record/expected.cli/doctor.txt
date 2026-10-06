@@ -1,0 +1,31 @@
+unresolved: total=3 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+
+unresolved: 3 to act on over 4 rows, and 5 places static reading cannot see, folded into 1
+  starter-undescribed: 2 rows
+    A deployed function calls into a package whose source is not read, in the shape of a helper that starts a workflow or invokes a function by its deployed name: it is handed an id the same package made earlier in the body, or the package is installed with types that reach a client that starts things. If it is one, describe it under adapters.starters, as the row says; or make the package's source readable here.
+      lending src/handlers/create-loan.ts:22  @library/notify send
+        ↳ @library/notify is installed with its declared types only, so what send does is not read. It is called from a deployed function and the types it is declared with reach LambdaClient, which invokes functions. If it starts a workflow or invokes a function by its deployed name, describe it under adapters.starters as {"module":"@library/notify","function":"send","target":"invoke","name":[{"kind":"argument","index":0}]} (`"target": "workflow"` for a workflow); or make its source readable here, as a member of the workspace, so the call inside it is read.
+      lending src/handlers/send-overdue-notices.ts:7  @library/jobs submit
+        ↳ @library/jobs is not installed, so what submit does is not read. It is called from a deployed function and it is handed job.id, read off what prepare returned earlier in the same body. If it starts a workflow or invokes a function by its deployed name, describe it under adapters.starters as {"module":"@library/jobs","function":"submit","target":"workflow","name":[{"kind":"origin-call-argument","call":"prepare","path":["kind"]}],"names":{"Job.OverdueNotices":"<deployed name>"}} (`"target": "invoke"` for a function); or install the package, so its source is read.
+  start-name-unread: 1 row
+    The name of the workflow this starts is not written where it can be read. Write the deployed name or its ARN, or a value of the environment the deployment sets; where the code names it some other way, say how in the `names` table of a starter description.
+      lending src/handlers/resume-run.ts:7  producer:lending#src/handlers/resume-run.ts:7:9 -> orchestrator.start({ runId: event.pathParameters…
+  call-dynamic-receiver (info): 1 row over 5 places
+    The receiver has no single class type; inject a class to make the edge visible.
+      lending src/handlers/create-loan.ts:18  handler -> orchestrator.create
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 0 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 3 now, +3)
+  no baseline at <root>/fixtures/start-workflow-by-record/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  start-name-unread: 0 → 1 (+1)
+  starter-undescribed: 0 → 2 (+2)
+  new (3):
+    lending|src/handlers/create-loan.ts|@library/notify send|starter-undescribed
+    lending|src/handlers/resume-run.ts|producer:lending#src/handlers/resume-run.ts:7:9 -> orchestrator.start({ runId: event.pathParameters?.['runId']|start-name-unread
+    lending|src/handlers/send-overdue-notices.ts|@library/jobs submit|starter-undescribed

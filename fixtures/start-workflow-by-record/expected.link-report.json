@@ -1,18 +1,18 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T18:18:01.063Z",
-  "configHash": "2aac5dc9534a",
+  "builtAt": "2026-10-06T18:17:59.429Z",
+  "configHash": "f38fa4940897",
   "services": [
     {
       "name": "lending",
-      "repo": "./loans",
+      "repo": ".",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 26,
-      "edges": 17,
+      "nodes": 18,
+      "edges": 11,
       "types": 0,
-      "unresolved": 2,
-      "durationMs": 688
+      "unresolved": 4,
+      "durationMs": 620
     }
   ],
   "httpOut": {
@@ -42,7 +42,7 @@
     "called": 0,
     "uncalled": [
       "entry:lending:http:POST:/loans",
-      "entry:lending:http:POST:/loans/:param/renewals"
+      "entry:lending:http:POST:/runs/:param/resume"
     ],
     "duplicated": []
   },
@@ -52,9 +52,9 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 26,
-    "edges": 23,
+    "nodes": 18,
+    "edges": 13,
     "types": 0,
-    "unresolved": 1
+    "unresolved": 4
   }
 }

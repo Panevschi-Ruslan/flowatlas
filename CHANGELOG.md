@@ -159,11 +159,27 @@ only one of them moved.
   is described under `adapters.starters` - its `module`, its `function` (or
   `receiverType` and `method`), its `target` (`workflow` or `invoke`), where the
   `name` is written, and an optional `names` table from what the code says to
-  the deployed name. A join through `names` is `declared`, never `static`. An
-  undescribed call into a package that is not installed, from a deployed
-  function, handed a string or an enum member, is one `starter-undescribed` row
-  naming the package and the function, with the description to write
+  the deployed name. A join through `names` is `declared`, never `static`
   (`fixtures/start-workflow-helper`).
+- **A start addressed by a record made one call earlier.** A helper that
+  records what to start and then starts it by id -
+  `const run = await orchestrator.create({ process: Process.LoanApproval });
+  await orchestrator.start({ runId: run.id })` - is described with the new
+  `origin-call-argument` locator, `{ "kind": "origin-call-argument", "call":
+  "create", "path": ["process"] }`, which follows `run.id` back to the call that
+  made `run` and reads the name from its argument. Only within one body, only
+  through `const` bindings, and only to one call of that name on the same
+  receiver or from the same module; anything else is `start-name-unread`
+  (`fixtures/start-workflow-by-record`).
+- **`doctor` says which helper to describe**, with one `starter-undescribed`
+  row per package and function, for a call from a deployed function into a
+  package whose source is not read that is shaped like a start: one not
+  installed, handed an id the same package made earlier in the body, or one
+  installed with its declared types only, whose types reach a Step Functions or
+  Lambda client. A call handed a string or an enum member and nothing else is
+  not offered a description, so an error builder or a code converter is not
+  taken for a starter. The description offered points at the earlier call where
+  there is one, and says `"target": "invoke"` where the types reach Lambda.
 - **A workflow step that sends is a publisher, joined to its subscriber.** A
   task that sends to a queue, publishes to a topic or puts events on a bus -
   `sqs:sendMessage`, `sns:publish`, `events:putEvents`, their batch forms and

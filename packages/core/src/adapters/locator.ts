@@ -102,7 +102,23 @@ export type NameLocator =
    * different from an address that could not be read. `locatorApplies` is that
    * question.
    */
-  | { kind: 'constructed-argument-path'; class: string; path: readonly string[]; index?: number };
+  | { kind: 'constructed-argument-path'; class: string; path: readonly string[]; index?: number }
+  /**
+   * A path inside an argument of the earlier call that produced a value this
+   * call is handed.
+   *
+   * A helper that records what to start in one call and starts it in the next -
+   * `const run = await orchestrator.create({ process: Process.LoanApproval });
+   * await orchestrator.start({ runId: run.id })` - writes the name one call
+   * before the call that acts on it, and the second call's arguments hold only
+   * an id. `call` is the method or function that produced the value, made on
+   * the same receiver or imported from the same module as this call; `index` is
+   * its argument the path starts in, the first by default. Followed only
+   * through `const` bindings in the body this call is written in, and only to
+   * one such call: anything else reaches nothing, which a reader reports as a
+   * name it could not read rather than guessing at (R171).
+   */
+  | { kind: 'origin-call-argument'; call: string; path: readonly string[]; index?: number };
 
 /**
  * What one locator found at one element of the address.
@@ -555,6 +571,175 @@ const annotatedName = (argument: TsNode): string | undefined => {
 const one = (expression: TsNode | undefined): LocatedSlot[] =>
   expression === undefined ? [] : [{ expression, reached: true }];
 
+/**
+ * Where a value handed to a call was made: the call whose result it is, or is
+ * read from, within the body the call is written in.
+ */
+export interface ValueOrigin {
+  /** The call that produced the value. */
+  readonly call: CallExpression;
+  /** The properties read off that call's result to reach the value: `['id']` for `run.id`. */
+  readonly read: readonly string[];
+  /** The value as it is written where it is handed over. */
+  readonly value: TsNode;
+}
+
+/** The body a node is written in: the nearest function, or the file. */
+const bodyOf = (node: TsNode): TsNode | undefined =>
+  node.getFirstAncestor(
+    (ancestor) =>
+      Node.isFunctionLikeDeclaration(ancestor) || Node.isFunctionExpression(ancestor) || Node.isSourceFile(ancestor),
+  );
+
+const isConst = (declaration: TsNode): boolean =>
+  Node.isVariableDeclaration(declaration) &&
+  declaration.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const;
+
+/**
+ * One `const` step back from a name: what it was bound to, and the property a
+ * destructuring took off that, in the body given and nowhere else.
+ */
+const constStep = (name: TsNode, body: TsNode | undefined): { value: TsNode; read?: string } | undefined => {
+  const parent = name.getParent();
+  const symbol =
+    parent !== undefined && Node.isShorthandPropertyAssignment(parent) ? parent.getValueSymbol() : name.getSymbol();
+  const declaration = symbol?.getDeclarations()[0];
+  if (declaration === undefined || bodyOf(declaration) !== body) return undefined;
+  if (isConst(declaration) && Node.isVariableDeclaration(declaration) && Node.isIdentifier(declaration.getNameNode())) {
+    const value = declaration.getInitializer();
+    return value === undefined ? undefined : { value };
+  }
+  // `const { id } = await create(...)`: one level of a record taken apart.
+  if (!Node.isBindingElement(declaration) || declaration.getDotDotDotToken() !== undefined) return undefined;
+  const variable = declaration.getParent().getParent();
+  if (!Node.isObjectBindingPattern(declaration.getParent()) || !isConst(variable) || !Node.isVariableDeclaration(variable)) {
+    return undefined;
+  }
+  const value = variable.getInitializer();
+  const key = declaration.getPropertyNameNode();
+  if (value === undefined || (key !== undefined && !Node.isIdentifier(key))) return undefined;
+  return { value, read: key?.getText() ?? declaration.getName() };
+};
+
+/** The call one value comes from, through property reads and `const` bindings in `body`. */
+const originOf = (value: TsNode, body: TsNode | undefined): ValueOrigin | undefined => {
+  const read: string[] = [];
+  let current = value;
+  for (let depth = 0; depth < MOST_LINKS; depth += 1) {
+    if (
+      Node.isParenthesizedExpression(current) ||
+      Node.isAsExpression(current) ||
+      Node.isSatisfiesExpression(current) ||
+      Node.isNonNullExpression(current) ||
+      Node.isTypeAssertion(current) ||
+      Node.isAwaitExpression(current)
+    ) {
+      current = current.getExpression();
+      continue;
+    }
+    if (Node.isPropertyAccessExpression(current)) {
+      read.unshift(current.getName());
+      current = current.getExpression();
+      continue;
+    }
+    if (Node.isCallExpression(current)) return { call: current, read, value };
+    if (!Node.isIdentifier(current)) return undefined;
+    const step = constStep(current, body);
+    if (step === undefined) return undefined;
+    if (step.read !== undefined) read.unshift(step.read);
+    current = step.value;
+  }
+  return undefined;
+};
+
+/** Every value written in an argument: the argument, or each value a record or a list written out holds. */
+const handedValues = (argument: TsNode, depth = 0): TsNode[] => {
+  if (depth > 4) return [];
+  if (Node.isObjectLiteralExpression(argument)) {
+    return argument.getProperties().flatMap((property) => {
+      if (Node.isPropertyAssignment(property)) {
+        const initializer = property.getInitializer();
+        return initializer === undefined ? [] : handedValues(initializer, depth + 1);
+      }
+      if (Node.isShorthandPropertyAssignment(property)) return [property.getNameNode()];
+      return [];
+    });
+  }
+  if (Node.isArrayLiteralExpression(argument)) {
+    return argument.getElements().flatMap((element) => handedValues(element, depth + 1));
+  }
+  return [argument];
+};
+
+/**
+ * Every value this call is handed that a call before it, in the same body,
+ * produced.
+ *
+ * `start({ runId: run.id })` is handed `run.id`, read off what
+ * `const run = await create(...)` produced. Only `const` bindings are followed,
+ * because a binding that can be reassigned is not the call it was first given,
+ * and only in the body the call is written in, because past it the value is a
+ * parameter some other call decides.
+ */
+export const originsOf = (site: CallExpression): ValueOrigin[] => {
+  const body = bodyOf(site);
+  return site
+    .getArguments()
+    .flatMap((argument) => handedValues(argument))
+    .flatMap((value) => {
+      const origin = originOf(value, body);
+      return origin === undefined || origin.call === site ? [] : [origin];
+    });
+};
+
+/**
+ * What a call is made by: its method and receiver, or the function and where
+ * it comes from - the module it is imported from, or the file declaring it.
+ */
+const makerOf = (call: CallExpression): { name: string; on: TsNode | undefined; from?: string } | undefined => {
+  const callee = call.getExpression();
+  if (Node.isPropertyAccessExpression(callee)) return { name: callee.getName(), on: callee.getExpression() };
+  if (!Node.isIdentifier(callee)) return undefined;
+  const declaration = callee.getSymbol()?.getDeclarations()[0];
+  if (declaration !== undefined && Node.isImportSpecifier(declaration)) {
+    return {
+      name: declaration.getName(),
+      on: undefined,
+      from: declaration.getImportDeclaration().getModuleSpecifierValue(),
+    };
+  }
+  return { name: callee.getText(), on: undefined, from: declaration?.getSourceFile().getFilePath() };
+};
+
+/** Whether two receivers are one: the same symbol, or the same text where neither resolves. */
+const sameReceiver = (left: TsNode, right: TsNode): boolean => {
+  const [a, b] = [left.getSymbol(), right.getSymbol()];
+  return a !== undefined || b !== undefined ? a === b : left.getText() === right.getText();
+};
+
+/** Whether `producer` is the call named `name` made through what `site` is made through. */
+const madeAlongside = (producer: CallExpression, site: CallExpression, name: string): boolean => {
+  const [made, by] = [makerOf(producer), makerOf(site)];
+  if (made === undefined || by === undefined || made.name !== name) return false;
+  if (made.on !== undefined && by.on !== undefined) return sameReceiver(made.on, by.on);
+  return made.on === undefined && by.on === undefined && made.from !== undefined && made.from === by.from;
+};
+
+/**
+ * The one described call that produced a value this call is handed.
+ *
+ * Two different calls of that name are two candidates, and choosing between
+ * them is a guess, so the answer is then nothing.
+ */
+const producingCall = (site: CallExpression, name: string): CallExpression | undefined => {
+  const producers = new Set(
+    originsOf(site)
+      .map((origin) => origin.call)
+      .filter((call) => madeAlongside(call, site, name)),
+  );
+  return producers.size === 1 ? [...producers][0] : undefined;
+};
+
 type LocatorResolvers = {
   [K in NameLocator['kind']]: (
     site: LocatorSite,
@@ -600,6 +785,16 @@ const resolvers: LocatorResolvers = {
     if (!Node.isNewExpression(instance)) return [stopped(instance)];
     const input = instance.getArguments()[locator.index ?? 0];
     return input === undefined ? [undefined] : walkPath(input, locator.path);
+  },
+  'origin-call-argument': (site, locator) => {
+    const producer = Node.isCallExpression(site) ? producingCall(site, locator.call) : undefined;
+    const argument = producer?.getArguments()[locator.index ?? 0];
+    if (argument === undefined) return [];
+    // A path that stopped short stopped at something this body does not write -
+    // a parameter, a spread - and a reader handed it would follow it out to
+    // whoever called this body, which is further than this locator reaches.
+    const slots = walkPath(argument, locator.path);
+    return slots.some((slot) => slot !== undefined && !slot.reached) ? [] : slots;
   },
 };
 

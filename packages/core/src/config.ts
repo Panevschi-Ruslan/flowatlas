@@ -231,6 +231,20 @@ const nameLocatorSchema = z.discriminatedUnion('kind', [
     /** Which argument of the constructor the path starts in. The first by default. */
     index: z.number().int().min(0).optional(),
   }),
+  z.strictObject({
+    kind: z.literal('origin-call-argument'),
+    /**
+     * The call, on the same receiver or from the same module, whose result a
+     * value this call is handed was read off: `create`, for a `start` handed
+     * `run.id` where `const run = await create(...)`. Followed within one body,
+     * through `const` bindings only (R171).
+     */
+    call: z.string().min(1),
+    /** Properties from that call's argument inwards; empty is the argument itself. */
+    path: z.array(z.string().min(1)),
+    /** Which argument of that call the path starts in. The first by default. */
+    index: z.number().int().min(0).optional(),
+  }),
 ]);
 
 /** A regular expression, refused here rather than when the first call is read. */

@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>123 fixtures</span>
-    <span>249 snapshot files</span>
+    <span>124 fixtures</span>
+    <span>252 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -447,7 +447,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>State machines <span class="count" data-total="5">5</span></h2>
+    <h2>State machines <span class="count" data-total="6">6</span></h2>
     <ul>
       <li class="fixture" data-search="multi-repo-stepfunctions state machines a state machine in one repository that invokes functions two other repositories deploy, starts a state machine a third deploys, writes a table of its own, and sends to a queue, a topic and a bus whose subscribers the other repositories declare: the joins p22 makes across repositories by a deployed name, and the ones r169 makes between a step that sends and the subscriber p23 reads.">
         <div class="head">
@@ -455,6 +455,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">3 services</span>
         </div>
         <p>A state machine in one repository that invokes functions two other repositories deploy, starts a state machine a third deploys, writes a table of its own, and sends to a queue, a topic and a bus whose subscribers the other repositories declare: the joins P22 makes across repositories by a deployed name, and the ones R169 makes between a step that sends and the subscriber P23 reads.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="start-workflow-by-record state machines a lending library's loans service whose handler starts a workflow through a helper that records a run in one call and starts it by the run's id in the next, so the name of what is started is written one call before the call that starts it.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/start-workflow-by-record">start-workflow-by-record</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A lending library's loans service whose handler starts a workflow through a helper that records a run in one call and starts it by the run's id in the next, so the name of what is started is written one call before the call that starts it.</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="start-workflow-helper state machines a lending library's loans service whose handlers start workflows through the project's own helpers rather than the aws sdk: one helper is a package of this workspace, whose source is read, and one comes from a package that is deliberately not here and is described in `flowatlas.config.json`.">

@@ -5,8 +5,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildProject } from './build.js';
 
 /**
- * What P24 promises about code that starts a workflow or invokes a function by
- * its deployed name, read off the two fixtures' own source by hand rather than
+ * What P24 and R171 promise about code that starts a workflow or invokes a function by
+ * its deployed name, read off the three fixtures' own source by hand rather than
  * off a recording (R09).
  */
 
@@ -22,11 +22,13 @@ const build = async (name: string): Promise<ProjectGraph> => {
 
 let sdk: ProjectGraph;
 let helper: ProjectGraph;
+let byRecord: ProjectGraph;
 
 beforeAll(async () => {
   sdk = await build('start-workflow-sdk');
   helper = await build('start-workflow-helper');
-}, 240_000);
+  byRecord = await build('start-workflow-by-record');
+}, 360_000);
 
 afterAll(() => rmSync(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
@@ -89,15 +91,47 @@ describe('a helper', () => {
     ]);
   });
 
-  it('that nothing describes is one row naming the package and the function, with the description to write', () => {
-    const rows = helper.unresolved.filter((row) => row.reason === 'starter-undescribed');
-    expect(rows.map((row) => [row.file, row.line, row.symbol])).toEqual([['src/handlers/renew-loan.ts', 13, '@library/scheduling schedule']]);
+  // R171: a call handed an enum member and nothing else is not the shape of a
+  // start; error builders and code converters are handed exactly that.
+  it('that nothing describes, handed only an enum member, is not offered a description', () => {
+    expect(helper.unresolved.filter((row) => row.reason === 'starter-undescribed')).toEqual([]);
+  });
+});
+
+describe('a start addressed by a record made one call earlier (R171)', () => {
+  it('is read through the call that made the record, declared where a table names it', () => {
+    expect(startsFrom(byRecord, 'lending#src/handlers/create-loan.ts:handler')).toEqual([
+      ['start lending-loan-approval', 'entry:lending:workflow:lending-loan-approval', 'declared'],
+    ]);
+  });
+
+  it('is a name it could not read where the record was made somewhere else, and joins nothing', () => {
+    expect(startsFrom(byRecord, 'lending#src/handlers/resume-run.ts:handler')).toEqual([['start ?', undefined, undefined]]);
+    expect(byRecord.unresolved.filter((row) => row.reason === 'start-name-unread').map((row) => [row.file, row.line])).toEqual([
+      ['src/handlers/resume-run.ts', 7],
+    ]);
+  });
+
+  it('offers a description to the calls shaped like a start, and none to an error builder or the call that made the record', () => {
+    const rows = byRecord.unresolved.filter((row) => row.reason === 'starter-undescribed');
+    expect(rows.map((row) => [row.file, row.line, row.symbol])).toEqual([
+      ['src/handlers/create-loan.ts', 22, '@library/notify send'],
+      ['src/handlers/send-overdue-notices.ts', 7, '@library/jobs submit'],
+    ]);
+    // Installed with its types only, which reach the client that invokes functions.
     expect(rows[0]?.meta?.['description']).toEqual({
-      module: '@library/scheduling',
-      function: 'schedule',
-      target: 'workflow',
+      module: '@library/notify',
+      function: 'send',
+      target: 'invoke',
       name: [{ kind: 'argument', index: 0 }],
-      names: { 'Reminder.LoanDue': '<deployed name>' },
+    });
+    // Handed an id the same absent package made earlier in the body.
+    expect(rows[1]?.meta?.['description']).toEqual({
+      module: '@library/jobs',
+      function: 'submit',
+      target: 'workflow',
+      name: [{ kind: 'origin-call-argument', call: 'prepare', path: ['kind'] }],
+      names: { 'Job.OverdueNotices': '<deployed name>' },
     });
   });
 });

@@ -286,3 +286,30 @@ const specOf = (service: Service): BrokerSpec => ({
 });
 
 export const awsBrokerAdapters: readonly BrokerSpec[] = SERVICES.map(specOf);
+
+/**
+ * The clients of this table that start something by its deployed name, for a
+ * reader asking whether a package's declared types reach one (R171): the
+ * version 3 package, and the class version 2 names the service by, with the
+ * module of that one client alone.
+ */
+export interface StartingClient {
+  readonly entry: DeployedEntryKind;
+  readonly client: string;
+  readonly package: string;
+  readonly v2: { readonly package: string; readonly name: string; readonly module: string };
+}
+
+export const STARTING_CLIENTS: readonly StartingClient[] = SERVICES.flatMap((service) => {
+  const starts = service.operations.find((operation) => operation.starts !== undefined && operation.starts.resumes !== true)?.starts;
+  if (starts === undefined) return [];
+  const name = service.v2Service ?? service.service;
+  return [
+    {
+      entry: starts.entry,
+      client: service.client,
+      package: service.package,
+      v2: { package: V2_PACKAGE, name, module: `${V2_PACKAGE}/clients/${name.toLowerCase()}` },
+    },
+  ];
+});

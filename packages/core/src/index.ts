@@ -267,6 +267,7 @@ export {
   locatedSlots,
   locatorApplies,
   locatorIsCondition,
+  originsOf,
 } from './adapters/locator.js';
 export type {
   IsOperation,
@@ -274,6 +275,7 @@ export type {
   LocatorContext,
   LocatorSite,
   NameLocator,
+  ValueOrigin,
 } from './adapters/locator.js';
 export type { FrontendAdapter, FrontendExtractOptions } from './adapters/frontend.js';
 
