@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T16:22:24.720Z",
+  "builtAt": "2026-10-06T18:18:30.750Z",
   "services": [
     {
       "name": "platform",
@@ -673,7 +673,7 @@
       "reason": "function-name-disputed",
       "message": "the name of aws_lambda_function.place_hold depends on var.name_prefix, which the variable files set differently: var.name_prefix is \"library-production\" in infra/env/production.tfvars and \"library-staging\" in infra/env/staging.tfvars",
       "hint": "Choose the environment to read under services[].infra.vars, for example [\"infra/env/production.tfvars\"]. Until then the function has no name and nothing can join to it.",
-      "symbol": "aws_lambda_function.place_hold",
+      "symbol": "entry:holds:invoke:${…}@aws_lambda_function.place_hold",
       "adapter": "aws-lambda",
       "meta": {
         "variable": "name_prefix",
@@ -690,7 +690,7 @@
       "reason": "function-name-disputed",
       "message": "the name of aws_lambda_function.cancel_hold depends on var.name_prefix, which the variable files set differently: var.name_prefix is \"library-production\" in infra/env/production.tfvars and \"library-staging\" in infra/env/staging.tfvars",
       "hint": "Choose the environment to read under services[].infra.vars, for example [\"infra/env/production.tfvars\"]. Until then the function has no name and nothing can join to it.",
-      "symbol": "aws_lambda_function.cancel_hold",
+      "symbol": "entry:holds:invoke:${…}@aws_lambda_function.cancel_hold",
       "adapter": "aws-lambda",
       "meta": {
         "variable": "name_prefix",

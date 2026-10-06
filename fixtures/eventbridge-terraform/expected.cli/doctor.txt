@@ -1,7 +1,6 @@
 unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
 
 unresolved: 1 to act on over 1 row
-  ways in: 13 found, 12 with a handler that was read, 1 without
   channel-dynamic: 1 row
     The channel name cannot be read here. Annotate publishLibraryEvent with the channel it uses.
       circulation/src/lib/events.ts:15  publishLibraryEvent -> detailType

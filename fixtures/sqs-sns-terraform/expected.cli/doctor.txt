@@ -1,7 +1,6 @@
 unresolved: total=2 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
 
 unresolved: 2 to act on over 3 rows, and 1 place static reading cannot see, folded into 1
-  ways in: 10 found, 9 with a handler that was read, 1 without
   environment-not-set: 1 row
     Set RETURNS_QUEUE_URL in the environment library-bulk-return is deployed with, or correct the name the code reads.
       returns/src/lib/returns-queue.ts:17  producer:returns#src/lib/returns-queue.ts:17:9
@@ -10,7 +9,7 @@ unresolved: 2 to act on over 3 rows, and 1 place static reading cannot see, fold
       returns/src/returns/process-return.ts:28  producer:returns#src/returns/process-return.ts:28:11
   subscription-target-unread (info): 1 row
     It is read, and it is not a function, a workflow, a queue, a topic, a bus or a stream, so nothing is drawn past it. Nothing to fix unless it is one of those written in a form not recognised.
-      returns/infra/topics.tf:25  aws_sns_topic_subscription.branch_inbox
+      returns/infra/topics.tf:25  consumer:returns#infra/topics.tf:aws_sns_topic_subscription.branch_inbox
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked

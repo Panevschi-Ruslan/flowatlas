@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "lending-library-loans",
-  "generatedAt": "2026-10-06T16:24:58.711Z",
+  "generatedAt": "2026-10-06T18:18:16.883Z",
   "nodes": [
     {
       "id": "entry:lending-library-loans:http:GET:/loans/:param",
@@ -648,7 +648,7 @@
       "reason": "function-repeated-unread",
       "message": "aws_lambda_function.send_reminder[?] is one function per element of something not known here, so neither how many there are nor their names are read: for_each = toset(var.reminder_channels) is not known: var.reminder_channels has no default and no variable file sets it",
       "hint": "Give var.reminder_channels a default or set it in a variable file; each function is then read under its own name.",
-      "symbol": "aws_lambda_function.send_reminder[?]",
+      "symbol": "entry:lending-library-loans:invoke:${…}@aws_lambda_function.send_reminder[?]",
       "meta": {
         "because": "variable-unset",
         "variable": "reminder_channels"

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T17:33:21.117Z",
+  "builtAt": "2026-10-06T18:19:42.511Z",
   "services": [
     {
       "name": "returns",
@@ -1323,7 +1323,7 @@
       "level": "info",
       "message": "what aws_sns_topic_subscription.branch_inbox delivers to is not read: it delivers by email, which nothing here follows",
       "hint": "It is read, and it is not a function, a workflow, a queue, a topic, a bus or a stream, so nothing is drawn past it. Nothing to fix unless it is one of those written in a form not recognised.",
-      "symbol": "aws_sns_topic_subscription.branch_inbox",
+      "symbol": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.branch_inbox",
       "adapter": "aws-lambda",
       "meta": {
         "because": "unplaced"

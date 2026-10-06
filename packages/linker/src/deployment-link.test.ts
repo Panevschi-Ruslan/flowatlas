@@ -120,6 +120,13 @@ describe('a route answered by a function deployed elsewhere', () => {
     expect(project.nodes.find((node) => node.id === route.id)?.meta).toMatchObject({ functionService: 'loans' });
   });
 
+  it('reaches the entry of a function whose code was not read, where the rows about it are', () => {
+    const { project } = linkGraphs([graph('platform', [route]), graph('loans', [fn])], config, { builtAt: FIXED });
+    expect(project.edges).toEqual([
+      expect.objectContaining({ from: route.id, to: fn.id, type: 'calls', confidence: 'static', meta: { via: 'function-name' } }),
+    ]);
+  });
+
   it('draws nothing to a name nobody deploys', () => {
     const { project } = linkGraphs([graph('platform', [route])], config, { builtAt: FIXED });
     expect(project.edges).toEqual([]);

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T17:14:29.491Z",
+  "builtAt": "2026-10-06T18:18:14.786Z",
   "configHash": "8efb81aeaad3",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./desk",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 28,
-      "edges": 24,
+      "nodes": 29,
+      "edges": 25,
       "types": 2,
       "unresolved": 3,
-      "durationMs": 556
+      "durationMs": 649
     }
   ],
   "httpOut": {
@@ -38,12 +38,13 @@
     "noProducers": []
   },
   "routes": {
-    "total": 5,
+    "total": 6,
     "called": 0,
     "uncalled": [
       "entry:desk:http:DELETE:/holds/:param",
       "entry:desk:http:POST:/holds",
       "entry:desk:http:POST:/loans",
+      "entry:desk:http:POST:/loans/:param/archive",
       "entry:desk:http:POST:/loans/:param/renewals",
       "entry:desk:http:POST:/returns"
     ],
@@ -55,8 +56,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 28,
-    "edges": 26,
+    "nodes": 29,
+    "edges": 27,
     "types": 2,
     "unresolved": 1
   }

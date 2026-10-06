@@ -87,6 +87,12 @@ export interface DoctorSettings {
    * service's configured type is all that is said.
    */
   looksLike?: (service: { name: string; type: string }) => string | undefined;
+  /**
+   * The services the configuration declares by a document rather than points
+   * at a repository of, by name: nothing of theirs was read, so whether they
+   * have a way in is not a question about them (R173).
+   */
+  declared?: readonly string[];
 }
 
 /** The reasons that mean a call does not land where it was aimed. */
@@ -225,14 +231,21 @@ const WAY_IN_TYPES = ['entry', 'consumer', 'ui_component', 'ui_action'] as const
  * inside one still adds a row for the growth check to see — the gate is not
  * blind, as it is for a service whose ways in are mostly unread — and a library
  * typed as a server is a configuration somebody may mean.
+ *
+ * It says nothing about a service declared by a document, by rule rather than
+ * because a declared service happens to have no server type: no code of it was
+ * read, and a document that declares no way in describes a service nothing here
+ * enters, not a stack nothing reads (R173).
  */
 const withoutWaysInOf = (
   db: GraphDb,
   settings: DoctorSettings,
 ): Pick<DoctorReport['unresolved'], 'withoutWaysIn'> => {
   const entered = new Set(WAY_IN_TYPES.flatMap((type) => db.nodesByType(type)).map((node) => node.repo));
+  const declared = new Set(settings.declared ?? []);
   const found = (db.report()?.services ?? [])
     .filter((service) => settings.service === undefined || service.name === settings.service)
+    .filter((service) => !declared.has(service.name))
     .filter(
       (service) =>
         service.skipped === undefined &&

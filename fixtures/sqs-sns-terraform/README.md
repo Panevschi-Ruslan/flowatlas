@@ -16,7 +16,7 @@ Type-checked, never executed or deployed.
 | `process-return`, `TopicArn: process.env.ITEM_RETURNED_TOPIC_ARN` | `sns/library-item-returned`, from `aws_sns_topic.item_returned.arn` |
 | `process-return`, `QueueUrl: process.env.AUDIT_QUEUE_URL` | set to `var.audit_queue_url`, which `infra/env/dev.tfvars` and `infra/env/prod.tfvars` set differently and nothing chooses: one `environment-value-unread` row naming both files, and no channel |
 | `notify-borrower`, version 2: `new AWS.SQS().sendMessage({...}).promise()` | `sqs/library-reminders`, the queue's URL written in the code |
-| `POST /holds`, a REST integration of type `AWS` with `sqs:path/<account>/<queue>` | the route itself publishes to `sqs/library-hold-requests`; the account is not known from the files and the queue is |
+| `POST /holds`, a REST integration of type `AWS` with `sqs:path/<account>/<queue>` | the route itself publishes to `sqs/library-hold-requests`; the account is not known from the files and the queue is. A way in whose work is the message it sends, so `doctor` does not count it as one without a handler |
 
 Every settings key a function sets says where its value comes from on the
 `reads_config` edge that reads it (`setBy`).
@@ -26,7 +26,7 @@ Every settings key a function sets says where its value comes from on the
 | Channel | Read by |
 |---|---|
 | `sqs/library-returns` | an event-source mapping onto `library-process-return`; failures redrive to `sqs/library-returns-dlq` |
-| `sns/library-item-returned` | a subscription to `sqs/library-restock` (a publisher of its own onto that queue), one to `library-notify-borrower` whose filter policy is recorded and not matched on, and one by e-mail, which is read and not followed (`subscription-target-unread` at `info`) |
+| `sns/library-item-returned` | a subscription to `sqs/library-restock` (a publisher of its own onto that queue), one to `library-notify-borrower` whose filter policy is recorded and not matched on, and one by e-mail, which is read and not followed (`subscription-target-unread` at `info`, on the subscription's consumer node, so the walk from `POST /returns` counts it) |
 | `sqs/library-restock` | through `terraform-aws-modules/sqs/aws` with `create_dlq`: a mapping onto `library-restock`, and the module's own redrive to `sqs/library-restock-dlq` |
 | `sqs/library-reminders` | a mapping onto `library-send-reminder`, its filter criteria recorded |
 | `sqs/library-hold-requests` | a mapping onto `library-place-hold` |

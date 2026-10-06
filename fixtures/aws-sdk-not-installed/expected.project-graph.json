@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T14:56:38.304Z",
+  "builtAt": "2026-10-06T18:17:26.392Z",
   "services": [
     {
       "name": "catalogue",
@@ -412,12 +412,12 @@
   "unresolved": [
     {
       "file": "src/catalogue-events.ts",
-      "line": 21,
+      "line": 48,
       "reason": "call-dynamic-receiver",
       "level": "info",
-      "sites": 8,
+      "sites": 5,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
-      "symbol": "CatalogueEvents.catalogued -> this.client.send",
+      "symbol": "announceWithdrawal -> sns\n    .publish({\n      TopicArn: 'arn:aws:sns:eu-west-1:111122223333:catalogue-withdrawals',\n      Message: JSON.stringify({ itemId }),\n    }).promise",
       "service": "catalogue"
     }
   ]

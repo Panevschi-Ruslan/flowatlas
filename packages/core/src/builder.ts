@@ -175,6 +175,17 @@ export class GraphBuilder {
     return existing;
   }
 
+  /**
+   * Takes back the rows a later reader answered.
+   *
+   * A row says a reader could not follow something; a later reader that did -
+   * a description matched the call whose receiver had no type - takes it back,
+   * rather than leave a row about a place the graph now draws (R173).
+   */
+  withdrawUnresolved(answered: (row: Unresolved) => boolean): void {
+    for (const [key, row] of this.#unresolved) if (answered(row)) this.#unresolved.delete(key);
+  }
+
   has(id: string): boolean {
     return this.#nodes.has(id);
   }

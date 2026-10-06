@@ -13,7 +13,7 @@
  * cannot tell them apart will eventually be told to ignore both.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { loadConfig, type Unresolved } from '@flowatlas/core';
 import type { CheckOptions } from '@flowatlas/contracts';
 import type { GraphDb } from '@flowatlas/linker';
@@ -124,7 +124,34 @@ interface FromConfig {
   readableDirs: string[];
   /** The same, by service name, for describing a repository (R170). */
   serviceDirs: Map<string, string>;
+  /**
+   * Where each service is written in the configuration, for an annotation
+   * about the service as a whole: the file relative to the directory it is in,
+   * as every annotation's file is relative to where it was read (R173).
+   */
+  serviceAt: Map<string, { file: string; line: number }>;
 }
+
+/** A service's own `name`, as one line of a configuration writes it. */
+const NAMED = /"name"\s*:\s*("(?:[^"\\]|\\.)*")/;
+
+/**
+ * The line each service is named on: the first line that names it.
+ *
+ * Read from the text, because the parsed configuration keeps no lines; a
+ * service whose name is not written as `"name": "…"` on one line has none, and
+ * its annotation names the file alone.
+ */
+const serviceLines = (text: string, names: readonly string[]): Map<string, number> => {
+  const wanted = new Set(names);
+  const lines = new Map<string, number>();
+  text.split('\n').forEach((line, index) => {
+    const written = NAMED.exec(line)?.[1];
+    const name = written === undefined ? undefined : (JSON.parse(written) as string);
+    if (name !== undefined && wanted.has(name) && !lines.has(name)) lines.set(name, index + 1);
+  });
+  return lines;
+};
 
 /**
  * What a service's repository looks like, read from its directory, for the
@@ -149,6 +176,7 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
     declared: [],
     readableDirs: [],
     serviceDirs: new Map(),
+    serviceAt: new Map(),
   };
   try {
     const loaded = loadConfig(options.config ?? process.cwd(), { checkRepos: false });
@@ -182,6 +210,9 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
       const dir = service.repo.replace(/^\.\//, '').replace(/\/+$/, '');
       if (dir !== '' && dir !== '.') repoDirs.set(service.name, dir);
     }
+    const file = relative(loaded.rootDir, loaded.configPath).replace(/\\/g, '/');
+    const lines = serviceLines(readFileSync(loaded.configPath, 'utf8'), services.map((service) => service.name));
+    const serviceAt = new Map(services.map((service) => [service.name, { file, line: lines.get(service.name) ?? 0 }]));
     return {
       outputDir: loaded.outputDir,
       rootDir: loaded.rootDir,
@@ -200,6 +231,7 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
       declared,
       readableDirs,
       serviceDirs,
+      serviceAt,
     };
   } catch {
     // Pointed at a bare database with no configuration beside it there is
@@ -394,6 +426,7 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
         flowatlasVersion: VERSION,
         ...(options.service === undefined ? {} : { service: options.service }),
         looksLike: describeRepository(settings),
+        declared: settings.declared.map((document) => document.service),
       },
     );
 
@@ -433,7 +466,10 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
       format === 'json'
         ? renderDoctorJson(report)
         : format === 'github'
-          ? renderDoctorGithub(report, file === undefined ? {} : { file })
+          ? renderDoctorGithub(report, {
+              ...(file === undefined ? {} : { file }),
+              serviceAt: (service) => settings.serviceAt.get(service),
+            })
           : renderDoctorText(report, {
               ...(file === undefined ? {} : { file }),
               repoDirs: settings.repoDirs,

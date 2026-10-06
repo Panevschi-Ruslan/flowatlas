@@ -401,6 +401,12 @@ export interface GithubOptions {
    * and without it every annotation lands on a path that does not exist.
    */
   repoDir?: (service: string) => string | undefined;
+  /**
+   * Where a service is written in the configuration, for a finding about the
+   * service as a whole rather than a line of its code: a service with no way
+   * in (R173).
+   */
+  serviceAt?: (service: string) => { file: string; line: number } | undefined;
 }
 
 const annotation = (
@@ -441,6 +447,12 @@ export const renderDoctorGithub = (report: DoctorReport, options: GithubOptions 
     line,
   });
 
+  // First, as the verdict says it first (R170): a warning, as it decides no exit.
+  for (const service of report.unresolved.withoutWaysIn ?? []) {
+    lines.push(
+      annotation('warning', options.serviceAt?.(service.service), `${service.service}: no way in`, `${noWayInSentence(service)}.`),
+    );
+  }
   for (const issue of report.markers.issues) {
     lines.push(
       annotation(

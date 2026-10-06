@@ -7,6 +7,7 @@ import {
   makeHttpEntryKey,
   makeInvokeEntryKey,
   makeUnnamedInvokeKey,
+  SENDS_META,
   type Confidence,
   type DeployedFunction,
   type DeployedHandler,
@@ -262,11 +263,15 @@ const exportedFrom = (sourceFile: SourceFile, name: string): TsNode | undefined 
 const invokeKeyOf = (fn: DeployedFunction): string =>
   fn.name === undefined ? makeUnnamedInvokeKey(fn.address) : makeInvokeEntryKey(fn.name);
 
+/** The id of a function's `invoke` entry. */
+const invokeIdOf = (ctx: ExtractContext, fn: DeployedFunction): string => makeEntryId(ctx.repo, 'invoke', invokeKeyOf(fn));
+
 /**
  * The entry handler a deployed function's handler string stands for.
  *
- * Every row it writes is about the function's `invoke` entry and names it by
- * id, so a walk that arrives at the entry counts why it stops there (R168).
+ * Every row it writes is about the function, and names it by its declaration,
+ * as the deployment's own rows do; `reportRows` puts it on the function's
+ * `invoke` entry, where a walk that arrives counts why it stops there (R168).
  */
 const resolveHandler = (
   ctx: ExtractContext,
@@ -274,7 +279,7 @@ const resolveHandler = (
   handler: DeployedHandler,
   rows: Unresolved[],
 ): ResolvedHandler => {
-  const at = { file: fn.file, line: fn.line, symbol: makeEntryId(ctx.repo, 'invoke', invokeKeyOf(fn)) };
+  const at = { file: fn.file, line: fn.line, symbol: fn.address };
   const meta: Record<string, unknown> = { handler: handler.written };
   const who = fn.name ?? fn.address;
   let sourceFile: SourceFile | undefined;
@@ -413,9 +418,21 @@ const resolveHandler = (
   return { wrapping: [], meta: { ...meta, handlerVia: 'unread' } };
 };
 
-/** The rows of a reading, written into the graph under this adapter's name. */
-const reportRows = (ctx: ExtractContext, rows: readonly Unresolved[]): void => {
-  for (const row of rows) ctx.builder.addUnresolved({ ...row, adapter: DEPLOYED_FUNCTIONS });
+/**
+ * The rows of a reading, each on the node drawn for what it is about, written
+ * into the graph under this adapter's name.
+ *
+ * A deployment's reader knows a declaration by its address - a function, a
+ * route, a mapping, a state machine - and an address is no node, so a walk
+ * passes no row anchored to one. A row names the node a walk passes (R173):
+ * the node drawn for its declaration, wherever one was, and the address only
+ * where nothing was drawn, which is a row about something no walk goes through.
+ */
+const reportRows = (ctx: ExtractContext, rows: readonly Unresolved[], drawn: ReadonlyMap<string, string>): void => {
+  for (const row of rows) {
+    const node = row.symbol === undefined ? undefined : drawn.get(row.symbol);
+    ctx.builder.addUnresolved({ ...row, ...(node === undefined ? {} : { symbol: node }), adapter: DEPLOYED_FUNCTIONS });
+  }
 };
 
 /**
@@ -461,6 +478,8 @@ export const deployedFunctionsAdapter: EntryAdapter = {
     for (const reader of readers) {
       const deployment: Deployment = reader.read({ repoDir: ctx.repoDir, service: ctx.service, config: ctx.config });
       const rows: Unresolved[] = [...deployment.rows];
+      /** The node drawn for each declaration, by its address, for `reportRows`. */
+      const drawn = new Map<string, string>();
 
       const resolved = deployment.functions.map((fn) =>
         fn.handler === undefined ? { wrapping: [], meta: {} } : resolveHandler(ctx, fn, fn.handler, rows),
@@ -468,8 +487,10 @@ export const deployedFunctionsAdapter: EntryAdapter = {
       deployment.functions.forEach((fn, index) => {
         const reading = resolved[index] as ResolvedHandler;
         const key = invokeKeyOf(fn);
+        const id = invokeIdOf(ctx, fn);
+        drawn.set(fn.address, id);
         entries.push({
-          id: makeEntryId(ctx.repo, 'invoke', key),
+          id,
           kind: 'invoke',
           label: fn.name ?? `${fn.address} (name not read)`,
           key,
@@ -507,6 +528,8 @@ export const deployedFunctionsAdapter: EntryAdapter = {
         const wrapping = [...guards, ...(reading?.wrapping ?? [])];
         const key = makeHttpEntryKey(route.method, route.path);
         const id = makeEntryId(ctx.repo, 'http', key);
+        const declaredAs = route.meta?.['declaredAs'];
+        if (typeof declaredAs === 'string') drawn.set(declaredAs, id);
         // A route that sends the request to a queue, a topic or a bus itself is
         // its own publisher: no function runs, and the channel is the next step.
         const sends =
@@ -534,16 +557,23 @@ export const deployedFunctionsAdapter: EntryAdapter = {
             ...(route.root === undefined ? {} : { root: route.root.key, below: route.root.below }),
             ...(route.meta === undefined ? {} : { declaredAs: route.meta['declaredAs'] }),
             ...(target === undefined ? { integration: 'none' } : {}),
-            ...(target !== undefined && 'sends' in target ? { integration: target.sends.kind, ...(sends === undefined ? {} : { sends }) } : {}),
+            ...(target !== undefined && 'sends' in target ? { integration: target.sends.kind, ...(sends === undefined ? {} : { [SENDS_META]: sends }) } : {}),
           },
         });
+        // A route onto a function whose code was not read runs nothing this
+        // graph holds, and reaches the function's entry instead, as a schedule
+        // or a consumer in front of it does: the walk from the route then
+        // passes the entry the rows about that code are on (R173).
+        if (fn !== undefined && reading?.handler === undefined) {
+          ctx.builder.addEdge({ from: id, to: invokeIdOf(ctx, fn), type: 'calls', confidence: 'static', file: route.file, line: route.line, meta: { via: 'deployment' } });
+        }
       }
 
       // The subscribers the deployment declares: rules, subscriptions,
       // mappings, schedules, pipes and redrives, onto the channels code
       // publishes to (P23).
       entries.push(
-        ...drawDeliveries(ctx, deployment, reader.name, rows, (index) => {
+        ...drawDeliveries(ctx, deployment, reader.name, rows, drawn, (index) => {
           const reading = resolved[index];
           return reading?.handler === undefined
             ? undefined
@@ -556,8 +586,8 @@ export const deployedFunctionsAdapter: EntryAdapter = {
       );
 
       for (const root of deployment.roots) roots.push({ ...root, deployedBy: reader.name });
-      drawDeployedWorkflows(ctx, deployment.workflows, reader.name, DEPLOYED_FUNCTIONS);
-      reportRows(ctx, rows);
+      drawDeployedWorkflows(ctx, deployment.workflows, reader.name, DEPLOYED_FUNCTIONS, drawn);
+      reportRows(ctx, rows, drawn);
     }
 
     // What this repository publishes for other repositories' routes to hang

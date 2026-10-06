@@ -197,6 +197,17 @@ describe('GraphBuilder', () => {
     ]);
   });
 
+  it('takes back the rows a later reader answered, before the rest are folded', () => {
+    const b = builder();
+    b.addUnresolved({ file: 'src/a.ts', line: 1, reason: 'call-dynamic-receiver', level: 'info', symbol: 'run -> orchestrator.run' });
+    b.addUnresolved({ file: 'src/a.ts', line: 2, reason: 'call-dynamic-receiver', level: 'info', symbol: 'run -> scheduler.schedule' });
+    b.addUnresolved({ file: 'src/b.ts', line: 3, reason: 'call-dynamic-receiver', level: 'info', symbol: 'go -> orchestrator.run' });
+    b.withdrawUnresolved((row) => row.symbol?.endsWith('orchestrator.run') === true);
+    expect(b.build().unresolved).toEqual([
+      { file: 'src/a.ts', line: 2, reason: 'call-dynamic-receiver', level: 'info', symbol: 'run -> scheduler.schedule' },
+    ]);
+  });
+
   it('throws when an edge points at a node that was never added', () => {
     const b = builder();
     b.addNode(node('a'));

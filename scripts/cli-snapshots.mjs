@@ -276,12 +276,15 @@ const MULTI_EVENT_CASES = [
 /**
  * Handlers re-exported through a namespace and through `export … from` (R168):
  * a route through a queue to a consumer that lands, and one through a queue to a
- * consumer whose handler cannot be read, which the path counts.
+ * consumer whose handler cannot be read, which the path counts; and a route
+ * straight onto that function, which passes its entry and counts the same row
+ * (R173).
  */
 const namespacePlain = plainFor('lambda-namespace-handlers');
 
 const NAMESPACE_CASES = [
   ['flow.post-loans.tree.txt', (io) => runFlow('POST /loans', { ...namespacePlain, format: 'tree' }, io)],
+  ['flow.archive-loan.tree.txt', (io) => runFlow('POST /loans/:param/archive', { ...namespacePlain, format: 'tree' }, io)],
   ['flow.post-returns.tree.txt', (io) => runFlow('POST /returns', { ...namespacePlain, format: 'tree' }, io)],
   ['doctor.txt', (io) => runDoctorCommand({ config: namespacePlain.config }, io)],
 ];

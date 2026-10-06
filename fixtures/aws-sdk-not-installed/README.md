@@ -17,9 +17,11 @@ being `heuristic`.
 The producer, its `calls` edge and its `emits` edge are all `heuristic`: the
 source says what the author meant, not what a compiler checked. The same
 repository with its dependencies installed reads the same channels at `static`
-(`fixtures/aws-sdk-publishers`). The one row, `call-dynamic-receiver` on
-`this.client.send`, is the call graph saying the same thing from its side: a
-method of a client it could not resolve is not followed.
+(`fixtures/aws-sdk-publishers`). None of the three publishing calls leaves a
+`call-dynamic-receiver` row: the call graph could not type the receiver, and
+the SDK's broker description read the call all the same, so the row the call
+graph wrote is taken back (R173). The rows that remain are on calls nothing
+read, such as the `.promise()` after `sns.publish(...)`.
 
 No channel has a handler: the subscribers of all three are declared in the
 deployment, which is not read yet.

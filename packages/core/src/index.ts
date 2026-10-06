@@ -61,7 +61,7 @@ export {
 export type { DeployedEntryKind, HttpMethod, SiteLeafType } from './ids.js';
 
 export { ENTRY_KINDS, NODE_TYPES, isEntryKind } from './model/nodes.js';
-export { wayInBodyRead } from './model/way-in.js';
+export { SENDS_META, wayInBodyRead } from './model/way-in.js';
 export type { EntryKind, GraphNode, NodeType } from './model/nodes.js';
 
 export {

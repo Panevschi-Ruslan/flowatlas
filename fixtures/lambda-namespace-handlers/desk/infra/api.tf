@@ -123,3 +123,28 @@ resource "aws_api_gateway_integration" "record_return" {
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.record_return.invoke_arn
 }
+
+# /loans/{loanId}/archive, straight onto the function whose handler is built by
+# a package that is not installed: nothing past the function's entry is read.
+
+resource "aws_api_gateway_resource" "archive" {
+  rest_api_id = aws_api_gateway_rest_api.desk.id
+  parent_id   = aws_api_gateway_resource.loan.id
+  path_part   = "archive"
+}
+
+resource "aws_api_gateway_method" "archive_loan" {
+  rest_api_id   = aws_api_gateway_rest_api.desk.id
+  resource_id   = aws_api_gateway_resource.archive.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "archive_loan" {
+  rest_api_id             = aws_api_gateway_rest_api.desk.id
+  resource_id             = aws_api_gateway_resource.archive.id
+  http_method             = aws_api_gateway_method.archive_loan.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.archive_loan.invoke_arn
+}

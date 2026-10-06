@@ -22,8 +22,10 @@ on purpose.
 | `orchestrator.run('lending-loan-approval', ...)` in `renew-loan` | `start lending-loan-approval`, at `static`: the description says which call it is, the code states the name, and the deployment confirms it |
 | `scheduler.schedule(Reminder.LoanDue, ...)` in `renew-loan`, from `@library/scheduling` | nothing, and no `starter-undescribed` row. It is not installed and it is called from a deployed function, but a member of an enum is all it is handed, which is what an error builder or a code converter is handed too (R171). The calls that row is offered to are in `fixtures/start-workflow-by-record` |
 
-`orchestrator.run` and `scheduler.schedule` also leave the
-`call-dynamic-receiver` information row every call into an absent package does.
+`scheduler.schedule` also leaves the `call-dynamic-receiver` information row
+every call into an absent package does. `orchestrator.run` does not: the
+description says what the call is, so it is read, and the row the calls reader
+wrote about its untyped receiver is taken back (R173).
 
 ## The description
 

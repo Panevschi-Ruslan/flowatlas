@@ -334,7 +334,9 @@ imports the checker could not resolve: gateway (12) — check their tsconfig pat
 - **`ways in`** counts entry points found apart from entry points whose handler
   was read, because only the second is coverage of what happens after a request
   arrives. It is the same count `doctor` refuses a service on
-  (`fixtures/next-hollow`).
+  (`fixtures/next-hollow`). A route a platform puts straight onto a queue, a
+  topic or a bus has no handler by design: its work is the message it sends,
+  and it counts as read when that message was.
 - **`contributed no node`** names a service a reader opened and put nothing into
   the graph from, with why. It looks like success otherwise.
 - **`found at arm's length`** names a framework a service has only through a
@@ -485,6 +487,13 @@ recorded against. Every node the walk reaches counts, the entry a path ends at
 included — a function deployed with a handler that could not be read is where a
 path through a queue to it stops, and its row is why — and so do nodes past the
 `maxNodes` the tree shows.
+
+A row is recorded against the node a walk passes. Rows about something a
+deployment declares name the node drawn for it: a function's `invoke` entry, a
+route's entry, the consumer a rule, mapping or subscription delivers to. A route
+integrated straight with a function whose handler is not read reaches that
+function's entry, so the walk from the route counts the same row a path through
+a queue to it does.
 
 ### `flowatlas impact <symbol>`
 
@@ -739,7 +748,10 @@ the sentence about them, because installing them would not give it a way in.
 It decides no exit code: its bodies were read, so a change inside one still adds
 a row the growth check can see, and a library typed as a server is a
 configuration somebody may mean. `doctor.json` carries the same list under
-`unresolved.withoutWaysIn`.
+`unresolved.withoutWaysIn`, and `--format github` makes each a `::warning` on the
+line of `flowatlas.config.json` that names the service. A service declared by a
+document is never named: none of its code was read, and a document that declares
+no way in describes a service nothing here enters.
 
 The exit code is decided by the first of these that applies: a graph that cannot
 be reported on, a baseline that cannot be read, or `--strict` with no baseline
@@ -2333,6 +2345,11 @@ they say one. Filling in the deployed name is left to you. A call another
 reader already drew - a request, a query - is not reported. Making the
 package's source readable here answers the row as well
 (`fixtures/start-workflow-by-record`).
+
+A described call is read, so it leaves no `call-dynamic-receiver` row: the call
+graph writes one for a receiver it cannot type, as every call into a package
+that is not here has, and takes it back once a description - a starter, or a
+broker producer - reads the call. An undescribed one keeps it.
 
 ---
 

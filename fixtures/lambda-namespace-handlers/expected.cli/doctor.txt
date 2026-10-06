@@ -1,7 +1,7 @@
 unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
 
 unresolved: 0 to act on over 1 row, and 1 place static reading cannot see, folded into 1
-  ways in: 12 found, 11 with a handler that was read, 1 without
+  ways in: 13 found, 11 with a handler that was read, 2 without
   function-handler-unread (info): 1 row
     A handler is read when it is a function, a function wrapped by calls each handed exactly one function wherever it sits among their arguments, or a function a factory of this repository returns.
       desk/infra/functions.tf:70  entry:desk:invoke:library-desk-archive-loan

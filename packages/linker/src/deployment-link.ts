@@ -26,7 +26,8 @@ import { cmp, edgeKey } from './order.js';
  * integration may name its function by the name it is deployed under rather
  * than by a reference, and the function is then an `invoke` entry in some other
  * service. The route takes that entry's handler, and the middleware in front of
- * it, as its own, which is what running the route does.
+ * it, as its own, which is what running the route does; where the function's
+ * code was not read, it reaches the function's entry instead.
  *
  * Both are joins on a name somebody wrote on each side. A name that matches
  * nothing, or matches two different things, is a row and no edge.
@@ -190,10 +191,20 @@ const joinInvocations = (nodes: Map<string, GraphNode>, edges: Map<string, Graph
       continue;
     }
     const target = targets[0] as GraphNode;
+    let handled = false;
     for (const edge of [...edges.values()]) {
       if (edge.from !== target.id || (edge.type !== 'handles' && edge.type !== 'guarded_by')) continue;
+      handled ||= edge.type === 'handles';
       const joined: GraphEdge = { ...edge, from: entry.id, meta: { ...edge.meta, via: 'function-name', function: target.id } };
       if (!edges.has(edgeKey(joined))) edges.set(edgeKey(joined), joined);
+    }
+    // A function whose code was not read is reached at its entry, where the
+    // rows saying why sit, so a walk from the route passes them (R173).
+    if (!handled) {
+      const reached: GraphEdge = { from: entry.id, to: target.id, type: 'calls', confidence: 'static', meta: { via: 'function-name' } };
+      if (entry.file !== undefined) reached.file = entry.file;
+      if (entry.line !== undefined) reached.line = entry.line;
+      if (!edges.has(edgeKey(reached))) edges.set(edgeKey(reached), reached);
     }
     entry.meta = { ...entry.meta, function: name, functionService: target.repo };
   }

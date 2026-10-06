@@ -55,6 +55,17 @@ import { isStartPattern, startReader } from './starts.js';
 const lineColOf = (node: TsNode): { line: number; column: number } =>
   node.getSourceFile().getLineAndColumnAtPos(node.getStart());
 
+/**
+ * A call as the calls reader names one whose receiver it could not follow:
+ * where it is, and what it calls, spelled `receiver.method`.
+ */
+const calledAt = (file: string, line: number, callee: string): string => `${file}\0${line}\0${callee}`;
+
+const calleeOf = (call: CallExpression): string => {
+  const callee = call.getExpression();
+  return Node.isPropertyAccessExpression(callee) ? `${callee.getExpression().getText()}.${callee.getName()}` : callee.getText();
+};
+
 /** What a call is made on: the receiver of a method, or the function itself. */
 const receiverOf = (call: CallExpression): TsNode => {
   const callee = call.getExpression();
@@ -954,6 +965,8 @@ export const extractBrokers = (ctx: PassContext): void => {
     return undefined;
   };
   const starts = startReader(ctx, holderAt);
+  /** The calls a description matched, as the calls reader names a call it could not follow. */
+  const described = new Set<string>();
 
   for (const scope of scopes) {
     forEachCall(scope.body, (call) => {
@@ -962,6 +975,7 @@ export const extractBrokers = (ctx: PassContext): void => {
         for (const pattern of spec.producerPatterns) {
           const evidence = evidenceFor(pattern, expression);
           if (evidence === undefined) continue;
+          described.add(calledAt(scope.file, lineColOf(expression).line, calleeOf(expression)));
           // A start is read through the same pattern and address, and names an
           // entry rather than a channel.
           if (isStartPattern(pattern)) starts.read(expression, pattern, spec, scope, contextOf(receiverOf(expression), scope.owner), evidence);
@@ -973,6 +987,18 @@ export const extractBrokers = (ctx: PassContext): void => {
     });
 
     readReceiving(scope);
+  }
+
+  // A call whose receiver has no type is a place static reading cannot see,
+  // until a description says what it is: then it is read, as a publish or a
+  // start, and the row saying it could not be goes (R173).
+  if (described.size > 0) {
+    ctx.builder.withdrawUnresolved(
+      (row) =>
+        row.reason === 'call-dynamic-receiver' &&
+        row.symbol !== undefined &&
+        described.has(calledAt(row.file, row.line, row.symbol.slice(row.symbol.indexOf(' -> ') + ' -> '.length))),
+    );
   }
 
   readBrokerMarkers(ctx, specs[0] ?? brokerAdapters[0], alreadyStatic);

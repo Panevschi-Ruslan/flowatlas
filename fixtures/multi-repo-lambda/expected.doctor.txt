@@ -3,8 +3,8 @@ unresolved: total=2 (missing) · markers: errors=0 warnings=0 · desync=0 · con
 unresolved: 2 to act on over 2 rows
   function-name-disputed: 2 rows
     Choose the environment to read under services[].infra.vars, for example ["infra/env/production.tfvars"]. Until then the function has no name and nothing can join to it.
-      holds/infra/functions.tf:7  aws_lambda_function.place_hold
-      holds/infra/functions.tf:15  aws_lambda_function.cancel_hold
+      holds/infra/functions.tf:7  entry:holds:invoke:${…}@aws_lambda_function.place_hold
+      holds/infra/functions.tf:15  entry:holds:invoke:${…}@aws_lambda_function.cancel_hold
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked
@@ -17,5 +17,5 @@ baseline: missing (0 accepted, 2 now, +2)
   no baseline at <root>/fixtures/multi-repo-lambda/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   function-name-disputed: 0 → 2 (+2)
   new (2):
-    holds|infra/functions.tf|aws_lambda_function.cancel_hold|function-name-disputed
-    holds|infra/functions.tf|aws_lambda_function.place_hold|function-name-disputed
+    holds|infra/functions.tf|entry:holds:invoke:${…}@aws_lambda_function.cancel_hold|function-name-disputed
+    holds|infra/functions.tf|entry:holds:invoke:${…}@aws_lambda_function.place_hold|function-name-disputed

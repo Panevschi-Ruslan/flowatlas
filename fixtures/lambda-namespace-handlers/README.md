@@ -25,7 +25,9 @@ stubs of `@types/aws-lambda` and `@aws-sdk/client-sqs`.
 | `library-desk-archive-loan` | `handlers/consumers.archiveLoan` | `operations.archiveLoan`, re-exported by `export { } from` from `operations/archive.ts`, where it is what `batchHandler({ … })` builds | none: one `function-handler-unread` row |
 
 Every edge that lands is `static`. Each route of the API is an `http` entry onto
-the same function as the function it integrates with.
+the same function as the function it integrates with; `POST
+/loans/{loanId}/archive`, whose function's handler is not read, reaches that
+function's `invoke` entry instead (R173).
 
 ## The paths
 
@@ -34,6 +36,11 @@ which an event-source mapping delivers to `library-desk-archive-loan`. Its handl
 is built by a package that is not installed, so the walk stops at the function's
 entry, and the row recorded against that entry is counted:
 `unresolved on this path: 1`.
+
+`POST /loans/:param/archive` is integrated straight with
+`library-desk-archive-loan`. With no handler to run, the route reaches the
+function's entry, and the same row is counted: `unresolved on this path: 1`. It
+used to end at the route and count 0.
 
 `POST /returns` runs `recordReturn`, which sends to `sqs/library-desk-returns`,
 which `library-desk-process-returns` reads, and the walk goes on into

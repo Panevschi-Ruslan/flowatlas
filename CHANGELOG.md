@@ -254,6 +254,30 @@ only one of them moved.
     functions from; `src/` is the fallback. The reading and the build's file
     listing ask one function for them, so they cannot disagree.
     `fixtures/lambda-functions-beside-src`.
+- **A row sits where the walk goes.** A row about something a deployment
+  declares was anchored to its Terraform address, which is no node, so a path
+  through it looked complete (R173):
+  - Every row the deployment reader writes names the node drawn for what it is
+    about: a function's `invoke` entry, a route's entry, the consumer or entry a
+    rule, mapping, subscription, schedule or pipe delivers to, a state machine's
+    entry. Only a declaration nothing was drawn for keeps its address.
+    `subscription-target-unread` on a subscription is counted by `flow` through
+    the topic, and `function-name-unread` names the function's entry.
+  - A route integrated straight with a function whose handler is not read
+    reaches the function's `invoke` entry, in its own repository or, joined by
+    the deployed name, in another; `flow` from the route counts that entry's
+    rows instead of `unresolved on this path: 0`.
+  - A route integrated straight with a queue, a topic or a bus is no longer
+    counted by `build` and `doctor` as a way in without a handler: its work is
+    the message it sends.
+  - A call a broker or `starters` description reads no longer also leaves the
+    `call-dynamic-receiver` row the call graph wrote about its untyped receiver.
+  - `doctor --format github` annotates a service with no way in as a
+    `::warning` on the line of the configuration that names it, and the check
+    says nothing about a service declared by a document, by rule.
+  Baselines that accepted one of the moved rows see it as new under its node.
+  `fixtures/lambda-namespace-handlers`, `sqs-sns-terraform`,
+  `eventbridge-terraform`, `start-workflow-helper`, `multi-repo-doctor`.
 
 - **A property of a parameter is no longer reported as a constant nobody could
   read.** `event.detail.type` read off a parameter is decided by each caller,

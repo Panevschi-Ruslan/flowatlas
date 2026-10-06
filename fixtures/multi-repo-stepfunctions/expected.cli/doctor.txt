@@ -1,7 +1,6 @@
 unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
 
 unresolved: 0 to act on over 1 row, and 1 place static reading cannot see, folded into 1
-  ways in: 11 found, 10 with a handler that was read, 1 without
   workflow-named-by-file (info): 1 row
     A definition read on its own carries no deployed name, so anything joined to it by that name is drawn as heuristic. Read it from the file that deploys it to make the name certain.
       catalogue/workflows/reshelve-returns.asl.json:1  entry:catalogue:workflow:reshelve-returns

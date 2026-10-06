@@ -372,18 +372,25 @@ const drawTarget = (drawing: Drawing, way: WayIn, delivery: DeployedDelivery, ta
 
 /**
  * Every delivery of a deployment drawn into the graph; the entries it adds - a
- * schedule, a stream read in order - are returned for the extractor to draw.
+ * schedule, a stream read in order - are returned for the extractor to draw,
+ * and the node each delivery enters by is recorded in `drawn` under its
+ * address.
  */
 export const drawDeliveries = (
   ctx: ExtractContext,
   deployment: Deployment,
   deployedBy: string,
   rows: Unresolved[],
+  drawn: Map<string, string>,
   handlerOf: (index: number) => DeployedCode | undefined,
 ): EntryNode[] => {
   const drawing: Drawing = { ctx, deployment, deployedBy, rows, entries: new Map(), handlerOf };
   for (const delivery of deployment.deliveries) {
     const way = drawSource(drawing, delivery);
+    // A row about the delivery - a target not read, a forward not drawn - is
+    // about the node its messages enter by: a consumer, a schedule's entry, or
+    // the queue a redrive hands failures on from (R173).
+    drawn.set(delivery.address, way.id);
     if (delivery.to !== undefined) drawTarget(drawing, way, delivery, delivery.to);
     // A consumer is drawn by this module and keeps its references on its own
     // node; an entry is drawn by the extractor from what is returned.

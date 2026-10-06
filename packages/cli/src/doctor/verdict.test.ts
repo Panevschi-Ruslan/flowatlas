@@ -2,10 +2,10 @@ import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { openGraphDb, writeGraphDb, type GraphDb, type LinkReport, type ServiceReport } from '@flowatlas/linker';
-import { SCHEMA_VERSION, type GraphNode, type ProjectGraph, type Unresolved } from '@flowatlas/core';
+import { SCHEMA_VERSION, SENDS_META, type GraphNode, type ProjectGraph, type Unresolved } from '@flowatlas/core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { snapshotOf, type Baseline } from './baseline.js';
-import { renderDoctorText } from './render.js';
+import { renderDoctorGithub, renderDoctorText } from './render.js';
 import { runDoctor } from './run.js';
 import { BASELINE_FORMAT_VERSION } from './schema.js';
 
@@ -57,10 +57,11 @@ afterAll(() => {
 });
 
 /**
- * How the body behind one way in stands: read, never reached by an edge, or
- * reached by an edge onto a handler its adapter said it could not follow.
+ * How the body behind one way in stands: read, never reached by an edge,
+ * reached by an edge onto a handler its adapter said it could not follow, or
+ * none by design, the way in's work being the message it sends.
  */
-type Way = 'read' | 'no-edge' | 'edge-unread';
+type Way = 'read' | 'no-edge' | 'edge-unread' | 'sends';
 
 const graphWith = (options: {
   name: string;
@@ -89,6 +90,7 @@ const graphWith = (options: {
         label: `GET /${id}`,
         repo,
         ...(way === 'edge-unread' ? { meta: { handlerBodyRead: false } } : {}),
+        ...(way === 'sends' ? { meta: { [SENDS_META]: 'sqs/holds' } } : {}),
       },
       { id: handler, type: 'method', label: handler, repo },
     ]),
@@ -102,7 +104,7 @@ const graphWith = (options: {
     ),
   ];
   const edges = ways
-    .filter(({ way }) => way !== 'no-edge')
+    .filter(({ way }) => way !== 'no-edge' && way !== 'sends')
     .map(({ id, handler }) => ({ from: id, to: handler, type: 'handles' as const, confidence: 'static' as const }));
   const project: ProjectGraph = {
     schemaVersion: SCHEMA_VERSION,
@@ -327,6 +329,26 @@ describe('a service with no way in', () => {
     rmSync(root, { recursive: true, force: true });
   });
 
+  it('says nothing about a service declared by a document, by rule', () => {
+    const db = graphWith({
+      name: 'no-way-in-declared',
+      nodes: 1,
+      services: [reportOf({ name: 'gateway' })],
+    });
+    expect(runDoctor({ db, unresolved: [] }, { contracts: false }).unresolved.withoutWaysIn).toHaveLength(1);
+    expect(runDoctor({ db, unresolved: [] }, { contracts: false, declared: ['gateway'] }).unresolved.withoutWaysIn).toBeUndefined();
+  });
+
+  it('is a warning on the line of the configuration that names it, for a workflow', () => {
+    const db = graphWith({ name: 'no-way-in-github', nodes: 1, services: [reportOf({ name: 'gateway' })] });
+    const report = runDoctor({ db, unresolved: [] }, { contracts: false, looksLike: described });
+    const at = (service: string) => (service === 'gateway' ? { file: 'flowatlas.config.json', line: 4 } : undefined);
+    expect(renderDoctorGithub(report, { serviceAt: at }).split('\n')[0]).toBe(
+      '::warning file=flowatlas.config.json,line=4,title=gateway%3A no way in::gateway: no way in was found — it is built on Vue,' +
+        ' which nothing here reads yet (gateway, nestjs). Its code was read and nothing in this graph reaches it, so no flow starts there.',
+    );
+  });
+
   it('narrows as the run does', () => {
     const db = graphWith({
       name: 'no-way-in-narrowed',
@@ -382,6 +404,18 @@ describe('a service whose ways in mostly have no body that was read', () => {
     const report = runDoctor({ db, unresolved: [unreadRows[0] as Unresolved] }, { contracts: false });
     expect(report.verdict.exitCode).toBe(0);
     expect(report.unresolved.waysIn).toEqual({ found: 5, read: 4 });
+  });
+
+  it('counts a way in whose work is the message it sends as read, though it has no handler (R173)', () => {
+    const db = graphWith({
+      name: 'sends',
+      nodes: 1,
+      services: [reportOf({ name: 'shop' })],
+      ways: { shop: ['read', 'sends', 'sends', 'sends'] },
+    });
+    const report = runDoctor({ db, unresolved: [] }, { contracts: false });
+    expect(report.unresolved.waysIn).toEqual({ found: 4, read: 4 });
+    expect(report.verdict.exitCode).toBe(0);
   });
 
   it('is decided per service, so a service read end to end cannot carry a hollow one', () => {
