@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>112 fixtures</span>
-    <span>218 snapshot files</span>
+    <span>114 fixtures</span>
+    <span>220 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -370,7 +370,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, wired in Terraform <span class="count" data-total="3">3</span></h2>
+    <h2>Serverless, wired in Terraform <span class="count" data-total="4">4</span></h2>
     <ul>
       <li class="fixture" data-search="lambda-terraform-modules serverless, wired in terraform the same kind of service declared through modules: one of the repository's own, the public `terraform-aws-modules/lambda/aws` and `terraform-aws-modules/apigateway-v2/aws`, and a module from another repository that the configuration describes.">
         <div class="head">
@@ -386,6 +386,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>Lambda handlers whose ways in are declared in Terraform: one <code>aws_lambda_function</code> per handler, and a REST API built resource by resource in front of them.</p>
+        <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="lambda-wrapped-handlers serverless, wired in terraform lambda handlers each wrapped by a helper that takes the function as a later argument, which is how a project that instruments every handler writes them (r167).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-wrapped-handlers">lambda-wrapped-handlers</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>Lambda handlers each wrapped by a helper that takes the function as a later argument, which is how a project that instruments every handler writes them (R167).</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
       <li class="fixture" data-search="multi-repo-lambda serverless, wired in terraform three repositories sharing one rest api: two hang their routes from a point of it the third, a repository of nothing but terraform, publishes.">
@@ -723,7 +731,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Express, Fastify, Koa and Hono <span class="count" data-total="12">12</span></h2>
+    <h2>Express, Fastify, Koa and Hono <span class="count" data-total="13">13</span></h2>
     <ul>
       <li class="fixture" data-search="express-chained-app express, fastify, koa and hono an application declared by a chain, which is how a video platform declares its one application and what cost a video platform every route it has.">
         <div class="head">
@@ -764,6 +772,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>An Express service and a browser calling it.</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="express-traced-handlers express, fastify, koa and hono a lending library's loans api in express, every handler wrapped by a helper that takes the function as a later argument: the http side of r167, read by the same rule as a lambda handler.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/express-traced-handlers">express-traced-handlers</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A lending library's loans API in Express, every handler wrapped by a helper that takes the function as a later argument: the HTTP side of R167, read by the same rule as a Lambda handler.</p>
+        <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
       <li class="fixture" data-search="express-wrapped-handler express, fastify, koa and hono a named handler handed to a wrapper the repository declares itself, which is how a video platform writes nearly every route it has.">
         <div class="head">

@@ -27,9 +27,11 @@ let rest: RepoGraph;
 let modules: ProjectGraph;
 let multi: ProjectGraph;
 let multiConfig: string;
+let wrapped: RepoGraph;
 
 beforeAll(async () => {
   rest = (await runExtract(copyOf('lambda-terraform-rest'), { config: NEUTRAL, cache: false })).graph;
+  wrapped = (await runExtract(copyOf('lambda-wrapped-handlers'), { config: NEUTRAL, cache: false })).graph;
   modules = (await buildProject({ config: join(copyOf('lambda-terraform-modules'), 'flowatlas.config.json'), builtAt: FIXED })).project;
   multiConfig = join(copyOf('multi-repo-lambda'), 'flowatlas.config.json');
   multi = (await buildProject({ config: multiConfig, builtAt: FIXED })).project;
@@ -159,6 +161,39 @@ describe('what cannot be named is one row naming what to set, and no join', () =
     expect(rows).toHaveLength(1);
     expect(rows[0]?.hint).toContain('adapters.infra.modules');
     expect(modules.nodes.some((node) => String(node.meta?.['declaredAs'] ?? '').includes('newsletter'))).toBe(false);
+  });
+});
+
+describe('a handler wrapped with the function second (R167)', () => {
+  const d = (key: string): string => `entry:lending-library-desk:invoke:library-desk-${key}`;
+  const edge = (from: string) => wrapped.edges.find((each) => each.from === from && each.type === 'handles');
+
+  it('a name, then the function: through a const under a chain, and inline inside one', () => {
+    expect(edge(d('create-loan'))).toMatchObject({ confidence: 'static' });
+    expect(edge(d('create-loan'))?.to).toMatch(/^lending-library-desk#src\/handlers\/create-loan\.ts:handler@\d+$/);
+    expect(chain(wrapped, d('create-loan'))).toEqual(['jsonBodyParser()', 'traced']);
+    expect(edge(d('renew-loan'))).toMatchObject({ to: 'lending-library-desk#src/handlers/renew-loan.ts:renewLoan', confidence: 'static' });
+    expect(chain(wrapped, d('renew-loan'))).toEqual(['jsonBodyParser()', 'traced']);
+  });
+
+  it('options, then the function, and the function, then options', () => {
+    expect(edge(d('record-return'))).toMatchObject({ to: 'lending-library-desk#src/handlers/record-return.ts:recordReturn', confidence: 'static' });
+    expect(edge(d('place-hold'))).toMatchObject({ to: 'lending-library-desk#src/handlers/place-hold.ts:placeHold' });
+  });
+
+  it('static where the wrapper was read, heuristic where its package is not installed, and says which', () => {
+    expect(edge(d('cancel-hold'))).toMatchObject({ to: 'lending-library-desk#src/handlers/cancel-hold.ts:cancelHold', confidence: 'static' });
+    expect(edge(d('place-hold'))?.confidence).toBe('heuristic');
+    expect(entry(wrapped, d('place-hold')).meta?.['wrapperUnread']).toContain('@lending/telemetry, which is not installed');
+    // A wrapper of this repository that hands the function to that package is no surer.
+    expect(edge(d('send-reminders'))).toMatchObject({ to: 'lending-library-desk#src/handlers/send-reminder.ts:sendReminders', confidence: 'heuristic' });
+    expect(entry(wrapped, d('send-reminders')).meta?.['wrapperUnread']).toMatch(/^measured hands it on, and instrument comes from/);
+  });
+
+  it('a call handed two functions is still a row, naming the call', () => {
+    expect(edge(d('list-overdue'))).toBeUndefined();
+    const rows = wrapped.unresolved.filter((row) => row.reason === 'function-handler-unread');
+    expect(rows.map((row) => row.message)).toEqual([expect.stringContaining('firstOf(fromCache, fromTable), which is handed 2 functions')]);
   });
 });
 

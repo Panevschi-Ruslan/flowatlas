@@ -161,6 +161,13 @@ are read too, each held by a fixture:
   (`fixtures/express-wrapped-handler`). A factory handed a function, or a wrapper
   handed a list, keeps no handler and says so, because it cannot be told from one
   more wrapper;
+- a handler handed to a wrapper after a name or options, or before options —
+  `withSpan('getLoan', getLoan)`, `traced({ name: 'createLoan' }, async (req, res)
+  => …)`, `instrument(returnLoan, { segment: 'returns' })` — inline or through a
+  `const`, which lands on the handler like any other wrapper
+  (`fixtures/express-traced-handlers`). The rule for what a wrapper is, is the
+  one the Lambda reader follows a handler by too; see
+  [Functions and routes declared in Terraform](#functions-and-routes-declared-in-terraform);
 - an application in a repository whose dependencies are not installed, where the
   framework's types resolve to nothing. The source still says what the value is —
   `import express from 'express'` and `const app = express()` — so the
@@ -1692,9 +1699,40 @@ nothing says what the package is built from — a zip a script makes, an object 
 a bucket — the module is searched for by name, and the edge is `heuristic`
 (`handlerFoundBy: "search"`) if exactly one source file of that name exports the
 handler, and a row otherwise. A handler wrapped in a chain —
-`middy(createLoan).use(jsonBodyParser())`, or any call whose first argument is a
-function — lands on the function it wraps, with the chain as middleware in front
-of it, in order. `flow invoke:<name>` starts from a function.
+`middy(createLoan).use(jsonBodyParser())` — or by a wrapper lands on the function
+it wraps, with the chain and the wrappers as middleware in front of it, in the
+order they run. `flow invoke:<name>` starts from a function.
+
+**A wrapper is a call handed exactly one function**, written in place, named, or
+a name for what another wrapper built, wherever it sits among the arguments:
+`traced('createLoan', createLoan)`, `withRetry({ attempts: 3 }, recordReturn)`
+and `instrument(placeHold, { segment: 'holds' })` all land on the function, and
+so do `middy(traced('renewLoan', renewLoan))` and `middy(createLoanLogic)` with
+`const createLoanLogic = traced('createLoan', async (event) => …)`. How far the
+landing is trusted follows what could be read of the wrapper:
+
+- a wrapper this repository declares is read, and is one when its body visibly
+  hands the function on — returns it, calls it from the function it builds with
+  everything that function was called with, returns what it returns, or hands
+  it to another wrapper and returns what that built. The edge is `static`. A
+  function of the repository that only uses what it was handed — calls it with
+  one piece of a request, or while it is being built — is a factory, not a
+  wrapper, and lands nowhere;
+- a wrapper from an installed package is read as far as its declarations go,
+  and one whose types say it hands back a function is taken at its word:
+  `static`;
+- a wrapper from a package that is not installed cannot be read at all. The
+  edge is `heuristic`, and the entry's `wrapperUnread` says which wrapper and
+  why. A wrapper of this repository that hands the function to such a package is
+  no surer than the package.
+
+A call handed two or more functions — `firstOf(fromCache, fromTable)` — is not a
+wrapper of any of them, because which one runs is not in the call, and stays a
+`function-handler-unread` row naming the call (`fixtures/lambda-wrapped-handlers`).
+The Express, Fastify, Koa and Hono reader follows a route's handler by the same
+rule. The file-system routers (Next.js, Medusa) read a verb exported as a
+wrapper's value as that whole call, so where the function sits among the
+arguments never mattered to them.
 
 **Every route is an `http` entry onto the same handler.** A REST API's path is
 built from its `aws_api_gateway_resource` tree, `{loanId}` read as a parameter

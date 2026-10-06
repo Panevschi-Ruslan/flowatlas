@@ -1,4 +1,5 @@
 import type {
+  Confidence,
   EntryAdapter,
   EntryHandler,
   EntryNode,
@@ -28,12 +29,12 @@ import {
   handlerOfFunction,
   handlerReturned,
   inlineHandlerOf,
-  isWrittenFunction,
   joinPath,
   packageOfCall,
   repoFunctionOf,
   repoSources,
 } from './shared.js';
+import { evidenceOf, unwrapWork } from './wrapped-work.js';
 
 /**
  * The sentence for a route whose own path could not be read.
@@ -1131,19 +1132,33 @@ interface Answer {
    * the answer to, or the function that built what a call answers with; else none.
    */
   via: 'function' | 'call' | 'inline';
+  /** `heuristic` when a wrapper in front of the handler could not be read (R167). */
+  confidence?: Confidence;
+  why?: string;
+}
+
+/** A handler argument with its wrappers taken off, and how far that can be trusted. */
+interface HandlerArgument {
+  node?: TsNode;
+  confidence?: Confidence;
+  /** Which wrapper could not be read, and why, when the landing is a guess. */
+  why?: string;
 }
 
 /**
- * The function a handler argument really is, through the wrapper around it.
+ * The function a handler argument really is, through the wrappers around it.
  *
  * `asyncHandler(async (req, res) => …)` is how most of Express catches a
  * rejected promise, and the wrapper is not the handler: it is a call that
- * returns one. A call with exactly one argument stands for that argument when
- * the argument is work - a function written in place, a function this
- * repository declares named by reference, or a further call, which is handed
- * on unopened - and for itself otherwise. Narrow on purpose, so that `rateLimit({ max: 5 })`
- * and `useCollection('users')`, which take a value and return middleware, are
- * not mistaken for it.
+ * returns one. A call handed exactly one function - written in place, a
+ * function this repository declares, or a further call or name that stands for
+ * one - stands for that function, wherever it sits among the arguments:
+ * `withSpan('listLoans', listLoans)` is as much a wrapper as
+ * `asyncHandler(listLoans)` (R167). Which calls are wrappers is `wrappedBy`'s
+ * answer, the one the deployed-function reader gets too, and it is narrow on
+ * purpose: `rateLimit({ max: 5 })` and `useCollection('users')`, which take a
+ * value and return middleware, are handed no function, and a function of this
+ * repository whose body does not hand on what it was given is a factory.
  *
  * The named form is the one that was missing, and it is how a video platform writes
  * nearly every route it has: `asyncMiddleware(getVideo)`, and
@@ -1160,20 +1175,22 @@ interface Answer {
  * the rule `route-dialects.ts` lists among what every reader does the same way,
  * and this is the one place it is decided.
  */
-const throughWrapper = (argument: TsNode | undefined): TsNode | undefined => {
-  if (argument === undefined) return undefined;
-  const node = unwrap(argument);
-  if (!Node.isCallExpression(node)) return node;
-  const args = node.getArguments();
-  const only = args.length === 1 ? unwrap(args[0] as TsNode) : undefined;
-  if (only === undefined) return node;
-  if (isWrittenFunction(only) || repoFunctionOf(only) !== undefined) return only;
-  // One level and no further. What a call inside the wrapper was handed is not
-  // the handler by the same argument, because that call may be a factory rather
-  // than a second wrapper: in `asyncMiddleware(listFactory(res => res.locals.account))`
-  // the function written in place picks an account and answers nothing. Which of
-  // the two the inner call is, is `builtByFactory`'s question.
-  return Node.isCallExpression(only) ? only : node;
+const throughWrapper = (argument: TsNode | undefined): HandlerArgument => {
+  if (argument === undefined) return {};
+  // A call the wrappers end at may be a factory rather than one more wrapper: in
+  // `asyncMiddleware(listFactory(res => res.locals.account))` the function
+  // written in place picks an account and answers nothing. `wrappedBy` reads
+  // `listFactory`'s body and declines it, and whether it built the handler is
+  // `builtByFactory`'s question.
+  const { work, through } = unwrapWork(argument);
+  if (through.length === 0) {
+    // A wrapper handed nothing the checker can type - a call whose result is
+    // `any` - still hands on the one call it was given, unopened, as it always did.
+    const only = Node.isCallExpression(work) && work.getArguments().length === 1 ? unwrap(work.getArguments()[0] as TsNode) : undefined;
+    return { node: only !== undefined && Node.isCallExpression(only) ? only : work };
+  }
+  const { why } = evidenceOf(through);
+  return why === undefined ? { node: work } : { node: work, confidence: 'heuristic', why };
 };
 
 /**
@@ -1315,18 +1332,21 @@ const routeOf = (site: AppCall, dialect: RouteDialect, ctx: ExtractContext): Rou
  */
 const answered = (
   site: AppCall,
-  handlerArg: TsNode | undefined,
+  handlerArg: HandlerArgument,
   verbs: readonly string[],
   paths: readonly string[],
   ctx: ExtractContext,
 ): Answer => {
-  const answer = answerOf(site.call, handlerArg, ctx);
-  if (answer.via !== 'inline') return answer;
+  const read = answerOf(site.call, handlerArg.node, ctx);
   // A function written in place is still the code that runs, and a node of its
   // own is what lets a walk from the route go on into it. One function answers
   // every address the registration named, so every one of them is in its name.
-  const inline = inlineHandlerOf(handlerArg, `${verbs.join('|')} ${paths.join('|')}`, ctx);
-  return inline === undefined ? answer : { ...answer, handler: inline };
+  const inline = read.via === 'inline' ? inlineHandlerOf(handlerArg.node, `${verbs.join('|')} ${paths.join('|')}`, ctx) : undefined;
+  const answer = inline === undefined ? read : { ...read, handler: inline };
+  // How sure the landing is belongs to a landing; a route with no handler has
+  // nothing for a wrapper's doubt to qualify.
+  if (answer.handler === undefined || handlerArg.confidence === undefined) return answer;
+  return { ...answer, confidence: handlerArg.confidence, ...(handlerArg.why === undefined ? {} : { why: handlerArg.why }) };
 };
 
 /**
@@ -1537,6 +1557,7 @@ export const callRoutesAdapter = (
               label: `${method} ${path}`,
               key,
               ...(route.answer.handler === undefined ? {} : { handler: route.answer.handler }),
+              ...(route.answer.confidence === undefined ? {} : { handlerConfidence: route.answer.confidence }),
               file,
               line,
               ...(wrapping.length > 0 ? { wrapping } : {}),
@@ -1558,6 +1579,7 @@ export const callRoutesAdapter = (
                 // Said plainly, because a walk from this entry is only as narrow
                 // as the answer to "which code does the handler run".
                 handlerVia: route.answer.via,
+                ...(route.answer.why === undefined ? {} : { wrapperUnread: route.answer.why }),
                 // An application recognised from the source rather than from a
                 // resolved type: what the author meant, not what a compiler
                 // checked, and never more than `heuristic` (R142, as R122).

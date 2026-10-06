@@ -132,6 +132,17 @@ only one of them moved.
 - **The build cache is version 3.** The first build after upgrading reads every
   repository once, says `cache-invalid:version`, and is incremental from the
   next.
+- **A handler wrapped with the function second lands on the function.** A
+  tracing, retry or metrics helper that takes a name or options first —
+  `traced('createLoan', createLoan)`, `withRetry({ attempts: 3 }, fn)` — or the
+  function first and options after, left a Lambda function with an entry and no
+  body, and an Express, Fastify, Koa or Hono route with none either. A call
+  handed exactly one function is now a wrapper of it wherever it sits, inline,
+  through a `const`, and inside a middleware chain (`middy(traced('x', fn))`).
+  The edge is `static` where the wrapper's source or its package's declarations
+  were read, and `heuristic` with the reason in `wrapperUnread` where its package
+  is not installed. A call handed two functions is still a row naming the call.
+  `fixtures/lambda-wrapped-handlers`, `fixtures/express-traced-handlers`.
 
 ## [0.5.1][] - 2026-09-28
 

@@ -1,0 +1,264 @@
+{
+  "schemaVersion": 6,
+  "repo": "express-traced-handlers",
+  "generatedAt": "2026-10-06T15:56:37.041Z",
+  "nodes": [
+    {
+      "id": "entry:express-traced-handlers:http:GET:/loans",
+      "type": "entry",
+      "label": "GET /loans",
+      "repo": "express-traced-handlers",
+      "file": "src/routes/loans.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "adapter": "express-routes",
+        "registration": "loansRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:express-traced-handlers:http:GET:/loans/:param",
+      "type": "entry",
+      "label": "GET /loans/:param",
+      "repo": "express-traced-handlers",
+      "file": "src/routes/loans.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/loans/:param",
+        "rawPath": "/loans/:id",
+        "adapter": "express-routes",
+        "registration": "loansRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:express-traced-handlers:http:GET:/loans/:param/holds",
+      "type": "entry",
+      "label": "GET /loans/:param/holds",
+      "repo": "express-traced-handlers",
+      "file": "src/routes/loans.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/loans/:param/holds",
+        "rawPath": "/loans/:id/holds",
+        "adapter": "express-routes",
+        "registration": "loansRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:express-traced-handlers:http:POST:/loans",
+      "type": "entry",
+      "label": "POST /loans",
+      "repo": "express-traced-handlers",
+      "file": "src/routes/loans.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "adapter": "express-routes",
+        "registration": "loansRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:express-traced-handlers:http:POST:/loans/:param/return",
+      "type": "entry",
+      "label": "POST /loans/:param/return",
+      "repo": "express-traced-handlers",
+      "file": "src/routes/loans.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans/:param/return",
+        "rawPath": "/loans/:id/return",
+        "adapter": "express-routes",
+        "registration": "loansRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "function",
+        "wrapperUnread": "instrument comes from @lending/telemetry, which is not installed, so whether it runs the function it is handed was not read"
+      }
+    },
+    {
+      "id": "express-traced-handlers#src/lib/loans.ts:closeLoan",
+      "type": "function",
+      "label": "closeLoan",
+      "repo": "express-traced-handlers",
+      "file": "src/lib/loans.ts",
+      "line": 8
+    },
+    {
+      "id": "express-traced-handlers#src/lib/loans.ts:findLoan",
+      "type": "function",
+      "label": "findLoan",
+      "repo": "express-traced-handlers",
+      "file": "src/lib/loans.ts",
+      "line": 2
+    },
+    {
+      "id": "express-traced-handlers#src/lib/loans.ts:listLoansFor",
+      "type": "function",
+      "label": "listLoansFor",
+      "repo": "express-traced-handlers",
+      "file": "src/lib/loans.ts",
+      "line": 4
+    },
+    {
+      "id": "express-traced-handlers#src/lib/loans.ts:saveLoan",
+      "type": "function",
+      "label": "saveLoan",
+      "repo": "express-traced-handlers",
+      "file": "src/lib/loans.ts",
+      "line": 6
+    },
+    {
+      "id": "express-traced-handlers#src/routes/loans.ts:POST /@19",
+      "type": "function",
+      "label": "POST /@19",
+      "repo": "express-traced-handlers",
+      "file": "src/routes/loans.ts",
+      "line": 19
+    },
+    {
+      "id": "express-traced-handlers#src/routes/loans.ts:getLoan",
+      "type": "function",
+      "label": "getLoan",
+      "repo": "express-traced-handlers",
+      "file": "src/routes/loans.ts",
+      "line": 31
+    },
+    {
+      "id": "express-traced-handlers#src/routes/loans.ts:listLoans",
+      "type": "function",
+      "label": "listLoans",
+      "repo": "express-traced-handlers",
+      "file": "src/routes/loans.ts",
+      "line": 35
+    },
+    {
+      "id": "express-traced-handlers#src/routes/loans.ts:returnLoan",
+      "type": "function",
+      "label": "returnLoan",
+      "repo": "express-traced-handlers",
+      "file": "src/routes/loans.ts",
+      "line": 39
+    },
+    {
+      "id": "repo:express-traced-handlers",
+      "type": "repo",
+      "label": "express-traced-handlers",
+      "repo": "express-traced-handlers",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 5
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:express-traced-handlers:http:GET:/loans",
+      "to": "express-traced-handlers#src/routes/loans.ts:listLoans",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/loans.ts",
+      "line": 35
+    },
+    {
+      "from": "entry:express-traced-handlers:http:GET:/loans/:param",
+      "to": "express-traced-handlers#src/routes/loans.ts:getLoan",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/loans.ts",
+      "line": 31
+    },
+    {
+      "from": "entry:express-traced-handlers:http:POST:/loans",
+      "to": "express-traced-handlers#src/routes/loans.ts:POST /@19",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/loans.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:express-traced-handlers:http:POST:/loans/:param/return",
+      "to": "express-traced-handlers#src/routes/loans.ts:returnLoan",
+      "type": "handles",
+      "confidence": "heuristic",
+      "file": "src/routes/loans.ts",
+      "line": 39
+    },
+    {
+      "from": "express-traced-handlers#src/routes/loans.ts:POST /@19",
+      "to": "express-traced-handlers#src/lib/loans.ts:saveLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/routes/loans.ts",
+      "line": 20
+    },
+    {
+      "from": "express-traced-handlers#src/routes/loans.ts:getLoan",
+      "to": "express-traced-handlers#src/lib/loans.ts:findLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/routes/loans.ts",
+      "line": 32
+    },
+    {
+      "from": "express-traced-handlers#src/routes/loans.ts:listLoans",
+      "to": "express-traced-handlers#src/lib/loans.ts:listLoansFor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/routes/loans.ts",
+      "line": 36
+    },
+    {
+      "from": "express-traced-handlers#src/routes/loans.ts:returnLoan",
+      "to": "express-traced-handlers#src/lib/loans.ts:closeLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/routes/loans.ts",
+      "line": 40
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/routes/loans.ts",
+      "line": 29,
+      "reason": "route-handler-anonymous",
+      "level": "info",
+      "sites": 1,
+      "message": "1 route is answered by whatever a call hands back, so the code behind it is not read and nothing can be pointed at as its handler.",
+      "hint": "The call is either into a package, such as passport.authenticate(...), which returns the package's own function, or to a function of this repository handed another function or a list, which builds the handler at run time. Nothing needs fixing if that is intended; to give the route code to point at, register a named function of this repository that does the work.",
+      "symbol": "express",
+      "adapter": "express-routes"
+    }
+  ]
+}

@@ -19,8 +19,9 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
-import { Node, ts, type Node as TsNode, type SourceFile } from 'ts-morph';
+import { Node, ts, type CallExpression, type Node as TsNode, type SourceFile } from 'ts-morph';
 import { builtByFactory, fileOfNode, isWrittenFunction, repoFunctionOf, unwrapValue } from './shared.js';
+import { boundCall, evidenceOf, functionArguments, wrappedBy, type Wrapped } from './wrapped-work.js';
 
 export const DEPLOYED_FUNCTIONS = 'aws-lambda';
 
@@ -135,22 +136,42 @@ const workIn = (node: TsNode): TsNode | undefined => {
   return undefined;
 };
 
+/** What taking the wrappers off a handler export found. */
+interface Chain {
+  inner?: TsNode;
+  wrapping: EntryWrapping[];
+  /** The wrappers taken off, for how far the landing can be trusted. */
+  through: Wrapped[];
+  /** The call the reading stopped at without finding a function, for the row. */
+  stopped?: CallExpression;
+}
+
 /**
  * The function a handler export wraps, and the chain in front of it.
  *
  * `middy(createLoan).use(jsonBodyParser()).use(httpErrorHandler())` and
- * `withLogging(withAuth(createLoan))` are the two shapes: a chain of method
- * calls on an engine, whose arguments are middleware and whose engine is not,
- * and wrappers called one inside another, each of which is middleware itself.
- * Any call whose argument is a function is read this way, which is what R109
- * does for HTTP middleware, so no library is named here. A method call that is
- * handed the function itself - `middy().use(x).handler(fn)` - names the
- * function and nothing in front of it.
+ * `withLogging(traced('createLoan', createLoan))` are the two shapes: a chain of
+ * method calls on an engine, whose arguments are middleware and whose engine is
+ * not, and wrappers called one inside another, each of which is middleware
+ * itself. A wrapper is whatever `wrappedBy` says it is - a call handed exactly
+ * one function, wherever it sits among the arguments - which is the rule the
+ * HTTP readers follow a handler by too, so no library is named here (R109,
+ * R167). A name bound to a wrapped value is read through:
+ * `middy(createLoanLogic)` with `const createLoanLogic = traced(…)`. A method
+ * call that is handed the function itself - `middy().use(x).handler(fn)` -
+ * names the function and nothing in front of it.
  */
-const unwrapChain = (start: TsNode, ctx: ExtractContext): { inner?: TsNode; wrapping: EntryWrapping[] } => {
-  const chained: EntryWrapping[] = [];
-  const wrappers: EntryWrapping[] = [];
+const unwrapChain = (start: TsNode, ctx: ExtractContext): Chain => {
+  // In the order things run: outside in. A chain of methods is read from its
+  // last call back to its engine, so its middleware is gathered back to front
+  // and placed when the engine is reached - before any wrapper inside it, which
+  // runs nearer the function: `middy(traced('x', fn)).use(a)` runs `a`, then
+  // `traced`, then `fn`.
+  const ordered: EntryWrapping[] = [];
+  let chained: EntryWrapping[] = [];
+  const through: Wrapped[] = [];
   let inner: TsNode | undefined;
+  let stopped: CallExpression | undefined;
   let expression = unwrapValue(start);
   let viaMethods = false;
   const wrapping = (node: TsNode, source: string, kind: string): EntryWrapping => ({
@@ -181,20 +202,43 @@ const unwrapChain = (start: TsNode, ctx: ExtractContext): { inner?: TsNode; wrap
       expression = unwrapValue(callee.getExpression());
       continue;
     }
-    const first = args[0];
-    if (first === undefined) break;
-    const work = workIn(first);
+    const wrapped = wrappedBy(expression);
+    if (wrapped === undefined) {
+      stopped = expression;
+      break;
+    }
+    through.push(wrapped);
     // The engine a chain of methods hangs from is not middleware; a wrapper
     // called on its own is.
-    if (!viaMethods) wrappers.push(wrapping(callee, label(callee), 'function'));
+    if (!viaMethods) ordered.push(wrapping(callee, label(callee), 'function'));
+    ordered.push(...chained);
+    chained = [];
     viaMethods = false;
+    const work = workIn(wrapped.argument);
     if (work !== undefined) {
       inner ??= work;
       break;
     }
-    expression = unwrapValue(first);
+    const next = unwrapValue(wrapped.argument);
+    expression = Node.isCallExpression(next) ? next : (boundCall(next) ?? next);
   }
-  return { ...(inner === undefined ? {} : { inner }), wrapping: [...wrappers, ...chained] };
+  return {
+    ...(inner === undefined ? {} : { inner }),
+    wrapping: [...ordered, ...chained],
+    through,
+    ...(inner === undefined && stopped !== undefined ? { stopped } : {}),
+  };
+};
+
+/**
+ * Why a call a handler export was built with names no function, in the words of
+ * the row: handed several, which is not a wrapper of any of them (R167), or
+ * handed none this repository declares.
+ */
+const whyUnread = (call: CallExpression): string => {
+  const count = functionArguments(call).length;
+  if (count > 1) return `${label(call)}, which is handed ${count} functions, so which of them runs is not in the call`;
+  return `${label(call)}, which names no function of this repository`;
 };
 
 /** Every source file of the repository whose module path ends with `module`. */
@@ -296,13 +340,20 @@ const resolveHandler = (
     return { wrapping: [], meta };
   }
 
-  const done = (found: EntryHandler, via: string, wrapping: EntryWrapping[] = []): ResolvedHandler => ({
-    handler: found,
-    wrapping,
-    ...(confidence === undefined ? {} : { confidence }),
-    meta: { ...meta, handlerVia: via },
-  });
+  const done = (found: EntryHandler, via: string, chain?: Chain): ResolvedHandler => {
+    // A wrapper nothing of which could be read makes the landing as uncertain as
+    // a handler found by searching, and says which wrapper it was (R167).
+    const wrapped = chain === undefined ? undefined : evidenceOf(chain.through);
+    const landed = wrapped?.confidence === 'heuristic' ? 'heuristic' : confidence;
+    return {
+      handler: found,
+      wrapping: chain?.wrapping ?? [],
+      ...(landed === undefined ? {} : { confidence: landed }),
+      meta: { ...meta, handlerVia: via, ...(wrapped?.why === undefined ? {} : { wrapperUnread: wrapped.why }) },
+    };
+  };
 
+  let unreadCall: CallExpression | undefined;
   if (Node.isFunctionDeclaration(declaration) && declaration.getName() !== undefined) {
     return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName() as string, line: declaration.getStartLineNumber() }, 'function');
   }
@@ -316,34 +367,41 @@ const resolveHandler = (
       const named = repoFunctionOf(value);
       if (named !== undefined) return done({ file: fileOfNode(named.declaration, ctx), functionName: named.name, line: named.line }, 'function');
     }
-    if (value !== undefined && Node.isCallExpression(value)) {
-      const chain = unwrapChain(value, ctx);
+    // `export const handler = createLoanLogic`, a name for what a wrapper built,
+    // is read as the call it names.
+    const built = value === undefined ? undefined : Node.isCallExpression(value) ? value : boundCall(value);
+    if (built !== undefined) {
+      const chain = unwrapChain(built, ctx);
       if (chain.inner !== undefined) {
         if (isWrittenFunction(chain.inner)) {
           const where = chain.inner.getSourceFile().getLineAndColumnAtPos(chain.inner.getStart());
           return done(
             { file: fileOfNode(chain.inner, ctx), line: where.line, column: where.column, label: handler.export, inline: true },
             'inline',
-            chain.wrapping,
+            chain,
           );
         }
         const named = repoFunctionOf(chain.inner);
         if (named !== undefined) {
-          return done({ file: fileOfNode(named.declaration, ctx), functionName: named.name, line: named.line }, 'wrapped', chain.wrapping);
+          return done({ file: fileOfNode(named.declaration, ctx), functionName: named.name, line: named.line }, 'wrapped', chain);
         }
       }
-      const factory = builtByFactory(value);
+      const factory = builtByFactory(built);
       if (factory !== undefined) {
         return done({ file: fileOfNode(factory.declaration, ctx), functionName: factory.name, line: factory.line }, 'call');
       }
+      unreadCall = chain.stopped ?? built;
     }
   }
   rows.push({
     ...at,
     reason: 'function-handler-unread',
     level: 'info',
-    message: `${who} runs ${handler.written}, and ${file} builds that export in a way that names no function of this repository`,
-    hint: 'A handler is read when it is a function, a function wrapped by calls that take it as their first argument, or a function a factory of this repository returns.',
+    message:
+      unreadCall === undefined
+        ? `${who} runs ${handler.written}, and ${file} builds that export in a way that names no function of this repository`
+        : `${who} runs ${handler.written}, and ${file} builds that export with ${whyUnread(unreadCall)}`,
+    hint: 'A handler is read when it is a function, a function wrapped by calls each handed exactly one function wherever it sits among their arguments, or a function a factory of this repository returns.',
     symbol: fn.address,
   });
   return { wrapping: [], meta: { ...meta, handlerVia: 'unread' } };
