@@ -1,4 +1,11 @@
-import { AWS_SERVICE_PREFIX, DEFAULT_EVENT_BUS, DEPLOYED_CHANNELS, DEPLOYED_FORMS, FUNCTION_NAME_FORMS } from '@flowatlas/aws';
+import {
+  AWS_SERVICE_PREFIX,
+  DEPLOYED_CHANNELS,
+  DEPLOYED_FORMS,
+  FUNCTION_NAME_FORMS,
+  SDK_SENDS,
+  type SendingService,
+} from '@flowatlas/aws';
 import {
   hasAnyDependency,
   manifestsWithin,
@@ -6,6 +13,7 @@ import {
   type CallPattern,
   type ChannelKind,
   type DeployedEntryKind,
+  type MessageTarget,
   type NameLocator,
   type PackageJson,
   type StartedEntry,
@@ -99,15 +107,30 @@ interface Service {
 /** The version 2 SDK, one package for every service. */
 const V2_PACKAGE = 'aws-sdk';
 
-const QUEUE: readonly InputPart[] = [
-  { literal: AWS_SERVICE_PREFIX.sqs },
-  { path: ['QueueUrl'], forms: DEPLOYED_FORMS.queue },
-];
-
-const TOPIC: readonly InputPart[] = [
-  { literal: AWS_SERVICE_PREFIX.sns },
-  { path: ['TopicArn'], forms: DEPLOYED_FORMS.topic },
-];
+/**
+ * The operations that send to a queue, a topic or a bus, written against their
+ * input from the fields `@flowatlas/aws` states for every reader of the SDK, a
+ * state machine's task among them. A field one entry of a batch carries is
+ * found under each entry.
+ */
+const sendsTo = (target: MessageTarget['kind'], service: string): Operation[] => {
+  const { address, addressed, absent, event, operations }: SendingService = SDK_SENDS[target];
+  return operations.map((operation) => {
+    const inEntry = (field: string): string[] =>
+      operation.entries === undefined ? [field] : [operation.entries, '*', field];
+    const named = (field: string): string[] => (addressed === 'entry' ? inEntry(field) : [field]);
+    return {
+      command: operation.command,
+      method: operation.method,
+      address: [
+        { literal: service },
+        { path: named(address), ...(absent === undefined ? {} : { absent }), forms: DEPLOYED_FORMS[target] },
+        ...(event === undefined ? [] : [event.source, event.detailType].map((field) => ({ path: named(field) }))),
+      ],
+      payload: inEntry(operation.message),
+    };
+  });
+};
 
 const STATE_MACHINE: readonly InputPart[] = [{ path: ['stateMachineArn'], forms: DEPLOYED_FORMS.workflow }];
 
@@ -120,50 +143,21 @@ const SERVICES: readonly Service[] = [
     package: '@aws-sdk/client-eventbridge',
     client: 'EventBridgeClient',
     service: 'EventBridge',
-    operations: [
-      {
-        command: 'PutEventsCommand',
-        method: 'putEvents',
-        // Each entry is an event of its own, and names its own bus.
-        address: [
-          { literal: AWS_SERVICE_PREFIX.eventbridge },
-          { path: ['Entries', '*', 'EventBusName'], absent: DEFAULT_EVENT_BUS, forms: DEPLOYED_FORMS.bus },
-          { path: ['Entries', '*', 'Source'] },
-          { path: ['Entries', '*', 'DetailType'] },
-        ],
-        payload: ['Entries', '*', 'Detail'],
-      },
-    ],
+    operations: sendsTo('bus', AWS_SERVICE_PREFIX.eventbridge),
   },
   {
     ...DEPLOYED_CHANNELS.queue,
     package: '@aws-sdk/client-sqs',
     client: 'SQSClient',
     service: 'SQS',
-    operations: [
-      { command: 'SendMessageCommand', method: 'sendMessage', address: QUEUE, payload: ['MessageBody'] },
-      {
-        command: 'SendMessageBatchCommand',
-        method: 'sendMessageBatch',
-        address: QUEUE,
-        payload: ['Entries', '*', 'MessageBody'],
-      },
-    ],
+    operations: sendsTo('queue', AWS_SERVICE_PREFIX.sqs),
   },
   {
     ...DEPLOYED_CHANNELS.topic,
     package: '@aws-sdk/client-sns',
     client: 'SNSClient',
     service: 'SNS',
-    operations: [
-      { command: 'PublishCommand', method: 'publish', address: TOPIC, payload: ['Message'] },
-      {
-        command: 'PublishBatchCommand',
-        method: 'publishBatch',
-        address: TOPIC,
-        payload: ['PublishBatchRequestEntries', '*', 'Message'],
-      },
-    ],
+    operations: sendsTo('topic', AWS_SERVICE_PREFIX.sns),
   },
   {
     adapter: 'aws-stepfunctions',

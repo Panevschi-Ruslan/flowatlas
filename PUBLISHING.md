@@ -19,14 +19,14 @@ annotation changes what it takes. At the time of writing `@flowatlas/cli` is at
 0.5.0 and `@flowatlas/markers` at 0.2.0. `CHANGELOG.md` names the package when
 only one of them moved.
 
-The other nine `@flowatlas/*` packages are how the source is organised, not
+The other `@flowatlas/*` packages are how the source is organised, not
 something anybody should install. They are compiled into the command by
 `scripts/bundle.mjs` and marked `private`, so a publish cannot send them by
 accident. Their own `version` fields do not move and mean nothing outside this
 repository; the version a person sees is the command's.
 
-That was a real decision and it went the other way first. Publishing all eleven
-would have made every export of nine internal packages a promise to somebody,
+That was a real decision and it went the other way first. Publishing all of them
+would have made every export of the internal packages a promise to somebody,
 and the first time a function moved between `core` and `linker` it would have
 been a breaking change for a package nobody was meant to import.
 

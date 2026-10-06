@@ -1,4 +1,4 @@
-import { DEFAULT_EVENT_BUS } from '@flowatlas/aws';
+import { SDK_SENDS, type SendingService, type SendOperation } from '@flowatlas/aws';
 import type { DbOp, MessageTarget } from '@flowatlas/core';
 import type { State } from './definition.js';
 import {
@@ -134,62 +134,62 @@ const workflows: TaskClassifier = {
  *
  * Both name their channel in one field and differ only in which field and how a
  * name is cut out of it, so they are rows of a table rather than two classifiers
- * that would have to be kept alike by hand. Each action carries its message in a
- * field of its own: the message, or the list of entries a batch sends.
+ * that would have to be kept alike by hand. The fields are the SDK's, stated in
+ * `@flowatlas/aws` for code that calls it too: the field that names the channel,
+ * and each action's message - the message itself, or the list of entries a
+ * batch sends.
  */
 const SENDS: ReadonlyArray<{
   readonly services: readonly string[];
   readonly transport: 'queue' | 'topic';
-  /** Each action that sends, and the field its message is in. */
-  readonly actions: Readonly<Record<string, string>>;
-  readonly field: string;
   readonly name: (text: string) => string | undefined;
 }> = [
-  {
-    services: ['sqs'],
-    transport: 'queue',
-    actions: { sendMessage: 'MessageBody', sendMessageBatch: 'Entries' },
-    field: 'QueueUrl',
-    name: queueName,
-  },
-  {
-    services: ['sns'],
-    transport: 'topic',
-    actions: { publish: 'Message', publishBatch: 'PublishBatchRequestEntries' },
-    field: 'TopicArn',
-    name: topicName,
-  },
+  { services: ['sqs'], transport: 'queue', name: queueName },
+  { services: ['sns'], transport: 'topic', name: topicName },
 ];
+
+/** The operation of a service an action names, compared as the action is. */
+const operationOf = (transport: MessageTarget['kind'], call: IntegrationCall): SendOperation | undefined => {
+  const { operations }: SendingService = SDK_SENDS[transport];
+  return operations.find((operation) => actionIs(operation.method)(call));
+};
 
 const sends: readonly TaskClassifier[] = SENDS.map((send) => ({
   services: send.services,
   classify: (call, parameters) => {
-    const payload = Object.entries(send.actions).find(([action]) => actionIs(action)(call))?.[1];
-    if (payload === undefined) return undefined;
-    const written = parameters.written(payload);
+    const operation = operationOf(send.transport, call);
+    if (operation === undefined) return undefined;
+    const written = parameters.written(operation.entries ?? operation.message);
     return {
       kind: 'channel',
       transport: send.transport,
-      targets: [{ name: nameIn(parameters.read(send.field), send.name), ...(written === undefined ? {} : { payload: written }) }],
+      targets: [
+        {
+          name: nameIn(parameters.read(SDK_SENDS[send.transport].address), send.name),
+          ...(written === undefined ? {} : { payload: written }),
+        },
+      ],
     };
   },
 }));
 
-/** The default bus, named explicitly so an entry that leaves the bus out still names one. */
-const DEFAULT_BUS: Reading = { read: true, value: DEFAULT_EVENT_BUS, written: '' };
+/** The bus an entry that names none goes to, named explicitly so the entry still names one. */
+const DEFAULT_BUS: Reading = { read: true, value: SDK_SENDS.bus.absent, written: '' };
 
 const events: TaskClassifier = {
   services: ['events', 'eventbridge'],
   classify: (call, parameters) => {
-    if (!actionIs('putEvents')(call)) return undefined;
-    const entries = parameters.raw('Entries');
+    const operation = operationOf('bus', call);
+    if (operation?.entries === undefined) return undefined;
+    const { address, event } = SDK_SENDS.bus;
+    const entries = parameters.raw(operation.entries);
     const target = (entry: unknown): ChannelTarget => {
-      const bus = parameters.read('EventBusName', entry);
-      const payload = parameters.written('Detail', entry);
+      const bus = parameters.read(address, entry);
+      const payload = parameters.written(operation.message, entry);
       return {
         name: bus.read === false && bus.cause === 'absent' ? DEFAULT_BUS : nameIn(bus, eventBusName),
-        source: parameters.read('Source', entry),
-        detailType: parameters.read('DetailType', entry),
+        source: parameters.read(event.source, entry),
+        detailType: parameters.read(event.detailType, entry),
         ...(payload === undefined ? {} : { payload }),
       };
     };
@@ -198,7 +198,7 @@ const events: TaskClassifier = {
       transport: 'bus',
       // A list written out is one channel per entry; anything else - a path
       // under `Entries.$`, an expression - is one target nobody could read.
-      targets: Array.isArray(entries) ? entries.map(target) : [{ name: parameters.read('Entries') }],
+      targets: Array.isArray(entries) ? entries.map(target) : [{ name: parameters.read(operation.entries) }],
     };
   },
 };

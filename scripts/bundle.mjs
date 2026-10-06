@@ -4,7 +4,7 @@
  *
  *   node scripts/bundle.mjs
  *
- * The nine `@flowatlas/*` packages beside this one are how the source is
+ * The other `@flowatlas/*` packages of the workspace are how the source is
  * organised, not something anybody should install. Publishing them would make
  * each of their exports a promise to somebody, and the first time a function
  * moves between two of them that promise breaks for a package nobody was meant

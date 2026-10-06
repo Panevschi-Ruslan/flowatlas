@@ -47,18 +47,25 @@ const MODULE_SOURCE = /\bsource\s*=\s*"([^"]+)"/g;
 /** What `declares` answered for a directory, for the life of the process. */
 const declared = new Map<string, boolean>();
 
+/** When a repo-relative file last changed, or nothing when it is not there. */
+const changedAt = (repoDir: string, file: string): number | undefined => {
+  try {
+    return statSync(join(repoDir, file)).mtimeMs;
+  } catch {
+    return undefined;
+  }
+};
+
 /**
- * The configuration files and when each last changed, so an answer kept for a
- * directory is asked afresh once one of them changes.
+ * Files and when each last changed - the configuration files unless others are
+ * named - so an answer kept for a directory is asked afresh once one of them
+ * changes.
  */
-const stampOf = (repoDir: string): string =>
-  infrastructureFiles(repoDir)
+const stampOf = (repoDir: string, files: readonly string[] = infrastructureFiles(repoDir)): string =>
+  files
     .map((file) => {
-      try {
-        return `${file}@${statSync(join(repoDir, file)).mtimeMs}`;
-      } catch {
-        return file;
-      }
+      const at = changedAt(repoDir, file);
+      return at === undefined ? file : `${file}@${at}`;
     })
     .join('|');
 
@@ -81,37 +88,67 @@ const declaresIn = (repoDir: string, config?: FlowatlasConfig): boolean => {
   return false;
 };
 
-/**
- * The files each reading's evaluation opened, by what it was read with.
- *
- * Which files a configuration loads - a state machine's definition, a template -
- * is what `file()` and `templatefile()` were handed once evaluated, and a path
- * built through a local or a variable (`file("${local.dir}/x.json")`) is not
- * written anywhere a reader of the text could find it. So the answer is the
- * evaluator's, kept from the last reading of the same configuration: the paths
- * can change only when a configuration file or what it is read with does, and a
- * loaded file changing is what watching it is for, not a reason to look again.
- */
-const loaded = new Map<string, readonly string[]>();
+/** A reading of one configuration, and what it was read from. */
+interface Reading {
+  readonly deployment: Deployment;
+  /** The configuration files and when each last changed, taken before the reading began. */
+  readonly stamp: string;
+  /**
+   * The files its evaluation opened besides - a state machine's definition, a
+   * template - which only the evaluator knows: a path built through a local or
+   * a variable (`file("${local.dir}/x.json")`) is not written anywhere a reader
+   * of the text could find it.
+   */
+  readonly loaded: readonly string[];
+  /** Those files and when each last changed. */
+  readonly loadedStamp: string;
+}
 
-const loadedKey = (options: DeploymentReadOptions): string =>
+/**
+ * The last reading of each configuration, by what it is read with (R176).
+ *
+ * A build asks for one service's deployment more than once - for the directories
+ * its functions are packaged from, before the reading opens them, for the files
+ * it stamps, and for its entries - and each answer is the same reading. So a
+ * reading is kept, and taken again only once a configuration file or a file it
+ * loaded has changed: one evaluation per service per build, and a save during a
+ * watch is still seen. One reading is kept per configuration, so a long watch
+ * does not keep the old ones.
+ */
+const readings = new Map<string, Reading>();
+
+const readingKey = (options: DeploymentReadOptions): string =>
   [
     options.repoDir,
-    stampOf(options.repoDir),
     JSON.stringify(options.config.adapters.infra.modules),
     JSON.stringify(options.service?.infra?.vars ?? null),
   ].join('\0');
 
-/** A reading, its loaded files kept under the stamp taken before it began: a save during it is then seen next time. */
-const readWith = (options: DeploymentReadOptions, key = loadedKey(options)): Deployment => {
+const isCurrent = (repoDir: string, reading: Reading, stamp: string): boolean =>
+  reading.stamp === stamp && stampOf(repoDir, reading.loaded) === reading.loadedStamp;
+
+const readingOf = (options: DeploymentReadOptions): Reading => {
+  const { repoDir } = options;
+  const key = readingKey(options);
+  // Taken before the reading begins, so a save during it is seen next time.
+  const stamp = stampOf(repoDir);
+  const kept = readings.get(key);
+  if (kept !== undefined && isCurrent(repoDir, kept, stamp)) return kept;
+  const began = Date.now();
   const configuration = loadConfiguration({
-    repoDir: options.repoDir,
+    repoDir,
     ...(options.service?.infra === undefined ? {} : { varFiles: options.service.infra.vars }),
     descriptions: [...options.config.adapters.infra.modules, ...SHIPPED_MODULES],
   });
   const deployment = new DeploymentReading(configuration).read();
-  loaded.set(key, configuration.loadedFiles());
-  return deployment;
+  const loaded = configuration.loadedFiles();
+  const reading: Reading = { deployment, stamp, loaded, loadedStamp: stampOf(repoDir, loaded) };
+  // A loaded file is only known once it is opened, so its stamp is taken after:
+  // one saved while the reading ran may have been read either way, and a reading
+  // that cannot say which is not kept.
+  if (loaded.every((file) => (changedAt(repoDir, file) ?? 0) < began)) readings.set(key, reading);
+  else readings.delete(key);
+  return reading;
 };
 
 /**
@@ -134,14 +171,16 @@ export const terraformReader: DeploymentReader = {
     declared.set(key, answer);
     return answer;
   },
-  read: (options) => readWith(options),
+  read: (options) => readingOf(options).deployment,
   files: (repoDir, options) => {
     const infrastructure = infrastructureFiles(repoDir);
     if (infrastructure.length === 0) return [];
-    const reading = { repoDir, config: options?.config ?? parseConfig({}), ...(options?.service === undefined ? {} : { service: options.service }) };
-    const key = loadedKey(reading);
-    if (!loaded.has(key)) readWith(reading, key);
-    return [...new Set([...infrastructure, ...(loaded.get(key) ?? [])])].sort();
+    const { loaded } = readingOf({
+      repoDir,
+      config: options?.config ?? parseConfig({}),
+      ...(options?.service === undefined ? {} : { service: options.service }),
+    });
+    return [...new Set([...infrastructure, ...loaded])].sort();
   },
 };
 export { UNREAD_DEPLOYMENTS, unreadDeploymentOf } from './unread.js';

@@ -1,3 +1,5 @@
+import { SDK_SENDS, type SendingService, type SendOperation } from '@flowatlas/aws';
+import type { MessageTarget } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import type { State } from './definition.js';
 import { classifyTask, TASK_CLASSIFIERS, type Task } from './tasks.js';
@@ -211,6 +213,47 @@ describe('a message the task sends', () => {
   it('reads entries written as one path as one target nobody could read', () => {
     const found = classify({ Resource: 'arn:aws:states:::events:putEvents', Parameters: { 'Entries.$': '$.events' } });
     expect(found.kind === 'channel' && found.targets).toEqual([{ name: expect.objectContaining({ read: false, cause: 'jsonpath' }) }]);
+  });
+});
+
+/**
+ * The fields a task's message and its address are in are the SDK's, stated once
+ * in `@flowatlas/aws` for code that calls the SDK too (R176): every operation
+ * there is read here, from the fields it names, so one added there is read here.
+ */
+describe('every operation the SDK sends with', () => {
+  const RESOURCE: Readonly<Record<MessageTarget['kind'], string>> = { queue: 'sqs', topic: 'sns', bus: 'events' };
+  const WRITTEN: Readonly<Record<MessageTarget['kind'], string>> = {
+    queue: 'https://sqs.eu-west-1.amazonaws.com/123456789012/returns',
+    topic: 'arn:aws:sns:eu-west-1:123456789012:returns',
+    bus: 'arn:aws:events:eu-west-1:123456789012:event-bus/returns',
+  };
+  const rows = (Object.entries(SDK_SENDS) as [MessageTarget['kind'], SendingService][]).flatMap(([kind, service]) =>
+    service.operations.map((operation): [MessageTarget['kind'], string, SendingService, SendOperation] => [
+      kind,
+      operation.method,
+      service,
+      operation,
+    ]),
+  );
+
+  it.each(rows)('reads a %s from %s', (kind, _method, service, operation) => {
+    const address = {
+      [service.address]: WRITTEN[kind],
+      ...(service.event === undefined ? {} : { [service.event.source]: 'library', [service.event.detailType]: 'Returned' }),
+    };
+    const message = { [operation.message]: { loan: 1 } };
+    const parameters =
+      operation.entries === undefined
+        ? { ...address, ...message }
+        : service.addressed === 'entry'
+          ? { [operation.entries]: [{ ...address, ...message }] }
+          : { ...address, [operation.entries]: [message] };
+    const found = classify({ Resource: `arn:aws:states:::aws-sdk:${RESOURCE[kind]}:${operation.method}`, Parameters: parameters });
+    expect(found.kind === 'channel' && found.transport).toBe(kind);
+    expect(found.kind === 'channel' && found.targets.map((target) => [target.name.read && target.name.value, target.payload !== undefined])).toEqual([
+      ['returns', true],
+    ]);
   });
 });
 

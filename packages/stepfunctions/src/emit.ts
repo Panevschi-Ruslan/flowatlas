@@ -1,4 +1,4 @@
-import { channelOfTarget, DEPLOYED_CHANNELS } from '@flowatlas/aws';
+import { channelOfTarget, DEPLOYED_CHANNELS, SDK_SENDS } from '@flowatlas/aws';
 import {
   makeChannelId,
   makeEntryId,
@@ -171,10 +171,10 @@ const reachedBy = (
     ? { ...NOTHING, reaches: [reference(reading.value)], task: { name: reading.value } }
     : { ...NOTHING, rows: [unreadRow(site, what, field, reading)], task: {} };
 
-const CHANNEL_WORDS: Readonly<Record<MessageTarget['kind'], { what: string; field: string }>> = {
-  queue: { what: 'sends to a queue', field: 'QueueUrl' },
-  topic: { what: 'publishes to a topic', field: 'TopicArn' },
-  bus: { what: 'puts events on a bus', field: 'EventBusName' },
+const CHANNEL_WORDS: Readonly<Record<MessageTarget['kind'], string>> = {
+  queue: 'sends to a queue',
+  topic: 'publishes to a topic',
+  bus: 'puts events on a bus',
 };
 
 const TABLE_WORDS: Readonly<Record<Extract<Task, { kind: 'table' }>['op'], string>> = {
@@ -195,15 +195,16 @@ const messageTarget = (
   transport: MessageTarget['kind'],
   target: ChannelTarget,
 ): { readonly sends: MessageTarget } | { readonly rows: Unresolved[] } => {
-  const words = CHANNEL_WORDS[transport];
-  if (!target.name.read) return { rows: [unreadRow(site, words.what, words.field, target.name)] };
+  const what = CHANNEL_WORDS[transport];
+  if (!target.name.read) return { rows: [unreadRow(site, what, SDK_SENDS[transport].address, target.name)] };
   if (transport !== 'bus') return { sends: { kind: transport, name: target.name.value } };
+  const { event } = SDK_SENDS.bus;
   const fields = [
-    ['Source', target.source],
-    ['DetailType', target.detailType],
+    [event.source, target.source],
+    [event.detailType, target.detailType],
   ] as const;
   const rows = fields.flatMap(([field, reading]) =>
-    reading === undefined || reading.read ? [] : [unreadRow(site, words.what, field, reading)],
+    reading === undefined || reading.read ? [] : [unreadRow(site, what, field, reading)],
   );
   const [source, detailType] = fields.map(([, reading]) => (reading?.read === true ? reading.value : undefined));
   if (rows.length > 0 || source === undefined || detailType === undefined) return { rows };
