@@ -1,21 +1,22 @@
 import { isMap, isScalar, isSeq, LineCounter, parseDocument, type Node as YamlNode } from 'yaml';
+import type { DefinitionPosition as Position, DeployedDefinition } from './adapters/deployment.js';
 
 /**
- * A definition read as plain values, with where each of them was written.
+ * A document read as plain values, with where each of them was written.
  *
- * A state machine is written in JSON or in YAML, and once it is read nothing
- * downstream should care which: the walk over its states asks for values and,
- * beside them, for a line to put on a node. So each format is adapted to this
- * one shape and the rest of the package is written against the shape. A third
- * spelling - the value a deployment file builds in place, with no text of its
- * own - is the same shape again, with one position for everything (`fromValue`).
+ * A state machine's definition, or an API's OpenAPI document, is written in
+ * JSON or in YAML, and once it is read nothing downstream should care which:
+ * the walk over its members asks for values and, beside them, for a line to put
+ * on a node. So each format is adapted to this one shape and every reader is
+ * written against the shape. A third spelling - the value a deployment file
+ * builds in place, with no text of its own - is the same shape again, with one
+ * position for everything (`fromValue`).
+ *
+ * In the core because two readers that may not depend on each other read
+ * documents a deployment hands over: the reader of state machines and the
+ * reader of the deployment itself (R174). JSON and YAML are formats, not a
+ * technology being read.
  */
-
-/** Where something is written, 1-based, as an editor counts. */
-export interface Position {
-  readonly line: number;
-  readonly column: number;
-}
 
 /** One step down into a document: a key of a mapping or an index of a list. */
 export type PathStep = string | number;
@@ -269,3 +270,13 @@ const READERS: Readonly<Record<DefinitionFormat, (text: string) => PositionedDoc
 /** Reads text written in one of the formats. */
 export const readDocument = (text: string, format: DefinitionFormat): PositionedDocument =>
   READERS[format](text);
+
+/**
+ * A document a deployment hands over, as a positioned document: a workflow's
+ * definition, an API's OpenAPI body. Throws {@link DocumentSyntaxError} for
+ * text that is not its format.
+ */
+export const documentOf = (definition: DeployedDefinition): PositionedDocument =>
+  definition.kind === 'value'
+    ? { value: definition.value, at: (path) => definition.at(path) }
+    : shifted(readDocument(definition.text, definition.format), definition.firstLine - 1);

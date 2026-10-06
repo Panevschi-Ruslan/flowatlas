@@ -231,7 +231,7 @@ const MOST_LINKS = 8;
  * payload takes, without changing what it says: the message is what they are
  * handed. Spelled without whitespace, as the callee is compared.
  */
-const SERIALISERS: ReadonlySet<string> = new Set(['JSON.stringify', 'Buffer.from', 'newTextEncoder().encode']);
+const SERIALISERS: ReadonlySet<string> = new Set(['JSON.stringify', 'Buffer.from', 'newTextEncoder().encode', 'Uint8Array.from']);
 
 /**
  * The value a message is made from, where it is sent as text.

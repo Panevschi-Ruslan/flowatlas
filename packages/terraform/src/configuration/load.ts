@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { isAbsolute, join, posix, relative, sep } from 'node:path';
 import type { InfraModuleConfig, Unresolved } from '@flowatlas/core';
 import { attributeOf, blocksOf, type Attribute, type Block, type Body, type Expression, type HclFile, type Position } from '../hcl/ast.js';
+import { parseHclJson } from '../hcl/json.js';
 import { HclSyntaxError, parseHcl, parseHclExpression, templateText } from '../hcl/parse.js';
 import { evaluate, iterate, orderedKeys, withNames, type Scope } from '../eval/evaluate.js';
 import {
@@ -75,6 +76,19 @@ interface Tfvars {
   readonly file: string;
   readonly values: ReadonlyMap<string, Value>;
 }
+
+/**
+ * The two syntaxes a configuration file is written in, by its name. Both are
+ * read into one tree, so nothing after this line knows which one a block was
+ * written in.
+ */
+const SYNTAXES: ReadonlyArray<readonly [suffix: string, parse: (text: string, file: string) => HclFile]> = [
+  ['.tf', parseHcl],
+  ['.tf.json', parseHclJson],
+];
+
+export const syntaxOf = (file: string): ((text: string, file: string) => HclFile) | undefined =>
+  SYNTAXES.find(([suffix]) => file.endsWith(suffix))?.[1];
 
 const AUTO_VARS = /(?:^|\/)(?:terraform\.tfvars|terraform\.tfvars\.json|[^/]+\.auto\.tfvars|[^/]+\.auto\.tfvars\.json)$/;
 
@@ -726,18 +740,8 @@ export const loadConfiguration = (options: LoadOptions): Configuration => {
   const all = infrastructureFiles(options.repoDir);
   const byDir = new Map<string, HclFile[]>();
   for (const file of all) {
-    if (file.endsWith('.tf.json')) {
-      rows.push({
-        file,
-        line: 1,
-        reason: 'infra-file-unread',
-        level: 'info',
-        message: `${file} is configuration written as JSON, which is not read`,
-        hint: 'Only the native syntax is read. Anything this file declares is missing from the graph.',
-      });
-      continue;
-    }
-    if (!file.endsWith('.tf')) continue;
+    const parse = syntaxOf(file);
+    if (parse === undefined) continue;
     let text: string;
     try {
       text = readFileSync(join(options.repoDir, file), 'utf8');
@@ -745,7 +749,7 @@ export const loadConfiguration = (options: LoadOptions): Configuration => {
       continue;
     }
     try {
-      const parsed = parseHcl(text, file);
+      const parsed = parse(text, file);
       const dir = dirOf(file);
       byDir.set(dir, [...(byDir.get(dir) ?? []), parsed]);
     } catch (error) {

@@ -1,0 +1,64 @@
+openapi: "3.0.1"
+info:
+  title: library-circulation
+  version: "1.0"
+
+paths:
+  /loans:
+    post:
+      operationId: createLoan
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: ${create_loan_invoke_arn}
+
+  /loans/{loanId}:
+    get:
+      operationId: getLoan
+      security:
+        - librarians: []
+      parameters:
+        - name: loanId
+          in: path
+          required: true
+          schema:
+            type: string
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: ${get_loan_invoke_arn}
+
+  /loans/{loanId}/renewals:
+    post:
+      operationId: renewLoan
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${renew_loan_arn}/invocations
+
+  # No function: API Gateway sends the request body to the returns queue itself.
+  /returns:
+    post:
+      operationId: recordReturn
+      x-amazon-apigateway-integration:
+        type: aws
+        httpMethod: POST
+        credentials: ${api_role_arn}
+        uri: arn:aws:apigateway:${region}:sqs:path/${account_id}/${returns_queue}
+        requestParameters:
+          integration.request.header.Content-Type: "'application/x-www-form-urlencoded'"
+        requestTemplates:
+          application/json: Action=SendMessage&MessageBody=$input.body
+        passthroughBehavior: never
+
+components:
+  securitySchemes:
+    librarians:
+      type: apiKey
+      name: Authorization
+      in: header
+      x-amazon-apigateway-authtype: cognito_user_pools
+      x-amazon-apigateway-authorizer:
+        type: cognito_user_pools
+        providerARNs:
+          - ${librarians_pool_arn}

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "lending-library-loans",
-  "generatedAt": "2026-10-06T18:18:16.883Z",
+  "generatedAt": "2026-10-06T21:12:41.597Z",
   "nodes": [
     {
       "id": "entry:lending-library-loans:http:GET:/loans/:param",
@@ -19,6 +19,9 @@
         "api": "library-dev-api",
         "function": "library-dev-get-loan",
         "declaredAs": "aws_api_gateway_method.get_loan",
+        "stages": [
+          "dev"
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -38,6 +41,9 @@
         "api": "library-dev-api",
         "function": "library-dev-create-loan",
         "declaredAs": "aws_api_gateway_method.create_loan",
+        "stages": [
+          "dev"
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -57,6 +63,9 @@
         "api": "library-dev-api",
         "function": "library-dev-renew-loan",
         "declaredAs": "aws_api_gateway_method.renew_loan",
+        "stages": [
+          "dev"
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -76,6 +85,9 @@
         "api": "library-dev-api",
         "function": "library-dev-record-return",
         "declaredAs": "aws_api_gateway_method.record_return",
+        "stages": [
+          "dev"
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -104,6 +116,9 @@
             "variable": "reminder_channels"
           }
         },
+        "reads": {
+          "": "type:@types/aws-lambda#ScheduledEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -130,6 +145,9 @@
             "value": "21"
           }
         },
+        "reads": {
+          "": "type:lending-library-loans#CreateLoanEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -151,6 +169,9 @@
         "sourceDirectory": "src/loans",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -174,6 +195,9 @@
         "sourceDirectory": "src/returns",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -195,6 +219,9 @@
         "sourceDirectory": "src/loans",
         "handlerVia": "inline",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -640,7 +667,45 @@
       "line": 7
     }
   ],
-  "types": {},
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#ScheduledEvent": {
+      "name": "ScheduledEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "7e19b21586cc2fef",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:lending-library-loans#CreateLoanEvent": {
+      "name": "CreateLoanEvent",
+      "kind": "object",
+      "declaredIn": "lending-library-loans#src/loans/create-loan.ts",
+      "structuralHash": "cd55c224a818dfe2",
+      "fields": [
+        {
+          "name": "body",
+          "type": "{borrowerId:string;isbn:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "infra/functions.tf",

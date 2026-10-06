@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T18:17:59.429Z",
+  "builtAt": "2026-10-06T21:13:56.466Z",
   "services": [
     {
       "name": "lending",
@@ -66,6 +66,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "{borrowerId:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -87,6 +90,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -108,6 +114,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "{loanId:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -129,6 +138,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -150,6 +162,7 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {},
         "adapter": "aws-lambda"
       }
     },
@@ -169,6 +182,10 @@
         "states": 1,
         "queryLanguage": "JSONPath",
         "comment": "Approves a loan: checks the borrower.",
+        "reads": {
+          "": "{borrowerId:unknown}"
+        },
+        "carriesOn": true,
         "deployedBy": "terraform",
         "declaredAs": "aws_sfn_state_machine.loan_approval",
         "definitionFrom": "file",
@@ -266,6 +283,10 @@
         "adapter": "starters",
         "method": "start",
         "starts": "workflow",
+        "envelope": {
+          "at": [],
+          "text": false
+        },
         "confidence": "declared",
         "reaches": [
           "workflow:lending-loan-approval"
@@ -285,6 +306,10 @@
         "adapter": "starters",
         "method": "start",
         "starts": "workflow",
+        "envelope": {
+          "at": [],
+          "text": false
+        },
         "confidence": "static"
       }
     },
@@ -425,14 +450,25 @@
       }
     }
   ],
-  "types": {},
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "src/handlers/create-loan.ts",
       "line": 18,
       "reason": "call-dynamic-receiver",
       "level": "info",
-      "sites": 5,
+      "sites": 3,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "handler -> orchestrator.create",
       "service": "lending"

@@ -130,6 +130,18 @@ client.send(new Put({ Entries: [{ Source: 'loans', Type: 'LoanCreated', Detail: 
     ).toEqual(['loan']);
   });
 
+  // An invocation's payload is bytes, made from the text by whichever call is to hand.
+  it('reads what the bytes of a payload are made from', () => {
+    expect(
+      payloads(`declare const loan: { loanId: string };
+client.send(new Put({ Entries: [
+  { Source: 'loans', Type: 'A', Detail: Buffer.from(JSON.stringify(loan)) },
+  { Source: 'loans', Type: 'B', Detail: new TextEncoder().encode(JSON.stringify(loan)) },
+  { Source: 'loans', Type: 'C', Detail: Uint8Array.from(JSON.stringify(loan), (character) => character.charCodeAt(0)) },
+] }));`),
+    ).toEqual(['loan', 'loan', 'loan']);
+  });
+
   it('reads each entry its own message', () => {
     expect(
       payloads(`declare const hold: { holdId: string };

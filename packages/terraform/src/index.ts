@@ -3,13 +3,14 @@ import { join } from 'node:path';
 import { parseConfig, type Deployment, type DeploymentReadOptions, type DeploymentReader, type FlowatlasConfig } from '@flowatlas/core';
 import { DeploymentReading } from './aws/read.js';
 import { infrastructureFiles } from './configuration/files.js';
-import { loadConfiguration } from './configuration/load.js';
+import { loadConfiguration, syntaxOf } from './configuration/load.js';
 import { SHIPPED_MODULES } from './configuration/shipped.js';
 import { describedModule } from './configuration/sources.js';
 
 export type { Attribute, Block, Body, Expression, HclFile, Position, Step, TemplatePart } from './hcl/ast.js';
 export { attributeOf, blocksOf } from './hcl/ast.js';
 export { HclSyntaxError, parseHcl, parseHclExpression, parseHclTemplate, templateText } from './hcl/parse.js';
+export { parseHclJson } from './hcl/json.js';
 export { evaluate } from './eval/evaluate.js';
 export type { Scope } from './eval/evaluate.js';
 export type { Because, Instance, ModuleInstance, Value } from './eval/values.js';
@@ -42,7 +43,8 @@ const READ_TYPES = new RegExp(
   ].join('|')})"`,
 );
 
-const MODULE_SOURCE = /\bsource\s*=\s*"([^"]+)"/g;
+/** A module call's source, as either syntax writes it: `source = "..."` or `"source": "..."`. */
+const MODULE_SOURCE = /\bsource"?\s*[=:]\s*"([^"]+)"/g;
 
 /** What `declares` answered for a directory, for the life of the process. */
 const declared = new Map<string, boolean>();
@@ -72,7 +74,7 @@ const stampOf = (repoDir: string, files: readonly string[] = infrastructureFiles
 const declaresIn = (repoDir: string, config?: FlowatlasConfig): boolean => {
   const descriptions = [...(config?.adapters.infra.modules ?? []), ...SHIPPED_MODULES];
   for (const file of infrastructureFiles(repoDir)) {
-    if (!file.endsWith('.tf')) continue;
+    if (syntaxOf(file) === undefined) continue;
     let text: string;
     try {
       text = readFileSync(join(repoDir, file), 'utf8');

@@ -352,6 +352,36 @@ const FALLBACK_CASES = [
 ];
 
 /**
+ * Terraform shapes read since R174: configuration written as JSON, an API
+ * created from its OpenAPI document, a WebSocket API, base paths a domain puts
+ * in front of an API, and a rule that forwards to another bus by a pattern.
+ * Each fixture's health check is the proof it is read without a row; the walk
+ * is what each shape adds.
+ */
+const terraformShape = (name, cases) => {
+  const plain = plainFor(name);
+  return {
+    dir: join(root, 'fixtures', name, 'expected.cli'),
+    owned: true,
+    cases: [
+      ...cases.map(([file, route]) => [file, (io) => runFlow(route, { ...plain, format: 'tree' }, io)]),
+      ['doctor.txt', (io) => runDoctorCommand({ config: plain.config }, io)],
+    ],
+  };
+};
+
+const TERRAFORM_SHAPE_SUITES = [
+  terraformShape('lambda-terraform-json', [['flow.post-items.tree.txt', 'POST /items']]),
+  terraformShape('lambda-terraform-openapi', [
+    ['flow.post-returns.tree.txt', 'POST /returns'],
+    ['flow.get-loan.tree.txt', 'GET /loans/:param'],
+  ]),
+  terraformShape('lambda-terraform-websocket', [['flow.ask-librarian.tree.txt', 'event:websocket/library-reading-room/askLibrarian']]),
+  terraformShape('lambda-terraform-base-paths', [['flow.check-item.tree.txt', 'invoke:library-kiosk-check-item']]),
+  terraformShape('lambda-terraform-bus-forward', [['flow.renew-loan.tree.txt', 'POST /loans/:param/renewals']]),
+];
+
+/**
  * Sets of recordings, in several places.
  *
  * The first owns its folder, so an answer nobody asks for any more is swept
@@ -379,6 +409,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'start-workflow-function-helper', 'expected.cli'), owned: true, cases: FUNCTION_START_CASES },
   { dir: join(root, 'fixtures', 'lambda-workspace-root', 'expected.cli'), owned: true, cases: WORKSPACE_ROOT_CASES },
   { dir: join(root, 'fixtures', 'sqs-environment-fallback', 'expected.cli'), owned: true, cases: FALLBACK_CASES },
+  ...TERRAFORM_SHAPE_SUITES,
 ];
 
 /**

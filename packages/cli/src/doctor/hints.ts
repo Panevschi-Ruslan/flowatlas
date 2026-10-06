@@ -593,8 +593,6 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   // Ways in declared where a service is deployed (adapters-entry/deployed-functions.ts, terraform)
   'infra-file-unparsed': () =>
     'This configuration file does not parse, so nothing in it is read. If the file is valid, this is a defect in the reader: report it with the line.',
-  'infra-file-unread': () =>
-    'Configuration written as JSON is not read; only the native syntax is. Whatever this file declares is missing from the graph.',
   'infra-module-missing': () =>
     'A module call names a local directory that holds no configuration. Check the path; a local source is relative to the directory of the file that calls it.',
   'infra-module-undescribed': () =>
@@ -623,16 +621,18 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The path or verb of an API route depends on something the files do not settle, so the route cannot be joined to anything that calls it.',
   'route-target-unread': () =>
     'What answers a route is not read. Point the integration at a function, a queue, a topic or a bus the files declare, or at one by a name they settle.',
+  'route-base-path-unread': () =>
+    'A custom domain maps an API at a base path, and the API it maps or the base path is not read, so the routes of that API are at an address not known in full and nothing calling them joins. Write the base path and the API so the files settle them.',
   'subscription-source-unread': () =>
     'What a rule, a subscription, a mapping or a pipe takes its messages from is not read, so it is drawn on no channel. Write the queue, topic, bus or stream so the files settle it: a reference to what the configuration declares, or its ARN. A source of a kind nothing here reads is said once, at info.',
   'subscription-target-unread': () =>
     'What a rule, a subscription, a mapping or a pipe hands its messages to is not read. A target of a kind nothing here follows - a container task, an e-mail address, an API destination - is said once at info and needs nothing; a function, workflow, queue, topic or bus whose name the files do not settle needs one.',
   'subscription-forward-unread': () =>
-    'A rule puts the events it takes by a pattern on another bus, and which events those are is not named exactly, so no channel on that bus is drawn. Nothing to fix unless that bus has subscribers you expect to see.',
+    'Something that is not a rule on a bus - a schedule, a queue, a pipe - puts what it takes on a bus, and which events those are is not named, so no channel on that bus is drawn. A rule that takes its events by name or by a pattern carries them on. Nothing to fix unless that bus has subscribers you expect to see.',
   'event-pattern-unread': () =>
     'A rule\'s event pattern is not read, so the rule is on no channel. Write it as JSON, a heredoc or jsonencode of what the files settle.',
   'api-body-unread': () =>
-    'An API whose routes are an OpenAPI body is not read as routes. Declare the service with a document of kind openapi to read them.',
+    'An API is created from an OpenAPI body that is not read, so none of its routes are drawn. Write the body as templatefile(), file(), jsonencode() or a heredoc, with a path the files settle and text that is JSON or YAML with paths.',
   'deployment-unread': () =>
     'The repository declares Lambda packages and no deployment description this reads. Functions are read from Terraform; the handlers are still read as code, and nothing reaches them.',
 

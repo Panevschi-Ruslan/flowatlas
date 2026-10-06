@@ -76,6 +76,13 @@ export const eventChannelPattern = (bus: string, pattern: MessagePattern): Chann
 });
 
 /**
+ * What a rule that hands its events on to another bus does to the name of each
+ * channel it takes: the same source and detail type, on that bus. The parts are
+ * the grammar's, as `eventChannelPattern` lists them; `null` keeps a part.
+ */
+export const forwardedToBus = (bus: string): (string | null)[] => [null, bus, null, null];
+
+/**
  * The adapter, the kind of channel and the kind of message a queue, a topic or
  * a bus is read as, whoever reads it: the SDK's publishers, a deployment's
  * subscribers, a step that sends.

@@ -29,6 +29,11 @@ describe('how a delivery wraps what it hands its target', () => {
     ).toEqual({ at: [], text: false });
   });
 
+  it('is the message as it was sent when a rule puts the event on another bus', () => {
+    const bus = { kind: 'bus', name: 'library', pattern: { fields: {} } } as const;
+    expect(deliveryEnvelope(delivery({ by: 'rule', from: bus, to: { kind: 'bus', name: 'library-audit' } }))).toEqual({ at: [], text: false });
+  });
+
   it('is not known for a rewritten input, a pipe, or a delivery whose target was not read', () => {
     const bus = { kind: 'bus', name: 'library', pattern: { fields: {} } } as const;
     expect(deliveryEnvelope(delivery({ by: 'rule', from: bus, meta: { transformed: true } }))).toBeUndefined();

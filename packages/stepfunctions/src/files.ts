@@ -1,6 +1,6 @@
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import type { DefinitionFormat } from './source.js';
+import type { DefinitionFormat } from '@flowatlas/core';
 
 /**
  * Definition files a repository keeps standing on their own, beside whatever

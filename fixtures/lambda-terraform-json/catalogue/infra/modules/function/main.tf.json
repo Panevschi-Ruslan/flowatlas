@@ -1,0 +1,23 @@
+{
+  "variable": {
+    "name": { "type": "string" },
+    "handler": { "type": "string" },
+    "role_arn": { "type": "string" },
+    "package": { "type": "string" },
+    "runtime": { "type": "string", "default": "nodejs20.x" }
+  },
+  "resource": {
+    "aws_lambda_function": {
+      "this": {
+        "function_name": "${var.name}",
+        "role": "${var.role_arn}",
+        "runtime": "${var.runtime}",
+        "handler": "${var.handler}",
+        "filename": "${var.package}"
+      }
+    }
+  },
+  "output": {
+    "invoke_arn": { "value": "${aws_lambda_function.this.invoke_arn}" }
+  }
+}

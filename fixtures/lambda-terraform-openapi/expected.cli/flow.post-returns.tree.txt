@@ -1,0 +1,7 @@
+@  POST /returns                                          circulation/infra/openapi.yaml:41
+  ~  message sqs/library-returns                          circulation/infra/openapi.yaml:41
+    ~  sqs/library-returns                                infra/openapi.yaml:41
+      ~  mapping aws_lambda_event_source_mapping.returns  circulation/infra/functions.tf:55
+        @  library-process-return                         circulation/infra/functions.tf:28
+          -> handler                                      circulation/src/returns/process-return.ts:6
+unresolved on this path: 0

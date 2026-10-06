@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T21:12:37.577Z",
+  "configHash": "7399ea785fa8",
+  "services": [
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 8,
+      "edges": 5,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 534
+    },
+    {
+      "name": "circulation",
+      "repo": "./circulation",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 14,
+      "edges": 10,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 539
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 4,
+    "linked": 4,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:circulation:http:POST:/loans",
+      "entry:circulation:http:POST:/loans/:param/renewals"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 23,
+    "edges": 20,
+    "types": 4,
+    "unresolved": 0
+  }
+}

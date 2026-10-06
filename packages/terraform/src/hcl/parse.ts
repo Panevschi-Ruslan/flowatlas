@@ -869,10 +869,12 @@ export const parseHclExpression = (text: string, file = '<expression>'): Express
 
 /**
  * Parses a template file, as `templatefile()` reads one: text with
- * interpolations and directives and no escapes.
+ * interpolations and directives and no escapes. `line` is where the text starts
+ * in its file, for a template that is part of a larger one: a string of
+ * Terraform's JSON syntax.
  */
-export const parseHclTemplate = (text: string, file: string): Expression => {
-  const parser = new Parser(text, file);
+export const parseHclTemplate = (text: string, file: string, line = 1): Expression => {
+  const parser = new Parser(text, file, line);
   const run = parser.template(false, new Set());
-  return { type: 'template', parts: run.parts, pos: { file, line: 1, column: 1 } };
+  return { type: 'template', parts: run.parts, pos: { file, line, column: 1 } };
 };

@@ -38,7 +38,9 @@ const line = (delivery: DeployedDelivery): string => {
         ? `schedule ${from.expression ?? '?'}`
         : from.kind === 'changes'
           ? `changes of ${from.of} ${from.name}`
-          : `${from.kind} ${from.name}`;
+          : from.kind === 'connection'
+            ? `connection ${from.api} ${from.route}`
+            : `${from.kind} ${from.name}`;
   const to = delivery.to;
   const target =
     to === undefined

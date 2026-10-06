@@ -31,18 +31,6 @@ export { definitionFiles, formatOfDefinition, nameOfDefinition } from './files.j
 export { extractWorkflows, readDefinitionFile, unreadableDefinition, workflowsPass } from './pass.js';
 export { functionReference, workflowReference } from './references.js';
 export {
-  DocumentSyntaxError,
-  fromValue,
-  readDocument,
-  readJson,
-  readYaml,
-  shifted,
-  type DefinitionFormat,
-  type PathStep,
-  type Position,
-  type PositionedDocument,
-} from './source.js';
-export {
   classifyTask,
   TASK_CLASSIFIERS,
   type ChannelTarget,

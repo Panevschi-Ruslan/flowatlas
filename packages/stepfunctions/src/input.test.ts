@@ -1,7 +1,7 @@
+import { readJson } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import { readStateMachine, type StateMachine } from './definition.js';
 import { requiredInput } from './input.js';
-import { readJson } from './source.js';
 
 const machineOf = (first: Record<string, unknown>, extra: Record<string, unknown> = {}): StateMachine =>
   readStateMachine(readJson(JSON.stringify({ StartAt: 'First', States: { First: { ...first, End: true } }, ...extra })));

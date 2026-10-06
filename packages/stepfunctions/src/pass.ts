@@ -1,10 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { definePass, type ExtractContext, type ExtractorPass, type GraphBuilder } from '@flowatlas/core';
+import { definePass, DocumentSyntaxError, readDocument, type ExtractContext, type ExtractorPass, type GraphBuilder } from '@flowatlas/core';
 import { readStateMachine } from './definition.js';
 import { emitWorkflow, type WorkflowFragment } from './emit.js';
 import { definitionFiles, formatOfDefinition, nameOfDefinition } from './files.js';
-import { DocumentSyntaxError, readDocument } from './source.js';
 
 /**
  * Reads every definition file a repository keeps on its own and draws each as a

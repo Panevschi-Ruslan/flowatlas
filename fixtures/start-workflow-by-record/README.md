@@ -26,8 +26,11 @@ executed or deployed; the three absent packages have no stub on purpose, and
 | `jobs.submit({ jobId: job.id })` in `send-overdue-notices`, after `const job = await jobs.prepare({ kind: Job.OverdueNotices, ... })`, from `@library/jobs` | one `starter-undescribed` row: the package is not installed, and the call is handed an id the same package made earlier in the body. The description it offers points at `prepare`'s `kind` with an `origin-call-argument` locator |
 | `notifier.send('lending-notify-borrower', { loanId })` in `create-loan`, from `@library/notify` | one `starter-undescribed` row: the package is installed with its declared types only, and those types reach `LambdaClient`, so the description it offers says `"target": "invoke"` |
 
-The calls into the three absent packages also leave the
+The other calls into the three absent packages also leave the
 `call-dynamic-receiver` information row every call into an absent package does.
+The two `orchestrator.start` calls do not: the description says what each call
+is, so it is read, and the row the calls reader wrote about its untyped receiver
+is taken back (R173).
 
 ## The description
 

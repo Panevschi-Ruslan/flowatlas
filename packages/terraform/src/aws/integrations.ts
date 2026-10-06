@@ -1,8 +1,9 @@
 import { DEFAULT_EVENT_BUS } from '@flowatlas/aws';
 import type { MessageTarget } from '@flowatlas/core';
-import { asText, type Because, type Instance, type Value } from '../eval/values.js';
+import { asText, fromJson, list, object, type Because, type Instance, type Value } from '../eval/values.js';
 import { argument, HOLE, referencesOf, textOf, textWithHoles, whyNot } from './arguments.js';
 import { busOf, deployedOf, deployedOfValue, isBecause } from './deployed.js';
+import type { Placeholders } from './documents.js';
 import type { ResourceReading } from './reading.js';
 
 /**
@@ -24,8 +25,106 @@ import type { ResourceReading } from './reading.js';
 
 type Sent = { readonly sends: MessageTarget } | Because;
 
-const parameter = (integration: Instance, key: string): Value | undefined => {
-  const parameters = argument(integration, 'request_parameters');
+/** What an integration says, by what it means rather than by what either way of writing one calls it. */
+export type IntegrationField = 'type' | 'subtype' | 'uri' | 'parameters' | 'templates';
+
+/**
+ * An integration, wherever it is written: the arguments of a resource, or the
+ * `x-amazon-apigateway-integration` of an operation in an OpenAPI document an
+ * API is given as its body (R174).
+ *
+ * An Adapter. The shapes below, and the reading of the function an integration
+ * invokes, ask it for a field and never learn which of the two they read.
+ */
+export interface Integration {
+  /** A field as a reader would point at it: `uri of aws_api_gateway_integration.x`. */
+  describe(field: IntegrationField): string;
+  value(field: IntegrationField): Value | undefined;
+  /** As text, each part that is not read standing as {@link HOLE}. */
+  text(field: IntegrationField): string | undefined;
+  /** Every reference written inside a field, each evaluated on its own. */
+  references(field: IntegrationField): Value[];
+}
+
+/** The argument each field is, by the kind of API the resource belongs to. */
+const RESOURCE_FIELDS: Readonly<Record<'rest' | 'http', Partial<Record<IntegrationField, string>>>> = {
+  rest: { type: 'type', uri: 'uri', parameters: 'request_parameters', templates: 'request_templates' },
+  http: {
+    type: 'integration_type',
+    subtype: 'integration_subtype',
+    uri: 'integration_uri',
+    parameters: 'request_parameters',
+    templates: 'request_templates',
+  },
+};
+
+/** An integration declared as a resource: `aws_api_gateway_integration`, `aws_apigatewayv2_integration`. */
+export const resourceIntegration = (instance: Instance, api: 'rest' | 'http'): Integration => {
+  const named = (field: IntegrationField): string | undefined => RESOURCE_FIELDS[api][field];
+  const valueOf = (field: IntegrationField): Value | undefined => {
+    const name = named(field);
+    return name === undefined ? undefined : argument(instance, name);
+  };
+  return {
+    describe: (field) => `${named(field) ?? field} of ${instance.address}`,
+    value: valueOf,
+    text: (field) => {
+      const name = named(field);
+      return name === undefined ? undefined : (textOf(valueOf(field)) ?? textWithHoles(instance, name));
+    },
+    references: (field) => {
+      const name = named(field);
+      return name === undefined ? [] : referencesOf(instance, name);
+    },
+  };
+};
+
+/** The member each field is in a document's extension. */
+const DOCUMENT_FIELDS: Readonly<Record<IntegrationField, string>> = {
+  type: 'type',
+  subtype: 'integrationSubtype',
+  uri: 'uri',
+  parameters: 'requestParameters',
+  templates: 'requestTemplates',
+};
+
+/**
+ * An integration written in a document, with the placeholders the document was
+ * handed over with: a member that is one placeholder is what it stands for.
+ */
+export const documentIntegration = (extension: Readonly<Record<string, unknown>>, where: string, placeholders: Placeholders): Integration => {
+  const valueOf = (json: unknown): Value => {
+    if (typeof json === 'string') return placeholders.valueIn(json);
+    if (Array.isArray(json)) return list(json.map(valueOf));
+    if (json !== null && typeof json === 'object') return object(new Map(Object.entries(json).map(([key, inner]) => [key, valueOf(inner)])));
+    return fromJson(json);
+  };
+  const raw = (field: IntegrationField): unknown => extension[DOCUMENT_FIELDS[field]];
+  return {
+    describe: (field) => `${DOCUMENT_FIELDS[field]} of ${where}`,
+    value: (field) => (raw(field) === undefined ? undefined : valueOf(raw(field))),
+    text: (field) => {
+      const found = raw(field);
+      return typeof found === 'string' ? placeholders.textIn(found) : undefined;
+    },
+    references: (field) => {
+      const found = raw(field);
+      return typeof found === 'string' ? placeholders.referencesIn(found) : [];
+    },
+  };
+};
+
+/** The integration an HTTP or a WebSocket API's route names as its target. */
+export const integrationOfRoute = (route: Instance): Instance | undefined =>
+  referencesOf(route, 'target')
+    .map((value) => (value.kind === 'ref' ? value.target : value.kind === 'instance' ? value.instance : undefined))
+    .find((target) => target?.type === 'aws_apigatewayv2_integration');
+
+/** The type an integration says it is, in one case: a document writes `aws_proxy` where a resource writes `AWS_PROXY`. */
+export const integrationType = (integration: Integration): string | undefined => textOf(integration.value('type'))?.toUpperCase();
+
+const parameter = (integration: Integration, key: string): Value | undefined => {
+  const parameters = integration.value('parameters');
   return parameters?.kind === 'object' ? parameters.entries.get(key) : undefined;
 };
 
@@ -63,10 +162,10 @@ const textField = (value: Value | undefined, field: string): string | Because =>
 const REST_SERVICE = /^arn:[^:]+:apigateway:[^:]*:(sqs|sns|events):(path|action)\/([^/?]*)(.*)$/;
 
 /** The queue a `sqs:path/<account>/<queue>` integration names. */
-const queueInPath = (integration: Instance, rest: string, reading: ResourceReading): Sent => {
+const queueInPath = (integration: Integration, rest: string, reading: ResourceReading): Sent => {
   const queue = rest.split('/')[1]?.split('?')[0];
   if (queue !== undefined && queue !== '' && !queue.includes(HOLE)) return { sends: { kind: 'queue', name: queue } };
-  const referenced = referencesOf(integration, 'uri')
+  const referenced = integration.references('uri')
     .map((value) => deployedOf(value, reading))
     .find((found) => found !== undefined && !isBecause(found) && found.kind === 'queue');
   return referenced !== undefined && !isBecause(referenced)
@@ -75,8 +174,8 @@ const queueInPath = (integration: Instance, rest: string, reading: ResourceReadi
 };
 
 /** The event a `PutEvents` integration's request template writes out. */
-const eventInTemplate = (integration: Instance): Sent => {
-  const templates = argument(integration, 'request_templates');
+const eventInTemplate = (integration: Integration): Sent => {
+  const templates = integration.value('templates');
   const template =
     templates?.kind === 'object' ? [...templates.entries.values()].map(asText).find((text) => text !== undefined) : undefined;
   if (template === undefined) return whyNot(templates, 'the request template');
@@ -88,7 +187,7 @@ const eventInTemplate = (integration: Instance): Sent => {
   );
 };
 
-type RestShape = (integration: Instance, rest: string, reading: ResourceReading) => Sent;
+type RestShape = (integration: Integration, rest: string, reading: ResourceReading) => Sent;
 
 /** REST integrations of type `AWS`, by `<service>:path` or `<service>:action/<action>` as the uri writes them. */
 const REST_SHAPES: ReadonlyMap<string, RestShape> = new Map<string, RestShape>([
@@ -106,7 +205,7 @@ const REST_SHAPES: ReadonlyMap<string, RestShape> = new Map<string, RestShape>([
   ['events:action/PutEvents', (integration) => eventInTemplate(integration)],
 ]);
 
-type HttpShape = (integration: Instance, reading: ResourceReading) => Sent;
+type HttpShape = (integration: Integration, reading: ResourceReading) => Sent;
 
 /** HTTP API integrations, by `integration_subtype`. */
 const HTTP_SHAPES: ReadonlyMap<string, HttpShape> = new Map<string, HttpShape>([
@@ -122,9 +221,9 @@ const HTTP_SHAPES: ReadonlyMap<string, HttpShape> = new Map<string, HttpShape>([
   ],
 ]);
 
-const restSends = (integration: Instance, reading: ResourceReading): Sent | undefined => {
-  if (textOf(argument(integration, 'type')) !== 'AWS') return undefined;
-  const uri = textOf(argument(integration, 'uri')) ?? textWithHoles(integration, 'uri');
+const restSends = (integration: Integration, reading: ResourceReading): Sent | undefined => {
+  if (integrationType(integration) !== 'AWS') return undefined;
+  const uri = integration.text('uri');
   const match = uri === undefined ? null : REST_SERVICE.exec(uri);
   if (match === null) return undefined;
   const [, service, style, action = '', rest = ''] = match;
@@ -132,14 +231,16 @@ const restSends = (integration: Instance, reading: ResourceReading): Sent | unde
   return shape?.(integration, `${action}${rest}`, reading);
 };
 
-const httpSends = (integration: Instance, reading: ResourceReading): Sent | undefined => {
-  const subtype = textOf(argument(integration, 'integration_subtype'));
+const httpSends = (integration: Integration, reading: ResourceReading): Sent | undefined => {
+  const subtype = textOf(integration.value('subtype'));
   return subtype === undefined ? undefined : HTTP_SHAPES.get(subtype)?.(integration, reading);
 };
 
 /**
  * What a route's integration sends to, when it sends to a queue, a topic or a
- * bus rather than invoking a function; `undefined` when it does not.
+ * bus rather than invoking a function; `undefined` when it does not. A REST
+ * shape is recognised by its `uri` and an HTTP API one by its subtype, so one
+ * integration is asked both ways and answers to at most one.
  */
-export const sentBy = (integration: Instance, api: 'rest' | 'http', reading: ResourceReading): Sent | undefined =>
-  api === 'rest' ? restSends(integration, reading) : httpSends(integration, reading);
+export const sentBy = (integration: Integration, reading: ResourceReading): Sent | undefined =>
+  restSends(integration, reading) ?? httpSends(integration, reading);

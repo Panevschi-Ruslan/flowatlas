@@ -68,11 +68,16 @@ const isChannel = (kind: string): boolean => kind === 'queue' || kind === 'topic
  * nothing where that is not known: a target whose input is rewritten
  * (`input_transformer`, `input_path`, `input`), or a pipe, whose target is
  * handed a batch shaped by the pipe.
+ *
+ * A rule that targets another bus puts the same event on it, its message still
+ * at `detail`, where that bus's rules hand it on as they would any event: the
+ * message is forwarded as it was sent (R174).
  */
 export const deliveryEnvelope = (delivery: DeployedDelivery): Envelope | undefined => {
   const { from, to } = delivery;
   if (to === undefined || delivery.by === 'pipe' || delivery.meta?.['transformed'] === true) return undefined;
   if (from.kind !== 'queue' && from.kind !== 'topic' && from.kind !== 'bus') return undefined;
   if (!isChannel(to.kind)) return ENVELOPES[from.kind];
+  if (from.kind === 'bus' && to.kind === 'bus') return AS_SENT;
   return delivery.meta?.['raw'] === true ? AS_SENT : ONWARD[from.kind];
 };

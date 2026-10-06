@@ -1,0 +1,350 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T21:12:42.375Z",
+  "services": [
+    {
+      "name": "reading-room",
+      "repo": "./reading-room",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:reading-room:event:websocket/library-reading-room/$connect",
+      "type": "entry",
+      "label": "event websocket/library-reading-room/$connect",
+      "repo": "reading-room",
+      "file": "infra/websocket.tf",
+      "line": 25,
+      "kind": "event",
+      "meta": {
+        "key": "websocket/library-reading-room/$connect",
+        "by": "route",
+        "declaredAs": "aws_apigatewayv2_route.connect",
+        "deployedBy": "terraform",
+        "api": "library-reading-room",
+        "route": "$connect",
+        "authorization": "CUSTOM",
+        "function": "library-reading-room-connect",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:reading-room:event:websocket/library-reading-room/$default",
+      "type": "entry",
+      "label": "event websocket/library-reading-room/$default",
+      "repo": "reading-room",
+      "file": "infra/websocket.tf",
+      "line": 45,
+      "kind": "event",
+      "meta": {
+        "key": "websocket/library-reading-room/$default",
+        "by": "route",
+        "declaredAs": "aws_apigatewayv2_route.fallback",
+        "deployedBy": "terraform",
+        "api": "library-reading-room",
+        "route": "$default",
+        "function": "library-reading-room-fallback",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:reading-room:event:websocket/library-reading-room/$disconnect",
+      "type": "entry",
+      "label": "event websocket/library-reading-room/$disconnect",
+      "repo": "reading-room",
+      "file": "infra/websocket.tf",
+      "line": 33,
+      "kind": "event",
+      "meta": {
+        "key": "websocket/library-reading-room/$disconnect",
+        "by": "route",
+        "declaredAs": "aws_apigatewayv2_route.disconnect",
+        "deployedBy": "terraform",
+        "api": "library-reading-room",
+        "route": "$disconnect",
+        "function": "library-reading-room-disconnect",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:reading-room:event:websocket/library-reading-room/askLibrarian",
+      "type": "entry",
+      "label": "event websocket/library-reading-room/askLibrarian",
+      "repo": "reading-room",
+      "file": "infra/websocket.tf",
+      "line": 39,
+      "kind": "event",
+      "meta": {
+        "key": "websocket/library-reading-room/askLibrarian",
+        "by": "route",
+        "declaredAs": "aws_apigatewayv2_route.ask_librarian",
+        "deployedBy": "terraform",
+        "api": "library-reading-room",
+        "route": "askLibrarian",
+        "function": "library-reading-room-ask",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:reading-room:invoke:library-reading-room-ask",
+      "type": "entry",
+      "label": "library-reading-room-ask",
+      "repo": "reading-room",
+      "file": "infra/main.tf",
+      "line": 36,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-reading-room-ask",
+        "deployedBy": "terraform",
+        "name": "library-reading-room-ask",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.route[\"ask\"]",
+        "handler": "messages/ask-librarian.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyWebsocketEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:reading-room:invoke:library-reading-room-connect",
+      "type": "entry",
+      "label": "library-reading-room-connect",
+      "repo": "reading-room",
+      "file": "infra/main.tf",
+      "line": 36,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-reading-room-connect",
+        "deployedBy": "terraform",
+        "name": "library-reading-room-connect",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.route[\"connect\"]",
+        "handler": "connections/on-connect.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyWebsocketEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:reading-room:invoke:library-reading-room-disconnect",
+      "type": "entry",
+      "label": "library-reading-room-disconnect",
+      "repo": "reading-room",
+      "file": "infra/main.tf",
+      "line": 36,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-reading-room-disconnect",
+        "deployedBy": "terraform",
+        "name": "library-reading-room-disconnect",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.route[\"disconnect\"]",
+        "handler": "connections/on-disconnect.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyWebsocketEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:reading-room:invoke:library-reading-room-fallback",
+      "type": "entry",
+      "label": "library-reading-room-fallback",
+      "repo": "reading-room",
+      "file": "infra/main.tf",
+      "line": 36,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-reading-room-fallback",
+        "deployedBy": "terraform",
+        "name": "library-reading-room-fallback",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.route[\"fallback\"]",
+        "handler": "messages/unknown-action.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyWebsocketEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "reading-room#src/connections/connections-table.ts:forget",
+      "type": "function",
+      "label": "forget",
+      "repo": "reading-room",
+      "file": "src/connections/connections-table.ts",
+      "line": 7
+    },
+    {
+      "id": "reading-room#src/connections/connections-table.ts:remember",
+      "type": "function",
+      "label": "remember",
+      "repo": "reading-room",
+      "file": "src/connections/connections-table.ts",
+      "line": 3
+    },
+    {
+      "id": "reading-room#src/connections/on-connect.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "reading-room",
+      "file": "src/connections/on-connect.ts",
+      "line": 5
+    },
+    {
+      "id": "reading-room#src/connections/on-disconnect.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "reading-room",
+      "file": "src/connections/on-disconnect.ts",
+      "line": 5
+    },
+    {
+      "id": "reading-room#src/messages/ask-librarian.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "reading-room",
+      "file": "src/messages/ask-librarian.ts",
+      "line": 6
+    },
+    {
+      "id": "reading-room#src/messages/unknown-action.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "reading-room",
+      "file": "src/messages/unknown-action.ts",
+      "line": 4
+    },
+    {
+      "id": "repo:reading-room",
+      "type": "repo",
+      "label": "reading-room",
+      "repo": "reading-room",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:reading-room:event:websocket/library-reading-room/$connect",
+      "to": "reading-room#src/connections/on-connect.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/connections/on-connect.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:reading-room:event:websocket/library-reading-room/$default",
+      "to": "reading-room#src/messages/unknown-action.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/messages/unknown-action.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:reading-room:event:websocket/library-reading-room/$disconnect",
+      "to": "reading-room#src/connections/on-disconnect.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/connections/on-disconnect.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:reading-room:event:websocket/library-reading-room/askLibrarian",
+      "to": "reading-room#src/messages/ask-librarian.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/messages/ask-librarian.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:reading-room:invoke:library-reading-room-ask",
+      "to": "reading-room#src/messages/ask-librarian.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/messages/ask-librarian.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:reading-room:invoke:library-reading-room-connect",
+      "to": "reading-room#src/connections/on-connect.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/connections/on-connect.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:reading-room:invoke:library-reading-room-disconnect",
+      "to": "reading-room#src/connections/on-disconnect.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/connections/on-disconnect.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:reading-room:invoke:library-reading-room-fallback",
+      "to": "reading-room#src/messages/unknown-action.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/messages/unknown-action.ts",
+      "line": 4
+    },
+    {
+      "from": "reading-room#src/connections/on-connect.ts:handler",
+      "to": "reading-room#src/connections/connections-table.ts:remember",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/connections/on-connect.ts",
+      "line": 6
+    },
+    {
+      "from": "reading-room#src/connections/on-disconnect.ts:handler",
+      "to": "reading-room#src/connections/connections-table.ts:forget",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/connections/on-disconnect.ts",
+      "line": 6
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyWebsocketEventV2": {
+      "name": "APIGatewayProxyWebsocketEventV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2c155b64277516dc",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": []
+}

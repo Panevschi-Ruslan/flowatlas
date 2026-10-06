@@ -1,0 +1,12 @@
+{
+  "name": "lending-library-circulation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Loans, returns and holds for a lending library: two APIs created from OpenAPI documents, in front of Lambda functions and SQS queues.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

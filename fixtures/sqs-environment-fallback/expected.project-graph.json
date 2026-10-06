@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T18:25:28.923Z",
+  "builtAt": "2026-10-06T21:13:53.008Z",
   "services": [
     {
       "name": "returns",
@@ -111,7 +111,15 @@
         "adapter": "aws-sqs",
         "by": "mapping",
         "declaredAs": "aws_lambda_event_source_mapping.process_priority_returns",
-        "deployedBy": "terraform"
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
       }
     },
     {
@@ -127,7 +135,15 @@
         "adapter": "aws-sqs",
         "by": "mapping",
         "declaredAs": "aws_lambda_event_source_mapping.process_returns",
-        "deployedBy": "terraform"
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
       }
     },
     {
@@ -191,6 +207,9 @@
             "value": "25"
           }
         },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -218,6 +237,10 @@
             "kind": "bus"
           }
         },
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "type:returns#ReturnedItem"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -244,6 +267,9 @@
             "value": "library-priority-returns",
             "kind": "queue"
           }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
         },
         "adapter": "aws-lambda"
       }
@@ -638,6 +664,26 @@
     }
   ],
   "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
     "type:returns#ReturnedItem": {
       "name": "ReturnedItem",
       "kind": "object",

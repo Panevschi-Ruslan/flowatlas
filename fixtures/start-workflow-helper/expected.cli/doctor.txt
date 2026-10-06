@@ -1,9 +1,9 @@
 unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
 
-unresolved: 0 to act on over 1 row, and 3 places static reading cannot see, folded into 1
-  call-dynamic-receiver (info): 1 row over 3 places
+unresolved: 0 to act on over 1 row, and 1 place static reading cannot see, folded into 1
+  call-dynamic-receiver (info): 1 row
     The receiver has no single class type; inject a class to make the edge visible.
-      loans/src/handlers/create-loan.ts:16  handler -> orchestrator.run
+      loans/src/handlers/renew-loan.ts:13  handler -> scheduler.schedule
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked

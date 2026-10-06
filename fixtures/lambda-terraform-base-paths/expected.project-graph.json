@@ -1,0 +1,449 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T21:12:36.438Z",
+  "services": [
+    {
+      "name": "catalogue",
+      "repo": "./catalogue",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalogue#src/holds/place-hold.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalogue",
+      "file": "src/holds/place-hold.ts",
+      "line": 6
+    },
+    {
+      "id": "catalogue#src/items/get-item.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalogue",
+      "file": "src/items/get-item.ts",
+      "line": 5
+    },
+    {
+      "id": "catalogue#src/items/items-table.ts:findItem",
+      "type": "function",
+      "label": "findItem",
+      "repo": "catalogue",
+      "file": "src/items/items-table.ts",
+      "line": 8
+    },
+    {
+      "id": "config_key:kiosk#LIBRARY_API_URL",
+      "type": "config_key",
+      "label": "LIBRARY_API_URL",
+      "repo": "kiosk",
+      "file": "src/kiosk/check-item.ts",
+      "line": 9,
+      "meta": {
+        "key": "LIBRARY_API_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:catalogue:http:GET:/v1/items/:param",
+      "type": "entry",
+      "label": "GET /v1/items/:param",
+      "repo": "catalogue",
+      "file": "infra/catalogue-api.tf",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v1/items/:param",
+        "rawPath": "/items/{itemId}",
+        "deployedBy": "terraform",
+        "api": "library-catalogue",
+        "function": "library-catalogue-get-item",
+        "declaredAs": "aws_api_gateway_method.get_item",
+        "basePath": "/v1",
+        "domains": [
+          "api.library.example"
+        ],
+        "stages": [
+          "live"
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:http:POST:/holds/requests",
+      "type": "entry",
+      "label": "POST /holds/requests",
+      "repo": "catalogue",
+      "file": "infra/holds-api.tf",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/holds/requests",
+        "rawPath": "/requests",
+        "deployedBy": "terraform",
+        "api": "library-holds",
+        "function": "library-catalogue-place-hold",
+        "declaredAs": "aws_apigatewayv2_route.place_hold",
+        "basePath": "/holds",
+        "domains": [
+          "api.library.example"
+        ],
+        "stages": [
+          "$default"
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:invoke:library-catalogue-get-item",
+      "type": "entry",
+      "label": "library-catalogue-get-item",
+      "repo": "catalogue",
+      "file": "infra/main.tf",
+      "line": 24,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-catalogue-get-item",
+        "deployedBy": "terraform",
+        "name": "library-catalogue-get-item",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.get_item",
+        "handler": "items/get-item.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalogue:invoke:library-catalogue-place-hold",
+      "type": "entry",
+      "label": "library-catalogue-place-hold",
+      "repo": "catalogue",
+      "file": "infra/main.tf",
+      "line": 32,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-catalogue-place-hold",
+        "deployedBy": "terraform",
+        "name": "library-catalogue-place-hold",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.place_hold",
+        "handler": "holds/place-hold.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:kiosk:invoke:library-kiosk-check-item",
+      "type": "entry",
+      "label": "library-kiosk-check-item",
+      "repo": "kiosk",
+      "file": "infra/main.tf",
+      "line": 31,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-kiosk-check-item",
+        "deployedBy": "terraform",
+        "name": "library-kiosk-check-item",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.check_item",
+        "handler": "kiosk/check-item.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "LIBRARY_API_URL": {
+            "written": "\"https://api.library.example\"",
+            "value": "https://api.library.example"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:kiosk:invoke:library-kiosk-request-hold",
+      "type": "entry",
+      "label": "library-kiosk-request-hold",
+      "repo": "kiosk",
+      "file": "infra/main.tf",
+      "line": 43,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-kiosk-request-hold",
+        "deployedBy": "terraform",
+        "name": "library-kiosk-request-hold",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.request_hold",
+        "handler": "kiosk/request-hold.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "LIBRARY_API_URL": {
+            "written": "\"https://api.library.example\"",
+            "value": "https://api.library.example"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "http_out:kiosk#src/kiosk/check-item.ts:9:26",
+      "type": "http_out",
+      "label": "GET /v1/items/:param",
+      "repo": "kiosk",
+      "file": "src/kiosk/check-item.ts",
+      "line": 9,
+      "meta": {
+        "method": "GET",
+        "url": "${LIBRARY_API_URL}/v1/items/${…}",
+        "path": "/v1/items/:param",
+        "baseUrlEnv": "LIBRARY_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "catalogue"
+      }
+    },
+    {
+      "id": "http_out:kiosk#src/kiosk/request-hold.ts:5:26",
+      "type": "http_out",
+      "label": "POST /holds/requests",
+      "repo": "kiosk",
+      "file": "src/kiosk/request-hold.ts",
+      "line": 5,
+      "meta": {
+        "method": "POST",
+        "url": "${LIBRARY_API_URL}/holds/requests",
+        "path": "/holds/requests",
+        "baseUrlEnv": "LIBRARY_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "catalogue"
+      }
+    },
+    {
+      "id": "kiosk#src/kiosk/check-item.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "kiosk",
+      "file": "src/kiosk/check-item.ts",
+      "line": 7
+    },
+    {
+      "id": "kiosk#src/kiosk/request-hold.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "kiosk",
+      "file": "src/kiosk/request-hold.ts",
+      "line": 4
+    },
+    {
+      "id": "repo:catalogue",
+      "type": "repo",
+      "label": "catalogue",
+      "repo": "catalogue",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:kiosk",
+      "type": "repo",
+      "label": "kiosk",
+      "repo": "kiosk",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "catalogue#src/items/get-item.ts:handler",
+      "to": "catalogue#src/items/items-table.ts:findItem",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/get-item.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:catalogue:http:GET:/v1/items/:param",
+      "to": "catalogue#src/items/get-item.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/items/get-item.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:catalogue:http:POST:/holds/requests",
+      "to": "catalogue#src/holds/place-hold.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/holds/place-hold.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:catalogue:invoke:library-catalogue-get-item",
+      "to": "catalogue#src/items/get-item.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/items/get-item.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:catalogue:invoke:library-catalogue-place-hold",
+      "to": "catalogue#src/holds/place-hold.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/holds/place-hold.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:kiosk:invoke:library-kiosk-check-item",
+      "to": "kiosk#src/kiosk/check-item.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/kiosk/check-item.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:kiosk:invoke:library-kiosk-request-hold",
+      "to": "kiosk#src/kiosk/request-hold.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/kiosk/request-hold.ts",
+      "line": 4
+    },
+    {
+      "from": "http_out:kiosk#src/kiosk/check-item.ts:9:26",
+      "to": "entry:catalogue:http:GET:/v1/items/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/kiosk/check-item.ts",
+      "line": 9,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "catalogue"
+      }
+    },
+    {
+      "from": "http_out:kiosk#src/kiosk/request-hold.ts:5:26",
+      "to": "entry:catalogue:http:POST:/holds/requests",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/kiosk/request-hold.ts",
+      "line": 5,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "catalogue"
+      }
+    },
+    {
+      "from": "kiosk#src/kiosk/check-item.ts:handler",
+      "to": "config_key:kiosk#LIBRARY_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/kiosk/check-item.ts",
+      "line": 9,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-kiosk-check-item",
+            "written": "\"https://api.library.example\"",
+            "value": "https://api.library.example"
+          }
+        ]
+      }
+    },
+    {
+      "from": "kiosk#src/kiosk/check-item.ts:handler",
+      "to": "http_out:kiosk#src/kiosk/check-item.ts:9:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/kiosk/check-item.ts",
+      "line": 9
+    },
+    {
+      "from": "kiosk#src/kiosk/request-hold.ts:handler",
+      "to": "config_key:kiosk#LIBRARY_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/kiosk/request-hold.ts",
+      "line": 5,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-kiosk-request-hold",
+            "written": "\"https://api.library.example\"",
+            "value": "https://api.library.example"
+          }
+        ]
+      }
+    },
+    {
+      "from": "kiosk#src/kiosk/request-hold.ts:handler",
+      "to": "http_out:kiosk#src/kiosk/request-hold.ts:5:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/kiosk/request-hold.ts",
+      "line": 5
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": []
+}

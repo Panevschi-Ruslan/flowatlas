@@ -1,0 +1,45 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-06T21:12:41.107Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:circulation#infra/api.tf:aws_apigatewayv2_api.kiosk.body.paths[\"/holds\"].post",
+        "to": "consumer:circulation#infra/functions.tf:aws_lambda_event_source_mapping.holds",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#infra/api.tf:aws_apigatewayv2_api.kiosk.body.paths[\"/holds\"].post|emits|consumer:circulation#infra/functions.tf:aws_lambda_event_source_mapping.holds",
+      "direction": "payload",
+      "reason": "sender-forwards",
+      "message": "producer:circulation#infra/api.tf:aws_apigatewayv2_api.kiosk.body.paths[\"/holds\"].post hands on what it is given, and nothing declares its shape",
+      "hint": "Nothing to change at this end. A message forwarded from a channel is compared from the publisher that wrote it when the forwarding wrapping is known; a request a route sends straight to a channel has no declared shape."
+    },
+    {
+      "edge": {
+        "from": "producer:circulation#infra/openapi.yaml:aws_api_gateway_rest_api.circulation.body.paths[\"/returns\"].post",
+        "to": "consumer:circulation#infra/functions.tf:aws_lambda_event_source_mapping.returns",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#infra/openapi.yaml:aws_api_gateway_rest_api.circulation.body.paths[\"/returns\"].post|emits|consumer:circulation#infra/functions.tf:aws_lambda_event_source_mapping.returns",
+      "direction": "payload",
+      "reason": "sender-forwards",
+      "message": "producer:circulation#infra/openapi.yaml:aws_api_gateway_rest_api.circulation.body.paths[\"/returns\"].post hands on what it is given, and nothing declares its shape",
+      "hint": "Nothing to change at this end. A message forwarded from a channel is compared from the publisher that wrote it when the forwarding wrapping is known; a request a route sends straight to a channel has no declared shape."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 2,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

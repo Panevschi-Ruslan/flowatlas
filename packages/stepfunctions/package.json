@@ -47,8 +47,7 @@
   },
   "dependencies": {
     "@flowatlas/aws": "workspace:*",
-    "@flowatlas/core": "workspace:*",
-    "yaml": "^2.9.1"
+    "@flowatlas/core": "workspace:*"
   },
   "private": true
 }

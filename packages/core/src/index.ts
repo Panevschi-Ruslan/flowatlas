@@ -180,8 +180,10 @@ export type {
 export {
   ADDRESS_SEPARATOR,
   AWAITING_META,
+  CHANNEL_FORWARD_META,
   CHANNEL_PATTERN_META,
   ENVIRONMENT_META,
+  forwardedName,
   matchChannelPattern,
   nameInForms,
   nameWithin,
@@ -189,10 +191,23 @@ export {
 export type {
   AwaitedAddress,
   AwaitedPart,
+  ChannelForward,
   ChannelPattern,
   EnvironmentValue,
   PatternMatch,
 } from './channel-pattern.js';
+export { OPERATION_VERBS, operationsOf } from './declared-operations.js';
+export type { DeclaredOperation } from './declared-operations.js';
+export {
+  documentOf,
+  DocumentSyntaxError,
+  fromValue,
+  readDocument,
+  readJson,
+  readYaml,
+  shifted,
+} from './positioned-document.js';
+export type { DefinitionFormat, PathStep, PositionedDocument } from './positioned-document.js';
 
 export {
   applicationOfFile,

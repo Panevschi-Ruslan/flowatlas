@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DocumentSyntaxError, fromValue, readDocument, readJson, readYaml } from './source.js';
+import { DocumentSyntaxError, fromValue, readDocument, readJson, readYaml } from './positioned-document.js';
 
 describe('readJson', () => {
   const text = ['{', '  "StartAt": "CheckHolds",', '  "States": {', '    "CheckHolds": { "Type": "Pass", "End": true }', '  },', '  "Tags": ["a", "b"]', '}'].join('\n');

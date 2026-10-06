@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T18:23:31.804Z",
+  "builtAt": "2026-10-06T21:12:43.489Z",
   "services": [
     {
       "name": "lending",
@@ -59,6 +59,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "{borrowerId:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -86,6 +89,9 @@
             "kind": "workflow"
           }
         },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -107,6 +113,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "{borrowerId:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -126,6 +135,10 @@
         "states": 2,
         "queryLanguage": "JSONPath",
         "comment": "Approves a loan: checks the borrower, then scores them.",
+        "reads": {
+          "": "{borrowerId:unknown}"
+        },
+        "carriesOn": true,
         "deployedBy": "terraform",
         "declaredAs": "aws_sfn_state_machine.loan_approval",
         "definitionFrom": "file",
@@ -245,6 +258,11 @@
         "adapter": "aws-stepfunctions",
         "method": "send",
         "starts": "workflow",
+        "envelope": {
+          "at": [],
+          "text": false
+        },
+        "payload": "type:lending#Loan",
         "confidence": "static",
         "awaiting": [
           {
@@ -427,6 +445,74 @@
       }
     }
   ],
-  "types": {},
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:lending#Loan": {
+      "name": "Loan",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/loans.ts",
+      "structuralHash": "642e5e2619bf9e1c",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "requestedAt",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemIds",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true,
+        "extends": [
+          "type:lending#LoanRequest"
+        ]
+      }
+    },
+    "type:lending#LoanRequest": {
+      "name": "LoanRequest",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/loans.ts",
+      "structuralHash": "07210ddb6676fb42",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemIds",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
   "unresolved": []
 }

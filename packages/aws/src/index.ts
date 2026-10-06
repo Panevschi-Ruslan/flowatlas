@@ -22,6 +22,7 @@ export {
   EVENT_NAME_FIELDS,
   eventChannel,
   eventChannelPattern,
+  forwardedToBus,
   queueChannel,
   topicChannel,
 } from './channels.js';

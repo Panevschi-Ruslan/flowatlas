@@ -572,7 +572,10 @@ export const deployedFunctionsAdapter: EntryAdapter = {
             ...(fn === undefined ? {} : { function: fn.name ?? fn.address }),
             ...(target !== undefined && 'name' in target ? { invokes: target.name } : {}),
             ...(route.root === undefined ? {} : { root: route.root.key, below: route.root.below }),
-            ...(route.meta === undefined ? {} : { declaredAs: route.meta['declaredAs'] }),
+            // What the reader records about the route - where it is declared,
+            // the domains, base path and stages it is reached at - less the
+            // key, which is the entry's own.
+            ...Object.fromEntries(Object.entries(route.meta ?? {}).filter(([name]) => name !== 'key')),
             ...(target === undefined ? { integration: 'none' } : {}),
             ...(target !== undefined && 'sends' in target ? { integration: target.sends.kind, ...(sends === undefined ? {} : { [SENDS_META]: sends }) } : {}),
           },

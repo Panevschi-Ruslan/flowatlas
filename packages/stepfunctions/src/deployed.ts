@@ -1,8 +1,7 @@
-import { makeUnnamedWorkflowKey, type DeployedDefinition, type DeployedWorkflow } from '@flowatlas/core';
+import { documentOf, DocumentSyntaxError, makeUnnamedWorkflowKey, type DeployedWorkflow, type PositionedDocument } from '@flowatlas/core';
 import { readStateMachine } from './definition.js';
 import { emitWorkflow, type WorkflowFragment } from './emit.js';
 import { unreadableDefinition } from './pass.js';
-import { DocumentSyntaxError, readDocument, shifted, type PositionedDocument } from './source.js';
 
 /**
  * A workflow a deployment declares, drawn.
@@ -15,12 +14,6 @@ import { DocumentSyntaxError, readDocument, shifted, type PositionedDocument } f
  * out of it, and draw them, with the placeholders answered by the deployment
  * and the name certain because the deployment states it.
  */
-
-/** The definition a deployment hands over, as the document the reader of definitions reads. */
-const documentOf = (definition: DeployedDefinition): PositionedDocument =>
-  definition.kind === 'value'
-    ? { value: definition.value, at: (path) => definition.at(path) }
-    : shifted(readDocument(definition.text, definition.format), definition.firstLine - 1);
 
 export const drawDeployedWorkflow = (workflow: DeployedWorkflow, service: string): WorkflowFragment => {
   const { definition } = workflow;

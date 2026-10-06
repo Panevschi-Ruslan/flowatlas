@@ -164,10 +164,17 @@ export type DeliverySource =
   /** A clock: `expression` as the deployment writes it, when read. */
   | { readonly kind: 'schedule'; readonly expression?: string }
   /** The changes to a table, or the records of a stream, read in order. */
-  | { readonly kind: 'changes'; readonly of: 'table' | 'stream'; readonly name: string };
+  | { readonly kind: 'changes'; readonly of: 'table' | 'stream'; readonly name: string }
+  /**
+   * Messages on the connections a socket API holds open, by the route its
+   * selection gives them - one of the API's own (`$connect`) or a value read out
+   * of the message. `api` is the API's name, or where it is declared when its
+   * name is not read.
+   */
+  | { readonly kind: 'connection'; readonly api: string; readonly route: string };
 
 /** What declares a delivery. */
-export type DeliveryKind = 'rule' | 'subscription' | 'mapping' | 'schedule' | 'pipe' | 'redrive';
+export type DeliveryKind = 'rule' | 'subscription' | 'mapping' | 'schedule' | 'pipe' | 'redrive' | 'route';
 
 /**
  * One way messages reach something: a rule's target, a subscription, a mapping

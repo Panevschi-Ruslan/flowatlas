@@ -11,6 +11,7 @@ import {
   READS_META,
   STEP_OF_META,
   STEPS_META,
+  type DefinitionPosition as Position,
   type GraphEdge,
   type GraphNode,
   type MessageTarget,
@@ -19,7 +20,6 @@ import {
 import type { State, StateMachine, Transition } from './definition.js';
 import { requiredInput } from './input.js';
 import { functionReference, workflowReference } from './references.js';
-import type { Position } from './source.js';
 import { classifyTask, type ChannelTarget, type Task, type TaskTargetKind } from './tasks.js';
 import { NO_TEMPLATE_VALUES, type Reading, type TemplateValues, type UnreadCause } from './values.js';
 

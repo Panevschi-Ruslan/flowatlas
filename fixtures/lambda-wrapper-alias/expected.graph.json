@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "lending-library-desk",
-  "generatedAt": "2026-10-06T18:23:34.289Z",
+  "generatedAt": "2026-10-06T21:12:44.779Z",
   "nodes": [
     {
       "id": "entry:lending-library-desk:invoke:library-desk-cancel-hold",
@@ -21,6 +21,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "wrapped",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -42,6 +45,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "inline",
         "environment": {},
+        "reads": {
+          "": "type:lending-library-desk#CreateLoanEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -84,6 +90,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "wrapped",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -105,6 +114,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "wrapped",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -391,7 +403,35 @@
       "line": 10
     }
   ],
-  "types": {},
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:lending-library-desk#CreateLoanEvent": {
+      "name": "CreateLoanEvent",
+      "kind": "object",
+      "declaredIn": "lending-library-desk#src/handlers/create-loan.ts",
+      "structuralHash": "cd55c224a818dfe2",
+      "fields": [
+        {
+          "name": "body",
+          "type": "{borrowerId:string;isbn:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "infra/functions.tf",

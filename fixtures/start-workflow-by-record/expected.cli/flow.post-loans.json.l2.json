@@ -61,6 +61,10 @@
                 "adapter": "starters",
                 "method": "start",
                 "starts": "workflow",
+                "envelope": {
+                  "at": [],
+                  "text": false
+                },
                 "confidence": "declared",
                 "reaches": [
                   "workflow:lending-loan-approval"
@@ -88,6 +92,10 @@
                     "states": 1,
                     "queryLanguage": "JSONPath",
                     "comment": "Approves a loan: checks the borrower.",
+                    "reads": {
+                      "": "{borrowerId:unknown}"
+                    },
+                    "carriesOn": true,
                     "deployedBy": "terraform",
                     "declaredAs": "aws_sfn_state_machine.loan_approval",
                     "definitionFrom": "file",
@@ -152,6 +160,9 @@
                             "sourceDirectory": "src",
                             "handlerVia": "function",
                             "environment": {},
+                            "reads": {
+                              "": "{borrowerId:string}"
+                            },
                             "adapter": "aws-lambda"
                           }
                         },

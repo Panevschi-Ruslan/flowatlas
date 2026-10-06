@@ -1,0 +1,740 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T21:12:40.820Z",
+  "services": [
+    {
+      "name": "circulation",
+      "repo": "./circulation",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:sqs/library-hold-requests",
+      "type": "channel",
+      "label": "sqs/library-hold-requests",
+      "repo": "circulation",
+      "file": "infra/api.tf",
+      "line": 44,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/library-returns",
+      "type": "channel",
+      "label": "sqs/library-returns",
+      "repo": "circulation",
+      "file": "infra/openapi.yaml",
+      "line": 41,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "circulation#infra/openapi.yaml:librarians",
+      "type": "guard",
+      "label": "librarians",
+      "repo": "circulation",
+      "file": "infra/openapi.yaml",
+      "line": 16,
+      "kind": "authorizer"
+    },
+    {
+      "id": "circulation#src/catalogue/get-item.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "circulation",
+      "file": "src/catalogue/get-item.ts",
+      "line": 6
+    },
+    {
+      "id": "circulation#src/holds/place-hold.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "circulation",
+      "file": "src/holds/place-hold.ts",
+      "line": 6
+    },
+    {
+      "id": "circulation#src/loans/create-loan.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "circulation",
+      "file": "src/loans/create-loan.ts",
+      "line": 5
+    },
+    {
+      "id": "circulation#src/loans/get-loan.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "circulation",
+      "file": "src/loans/get-loan.ts",
+      "line": 5
+    },
+    {
+      "id": "circulation#src/loans/loans-table.ts:findLoan",
+      "type": "function",
+      "label": "findLoan",
+      "repo": "circulation",
+      "file": "src/loans/loans-table.ts",
+      "line": 14
+    },
+    {
+      "id": "circulation#src/loans/loans-table.ts:saveLoan",
+      "type": "function",
+      "label": "saveLoan",
+      "repo": "circulation",
+      "file": "src/loans/loans-table.ts",
+      "line": 10
+    },
+    {
+      "id": "circulation#src/loans/renew-loan.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "circulation",
+      "file": "src/loans/renew-loan.ts",
+      "line": 5
+    },
+    {
+      "id": "circulation#src/returns/process-return.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "circulation",
+      "file": "src/returns/process-return.ts",
+      "line": 6
+    },
+    {
+      "id": "consumer:circulation#infra/functions.tf:aws_lambda_event_source_mapping.holds",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.holds",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 60,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.holds",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:circulation#infra/functions.tf:aws_lambda_event_source_mapping.returns",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.returns",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 55,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.returns",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:circulation:http:GET:/items/:param",
+      "type": "entry",
+      "label": "GET /items/:param",
+      "repo": "circulation",
+      "file": "infra/api.tf",
+      "line": 58,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items/:param",
+        "rawPath": "/items/{itemId}",
+        "deployedBy": "terraform",
+        "api": "library-kiosk",
+        "function": "library-get-item",
+        "declaredAs": "aws_apigatewayv2_api.kiosk.body.paths[\"/items/{itemId}\"].get",
+        "stages": [
+          "$default"
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:http:GET:/loans/:param",
+      "type": "entry",
+      "label": "GET /loans/:param",
+      "repo": "circulation",
+      "file": "infra/openapi.yaml",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/loans/:param",
+        "rawPath": "/loans/{loanId}",
+        "deployedBy": "terraform",
+        "api": "library-circulation",
+        "function": "library-get-loan",
+        "declaredAs": "aws_api_gateway_rest_api.circulation.body.paths[\"/loans/{loanId}\"].get",
+        "stages": [
+          "live"
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:http:POST:/holds",
+      "type": "entry",
+      "label": "POST /holds",
+      "repo": "circulation",
+      "file": "infra/api.tf",
+      "line": 44,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/holds",
+        "rawPath": "/holds",
+        "deployedBy": "terraform",
+        "api": "library-kiosk",
+        "declaredAs": "aws_apigatewayv2_api.kiosk.body.paths[\"/holds\"].post",
+        "stages": [
+          "$default"
+        ],
+        "integration": "queue",
+        "sends": "sqs/library-hold-requests",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:http:POST:/loans",
+      "type": "entry",
+      "label": "POST /loans",
+      "repo": "circulation",
+      "file": "infra/openapi.yaml",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "deployedBy": "terraform",
+        "api": "library-circulation",
+        "function": "library-create-loan",
+        "declaredAs": "aws_api_gateway_rest_api.circulation.body.paths[\"/loans\"].post",
+        "stages": [
+          "live"
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:http:POST:/loans/:param/renewals",
+      "type": "entry",
+      "label": "POST /loans/:param/renewals",
+      "repo": "circulation",
+      "file": "infra/openapi.yaml",
+      "line": 32,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans/:param/renewals",
+        "rawPath": "/loans/{loanId}/renewals",
+        "deployedBy": "terraform",
+        "api": "library-circulation",
+        "function": "library-renew-loan",
+        "declaredAs": "aws_api_gateway_rest_api.circulation.body.paths[\"/loans/{loanId}/renewals\"].post",
+        "stages": [
+          "live"
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:http:POST:/returns",
+      "type": "entry",
+      "label": "POST /returns",
+      "repo": "circulation",
+      "file": "infra/openapi.yaml",
+      "line": 41,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/returns",
+        "rawPath": "/returns",
+        "deployedBy": "terraform",
+        "api": "library-circulation",
+        "declaredAs": "aws_api_gateway_rest_api.circulation.body.paths[\"/returns\"].post",
+        "stages": [
+          "live"
+        ],
+        "integration": "queue",
+        "sends": "sqs/library-returns",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:invoke:library-create-loan",
+      "type": "entry",
+      "label": "library-create-loan",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 1,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-create-loan",
+        "deployedBy": "terraform",
+        "name": "library-create-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.create_loan",
+        "handler": "loans/create-loan.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:invoke:library-get-item",
+      "type": "entry",
+      "label": "library-get-item",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 46,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-get-item",
+        "deployedBy": "terraform",
+        "name": "library-get-item",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.get_item",
+        "handler": "catalogue/get-item.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:invoke:library-get-loan",
+      "type": "entry",
+      "label": "library-get-loan",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 10,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-get-loan",
+        "deployedBy": "terraform",
+        "name": "library-get-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.get_loan",
+        "handler": "loans/get-loan.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:invoke:library-place-hold",
+      "type": "entry",
+      "label": "library-place-hold",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-place-hold",
+        "deployedBy": "terraform",
+        "name": "library-place-hold",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.place_hold",
+        "handler": "holds/place-hold.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "{itemId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:invoke:library-process-return",
+      "type": "entry",
+      "label": "library-process-return",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 28,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-process-return",
+        "deployedBy": "terraform",
+        "name": "library-process-return",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.process_return",
+        "handler": "returns/process-return.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "{itemId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:circulation:invoke:library-renew-loan",
+      "type": "entry",
+      "label": "library-renew-loan",
+      "repo": "circulation",
+      "file": "infra/functions.tf",
+      "line": 19,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-renew-loan",
+        "deployedBy": "terraform",
+        "name": "library-renew-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.renew_loan",
+        "handler": "loans/renew-loan.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "producer:circulation#infra/api.tf:aws_apigatewayv2_api.kiosk.body.paths[\"/holds\"].post",
+      "type": "producer",
+      "label": "message sqs/library-hold-requests",
+      "repo": "circulation",
+      "file": "infra/api.tf",
+      "line": 44,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "route",
+        "declaredAs": "aws_apigatewayv2_api.kiosk.body.paths[\"/holds\"].post",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "producer:circulation#infra/openapi.yaml:aws_api_gateway_rest_api.circulation.body.paths[\"/returns\"].post",
+      "type": "producer",
+      "label": "message sqs/library-returns",
+      "repo": "circulation",
+      "file": "infra/openapi.yaml",
+      "line": 41,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "route",
+        "declaredAs": "aws_api_gateway_rest_api.circulation.body.paths[\"/returns\"].post",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "repo:circulation",
+      "type": "repo",
+      "label": "circulation",
+      "repo": "circulation",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:sqs/library-hold-requests",
+      "to": "consumer:circulation#infra/functions.tf:aws_lambda_event_source_mapping.holds",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/functions.tf",
+      "line": 60,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/library-returns",
+      "to": "consumer:circulation#infra/functions.tf:aws_lambda_event_source_mapping.returns",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/functions.tf",
+      "line": 55,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "circulation#src/loans/create-loan.ts:handler",
+      "to": "circulation#src/loans/loans-table.ts:saveLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loans/create-loan.ts",
+      "line": 8
+    },
+    {
+      "from": "circulation#src/loans/get-loan.ts:handler",
+      "to": "circulation#src/loans/loans-table.ts:findLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loans/get-loan.ts",
+      "line": 6
+    },
+    {
+      "from": "circulation#src/loans/renew-loan.ts:handler",
+      "to": "circulation#src/loans/loans-table.ts:findLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loans/renew-loan.ts",
+      "line": 6
+    },
+    {
+      "from": "circulation#src/loans/renew-loan.ts:handler",
+      "to": "circulation#src/loans/loans-table.ts:saveLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loans/renew-loan.ts",
+      "line": 8
+    },
+    {
+      "from": "consumer:circulation#infra/functions.tf:aws_lambda_event_source_mapping.holds",
+      "to": "entry:circulation:invoke:library-place-hold",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/functions.tf",
+      "line": 60,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:circulation#infra/functions.tf:aws_lambda_event_source_mapping.returns",
+      "to": "entry:circulation:invoke:library-process-return",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/functions.tf",
+      "line": 55,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:circulation:http:GET:/items/:param",
+      "to": "circulation#src/catalogue/get-item.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalogue/get-item.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:circulation:http:GET:/loans/:param",
+      "to": "circulation#infra/openapi.yaml:librarians",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "infra/openapi.yaml",
+      "line": 16,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:circulation:http:GET:/loans/:param",
+      "to": "circulation#src/loans/get-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/get-loan.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:circulation:http:POST:/holds",
+      "to": "producer:circulation#infra/api.tf:aws_apigatewayv2_api.kiosk.body.paths[\"/holds\"].post",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/api.tf",
+      "line": 44,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:circulation:http:POST:/loans",
+      "to": "circulation#src/loans/create-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/create-loan.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:circulation:http:POST:/loans/:param/renewals",
+      "to": "circulation#src/loans/renew-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/renew-loan.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:circulation:http:POST:/returns",
+      "to": "producer:circulation#infra/openapi.yaml:aws_api_gateway_rest_api.circulation.body.paths[\"/returns\"].post",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/openapi.yaml",
+      "line": 41,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:circulation:invoke:library-create-loan",
+      "to": "circulation#src/loans/create-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/create-loan.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:circulation:invoke:library-get-item",
+      "to": "circulation#src/catalogue/get-item.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalogue/get-item.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:circulation:invoke:library-get-loan",
+      "to": "circulation#src/loans/get-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/get-loan.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:circulation:invoke:library-place-hold",
+      "to": "circulation#src/holds/place-hold.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/holds/place-hold.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:circulation:invoke:library-process-return",
+      "to": "circulation#src/returns/process-return.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/process-return.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:circulation:invoke:library-renew-loan",
+      "to": "circulation#src/loans/renew-loan.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/renew-loan.ts",
+      "line": 5
+    },
+    {
+      "from": "producer:circulation#infra/api.tf:aws_apigatewayv2_api.kiosk.body.paths[\"/holds\"].post",
+      "to": "channel:sqs/library-hold-requests",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/api.tf",
+      "line": 44,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:circulation#infra/openapi.yaml:aws_api_gateway_rest_api.circulation.body.paths[\"/returns\"].post",
+      "to": "channel:sqs/library-returns",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/openapi.yaml",
+      "line": 41,
+      "meta": {
+        "via": "deployment"
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": []
+}

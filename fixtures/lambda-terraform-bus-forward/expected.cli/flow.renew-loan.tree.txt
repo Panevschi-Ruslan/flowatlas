@@ -1,0 +1,13 @@
+@  POST /loans/:param/renewals                                            circulation/infra/main.tf:84
+  -> handler                                                              circulation/src/loans/renew-loan.ts:6
+    ~  event eventbridge/library/library.loans/LoanRenewed                circulation/src/loans/renew-loan.ts:8
+      ~  eventbridge/library/library.loans/LoanRenewed                    src/loans/renew-loan.ts:8
+        ~  rule library-to-audit ~heuristic                               circulation/infra/forward.tf:30
+          ~  event eventbridge/library-audit/*/*                          circulation/infra/forward.tf:30
+            ~  eventbridge/library-audit/library.loans/LoanCreated ~heuristic  infra/main.tf:58
+              => audit ~  rule library-audit-loan-created                 audit/infra/main.tf:58
+                @  library-audit-record-entry                             audit/infra/main.tf:29
+            ~  eventbridge/library-audit/library.loans/LoanRenewed ~heuristic  infra/forward.tf:30
+              => audit ~  rule library-audit-renewals ~heuristic          audit/infra/main.tf:75
+                @  library-audit-flag-renewal                             audit/infra/main.tf:38
+unresolved on this path: 0

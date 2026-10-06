@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T18:18:14.786Z",
+  "builtAt": "2026-10-06T21:12:35.270Z",
   "services": [
     {
       "name": "desk",
@@ -79,7 +79,15 @@
         "adapter": "aws-sqs",
         "by": "mapping",
         "declaredAs": "aws_lambda_event_source_mapping.archive_loans",
-        "deployedBy": "terraform"
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
       }
     },
     {
@@ -95,7 +103,15 @@
         "adapter": "aws-sqs",
         "by": "mapping",
         "declaredAs": "aws_lambda_event_source_mapping.process_returns",
-        "deployedBy": "terraform"
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
       }
     },
     {
@@ -307,6 +323,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -334,6 +353,9 @@
             "kind": "queue"
           }
         },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -355,6 +377,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -376,6 +401,10 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "type:desk#ReturnedItem"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -403,6 +432,9 @@
             "kind": "queue"
           }
         },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -424,6 +456,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -790,6 +825,26 @@
     }
   ],
   "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
     "type:desk#LoanOpened": {
       "name": "LoanOpened",
       "kind": "object",

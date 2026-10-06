@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>124 fixtures</span>
-    <span>252 snapshot files</span>
+    <span>133 fixtures</span>
+    <span>292 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -370,7 +370,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, wired in Terraform <span class="count" data-total="9">9</span></h2>
+    <h2>Serverless, wired in Terraform <span class="count" data-total="16">16</span></h2>
     <ul>
       <li class="fixture" data-search="eventbridge-terraform serverless, wired in terraform a lending library's circulation service: lambda functions behind an http api that talk to each other over an eventbridge bus.">
         <div class="head">
@@ -396,13 +396,45 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>The circulation desk of a lending library as Lambda functions behind a REST API and two SQS queues, written the way a project that keeps its logic apart from its entry points often is: <code>src/operations</code> holds the functions, and each module under <code>src/handlers</code> re-exports some of them, in one of the ways a module can (R168).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="lambda-terraform-base-paths serverless, wired in terraform two repositories: `catalogue` publishes two apis on the library's own domain, `api.library.example`, each under a base path; `kiosk` calls them at that address (r174).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-terraform-base-paths">lambda-terraform-base-paths</a>
+          <span class="kind">2 services</span>
+        </div>
+        <p>Two repositories: <code>catalogue</code> publishes two APIs on the library's own domain, <code>api.library.example</code>, each under a base path; <code>kiosk</code> calls them at that address (R174).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="lambda-terraform-bus-forward serverless, wired in terraform a rule that hands events on to another team's bus (r174).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-terraform-bus-forward">lambda-terraform-bus-forward</a>
+          <span class="kind">2 services</span>
+        </div>
+        <p>A rule that hands events on to another team's bus (R174).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="lambda-terraform-json serverless, wired in terraform a lending library's catalogue: two lambda functions behind an http api, deployed by terraform written entirely as json (`*.tf.json`), the way a generator writes it.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-terraform-json">lambda-terraform-json</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A lending library's catalogue: two Lambda functions behind an HTTP API, deployed by Terraform written entirely as JSON (<code>*.tf.json</code>), the way a generator writes it.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="lambda-terraform-modules serverless, wired in terraform the same kind of service declared through modules: one of the repository's own, the public `terraform-aws-modules/lambda/aws` and `terraform-aws-modules/apigateway-v2/aws`, and a module from another repository that the configuration describes.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-terraform-modules">lambda-terraform-modules</a>
           <span class="kind">one service</span>
         </div>
         <p>The same kind of service declared through modules: one of the repository's own, the public <code>terraform-aws-modules/lambda/aws</code> and <code>terraform-aws-modules/apigateway-v2/aws</code>, and a module from another repository that the configuration describes.</p>
-        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="lambda-terraform-openapi serverless, wired in terraform a lending library's circulation service with two apis created from openapi documents rather than from resources and methods (r174).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-terraform-openapi">lambda-terraform-openapi</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A lending library's circulation service with two APIs created from OpenAPI documents rather than from resources and methods (R174).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="lambda-terraform-rest serverless, wired in terraform lambda handlers whose ways in are declared in terraform: one `aws_lambda_function` per handler, and a rest api built resource by resource in front of them.">
         <div class="head">
@@ -412,12 +444,36 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>Lambda handlers whose ways in are declared in Terraform: one <code>aws_lambda_function</code> per handler, and a REST API built resource by resource in front of them.</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
+      <li class="fixture" data-search="lambda-terraform-websocket serverless, wired in terraform a lending library's reading room: borrowers ask a librarian over a websocket api (r174).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-terraform-websocket">lambda-terraform-websocket</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A lending library's reading room: borrowers ask a librarian over a WebSocket API (R174).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="lambda-workspace-root serverless, wired in terraform a lending library's loans service whose repository is the root of a workspace: the functions are in its own `src/`, and the client they start workflows through is a member in `packages/workflows`, inside the same directory (r175).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-workspace-root">lambda-workspace-root</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A lending library's loans service whose repository is the root of a workspace: the functions are in its own <code>src/</code>, and the client they start workflows through is a member in <code>packages/workflows</code>, inside the same directory (R175).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="lambda-wrapped-handlers serverless, wired in terraform lambda handlers each wrapped by a helper that takes the function as a later argument, which is how a project that instruments every handler writes them (r167).">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-wrapped-handlers">lambda-wrapped-handlers</a>
           <span class="kind">one service</span>
         </div>
         <p>Lambda handlers each wrapped by a helper that takes the function as a later argument, which is how a project that instruments every handler writes them (R167).</p>
+        <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="lambda-wrapper-alias serverless, wired in terraform lambda handlers each wrapped by a helper of this repository that the handler calls by another name (r175): taken off a namespace import into a `const`, imported under a short name, or re-exported by a barrel under a new one.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-wrapper-alias">lambda-wrapper-alias</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>Lambda handlers each wrapped by a helper of this repository that the handler calls by another name (R175): taken off a namespace import into a <code>const</code>, imported under a short name, or re-exported by a barrel under a new one.</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
       <li class="fixture" data-search="multi-repo-events serverless, wired in terraform a publisher, its rules and its consumers in three repositories, on a bus a fourth repository owns.">
@@ -434,7 +490,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">3 services</span>
         </div>
         <p>Three repositories sharing one REST API: two hang their routes from a point of it the third, a repository of nothing but Terraform, publishes.</p>
-        <p class="snapshots"><code>expected.doctor.txt</code> <code>expected.flow.post-loans.tree.txt</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.doctor.txt</code> <code>expected.flow.post-loans.tree.txt</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="sqs-sns-terraform serverless, wired in terraform a lending library's returns service: lambda functions behind a rest api, joined by sqs queues and an sns topic.">
         <div class="head">
@@ -447,7 +503,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>State machines <span class="count" data-total="6">6</span></h2>
+    <h2>State machines <span class="count" data-total="7">7</span></h2>
     <ul>
       <li class="fixture" data-search="multi-repo-stepfunctions state machines a state machine in one repository that invokes functions two other repositories deploy, starts a state machine a third deploys, writes a table of its own, and sends to a queue, a topic and a bus whose subscribers the other repositories declare: the joins p22 makes across repositories by a deployed name, and the ones r169 makes between a step that sends and the subscriber p23 reads.">
         <div class="head">
@@ -455,7 +511,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">3 services</span>
         </div>
         <p>A state machine in one repository that invokes functions two other repositories deploy, starts a state machine a third deploys, writes a table of its own, and sends to a queue, a topic and a bus whose subscribers the other repositories declare: the joins P22 makes across repositories by a deployed name, and the ones R169 makes between a step that sends and the subscriber P23 reads.</p>
-        <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="start-workflow-by-record state machines a lending library's loans service whose handler starts a workflow through a helper that records a run in one call and starts it by the run's id in the next, so the name of what is started is written one call before the call that starts it.">
         <div class="head">
@@ -463,7 +519,15 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>A lending library's loans service whose handler starts a workflow through a helper that records a run in one call and starts it by the run's id in the next, so the name of what is started is written one call before the call that starts it.</p>
-        <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="start-workflow-function-helper state machines a lending library's loans service whose handlers start the approval workflow and invoke a function through helpers written as functions of a module, not methods of a class: `export const startworkflow = async (statemachinearn, input) =&gt; …` and `export async function notifyfunction(functionname, event)`.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/start-workflow-function-helper">start-workflow-function-helper</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A lending library's loans service whose handlers start the approval workflow and invoke a function through helpers written as functions of a module, not methods of a class: <code>export const startWorkflow = async (stateMachineArn, input) =&gt; …</code> and <code>export async function notifyFunction(functionName, event)</code>.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="start-workflow-helper state machines a lending library's loans service whose handlers start workflows through the project's own helpers rather than the aws sdk: one helper is a package of this workspace, whose source is read, and one comes from a package that is deliberately not here and is described in `flowatlas.config.json`.">
         <div class="head">
@@ -471,7 +535,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>A lending library's loans service whose handlers start workflows through the project's own helpers rather than the AWS SDK: one helper is a package of this workspace, whose source is read, and one comes from a package that is deliberately not here and is described in <code>flowatlas.config.json</code>.</p>
-        <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="start-workflow-sdk state machines a lending library's loans api, where the handler behind a route starts the approval workflow and invokes other functions by calling the aws sdk directly.">
         <div class="head">
@@ -479,7 +543,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>A lending library's loans API, where the handler behind a route starts the approval workflow and invokes other functions by calling the AWS SDK directly.</p>
-        <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="stepfunctions-asl-files state machines three state machine definitions kept as files beside the code that runs with them, in two repositories, and one workflow that starts a workflow in the other.">
         <div class="head">
@@ -495,7 +559,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>Four state machines deployed with Terraform over the Lambda functions of one lending library, each with its definition written a different way.</p>
-        <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
     </ul>
   </section>
@@ -1092,7 +1156,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Everything else <span class="count" data-total="4">4</span></h2>
+    <h2>Everything else <span class="count" data-total="5">5</span></h2>
     <ul>
       <li class="fixture" data-search="bot-registry everything else a bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.">
         <div class="head">
@@ -1117,6 +1181,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A hand-written sample of the graph schema itself, not a repository: no manifest, no configuration, no sources, nothing for the tool to run over.</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="sqs-environment-fallback everything else a lending library's returns service whose code names a queue, a topic and a bus by a variable of its environment with a default beside it: `process.env.returns_queue_url ?? '&lt;url&gt;'`, `?? item_returned_topic` and `process.env.event_bus_name || 'library-events'` (r175).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/sqs-environment-fallback">sqs-environment-fallback</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A lending library's returns service whose code names a queue, a topic and a bus by a variable of its environment with a default beside it: <code>process.env.RETURNS_QUEUE_URL ?? '&lt;url&gt;'</code>, <code>?? ITEM_RETURNED_TOPIC</code> and <code>process.env.EVENT_BUS_NAME || 'library-events'</code> (R175).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="unreadable-file everything else a repository of four files, one of which is not typescript at all.">
         <div class="head">

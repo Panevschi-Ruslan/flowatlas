@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T18:25:39.436Z",
+  "builtAt": "2026-10-06T21:13:57.595Z",
   "configHash": "f38fa4940897",
   "services": [
     {
@@ -10,9 +10,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 23,
       "edges": 17,
-      "types": 0,
+      "types": 3,
       "unresolved": 1,
-      "durationMs": 4437
+      "durationMs": 546
     }
   ],
   "httpOut": {
@@ -47,14 +47,14 @@
     "duplicated": []
   },
   "types": {
-    "total": 0,
+    "total": 3,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
     "nodes": 23,
     "edges": 22,
-    "types": 0,
+    "types": 3,
     "unresolved": 0
   }
 }

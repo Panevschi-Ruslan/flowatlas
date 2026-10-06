@@ -1,8 +1,7 @@
-import { REACHES_META } from '@flowatlas/core';
+import { readJson, REACHES_META } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import { readStateMachine } from './definition.js';
 import { emitWorkflow, type EmitOptions, type WorkflowFragment } from './emit.js';
-import { readJson } from './source.js';
 
 const FILE = 'statemachine/holds.asl.json';
 

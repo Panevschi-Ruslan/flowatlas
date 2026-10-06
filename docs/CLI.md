@@ -587,7 +587,10 @@ extra. A rule or a subscription that hands a message on to another queue or
 topic hands on the envelope, so whatever reads that queue is compared with the
 envelope around the original message - a handler of a rule's queue that
 parses the body as the message, when the message is at `detail`, is a
-`missing_required` error. Each finding says where the message was read from.
+`missing_required` error. A rule that puts the events it takes on another bus
+hands on the event as it is, so a function that bus's rules deliver to is
+compared with the original message at `detail`. Each finding says where the
+message was read from.
 
 What cannot be compared this way stays `unchecked`, with one of these reasons:
 
@@ -860,8 +863,8 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Bots and handler tables | `bot-handlers-not-found`, `dynamic-bot-trigger`, `entry-registry-unconfigured`, `registry-key-dynamic`, `registry-handler-anonymous`, `orphan-scene-decorator`, `orphan-update-decorator`, `wizard-step-conflict` |
 | Annotations | `marker-route-not-found`, `marker-service-unknown`, `marker-unknown-arg`, `marker-arg-not-a-name`, `marker-names-nothing` |
 | Declared services | `document-age` |
-| Functions and routes declared in Terraform | `function-name-unread`, `function-name-disputed`, `function-repeated-unread`, `function-handler-unread`, `function-handler-not-found`, `function-handler-ambiguous`, `function-source-unread`, `function-runtime-unread` (info), `function-image-unread` (info), `route-path-unread`, `route-target-unread`, `api-body-unread` (info), `deployment-unread` (info) |
-| Terraform files and modules | `infra-file-unparsed`, `infra-file-unread` (info), `infra-module-missing`, `infra-module-undescribed` (info unless its inputs name a handler, a function or a route), `infra-module-description-invalid` |
+| Functions and routes declared in Terraform | `function-name-unread`, `function-name-disputed`, `function-repeated-unread`, `function-handler-unread`, `function-handler-not-found`, `function-handler-ambiguous`, `function-source-unread`, `function-runtime-unread` (info), `function-image-unread` (info), `route-path-unread`, `route-target-unread`, `route-base-path-unread`, `api-body-unread`, `deployment-unread` (info) |
+| Terraform files and modules | `infra-file-unparsed`, `infra-module-missing`, `infra-module-undescribed` (info unless its inputs name a handler, a function or a route), `infra-module-description-invalid` |
 | Joining a deployment across repositories | `route-root-not-found`, `route-root-ambiguous`, `invoke-target-not-found`, `invoke-target-ambiguous` |
 | Workflows written as state machines | `workflow-definition-unreadable`, `workflow-definition-invalid`, `workflow-definition-not-loaded`, `workflow-name-unread`, `workflow-named-by-file` (info), `workflow-name-duplicate`, `workflow-target-dynamic` (info), `workflow-template-unbound`, `workflow-target-unreadable`, `reference-not-found`, `reference-ambiguous` |
 | Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info) |
@@ -1910,6 +1913,46 @@ written inside an invoke address, an alias), or by name through a `data`
 block. An authoriser in front of the route (`authorization`,
 `authorization_type`) is a guard, so `route-unguarded` sees it.
 
+**An API created from an OpenAPI document** (`body` on `aws_api_gateway_rest_api`
+or `aws_apigatewayv2_api`) is read from the document: each operation under
+`paths` - and `x-amazon-apigateway-any-method`, as `ALL` - is a route, and its
+`x-amazon-apigateway-integration` says what answers it, read exactly as an
+integration resource is: a function by its ARN or invoke ARN, or SQS, SNS or
+EventBridge integrated directly. The body may be `templatefile("openapi.yaml", {...})`,
+`file()`, `jsonencode({...})` or a heredoc, in JSON or YAML. A template
+variable that is a reference (`create_loan_arn = aws_lambda_function.create_loan.arn`)
+stays the reference, so `uri: ${create_loan_arn}` and
+`uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${create_loan_arn}/invocations`
+both name the function; a part the files do not settle - an account id - does not
+matter to which function or queue is named. An operation's `security` (or the
+document's) is a guard. Each route is placed on its line in the document. The
+walk over the operations is the one a service declared by its OpenAPI document
+is read with (`fixtures/lambda-terraform-openapi`). A body that is not read -
+a path the files do not settle, text that is not JSON or YAML, no `paths` - is
+one `api-body-unread` row.
+
+**A WebSocket API** (`protocol_type = "WEBSOCKET"`) has no paths and no verbs:
+each `aws_apigatewayv2_route` is a way in of its own, an `event` entry keyed
+`websocket/<api>/<route key>` - `$connect`, `$disconnect`, `$default`, or the
+value the route selection expression picks out of a message, `askLibrarian` -
+that runs whatever its integration invokes, or publishes onto the queue or bus
+it sends to. `meta.authorization` records an authoriser on `$connect`
+(`fixtures/lambda-terraform-websocket`).
+
+**Base paths and stages.** A custom domain's `aws_api_gateway_base_path_mapping`
+or `aws_apigatewayv2_api_mapping` puts its base path in front of every route of
+the API it maps, because that is the address a caller writes:
+`https://api.library.example/v1/items/42` calls `GET /items/{itemId}` of the API
+mapped at `v1`, and is joined to it as `GET /v1/items/:param`. An API mapped at
+two base paths has each route at both. The route records `basePath`, `domains`
+and the `stages` it is reached through; an API nothing maps records the stages
+it is deployed to (`aws_api_gateway_stage`, `aws_api_gateway_deployment`,
+`aws_apigatewayv2_stage`) and puts none of them in front, because a caller
+reaches a stage through its invoke URL, which already carries it. A point of an
+API another repository publishes carries the base path too. A mapping whose API
+or base path is not read is a `route-base-path-unread` row, and the routes of
+that API are at an address nothing joins to (`fixtures/lambda-terraform-base-paths`).
+
 **A shared API is joined across repositories.** A route that hangs from a
 point of an API another repository owns — looked up through a parameter
 (`data.aws_ssm_parameter.x.value`) or another state's output
@@ -1934,7 +1977,13 @@ a row saying what to set, never a name built from the parts that did. A
 `count` or `for_each` over something the files settle is expanded; over
 something they do not, it is one instance with its key unknown, and says so.
 Nothing needs `terraform init` or state: only the checked-out files are read.
-Configuration written as JSON (`*.tf.json`) is not read, and says so.
+Configuration written as JSON (`*.tf.json`) is read into the same tree as the
+native syntax, with a line on every block and argument: a string is a template
+(`"${aws_lambda_function.x.arn}"` is the reference), a variable's `default` is
+JSON as written, and `"//"` is a comment. A member is a block where the language
+makes it one - `lifecycle`, `dynamic`, a backend - and an argument everywhere
+else, which every reader accepts in place of a nested block
+(`fixtures/lambda-terraform-json`).
 
 **Environments.** Several `*.tfvars` files that give one name two values are
 two environments, and the tool does not pick one:
@@ -2032,8 +2081,12 @@ entry onto its handler, the way a route in front of it does. A function or a
 workflow deployed elsewhere is a reference by its deployed name, joined to the
 one entry in any service that answers to it (`reference-not-found` where none
 does). A queue, a topic or a bus is a publisher of its own onto that channel; a
-rule that takes events by name and puts them on another bus forwards each under
-the same source and detail type. Each is named by a reference to what the
+rule that puts the events it takes on another bus forwards each under the same
+source and detail type, where that bus's rules see them. A rule that names its
+events exactly forwards those; one that takes them by a pattern forwards
+whichever channels the pattern matches across the project, each put on the other
+bus by the linker with the match's confidence and `forwardedFrom` on the edge, and
+a rule on that bus matches them in turn (`fixtures/lambda-terraform-bus-forward`). Each is named by a reference to what the
 configuration declares or looks up, by an ARN or URL written out, or by a
 template whose name part is written out — `"arn:aws:lambda:${var.region}:${local.account}:function:library-notify"`
 names its function even though neither the region nor the account is known.

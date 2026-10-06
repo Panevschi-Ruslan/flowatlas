@@ -289,6 +289,8 @@ describe('init', () => {
       ['platform', 'lambda'],
     ]);
     const single = scanCandidates(join(ROOT, 'fixtures'), scratch).filter((candidate) => candidate.repo.includes('lambda-terraform'));
-    expect(single.map((candidate) => candidate.type)).toEqual(['lambda', 'lambda']);
+    // Every `lambda-terraform-*` fixture, however many there are by now.
+    expect(single.length).toBeGreaterThanOrEqual(2);
+    expect([...new Set(single.map((candidate) => candidate.type))]).toEqual(['lambda']);
   });
 });

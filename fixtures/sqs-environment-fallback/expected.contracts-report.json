@@ -1,8 +1,53 @@
 {
   "contractsFormatVersion": 4,
   "schemaVersion": 6,
-  "generatedAt": "2026-10-06T18:25:29.466Z",
-  "edges": [],
+  "generatedAt": "2026-10-06T21:13:53.299Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:returns#src/lib/returns-queue.ts:18:9",
+        "to": "consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_priority_returns",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#src/lib/returns-queue.ts:18:9|emits|consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_priority_returns",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/lib/returns-queue.ts:queueReturn"
+      },
+      "receiver": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/returns/process-return.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:returns#src/lib/returns-queue.ts:18:9",
+        "to": "consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_returns",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#src/lib/returns-queue.ts:18:9|emits|consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_returns",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/lib/returns-queue.ts:queueReturn"
+      },
+      "receiver": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/returns/process-return.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
   "findings": [],
   "ignored": [],
   "unchecked": [
@@ -29,38 +74,14 @@
       "reason": "channel-without-consumer",
       "message": "channel:sns/library-item-returned is published to and nothing handles it",
       "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
-    },
-    {
-      "edge": {
-        "from": "producer:returns#src/lib/returns-queue.ts:18:9",
-        "to": "consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_priority_returns",
-        "type": "emits"
-      },
-      "edgeKey": "producer:returns#src/lib/returns-queue.ts:18:9|emits|consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_priority_returns",
-      "direction": "payload",
-      "reason": "no-type-on-receiver",
-      "message": "consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_priority_returns declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
-    },
-    {
-      "edge": {
-        "from": "producer:returns#src/lib/returns-queue.ts:18:9",
-        "to": "consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_returns",
-        "type": "emits"
-      },
-      "edgeKey": "producer:returns#src/lib/returns-queue.ts:18:9|emits|consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_returns",
-      "direction": "payload",
-      "reason": "no-type-on-receiver",
-      "message": "consumer:returns#infra/functions.tf:aws_lambda_event_source_mapping.process_returns declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
     }
   ],
   "summary": {
-    "edges": 0,
+    "edges": 2,
     "shared": 0,
-    "identical": 0,
+    "identical": 2,
     "hash_differs": 0,
-    "unchecked": 4,
+    "unchecked": 2,
     "errors": 0,
     "warnings": 0,
     "infos": 0,

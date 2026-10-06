@@ -1,4 +1,4 @@
-import { CHANNEL_PATTERN_META, type ChannelPattern, type GraphEdge, type GraphNode } from '@flowatlas/core';
+import { CHANNEL_FORWARD_META, CHANNEL_PATTERN_META, type ChannelForward, type ChannelPattern, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import { joinChannelPatterns } from './pattern-link.js';
 
@@ -62,5 +62,62 @@ describe('joinChannelPatterns', () => {
     const { edges, rows } = join([elsewhere, consumer(loanEvents([]))]);
     expect(edges).toEqual([]);
     expect(rows).toEqual([expect.objectContaining({ reason: 'subscription-matches-nothing', level: 'info', service: 'routing' })]);
+  });
+
+  describe('a consumer that carries what it takes on to another bus', () => {
+    const producer: GraphNode = { id: 'producer:routing#rules.tf:aws_cloudwatch_event_target.audit', type: 'producer', label: 'event', repo: 'routing', file: 'rules.tf', line: 40 };
+    const forwarding = consumer(loanEvents([{ prefix: 'Loan' }]), {
+      [CHANNEL_FORWARD_META]: { producer: producer.id, parts: [null, 'audit', null, null] } satisfies ChannelForward,
+    });
+    const auditRule: GraphNode = {
+      ...consumer({
+        parts: [
+          { name: 'service', filters: [{ equals: 'eventbridge' }] },
+          { name: 'bus', filters: [{ equals: 'audit' }] },
+          { name: 'source', filters: [] },
+          { name: 'detail-type', filters: [{ equals: 'LoanReturned' }] },
+        ],
+      }),
+      id: 'consumer:audit#rules.tf:aws_cloudwatch_event_target.returns',
+    };
+
+    it('puts each matched channel on the other bus, at the confidence of the match, where a rule there matches it in turn', () => {
+      const nodes = new Map([created, returned, producer, forwarding, auditRule].map((node) => [node.id, node]));
+      const edges = new Map<string, GraphEdge>();
+      const rows = joinChannelPatterns(nodes, edges);
+      expect(rows).toEqual([]);
+      const emitted = [...edges.values()].filter((edge) => edge.type === 'emits');
+      expect(emitted.map((edge) => [edge.to, edge.confidence, edge.meta?.['forwardedFrom']])).toEqual([
+        ['channel:eventbridge/audit/library.loans/LoanCreated', 'heuristic', created.id],
+        ['channel:eventbridge/audit/library.loans/LoanReturned', 'heuristic', returned.id],
+      ]);
+      expect(nodes.get('channel:eventbridge/audit/library.loans/LoanReturned')).toMatchObject({ type: 'channel', repo: 'routing' });
+      expect([...edges.values()].filter((edge) => edge.to === auditRule.id).map((edge) => edge.from)).toEqual([
+        'channel:eventbridge/audit/library.loans/LoanReturned',
+      ]);
+    });
+
+    it('ends when two buses forward to each other', () => {
+      const back: GraphNode = {
+        ...consumer(
+          {
+            parts: [
+              { name: 'service', filters: [{ equals: 'eventbridge' }] },
+              { name: 'bus', filters: [{ equals: 'audit' }] },
+              { name: 'source', filters: [] },
+              { name: 'detail-type', filters: [] },
+            ],
+          },
+          { [CHANNEL_FORWARD_META]: { producer: producer.id, parts: [null, 'library', null, null] } },
+        ),
+        id: 'consumer:audit#rules.tf:aws_cloudwatch_event_target.back',
+      };
+      const nodes = new Map([created, producer, forwarding, back].map((node) => [node.id, node]));
+      joinChannelPatterns(nodes, new Map());
+      expect([...nodes.keys()].filter((id) => id.startsWith('channel:')).sort()).toEqual([
+        'channel:eventbridge/audit/library.loans/LoanCreated',
+        'channel:eventbridge/library/library.loans/LoanCreated',
+      ]);
+    });
   });
 });

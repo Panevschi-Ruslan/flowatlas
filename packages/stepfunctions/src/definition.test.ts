@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readStateMachine, STATE_TYPES, type StateMachine } from './definition.js';
-import { readJson, readYaml } from './source.js';
+import { readJson, readYaml } from '@flowatlas/core';
 
 const machineOf = (value: unknown): StateMachine => readStateMachine(readJson(JSON.stringify(value, null, 2)));
 

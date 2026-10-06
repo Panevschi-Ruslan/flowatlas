@@ -5,10 +5,12 @@ import {
   EVENT_NAME_FIELDS,
   eventChannel,
   eventChannelPattern,
+  forwardedToBus,
   queueChannel,
   topicChannel,
 } from '@flowatlas/aws';
 import {
+  CHANNEL_FORWARD_META,
   CHANNEL_PATTERN_META,
   ENVELOPE_META,
   ENVIRONMENT_META,
@@ -21,6 +23,7 @@ import {
   makeWorkflowEntryKey,
   MOST_CHOICES,
   REACHES_META,
+  type ChannelForward,
   type Confidence,
   type DeployedDelivery,
   type DeployedFunction,
@@ -254,6 +257,14 @@ const SOURCES: { readonly [K in DeliverySource['kind']]: SourceDrawer<K> } = {
       changesOf: delivery.from.of,
       name: delivery.from.name,
     }),
+  // A route of a socket API is a way in of its own: nothing publishes to it
+  // but a client holding a connection open (R174).
+  connection: (drawing, delivery) =>
+    entryOf(drawing, delivery, 'event', `websocket/${delivery.from.api}/${delivery.from.route}`, {
+      api: delivery.from.api,
+      route: delivery.from.route,
+      ...(delivery.meta ?? {}),
+    }),
 };
 
 /** Where a publisher a deployment declares sits, and what declares it. */
@@ -265,15 +276,15 @@ interface Declared {
   readonly meta?: Record<string, unknown>;
 }
 
-/** A publisher a delivery or a route is, onto the channel it sends to. */
-const forward = (drawing: Canvas, way: WayIn, delivery: Declared, target: MessageTarget, channel: string): void => {
+/** The publisher a delivery or a route is, reached from where its messages come in. */
+const publisher = (drawing: Canvas, way: WayIn, delivery: Declared, target: MessageTarget, label: string): string => {
   const { ctx } = drawing;
   const { adapter, kind } = DEPLOYED_CHANNELS[target.kind];
   const id = `producer:${makeSymbolId(ctx.repo, delivery.file, delivery.address)}`;
   ctx.builder.addNode({
     id,
     type: 'producer',
-    label: `${kind} ${channel}`,
+    label: `${kind} ${label}`,
     repo: ctx.repo,
     file: delivery.file,
     line: delivery.line,
@@ -289,8 +300,14 @@ const forward = (drawing: Canvas, way: WayIn, delivery: Declared, target: Messag
     },
   });
   ctx.builder.addEdge({ from: way.id, to: id, type: way.link ?? 'calls', confidence: way.confidence, file: way.file, line: way.line, meta: { via: 'deployment' } });
+  return id;
+};
+
+/** A publisher a delivery or a route is, onto the channel it sends to. */
+const forward = (drawing: Canvas, way: WayIn, delivery: Declared, target: MessageTarget, channel: string): void => {
+  const id = publisher(drawing, way, delivery, target, channel);
   const to = channelNode(drawing, channel, target.kind, delivery.file, delivery.line);
-  ctx.builder.addEdge({ from: id, to, type: 'emits', confidence: way.confidence, file: way.file, line: way.line, meta: { via: 'deployment' } });
+  drawing.ctx.builder.addEdge({ from: id, to, type: 'emits', confidence: way.confidence, file: way.file, line: way.line, meta: { via: 'deployment' } });
 };
 
 type TargetDrawer<K extends DeliveryTarget['kind']> = (
@@ -307,12 +324,27 @@ const localFunction = (drawing: Drawing, index: number): string | undefined => {
   return makeEntryId(drawing.ctx.repo, 'invoke', fn.name === undefined ? makeUnnamedInvokeKey(fn.address) : makeInvokeEntryKey(fn.name));
 };
 
-/** A message sent on to a channel: the target's own, or for a bus with no fields, each event the source took by name. */
+/**
+ * A message sent on to a channel: the target's own; for a bus with no fields,
+ * each event the source took by name; or, where the source took its events by
+ * a pattern, whichever events the pattern matches, which only the whole project
+ * knows - so the consumer says where it carries them, and the linker has the
+ * publisher put each one there (R174).
+ */
 const sendOn = (drawing: Drawing, way: WayIn, delivery: DeployedDelivery, target: MessageTarget): void => {
   const named = channelOfTarget(target);
   if (named !== undefined) return forward(drawing, way, delivery, target, named);
   if (target.kind === 'bus' && way.events !== undefined) {
     for (const [source, detailType] of way.events) forward(drawing, way, delivery, target, eventChannel(target.name, source, detailType));
+    return;
+  }
+  const consumer = drawing.ctx.builder.getNode(way.id);
+  if (target.kind === 'bus' && consumer?.meta?.[CHANNEL_PATTERN_META] !== undefined) {
+    const forwardsTo: ChannelForward = {
+      producer: publisher(drawing, way, delivery, target, eventChannel(target.name, '*', '*')),
+      parts: forwardedToBus(target.name),
+    };
+    consumer.meta = { ...consumer.meta, [CHANNEL_FORWARD_META]: forwardsTo };
     return;
   }
   drawing.rows.push({

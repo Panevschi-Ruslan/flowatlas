@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T18:19:42.511Z",
+  "builtAt": "2026-10-06T21:13:54.117Z",
   "services": [
     {
       "name": "returns",
@@ -171,7 +171,15 @@
         "adapter": "aws-sqs",
         "by": "mapping",
         "declaredAs": "aws_lambda_event_source_mapping.place_holds",
-        "deployedBy": "terraform"
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
       }
     },
     {
@@ -187,7 +195,15 @@
         "adapter": "aws-sqs",
         "by": "mapping",
         "declaredAs": "aws_lambda_event_source_mapping.process_returns",
-        "deployedBy": "terraform"
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
       }
     },
     {
@@ -203,7 +219,15 @@
         "adapter": "aws-sqs",
         "by": "mapping",
         "declaredAs": "aws_lambda_event_source_mapping.restock",
-        "deployedBy": "terraform"
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
       }
     },
     {
@@ -227,7 +251,15 @@
         },
         "notMatchedOn": [
           "filter"
-        ]
+        ],
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
       }
     },
     {
@@ -267,7 +299,16 @@
         },
         "notMatchedOn": [
           "filter_policy"
-        ]
+        ],
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "Sns",
+            "Message"
+          ],
+          "text": true
+        }
       }
     },
     {
@@ -285,7 +326,11 @@
         "declaredAs": "aws_sns_topic_subscription.restock",
         "deployedBy": "terraform",
         "protocol": "sqs",
-        "raw": true
+        "raw": true,
+        "envelope": {
+          "at": [],
+          "text": false
+        }
       }
     },
     {
@@ -369,6 +414,9 @@
             "value": "25"
           }
         },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -390,6 +438,10 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SNSEvent",
+          "Records[].Sns.Message": "type:returns#ReturnedItem"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -411,6 +463,10 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "type:returns#HoldRequest"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -447,6 +503,10 @@
             "kind": "topic"
           }
         },
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "type:returns#ReturnedItem"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -474,6 +534,9 @@
             "kind": "queue"
           }
         },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -495,6 +558,10 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "type:returns#ReturnedItem"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -516,6 +583,10 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "type:returns#Reminder"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -1238,6 +1309,36 @@
     }
   ],
   "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SNSEvent": {
+      "name": "SNSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "17e8e52b989c5abe",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
     "type:returns#AuditEntry": {
       "name": "AuditEntry",
       "kind": "object",
@@ -1252,6 +1353,28 @@
         {
           "name": "action",
           "type": "'returned'",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:returns#HoldRequest": {
+      "name": "HoldRequest",
+      "kind": "object",
+      "declaredIn": "returns#src/holds/place-hold.ts",
+      "structuralHash": "ad3825bae66336f9",
+      "fields": [
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
           "optional": false
         }
       ],

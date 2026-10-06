@@ -1,4 +1,4 @@
-import type { PathStep, Position, PositionedDocument } from './source.js';
+import type { DefinitionPosition as Position, PathStep, PositionedDocument } from '@flowatlas/core';
 
 /**
  * A state machine as a graph of named states, read from a positioned document.

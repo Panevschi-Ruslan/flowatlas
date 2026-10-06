@@ -28,4 +28,9 @@ inside its helper as `start ?` with a `start-name-unread` row, the flow from
 ## Asked of it
 
 `expected.cli/` holds `flow` for `POST /loans` and for the renewal, and
-`doctor`, which has nothing to report.
+`doctor`, which reports one contract error and no row. Each start's input is read
+at its caller too, so `contracts` compares it with what it starts: the loan
+`create-loan` hands the approval workflow carries the `borrowerId` its first
+state reads, and the event handed to `lending-notify-borrower` is what that
+handler reads, but the renewal starts the same workflow with
+`{ loanId, renewal }` and no `borrowerId` (R172).

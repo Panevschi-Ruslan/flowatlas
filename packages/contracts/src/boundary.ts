@@ -331,6 +331,13 @@ interface Upstream {
   envelope: Envelope;
 }
 
+/** What a forwarding delivery does to the message, as a comparison through it says. */
+const handedOn = ({ forwarder, envelope }: Upstream): string => {
+  const path = envelopePath(envelope.at);
+  if (path === '' && !envelope.text) return `${forwarder} hands it on as it was sent`;
+  return `${forwarder} hands it on as it is delivered, the message at ${path === '' ? 'the top' : path}${envelope.text ? ' as text' : ''}`;
+};
+
 /**
  * Where a message a delivery forwards came from, wrapped as the delivery hands it on.
  *
@@ -419,10 +426,7 @@ const channelExchanges = (lookup: GraphLookup, channel: GraphNode): Exchange[] =
           ...through,
           ...(delivered?.blocked === undefined ? {} : { blocked: delivered.blocked }),
           ...(from.envelope.beside === undefined ? {} : { wrapperKeys: from.envelope.beside }),
-          via: [
-            `${from.forwarder} hands it on as it is delivered, the message at ${envelopePath(from.envelope.at)}${from.envelope.text ? ' as text' : ''}`,
-            ...(delivered?.via ?? []),
-          ],
+          via: [handedOn(from), ...(delivered?.via ?? [])],
         });
       }
       if (upstream.length > 0) continue;

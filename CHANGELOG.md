@@ -210,6 +210,36 @@ only one of them moved.
   `invoke` entry records what its handler reads (`meta.reads`), a consumer a
   deployment declares and a start record how they wrap the message
   (`meta.envelope`), and a `workflow` entry what its first state requires.
+- **Terraform written as JSON.** `*.tf.json` is read into the same tree as the
+  native syntax, with a line on every block and argument, so a generated
+  configuration - and a module written as one - reads like any other. The
+  `infra-file-unread` row is gone (`fixtures/lambda-terraform-json`).
+- **An API created from an OpenAPI document.** The `body` of
+  `aws_api_gateway_rest_api` and `aws_apigatewayv2_api` -
+  `templatefile("openapi.yaml", {...})`, `file()`, `jsonencode({...})` or a
+  heredoc, in JSON or YAML - is read as routes, each answered by what its
+  `x-amazon-apigateway-integration` names: a function by its ARN, with template
+  variables that are references kept as references, or SQS, SNS or EventBridge
+  integrated directly. Each route is placed on its line in the document, and an
+  operation's `security` is a guard. `api-body-unread` is now a row only for a
+  body that cannot be read (`fixtures/lambda-terraform-openapi`).
+- **WebSocket APIs.** Each route of an API with `protocol_type = "WEBSOCKET"` -
+  `$connect`, `$disconnect`, `$default`, `askLibrarian` - is an `event` entry,
+  `websocket/<api>/<route key>`, onto what its integration runs; they were
+  skipped (`fixtures/lambda-terraform-websocket`).
+- **Base paths.** A route of an API a custom domain maps at a base path
+  (`aws_api_gateway_base_path_mapping`, `aws_apigatewayv2_api_mapping`) is at
+  that base path, so a caller written against the public URL joins:
+  `GET /v1/items/:param`. Domains, base path and stages are recorded on the
+  route; a stage is not put in front of a path. A mapping whose base path is not
+  read is a `route-base-path-unread` row (`fixtures/lambda-terraform-base-paths`).
+- **A rule that forwards to another bus by a pattern.** A rule that takes its
+  events by a filter and targets another bus carries every channel the filter
+  matches onto that bus, where that bus's rules see them, joined at the match's
+  confidence. What a function on that bus reads at `detail` is compared with
+  what the original publisher put. The `subscription-forward-unread` row remains
+  only for a schedule, a queue or a pipe that puts what it takes on a bus
+  (`fixtures/lambda-terraform-bus-forward`).
 
 ### Changed
 

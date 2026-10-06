@@ -91,6 +91,34 @@ describe('a message compared through the wrapping it is delivered in', () => {
     ]);
   });
 
+  it('compares a message a rule puts on another bus as it was sent, read at detail there', () => {
+    const parts = published({ detail: 'type:notices#Notice' }, { at: ['detail'], text: false });
+    const rule = 'consumer:routing#rules.tf:to-audit';
+    const forwarder = 'producer:routing#rules.tf:to-audit';
+    const report = check({
+      nodes: [
+        ...parts.nodes.map((each) => (each.id === 'channel:sqs/loans' ? node('channel:eventbridge/audit/loans/LoanCreated', 'channel', 'routing') : each)),
+        node('channel:eventbridge/library/loans/LoanCreated', 'channel', 'loans'),
+        node(rule, 'consumer', 'routing', { meta: { deployedBy: 'terraform', envelope: { at: [], text: false } } }),
+        node(forwarder, 'producer', 'routing', { meta: { deployedBy: 'terraform' } }),
+      ],
+      edges: [
+        edge('method:loans#create', 'calls', 'producer:loans#a.ts:1:1'),
+        edge('producer:loans#a.ts:1:1', 'emits', 'channel:eventbridge/library/loans/LoanCreated', { params: ['type:loans#Loan'] }),
+        edge('channel:eventbridge/library/loans/LoanCreated', 'consumes', rule),
+        edge(rule, 'calls', forwarder),
+        edge(forwarder, 'emits', 'channel:eventbridge/audit/loans/LoanCreated'),
+        edge('channel:eventbridge/audit/loans/LoanCreated', 'consumes', 'consumer:notices#infra/main.tf:mapping'),
+        edge('consumer:notices#infra/main.tf:mapping', 'calls', 'entry:notices:invoke:notify'),
+        edge('entry:notices:invoke:notify', 'handles', 'notices#src/notify.ts:handler'),
+      ],
+    });
+    expect(report.edges.map((each) => each.sender.typeId)).toEqual(['type:loans#Loan']);
+    const missing = report.findings.filter((finding) => finding.kind === 'missing_required');
+    expect(missing.map((finding) => finding.field)).toEqual(['subject']);
+    expect(missing[0]?.message).toContain('routing hands it on as it was sent; notices reads the message at detail of what it is handed');
+  });
+
   it('says a delivery hands on what it was given when there is no publisher to compare from', () => {
     const parts = published({ 'Records[].body': 'type:notices#Notice' });
     const report = check({

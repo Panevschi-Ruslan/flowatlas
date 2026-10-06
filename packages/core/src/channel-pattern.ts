@@ -166,3 +166,27 @@ export const matchChannelPattern = (name: string, pattern: ChannelPattern): Patt
   }
   return { exact: because.length === 0, because };
 };
+
+/**
+ * On a consumer that takes its channels by a filter and carries what it takes on
+ * to other channels - a rule whose target is another bus - where it carries
+ * them: a {@link ChannelForward}. The linker has the publisher it names put each
+ * channel the filter matched onto the channel the forward renames it to, so
+ * whatever reads that channel sees it.
+ */
+export const CHANNEL_FORWARD_META = 'forwardsTo';
+
+/** Where a consumer carries what it takes. */
+export interface ChannelForward {
+  /** The publisher that puts it there. */
+  readonly producer: string;
+  /** For each part of a matched channel's name, by position, a value to put in its place, or `null` to keep it. */
+  readonly parts: readonly (string | null)[];
+}
+
+/** The name a forward gives a channel it carries on, or `undefined` when the name does not have the forward's parts. */
+export const forwardedName = (name: string, forward: ChannelForward): string | undefined => {
+  const segments = name.split(ADDRESS_SEPARATOR);
+  if (segments.length !== forward.parts.length) return undefined;
+  return segments.map((segment, index) => forward.parts[index] ?? segment).join(ADDRESS_SEPARATOR);
+};

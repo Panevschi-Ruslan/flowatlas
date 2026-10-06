@@ -17,13 +17,16 @@ import { attributeOfInstance } from '../eval/evaluate.js';
 import { describe, type Because, type Instance, type Value } from '../eval/values.js';
 import { stateAddress, type Configuration } from '../configuration/load.js';
 import { readStateMachineInstance } from './state-machines.js';
-import { argument, referencesOf, siteOf, textOf, whyNot } from './arguments.js';
+import { addressesOf, joinSegments, MAPPING_READERS } from './addresses.js';
+import { argument, siteOf, textOf, whyNot } from './arguments.js';
 import { environmentOf } from './environment.js';
 import { EVENT_READERS } from './events.js';
-import { sentBy } from './integrations.js';
+import { integrationOfRoute, integrationType, resourceIntegration, sentBy, type Integration } from './integrations.js';
+import { OPENAPI_BODY_READERS } from './openapi-body.js';
 import { PIPE_READERS } from './pipes.js';
 import { QUEUE_READERS } from './queues.js';
-import type { ResourceReading } from './reading.js';
+import type { ResourceReading, RouteDraft, RouteGuard, RoutePath } from './reading.js';
+import { SOCKET_READERS } from './websocket.js';
 
 /**
  * Functions and the routes in front of them, read out of a configuration.
@@ -42,17 +45,6 @@ const repoPath = (instance: Instance, path: string): string => {
   const rootDir = instance.module.root?.dir ?? instance.module.dir;
   return posix.normalize(posix.join(rootDir === '' ? '.' : rootDir, path)).replace(/\/$/, '');
 };
-
-/** `{loanId}` is a parameter and `{proxy+}` takes the rest of the path. */
-const routeSegment = (part: string): string => (/^\{[^}]+\+\}$/.test(part) ? '*' : part);
-
-const joinSegments = (base: string, part: string): string =>
-  `${base.replace(/\/$/, '')}/${part.split('/').filter((segment) => segment !== '').map(routeSegment).join('/')}`;
-
-type PathResult =
-  | { readonly kind: 'path'; readonly path: string; readonly api?: string }
-  | { readonly kind: 'root'; readonly key: string; readonly below: string }
-  | { readonly kind: 'unknown'; readonly because: Because };
 
 const nameOfApi = (instance: Instance): string | undefined => textOf(argument(instance, 'name'));
 
@@ -99,9 +91,8 @@ export class DeploymentReading implements ResourceReading {
     ['aws_lambda_function', (instance) => this.#function(instance)],
     ['aws_api_gateway_method', (instance) => this.#restRoute(instance)],
     ['aws_apigatewayv2_route', (instance) => this.#httpRoute(instance)],
-    ['aws_api_gateway_rest_api', (instance) => this.#restApi(instance)],
     ['aws_sfn_state_machine', (instance) => this.#workflow(instance)],
-    ...[...EVENT_READERS, ...QUEUE_READERS, ...PIPE_READERS].map(
+    ...[...OPENAPI_BODY_READERS, ...SOCKET_READERS, ...MAPPING_READERS, ...EVENT_READERS, ...QUEUE_READERS, ...PIPE_READERS].map(
       ([type, read]) => [type, (instance: Instance) => read(instance, this)] as const,
     ),
   ];
@@ -126,18 +117,6 @@ export class DeploymentReading implements ResourceReading {
     const { workflow, rows } = readStateMachineInstance(instance);
     this.workflows.push(workflow);
     this.rows.push(...rows);
-  }
-
-  #restApi(instance: Instance): void {
-    if (argument(instance, 'body') === undefined) return;
-    this.rows.push({
-      ...siteOf(instance),
-      reason: 'api-body-unread',
-      level: 'info',
-      message: `${instance.address} declares its routes in an OpenAPI body, which is not read`,
-      hint: 'Routes declared as resources and methods are read. To read these, describe the service with a document of kind openapi instead.',
-      symbol: instance.address,
-    });
   }
 
   // ------------------------------------------------------------- functions
@@ -289,7 +268,7 @@ export class DeploymentReading implements ResourceReading {
   // ---------------------------------------------------------------- routes
 
   /** The path a REST resource id stands for. */
-  #resourcePath(value: Value | undefined, depth = 0): PathResult {
+  #resourcePath(value: Value | undefined, depth = 0): RoutePath {
     if (value === undefined) return { kind: 'unknown', because: { reason: 'absent', text: 'the resource is not set' } };
     if (depth > 32) return { kind: 'unknown', because: { reason: 'depth', text: 'the resource tree is too deep to follow' } };
     if (value.kind === 'unknown') return { kind: 'unknown', because: value.because };
@@ -308,14 +287,13 @@ export class DeploymentReading implements ResourceReading {
       return { kind: 'path', path: joinSegments(parent.path, part), ...(parent.api === undefined ? {} : { api: parent.api }) };
     }
     if (target.type === 'aws_api_gateway_rest_api' && attribute === 'root_resource_id') {
-      const api = nameOfApi(target);
-      return { kind: 'path', path: '/', ...(api === undefined ? {} : { api }) };
+      return { kind: 'path', path: '/', api: target };
     }
     if (target.mode === 'data' && target.type === 'aws_api_gateway_resource' && attribute === 'id') {
       const pathValue = argument(target, 'path');
       const path = textOf(pathValue);
       if (path === undefined) return { kind: 'unknown', because: whyNot(pathValue, `path of ${target.address}`) };
-      const api = this.#apiName(argument(target, 'rest_api_id'));
+      const api = this.#apiOf(argument(target, 'rest_api_id'));
       return { kind: 'path', path: joinSegments('/', path), ...(api === undefined ? {} : { api }) };
     }
     if (target.mode === 'data' && target.type === 'aws_ssm_parameter' && (attribute === 'value' || attribute === 'insecure_value')) {
@@ -337,17 +315,17 @@ export class DeploymentReading implements ResourceReading {
     return { kind: 'unknown', because: { reason: 'unplaced', text: `${describe(value)} is not a resource this reading can place` } };
   }
 
-  #apiName(value: Value | undefined): string | undefined {
+  /** The API a value refers to, when it refers to one. */
+  #apiOf(value: Value | undefined): Instance | undefined {
     if (value?.kind !== 'ref') return undefined;
     const target = value.target;
-    if (target.type === 'aws_api_gateway_rest_api' || target.type === 'aws_apigatewayv2_api') return nameOfApi(target);
-    return undefined;
+    return target.type === 'aws_api_gateway_rest_api' || target.type === 'aws_apigatewayv2_api' ? target : undefined;
   }
 
-  /** The function a URI, an ARN or a name stands for. */
-  #targetOf(instance: Instance, argumentName: string): RouteTarget | Because | undefined {
-    const value = argument(instance, argumentName);
-    const candidates = value === undefined ? [] : [value, ...referencesOf(instance, argumentName)];
+  /** The function the URI, the ARN or the name an integration is given stands for. */
+  invoked(integration: Integration): RouteTarget | Because | undefined {
+    const value = integration.value('uri');
+    const candidates = value === undefined ? [] : [value, ...integration.references('uri')];
     for (const candidate of candidates) {
       const found = this.#functionOf(candidate);
       if (found !== undefined) return found;
@@ -356,7 +334,7 @@ export class DeploymentReading implements ResourceReading {
     const named = text === undefined ? undefined : FUNCTION_ARN.exec(text)?.[1];
     if (named !== undefined) return { name: named };
     if (value === undefined) return undefined;
-    return whyNot(value, `${argumentName} of ${instance.address}`);
+    return whyNot(value, integration.describe('uri'));
   }
 
   #functionOf(value: Value, depth = 0): RouteTarget | undefined {
@@ -379,7 +357,7 @@ export class DeploymentReading implements ResourceReading {
     return undefined;
   }
 
-  #guards(instance: Instance, typeArgument: string): { label: string; file: string; line: number }[] {
+  #guards(instance: Instance, typeArgument: string): RouteGuard[] {
     const kind = textOf(argument(instance, typeArgument));
     if (kind === undefined || kind === 'NONE') return [];
     const authorizer = argument(instance, 'authorizer_id');
@@ -388,25 +366,19 @@ export class DeploymentReading implements ResourceReading {
     return [{ label: named ?? kind, ...at }];
   }
 
-  #pushRoute(
-    instance: Instance,
-    method: string,
-    path: PathResult,
-    rawPath: string,
-    target: RouteTarget | Because | undefined,
-    api: string | undefined,
-    guards: { label: string; file: string; line: number }[],
-  ): void {
-    const at = siteOf(instance);
+  /** A route at each address its API is reached at, or the row that says why its path is not read. */
+  route(draft: RouteDraft): void {
+    const { path, method, target } = draft;
+    const at = { file: draft.file, line: draft.line };
     if (path.kind === 'unknown') {
       this.rows.push({
         ...at,
         reason: 'route-path-unread',
-        message: `the path of ${method} ${instance.address} is not read: ${path.because.text}`,
+        message: `the path of ${method} ${draft.symbol} is not read: ${path.because.text}`,
         hint: path.because.variable === undefined
           ? 'A route whose path is not read cannot be joined to anything that calls it.'
           : `Give var.${path.because.variable} a value the files settle.`,
-        symbol: instance.address,
+        symbol: draft.symbol,
       });
       return;
     }
@@ -416,23 +388,37 @@ export class DeploymentReading implements ResourceReading {
         reason: 'route-target-unread',
         message: `what answers ${method} ${path.kind === 'path' ? path.path : `${UNREAD_SPAN}${path.below}`} is not read: ${target.text}`,
         hint: 'Point the integration at a function, a queue, a topic or a bus the files declare, or at one by a name they settle.',
-        symbol: instance.address,
+        symbol: draft.symbol,
       });
     }
     const resolvedTarget = target !== undefined && isRouteTarget(target) ? target : undefined;
-    const fullPath = path.kind === 'path' ? normalizePath(path.path) : normalizePath(`${UNREAD_SPAN}${path.below}`);
-    const routeApi = path.kind === 'path' ? (path.api ?? api) : api;
-    this.routes.push({
-      ...at,
-      method,
-      path: fullPath,
-      rawPath,
-      ...(routeApi === undefined ? {} : { api: routeApi }),
-      ...(resolvedTarget === undefined ? {} : { target: resolvedTarget }),
-      ...(path.kind === 'root' ? { root: { key: path.key, below: normalizePath(path.below) } } : {}),
-      ...(guards.length === 0 ? {} : { guards }),
-      meta: { declaredAs: instance.address, key: makeHttpEntryKey(method, fullPath) },
-    });
+    const api = path.kind === 'path' ? (path.api ?? draft.api) : draft.api;
+    const apiName = api === undefined ? undefined : nameOfApi(api);
+    // A route hanging from another deployment's point is at that point's
+    // addresses, which the linker gives it with the point.
+    const addresses = path.kind === 'path' && api !== undefined ? addressesOf(api, this) : [{ prefix: '', meta: {} }];
+    for (const address of addresses) {
+      const fullPath =
+        path.kind === 'root'
+          ? normalizePath(`${UNREAD_SPAN}${path.below}`)
+          : normalizePath(`${address.prefix ?? UNREAD_SPAN}${path.path}`);
+      this.routes.push({
+        ...at,
+        method,
+        path: fullPath,
+        rawPath: draft.rawPath,
+        ...(apiName === undefined ? {} : { api: apiName }),
+        ...(resolvedTarget === undefined ? {} : { target: resolvedTarget }),
+        ...(path.kind === 'root' ? { root: { key: path.key, below: normalizePath(path.below) } } : {}),
+        ...(draft.guards.length === 0 ? {} : { guards: draft.guards }),
+        meta: { declaredAs: draft.address, key: makeHttpEntryKey(method, fullPath), ...address.meta },
+      });
+    }
+  }
+
+  /** A route declared by a resource of its own: its site, its address and its symbol are the resource's. */
+  #routeOf(instance: Instance, rest: Omit<RouteDraft, 'address' | 'symbol' | 'file' | 'line'>): RouteDraft {
+    return { ...siteOf(instance), address: instance.address, symbol: instance.address, ...rest };
   }
 
   #restRoute(instance: Instance): void {
@@ -451,18 +437,21 @@ export class DeploymentReading implements ResourceReading {
     const method = verb.toUpperCase() === 'ANY' ? 'ALL' : verb.toUpperCase();
     const resource = argument(instance, 'resource_id');
     const path = this.#resourcePath(resource);
-    const api = this.#apiName(argument(instance, 'rest_api_id'));
-    const integration = this.#ofType('managed', 'aws_api_gateway_integration').find((candidate) => {
+    const api = this.#apiOf(argument(instance, 'rest_api_id'));
+    const declared = this.#ofType('managed', 'aws_api_gateway_integration').find((candidate) => {
       const sameResource = this.#sameValue(argument(candidate, 'resource_id'), resource);
       const theirVerb = textOf(argument(candidate, 'http_method'));
       return sameResource && theirVerb !== undefined && theirVerb.toUpperCase() === verb.toUpperCase();
     });
-    const type = integration === undefined ? undefined : textOf(argument(integration, 'type'));
+    const integration = declared === undefined ? undefined : resourceIntegration(declared, 'rest');
+    const type = integration === undefined ? undefined : integrationType(integration);
     const proxied = type === undefined || type === 'AWS_PROXY' || type === 'AWS';
-    const sends = integration === undefined ? undefined : sentBy(integration, 'rest', this);
-    const target = sends ?? (integration === undefined || !proxied ? undefined : this.#targetOf(integration, 'uri'));
+    const sends = integration === undefined ? undefined : sentBy(integration, this);
+    const target = sends ?? (integration === undefined || !proxied ? undefined : this.invoked(integration));
     const rawPath = path.kind === 'path' ? path.path : path.kind === 'root' ? path.below : '?';
-    this.#pushRoute(instance, method, path, rawPath, target, api, this.#guards(instance, 'authorization'));
+    this.route(
+      this.#routeOf(instance, { method, path, rawPath, target, ...(api === undefined ? {} : { api }), guards: this.#guards(instance, 'authorization') }),
+    );
   }
 
   #sameValue(a: Value | undefined, b: Value | undefined): boolean {
@@ -492,18 +481,23 @@ export class DeploymentReading implements ResourceReading {
     const [verb, rawPath] = key === '$default' ? ['ANY', '/{proxy+}'] : key.split(/\s+/, 2);
     if (verb === undefined || rawPath === undefined) return;
     const method = verb.toUpperCase() === 'ANY' ? 'ALL' : verb.toUpperCase();
-    const integration = referencesOf(instance, 'target')
-      .map((value) => (value.kind === 'ref' ? value.target : value.kind === 'instance' ? value.instance : undefined))
-      .find((target) => target?.type === 'aws_apigatewayv2_integration');
-    const type = integration === undefined ? undefined : textOf(argument(integration, 'integration_type'));
-    const sends = integration === undefined ? undefined : sentBy(integration, 'http', this);
+    const declared = integrationOfRoute(instance);
+    const integration = declared === undefined ? undefined : resourceIntegration(declared, 'http');
+    const type = integration === undefined ? undefined : integrationType(integration);
+    const sends = integration === undefined ? undefined : sentBy(integration, this);
     const target =
-      sends ??
-      (integration === undefined || (type !== undefined && type !== 'AWS_PROXY')
-        ? undefined
-        : this.#targetOf(integration, 'integration_uri'));
-    const api = this.#apiName(apiValue);
-    this.#pushRoute(instance, method, { kind: 'path', path: joinSegments('/', rawPath) }, rawPath, target, api, this.#guards(instance, 'authorization_type'));
+      sends ?? (integration === undefined || (type !== undefined && type !== 'AWS_PROXY') ? undefined : this.invoked(integration));
+    const api = this.#apiOf(apiValue);
+    this.route(
+      this.#routeOf(instance, {
+        method,
+        path: { kind: 'path', path: joinSegments('/', rawPath) },
+        rawPath,
+        target,
+        ...(api === undefined ? {} : { api }),
+        guards: this.#guards(instance, 'authorization_type'),
+      }),
+    );
   }
 
   // ----------------------------------------------------------------- roots
@@ -518,25 +512,25 @@ export class DeploymentReading implements ResourceReading {
       const name = textOf(argument(instance, 'name'));
       const value = argument(instance, 'value') ?? argument(instance, 'insecure_value');
       if (name === undefined || value === undefined) continue;
-      const path = this.#resourcePath(value);
-      if (path.kind !== 'path') continue;
-      this.roots.push({ key: `parameter:${name}`, path: normalizePath(path.path), ...(path.api === undefined ? {} : { api: path.api }), ...siteOf(instance) });
+      this.#root(`parameter:${name}`, this.#resourcePath(value), siteOf(instance));
     }
     for (const root of this.configuration.roots) {
       const state = this.configuration.stateOf(root);
       if (state === undefined) continue;
       for (const output of root.outputNames()) {
-        const path = this.#resourcePath(root.output(output));
-        if (path.kind !== 'path') continue;
         const at = root.outputAt(output);
-        this.roots.push({
-          key: `state:${state}#${output}`,
-          path: normalizePath(path.path),
-          ...(path.api === undefined ? {} : { api: path.api }),
-          file: at?.file ?? root.dir,
-          line: at?.line ?? 1,
-        });
+        this.#root(`state:${state}#${output}`, this.#resourcePath(root.output(output)), { file: at?.file ?? root.dir, line: at?.line ?? 1 });
       }
+    }
+  }
+
+  /** A published point at each address of its API: a base path a domain puts in front of the API is in front of the point too. */
+  #root(key: string, path: RoutePath, at: { file: string; line: number }): void {
+    if (path.kind !== 'path') return;
+    const api = path.api === undefined ? undefined : nameOfApi(path.api);
+    const addresses = path.api === undefined ? [{ prefix: '' }] : addressesOf(path.api, this);
+    for (const { prefix } of addresses) {
+      this.roots.push({ key, path: normalizePath(`${prefix ?? UNREAD_SPAN}${path.path}`), ...(api === undefined ? {} : { api }), ...at });
     }
   }
 }
