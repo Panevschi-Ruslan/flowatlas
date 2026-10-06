@@ -12,7 +12,7 @@ import { join, resolve } from 'node:path';
 import { CONFIG_FILENAME, FlowatlasError, loadConfig } from '@flowatlas/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { UNKNOWN_TYPE } from '../stacks.js';
-import { runInit, scanCandidates, suggestName } from './init.js';
+import { repoPathFor, runInit, scanCandidates, suggestName } from './init.js';
 
 const temporary: string[] = [];
 
@@ -315,5 +315,72 @@ describe('runInit without a terminal', () => {
     const { root, out } = makeWorkspace();
     const result = await runInit({ dir: root, out, print: silent() });
     expect(result.config.services).toEqual([]);
+  });
+});
+
+/**
+ * Many repositories nothing reads are counted and grouped, not listed (R170):
+ * a hundred names after "Could not tell the type of:" is a wall nobody reads.
+ */
+describe('init over many repositories it cannot read', () => {
+  const many = (): { root: string; out: string } => {
+    const { root, out } = makeWorkspace();
+    makeRepo(root, 'api', { name: 'api', dependencies: { '@nestjs/core': '10.0.0' } });
+    for (const name of ['catalogue-web', 'loans-web', 'holds-web']) {
+      makeRepo(root, name, { name, dependencies: { vue: '3.4.0' } });
+    }
+    for (const name of ['scripts', 'ops', 'mailer', 'reports']) {
+      makeRepo(root, name, { name, dependencies: { lodash: '4.0.0', dayjs: '1.11.0' } });
+    }
+    makeRepo(root, 'palette', { name: '@lending/palette', main: 'index.js' });
+    return { root, out };
+  };
+
+  it('counts them, names the stacks it recognised, and says what the rest have in common', async () => {
+    const { root, out } = many();
+    const messages: string[] = [];
+    const result = await runInit({ dir: root, out, yes: true, mcp: false, print: (m) => messages.push(m) });
+    const said = messages.join('\n');
+    expect(result.config.services).toHaveLength(9);
+    expect(said).toContain('  api  ../api  nestjs');
+    expect(said).toContain('  and 8 that nothing here reads:');
+    expect(said).toContain('No reader yet for 3 repositories: Vue (3).');
+    expect(said).toContain('Could not tell the type of 5 repositories. Of those:');
+    expect(said).toContain('  5 have no tsconfig.json, so may hold no TypeScript at all');
+    expect(said).toContain('  1 declare no dependency at all');
+    expect(said).toContain('  1 are libraries: their package.json says how to import them');
+    expect(said).toContain('  the dependencies they declare most: dayjs (4), lodash (4)');
+    expect(said).toContain('--list-unknown');
+    for (const name of ['catalogue-web', 'scripts', 'mailer', 'palette']) expect(said).not.toContain(name);
+  });
+
+  it('names every one when asked', async () => {
+    const { root, out } = many();
+    const messages: string[] = [];
+    await runInit({ dir: root, out, yes: true, mcp: false, listUnknown: true, print: (m) => messages.push(m) });
+    const said = messages.join('\n');
+    expect(said).toContain('No reader yet for: catalogue-web (Vue), holds-web (Vue), loans-web (Vue).');
+    expect(said).toContain('Could not tell the type of: mailer, ops, palette, reports, scripts.');
+    expect(said).not.toContain('Of those');
+  });
+});
+
+describe('repoPathFor', () => {
+  it('writes a path relative to the configuration', () => {
+    expect(repoPathFor('/work/project/flowatlas', '/work/project/api')).toBe('../api');
+    expect(repoPathFor('/work/project', '/work/project/api')).toBe('./api');
+    expect(repoPathFor('/work/project', '/work/project')).toBe('.');
+  });
+
+  it('writes it absolute when the relative path would climb to the root of the file system', () => {
+    expect(repoPathFor('/tmp/out/config', '/Users/someone/code/api')).toBe('/Users/someone/code/api');
+    expect(repoPathFor('/a', '/b/api')).toBe('/b/api');
+  });
+
+  it('writes an absolute path the loader accepts', async () => {
+    const { root, out } = makeWorkspace();
+    const api = makeRepo(root, 'api', { name: 'api', dependencies: { '@nestjs/core': '10.0.0' } });
+    writeFileSync(out, JSON.stringify({ services: [{ name: 'api', repo: realpathSync(api), type: 'nestjs' }] }));
+    expect(loadConfig(out).repoDir(loadConfig(out).config.services[0] as never)).toBe(realpathSync(api));
   });
 });

@@ -4,15 +4,20 @@ import {
   type AdapterSlot,
   type FlowatlasConfig,
   type PackageJson,
+  type ServiceConfig,
+  type SourceRootOptions,
 } from '@flowatlas/core';
 import { brokersPass, registerBrokerAdapters } from '@flowatlas/adapters-broker';
 import { leavesPass, registerDbAdapters } from '@flowatlas/adapters-db';
-import { registerEntryAdapters } from '@flowatlas/adapters-entry';
+import { deployedSourceDirectories, registerEntryAdapters } from '@flowatlas/adapters-entry';
 import { registerFrontendAdapters as registerAngularFrontend } from '@flowatlas/extractor-angular';
-import { registerFrontendAdapters as registerReactFrontend } from '@flowatlas/extractor-react';
+import {
+  REACT_SOURCE_ROOTS,
+  registerFrontendAdapters as registerReactFrontend,
+} from '@flowatlas/extractor-react';
 import type { NestExtractorPass } from '@flowatlas/extractor-nestjs';
 import { workflowsPass } from '@flowatlas/stepfunctions';
-import { halfOf, READERS } from '../readers.js';
+import { halfOf, READERS, REACT_EXTRACTOR } from '../readers.js';
 
 /**
  * Package that reads each kind of repository.
@@ -155,3 +160,44 @@ export const declinedNote = (
     ` the configuration says "${type}" and its package.json declares no framework this reads`
   );
 };
+
+/**
+ * Where each reader looks when a repository's tsconfig names no source root, for
+ * the readers that do not look in `src` (R170).
+ *
+ * Taken from the reader's own package rather than restated here, so the build's
+ * file listing and the reading have one statement of it between them.
+ */
+const ROOTS_OF_READER: ReadonlyMap<string, SourceRootOptions> = new Map([
+  [REACT_EXTRACTOR, REACT_SOURCE_ROOTS],
+]);
+
+/**
+ * The directories a server's deployment packages its functions from, which are
+ * roots of its code whatever its tsconfig says. A browser is never deployed as
+ * a function, and its reader is told of none.
+ */
+export const deployedRootsOf = (
+  service: ServiceConfig,
+  repoDir: string,
+  config: FlowatlasConfig,
+): readonly string[] =>
+  halfOf(service.type) === 'server' ? deployedSourceDirectories(repoDir, config, service) : [];
+
+/**
+ * Where a service's own code is, as the build's file listing is told it.
+ *
+ * The reading is told the same three things — the service's tsconfig, its
+ * reader's fallback and its deployment's directories — and both hand them to
+ * the core's `sourceRootsOf`, so a file one of them opens is a file the other
+ * stamps (R170).
+ */
+export const sourceRootOptionsOf = (
+  service: ServiceConfig,
+  repoDir: string,
+  config: FlowatlasConfig,
+): SourceRootOptions => ({
+  ...(service.tsconfig === undefined ? {} : { tsconfig: service.tsconfig }),
+  ...ROOTS_OF_READER.get(EXTRACTORS.get(service.type) ?? ''),
+  deployed: deployedRootsOf(service, repoDir, config),
+});

@@ -13,7 +13,7 @@ import {
 } from '@flowatlas/core';
 import type { Command } from 'commander';
 import { declaresDeployment, guessDirectoryType, guessType, UNKNOWN_TYPE } from '../stacks.js';
-import { suggestName, toPosixRelative } from './init.js';
+import { repoPathFor, suggestName } from './init.js';
 import { installMcp, MCP_FILE, SERVER_KEY } from './mcp.js';
 
 export interface LinkOptions {
@@ -116,7 +116,7 @@ export const linkRepos = (paths: readonly string[], options: LinkOptions = {}): 
     const { name: suggested, type } = describe(dir);
     // Two repositories can share a package name; the directory settles it.
     const name = byName.has(suggested) ? `${suggested}-${basename(dir)}` : suggested;
-    const service: ServiceConfig = { name, repo: toPosixRelative(configDir, dir), type };
+    const service: ServiceConfig = { name, repo: repoPathFor(configDir, dir), type };
     byName.set(name, service);
     byPath.set(dir, service);
     added.push(service);

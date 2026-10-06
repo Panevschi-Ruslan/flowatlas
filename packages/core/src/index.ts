@@ -322,6 +322,7 @@ export {
   reportUnreadableSources,
   SKIPPED_TEST_DIRECTORY_REASON,
   skippedTestDirectories,
+  sourceRootsOf,
   TSCONFIG_CANDIDATES,
   UNREADABLE_FILE_REASON,
 } from './project.js';
@@ -329,6 +330,7 @@ export type {
   CreateProjectOptions,
   RepoStats,
   SourceCounts,
+  SourceRootOptions,
   UnreadableSourceContext,
 } from './project.js';
 

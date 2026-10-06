@@ -54,7 +54,7 @@ const DECLARED_SERVICE_TYPE = 'declared';
 const serviceEntrySchema = z.strictObject({
   name: z.string().min(1),
   /**
-   * Path to the repository, relative to the configuration file.
+   * Path to the repository, relative to the configuration file, or absolute.
    *
    * Absent for a declared service, where the directory holding the document
    * stands in for it: everything downstream asks a service where it lives, and

@@ -102,7 +102,7 @@ const ENTRY_POINT_KEYS = ['main', 'module', 'browser', 'bin'] as const;
  * server that is compiled in place but never imported as a whole is spelled —
  * does not, because there is no whole to import.
  */
-const importableByName = (pkg: PackageJson): boolean => {
+export const importableByName = (pkg: PackageJson): boolean => {
   if (ENTRY_POINT_KEYS.some((key) => pkg[key] !== undefined)) return true;
   const exported = pkg['exports'];
   if (typeof exported === 'string') return true;
@@ -272,3 +272,59 @@ export const guessDirectoryType = (
 /** The stack a directory is built on when nothing here reads it, from its manifest or its files. */
 export const guessUnreadIn = (dir: string, pkg: PackageJson | undefined): string | undefined =>
   (pkg === undefined ? undefined : guessUnread(pkg)) ?? unreadDeploymentOf(dir);
+
+/** What one description of a repository is asked: its directory, manifest and configured type. */
+interface Seen {
+  readonly dir: string;
+  readonly pkg: PackageJson | undefined;
+  readonly type: string;
+}
+
+/**
+ * Descriptions of a repository, most telling first; the first that applies is
+ * the one given (R170).
+ *
+ * Asked about a service that was read and has no way in, where the useful
+ * sentence is what the repository is rather than what is missing from it: a
+ * deployment written for a tool nothing reads, a framework nothing reads, a
+ * framework that *is* read under another type, or a library. Each row is one
+ * claim the repository's own files make, and a new one is a row here.
+ */
+const DESCRIPTIONS: ReadonlyArray<(seen: Seen) => string | undefined> = Object.freeze([
+  ({ dir }) => {
+    const tool = unreadDeploymentOf(dir);
+    return tool === undefined ? undefined : `its functions are declared for ${tool}, which nothing here reads yet`;
+  },
+  ({ pkg }) => {
+    const framework = pkg === undefined ? undefined : guessUnread(pkg);
+    return framework === undefined ? undefined : `it is built on ${framework}, which nothing here reads yet`;
+  },
+  ({ dir, pkg, type }) => {
+    const guessed = guessDirectoryType(dir, pkg, undefined);
+    return guessed === UNKNOWN_TYPE || guessed === type
+      ? undefined
+      : `it looks like ${guessed} rather than ${type}; set its type to "${guessed}"`;
+  },
+  ({ pkg }) =>
+    pkg !== undefined && importableByName(pkg)
+      ? 'it looks like a library: its package.json says how to import it, and a library has no way in of its own'
+      : undefined,
+  ({ pkg, type }) =>
+    pkg === undefined
+      ? `it has no package.json, and none of its files declares a way in that the ${type} reader recognises`
+      : undefined,
+]);
+
+/**
+ * What a repository looks like, in one clause, for a reader told it has no way
+ * in. Always says something: where none of the descriptions applies, it says
+ * what was looked for and under which type.
+ */
+export const looksLike = (dir: string, type: string): string => {
+  const seen: Seen = { dir, pkg: readPackageJson(dir), type };
+  for (const describe of DESCRIPTIONS) {
+    const said = describe(seen);
+    if (said !== undefined) return said;
+  }
+  return `it is configured as ${type}, and none of its code declares a route, a handler or a consumer that reader recognises`;
+};

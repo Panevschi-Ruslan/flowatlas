@@ -262,6 +262,22 @@ describe('the build cache', () => {
     expect(again.nodes.map((node) => node.id)).toContain('entry:catalogue:invoke:catalogue-find-title');
     expect(again.nodes.map((node) => node.id)).not.toContain('entry:catalogue:invoke:catalogue-get-title');
   }, 120_000);
+
+  it('reads a repository again when only a file beside src changed, in a directory the deployment names (R170)', async () => {
+    const dir = copyOf('lambda-functions-beside-src', 'lambda-functions-beside-src-cached');
+    const config = join(dir, 'flowatlas.config.json');
+    writeFileSync(config, JSON.stringify({ services: [{ name: 'holds', repo: '.', type: 'lambda' }] }));
+    const first = await buildProject({ config, builtAt: FIXED });
+    const hosts = (graph: ProjectGraph): unknown[] =>
+      graph.nodes.filter((node) => node.type === 'http_out').map((node) => node.meta?.['host']);
+    expect(hosts(first.project)).toEqual(['catalogue.library.example']);
+
+    const file = join(dir, 'functions', 'shared', 'catalogue.ts');
+    writeFileSync(file, readFileSync(file, 'utf8').replace('catalogue.library.example', 'titles.library.example'));
+    const again = await buildProject({ config, builtAt: FIXED });
+    expect(again.plan['holds']?.mode).not.toBe('skip');
+    expect(hosts(again.project)).toEqual(['titles.library.example']);
+  }, 120_000);
 });
 
 describe('init', () => {

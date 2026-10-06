@@ -212,6 +212,32 @@ only one of them moved.
   of an ARN or a queue URL by the same forms: a state machine ARN with a version
   or an alias names the machine in Terraform too, and a partner bus keeps the
   slashes in its name everywhere.
+- **A stack the tool cannot read is described as what it is.** Four answers
+  that sent a first-time reader the wrong way (R170):
+  - `doctor` said a service with no way in at all was a partial read with its
+    dependencies missing, and installing them changed nothing. A server that was
+    read and that nothing in the graph reaches is now the first line of the
+    report and the first sentence of the verdict, with what the repository looks
+    like — a deployment tool or framework nothing reads, a readable framework
+    under another type, or a library — and is left out of the sentence about
+    dependencies. It changes no exit code. `doctor.json` lists such services
+    under `unresolved.withoutWaysIn`. The verdict is now an ordered list of
+    rules, and `--strict` with no baseline is one of them rather than a patch
+    the command applied afterwards; the exit code is unchanged.
+  - `init` over many repositories it could not type printed every name.
+    Past five, it counts them: the stacks it recognised and has no reader for,
+    and what the rest have in common. `--list-unknown` names every one.
+  - `init` and `link` wrote a configuration far from its repositories with
+    paths like `../../../../../../../Users/…`. A path that climbs to the root of
+    the file system is written absolute.
+  - A repository with a `src/` was read in `src/` only, so handlers in
+    `functions/` beside it were never opened and never stamped: a request they
+    made was missing, and an edit to one was answered with `0 files changed`.
+    The source roots now come from the tsconfig's `include` and `files`, and
+    for a server whose deployment is read, from every directory it packages
+    functions from; `src/` is the fallback. The reading and the build's file
+    listing ask one function for them, so they cannot disagree.
+    `fixtures/lambda-functions-beside-src`.
 
 - **A property of a parameter is no longer reported as a constant nobody could
   read.** `event.detail.type` read off a parameter is decided by each caller,

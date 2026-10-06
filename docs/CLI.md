@@ -83,7 +83,38 @@ as `apps/web` is, it finds nothing.
 | `--out <file>` | `./flowatlas.config.json` | where to write the configuration |
 | `-y, --yes` | off | accept every suggestion without asking. Required when the terminal is not interactive |
 | `--force` | off | overwrite an existing configuration |
+| `--list-unknown` | off | name every repository nothing reads, however many there are |
 | `--no-mcp` | off | skip registering the graph server |
+
+Each `repo` is written relative to the configuration, so the project still loads
+from another checkout — unless getting there climbs all the way to the root of
+the file system, which is what a configuration written far from its repositories
+does (`--out` in one tree, `--dir` in another). That one is written absolute,
+rather than as `../../../../../../../Users/…`. `link` writes paths the same way.
+
+**Many repositories nothing reads are counted, not listed.** Up to five are named
+as below. Past that, `init` lists the services it will read, then counts the
+rest: how many were recognised as a stack there is no reader for, by stack, and
+how many it could not type at all, with what those have in common — how many
+declare no dependency, are libraries, declare a workspace with no application in
+it, or have no `tsconfig.json`, and the dependencies they declare most. Each is
+still in the configuration, as `unknown`; `--list-unknown` names every one.
+
+```
+Wrote /work/flowatlas/flowatlas.config.json with 103 service(s):
+  api  ../api  nestjs
+  web  ../web  angular
+  and 101 that nothing here reads:
+No reader yet for 13 repositories: Vue (9), the Serverless Framework (4).
+flowatlas reads repositories of type nestjs and … and react today.
+Those repositories stay in the configuration and contribute nothing to the graph.
+Could not tell the type of 88 repositories. Of those:
+  88 have no tsconfig.json, so may hold no TypeScript at all
+  61 declare no dependency at all
+  the dependencies they declare most: lodash (22), axios (19), dayjs (12)
+Detection is only a suggestion. Set the type by hand if you know it.
+Run init again with --list-unknown to name every one; each is in the configuration with its type.
+```
 
 The type of a repository is read from its manifest: `@nestjs/core` makes it
 `nestjs`, `@medusajs/framework` or `@medusajs/medusa` makes it `medusa`, `next`
@@ -363,6 +394,27 @@ writes a `graph.json`; run on its own, `extract` writes to `--out`, which is
 | `--json` | off | print the summary as JSON |
 | `-v, --verbose` | off | log each pass |
 
+**Which files are read.** A service's own code is found under its source roots,
+and `build` and `extract` ask one function for them, so the files a reading opens
+and the files the build cache stamps cannot differ. The roots are, in order:
+
+1. the directories the tsconfig's `include` and `files` name — a pattern stands
+   for the directory before its first wildcard, and a file for the directory it
+   is in, because the compiler follows imports from it. A relative `extends` is
+   followed when the tsconfig itself names neither;
+2. when it names nothing, `src` where there is one, and the whole repository
+   where there is not — the whole repository always for `react`, whose screens
+   live wherever its framework's convention puts them;
+3. beside either, for a server whose deployment is read, every directory the
+   deployment packages functions from, mapped back from compiled output by the
+   tsconfig that wrote it.
+
+A root outside the repository, under `node_modules`, `dist` or `build`, or hidden,
+is left out; a root named like a test is left out and reported as a test
+directory is. `fixtures/lambda-functions-beside-src` keeps its handlers in
+`functions/` beside `src/`, with a tsconfig that names `src` only: the deployment
+names `functions`, so both are read.
+
 ---
 
 ## Asking
@@ -624,7 +676,9 @@ join.
 
 What could not be read, what the annotations get wrong, what has drifted, and
 whether any of it has grown since the baseline. Five sections over one built
-graph; it reads no repository, so two runs over one graph say the same thing.
+graph; it reads no repository's source, so two runs over one graph say the same
+thing. It looks at a repository only to say whether its dependencies are
+installed, and what a service with no way in looks like.
 
 | Flag | Default | Does |
 |---|---|---|
@@ -666,6 +720,30 @@ for that service the gate is blind rather than lax, and a baseline accepted over
 it would be accepting the blindness. Decided per service, so a service read end
 to end cannot carry a hollow one past the check by outnumbering it; `--service`
 narrows the question the way it narrows every other.
+
+**A server with no way in at all is said first.** A service a server reader read
+— it holds code — with no route, handler, subscriber or screen in the graph is
+one nothing reaches, so no flow starts there. That is usually a stack nothing
+reads under a type set by hand, and it is the first line of the report and the
+first sentence of the verdict, with what the repository looks like: a
+deployment written for a tool nothing reads (the Serverless Framework, AWS SAM,
+the AWS CDK), a framework nothing reads, a framework that *is* read under
+another type, or a library:
+
+```
+api: no way in was found — its functions are declared for the Serverless Framework, which nothing here reads yet. Its code was read and nothing in this graph reaches it, so no flow starts there; its dependencies are not installed either, and installing them would not give it one.
+```
+
+It comes before anything about dependencies, and such a service is not named in
+the sentence about them, because installing them would not give it a way in.
+It decides no exit code: its bodies were read, so a change inside one still adds
+a row the growth check can see, and a library typed as a server is a
+configuration somebody may mean. `doctor.json` carries the same list under
+`unresolved.withoutWaysIn`.
+
+The exit code is decided by the first of these that applies: a graph that cannot
+be reported on, a baseline that cannot be read, or `--strict` with no baseline
+(2); `--strict` and a check that found something (1); otherwise 0.
 
 Every unresolved row is read at one of three levels, and only the first two say
 the graph is missing something:

@@ -23,6 +23,7 @@ import { CliError, EXIT } from '../exit.js';
 import { documentAgeRows, gitAgeReader, type DeclaredDocument } from '../doctor/age.js';
 import { expandReasons } from '../doctor/hints.js';
 import { processIo, type QueryIo } from '../query/answer.js';
+import { looksLike } from '../stacks.js';
 import { VERSION } from '../version.js';
 import {
   acceptedBy,
@@ -121,7 +122,22 @@ interface FromConfig {
   declared: DeclaredDocument[];
   /** Absolute directories of the services that really were read. */
   readableDirs: string[];
+  /** The same, by service name, for describing a repository (R170). */
+  serviceDirs: Map<string, string>;
 }
+
+/**
+ * What a service's repository looks like, read from its directory, for the
+ * verdict on a service with no way in (R170). The one place `doctor` opens a
+ * repository's own files, and only its manifest and the files that name a
+ * deployment tool.
+ */
+const describeRepository =
+  (settings: FromConfig) =>
+  (service: { name: string; type: string }): string | undefined => {
+    const dir = settings.serviceDirs.get(service.name);
+    return dir === undefined ? undefined : looksLike(dir, service.type);
+  };
 
 const fromConfig = (options: DoctorOptions): FromConfig => {
   const empty: FromConfig = {
@@ -132,6 +148,7 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
     repoDirs: new Map(),
     declared: [],
     readableDirs: [],
+    serviceDirs: new Map(),
   };
   try {
     const loaded = loadConfig(options.config ?? process.cwd(), { checkRepos: false });
@@ -140,6 +157,7 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
     const repoDirs = new Map<string, string>();
     const declared: DeclaredDocument[] = [];
     const readableDirs: string[] = [];
+    const serviceDirs = new Map<string, string>();
     for (const service of services) {
       for (const env of service.baseUrlEnv ?? []) {
         envOwners.set(env, [...(envOwners.get(env) ?? []), service.name]);
@@ -160,6 +178,7 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
         continue;
       }
       readableDirs.push(loaded.repoDir(service));
+      serviceDirs.set(service.name, loaded.repoDir(service));
       const dir = service.repo.replace(/^\.\//, '').replace(/\/+$/, '');
       if (dir !== '' && dir !== '.') repoDirs.set(service.name, dir);
     }
@@ -180,6 +199,7 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
       repoDirs,
       declared,
       readableDirs,
+      serviceDirs,
     };
   } catch {
     // Pointed at a bare database with no configuration beside it there is
@@ -373,6 +393,7 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
         envOwners: settings.envOwners,
         flowatlasVersion: VERSION,
         ...(options.service === undefined ? {} : { service: options.service }),
+        looksLike: describeRepository(settings),
       },
     );
 
@@ -386,17 +407,8 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
     }
 
     // A missing baseline is an answer on an ordinary run and a stop on a strict
-    // one: a gate with nothing to compare against is not a gate, and pretending
-    // otherwise is how a check quietly stops checking.
+    // one; that is one of the verdict's rules, decided with the others.
     let exitCode: number = report.verdict.exitCode;
-    if (strict && report.baseline.status === 'missing') {
-      exitCode = EXIT.cannotRun;
-      report.verdict.exitCode = EXIT.cannotRun;
-      report.verdict.reasons.push(
-        `${report.baseline.note ?? 'there is no baseline'} — or pass --no-baseline to check annotations and contracts only`,
-      );
-      if (file !== undefined) writeFileSync(file, renderDoctorJson(report), 'utf8');
-    }
 
     let baselineFile: string | undefined;
     if (accept) {

@@ -1,5 +1,5 @@
-import { existsSync, readdirSync } from 'node:fs';
-import { dirname, join, relative, resolve, sep } from 'node:path';
+import { existsSync, readdirSync, statSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import {
   Project,
   ts,
@@ -21,13 +21,38 @@ import {
   workspaceRootsAbove,
 } from './workspace.js';
 
-export interface CreateProjectOptions {
+/**
+ * What decides where a service's own code is (see {@link sourceRootsOf}).
+ *
+ * Every field is something the repository or its configuration states. The
+ * reading and the build's file listing are both handed this, so the files one
+ * opens and the files the other stamps are one answer to one question (R170).
+ */
+export interface SourceRootOptions {
+  /**
+   * Path to a tsconfig, absolute or relative to the root. Its `include` and
+   * `files` name the roots; without one, the first of
+   * {@link TSCONFIG_CANDIDATES} is asked.
+   */
+  tsconfig?: string;
+  /**
+   * Directories a deployment packages the service's functions from, relative
+   * to the root. Roots whatever the tsconfig says, because what a deployment
+   * runs is the service's code whether or not anything compiles it.
+   */
+  deployed?: readonly string[];
+  /**
+   * Where to read when the tsconfig names no root: `src` when the repository
+   * has one and the whole repository otherwise (the default), or the whole
+   * repository always — what a browser reader asks for, since a browser keeps
+   * its screens wherever its framework's convention puts them.
+   */
+  fallback?: 'src' | 'repository';
+}
+
+export interface CreateProjectOptions extends SourceRootOptions {
   /** Absolute path to the repository root. */
   rootDir: string;
-  /** Path to a tsconfig, absolute or relative to the root. */
-  tsconfig?: string;
-  /** Extra globs to add, relative to the root. */
-  include?: string[];
   /**
    * Test directories to read after all, relative to the root: a `fixtures` or
    * `e2e` directory that holds code the application runs. Every other one is
@@ -42,14 +67,11 @@ const SKIPPED_DIRECTORIES = new Set(['node_modules', 'dist', 'build']);
 /**
  * The extensions a TypeScript repository keeps its code in.
  *
- * Both of them, and not because every reader wants both. A reader that wants
- * fewer says so through `include`, which is what makes the set of files a
- * property of the reader rather than of this module. What this constant fixes
- * is the default, and the default has to be every kind of source a repository
- * has, because the alternative was read for a long time as a statement about
- * the repository: globbing `.ts` alone meant a directory that is a browser and
- * a server at once could only ever be half read, and the half that was missing
- * was decided here rather than by anyone who could see the consequence.
+ * Both of them, for every reader, because the alternative was read for a long
+ * time as a statement about the repository: globbing `.ts` alone meant a
+ * directory that is a browser and a server at once could only ever be half read,
+ * and the half that was missing was decided here rather than by anyone who could
+ * see the consequence.
  *
  * The suffix carries no meaning beyond "this file may hold markup". A route
  * handler that answers with an image is written in `.tsx` for that reason
@@ -142,9 +164,128 @@ const testDirectoriesOf = (
  * asked by a glob on one side and a walk on the other with a fixture standing
  * between them to check that the two lists had not drifted.
  */
-const sourceFilesUnder = (dir: string, tests: TestDirectories = NO_TEST_DIRECTORIES): string[] => {
-  const sourceRoot = existsSync(join(dir, 'src')) ? 'src' : '.';
-  return walkSources(dir, sourceRoot === '.' ? '' : sourceRoot, tests).sort();
+const sourceFilesUnder = (
+  dir: string,
+  tests: TestDirectories = NO_TEST_DIRECTORIES,
+  roots: readonly string[] = sourceRootsOf(dir),
+): string[] => {
+  const files = roots.flatMap((root) => {
+    const at = root === WHOLE ? '' : root;
+    // A root is a directory like any other: one a tsconfig names that is named
+    // like a test is left out and recorded, as it would be met on a walk.
+    const testDir = skippingTestDirectory(dir, join(dir, at, '_'), tests);
+    if (testDir === undefined) return walkSources(dir, at, tests);
+    tests.skipped(testDir, walkSources(dir, at, undefined).map((file) => join(dir, file)));
+    return [];
+  });
+  return [...new Set(files)].sort();
+};
+
+/** The whole repository, as a root. */
+const WHOLE = '.';
+
+/** Where a pattern stops being a path: the first segment with a wildcard in it. */
+const WILDCARD = /[*?[{]/;
+
+/**
+ * The directory a tsconfig entry names, relative to the root, or nothing when it
+ * is outside the root or not there.
+ *
+ * A pattern stands for the directory before its first wildcard, `src/**\/*.ts`
+ * for `src`, because what is read below a root is decided by what a source is
+ * and not by the pattern. A file stands for the directory it is in: `files`
+ * names where the compiler starts and it follows imports from there, so
+ * `src/main.ts` means the code in `src`.
+ */
+const rootOfEntry = (rootDir: string, base: string, entry: string): string | undefined => {
+  const segments = entry.replace(/\\/g, '/').split('/');
+  const cut = segments.findIndex((segment) => WILDCARD.test(segment));
+  const path = resolve(base, ...(cut === -1 ? segments : segments.slice(0, cut)));
+  if (!existsSync(path)) return undefined;
+  const dir = cut === -1 && !isDirectory(path) ? dirname(path) : path;
+  const rel = relative(rootDir, dir);
+  if (rel === '') return WHOLE;
+  if (isAbsolute(rel)) return undefined;
+  const parts = rel.split(sep);
+  // Outside the root, or somewhere a walk never enters: an output directory, a
+  // dependency, a hidden one.
+  if (parts.some((part) => part === '..' || SKIPPED_DIRECTORIES.has(part) || part.startsWith('.'))) {
+    return undefined;
+  }
+  return parts.join('/');
+};
+
+const isDirectory = (path: string): boolean => {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * The roots a tsconfig names through `include` and `files`, following a
+ * relative `extends` when it names neither, as the compiler does. Empty when it
+ * names none: a tsconfig with neither means "everything", which is not a
+ * statement about where the code is, and a solution tsconfig's `files: []`
+ * says the code is described elsewhere.
+ */
+const tsconfigRoots = (rootDir: string, configPath: string | undefined, depth = 0): string[] => {
+  if (configPath === undefined || depth > 8) return [];
+  const read = ts.readConfigFile(configPath, ts.sys.readFile);
+  const config = read.error === undefined ? (read.config as Record<string, unknown>) : undefined;
+  if (config === undefined) return [];
+  const entries = [config['include'], config['files']]
+    .filter(Array.isArray)
+    .flat()
+    .filter((entry): entry is string => typeof entry === 'string');
+  if (config['include'] === undefined && config['files'] === undefined) {
+    // The last one wins, as it does for the compiler; a package's tsconfig is
+    // the package's business and is not followed.
+    const parent = [config['extends']]
+      .flat()
+      .filter((each): each is string => typeof each === 'string' && each.startsWith('.'))
+      .pop();
+    if (parent === undefined) return [];
+    const path = resolve(dirname(configPath), parent);
+    return tsconfigRoots(rootDir, existsSync(path) ? path : `${path}.json`, depth + 1);
+  }
+  return entries.flatMap((entry) => rootOfEntry(rootDir, dirname(configPath), entry) ?? []);
+};
+
+/** The roots with every one inside another dropped, so nothing is read twice. */
+const outermost = (roots: readonly string[]): string[] => {
+  const unique = [...new Set(roots)].sort();
+  if (unique.includes(WHOLE)) return [WHOLE];
+  return unique.filter((root) => !unique.some((other) => other !== root && root.startsWith(`${other}/`)));
+};
+
+/**
+ * Where a service's own code is, relative to its root and sorted (R170).
+ *
+ * One function, asked both by {@link createProject} for the files it opens and by
+ * {@link listRepoSources} for the files a build stamps, so the two cannot answer
+ * differently. Three things say where code is, in this order:
+ *
+ * 1. The tsconfig's `include` and `files`, which is the repository's own
+ *    statement of where its code is.
+ * 2. When it says nothing, `src` where there is one and the whole repository
+ *    otherwise ({@link SourceRootOptions.fallback}). A fallback, not the rule:
+ *    it was the rule, and a repository with handlers in `functions/` beside
+ *    `src/` was read without them and never told.
+ * 3. Beside either, the directories a deployment packages functions from, which
+ *    are the service's code whatever the tsconfig compiles.
+ *
+ * Directories that are not there are left out, and so is anything outside the
+ * root: another package's code is reached through the workspace
+ * (`serviceSourceDirs`), never through a path that climbs out.
+ */
+export const sourceRootsOf = (rootDir: string, options: SourceRootOptions = {}): string[] => {
+  const named = tsconfigRoots(rootDir, findTsconfig(rootDir, options.tsconfig));
+  const fallback =
+    options.fallback !== 'repository' && existsSync(join(rootDir, 'src')) ? 'src' : WHOLE;
+  const deployed = (options.deployed ?? []).flatMap((dir) => rootOfEntry(rootDir, rootDir, dir) ?? []);
+  return outermost([...(named.length > 0 ? named : [fallback]), ...deployed]);
 };
 
 /**
@@ -628,16 +769,17 @@ const workspaceResolution = (
 /**
  * Loads a repository for analysis.
  *
- * Files are added by glob rather than from the tsconfig, because a repository
- * usually compiles its tests and build output too and reading those doubles the
- * work for nothing. The tsconfig is still honoured for compiler options and
+ * Files are listed from the roots {@link sourceRootsOf} names rather than taken
+ * from the tsconfig's own file list, because a repository usually compiles its
+ * tests and build output too and reading those doubles the work for nothing.
+ * The tsconfig is still honoured for compiler options and
  * path mappings, which is what type resolution depends on — and a declared
  * package's own path mappings are honoured for that package's own files, and a
  * package of the extent imported by its name is found without an install, which
  * is what {@link workspaceResolution} is about.
  */
 export const createProject = (options: CreateProjectOptions): Project => {
-  const { rootDir, tsconfig, include, readTestDirectories } = options;
+  const { rootDir, tsconfig, readTestDirectories } = options;
   const skipped = new Map<string, string[]>();
   const tests = testDirectoriesOf(rootDir, readTestDirectories, (dir, files) => {
     skipped.set(dir, [...(skipped.get(dir) ?? []), ...files]);
@@ -659,40 +801,17 @@ export const createProject = (options: CreateProjectOptions): Project => {
       : { resolutionHost: workspaceResolution(aliases, members) }),
   });
 
-  const sourceRoot = existsSync(join(rootDir, 'src')) ? 'src' : '.';
-  const globs = include ?? SOURCE_EXTENSIONS.map((ext) => `${sourceRoot}/**/*${ext}`);
-  project.addSourceFilesAtPaths([
-    ...globs.map((glob) => join(rootDir, glob)),
-    ...[...SKIPPED_DIRECTORIES].map((dir) => `!${join(rootDir, `**/${dir}/**`)}`),
-    `!${join(rootDir, `**/*${DECLARATION_SUFFIX}`)}`,
-  ]);
-  // A test is told by the shape of its name, which a glob cannot spell, so the
-  // files the globs matched are asked the same question the walk below asks.
-  // Relative to the root, because a test is a test of the tree being read and
-  // the directories above the root are the machine's business.
+  // The service's own roots first, then every other directory its code is in. A
+  // test by its name is left out without a word; a directory named like a test
+  // is left out and recorded with the files it held, unless the service named it
+  // to be read (`readTestDirectories`).
   //
-  // A test by its name is left out without a word. A file left out because a
-  // directory it is in is named like a test is recorded against that directory,
-  // unless the service named it to be read (`readTestDirectories`).
-  for (const file of project.getSourceFiles()) {
-    const path = file.getFilePath();
-    if (isTestName(file.getBaseName())) {
-      project.removeSourceFile(file);
-      continue;
-    }
-    const dir = skippingTestDirectory(rootDir, path, tests);
-    if (dir === undefined) continue;
-    tests.skipped(dir, [path]);
-    project.removeSourceFile(file);
-  }
-
-  // Then every other directory this service's code is in. A workspace member
-  // whose handlers live in a sibling package used to have those files opened
-  // anyway — the checker resolved into them, so they were in the project — and
-  // then excluded from every walk, which is how a repository came to have all of
-  // its routes and none of their bodies. Opening them here as well as resolving
-  // them is what lets a clone with nothing installed read the same code as one
-  // with everything installed.
+  // A workspace member whose handlers live in a sibling package used to have
+  // those files opened anyway — the checker resolved into them, so they were in
+  // the project — and then excluded from every walk, which is how a repository
+  // came to have all of its routes and none of their bodies. Opening them here as
+  // well as resolving them is what lets a clone with nothing installed read the
+  // same code as one with everything installed.
   //
   // Listed rather than globbed, and that is not a style choice. A glob makes the
   // parser walk the directory tree under it, and the tree it walks is the one it
@@ -701,7 +820,11 @@ export const createProject = (options: CreateProjectOptions): Project => {
   // `packages/app-store` holds a child that exists only in the tsconfig, and a
   // glob over that package walked into it and stopped the whole reading with
   // "Directory not found". The list comes from the file system and holds only
-  // files that are there.
+  // files that are there. It is also the list `listRepoSources` makes from the
+  // same roots, so what a build stamps and what this opens are one answer (R170).
+  for (const file of sourceFilesUnder(rootDir, tests, sourceRootsOf(rootDir, options))) {
+    project.addSourceFileAtPath(join(rootDir, file));
+  }
   for (const dir of packages) {
     for (const file of sourceFilesUnder(dir, tests)) project.addSourceFileAtPath(join(dir, file));
   }
@@ -900,14 +1023,14 @@ export const reportSkippedTestDirectories = (
  * The files {@link createProject} would add, listed without parsing any of them.
  *
  * What a build needs to answer "did anything change here" before deciding to
- * read a repository at all. The two must agree, which `sources.test.ts` checks
- * against a fixture rather than trusting the two lists to stay in step. They now
- * agree by construction for every directory but the service's own, which is
- * still globbed there and walked here; the check earns its keep on that one.
+ * read a repository at all. The two agree by construction: both walk the roots
+ * {@link sourceRootsOf} names, given the same `roots`, and the same directories
+ * of the workspace. `sources.test.ts` still checks it against fixtures.
  */
 export const listRepoSources = (
   rootDir: string,
   readTestDirectories?: readonly string[],
+  roots: SourceRootOptions = {},
 ): string[] => {
   const tests = testDirectoriesOf(rootDir, readTestDirectories);
   // One walk per directory the service's code is in, so that a change in a
@@ -916,8 +1039,8 @@ export const listRepoSources = (
   // the service that calls it on disk unchanged and out of date.
   const out = serviceSourceDirs(rootDir).flatMap((dir) => {
     const prefix = relative(rootDir, dir).split(sep).join('/');
-    const files = sourceFilesUnder(dir, tests);
-    return prefix === '' ? files : files.map((file) => `${prefix}/${file}`);
+    if (prefix === '') return sourceFilesUnder(dir, tests, sourceRootsOf(dir, roots));
+    return sourceFilesUnder(dir, tests).map((file) => `${prefix}/${file}`);
   });
   return out.sort();
 };

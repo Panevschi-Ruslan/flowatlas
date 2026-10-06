@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createProject, listRepoSources, skippedTestDirectories } from './project.js';
+import { createProject, listRepoSources, skippedTestDirectories, sourceRootsOf } from './project.js';
 
 /**
  * A workspace package imported by its name, with nothing installed (R152).
@@ -211,6 +211,106 @@ describe('a directory named like tests', () => {
     for (const held of skippedTestDirectories(project).values()) {
       expect(held.some((file) => file.endsWith('orders.spec.ts'))).toBe(false);
     }
+  });
+});
+
+/**
+ * Where a service's own code is (R170): the tsconfig's `include` and `files`,
+ * `src` when it names nothing, and the directories a deployment packages from,
+ * the same answer for the files opened and the files listed.
+ */
+describe('the source roots of a service', () => {
+  const repository = (files: Record<string, string | object>): string => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), 'flowatlas-roots-')));
+    temporary.push(root);
+    write(root, {
+      'src/holds.ts': 'export const holds = 1;\n',
+      'functions/place-hold.ts': 'export const handler = 1;\n',
+      'functions/shared/request.ts': 'export const request = 1;\n',
+      'scripts/seed.ts': 'export const seed = 1;\n',
+      ...files,
+    });
+    return root;
+  };
+
+  const opened = (root: string, options: { tsconfig?: string; deployed?: readonly string[] } = {}): string[] =>
+    createProject({ rootDir: root, ...options })
+      .getSourceFiles()
+      .map((file) => file.getFilePath().slice(root.length + 1))
+      .sort();
+
+  it('falls back to src when the tsconfig names nothing, and to the whole repository without src', () => {
+    const root = repository({ 'tsconfig.json': TSCONFIG });
+    expect(sourceRootsOf(root)).toEqual(['src']);
+    rmSync(join(root, 'src'), { recursive: true });
+    expect(sourceRootsOf(root)).toEqual(['.']);
+  });
+
+  it('takes the directories the tsconfig includes, before any wildcard, and drops those not there', () => {
+    const root = repository({
+      'tsconfig.json': { ...TSCONFIG, include: ['src/**/*.ts', 'functions', 'lambdas/*/index.ts'] },
+    });
+    expect(sourceRootsOf(root)).toEqual(['functions', 'src']);
+    expect(opened(root)).toEqual(['functions/place-hold.ts', 'functions/shared/request.ts', 'src/holds.ts']);
+  });
+
+  it('takes the directory of a file the tsconfig names, since the compiler follows imports from it', () => {
+    const root = repository({ 'tsconfig.json': { ...TSCONFIG, files: ['functions/place-hold.ts'] } });
+    expect(sourceRootsOf(root)).toEqual(['functions']);
+  });
+
+  it('follows a relative extends when the tsconfig itself names nothing', () => {
+    const root = repository({
+      'tsconfig.base.json': { ...TSCONFIG, include: ['functions'] },
+      'tsconfig.json': { extends: './tsconfig.base.json' },
+    });
+    expect(sourceRootsOf(root)).toEqual(['functions']);
+  });
+
+  it('falls back on a solution tsconfig, whose files list is empty', () => {
+    const root = repository({ 'tsconfig.json': { files: [], references: [{ path: './tsconfig.app.json' }] } });
+    expect(sourceRootsOf(root)).toEqual(['src']);
+  });
+
+  it('keeps the outermost of nested roots, and the whole repository over everything', () => {
+    const nested = repository({ 'tsconfig.json': { ...TSCONFIG, include: ['functions', 'functions/shared'] } });
+    expect(sourceRootsOf(nested)).toEqual(['functions']);
+    const whole = repository({ 'tsconfig.json': { ...TSCONFIG, include: ['**/*.ts', 'src'] } });
+    expect(sourceRootsOf(whole)).toEqual(['.']);
+  });
+
+  it('never climbs out of the repository, nor into an output or hidden directory', () => {
+    const root = repository({
+      'tsconfig.json': { ...TSCONFIG, include: ['../elsewhere', 'dist/functions', '.next/types/**/*.ts', 'src'] },
+      'dist/functions/place-hold.ts': 'export const built = 1;\n',
+      '.next/types/app.ts': 'export const generated = 1;\n',
+    });
+    expect(sourceRootsOf(root)).toEqual(['src']);
+  });
+
+  it('adds the directories a deployment packages from beside src, for the reading and the listing alike', () => {
+    const root = repository({ 'tsconfig.json': { ...TSCONFIG, include: ['src'] } });
+    expect(sourceRootsOf(root, { deployed: ['functions'] })).toEqual(['functions', 'src']);
+    expect(opened(root)).toEqual(['src/holds.ts']);
+    const files = opened(root, { deployed: ['functions'] });
+    expect(files).toEqual(['functions/place-hold.ts', 'functions/shared/request.ts', 'src/holds.ts']);
+    expect(listRepoSources(root, undefined, { deployed: ['functions'] })).toEqual(files);
+  });
+
+  it('reads the whole repository when a reader asks for that as its fallback', () => {
+    const root = repository({ 'tsconfig.json': TSCONFIG });
+    expect(sourceRootsOf(root, { fallback: 'repository' })).toEqual(['.']);
+  });
+
+  it('leaves out a root named like a test, and records it', () => {
+    const root = repository({
+      'tsconfig.json': { ...TSCONFIG, include: ['src', 'e2e'] },
+      'e2e/client.ts': 'export const client = 1;\n',
+    });
+    const project = createProject({ rootDir: root });
+    expect(project.getSourceFiles().map((file) => file.getBaseName())).toEqual(['holds.ts']);
+    expect([...skippedTestDirectories(project).keys()].map((dir) => dir.slice(root.length + 1))).toEqual(['e2e']);
+    expect(listRepoSources(root)).toEqual(['src/holds.ts']);
   });
 });
 

@@ -18,6 +18,7 @@ import {
   type RepoGraph,
   type ServiceConfig,
 } from '@flowatlas/core';
+import { deployedSourceDirectories } from '@flowatlas/adapters-entry';
 import { extractRepo as extractAngularRepo } from '@flowatlas/extractor-angular';
 import { extractRepo as extractReactRepo } from '@flowatlas/extractor-react';
 import {
@@ -260,8 +261,16 @@ export const runExtract = async (
   // A server repository is opened here rather than inside the extractor, so the
   // parsed project can also answer what the build cache needs to know: which
   // files there are, what each imports, and which of them are global. The
-  // browser readers have no such session yet, so they cache nothing.
-  const warm = readBrowser === undefined ? openRepo(extractOptions) : undefined;
+  // browser readers have no such session yet, so they cache nothing. The
+  // directories its deployment packages functions from are roots of its code as
+  // much as `src` is, and the build's listing is told the same (R170).
+  const warm =
+    readBrowser === undefined
+      ? openRepo({
+          ...extractOptions,
+          deployed: deployedSourceDirectories(rootDir, config ?? parseConfig({}), service),
+        })
+      : undefined;
   const graph =
     warm === undefined
       ? await (readBrowser as (options: ExtractRepoOptions) => Promise<RepoGraph>)(extractOptions)

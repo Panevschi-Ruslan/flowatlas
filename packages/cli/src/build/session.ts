@@ -9,7 +9,7 @@ import {
   repoFiles,
   type WarmRepo,
 } from '@flowatlas/extractor-nestjs';
-import { createRegistry, EXTRA_PASSES } from './extractor.js';
+import { createRegistry, deployedRootsOf, EXTRA_PASSES } from './extractor.js';
 import { NESTJS_EXTRACTOR, typesReadBy } from '../readers.js';
 import type { IncrementalExtractor, PartialExtract } from './incremental.js';
 
@@ -43,6 +43,7 @@ const nestjs: WarmExtractor<WarmRepo> = {
       registry: createRegistry(),
       extraPasses: EXTRA_PASSES,
       logger: silentLogger,
+      deployed: deployedRootsOf(service, repoDir, config),
     }),
   files: repoFiles,
   imports: importsOf,

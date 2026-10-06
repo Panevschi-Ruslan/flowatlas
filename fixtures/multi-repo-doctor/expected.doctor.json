@@ -449,7 +449,13 @@
     "waysIn": {
       "found": 4,
       "read": 4
-    }
+    },
+    "withoutWaysIn": [
+      {
+        "service": "gateway",
+        "looksLike": "it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises"
+      }
+    ]
   },
   "markers": {
     "status": "ok",
@@ -823,6 +829,7 @@
   "verdict": {
     "exitCode": 0,
     "reasons": [
+      "gateway: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there",
       "7 annotations the graph contradicts",
       "4 contract errors nothing excused"
     ]

@@ -1,3 +1,5 @@
+gateway: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there.
+
 unresolved: total=26 (baseline 26, +0) · markers: errors=7 warnings=4 · desync=2 · contracts: errors=4 ignored=1 · exit=0
 
 unresolved: 26 to act on over 31 rows, and 5 places static reading cannot see, folded into 5
@@ -90,5 +92,6 @@ baseline: ok (26 accepted, 26 now, +0)
   accepted against graph schema 3, and this graph is 6; the counts are still comparable, but a schema change can move them on its own
 
 verdict:
+  gateway: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there
   7 annotations the graph contradicts
   4 contract errors nothing excused

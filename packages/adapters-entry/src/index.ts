@@ -56,6 +56,7 @@ export {
   deployedFunctionsAdapter,
   deploymentReadersFor,
 } from './deployed-functions.js';
+export { deployedSourceDirectories } from './deployed-sources.js';
 export {
   CONFIGURED_PROCEDURES,
   configuredProceduresAdapter,

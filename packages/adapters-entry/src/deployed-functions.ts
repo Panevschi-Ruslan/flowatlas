@@ -81,7 +81,7 @@ const readTsconfig = (path: string): { outDir?: string; rootDir?: string } | und
  * of its inputs, which is the tsconfig's own directory, or its `src` where that
  * exists and the directory itself does not answer.
  */
-const sourceOfOutput = (repoDir: string, directory: string): { directory: string; tsconfig: string } | undefined => {
+export const sourceOfOutput = (repoDir: string, directory: string): { directory: string; tsconfig: string } | undefined => {
   const parts = directory.split('/');
   for (let depth = parts.length; depth >= 0; depth -= 1) {
     const dir = parts.slice(0, depth).join('/');

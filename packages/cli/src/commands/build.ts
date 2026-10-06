@@ -57,6 +57,7 @@ import {
   declinedNote,
   EXTRACTORS,
   isFrontend,
+  sourceRootOptionsOf,
 } from '../build/extractor.js';
 import { noReaderNote } from '../stacks.js';
 import { deploymentFiles } from '../build/deployment-files.js';
@@ -310,7 +311,12 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
   // Listed from disk even when the repository is already open: a file created
   // since it was opened is exactly the change the survey must not miss.
   const deployed = extractor === null ? [] : deploymentFiles(repoDir, { config, service });
-  const files = [...listRepoSources(repoDir, service.readTestDirectories), ...deployed];
+  const sources = listRepoSources(
+    repoDir,
+    service.readTestDirectories,
+    sourceRootOptionsOf(service, repoDir, config),
+  );
+  const files = [...sources, ...deployed];
 
   return {
     service: service.name,

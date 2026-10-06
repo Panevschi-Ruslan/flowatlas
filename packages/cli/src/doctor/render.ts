@@ -8,10 +8,11 @@
  */
 import { resolve } from 'node:path';
 import type { ContractFinding } from '@flowatlas/contracts';
-import { partialReadNotice } from '../partial-read.js';
+import { isInstalled, partialReadNotice, type ReadRepo } from '../partial-read.js';
 import { moreRows, renderTable, section } from '../format/table.js';
 import type { MarkerIssue } from './markers.js';
 import type { DoctorReport } from './schema.js';
+import { noWayInSentence } from './ways-in.js';
 
 /** `… 12 more rows; the whole list is in <file>` — never a silent cut (I9). */
 const more = (dropped: number | undefined, file?: string): string[] =>
@@ -268,7 +269,39 @@ const unresolvedTypes = (report: DoctorReport): number =>
     : (report.unresolved.byReason.find((group) => group.reason === 'type-unresolved')?.sites ?? 0);
 
 /**
- * The one sentence, at the head of the report (R129).
+ * What the report says above its first line, about how its services were read.
+ *
+ * One rule per kind of read that went wrong, most telling first. A service is
+ * spoken for by the first rule that takes it, and no later rule names it again:
+ * a service with no way in is told so, and is not then told to install its
+ * dependencies as if that were what it lacked (R170).
+ */
+interface HeadRule {
+  /** The services, of those no earlier rule took, that this rule speaks for. */
+  takes(report: DoctorReport, repos: readonly ReadRepo[]): readonly string[];
+  /** What it says about the services it took, a paragraph each. */
+  says(report: DoctorReport, repos: readonly ReadRepo[]): string[];
+}
+
+/**
+ * A service that has no way in, named before anything about its dependencies,
+ * because installing them would not give it one; where they are not installed
+ * either, it says so in the same breath.
+ */
+const NOT_INSTALLED_EITHER = '; its dependencies are not installed either, and installing them would not give it one';
+
+const noWayInHead: HeadRule = {
+  takes: (report) => (report.unresolved.withoutWaysIn ?? []).map(({ service }) => service),
+  says: (report, repos) =>
+    (report.unresolved.withoutWaysIn ?? []).map((service) => {
+      const repo = repos.find((each) => each.name === service.service);
+      const uninstalled = repo !== undefined && !isInstalled(repo.dir);
+      return `${noWayInSentence(service)}${uninstalled ? NOT_INSTALLED_EITHER : ''}.`;
+    }),
+};
+
+/**
+ * The one sentence about dependencies that are not installed (R129).
  *
  * At the head rather than beside the rows, and once rather than per row, because
  * hundreds of `type-unresolved` rows already imply it and a reader either infers
@@ -280,17 +313,33 @@ const unresolvedTypes = (report: DoctorReport): number =>
  * and resolving it is the difference between establishing that nothing is
  * installed and assuming it. Without a root, nothing is claimed.
  */
-const partialReadHead = (
+const partialReadHead: HeadRule = {
+  takes: (_report, repos) => repos.map((repo) => repo.name),
+  says: (report, repos) => {
+    const notice = partialReadNotice(repos, unresolvedTypes(report));
+    return notice === undefined ? [] : [notice];
+  },
+};
+
+const HEAD_RULES: readonly HeadRule[] = Object.freeze([noWayInHead, partialReadHead]);
+
+const headOf = (
   report: DoctorReport,
   repoDirs: ReadonlyMap<string, string>,
   rootDir: string | undefined,
 ): string[] => {
-  if (rootDir === undefined || repoDirs.size === 0) return [];
-  const notice = partialReadNotice(
-    [...repoDirs.entries()].map(([name, dir]) => ({ name, dir: resolve(rootDir, dir) })),
-    unresolvedTypes(report),
-  );
-  return notice === undefined ? [] : [notice, ''];
+  let left: readonly ReadRepo[] =
+    rootDir === undefined
+      ? []
+      : [...repoDirs.entries()].map(([name, dir]) => ({ name, dir: resolve(rootDir, dir) }));
+  const said: string[] = [];
+  for (const rule of HEAD_RULES) {
+    const taken = new Set(rule.takes(report, left));
+    if (taken.size === 0) continue;
+    said.push(...rule.says(report, left.filter((repo) => taken.has(repo.name))));
+    left = left.filter((repo) => !taken.has(repo.name));
+  }
+  return said.flatMap((paragraph) => [paragraph, '']);
 };
 
 export const renderDoctorText = (
@@ -313,7 +362,7 @@ export const renderDoctorText = (
       : ['verdict:', ...report.verdict.reasons.map((reason) => `  ${reason}`)];
 
   return `${[
-    ...partialReadHead(report, options.repoDirs ?? NO_REPOS, options.rootDir),
+    ...headOf(report, options.repoDirs ?? NO_REPOS, options.rootDir),
     summaryLine(report),
     '',
     ...blocks.flatMap((block) => [...block, '']),

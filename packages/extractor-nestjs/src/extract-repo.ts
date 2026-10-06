@@ -43,6 +43,11 @@ export interface ExtractRepoOptions {
   registry?: AdapterRegistry;
   tsconfig?: string;
   /**
+   * Directories the repository's deployment packages functions from, relative
+   * to the root: source roots beside the ones its tsconfig names (R170).
+   */
+  deployed?: readonly string[];
+  /**
    * A project already parsed, reused instead of parsing the repository again.
    *
    * What a watch keeps warm between rebuilds: parsing is the expensive part and
@@ -98,6 +103,7 @@ export const createRepoProject = (options: ExtractRepoOptions): Project => {
     rootDir: options.rootDir,
     ...(tsconfig === undefined ? {} : { tsconfig }),
     ...(readTestDirectories === undefined ? {} : { readTestDirectories }),
+    ...(options.deployed === undefined ? {} : { deployed: options.deployed }),
   });
 };
 
