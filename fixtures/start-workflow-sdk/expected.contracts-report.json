@@ -1,0 +1,154 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-06T20:50:02.077Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:lending#src/handlers/create-loan.ts:18:9",
+        "to": "entry:lending:workflow:lending-loan-approval",
+        "type": "calls"
+      },
+      "edgeKey": "producer:lending#src/handlers/create-loan.ts:18:9|calls|entry:lending:workflow:lending-loan-approval",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "lending",
+        "typeId": "type:lending#Loan",
+        "symbol": "lending#src/handlers/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "lending",
+        "typeId": "{borrowerId:unknown}",
+        "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:borrowerId"
+      ]
+    },
+    {
+      "edge": {
+        "from": "producer:lending#src/handlers/renew-loan.ts:12:9",
+        "to": "entry:lending:workflow:lending-loan-approval",
+        "type": "calls"
+      },
+      "edgeKey": "producer:lending#src/handlers/renew-loan.ts:12:9|calls|entry:lending:workflow:lending-loan-approval",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "lending",
+        "typeId": "{loanId:string;renewal:boolean}",
+        "symbol": "lending#src/handlers/renew-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "lending",
+        "typeId": "{borrowerId:unknown}",
+        "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "producer:lending#src/handlers/renew-loan.ts:12:9",
+            "to": "entry:lending:workflow:lending-loan-approval",
+            "type": "calls"
+          },
+          "edgeKey": "producer:lending#src/handlers/renew-loan.ts:12:9|calls|entry:lending:workflow:lending-loan-approval",
+          "direction": "request",
+          "sender": {
+            "service": "lending",
+            "typeId": "{loanId:string;renewal:boolean}",
+            "symbol": "lending#src/handlers/renew-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "lending",
+            "typeId": "{borrowerId:unknown}",
+            "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower"
+          },
+          "typeId": "{borrowerId:unknown}",
+          "field": "borrowerId",
+          "expected": "unknown",
+          "actual": null,
+          "rule": null,
+          "message": "receiver lending requires `borrowerId: unknown`; sender lending does not send it; workflow lending-loan-approval reads part of what it is handed and carries the rest on",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "any-unknown-skip:borrowerId"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "producer:lending#src/handlers/renew-loan.ts:12:9",
+        "to": "entry:lending:workflow:lending-loan-approval",
+        "type": "calls"
+      },
+      "edgeKey": "producer:lending#src/handlers/renew-loan.ts:12:9|calls|entry:lending:workflow:lending-loan-approval",
+      "direction": "request",
+      "sender": {
+        "service": "lending",
+        "typeId": "{loanId:string;renewal:boolean}",
+        "symbol": "lending#src/handlers/renew-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "lending",
+        "typeId": "{borrowerId:unknown}",
+        "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower"
+      },
+      "typeId": "{borrowerId:unknown}",
+      "field": "borrowerId",
+      "expected": "unknown",
+      "actual": null,
+      "rule": null,
+      "message": "receiver lending requires `borrowerId: unknown`; sender lending does not send it; workflow lending-loan-approval reads part of what it is handed and carries the rest on",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:lending#src/handlers/create-loan.ts:15:9",
+        "to": "entry:lending:invoke:lending-hold-copies",
+        "type": "calls"
+      },
+      "edgeKey": "producer:lending#src/handlers/create-loan.ts:15:9|calls|entry:lending:invoke:lending-hold-copies",
+      "direction": "request",
+      "reason": "body-already-serialised",
+      "message": "lending#src/handlers/create-loan.ts:handler has Uint8Array<ArrayBufferLike> where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:lending#src/handlers/create-loan.ts:27:9",
+        "to": "entry:lending:invoke:lending-notify-borrower",
+        "type": "calls"
+      },
+      "edgeKey": "producer:lending#src/handlers/create-loan.ts:27:9|calls|entry:lending:invoke:lending-notify-borrower",
+      "direction": "request",
+      "reason": "body-already-serialised",
+      "message": "lending#src/handlers/create-loan.ts:handler has Uint8Array<ArrayBufferLike> where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 2,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 2,
+    "unchecked": 2,
+    "errors": 1,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

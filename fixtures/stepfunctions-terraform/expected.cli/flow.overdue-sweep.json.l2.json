@@ -17,6 +17,10 @@
         "states": 3,
         "queryLanguage": "JSONPath",
         "comment": "Finds the loans past their return date and reminds each borrower.",
+        "reads": {
+          "": "{today:unknown}"
+        },
+        "carriesOn": true,
         "deployedBy": "terraform",
         "declaredAs": "module.overdue_sweep.aws_sfn_state_machine.this",
         "definitionFrom": "jsonencode",
@@ -166,6 +170,9 @@
                         "sourceDirectory": "src/handlers",
                         "handlerVia": "function",
                         "environment": {},
+                        "reads": {
+                          "": "{borrowerId:string}"
+                        },
                         "adapter": "aws-lambda"
                       }
                     },

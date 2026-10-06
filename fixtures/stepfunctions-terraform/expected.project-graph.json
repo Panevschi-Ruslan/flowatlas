@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T17:33:25.335Z",
+  "builtAt": "2026-10-06T20:50:04.342Z",
   "services": [
     {
       "name": "lending",
@@ -129,6 +129,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:lending#Overdue"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -150,6 +153,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:lending#Borrower"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -171,6 +177,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:lending#NotifyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -192,6 +201,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:lending#ExpiredHold"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -213,6 +225,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:lending#Borrower"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -234,6 +249,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "{borrowerId:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -253,6 +271,8 @@
         "states": 3,
         "queryLanguage": "JSONPath",
         "comment": "Releases a hold nobody collected and offers the item to the next borrower.",
+        "reads": {},
+        "carriesOn": true,
         "deployedBy": "terraform",
         "declaredAs": "aws_sfn_state_machine.hold_expiry",
         "definitionFrom": "heredoc",
@@ -276,6 +296,10 @@
         "states": 12,
         "queryLanguage": "JSONPath",
         "comment": "Approves a loan: checks the borrower, reserves the copies, waits for a librarian, records the loan and tells the borrower.",
+        "reads": {
+          "": "{borrowerId:unknown}"
+        },
+        "carriesOn": true,
         "deployedBy": "terraform",
         "declaredAs": "aws_sfn_state_machine.loan_approval",
         "definitionFrom": "file",
@@ -298,6 +322,10 @@
         "states": 12,
         "queryLanguage": "JSONPath",
         "comment": "Renews a borrower's loans: settles any late fee first, then extends every loan and asks for approval again where a loan was flagged.",
+        "reads": {
+          "": "{borrowerId:unknown}"
+        },
+        "carriesOn": true,
         "deployedBy": "terraform",
         "declaredAs": "module.loan_renewal.aws_sfn_state_machine.this[0]",
         "definitionFrom": "templatefile",
@@ -321,6 +349,10 @@
         "states": 3,
         "queryLanguage": "JSONPath",
         "comment": "Finds the loans past their return date and reminds each borrower.",
+        "reads": {
+          "": "{today:unknown}"
+        },
+        "carriesOn": true,
         "deployedBy": "terraform",
         "declaredAs": "module.overdue_sweep.aws_sfn_state_machine.this",
         "definitionFrom": "jsonencode",
@@ -2079,7 +2111,114 @@
       }
     }
   ],
-  "types": {},
+  "types": {
+    "type:lending#Borrower": {
+      "name": "Borrower",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/standing.ts",
+      "structuralHash": "0ac248e42a828374",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "overdueItems",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "unpaidFees",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:lending#ExpiredHold": {
+      "name": "ExpiredHold",
+      "kind": "object",
+      "declaredIn": "lending#src/handlers/release-hold.ts",
+      "structuralHash": "8366d9a63c51d6c1",
+      "fields": [
+        {
+          "name": "holdId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:lending#NotifyEvent": {
+      "name": "NotifyEvent",
+      "kind": "object",
+      "declaredIn": "lending#src/handlers/notify-borrower.ts",
+      "structuralHash": "12cc2c890aaa860c",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": "'approved'|'fee-due'|'renewed'",
+          "optional": false
+        },
+        {
+          "name": "taskToken",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:lending#Overdue": {
+      "name": "Overdue",
+      "kind": "object",
+      "declaredIn": "lending#src/handlers/assess-late-fee.ts",
+      "structuralHash": "70d090f597dba38d",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "daysOverdue",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "replacementCost",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "statemachine/loan-renewal.asl.json",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T16:41:40.555Z",
+  "builtAt": "2026-10-06T20:53:51.754Z",
   "services": [
     {
       "name": "circulation",
@@ -278,7 +278,13 @@
         "rule": "aws_cloudwatch_event_rule.cover_uploaded",
         "notMatchedOn": [
           "detail"
-        ]
+        ],
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
       }
     },
     {
@@ -296,7 +302,13 @@
         "declaredAs": "aws_cloudwatch_event_target.notify_on_hold",
         "deployedBy": "terraform",
         "name": "library-hold-requested",
-        "rule": "aws_cloudwatch_event_rule.hold_requested"
+        "rule": "aws_cloudwatch_event_rule.hold_requested",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
       }
     },
     {
@@ -314,7 +326,13 @@
         "declaredAs": "aws_cloudwatch_event_target.notify_on_loan",
         "deployedBy": "terraform",
         "name": "library-loan-created",
-        "rule": "aws_cloudwatch_event_rule.loan_created"
+        "rule": "aws_cloudwatch_event_rule.loan_created",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
       }
     },
     {
@@ -332,7 +350,13 @@
         "declaredAs": "aws_cloudwatch_event_target.notify_on_return",
         "deployedBy": "terraform",
         "name": "library-item-returned",
-        "rule": "aws_cloudwatch_event_rule.item_returned"
+        "rule": "aws_cloudwatch_event_rule.item_returned",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
       }
     },
     {
@@ -354,6 +378,12 @@
         "notMatchedOn": [
           "detail"
         ],
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        },
         "channelPattern": {
           "parts": [
             {
@@ -508,6 +538,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -529,6 +562,10 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#EventBridgeEvent<'Object Created',type:circulation#CoverUploaded>",
+          "detail": "type:circulation#CoverUploaded"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -550,6 +587,10 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#EventBridgeEvent<'HoldRequested'|'ItemReturned'|'LoanCreated',{borrowerId:string}>",
+          "detail": "{borrowerId:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -571,6 +612,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -592,6 +636,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -613,6 +660,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "{loanId:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -634,6 +684,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#ScheduledEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -653,6 +706,10 @@
         "states": 4,
         "queryLanguage": "JSONPath",
         "comment": "Reviews a loan once it has been renewed often, and settles it either way.",
+        "reads": {
+          "": "{detail:{loanId:unknown}}"
+        },
+        "carriesOn": true,
         "deployedBy": "terraform",
         "declaredAs": "aws_sfn_state_machine.loan_review",
         "definitionFrom": "file",
@@ -1193,6 +1250,68 @@
     }
   ],
   "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEventV2": {
+      "name": "APIGatewayProxyEventV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "d1b9db28fad35c91",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#EventBridgeEvent<'HoldRequested'|'ItemReturned'|'LoanCreated',{borrowerId:string}>": {
+      "name": "EventBridgeEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "927920068f37d58d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#EventBridgeEvent<'Object Created',type:circulation#CoverUploaded>": {
+      "name": "EventBridgeEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "927920068f37d58d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#ScheduledEvent": {
+      "name": "ScheduledEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "7e19b21586cc2fef",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:circulation#CoverUploaded": {
+      "name": "CoverUploaded",
+      "kind": "object",
+      "declaredIn": "circulation#src/covers/import-cover.ts",
+      "structuralHash": "ea2eb4833c108c9b",
+      "fields": [
+        {
+          "name": "bucket",
+          "type": "{name:string}",
+          "optional": false
+        },
+        {
+          "name": "object",
+          "type": "{key:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
     "type:circulation#Loan": {
       "name": "Loan",
       "kind": "object",

@@ -227,6 +227,13 @@ const awaitingOf = (
 const MOST_LINKS = 8;
 
 /**
+ * Calls that turn a value into text, or text into the bytes an invocation's
+ * payload takes, without changing what it says: the message is what they are
+ * handed. Spelled without whitespace, as the callee is compared.
+ */
+const SERIALISERS: ReadonlySet<string> = new Set(['JSON.stringify', 'Buffer.from', 'newTextEncoder().encode']);
+
+/**
  * The value a message is made from, where it is sent as text.
  *
  * `JSON.stringify(loan)` sends the loan, and the receiver parses the loan back
@@ -240,7 +247,7 @@ export const messageValue = (expression: TsNode): TsNode => {
       current = current.getExpression();
       continue;
     }
-    if (Node.isCallExpression(current) && current.getExpression().getText() === 'JSON.stringify') {
+    if (Node.isCallExpression(current) && SERIALISERS.has(current.getExpression().getText().replace(/\s+/g, ''))) {
       const [value] = current.getArguments();
       if (value === undefined) return current;
       current = value;

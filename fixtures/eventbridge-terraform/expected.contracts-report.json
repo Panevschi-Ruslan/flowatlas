@@ -1,9 +1,429 @@
 {
   "contractsFormatVersion": 4,
   "schemaVersion": 6,
-  "generatedAt": "2026-10-06T16:21:58.602Z",
-  "edges": [],
-  "findings": [],
+  "generatedAt": "2026-10-06T20:48:12.479Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "circulation",
+        "typeId": "{borrowerId:string}",
+        "symbol": "circulation#src/notices/notify-borrower.ts:handler"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+            "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+            "type": "emits"
+          },
+          "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+          "direction": "payload",
+          "sender": {
+            "service": "circulation",
+            "typeId": "type:circulation#Loan",
+            "symbol": "circulation#src/loans/create-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "circulation",
+            "typeId": "{borrowerId:string}",
+            "symbol": "circulation#src/notices/notify-borrower.ts:handler"
+          },
+          "typeId": "{borrowerId:string}",
+          "field": "dueOn",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender circulation sends `dueOn: string`; receiver circulation declares no such field; circulation reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+            "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+            "type": "emits"
+          },
+          "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+          "direction": "payload",
+          "sender": {
+            "service": "circulation",
+            "typeId": "type:circulation#Loan",
+            "symbol": "circulation#src/loans/create-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "circulation",
+            "typeId": "{borrowerId:string}",
+            "symbol": "circulation#src/notices/notify-borrower.ts:handler"
+          },
+          "typeId": "{borrowerId:string}",
+          "field": "itemId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender circulation sends `itemId: string`; receiver circulation declares no such field; circulation reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+            "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+            "type": "emits"
+          },
+          "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+          "direction": "payload",
+          "sender": {
+            "service": "circulation",
+            "typeId": "type:circulation#Loan",
+            "symbol": "circulation#src/loans/create-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "circulation",
+            "typeId": "{borrowerId:string}",
+            "symbol": "circulation#src/notices/notify-borrower.ts:handler"
+          },
+          "typeId": "{borrowerId:string}",
+          "field": "loanId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender circulation sends `loanId: string`; receiver circulation declares no such field; circulation reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+            "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+            "type": "emits"
+          },
+          "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+          "direction": "payload",
+          "sender": {
+            "service": "circulation",
+            "typeId": "type:circulation#Loan",
+            "symbol": "circulation#src/loans/create-loan.ts:handler"
+          },
+          "receiver": {
+            "service": "circulation",
+            "typeId": "{borrowerId:string}",
+            "symbol": "circulation#src/notices/notify-borrower.ts:handler"
+          },
+          "typeId": "{borrowerId:string}",
+          "field": "renewals",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender circulation sends `renewals: number`; receiver circulation declares no such field; circulation reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:circulation#src/loans/renew-loan.ts:29:9",
+        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.review_renewal",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/renew-loan.ts:29:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.review_renewal",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Renewal",
+        "symbol": "circulation#src/loans/renew-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "circulation",
+        "typeId": "{loanId:unknown}",
+        "symbol": "circulation#statemachines/loan-review.asl.json:loan-review/ReviewLoan"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:loanId"
+      ]
+    },
+    {
+      "edge": {
+        "from": "producer:circulation#src/returns/record-return.ts:13:9",
+        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/returns/record-return.ts:13:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#ReturnedItem",
+        "symbol": "circulation#src/returns/record-return.ts:handler"
+      },
+      "receiver": {
+        "service": "circulation",
+        "typeId": "{borrowerId:string}",
+        "symbol": "circulation#src/notices/notify-borrower.ts:handler"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:circulation#src/returns/record-return.ts:13:9",
+            "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+            "type": "emits"
+          },
+          "edgeKey": "producer:circulation#src/returns/record-return.ts:13:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+          "direction": "payload",
+          "sender": {
+            "service": "circulation",
+            "typeId": "type:circulation#ReturnedItem",
+            "symbol": "circulation#src/returns/record-return.ts:handler"
+          },
+          "receiver": {
+            "service": "circulation",
+            "typeId": "{borrowerId:string}",
+            "symbol": "circulation#src/notices/notify-borrower.ts:handler"
+          },
+          "typeId": "{borrowerId:string}",
+          "field": "itemId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender circulation sends `itemId: string`; receiver circulation declares no such field; circulation reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:circulation#src/returns/record-return.ts:13:9",
+            "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+            "type": "emits"
+          },
+          "edgeKey": "producer:circulation#src/returns/record-return.ts:13:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+          "direction": "payload",
+          "sender": {
+            "service": "circulation",
+            "typeId": "type:circulation#ReturnedItem",
+            "symbol": "circulation#src/returns/record-return.ts:handler"
+          },
+          "receiver": {
+            "service": "circulation",
+            "typeId": "{borrowerId:string}",
+            "symbol": "circulation#src/notices/notify-borrower.ts:handler"
+          },
+          "typeId": "{borrowerId:string}",
+          "field": "returnedAt",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender circulation sends `returnedAt: string`; receiver circulation declares no such field; circulation reads the message at detail of what it is handed",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+      "direction": "payload",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "circulation",
+        "typeId": "{borrowerId:string}",
+        "symbol": "circulation#src/notices/notify-borrower.ts:handler"
+      },
+      "typeId": "{borrowerId:string}",
+      "field": "dueOn",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender circulation sends `dueOn: string`; receiver circulation declares no such field; circulation reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+      "direction": "payload",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "circulation",
+        "typeId": "{borrowerId:string}",
+        "symbol": "circulation#src/notices/notify-borrower.ts:handler"
+      },
+      "typeId": "{borrowerId:string}",
+      "field": "itemId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender circulation sends `itemId: string`; receiver circulation declares no such field; circulation reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+      "direction": "payload",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "circulation",
+        "typeId": "{borrowerId:string}",
+        "symbol": "circulation#src/notices/notify-borrower.ts:handler"
+      },
+      "typeId": "{borrowerId:string}",
+      "field": "loanId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender circulation sends `loanId: string`; receiver circulation declares no such field; circulation reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
+        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
+      "direction": "payload",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#Loan",
+        "symbol": "circulation#src/loans/create-loan.ts:handler"
+      },
+      "receiver": {
+        "service": "circulation",
+        "typeId": "{borrowerId:string}",
+        "symbol": "circulation#src/notices/notify-borrower.ts:handler"
+      },
+      "typeId": "{borrowerId:string}",
+      "field": "renewals",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender circulation sends `renewals: number`; receiver circulation declares no such field; circulation reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:circulation#src/returns/record-return.ts:13:9",
+        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/returns/record-return.ts:13:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+      "direction": "payload",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#ReturnedItem",
+        "symbol": "circulation#src/returns/record-return.ts:handler"
+      },
+      "receiver": {
+        "service": "circulation",
+        "typeId": "{borrowerId:string}",
+        "symbol": "circulation#src/notices/notify-borrower.ts:handler"
+      },
+      "typeId": "{borrowerId:string}",
+      "field": "itemId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender circulation sends `itemId: string`; receiver circulation declares no such field; circulation reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:circulation#src/returns/record-return.ts:13:9",
+        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+        "type": "emits"
+      },
+      "edgeKey": "producer:circulation#src/returns/record-return.ts:13:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
+      "direction": "payload",
+      "sender": {
+        "service": "circulation",
+        "typeId": "type:circulation#ReturnedItem",
+        "symbol": "circulation#src/returns/record-return.ts:handler"
+      },
+      "receiver": {
+        "service": "circulation",
+        "typeId": "{borrowerId:string}",
+        "symbol": "circulation#src/notices/notify-borrower.ts:handler"
+      },
+      "typeId": "{borrowerId:string}",
+      "field": "returnedAt",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender circulation sends `returnedAt: string`; receiver circulation declares no such field; circulation reads the message at detail of what it is handed",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
   "ignored": [],
   "unchecked": [
     {
@@ -26,56 +446,20 @@
       },
       "edgeKey": "producer:circulation#infra/api.tf:aws_apigatewayv2_route.request_hold|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_hold",
       "direction": "payload",
-      "reason": "no-type-on-sender",
-      "message": "entry:circulation:http:POST:/holds declares no type for what it sends",
-      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
-    },
-    {
-      "edge": {
-        "from": "producer:circulation#src/loans/create-loan.ts:11:9",
-        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
-        "type": "emits"
-      },
-      "edgeKey": "producer:circulation#src/loans/create-loan.ts:11:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan",
-      "direction": "payload",
-      "reason": "no-type-on-receiver",
-      "message": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_loan declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
-    },
-    {
-      "edge": {
-        "from": "producer:circulation#src/loans/renew-loan.ts:29:9",
-        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.review_renewal",
-        "type": "emits"
-      },
-      "edgeKey": "producer:circulation#src/loans/renew-loan.ts:29:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.review_renewal",
-      "direction": "payload",
-      "reason": "no-type-on-receiver",
-      "message": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.review_renewal declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
-    },
-    {
-      "edge": {
-        "from": "producer:circulation#src/returns/record-return.ts:13:9",
-        "to": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
-        "type": "emits"
-      },
-      "edgeKey": "producer:circulation#src/returns/record-return.ts:13:9|emits|consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return",
-      "direction": "payload",
-      "reason": "no-type-on-receiver",
-      "message": "consumer:circulation#infra/rules.tf:aws_cloudwatch_event_target.notify_on_return declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+      "reason": "sender-forwards",
+      "message": "producer:circulation#infra/api.tf:aws_apigatewayv2_route.request_hold hands on what it is given, and nothing declares its shape",
+      "hint": "Nothing to change at this end. A message forwarded from a channel is compared from the publisher that wrote it when the forwarding wrapping is known; a request a route sends straight to a channel has no declared shape."
     }
   ],
   "summary": {
-    "edges": 0,
+    "edges": 3,
     "shared": 0,
     "identical": 0,
-    "hash_differs": 0,
-    "unchecked": 5,
+    "hash_differs": 3,
+    "unchecked": 2,
     "errors": 0,
     "warnings": 0,
-    "infos": 0,
+    "infos": 6,
     "ignored": 0
   }
 }

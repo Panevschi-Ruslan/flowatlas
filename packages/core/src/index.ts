@@ -354,6 +354,15 @@ export {
   placedFunction,
   placeOf,
 } from './functions.js';
+export {
+  CARRIES_ON_META,
+  ELEMENT,
+  ENVELOPE_META,
+  envelopePath,
+  messageTypeAt,
+  READS_META,
+} from './envelope.js';
+export type { Envelope } from './envelope.js';
 export { suppliedTypes } from './supplied.js';
 export type { SuppliedTypes } from './supplied.js';
 export type { NamedFunction } from './functions.js';

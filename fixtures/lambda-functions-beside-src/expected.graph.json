@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "lending-library-hold-shelf",
-  "generatedAt": "2026-10-06T17:27:57.615Z",
+  "generatedAt": "2026-10-06T20:54:11.036Z",
   "nodes": [
     {
       "id": "entry:lending-library-hold-shelf:invoke:library-holds-cancel-hold",
@@ -21,6 +21,9 @@
         "sourceDirectory": "functions",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -42,6 +45,9 @@
         "sourceDirectory": "functions",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#ScheduledEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -63,6 +69,9 @@
         "sourceDirectory": "functions",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -315,6 +324,27 @@
       "line": 3
     }
   ],
-  "types": {},
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#ScheduledEvent": {
+      "name": "ScheduledEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "7e19b21586cc2fef",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
   "unresolved": []
 }

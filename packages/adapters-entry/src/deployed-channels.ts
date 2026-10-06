@@ -1,5 +1,6 @@
 import {
   channelOfTarget,
+  deliveryEnvelope,
   DEPLOYED_CHANNELS,
   EVENT_NAME_FIELDS,
   eventChannel,
@@ -9,6 +10,7 @@ import {
 } from '@flowatlas/aws';
 import {
   CHANNEL_PATTERN_META,
+  ENVELOPE_META,
   ENVIRONMENT_META,
   makeChannelId,
   makeEntryId,
@@ -121,11 +123,18 @@ const notMatchedOn = (delivery: DeployedDelivery): string[] => {
 
 const confidenceOf = (delivery: DeployedDelivery): Confidence => (delivery.meta?.['disabled'] === true ? 'heuristic' : 'static');
 
-/** A consumer node for a delivery that takes messages from a channel. */
+/**
+ * A consumer node for a delivery that takes messages from a channel.
+ *
+ * It carries the wrapping its target is handed the message in, where that is
+ * known, which is what lets the message be compared with what the target reads
+ * rather than with nothing (R172).
+ */
 const consumerOf = (drawing: Drawing, delivery: DeployedDelivery, kind: string, adapter: string, extra: Record<string, unknown> = {}): WayIn => {
   const { ctx } = drawing;
   const id = `consumer:${makeSymbolId(ctx.repo, delivery.file, delivery.address)}`;
   const skipped = notMatchedOn(delivery);
+  const envelope = deliveryEnvelope(delivery);
   ctx.builder.addNode({
     id,
     type: 'consumer',
@@ -143,6 +152,7 @@ const consumerOf = (drawing: Drawing, delivery: DeployedDelivery, kind: string, 
       ...(delivery.name === undefined ? {} : { name: delivery.name }),
       ...(delivery.meta ?? {}),
       ...(skipped.length === 0 ? {} : { notMatchedOn: skipped }),
+      ...(envelope === undefined ? {} : { [ENVELOPE_META]: envelope }),
       ...extra,
     },
   });

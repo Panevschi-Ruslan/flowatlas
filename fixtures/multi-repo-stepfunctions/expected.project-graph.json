@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T17:32:12.453Z",
+  "builtAt": "2026-10-06T20:48:48.017Z",
   "services": [
     {
       "name": "circulation",
@@ -467,7 +467,13 @@
         "declaredAs": "aws_cloudwatch_event_target.update_availability",
         "deployedBy": "terraform",
         "name": "catalogue-loan-checked-out",
-        "rule": "aws_cloudwatch_event_rule.loan_checked_out"
+        "rule": "aws_cloudwatch_event_rule.loan_checked_out",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
       }
     },
     {
@@ -483,7 +489,15 @@
         "adapter": "aws-sqs",
         "by": "mapping",
         "declaredAs": "aws_lambda_event_source_mapping.copy_pulls",
-        "deployedBy": "terraform"
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
       }
     },
     {
@@ -502,6 +516,12 @@
         "deployedBy": "terraform",
         "name": "circulation-checkout-requested",
         "rule": "aws_cloudwatch_event_rule.checkout_requested",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        },
         "reaches": [
           "workflow:circulation-checkout"
         ]
@@ -521,7 +541,16 @@
         "by": "subscription",
         "declaredAs": "aws_sns_topic_subscription.record_checkout",
         "deployedBy": "terraform",
-        "protocol": "lambda"
+        "protocol": "lambda",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "Sns",
+            "Message"
+          ],
+          "text": true
+        }
       }
     },
     {
@@ -559,6 +588,10 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:catalogue#PullRequests",
+          "Records[].body": "{copyId:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -580,6 +613,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:catalogue#ReserveRequest"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -601,6 +637,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "{copyId:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -622,6 +661,10 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:catalogue#LoanCheckedOut",
+          "detail": "{titleId:string;copyId:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -641,7 +684,11 @@
         "startAt": "ReshelveEach",
         "states": 2,
         "queryLanguage": "JSONPath",
-        "comment": "Puts every returned copy back on its shelf."
+        "comment": "Puts every returned copy back on its shelf.",
+        "reads": {
+          "": "{copyIds:unknown}"
+        },
+        "carriesOn": true
       }
     },
     {
@@ -660,6 +707,10 @@
         "states": 9,
         "queryLanguage": "JSONPath",
         "comment": "Checks a title out to a borrower: asks the members service about the borrower, the catalogue for a copy, writes the loan, tells the catalogue and the members service about it, and starts the members service's notices.",
+        "reads": {
+          "": "{borrowerId:unknown}"
+        },
+        "carriesOn": true,
         "deployedBy": "terraform",
         "declaredAs": "aws_sfn_state_machine.checkout",
         "definitionFrom": "templatefile",
@@ -704,6 +755,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:members#StandingRequest"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -725,6 +779,10 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:members#CheckoutNotifications",
+          "Records[].Sns.Message": "{borrowerId:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -746,6 +804,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:members#NoticeRequest"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -765,6 +826,8 @@
         "states": 1,
         "queryLanguage": "JSONPath",
         "comment": "Sends a borrower a notice, and tries once more an hour later if the mail service refuses it.",
+        "reads": {},
+        "carriesOn": true,
         "deployedBy": "terraform",
         "declaredAs": "aws_sfn_state_machine.borrower_notices",
         "definitionFrom": "file",
@@ -1535,7 +1598,125 @@
       }
     }
   ],
-  "types": {},
+  "types": {
+    "type:catalogue#LoanCheckedOut": {
+      "name": "LoanCheckedOut",
+      "kind": "object",
+      "declaredIn": "catalogue#src/handlers/update-availability.ts",
+      "structuralHash": "459d4afa4c3a76d2",
+      "fields": [
+        {
+          "name": "source",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "detail-type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "detail",
+          "type": "{titleId:string;copyId:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:catalogue#PullRequests": {
+      "name": "PullRequests",
+      "kind": "object",
+      "declaredIn": "catalogue#src/handlers/pull-copy.ts",
+      "structuralHash": "37be2caf4d190dc9",
+      "fields": [
+        {
+          "name": "Records",
+          "type": "{body:string}[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:catalogue#ReserveRequest": {
+      "name": "ReserveRequest",
+      "kind": "object",
+      "declaredIn": "catalogue#src/handlers/reserve-copy.ts",
+      "structuralHash": "70b76d9194d90f8c",
+      "fields": [
+        {
+          "name": "titleId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:members#CheckoutNotifications": {
+      "name": "CheckoutNotifications",
+      "kind": "object",
+      "declaredIn": "members#src/handlers/record-checkout.ts",
+      "structuralHash": "3a006433824985ea",
+      "fields": [
+        {
+          "name": "Records",
+          "type": "{Sns:{Message:string}}[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:members#NoticeRequest": {
+      "name": "NoticeRequest",
+      "kind": "object",
+      "declaredIn": "members#src/handlers/send-notice.ts",
+      "structuralHash": "88620a0052a61c24",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "notice",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:members#StandingRequest": {
+      "name": "StandingRequest",
+      "kind": "object",
+      "declaredIn": "members#src/handlers/check-standing.ts",
+      "structuralHash": "55fd635b04be42b6",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "workflows/reshelve-returns.asl.json",

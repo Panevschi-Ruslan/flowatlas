@@ -1,12 +1,18 @@
 import { join } from 'node:path';
 import {
   addEntryWrapping,
+  envelopePath,
   functionAt,
   inlineFunction,
   isFunctionHandler,
   isInlineHandler,
   makeSymbolId,
+  messageTypeAt,
+  READS_META,
   type EntryHandler,
+  type EntryNode,
+  type NamedFunction,
+  type TypeRef,
 } from '@flowatlas/core';
 import type { ClassDeclaration, MethodDeclaration } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
@@ -26,6 +32,8 @@ interface ResolvedHandler {
   /** Declarations the wrapping pass matches guards and pipes against. */
   owner?: ClassDeclaration;
   method?: MethodDeclaration;
+  /** The function itself, when the handler is one rather than a method. */
+  fn?: NamedFunction;
 }
 
 /**
@@ -49,7 +57,7 @@ const resolveHandler = (
     const fn = inlineFunction(written, handler.label);
     ctx.ensureFunctionNode(fn);
     ctx.handlerFunctions.push(fn);
-    return { id: ctx.functionIdOf(fn) };
+    return { id: ctx.functionIdOf(fn), fn };
   }
 
   if (isFunctionHandler(handler)) {
@@ -57,7 +65,7 @@ const resolveHandler = (
     if (fn === undefined) return {};
     ctx.ensureFunctionNode(fn);
     ctx.handlerFunctions.push(fn);
-    return { id: ctx.functionIdOf(fn) };
+    return { id: ctx.functionIdOf(fn), fn };
   }
 
   const indexed = ctx.classes.byId(makeSymbolId(ctx.repo, handler.file, handler.className));
@@ -75,6 +83,32 @@ const resolveHandler = (
   return { ...(id === undefined ? {} : { id }), owner, method };
 };
 
+/** Type references that say nothing about a shape, which are not worth recording. */
+const SAYS_NOTHING = new Set(['any', 'unknown', 'object']);
+
+/**
+ * What the handler takes from each wrapping the adapter said a message may come
+ * in, by the path to the message: the declared type there, or what it parses
+ * the text there into (R172). `undefined` when nothing was asked or there is no
+ * function to read, which is a different answer from a function that was read
+ * and takes nothing from any of them - an empty record.
+ */
+const readsOf = (
+  ctx: NestExtractContext,
+  entry: EntryNode,
+  fn: NamedFunction | undefined,
+): Record<string, TypeRef> | undefined => {
+  const site = fn?.body.getParent();
+  if (entry.reads === undefined || site === undefined) return undefined;
+  const reads: Record<string, TypeRef> = {};
+  for (const envelope of entry.reads) {
+    const type = messageTypeAt(site, envelope);
+    const ref = type === undefined ? undefined : ctx.types.collectType(type, site);
+    if (ref !== undefined && !SAYS_NOTHING.has(ref)) reads[envelopePath(envelope.at)] = ref;
+  }
+  return reads;
+};
+
 /**
  * Turns what the entry adapters found into nodes and edges.
  *
@@ -86,6 +120,7 @@ export const entriesPass = definePass('entries', (ctx: NestExtractContext) => {
   for (const adapter of ctx.adapters.entry) {
     for (const entry of adapter.extractEntries(ctx)) {
       const handler = resolveHandler(ctx, entry.handler);
+      const reads = readsOf(ctx, entry, handler.fn);
 
       const node = ctx.builder.addNode({
         id: entry.id,
@@ -95,7 +130,15 @@ export const entriesPass = definePass('entries', (ctx: NestExtractContext) => {
         file: entry.file,
         ...(entry.line === undefined ? {} : { line: entry.line }),
         kind: entry.kind,
-        ...(entry.meta === undefined ? {} : { meta: { ...entry.meta, adapter: adapter.name } }),
+        ...(entry.meta === undefined
+          ? {}
+          : {
+              meta: {
+                ...entry.meta,
+                ...(reads === undefined ? {} : { [READS_META]: reads }),
+                adapter: adapter.name,
+              },
+            }),
       });
 
       // Drawn here rather than in the adapter, and drawn from the same

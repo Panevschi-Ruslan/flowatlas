@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "lending-library-desk",
-  "generatedAt": "2026-10-06T17:14:32.051Z",
+  "generatedAt": "2026-10-06T20:48:33.822Z",
   "nodes": [
     {
       "id": "entry:lending-library-desk:invoke:library-desk-cancel-hold",
@@ -21,6 +21,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "wrapped",
         "environment": {},
+        "reads": {
+          "": "type:lending-library-desk#CancelHoldEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -42,6 +45,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "inline",
         "environment": {},
+        "reads": {
+          "": "type:lending-library-desk#CreateLoanEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -85,6 +91,9 @@
         "handlerVia": "wrapped",
         "wrapperUnread": "instrument comes from @lending/telemetry, which is not installed, so whether it runs the function it is handed was not read",
         "environment": {},
+        "reads": {
+          "": "type:lending-library-desk#HoldEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -106,6 +115,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "wrapped",
         "environment": {},
+        "reads": {
+          "": "type:lending-library-desk#ReturnEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -127,6 +139,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "wrapped",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -149,6 +164,7 @@
         "handlerVia": "wrapped",
         "wrapperUnread": "measured hands it on, and instrument comes from @lending/telemetry, which is not installed, so whether it runs the function it is handed was not read",
         "environment": {},
+        "reads": {},
         "adapter": "aws-lambda"
       }
     },
@@ -598,7 +614,91 @@
       "line": 5
     }
   ],
-  "types": {},
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:lending-library-desk#CancelHoldEvent": {
+      "name": "CancelHoldEvent",
+      "kind": "object",
+      "declaredIn": "lending-library-desk#src/handlers/cancel-hold.ts",
+      "structuralHash": "0ff061d69a2c89fc",
+      "fields": [
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:lending-library-desk#CreateLoanEvent": {
+      "name": "CreateLoanEvent",
+      "kind": "object",
+      "declaredIn": "lending-library-desk#src/handlers/create-loan.ts",
+      "structuralHash": "cd55c224a818dfe2",
+      "fields": [
+        {
+          "name": "body",
+          "type": "{borrowerId:string;isbn:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:lending-library-desk#HoldEvent": {
+      "name": "HoldEvent",
+      "kind": "object",
+      "declaredIn": "lending-library-desk#src/handlers/place-hold.ts",
+      "structuralHash": "cd55c224a818dfe2",
+      "fields": [
+        {
+          "name": "body",
+          "type": "{isbn:string;borrowerId:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:lending-library-desk#ReturnEvent": {
+      "name": "ReturnEvent",
+      "kind": "object",
+      "declaredIn": "lending-library-desk#src/handlers/record-return.ts",
+      "structuralHash": "ef49f0bf6cde5464",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "infra/functions.tf",

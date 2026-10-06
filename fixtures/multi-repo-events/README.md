@@ -20,3 +20,13 @@ the channel, through the rule in `routing`, into the welcome function's body in
 The exact rule's join is `static`; the audit rule's and the digest rule's are
 `heuristic`, each with its reason on the edge. The partner rule selects nothing
 anybody configured publishes: one `subscription-matches-nothing` row at `info`.
+
+## The contract the digest breaks
+
+A rule that sends to a queue sends the whole event, with the loan at `detail`,
+and `loan-digest` parses the body as `{ borrowerId }`. `contracts` compares the
+loan `loans` publishes, wrapped as the rule hands it on, with what the digest
+parses, and reports `borrowerId` as `missing_required`: at run time it is
+`undefined`, because it is at `detail.borrowerId`. The welcome function reads
+the loan at `detail` of its own event and agrees with it; `itemId` is sent and
+not read, at `info`.

@@ -10,7 +10,9 @@
  * the input that carry a message and say where it goes. The readers are
  * siblings and none may depend on another, so the rule lives in a package each
  * of them can import and none of them owns; it is not in the core
- * because the core names no technology (I1).
+ * because the core names no technology (I1). `envelopes` says where a message
+ * sits in what each kind of delivery hands its target, which is how a publisher
+ * and a handler are compared through the wrapping (R172).
  */
 export {
   AWS_SERVICE_PREFIX,
@@ -23,6 +25,7 @@ export {
   queueChannel,
   topicChannel,
 } from './channels.js';
+export { deliveryEnvelope, ENVELOPES, ONWARD, STARTED, type DeliveryEnvelope } from './envelopes.js';
 export {
   DEPLOYED_FORMS,
   deployedArn,

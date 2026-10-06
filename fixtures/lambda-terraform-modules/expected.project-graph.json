@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T16:22:12.351Z",
+  "builtAt": "2026-10-06T20:48:32.428Z",
   "services": [
     {
       "name": "catalogue",
@@ -195,6 +195,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -216,6 +219,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -237,6 +243,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "wrapped",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -258,6 +267,9 @@
         "sourceDirectory": "src/handlers",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -436,7 +448,18 @@
       "line": 4
     }
   ],
-  "types": {},
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "infra/main.tf",

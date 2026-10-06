@@ -109,5 +109,46 @@ export const uncheckedNote = (
         message: `${subject} is handled and nothing publishes to it`,
         hint: 'See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable.',
       };
+    // The rest are a message delivered by a platform rather than handed over by
+    // code (R172): compared through the wrapping it arrives in, where that and
+    // what the far end reads of it are both known, and said here where not.
+    case 'envelope-unread':
+      return {
+        message: `how ${subject} wraps what it hands its target is not known`,
+        hint: 'Nothing to change in the code. A target handed something other than the message as delivered - an input rewritten on the way, a batch a pipe shapes - is not compared, because the message and what the target reads would not be the same thing.',
+      };
+    case 'message-unparsed':
+      return {
+        message: `${subject} does not parse the text at ${detail ?? 'the top'} of what it is handed into a declared type`,
+        hint: 'Parse the message into a declared type where the handler reads it - `JSON.parse(text) as Order`, or into a variable declared with one - so there is a shape to compare.',
+      };
+    case 'message-undeclared':
+      return {
+        message:
+          detail === undefined
+            ? `${subject} declares no type of its own for what it is handed`
+            : `${subject} declares no type for what is at ${detail} of what it is handed`,
+        hint: "Type the handler's parameter with the message's own type inside it, so there is a shape to compare.",
+      };
+    case 'delivered-onward':
+      return {
+        message: `${subject} hands the message on to ${detail ?? 'another channel'} rather than to code`,
+        hint: 'Nothing to change: the message is compared with what reads it where it is handed on to.',
+      };
+    case 'delivery-target-unread':
+      return {
+        message: `nothing ${subject} delivers to is code this project reads`,
+        hint: 'The target is not code any configured service holds - an e-mail address, or a function no configured service deploys - so there is nothing to compare the message with. Configure the service that deploys it to compare it.',
+      };
+    case 'handler-unread':
+      return {
+        message: `the code ${subject} runs was not read for what it takes from what it is handed`,
+        hint: 'Its handler is built by a call whose result is not a function this tool reads, or was not found; see the rows about it in flowatlas doctor. Export the function the platform calls, so there is a parameter to compare.',
+      };
+    case 'sender-forwards':
+      return {
+        message: `${subject} hands on what it is given, and nothing declares its shape`,
+        hint: 'Nothing to change at this end. A message forwarded from a channel is compared from the publisher that wrote it when the forwarding wrapping is known; a request a route sends straight to a channel has no declared shape.',
+      };
   }
 };

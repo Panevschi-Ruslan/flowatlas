@@ -79,7 +79,7 @@ interface Operation {
   /** The method both clients that take the input directly call it as. */
   readonly method: string;
   readonly address: readonly InputPart[];
-  /** Where in the input the message is, for an operation that sends one. */
+  /** Where in the input the message is, for an operation that sends one or starts something with one. */
   readonly payload?: readonly string[];
   /** What it is recorded as, where that is not the service's word. */
   readonly kind?: string;
@@ -167,11 +167,18 @@ const SERVICES: readonly Service[] = [
     service: 'SFN',
     v2Service: 'StepFunctions',
     operations: [
-      { command: 'StartExecutionCommand', method: 'startExecution', address: STATE_MACHINE, starts: { entry: 'workflow' } },
+      {
+        command: 'StartExecutionCommand',
+        method: 'startExecution',
+        address: STATE_MACHINE,
+        payload: ['input'],
+        starts: { entry: 'workflow' },
+      },
       {
         command: 'StartSyncExecutionCommand',
         method: 'startSyncExecution',
         address: STATE_MACHINE,
+        payload: ['input'],
         kind: 'start-sync',
         starts: { entry: 'workflow' },
       },
@@ -202,6 +209,7 @@ const SERVICES: readonly Service[] = [
         command: 'InvokeCommand',
         method: 'invoke',
         address: [{ path: ['FunctionName'], forms: [...DEPLOYED_FORMS.function, ...FUNCTION_NAME_FORMS] }],
+        payload: ['Payload'],
         // Left out, the caller waits for the answer; `Event` hands the call over and returns.
         starts: { entry: 'invoke', kindAt: { path: ['InvocationType'], kinds: { Event: 'invoke-async', DryRun: 'invoke-dry-run' } } },
       },

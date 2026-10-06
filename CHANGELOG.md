@@ -190,6 +190,26 @@ only one of them moved.
   message the step is given is kept as written on the edge (`meta.payload`).
   The `workflow-channel-not-joined` row is gone
   (`fixtures/multi-repo-stepfunctions`).
+- **`contracts` compares a message delivered by AWS through the envelope it
+  arrives in.** A queue's, a topic's or a bus's message is compared with what
+  the function the deployment delivers it to reads at `Records[].body`,
+  `Records[].Sns.Message` or `detail` - the type declared there, or what the
+  handler parses the text there into - and a start's `input` or `Payload` with
+  the invoked handler's parameter or with what the started workflow's first
+  state reads of its input. A rule or a subscription that forwards to another
+  queue or topic forwards the envelope, and whatever reads that queue is
+  compared with it: `fixtures/multi-repo-events` now reports the digest
+  handler reading `borrowerId` off the body of a queue a rule fills with whole
+  events, where it is at `detail.borrowerId`, and
+  `fixtures/start-workflow-sdk` a renewal starting the approval workflow
+  without the `borrowerId` its first state reads. Where nothing can be compared
+  the boundary stays `unchecked` with one of seven new reasons:
+  `envelope-unread`, `message-unparsed`, `message-undeclared`,
+  `handler-unread`, `delivered-onward`, `delivery-target-unread` and
+  `sender-forwards`. The table of envelopes is data in `@flowatlas/aws`; an
+  `invoke` entry records what its handler reads (`meta.reads`), a consumer a
+  deployment declares and a start record how they wrap the message
+  (`meta.envelope`), and a `workflow` entry what its first state requires.
 
 ### Changed
 

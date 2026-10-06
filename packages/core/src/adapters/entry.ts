@@ -5,6 +5,7 @@ import type { EntryKind } from '../model/nodes.js';
 import type { ExtractContext } from './context.js';
 import type { EntryWrapping } from './wrapping.js';
 import type { PackageJson } from './manifest.js';
+import type { Envelope } from '../envelope.js';
 
 /** A method of a class, which is where most handlers live. */
 export interface MethodHandler {
@@ -102,6 +103,16 @@ export interface EntryNode {
    * that read the graph as a graph could see a middleware chain at all (R109).
    */
   wrapping?: readonly EntryWrapping[];
+  /**
+   * The ways a message may be wrapped in what the handler is handed.
+   *
+   * Described rather than read, like the handler: the extractor reads, for each,
+   * what the handler takes from that place - the declared type there, or what it
+   * parses the text there into - and records it on the entry under
+   * `meta.reads`, so a message delivered in any of these wrappings can be
+   * compared with what the handler actually reads (R172).
+   */
+  reads?: readonly Envelope[];
   meta?: Record<string, unknown>;
 }
 

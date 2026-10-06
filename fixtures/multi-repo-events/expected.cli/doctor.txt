@@ -1,4 +1,4 @@
-unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=1 ignored=0 · exit=0
 
 unresolved: 0 to act on over 1 row, and 1 place static reading cannot see, folded into 1
   subscription-matches-nothing (info): 1 row
@@ -10,7 +10,12 @@ markers: none
 
 desync: none
 
-contracts: no errors, 0 excused, 7 boundary directions nothing could be compared on
+contracts: 1 error, 0 excused, 5 boundary directions nothing could be compared on:
+  kind              between                direction  field       what
+  missing_required  loans → notifications  payload    borrowerId  receiver notifications requires `borrowerId: string`; sender loans does not send it; routing hands it on as it is delivered, the message at detail; notifications reads the message at Records[].body of what it is handed, as text it parses
 
 baseline: missing (0 accepted, 0 now, +0)
   no baseline at <root>/fixtures/multi-repo-events/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+
+verdict:
+  1 contract error nothing excused

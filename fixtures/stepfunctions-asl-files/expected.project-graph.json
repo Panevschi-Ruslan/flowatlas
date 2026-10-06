@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T17:33:24.097Z",
+  "builtAt": "2026-10-06T20:50:03.072Z",
   "services": [
     {
       "name": "circulation",
@@ -685,7 +685,11 @@
         "startAt": "ShapeApplication",
         "states": 19,
         "queryLanguage": "JSONPath",
-        "comment": "Approves a loan: checks the borrower and the holds, reserves the copies, waits for a librarian, records the loan and tells the borrower."
+        "comment": "Approves a loan: checks the borrower and the holds, reserves the copies, waits for a librarian, records the loan and tells the borrower.",
+        "reads": {
+          "": "{borrowerId:unknown;branch:unknown;itemIds:unknown}"
+        },
+        "carriesOn": true
       }
     },
     {
@@ -722,7 +726,9 @@
         "startAt": "ChooseChannel",
         "states": 4,
         "queryLanguage": "JSONPath",
-        "comment": "Tells a borrower something, by the channel they prefer, and records that it was sent."
+        "comment": "Tells a borrower something, by the channel they prefer, and records that it was sent.",
+        "reads": {},
+        "carriesOn": true
       }
     },
     {
@@ -741,7 +747,9 @@
         "startAt": "FindOverdueLoans",
         "states": 4,
         "queryLanguage": "JSONata",
-        "comment": "Finds the loans past their due date and reminds each borrower. Written in JSONata."
+        "comment": "Finds the loans past their due date and reminds each borrower. Written in JSONata.",
+        "reads": {},
+        "carriesOn": true
       }
     },
     {

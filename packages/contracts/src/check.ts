@@ -73,6 +73,8 @@ const idOf = (ref: string): string | undefined => {
  */
 const TRANSPORT_BODIES = new Set([
   'string',
+  // The bytes an invocation's payload is handed as, by a helper nothing here sees into.
+  'Uint8Array',
   'FormData',
   'RequestInit',
   'Blob',
@@ -372,6 +374,7 @@ const findingOf = (
       everyCall: exchange.direction !== 'request' || exchange.sender.writesEvery !== false,
     }) +
     (unreached === null ? '' : `; nothing in the project calls ${unreached}`) +
+    (exchange.via ?? []).map((clause) => `; ${clause}`).join('') +
     declaredNote(exchange),
   ignored: ignoredBy !== null,
   ignoredBy,
@@ -587,6 +590,18 @@ const isSent = (exchange: Exchange, diff: FieldDiff): boolean => {
 };
 
 /**
+ * Whether a key sent and not declared is worth a sentence (R172).
+ *
+ * Not when the receiver reads part of what it is handed and carries the rest
+ * on - a workflow, whose later steps read what its first one did not - since it
+ * has said nothing about the keys it passes along. Not when the key is one the
+ * platform wrapped the message in on the way, which nobody at the sending end
+ * wrote. What either does require is still required.
+ */
+const worthSaying = (exchange: Exchange, diff: FieldDiff): boolean =>
+  diff.kind !== 'extra_field' || (exchange.carriesOn !== true && !(exchange.wrapperKeys ?? []).includes(diff.path));
+
+/**
  * Every boundary in a project, checked.
  *
  * Takes the graph in whichever form the caller holds it, so `doctor`, `diff`
@@ -639,7 +654,7 @@ export const checkContracts = (
     const ignoredBy = excusedBy(lookup, exchange, options);
     const unreached = unreachedCaller(lookup, exchange);
     const found = verdict.diffs
-      .filter((diff) => isSent(exchange, diff))
+      .filter((diff) => isSent(exchange, diff) && worthSaying(exchange, diff))
       .map((diff) =>
         findingOf(
           exchange,

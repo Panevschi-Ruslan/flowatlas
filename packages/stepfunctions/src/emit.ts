@@ -1,5 +1,6 @@
 import { channelOfTarget, DEPLOYED_CHANNELS, SDK_SENDS } from '@flowatlas/aws';
 import {
+  CARRIES_ON_META,
   makeChannelId,
   makeEntryId,
   makeLeafId,
@@ -7,6 +8,7 @@ import {
   makeTableId,
   makeWorkflowEntryKey,
   REACHES_META,
+  READS_META,
   STEP_OF_META,
   STEPS_META,
   type GraphEdge,
@@ -15,6 +17,7 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import type { State, StateMachine, Transition } from './definition.js';
+import { requiredInput } from './input.js';
 import { functionReference, workflowReference } from './references.js';
 import type { Position } from './source.js';
 import { classifyTask, type ChannelTarget, type Task, type TaskTargetKind } from './tasks.js';
@@ -486,6 +489,9 @@ export const emitWorkflow = (machine: StateMachine, options: EmitOptions): Workf
 
   const key = options.key ?? makeWorkflowEntryKey(name);
   const entryId = makeEntryId(repo, 'workflow', key);
+  // What the first state reads of the input, which is what a call that starts
+  // the workflow is compared with; the rest of the input travels on (R172).
+  const input = requiredInput(machine);
   nodes.push({
     id: entryId,
     type: 'entry',
@@ -504,6 +510,8 @@ export const emitWorkflow = (machine: StateMachine, options: EmitOptions): Workf
       [STEPS_META]: machine.states.length,
       queryLanguage: machine.queryLanguage,
       ...(machine.comment === undefined ? {} : { comment: machine.comment }),
+      [READS_META]: input === undefined ? {} : { '': input },
+      [CARRIES_ON_META]: true,
       ...options.meta,
     },
   });

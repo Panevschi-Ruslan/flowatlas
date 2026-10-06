@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:53.147Z",
+  "builtAt": "2026-10-06T20:48:46.678Z",
   "configHash": "c86d8fb4c4cb",
   "services": [
     {
@@ -10,9 +10,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 10,
       "edges": 8,
-      "types": 0,
+      "types": 1,
       "unresolved": 2,
-      "durationMs": 0
+      "durationMs": 584
     },
     {
       "name": "loans",
@@ -21,9 +21,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 14,
       "edges": 12,
-      "types": 0,
+      "types": 1,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 593
     },
     {
       "name": "platform",
@@ -34,7 +34,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 387
     }
   ],
   "httpOut": {
@@ -72,14 +72,14 @@
     "duplicated": []
   },
   "types": {
-    "total": 0,
+    "total": 1,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
     "nodes": 27,
     "edges": 22,
-    "types": 0,
+    "types": 1,
     "unresolved": 2
   }
 }

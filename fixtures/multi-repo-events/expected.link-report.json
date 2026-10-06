@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T16:22:23.563Z",
+  "builtAt": "2026-10-06T20:48:45.364Z",
   "configHash": "e6bf14a6f63d",
   "services": [
     {
@@ -10,9 +10,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 10,
       "edges": 8,
-      "types": 1,
+      "types": 2,
       "unresolved": 2,
-      "durationMs": 613
+      "durationMs": 647
     },
     {
       "name": "notifications",
@@ -21,9 +21,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 8,
       "edges": 6,
-      "types": 0,
+      "types": 3,
       "unresolved": 0,
-      "durationMs": 603
+      "durationMs": 645
     },
     {
       "name": "platform-events",
@@ -34,7 +34,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 391
+      "durationMs": 425
     },
     {
       "name": "routing",
@@ -45,7 +45,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 389
+      "durationMs": 403
     }
   ],
   "httpOut": {
@@ -82,7 +82,7 @@
     "duplicated": []
   },
   "types": {
-    "total": 1,
+    "total": 5,
     "sharedPackage": 0
   },
   "unresolved": [
@@ -100,7 +100,7 @@
   "totals": {
     "nodes": 30,
     "edges": 27,
-    "types": 1,
+    "types": 5,
     "unresolved": 1
   }
 }

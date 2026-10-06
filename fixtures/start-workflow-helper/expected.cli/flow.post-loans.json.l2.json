@@ -98,6 +98,11 @@
                 "adapter": "aws-stepfunctions",
                 "method": "send",
                 "starts": "workflow",
+                "envelope": {
+                  "at": [],
+                  "text": false
+                },
+                "payload": "type:lending#Loan",
                 "confidence": "static",
                 "awaiting": [
                   {
@@ -138,6 +143,10 @@
                     "states": 2,
                     "queryLanguage": "JSONPath",
                     "comment": "Approves a loan: checks the borrower, then scores them.",
+                    "reads": {
+                      "": "{borrowerId:unknown}"
+                    },
+                    "carriesOn": true,
                     "deployedBy": "terraform",
                     "declaredAs": "aws_sfn_state_machine.loan_approval",
                     "definitionFrom": "file",
@@ -202,6 +211,9 @@
                             "sourceDirectory": "src",
                             "handlerVia": "function",
                             "environment": {},
+                            "reads": {
+                              "": "{borrowerId:string}"
+                            },
                             "adapter": "aws-lambda"
                           }
                         },
@@ -270,6 +282,9 @@
                                 "sourceDirectory": "src",
                                 "handlerVia": "function",
                                 "environment": {},
+                                "reads": {
+                                  "": "{borrowerId:string}"
+                                },
                                 "adapter": "aws-lambda"
                               }
                             },
@@ -315,6 +330,10 @@
                 "adapter": "starters",
                 "method": "run",
                 "starts": "workflow",
+                "envelope": {
+                  "at": [],
+                  "text": false
+                },
                 "confidence": "declared",
                 "reaches": [
                   "workflow:lending-reserve-copies"
@@ -342,6 +361,10 @@
                     "states": 2,
                     "queryLanguage": "JSONPath",
                     "comment": "Reserves every copy a loan asks for.",
+                    "reads": {
+                      "": "{itemIds:unknown;loanId:unknown}"
+                    },
+                    "carriesOn": true,
                     "deployedBy": "terraform",
                     "declaredAs": "aws_sfn_state_machine.reserve_copies",
                     "definitionFrom": "file",
@@ -426,6 +449,9 @@
                                 "sourceDirectory": "src",
                                 "handlerVia": "function",
                                 "environment": {},
+                                "reads": {
+                                  "": "{loanId:string;itemId:string}"
+                                },
                                 "adapter": "aws-lambda"
                               }
                             },
@@ -461,5 +487,43 @@
         ]
       }
     ]
+  },
+  "types": {
+    "type:lending#Loan": {
+      "id": "type:lending#Loan",
+      "name": "Loan",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/loans.ts",
+      "structuralHash": "642e5e2619bf9e1c",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "requestedAt",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemIds",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true,
+        "extends": [
+          "type:lending#LoanRequest"
+        ]
+      }
+    }
   }
 }

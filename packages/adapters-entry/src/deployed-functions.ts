@@ -20,6 +20,7 @@ import {
   type ExtractContext,
   type Unresolved,
 } from '@flowatlas/core';
+import { ENVELOPES } from '@flowatlas/aws';
 import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
 import { Node, ts, type CallExpression, type Node as TsNode, type SourceFile } from 'ts-morph';
 import { drawDeliveries, drawRouteSends, environmentMeta } from './deployed-channels.js';
@@ -46,6 +47,21 @@ export const deploymentReadersFor = (repoDir: string, config?: Parameters<Deploy
   DEPLOYMENT_READERS.filter((reader) => reader.declares(repoDir, config));
 
 const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts'];
+
+/**
+ * Every wrapping a function may be handed a message in: invoked with it, or
+ * delivered it from a queue, a topic or a bus. The extractor reads what the
+ * handler takes from each, so whichever way the deployment delivers is
+ * compared with what the handler reads (R172).
+ */
+const FUNCTION_READS = [ENVELOPES.invoke, ENVELOPES.queue, ENVELOPES.topic, ENVELOPES.bus];
+
+/**
+ * How a handler was found when the function found is the one handed the event.
+ * A factory's own parameters are its options, not the event, so a handler a
+ * factory returns is not read for what it takes.
+ */
+const RUNS_ITSELF: ReadonlySet<string> = new Set(['function', 'inline', 'wrapped']);
 
 /** What `tsconfig.json` says about where compiled output goes, per directory. */
 interface OutputMapping {
@@ -499,6 +515,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
           file: fn.file,
           line: fn.line,
           ...(reading.wrapping.length === 0 ? {} : { wrapping: reading.wrapping }),
+          ...(RUNS_ITSELF.has(String(reading.meta['handlerVia'])) ? { reads: FUNCTION_READS } : {}),
           meta: {
             key,
             deployedBy: reader.name,

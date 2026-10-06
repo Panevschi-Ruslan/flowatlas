@@ -29,3 +29,10 @@ function each have exactly one receiver, named by the deployment.
 `expected.cli/` holds `flow` for `POST /loans`, through all three starts into
 the approval workflow and its three functions, `flow` for `POST /reviews`, and
 `doctor`.
+
+`contracts` compares each start's `input` with what the workflow's first state
+reads of it: `CheckBorrower` reads `$.borrowerId`. The loan `create-loan` sends
+has one; the renewal `renew-loan` sends, `{ loanId, renewal }`, does not, which
+fails the run at its first state and is a `missing_required` error. The two
+invocations hand over `payloadOf(...)`, bytes made by a helper nothing here sees
+into, and are `body-already-serialised`.

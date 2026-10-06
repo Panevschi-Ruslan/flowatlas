@@ -10,7 +10,7 @@ markers: none
 
 desync: none
 
-contracts: no errors, 0 excused, 0 boundary directions nothing could be compared on
+contracts: no errors, 0 excused, 2 boundary directions nothing could be compared on
 
 baseline: missing (0 accepted, 0 now, +0)
   no baseline at <root>/fixtures/start-workflow-helper/flowatlas.baseline.json; run flowatlas doctor --accept to write one

@@ -222,6 +222,13 @@ export const UNCHECKED_REASONS = [
   'channel-without-consumer',
   'procedure-input-by-name',
   'procedure-output-inferred',
+  'envelope-unread',
+  'message-unparsed',
+  'message-undeclared',
+  'delivered-onward',
+  'delivery-target-unread',
+  'handler-unread',
+  'sender-forwards',
 ] as const;
 
 export type UncheckedReason = (typeof UNCHECKED_REASONS)[number];

@@ -17,7 +17,11 @@
         "startAt": "ShapeApplication",
         "states": 19,
         "queryLanguage": "JSONPath",
-        "comment": "Approves a loan: checks the borrower and the holds, reserves the copies, waits for a librarian, records the loan and tells the borrower."
+        "comment": "Approves a loan: checks the borrower and the holds, reserves the copies, waits for a librarian, records the loan and tells the borrower.",
+        "reads": {
+          "": "{borrowerId:unknown;branch:unknown;itemIds:unknown}"
+        },
+        "carriesOn": true
       }
     },
     "children": [
@@ -556,7 +560,9 @@
                                             "startAt": "ChooseChannel",
                                             "states": 4,
                                             "queryLanguage": "JSONPath",
-                                            "comment": "Tells a borrower something, by the channel they prefer, and records that it was sent."
+                                            "comment": "Tells a borrower something, by the channel they prefer, and records that it was sent.",
+                                            "reads": {},
+                                            "carriesOn": true
                                           }
                                         },
                                         "edge": {

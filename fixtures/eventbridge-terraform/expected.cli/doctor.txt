@@ -10,7 +10,7 @@ markers: none
 
 desync: none
 
-contracts: no errors, 0 excused, 5 boundary directions nothing could be compared on
+contracts: no errors, 0 excused, 2 boundary directions nothing could be compared on
 
 baseline: missing (0 accepted, 1 now, +1)
   no baseline at <root>/fixtures/eventbridge-terraform/flowatlas.baseline.json; run flowatlas doctor --accept to write one

@@ -16,7 +16,7 @@ markers: none
 
 desync: none
 
-contracts: no errors, 0 excused, 9 boundary directions nothing could be compared on
+contracts: no errors, 0 excused, 5 boundary directions nothing could be compared on
 
 baseline: missing (0 accepted, 2 now, +2)
   no baseline at <root>/fixtures/sqs-sns-terraform/flowatlas.baseline.json; run flowatlas doctor --accept to write one

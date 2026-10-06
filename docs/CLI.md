@@ -571,6 +571,36 @@ A boundary that could not be compared is not left out: it is listed under
 `unchecked` with the reason and the thing to do about it, so "no errors" can be
 read as "nothing broken" rather than "nothing looked at".
 
+**A message delivered by AWS is compared through the envelope it arrives in.**
+A function a queue, a topic or a bus delivers to is not handed the message: it
+is handed an event with the message inside it. A queue's message is the text at
+`Records[].body`, a topic's the text at `Records[].Sns.Message`, a bus's the
+value at `detail`; a function invoked, or a workflow started, is handed its
+input as it is. The publisher's payload (`MessageBody`, `Message`, `Detail`,
+seen through `JSON.stringify`) is compared with what the handler takes from
+that place - the type it declares there, or what it parses the text there into
+(`JSON.parse(record.body) as Loan`). A start's `input` or `Payload` is compared
+with the invoked handler's parameter, or with what the started workflow's
+first state reads of its input (`"id.$": "$.loanId"` requires `loanId`); keys a
+workflow does not read there are carried on, so they are never reported as
+extra. A rule or a subscription that hands a message on to another queue or
+topic hands on the envelope, so whatever reads that queue is compared with the
+envelope around the original message - a handler of a rule's queue that
+parses the body as the message, when the message is at `detail`, is a
+`missing_required` error. Each finding says where the message was read from.
+
+What cannot be compared this way stays `unchecked`, with one of these reasons:
+
+| Reason | Means |
+|---|---|
+| `envelope-unread` | the delivery rewrites what its target is handed (`input_transformer`, `input_path`, `input`), or is a pipe |
+| `message-unparsed` | the handler never parses the text at the message's path into a declared type |
+| `message-undeclared` | the handler, or the workflow's first state, declares nothing at the message's path |
+| `handler-unread` | the function's handler was not read as the function handed the event: built by a factory, or not found |
+| `delivered-onward` | the delivery hands the message on to another channel; it is compared where that is read |
+| `delivery-target-unread` | the delivery's target is no code this project reads, such as an e-mail address |
+| `sender-forwards` | the sending end hands on what it was given - a route sending its request to a queue, a forward with no typed publisher behind it |
+
 ### `flowatlas stats`
 
 What the built graph is made of: counts by node and edge type, per service, and

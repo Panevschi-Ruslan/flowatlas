@@ -1,8 +1,97 @@
 {
   "contractsFormatVersion": 4,
   "schemaVersion": 6,
-  "generatedAt": "2026-10-06T16:23:22.048Z",
-  "edges": [],
+  "generatedAt": "2026-10-06T20:49:58.235Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:returns#src/lib/returns-queue.ts:17:9",
+        "to": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.process_returns",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#src/lib/returns-queue.ts:17:9|emits|consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.process_returns",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/lib/returns-queue.ts:queueReturn"
+      },
+      "receiver": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/returns/process-return.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:returns#src/notices/notify-borrower.ts:20:11",
+        "to": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.send_reminders",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#src/notices/notify-borrower.ts:20:11|emits|consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.send_reminders",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "returns",
+        "typeId": "type:returns#Reminder",
+        "symbol": "returns#src/notices/notify-borrower.ts:handler"
+      },
+      "receiver": {
+        "service": "returns",
+        "typeId": "type:returns#Reminder",
+        "symbol": "returns#src/notices/send-reminder.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:returns#src/returns/process-return.ts:21:11",
+        "to": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.restock",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#src/returns/process-return.ts:21:11|emits|consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.restock",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/returns/process-return.ts:handler"
+      },
+      "receiver": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/stock/restock.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:returns#src/returns/process-return.ts:21:11",
+        "to": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.notify_borrower",
+        "type": "emits"
+      },
+      "edgeKey": "producer:returns#src/returns/process-return.ts:21:11|emits|consumer:returns#infra/topics.tf:aws_sns_topic_subscription.notify_borrower",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/returns/process-return.ts:handler"
+      },
+      "receiver": {
+        "service": "returns",
+        "typeId": "type:returns#ReturnedItem",
+        "symbol": "returns#src/notices/notify-borrower.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
   "findings": [],
   "ignored": [],
   "unchecked": [
@@ -38,45 +127,9 @@
       },
       "edgeKey": "producer:returns#infra/api.tf:aws_api_gateway_method.request_hold|emits|consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.place_holds",
       "direction": "payload",
-      "reason": "no-type-on-sender",
-      "message": "entry:returns:http:POST:/holds declares no type for what it sends",
-      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
-    },
-    {
-      "edge": {
-        "from": "producer:returns#infra/topics.tf:aws_sns_topic_subscription.restock",
-        "to": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.restock",
-        "type": "emits"
-      },
-      "edgeKey": "producer:returns#infra/topics.tf:aws_sns_topic_subscription.restock|emits|consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.restock",
-      "direction": "payload",
-      "reason": "no-type-on-sender",
-      "message": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.restock declares no type for what it sends",
-      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
-    },
-    {
-      "edge": {
-        "from": "producer:returns#src/lib/returns-queue.ts:17:9",
-        "to": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.process_returns",
-        "type": "emits"
-      },
-      "edgeKey": "producer:returns#src/lib/returns-queue.ts:17:9|emits|consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.process_returns",
-      "direction": "payload",
-      "reason": "no-type-on-receiver",
-      "message": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.process_returns declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
-    },
-    {
-      "edge": {
-        "from": "producer:returns#src/notices/notify-borrower.ts:20:11",
-        "to": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.send_reminders",
-        "type": "emits"
-      },
-      "edgeKey": "producer:returns#src/notices/notify-borrower.ts:20:11|emits|consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.send_reminders",
-      "direction": "payload",
-      "reason": "no-type-on-receiver",
-      "message": "consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.send_reminders declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+      "reason": "sender-forwards",
+      "message": "producer:returns#infra/api.tf:aws_api_gateway_method.request_hold hands on what it is given, and nothing declares its shape",
+      "hint": "Nothing to change at this end. A message forwarded from a channel is compared from the publisher that wrote it when the forwarding wrapping is known; a request a route sends straight to a channel has no declared shape."
     },
     {
       "edge": {
@@ -86,21 +139,9 @@
       },
       "edgeKey": "producer:returns#src/returns/process-return.ts:21:11|emits|consumer:returns#infra/topics.tf:aws_sns_topic_subscription.branch_inbox",
       "direction": "payload",
-      "reason": "no-type-on-receiver",
-      "message": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.branch_inbox declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
-    },
-    {
-      "edge": {
-        "from": "producer:returns#src/returns/process-return.ts:21:11",
-        "to": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.notify_borrower",
-        "type": "emits"
-      },
-      "edgeKey": "producer:returns#src/returns/process-return.ts:21:11|emits|consumer:returns#infra/topics.tf:aws_sns_topic_subscription.notify_borrower",
-      "direction": "payload",
-      "reason": "no-type-on-receiver",
-      "message": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.notify_borrower declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+      "reason": "delivery-target-unread",
+      "message": "nothing consumer:returns#infra/topics.tf:aws_sns_topic_subscription.branch_inbox delivers to is code this project reads",
+      "hint": "The target is not code any configured service holds - an e-mail address, or a function no configured service deploys - so there is nothing to compare the message with. Configure the service that deploys it to compare it."
     },
     {
       "edge": {
@@ -110,17 +151,17 @@
       },
       "edgeKey": "producer:returns#src/returns/process-return.ts:21:11|emits|consumer:returns#infra/topics.tf:aws_sns_topic_subscription.restock",
       "direction": "payload",
-      "reason": "no-type-on-receiver",
-      "message": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.restock declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+      "reason": "delivered-onward",
+      "message": "consumer:returns#infra/topics.tf:aws_sns_topic_subscription.restock hands the message on to channel:sqs/library-restock rather than to code",
+      "hint": "Nothing to change: the message is compared with what reads it where it is handed on to."
     }
   ],
   "summary": {
-    "edges": 0,
+    "edges": 4,
     "shared": 0,
-    "identical": 0,
+    "identical": 4,
     "hash_differs": 0,
-    "unchecked": 9,
+    "unchecked": 5,
     "errors": 0,
     "warnings": 0,
     "infos": 0,

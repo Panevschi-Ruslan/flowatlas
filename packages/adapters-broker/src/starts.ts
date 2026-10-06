@@ -1,6 +1,8 @@
 import { builtinModules } from 'node:module';
+import { STARTED } from '@flowatlas/aws';
 import {
   AWAITING_META,
+  ENVELOPE_META,
   forwardedFrom,
   makeDeployedReference,
   makeLeafId,
@@ -13,11 +15,12 @@ import {
   type Confidence,
   type LocatorContext,
   type StartedEntry,
+  type TypeRef,
   packageOfSpecifier,
 } from '@flowatlas/core';
 import type { Holder, PassContext } from '@flowatlas/extract-scopes';
-import { Node, type CallExpression, type Node as TsNode, type SourceFile } from 'ts-morph';
-import { addressOf, collapsed, readAddress, readWritten, type AddressedElement } from './address.js';
+import { Node, type CallExpression, type Node as TsNode, type ParameterDeclaration, type SourceFile } from 'ts-morph';
+import { addressOf, collapsed, messageValue, readAddress, readWritten, type AddressedElement } from './address.js';
 import { STARTING_CLIENTS, type StartingClient } from './adapters/aws.js';
 import type { BrokerSpec } from './adapters/types.js';
 import type { ReceiverEvidence } from './call-site.js';
@@ -290,6 +293,12 @@ export interface StartReader {
   notice(call: CallExpression, holder: Holder): void;
 }
 
+/** The parameter of the function a call is written in that a value is, when it is one. */
+const parameterOf = (value: TsNode): ParameterDeclaration | undefined => {
+  const declaration = Node.isIdentifier(value) ? value.getSymbol()?.getDeclarations()[0] : undefined;
+  return declaration !== undefined && Node.isParameterDeclaration(declaration) ? declaration : undefined;
+};
+
 /**
  * The reader of starts for one repository.
  *
@@ -315,6 +324,7 @@ export const startReader = (ctx: PassContext, holderAt: (site: TsNode) => Holder
     kind: string,
     spec: BrokerSpec,
     evidence: ReceiverEvidence,
+    payload: TypeRef | undefined,
   ): void => {
     const { starts } = pattern;
     const { line, column } = lineColOf(site);
@@ -342,6 +352,10 @@ export const startReader = (ctx: PassContext, holderAt: (site: TsNode) => Holder
         adapter: spec.name,
         method: pattern.method,
         [STARTS_META]: starts.entry,
+        // What the started workflow or function is handed, and how it is
+        // handed it, so the two can be compared like a message and its handler.
+        [ENVELOPE_META]: STARTED[starts.entry],
+        ...(payload === undefined ? {} : { payload }),
         confidence,
         ...(names.length === 0 ? {} : { [REACHES_META]: names.map((name) => makeDeployedReference(starts.entry, name)) }),
         ...(awaiting.length === 0 ? {} : { [AWAITING_META]: awaiting }),
@@ -408,23 +422,34 @@ export const startReader = (ctx: PassContext, holderAt: (site: TsNode) => Holder
       return;
     }
     const parts = addressOf(pattern);
-    const elements = readAddress(call, parts, undefined, context, ctx.config, call.getText().slice(0, 60));
+    const elements = readAddress(call, parts, pattern.payload, context, ctx.config, call.getText().slice(0, 60));
     const [only] = elements;
     const [part] = parts;
+    // What the call hands over, read where it is written: past `JSON.stringify`,
+    // and, where it is a parameter of a helper, at each call of the helper.
+    const message = elements.find((element) => element.payload !== undefined)?.payload;
+    const payloadOf = (value: TsNode | undefined): TypeRef | undefined => {
+      const ref = value === undefined ? undefined : ctx.types.collectType(value.getType(), value);
+      return ref === 'any' || ref === 'unknown' ? undefined : ref;
+    };
+    const handedIn = message === undefined ? undefined : parameterOf(message);
     if (elements.length === 1 && only?.parameter !== undefined && part !== undefined) {
       const forwarded = forwardedFrom(only.parameter);
+      const passed = handedIn === undefined ? [] : forwardedFrom(handedIn).calls;
       let recorded = 0;
       for (const hop of forwarded.calls) {
         const owner = holderAt(hop.site);
         if (owner === undefined || !Node.isCallExpression(hop.site)) continue;
-        record(hop.site, [readWritten(hop.argument, part, ctx.config)], owner, pattern, kind, spec, evidence);
+        const argument = passed.find((each) => each.site === hop.site)?.argument;
+        const payload = handedIn === undefined ? payloadOf(message) : payloadOf(argument === undefined ? undefined : messageValue(argument));
+        record(hop.site, [readWritten(hop.argument, part, ctx.config)], owner, pattern, kind, spec, evidence, payload);
         recorded += 1;
       }
       // A call that may run this function and may run another decides
       // nothing anyone can attribute, so the call here still answers for it.
       if (recorded > 0 && !forwarded.undecided) return;
     }
-    record(call, elements, holder, pattern, kind, spec, evidence);
+    record(call, elements, holder, pattern, kind, spec, evidence, payloadOf(message));
   };
 
   // What the doctor row below needs, worked out once and only if it is asked.

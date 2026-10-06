@@ -8,7 +8,8 @@
  * edge points the other way. Getting that backwards would report every answer
  * as a missing request.
  */
-import type { GraphEdge, GraphNode } from '@flowatlas/core';
+import { envelopePath, STARTS_META, type Envelope, type GraphEdge, type GraphNode } from '@flowatlas/core';
+import { envelopeOf, readThrough, wrapped, type Blocked } from './envelope.js';
 import { edgeKeyOf } from './key.js';
 import type { ContractParty, Direction, GraphLookup, UncheckedReason } from './types.js';
 
@@ -22,7 +23,19 @@ export interface Exchange {
   /** Symbols an annotation could excuse this exchange from. */
   symbols: string[];
   /** Set when there was never anything to compare. */
-  blocked?: { reason: UncheckedReason; subject: string; detail?: string };
+  blocked?: Blocked;
+  /**
+   * The receiver reads part of what it is handed and carries the rest on, so a
+   * key it does not read is not a key nobody reads.
+   */
+  carriesOn?: boolean;
+  /**
+   * Keys the platform wrote beside the message on the way, which nobody at the
+   * sending end put there and nobody is told about as sent.
+   */
+  wrapperKeys?: readonly string[];
+  /** Clauses a finding adds, saying what the message passed through on the way (R172). */
+  via?: string[];
 }
 
 /** References that name no shape, so there is nothing to compare against. */
@@ -225,6 +238,124 @@ const entryOfConsumer = (lookup: GraphLookup, consumer: GraphNode): GraphEdge | 
     .find((edge) => lookup.node(edge.from)?.type === 'entry');
 };
 
+/** One end read through a wrapping: the party, and whatever stopped it being compared. */
+interface Delivered {
+  receiver: ContractParty;
+  blocked?: Blocked;
+  carriesOn: boolean;
+  via?: string[];
+}
+
+const deployed = (node: GraphNode): boolean => typeof node.meta?.['deployedBy'] === 'string';
+
+const viaOf = (clauses: string[] | undefined): { via?: string[] } =>
+  clauses === undefined || clauses.length === 0 ? {} : { via: clauses };
+
+/** The channels a publisher sends to, for a sentence that says where a message went on to. */
+const channelsOf = (lookup: GraphLookup, producer: string): string =>
+  lookup
+    .edgesFrom(producer, ['emits'])
+    .map((edge) => edge.to)
+    .sort()
+    .join(', ');
+
+/** The code an entry runs, read through the wrapping the message is handed to it in. */
+const throughEnvelope = (lookup: GraphLookup, wrapper: GraphNode, entry: GraphNode): Delivered => {
+  const envelope = envelopeOf(wrapper);
+  // The reader that drew the delivery says how it wraps the message, or says
+  // nothing because that is not known; why is that reader's to say.
+  if (envelope === undefined) {
+    return {
+      receiver: party(lookup, entry.repo, undefined, entry.id),
+      blocked: { reason: 'envelope-unread', subject: wrapper.id },
+      carriesOn: false,
+    };
+  }
+  const reading = readThrough(lookup, entry, envelope);
+  return {
+    receiver: party(lookup, entry.repo, reading.typeId, reading.symbol),
+    ...(reading.blocked === undefined ? {} : { blocked: reading.blocked }),
+    carriesOn: reading.carriesOn,
+    via: reading.via,
+  };
+};
+
+/**
+ * Who a consumer a deployment declares hands the message to, and what that
+ * reads of it.
+ *
+ * Such a consumer has no handler of its own: it is a delivery, and the code it
+ * runs is the function or the workflow it reaches. `undefined` for a consumer
+ * that is neither, which is read as it always was.
+ */
+const deliveredTo = (lookup: GraphLookup, consumer: GraphNode): Delivered | undefined => {
+  const target = lookup
+    .edgesFrom(consumer.id, ['calls'])
+    .map((edge) => lookup.node(edge.to))
+    .filter((node): node is GraphNode => node !== undefined)
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))[0];
+  const blocked = (reason: Blocked['reason'], detail?: string): Delivered => ({
+    receiver: party(lookup, consumer.repo, undefined, consumer.id),
+    blocked: { reason, subject: consumer.id, ...(detail === undefined || detail === '' ? {} : { detail }) },
+    carriesOn: false,
+  });
+  if (target === undefined) return deployed(consumer) ? blocked('delivery-target-unread') : undefined;
+  if (target.type === 'producer') return blocked('delivered-onward', channelsOf(lookup, target.id));
+  if (target.type !== 'entry') return blocked('delivery-target-unread');
+  return throughEnvelope(lookup, consumer, target);
+};
+
+/**
+ * Why a sending end has nothing to compare, said before anything about the
+ * receiving end, the way a sender with no type always was: a delivery or a
+ * route that hands on what it was given has no type of its own to declare.
+ */
+const unsent = (
+  lookup: GraphLookup,
+  producer: GraphNode | undefined,
+  sent: string | undefined,
+  symbol: string,
+): Blocked | undefined => {
+  if (namesAShape(sent)) return undefined;
+  return producer !== undefined && deployed(producer)
+    ? { reason: 'sender-forwards', subject: producer.id }
+    : { reason: 'no-type-on-sender', subject: symbol };
+};
+
+/** A publisher whose message a delivery forwards, with the message as it is forwarded. */
+interface Upstream {
+  emit: GraphEdge;
+  typeId: string;
+  /** The service whose delivery forwards it. */
+  forwarder: string;
+  envelope: Envelope;
+}
+
+/**
+ * Where a message a delivery forwards came from, wrapped as the delivery hands it on.
+ *
+ * One hop: a publisher that itself forwards is not followed further back.
+ */
+const forwardedFrom = (lookup: GraphLookup, forwarder: string): Upstream[] =>
+  lookup
+    .edgesTo(forwarder, ['calls'])
+    .map((edge) => lookup.node(edge.from))
+    .filter((node): node is GraphNode => node?.type === 'consumer')
+    .flatMap((consumer) => {
+      const envelope = envelopeOf(consumer);
+      if (envelope === undefined) return [];
+      return lookup.edgesTo(consumer.id, ['consumes']).flatMap((consume) =>
+        lookup.edgesTo(consume.from, ['emits']).flatMap((emit) => {
+          const sent = emit.params?.[0];
+          const typeId = namesAShape(sent) ? wrapped(sent, envelope) : undefined;
+          return typeId === undefined
+            ? []
+            : [{ emit, typeId, forwarder: consumer.repo, envelope }];
+        }),
+      );
+    })
+    .sort((a, b) => (a.emit.from < b.emit.from ? -1 : a.emit.from > b.emit.from ? 1 : 0));
+
 /**
  * A published message and the handler that reads it.
  *
@@ -259,21 +390,55 @@ const channelExchanges = (lookup: GraphLookup, channel: GraphNode): Exchange[] =
   for (const emit of emits) {
     const publisher = callerOf(lookup, emit.from);
     const publisherService = repoOf(lookup, emit.from);
+    const producer = lookup.node(emit.from);
+    // A delivery that hands on what it was delivered sends nothing of its own:
+    // what it sends is its publishers' messages, wrapped.
+    const upstream = emit.params?.[0] === undefined ? forwardedFrom(lookup, emit.from) : [];
     for (const consume of consumes) {
       const consumer = lookup.node(consume.to);
       if (consumer === undefined) continue;
       const handles = entryOfConsumer(lookup, consumer);
-      const handler = handles?.to ?? consume.to;
+      const delivered = handles === undefined ? deliveredTo(lookup, consumer) : undefined;
+      const handler = delivered?.receiver.symbol ?? handles?.to ?? consume.to;
       const handlerService = consumer.repo;
+      const receiver =
+        delivered?.receiver ?? party(lookup, handlerService, bodyTypeOf(handles) ?? handles?.params?.[0], handler);
+      const through = delivered?.carriesOn === true ? { carriesOn: true } : {};
+      // Keyed by the publisher that wrote the message and the handler that
+      // reads it, like any message on a channel: the forwarding is the medium.
+      for (const from of upstream) {
+        const shape = { from: from.emit.from, to: consume.to, type: 'emits' };
+        const origin = callerOf(lookup, from.emit.from);
+        found.push({
+          edge: shape,
+          edgeKey: edgeKeyOf(shape),
+          direction: 'payload',
+          sender: party(lookup, repoOf(lookup, from.emit.from), from.typeId, origin),
+          receiver,
+          symbols: [origin, handler],
+          ...through,
+          ...(delivered?.blocked === undefined ? {} : { blocked: delivered.blocked }),
+          ...(from.envelope.beside === undefined ? {} : { wrapperKeys: from.envelope.beside }),
+          via: [
+            `${from.forwarder} hands it on as it is delivered, the message at ${envelopePath(from.envelope.at)}${from.envelope.text ? ' as text' : ''}`,
+            ...(delivered?.via ?? []),
+          ],
+        });
+      }
+      if (upstream.length > 0) continue;
       const shape = { from: emit.from, to: consume.to, type: 'emits' };
       const edgeKey = edgeKeyOf(shape);
+      const blocked = unsent(lookup, producer, emit.params?.[0], publisher) ?? delivered?.blocked;
       found.push({
         edge: shape,
         edgeKey,
         direction: 'payload',
         sender: party(lookup, publisherService, emit.params?.[0], publisher),
-        receiver: party(lookup, handlerService, bodyTypeOf(handles) ?? handles?.params?.[0], handler),
+        receiver,
         symbols: [publisher, handler],
+        ...through,
+        ...(blocked === undefined ? {} : { blocked }),
+        ...viaOf(delivered?.via),
       });
       // A request and an answer, over a channel. The kind of the publish says
       // whether there is an answer at all; whether either end declares its type
@@ -296,6 +461,40 @@ const channelExchanges = (lookup: GraphLookup, channel: GraphNode): Exchange[] =
   return found;
 };
 
+/**
+ * A call that starts a workflow or invokes a function by its deployed name,
+ * and what that reads of what it is handed (R172).
+ *
+ * The start is a request: the caller hands over its input and the far end
+ * reads it, through the wrapping the call says it is handed in. Its answer,
+ * where there is one, is bytes nobody here declares, so only the request is
+ * compared.
+ */
+const startExchanges = (lookup: GraphLookup, producer: GraphNode): Exchange[] =>
+  lookup.edgesFrom(producer.id, ['calls']).flatMap((call) => {
+    const entry = lookup.node(call.to);
+    if (entry?.type !== 'entry') return [];
+    const caller = callerOf(lookup, producer.id);
+    const said = producer.meta?.['payload'];
+    const sent = typeof said === 'string' ? said : undefined;
+    const delivered = throughEnvelope(lookup, producer, entry);
+    const blocked = unsent(lookup, producer, sent, caller) ?? delivered.blocked;
+    const shape = { from: producer.id, to: entry.id, type: call.type };
+    return [
+      {
+        edge: shape,
+        edgeKey: edgeKeyOf(shape),
+        direction: 'request' as const,
+        sender: party(lookup, producer.repo, sent, caller),
+        receiver: delivered.receiver,
+        symbols: [caller, delivered.receiver.symbol],
+        ...(blocked === undefined ? {} : { blocked }),
+        ...(delivered.carriesOn ? { carriesOn: true } : {}),
+        ...viaOf(delivered.via),
+      },
+    ];
+  });
+
 const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 /**
@@ -313,6 +512,9 @@ export const boundaries = (lookup: GraphLookup): Exchange[] => {
   }
   for (const channel of lookup.nodesByType('channel')) {
     found.push(...channelExchanges(lookup, channel));
+  }
+  for (const producer of lookup.nodesByType('producer')) {
+    if (typeof producer.meta?.[STARTS_META] === 'string') found.push(...startExchanges(lookup, producer));
   }
   return found.sort(
     (a, b) =>

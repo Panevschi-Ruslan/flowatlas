@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T17:27:27.470Z",
+  "builtAt": "2026-10-06T20:50:01.765Z",
   "services": [
     {
       "name": "lending",
@@ -97,6 +97,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "{borrowerId:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -124,6 +127,9 @@
             "kind": "workflow"
           }
         },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -145,6 +151,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:lending#Loan"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -166,6 +175,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "{borrowerId:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -187,6 +199,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -208,6 +223,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -229,6 +247,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "{loanId:string;taskToken:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -250,6 +271,9 @@
         "sourceDirectory": "src",
         "handlerVia": "function",
         "environment": {},
+        "reads": {
+          "": "{borrowerId:string}"
+        },
         "adapter": "aws-lambda"
       }
     },
@@ -269,6 +293,10 @@
         "states": 4,
         "queryLanguage": "JSONPath",
         "comment": "Approves a loan: checks the borrower, waits for a librarian's review, and scores the borrower.",
+        "reads": {
+          "": "{borrowerId:unknown}"
+        },
+        "carriesOn": true,
         "deployedBy": "terraform",
         "declaredAs": "aws_sfn_state_machine.loan_approval",
         "definitionFrom": "file",
@@ -467,6 +495,11 @@
         "adapter": "aws-lambda-invoke",
         "method": "send",
         "starts": "invoke",
+        "envelope": {
+          "at": [],
+          "text": false
+        },
+        "payload": "Uint8Array<ArrayBufferLike>",
         "confidence": "static",
         "reaches": [
           "invoke:lending-hold-copies"
@@ -486,6 +519,11 @@
         "adapter": "aws-stepfunctions",
         "method": "send",
         "starts": "workflow",
+        "envelope": {
+          "at": [],
+          "text": false
+        },
+        "payload": "type:lending#Loan",
         "confidence": "static",
         "awaiting": [
           {
@@ -518,6 +556,11 @@
         "adapter": "aws-lambda-invoke",
         "method": "send",
         "starts": "invoke",
+        "envelope": {
+          "at": [],
+          "text": false
+        },
+        "payload": "Uint8Array<ArrayBufferLike>",
         "confidence": "static",
         "reaches": [
           "invoke:lending-notify-borrower"
@@ -567,6 +610,11 @@
         "adapter": "aws-stepfunctions",
         "method": "startExecution",
         "starts": "workflow",
+        "envelope": {
+          "at": [],
+          "text": false
+        },
+        "payload": "{loanId:string;renewal:boolean}",
         "confidence": "static",
         "reaches": [
           "workflow:lending-loan-approval"
@@ -912,6 +960,74 @@
       }
     }
   ],
-  "types": {},
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:lending#Loan": {
+      "name": "Loan",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/loans.ts",
+      "structuralHash": "642e5e2619bf9e1c",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "requestedAt",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemIds",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true,
+        "extends": [
+          "type:lending#LoanRequest"
+        ]
+      }
+    },
+    "type:lending#LoanRequest": {
+      "name": "LoanRequest",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/loans.ts",
+      "structuralHash": "07210ddb6676fb42",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemIds",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
   "unresolved": []
 }
