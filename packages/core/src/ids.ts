@@ -12,6 +12,13 @@ import type { EntryKind } from './model/nodes.js';
  *            entry:<service>:invoke:<deployed-name>
  *            entry:<service>:invoke:${…}@<declaration>   — a function whose name
  *                                                        was not read
+ *            entry:<service>:workflow:<deployed-name>
+ *   state    <repo>#<file>:<workflow>/<state>   — one step of a workflow; a
+ *                                                symbol id whose symbol is the
+ *                                                workflow's name and the step's
+ *   reference <kind>:<key>               — an entry named without its service,
+ *                                          which is how something that knows
+ *                                          only a deployed name points at one
  *   channel  channel:<name>              — never repo-prefixed
  *   type     type:<repo>#<TypeName>
  *
@@ -237,6 +244,65 @@ export const makeInvokeEntryKey = (name: string): string => required('name', nam
  */
 export const makeUnnamedInvokeKey = (declaration: string): string =>
   `${UNREAD_SPAN}@${required('declaration', declaration)}`;
+
+/**
+ * The `key` half of a `workflow` entry id: the name the workflow is deployed
+ * under, exactly as the deployment spells it.
+ *
+ * The name is the whole address. Whatever starts a workflow - another
+ * workflow, a rule, a handler - names it and nothing else, so two sides that
+ * never read each other can still agree on it.
+ */
+export const makeWorkflowEntryKey = (name: string): string => required('name', name);
+
+/**
+ * `<repo>#<file>:<workflow>/<state>` — one step of a workflow.
+ *
+ * A symbol id like any other, so everything that walks functions walks steps.
+ * The step's name is unique within its workflow, and `/` is not part of any
+ * name a function or a class can have, so a step can never take the id of a
+ * declaration in the same file.
+ */
+export const makeStateId = (repo: string, file: string, workflow: string, state: string): string =>
+  makeSymbolId(repo, file, `${required('workflow', workflow)}/${required('state', state)}`);
+
+/**
+ * `<kind>:<key>` — an entry named without the service it is in.
+ *
+ * Something that knows only the name a thing is deployed under - a step that
+ * starts another workflow, say - cannot know which service declares it, and
+ * must not guess. It records this instead, and the linker joins it to the one
+ * entry, in whichever service, whose id ends in it ({@link entryReferenceOf}).
+ * The key is built by the same helper on both sides, so the two cannot drift
+ * apart in how they spell one name, which is the argument for
+ * {@link makeHttpEntryKey} too.
+ */
+export const makeEntryReference = (kind: EntryKind, key: string): string =>
+  `${required('kind', kind)}:${required('key', key)}`;
+
+/**
+ * The key of a node's `meta` that holds the references it reaches by name.
+ *
+ * A list of {@link makeEntryReference} strings. The node does not draw the
+ * edges itself, because it cannot know which service declares what it names;
+ * the linker draws one `calls` edge per reference that names exactly one entry,
+ * and a row for each that names none or several.
+ */
+export const REACHES_META = 'reaches';
+
+/**
+ * The reference an entry id answers to, or `undefined` for an id that is not
+ * an entry's.
+ *
+ * `entry:loans@public:http:GET:/x` answers `http:GET:/x`: the service, and the
+ * application with it, are exactly what a reference leaves out.
+ */
+export const entryReferenceOf = (id: string): string | undefined => {
+  if (!isEntryId(id)) return undefined;
+  const rest = id.slice('entry:'.length);
+  const cut = rest.indexOf(':');
+  return cut < 0 ? undefined : rest.slice(cut + 1);
+};
 
 /**
  * `channel:<name>` — deliberately without a repo prefix, because the whole

@@ -15,6 +15,7 @@ const ENTRY_KINDS = [
   'rpc',
   'cron',
   'invoke',
+  'workflow',
 ] as const;
 
 const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);

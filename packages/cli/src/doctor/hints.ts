@@ -666,6 +666,30 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'document-age': () =>
     'Nothing here can check a document against the running service, so how recently the document was updated is the only evidence there is that it is still true. Fetch the current one from whoever owns the service if it is behind.',
 
+  // Workflows written down as state machine definitions (stepfunctions)
+  'workflow-definition-unreadable': () =>
+    'The definition could not be read as a state machine, so no step of it is in the graph. Fix the syntax, or give the file another name if it is not a definition.',
+  'workflow-definition-invalid': () =>
+    'The definition names a state that is not there, or names one twice, and the service would refuse it. What is drawn is what the file says, which is not what runs. Correct the definition.',
+  'workflow-named-by-file': () =>
+    'A definition read on its own does not say what it is deployed as, so it is named after its file and anything joined to it by that name is drawn as heuristic. Read it from the file that deploys it to make the name certain.',
+  'workflow-name-duplicate': () =>
+    'Two definitions in one service would be one workflow, so only the first is drawn. Rename one of the files.',
+  'workflow-target-dynamic': () =>
+    'The step chooses what it calls when it runs, from its input, so no edge is drawn for it. Nothing to fix here.',
+  'workflow-template-unbound': () =>
+    'The step names what it calls through a placeholder that whatever deploys the definition fills in. Read the definition from the file that deploys it, or write the name in place.',
+  'workflow-target-unreadable': () =>
+    'The step says it calls something and does not say what, or says it in a form that names nothing. Write the name or the ARN the service expects.',
+  'workflow-channel-not-joined': () =>
+    'A message a workflow sends is recorded on its step and is not yet joined to whatever handles it, which is read from where the subscription is deployed.',
+
+  // A name joined across services (linker/reference-link.ts)
+  'reference-not-found': () =>
+    'Something here names what it reaches by the name it is deployed under, and no configured service declares that name. Add the repository that deploys it to the configuration.',
+  'reference-ambiguous': () =>
+    'More than one configured service declares the same deployed name, so nothing was joined. One of the declarations is stale, or two environments are configured as one project.',
+
   // Boundaries nothing could be compared on (contracts)
   ...Object.fromEntries(
     Object.entries(UNCHECKED_HINTS).map(([reason, hint]) => [reason, () => hint]),

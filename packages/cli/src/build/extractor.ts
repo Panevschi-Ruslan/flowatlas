@@ -11,6 +11,7 @@ import { registerEntryAdapters } from '@flowatlas/adapters-entry';
 import { registerFrontendAdapters as registerAngularFrontend } from '@flowatlas/extractor-angular';
 import { registerFrontendAdapters as registerReactFrontend } from '@flowatlas/extractor-react';
 import type { NestExtractorPass } from '@flowatlas/extractor-nestjs';
+import { workflowsPass } from '@flowatlas/stepfunctions';
 import { halfOf, READERS } from '../readers.js';
 
 /**
@@ -43,8 +44,13 @@ export const EXTRACTORS: ReadonlyMap<string, string> = new Map(
  */
 export const isFrontend = (type: string): boolean => halfOf(type) === 'browser';
 
-/** Steps the adapter packages contribute, run after the built-in ones. */
-export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, brokersPass];
+/**
+ * Steps the adapter packages contribute, run after the built-in ones.
+ *
+ * `workflowsPass` reads the state machine definitions a repository keeps beside
+ * its code, so any service a server reader reads has its workflows drawn too.
+ */
+export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, brokersPass, workflowsPass];
 
 /** Every adapter the command line knows how to offer an extractor. */
 export const createRegistry = (): AdapterRegistry => {

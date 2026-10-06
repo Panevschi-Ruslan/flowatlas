@@ -180,6 +180,26 @@ const LAMBDA_CASES = [
 ];
 
 /**
+ * A workflow read from state machine definitions, walked and reached into.
+ *
+ * The graph beneath it is gated by the fixture's own snapshot; these hold what a
+ * person reads. A workflow is a chain of steps longer than the default depth a
+ * walk stops at, so each asks for the whole of it.
+ */
+const workflowsFixture = join(root, 'fixtures', 'stepfunctions-asl-files');
+const workflowsConfig = join(workflowsFixture, 'flowatlas.config.json');
+const workflowsPlain = { config: workflowsConfig, color: false, ascii: true };
+const RECORD_NOTICE = 'notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/RecordNotice';
+
+const WORKFLOW_CASES = [
+  ['flow.loan-approval.tree.txt', (io) => runFlow('workflow:loan-approval', { ...workflowsPlain, format: 'tree', depth: '24' }, io)],
+  ['flow.loan-approval.json.l2.json', (io) => runFlow('workflow:loan-approval', { ...workflowsPlain, format: 'json', detail: '2', depth: '24' }, io)],
+  ['impact.record-notice.tree.txt', (io) => runImpact(RECORD_NOTICE, { ...workflowsPlain, format: 'tree', depth: '24' }, io)],
+  ['impact.record-notice.entries-only.tree.txt', (io) => runImpact(RECORD_NOTICE, { ...workflowsPlain, format: 'tree', depth: '24', entriesOnly: true }, io)],
+  ['doctor.txt', (io) => runDoctorCommand({ config: workflowsConfig }, io)],
+];
+
+/**
  * Sets of recordings, in several places.
  *
  * The first owns its folder, so an answer nobody asks for any more is swept
@@ -194,6 +214,7 @@ const SUITES = [
   { dir: hollowFixture, owned: false, cases: HOLLOW_CASES },
   { dir: socketFixture, owned: false, cases: SOCKET_CASES },
   { dir: lambdaFixture, owned: false, cases: LAMBDA_CASES },
+  { dir: join(workflowsFixture, 'expected.cli'), owned: true, cases: WORKFLOW_CASES },
 ];
 
 /**

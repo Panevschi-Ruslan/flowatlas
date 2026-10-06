@@ -1,0 +1,7 @@
+{
+  "services": [
+    { "name": "circulation", "repo": "./circulation", "type": "express" },
+    { "name": "notifications", "repo": "./notifications", "type": "express" }
+  ],
+  "output": ".flowatlas"
+}

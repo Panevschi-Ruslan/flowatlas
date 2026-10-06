@@ -1,0 +1,41 @@
+@  workflow loan-approval                                                 circulation/statemachine/loan-approval.asl.json:1
+  -> ShapeApplication [Pass]                                              circulation/statemachine/loan-approval.asl.json:5
+    -> CheckBorrowerStanding [Task lambda:invoke]                         circulation/statemachine/loan-approval.asl.json:14
+      -> RejectLoan [Task sns:publish]                                    circulation/statemachine/loan-approval.asl.json:234
+        -> LoanRejected [Fail]                                            circulation/statemachine/loan-approval.asl.json:243
+      -> IsBorrowerInGoodStanding [Choice]                                circulation/statemachine/loan-approval.asl.json:44
+        -> CheckHolds [Task dynamodb:query]                               circulation/statemachine/loan-approval.asl.json:60
+          [] read library-holds                                           circulation/statemachine/loan-approval.asl.json:60
+            #  library-holds
+          -> ReserveCopies [Map]                                          circulation/statemachine/loan-approval.asl.json:75
+            -> ReserveCopy [Task dynamodb:updateItem]                     circulation/statemachine/loan-approval.asl.json:85
+              [] write library-copies                                     circulation/statemachine/loan-approval.asl.json:85
+                #  library-copies
+            -> AwaitLibrarianApproval [Task sqs:sendMessage]              circulation/statemachine/loan-approval.asl.json:109
+              -> RejectLoan [Task sns:publish]                            circulation/statemachine/loan-approval.asl.json:234
+                -> LoanRejected [Fail]                                    circulation/statemachine/loan-approval.asl.json:243
+              -> RecordLoan [Parallel]                                    circulation/statemachine/loan-approval.asl.json:131
+                -> WriteLoan [Task dynamodb:putItem]                      circulation/statemachine/loan-approval.asl.json:137
+                  [] write library-loans                                  circulation/statemachine/loan-approval.asl.json:137
+                    #  library-loans
+                -> ScoreBorrower [Task function]                          circulation/statemachine/loan-approval.asl.json:155
+                -> NotifyBorrower [Task states:startExecution]            circulation/statemachine/loan-approval.asl.json:166
+                  => notifications @  workflow borrower-notifications ~heuristic  notifications/workflows/borrower-notifications.asl.yaml:1
+                    -> ChooseChannel [Choice]                             notifications/workflows/borrower-notifications.asl.yaml:4
+                      -> SendEmail [Task lambda:invoke]                   notifications/workflows/borrower-notifications.asl.yaml:14
+                        -> RecordNotice [Task dynamodb:putItem]           notifications/workflows/borrower-notifications.asl.yaml:30
+                          [] write library-notices                        notifications/workflows/borrower-notifications.asl.yaml:30
+                            #  library-notices
+                      -> SendText [Task lambda:invoke]                    notifications/workflows/borrower-notifications.asl.yaml:22
+                        -> RecordNotice [Task dynamodb:putItem]           notifications/workflows/borrower-notifications.asl.yaml:30
+                          [] write library-notices                        notifications/workflows/borrower-notifications.asl.yaml:30
+                            #  library-notices
+                  -> PublishLoanApproved [Task events:putEvents]          circulation/statemachine/loan-approval.asl.json:179
+                    -> ArchiveApplication [Task s3:putObject]             circulation/statemachine/loan-approval.asl.json:195
+                      -> LookUpBranchPolicy [Task lambda:invoke]          circulation/statemachine/loan-approval.asl.json:206
+                        -> ApplyLateFeePolicy [Task lambda:invoke]        circulation/statemachine/loan-approval.asl.json:216
+                          -> WaitForPickupWindow [Wait]                   circulation/statemachine/loan-approval.asl.json:226
+                            -> LoanApproved [Succeed]                     circulation/statemachine/loan-approval.asl.json:231
+        -> RejectLoan [Task sns:publish]                                  circulation/statemachine/loan-approval.asl.json:234
+          -> LoanRejected [Fail]                                          circulation/statemachine/loan-approval.asl.json:243
+unresolved on this path: 9

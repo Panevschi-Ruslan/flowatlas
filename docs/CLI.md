@@ -399,6 +399,7 @@ flowatlas flow "POST /orders/:param"
 flowatlas flow "entry:orders:http:POST:/orders/:param"
 flowatlas flow "bot:order_confirm"        # a bot command or button
 flowatlas flow "invoke:library-dev-create-loan"   # a function, by its deployed name
+flowatlas flow "workflow:loan-approval"   # a state machine, by its name
 ```
 
 A name matching two services comes back as a choice rather than a guess. A name
@@ -1708,6 +1709,74 @@ made as a mutation to a procedure declared a query joins and says so in a
 `procedure-call-mismatch` row (`fixtures/trpc-join`). `adapters.entry.procedures`
 exposes the description the shipped reader is written as, for another framework
 of the same family.
+
+### Workflows written as state machines
+
+A state machine written in the Amazon States Language is the order a project's
+steps happen in, written down. Every repository a server reader reads is also
+searched for definitions kept as files of their own - `*.asl.json`,
+`*.asl.yaml`, `*.asl.yml`, the convention the public samples and editors use -
+and each is drawn as a way in of kind `workflow`. Nothing to configure.
+
+- **The machine** is an entry, `entry:<service>:workflow:<name>`, that `handles`
+  its `StartAt` state. `flow workflow:<name>` names it.
+- **Each state** is a `function` node of kind `state`, with the state's type in
+  `meta.stateType` and its id `<service>#<file>:<workflow>/<state>`. A state
+  nested in a `Parallel` branch or a `Map` processor is a node like any other,
+  with `meta.scope` saying where it sits. What a state is given and passes on -
+  `Parameters`/`Arguments`, `ResultSelector`, `ResultPath`, `InputPath`,
+  `OutputPath`, `Output`, `Assign` - and its `Retry` are kept on the node as
+  written, so `--detail 2` shows them. Nothing is evaluated.
+- **Every transition** is a `calls` edge from one state to the next, and
+  `meta.transitions` on it says which way it is: `next`, `choice` (with the rule
+  as written), `default`, `catch` (with the errors), `branch` (with its index)
+  or `item-processor`. Two ways between the same pair of states - a rule and the
+  default both going to one state - are one edge listing both. Every branch is
+  drawn and none is preferred.
+- **A task that starts another workflow** (`states:startExecution`, with
+  `.sync`, `.sync:2` and `.waitForTaskToken`, and the SDK's `sfn` spelling) is
+  joined to that workflow's entry by the name in its `StateMachineArn`, in
+  whichever service declares it, the way a publisher and a consumer meet on a
+  channel's name.
+- **A task that invokes a function** (`lambda:invoke` with `FunctionName` as a
+  name, a partial ARN or a full one, or the function's ARN as the `Resource`)
+  carries a reference to the function by its deployed name, `invoke:<name>`. A
+  function becomes something a reference can reach once the deployment that
+  creates it is read; until then each is a `reference-not-found` row.
+- **A task that reads or writes a table** (`dynamodb:getItem`, `putItem`,
+  `updateItem`, `deleteItem`, and through the SDK `query`, `scan` and the batch
+  and transaction calls) is a `db_query` on that table.
+- **A task that sends a message** (`sqs:sendMessage`, `sns:publish`,
+  `events:putEvents`) names the queue, topic or bus in an informational
+  `workflow-channel-not-joined` row on its step. A message is joined to whatever
+  handles it only once the subscription is read from where it is deployed.
+- **Any other integration** - `aws-sdk:s3:putObject`, `glue:startJobRun.sync` -
+  is a step whose `meta.task` says the service, the action and how the state
+  waits for it. It joins nothing, and is still in every walk.
+
+**What is never guessed.** A name the definition does not state is a row, and no
+edge: `workflow-target-dynamic` where the state chooses it at run time (a
+`.$` path, a `States.` intrinsic, a JSONata `{% %}` expression), which is
+nothing to fix; `workflow-template-unbound` where it is a `${...}` placeholder
+that whatever deploys the definition fills in first; and
+`workflow-target-unreadable` where the field is missing or names nothing. A
+placeholder standing only for the region or the account in front of a written
+name - `arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:notify-borrower`
+- still names the function.
+
+**What a definition on its own cannot say** is the name it is deployed under. So
+a workflow read from a file is named after the file - `loan-approval.asl.json`
+is `loan-approval` - its entry says `meta.nameFrom: "file-name"`, a
+`workflow-named-by-file` row says so, and every join made to it by that name is
+`heuristic` rather than `static`. Two definitions in one service with one file
+name are a `workflow-name-duplicate` row, and only the first is drawn. A file
+that does not parse, or parses into something with no `StartAt` and `States`,
+is one `workflow-definition-unreadable` row and nothing else; a definition that
+names a state that is not there is drawn as written beside a
+`workflow-definition-invalid` row (`fixtures/stepfunctions-asl-files`).
+
+A definition file is stamped with the sources, so changing one rebuilds its
+service.
 
 ---
 

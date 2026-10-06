@@ -34,6 +34,7 @@ import {
   type ProcedureIndex,
   type ProcedureOutcome,
 } from './procedure-link.js';
+import { joinReferences } from './reference-link.js';
 import { auditRoutes } from './route-audit.js';
 import { answeredOnlyByWildcard } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
@@ -606,6 +607,10 @@ export const linkGraphs = (
     const finding = uiFindingFor(outcome);
     if (finding !== undefined) record(call, finding);
   }
+
+  // Whatever names an entry by its deployed name alone, joined to the entry in
+  // whichever service declares it.
+  found.push(...joinReferences(nodes, edges));
 
   found.push(
     ...auditRoutes(nodes, edges.values(), {

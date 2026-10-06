@@ -75,6 +75,7 @@
     "chokidar": "^5.0.0",
     "commander": "^15.0.0",
     "ts-morph": "^28.0.0",
+    "yaml": "^2.9.1",
     "zod": "^4.5.4"
   },
   "devDependencies": {
@@ -89,6 +90,7 @@
     "@flowatlas/extractor-nestjs": "workspace:*",
     "@flowatlas/linker": "workspace:*",
     "@flowatlas/mcp": "workspace:*",
-    "@flowatlas/terraform": "workspace:*"
+    "@flowatlas/terraform": "workspace:*",
+    "@flowatlas/stepfunctions": "workspace:*"
   }
 }

@@ -34,10 +34,37 @@ only one of them moved.
   with. Without it, a name two `*.tfvars` files set differently is a row naming
   the variable and the files, never a name picked from one of them.
 - **`flow invoke:<name>`** starts from a function by its deployed name.
+- **A state machine is a way in, and its states are steps.** A definition in
+  the Amazon States Language that a repository keeps as a file of its own -
+  `*.asl.json`, `*.asl.yaml` - is read in every service a server reader reads,
+  with nothing to configure, and drawn as an entry of the new kind `workflow`
+  that handles its first state. Every state is a `function` node of kind
+  `state`, and every way control moves between two states - `Next`, each
+  `Choice` rule and its `Default`, each `Catch`, every `Parallel` branch, a
+  `Map`'s processor - is an edge saying which it is. `Retry`, and what a state
+  is given and passes on, are kept on the node as written; nothing is
+  evaluated. `flow workflow:loan-approval` walks it.
+- **A step that starts another workflow is joined to it by name**, across
+  services, the way a channel is. A step that reads or writes a table is a query
+  on that table; a step that sends to a queue, a topic or a bus says which, on
+  its step; any other integration is a step naming its service and action.
+- **A name the definition does not state is a row, never a guess**: one chosen
+  at run time by a path, an intrinsic or a JSONata expression
+  (`workflow-target-dynamic`, nothing to fix), a `${...}` placeholder nothing
+  here fills (`workflow-template-unbound`), a field that names nothing
+  (`workflow-target-unreadable`). A definition read on its own is named after
+  its file and says so (`workflow-named-by-file`), and a join on that name is
+  `heuristic`. A task that invokes a function joins to that function's `invoke`
+  entry by its deployed name, in whichever service deploys it, and is a
+  `reference-not-found` row where no service does
+  (`fixtures/stepfunctions-asl-files`).
+- **`flow workflow:<name>`** walks a state machine's steps in order and into
+  each handler.
 
 ### Changed
 
-- **The graph's schema version is 6**, for the `invoke` entry kind. A database
+- **The graph's schema version is 6**, for the `invoke` and `workflow` entry
+  kinds. A database
   built by an earlier version is refused with a message to rebuild.
 - **A `.tf` or `.tfvars` change re-reads the service.** The build cache stamps
   the files that describe a deployment beside the sources, so changing a

@@ -1,0 +1,41 @@
+unresolved: total=5 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=0
+
+unresolved: 5 to act on over 10 rows, and 8 places static reading cannot see, folded into 5
+  reference-not-found: 4 rows
+    Add the repository that deploys it to the configuration, so this step reaches its code.
+      circulation/statemachine/loan-approval.asl.json:14  circulation#statemachine/loan-approval.asl.json:loan-approval/CheckBorrowerStanding
+      circulation/statemachine/loan-approval.asl.json:155  circulation#statemachine/loan-approval.asl.json:loan-approval/ScoreBorrower
+      notifications/workflows/borrower-notifications.asl.yaml:14  notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail
+      notifications/workflows/borrower-notifications.asl.yaml:22  notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText
+  workflow-template-unbound: 1 row
+    Whatever deploys this definition fills the placeholder in first. Read the definition from the file that deploys it, so its values are known, or write the name in place.
+      circulation/statemachine/loan-approval.asl.json:216  circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy
+  workflow-channel-not-joined (info): 1 row over 3 places
+    A message sent from a workflow is recorded on its step and not yet joined to whatever handles it, which is read from where the subscription is deployed.
+      circulation/statemachine/loan-approval.asl.json:109  circulation#statemachine/loan-approval.asl.json:loan-approval/AwaitLibrarianApproval
+  workflow-named-by-file (info): 2 rows over 3 places
+    A definition read on its own carries no deployed name, so anything joined to it by that name is drawn as heuristic. Read it from the file that deploys it to make the name certain.
+      circulation/statemachine/loan-approval.asl.json:1  entry:circulation:workflow:loan-approval
+      notifications/workflows/borrower-notifications.asl.yaml:1  entry:notifications:workflow:borrower-notifications
+  workflow-target-dynamic (info): 2 rows
+    The definition chooses this at run time, so no edge is drawn for it. Nothing to fix here.
+      circulation/statemachine/loan-approval.asl.json:206  circulation#statemachine/loan-approval.asl.json:loan-approval/LookUpBranchPolicy
+      notifications/workflows/overdue-reminders.asl.json:27  notifications#workflows/overdue-reminders.asl.json:overdue-reminders/SendReminder
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 0 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 5 now, +5)
+  no baseline at <root>/fixtures/stepfunctions-asl-files/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  reference-not-found: 0 → 4 (+4)
+  workflow-template-unbound: 0 → 1 (+1)
+  new (5):
+    circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy|workflow-template-unbound
+    circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/CheckBorrowerStanding|reference-not-found
+    circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/ScoreBorrower|reference-not-found
+    notifications|workflows/borrower-notifications.asl.yaml|notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail|reference-not-found
+    notifications|workflows/borrower-notifications.asl.yaml|notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText|reference-not-found

@@ -120,6 +120,7 @@ const KIND_LABEL: Record<string, [string, string]> = {
   event: ['consumer', 'consumers'],
   rpc: ['rpc entry', 'rpc entries'],
   cron: ['cron job', 'cron jobs'],
+  workflow: ['workflow', 'workflows'],
 };
 
 export interface ReachableGroup {

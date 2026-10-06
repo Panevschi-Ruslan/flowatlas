@@ -53,6 +53,11 @@ export const ENTRY_KINDS = [
   // a route in front of it, a workflow, a rule, another function - names it and
   // nothing else, so the name is the whole address (P21).
   'invoke',
+  // A flow somebody wrote down as a document of named steps, reached by the
+  // name it is deployed under and by nothing else. Its steps are ordinary
+  // `function` nodes with `kind: "state"`, so a walk needs nothing new to
+  // follow one (P22).
+  'workflow',
 ] as const;
 
 export type EntryKind = (typeof ENTRY_KINDS)[number];

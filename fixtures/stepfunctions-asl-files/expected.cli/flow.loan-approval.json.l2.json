@@ -1,0 +1,1127 @@
+{
+  "entry": "entry:circulation:workflow:loan-approval",
+  "unresolvedOnPath": 9,
+  "root": {
+    "node": {
+      "id": "entry:circulation:workflow:loan-approval",
+      "type": "entry",
+      "label": "workflow loan-approval",
+      "loc": "statemachine/loan-approval.asl.json:1",
+      "service": "circulation",
+      "kind": "workflow",
+      "meta": {
+        "key": "loan-approval",
+        "name": "loan-approval",
+        "nameFrom": "file-name",
+        "nameConfidence": "heuristic",
+        "startAt": "ShapeApplication",
+        "states": 19,
+        "queryLanguage": "JSONPath",
+        "comment": "Approves a loan: checks the borrower and the holds, reserves the copies, waits for a librarian, records the loan and tells the borrower."
+      }
+    },
+    "children": [
+      {
+        "node": {
+          "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/ShapeApplication",
+          "type": "function",
+          "label": "ShapeApplication [Pass]",
+          "loc": "statemachine/loan-approval.asl.json:5",
+          "service": "circulation",
+          "kind": "state",
+          "meta": {
+            "workflow": "loan-approval",
+            "stateType": "Pass",
+            "parameters": {
+              "borrowerId.$": "$.borrowerId",
+              "itemIds.$": "$.itemIds",
+              "branch.$": "$.branch"
+            }
+          }
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/CheckBorrowerStanding",
+              "type": "function",
+              "label": "CheckBorrowerStanding [Task lambda:invoke]",
+              "loc": "statemachine/loan-approval.asl.json:14",
+              "service": "circulation",
+              "kind": "state",
+              "meta": {
+                "workflow": "loan-approval",
+                "stateType": "Task",
+                "task": {
+                  "kind": "function",
+                  "service": "lambda",
+                  "action": "invoke",
+                  "pattern": "request-response",
+                  "name": "check-borrower-standing"
+                },
+                "reaches": [
+                  "invoke:check-borrower-standing"
+                ],
+                "parameters": {
+                  "FunctionName": "check-borrower-standing",
+                  "Payload": {
+                    "borrowerId.$": "$.borrowerId"
+                  }
+                },
+                "resultSelector": {
+                  "standing.$": "$.Payload.standing"
+                },
+                "resultPath": "$.borrower",
+                "retry": [
+                  {
+                    "ErrorEquals": [
+                      "Lambda.ServiceException",
+                      "Lambda.TooManyRequestsException"
+                    ],
+                    "IntervalSeconds": 2,
+                    "MaxAttempts": 3,
+                    "BackoffRate": 2
+                  }
+                ]
+              }
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/RejectLoan",
+                  "type": "function",
+                  "label": "RejectLoan [Task sns:publish]",
+                  "loc": "statemachine/loan-approval.asl.json:234",
+                  "service": "circulation",
+                  "kind": "state",
+                  "meta": {
+                    "workflow": "loan-approval",
+                    "stateType": "Task",
+                    "task": {
+                      "kind": "channel",
+                      "service": "sns",
+                      "action": "publish",
+                      "pattern": "request-response",
+                      "transport": "topic",
+                      "targets": [
+                        "loan-decisions"
+                      ]
+                    },
+                    "parameters": {
+                      "TopicArn": "arn:aws:sns:eu-west-1:123456789012:loan-decisions",
+                      "Message.$": "$"
+                    }
+                  }
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanRejected",
+                      "type": "function",
+                      "label": "LoanRejected [Fail]",
+                      "loc": "statemachine/loan-approval.asl.json:243",
+                      "service": "circulation",
+                      "kind": "state",
+                      "meta": {
+                        "workflow": "loan-approval",
+                        "stateType": "Fail",
+                        "end": true
+                      }
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "node": {
+                  "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/IsBorrowerInGoodStanding",
+                  "type": "function",
+                  "label": "IsBorrowerInGoodStanding [Choice]",
+                  "loc": "statemachine/loan-approval.asl.json:44",
+                  "service": "circulation",
+                  "kind": "state",
+                  "meta": {
+                    "workflow": "loan-approval",
+                    "stateType": "Choice"
+                  }
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/CheckHolds",
+                      "type": "function",
+                      "label": "CheckHolds [Task dynamodb:query]",
+                      "loc": "statemachine/loan-approval.asl.json:60",
+                      "service": "circulation",
+                      "kind": "state",
+                      "meta": {
+                        "workflow": "loan-approval",
+                        "stateType": "Task",
+                        "task": {
+                          "kind": "table",
+                          "service": "dynamodb",
+                          "action": "query",
+                          "pattern": "request-response",
+                          "sdk": true,
+                          "op": "read",
+                          "tables": [
+                            "library-holds"
+                          ]
+                        },
+                        "parameters": {
+                          "TableName": "library-holds",
+                          "KeyConditionExpression": "itemId = :itemId",
+                          "ExpressionAttributeValues": {
+                            ":itemId": {
+                              "S.$": "$.itemIds[0]"
+                            }
+                          }
+                        },
+                        "resultPath": "$.holds"
+                      }
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "db_query:circulation#statemachine/loan-approval.asl.json:60:5",
+                          "type": "db_query",
+                          "label": "read library-holds",
+                          "loc": "statemachine/loan-approval.asl.json:60",
+                          "service": "circulation",
+                          "meta": {
+                            "op": "read",
+                            "table": "library-holds",
+                            "tables": [
+                              "library-holds"
+                            ],
+                            "service": "dynamodb",
+                            "action": "query"
+                          }
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static"
+                        },
+                        "children": [
+                          {
+                            "node": {
+                              "id": "table:circulation#library-holds",
+                              "type": "table",
+                              "label": "library-holds",
+                              "service": "circulation"
+                            },
+                            "edge": {
+                              "type": "queries",
+                              "confidence": "static"
+                            },
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "node": {
+                          "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/ReserveCopies",
+                          "type": "function",
+                          "label": "ReserveCopies [Map]",
+                          "loc": "statemachine/loan-approval.asl.json:75",
+                          "service": "circulation",
+                          "kind": "state",
+                          "meta": {
+                            "workflow": "loan-approval",
+                            "stateType": "Map",
+                            "resultPath": null
+                          }
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static"
+                        },
+                        "children": [
+                          {
+                            "node": {
+                              "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/ReserveCopy",
+                              "type": "function",
+                              "label": "ReserveCopy [Task dynamodb:updateItem]",
+                              "loc": "statemachine/loan-approval.asl.json:85",
+                              "service": "circulation",
+                              "kind": "state",
+                              "meta": {
+                                "workflow": "loan-approval",
+                                "stateType": "Task",
+                                "scope": [
+                                  "ReserveCopies"
+                                ],
+                                "end": true,
+                                "task": {
+                                  "kind": "table",
+                                  "service": "dynamodb",
+                                  "action": "updateItem",
+                                  "pattern": "request-response",
+                                  "op": "write",
+                                  "tables": [
+                                    "library-copies"
+                                  ]
+                                },
+                                "parameters": {
+                                  "TableName": "library-copies",
+                                  "Key": {
+                                    "itemId": {
+                                      "S.$": "$"
+                                    }
+                                  },
+                                  "UpdateExpression": "SET reserved = :yes",
+                                  "ExpressionAttributeValues": {
+                                    ":yes": {
+                                      "BOOL": true
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "edge": {
+                              "type": "calls",
+                              "confidence": "static"
+                            },
+                            "children": [
+                              {
+                                "node": {
+                                  "id": "db_query:circulation#statemachine/loan-approval.asl.json:85:11",
+                                  "type": "db_query",
+                                  "label": "write library-copies",
+                                  "loc": "statemachine/loan-approval.asl.json:85",
+                                  "service": "circulation",
+                                  "meta": {
+                                    "op": "write",
+                                    "table": "library-copies",
+                                    "tables": [
+                                      "library-copies"
+                                    ],
+                                    "service": "dynamodb",
+                                    "action": "updateItem"
+                                  }
+                                },
+                                "edge": {
+                                  "type": "calls",
+                                  "confidence": "static"
+                                },
+                                "children": [
+                                  {
+                                    "node": {
+                                      "id": "table:circulation#library-copies",
+                                      "type": "table",
+                                      "label": "library-copies",
+                                      "service": "circulation"
+                                    },
+                                    "edge": {
+                                      "type": "queries",
+                                      "confidence": "static"
+                                    },
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "node": {
+                              "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/AwaitLibrarianApproval",
+                              "type": "function",
+                              "label": "AwaitLibrarianApproval [Task sqs:sendMessage]",
+                              "loc": "statemachine/loan-approval.asl.json:109",
+                              "service": "circulation",
+                              "kind": "state",
+                              "meta": {
+                                "workflow": "loan-approval",
+                                "stateType": "Task",
+                                "task": {
+                                  "kind": "channel",
+                                  "service": "sqs",
+                                  "action": "sendMessage",
+                                  "pattern": "wait-for-task-token",
+                                  "transport": "queue",
+                                  "targets": [
+                                    "librarian-approvals"
+                                  ]
+                                },
+                                "parameters": {
+                                  "QueueUrl": "https://sqs.eu-west-1.amazonaws.com/123456789012/librarian-approvals",
+                                  "MessageBody": {
+                                    "borrowerId.$": "$.borrowerId",
+                                    "itemIds.$": "$.itemIds",
+                                    "taskToken.$": "$$.Task.Token"
+                                  }
+                                },
+                                "resultPath": "$.approval"
+                              }
+                            },
+                            "edge": {
+                              "type": "calls",
+                              "confidence": "static"
+                            },
+                            "children": [
+                              {
+                                "node": {
+                                  "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/RejectLoan",
+                                  "type": "function",
+                                  "label": "RejectLoan [Task sns:publish]",
+                                  "loc": "statemachine/loan-approval.asl.json:234",
+                                  "service": "circulation",
+                                  "kind": "state",
+                                  "meta": {
+                                    "workflow": "loan-approval",
+                                    "stateType": "Task",
+                                    "task": {
+                                      "kind": "channel",
+                                      "service": "sns",
+                                      "action": "publish",
+                                      "pattern": "request-response",
+                                      "transport": "topic",
+                                      "targets": [
+                                        "loan-decisions"
+                                      ]
+                                    },
+                                    "parameters": {
+                                      "TopicArn": "arn:aws:sns:eu-west-1:123456789012:loan-decisions",
+                                      "Message.$": "$"
+                                    }
+                                  }
+                                },
+                                "edge": {
+                                  "type": "calls",
+                                  "confidence": "static"
+                                },
+                                "children": [
+                                  {
+                                    "node": {
+                                      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanRejected",
+                                      "type": "function",
+                                      "label": "LoanRejected [Fail]",
+                                      "loc": "statemachine/loan-approval.asl.json:243",
+                                      "service": "circulation",
+                                      "kind": "state",
+                                      "meta": {
+                                        "workflow": "loan-approval",
+                                        "stateType": "Fail",
+                                        "end": true
+                                      }
+                                    },
+                                    "edge": {
+                                      "type": "calls",
+                                      "confidence": "static"
+                                    },
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "node": {
+                                  "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/RecordLoan",
+                                  "type": "function",
+                                  "label": "RecordLoan [Parallel]",
+                                  "loc": "statemachine/loan-approval.asl.json:131",
+                                  "service": "circulation",
+                                  "kind": "state",
+                                  "meta": {
+                                    "workflow": "loan-approval",
+                                    "stateType": "Parallel",
+                                    "resultPath": null
+                                  }
+                                },
+                                "edge": {
+                                  "type": "calls",
+                                  "confidence": "static"
+                                },
+                                "children": [
+                                  {
+                                    "node": {
+                                      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/WriteLoan",
+                                      "type": "function",
+                                      "label": "WriteLoan [Task dynamodb:putItem]",
+                                      "loc": "statemachine/loan-approval.asl.json:137",
+                                      "service": "circulation",
+                                      "kind": "state",
+                                      "meta": {
+                                        "workflow": "loan-approval",
+                                        "stateType": "Task",
+                                        "scope": [
+                                          "RecordLoan[0]"
+                                        ],
+                                        "end": true,
+                                        "task": {
+                                          "kind": "table",
+                                          "service": "dynamodb",
+                                          "action": "putItem",
+                                          "pattern": "request-response",
+                                          "op": "write",
+                                          "tables": [
+                                            "library-loans"
+                                          ]
+                                        },
+                                        "parameters": {
+                                          "TableName": "library-loans",
+                                          "Item": {
+                                            "borrowerId": {
+                                              "S.$": "$.borrowerId"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "edge": {
+                                      "type": "calls",
+                                      "confidence": "static"
+                                    },
+                                    "children": [
+                                      {
+                                        "node": {
+                                          "id": "db_query:circulation#statemachine/loan-approval.asl.json:137:13",
+                                          "type": "db_query",
+                                          "label": "write library-loans",
+                                          "loc": "statemachine/loan-approval.asl.json:137",
+                                          "service": "circulation",
+                                          "meta": {
+                                            "op": "write",
+                                            "table": "library-loans",
+                                            "tables": [
+                                              "library-loans"
+                                            ],
+                                            "service": "dynamodb",
+                                            "action": "putItem"
+                                          }
+                                        },
+                                        "edge": {
+                                          "type": "calls",
+                                          "confidence": "static"
+                                        },
+                                        "children": [
+                                          {
+                                            "node": {
+                                              "id": "table:circulation#library-loans",
+                                              "type": "table",
+                                              "label": "library-loans",
+                                              "service": "circulation"
+                                            },
+                                            "edge": {
+                                              "type": "queries",
+                                              "confidence": "static"
+                                            },
+                                            "children": []
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "node": {
+                                      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/ScoreBorrower",
+                                      "type": "function",
+                                      "label": "ScoreBorrower [Task function]",
+                                      "loc": "statemachine/loan-approval.asl.json:155",
+                                      "service": "circulation",
+                                      "kind": "state",
+                                      "meta": {
+                                        "workflow": "loan-approval",
+                                        "stateType": "Task",
+                                        "scope": [
+                                          "RecordLoan[1]"
+                                        ],
+                                        "end": true,
+                                        "task": {
+                                          "kind": "function",
+                                          "name": "score-borrower"
+                                        },
+                                        "reaches": [
+                                          "invoke:score-borrower"
+                                        ]
+                                      }
+                                    },
+                                    "edge": {
+                                      "type": "calls",
+                                      "confidence": "static"
+                                    },
+                                    "children": []
+                                  },
+                                  {
+                                    "node": {
+                                      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/NotifyBorrower",
+                                      "type": "function",
+                                      "label": "NotifyBorrower [Task states:startExecution]",
+                                      "loc": "statemachine/loan-approval.asl.json:166",
+                                      "service": "circulation",
+                                      "kind": "state",
+                                      "meta": {
+                                        "workflow": "loan-approval",
+                                        "stateType": "Task",
+                                        "task": {
+                                          "kind": "workflow",
+                                          "service": "states",
+                                          "action": "startExecution",
+                                          "pattern": "sync:2",
+                                          "name": "borrower-notifications"
+                                        },
+                                        "reaches": [
+                                          "workflow:borrower-notifications"
+                                        ],
+                                        "parameters": {
+                                          "StateMachineArn": "arn:aws:states:eu-west-1:123456789012:stateMachine:borrower-notifications",
+                                          "Input": {
+                                            "borrowerId.$": "$.borrowerId",
+                                            "notice": "loan-approved"
+                                          }
+                                        },
+                                        "resultPath": null
+                                      }
+                                    },
+                                    "edge": {
+                                      "type": "calls",
+                                      "confidence": "static"
+                                    },
+                                    "children": [
+                                      {
+                                        "node": {
+                                          "id": "entry:notifications:workflow:borrower-notifications",
+                                          "type": "entry",
+                                          "label": "workflow borrower-notifications",
+                                          "loc": "workflows/borrower-notifications.asl.yaml:1",
+                                          "service": "notifications",
+                                          "kind": "workflow",
+                                          "meta": {
+                                            "key": "borrower-notifications",
+                                            "name": "borrower-notifications",
+                                            "nameFrom": "file-name",
+                                            "nameConfidence": "heuristic",
+                                            "startAt": "ChooseChannel",
+                                            "states": 4,
+                                            "queryLanguage": "JSONPath",
+                                            "comment": "Tells a borrower something, by the channel they prefer, and records that it was sent."
+                                          }
+                                        },
+                                        "edge": {
+                                          "type": "calls",
+                                          "confidence": "heuristic"
+                                        },
+                                        "children": [
+                                          {
+                                            "node": {
+                                              "id": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/ChooseChannel",
+                                              "type": "function",
+                                              "label": "ChooseChannel [Choice]",
+                                              "loc": "workflows/borrower-notifications.asl.yaml:4",
+                                              "service": "notifications",
+                                              "kind": "state",
+                                              "meta": {
+                                                "workflow": "borrower-notifications",
+                                                "stateType": "Choice"
+                                              }
+                                            },
+                                            "edge": {
+                                              "type": "handles",
+                                              "confidence": "static"
+                                            },
+                                            "children": [
+                                              {
+                                                "node": {
+                                                  "id": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail",
+                                                  "type": "function",
+                                                  "label": "SendEmail [Task lambda:invoke]",
+                                                  "loc": "workflows/borrower-notifications.asl.yaml:14",
+                                                  "service": "notifications",
+                                                  "kind": "state",
+                                                  "meta": {
+                                                    "workflow": "borrower-notifications",
+                                                    "stateType": "Task",
+                                                    "task": {
+                                                      "kind": "function",
+                                                      "service": "lambda",
+                                                      "action": "invoke",
+                                                      "pattern": "request-response",
+                                                      "name": "send-borrower-email"
+                                                    },
+                                                    "reaches": [
+                                                      "invoke:send-borrower-email"
+                                                    ],
+                                                    "parameters": {
+                                                      "FunctionName": "arn:aws:lambda:eu-west-1:123456789012:function:send-borrower-email",
+                                                      "Payload.$": "$"
+                                                    },
+                                                    "resultPath": "$.sent"
+                                                  }
+                                                },
+                                                "edge": {
+                                                  "type": "calls",
+                                                  "confidence": "static"
+                                                },
+                                                "children": [
+                                                  {
+                                                    "node": {
+                                                      "id": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/RecordNotice",
+                                                      "type": "function",
+                                                      "label": "RecordNotice [Task dynamodb:putItem]",
+                                                      "loc": "workflows/borrower-notifications.asl.yaml:30",
+                                                      "service": "notifications",
+                                                      "kind": "state",
+                                                      "meta": {
+                                                        "workflow": "borrower-notifications",
+                                                        "stateType": "Task",
+                                                        "end": true,
+                                                        "task": {
+                                                          "kind": "table",
+                                                          "service": "dynamodb",
+                                                          "action": "putItem",
+                                                          "pattern": "request-response",
+                                                          "sdk": true,
+                                                          "op": "write",
+                                                          "tables": [
+                                                            "library-notices"
+                                                          ]
+                                                        },
+                                                        "parameters": {
+                                                          "TableName": "library-notices",
+                                                          "Item": {
+                                                            "borrowerId": {
+                                                              "S.$": "$.borrowerId"
+                                                            },
+                                                            "notice": {
+                                                              "S.$": "$.notice"
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "edge": {
+                                                      "type": "calls",
+                                                      "confidence": "static"
+                                                    },
+                                                    "children": [
+                                                      {
+                                                        "node": {
+                                                          "id": "db_query:notifications#workflows/borrower-notifications.asl.yaml:30:3",
+                                                          "type": "db_query",
+                                                          "label": "write library-notices",
+                                                          "loc": "workflows/borrower-notifications.asl.yaml:30",
+                                                          "service": "notifications",
+                                                          "meta": {
+                                                            "op": "write",
+                                                            "table": "library-notices",
+                                                            "tables": [
+                                                              "library-notices"
+                                                            ],
+                                                            "service": "dynamodb",
+                                                            "action": "putItem"
+                                                          }
+                                                        },
+                                                        "edge": {
+                                                          "type": "calls",
+                                                          "confidence": "static"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "node": {
+                                                              "id": "table:notifications#library-notices",
+                                                              "type": "table",
+                                                              "label": "library-notices",
+                                                              "service": "notifications"
+                                                            },
+                                                            "edge": {
+                                                              "type": "queries",
+                                                              "confidence": "static"
+                                                            },
+                                                            "children": []
+                                                          }
+                                                        ]
+                                                      }
+                                                    ]
+                                                  }
+                                                ]
+                                              },
+                                              {
+                                                "node": {
+                                                  "id": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText",
+                                                  "type": "function",
+                                                  "label": "SendText [Task lambda:invoke]",
+                                                  "loc": "workflows/borrower-notifications.asl.yaml:22",
+                                                  "service": "notifications",
+                                                  "kind": "state",
+                                                  "meta": {
+                                                    "workflow": "borrower-notifications",
+                                                    "stateType": "Task",
+                                                    "task": {
+                                                      "kind": "function",
+                                                      "service": "lambda",
+                                                      "action": "invoke",
+                                                      "pattern": "request-response",
+                                                      "name": "send-borrower-text"
+                                                    },
+                                                    "reaches": [
+                                                      "invoke:send-borrower-text"
+                                                    ],
+                                                    "parameters": {
+                                                      "FunctionName": "123456789012:function:send-borrower-text",
+                                                      "Payload.$": "$"
+                                                    },
+                                                    "resultPath": "$.sent"
+                                                  }
+                                                },
+                                                "edge": {
+                                                  "type": "calls",
+                                                  "confidence": "static"
+                                                },
+                                                "children": [
+                                                  {
+                                                    "node": {
+                                                      "id": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/RecordNotice",
+                                                      "type": "function",
+                                                      "label": "RecordNotice [Task dynamodb:putItem]",
+                                                      "loc": "workflows/borrower-notifications.asl.yaml:30",
+                                                      "service": "notifications",
+                                                      "kind": "state",
+                                                      "meta": {
+                                                        "workflow": "borrower-notifications",
+                                                        "stateType": "Task",
+                                                        "end": true,
+                                                        "task": {
+                                                          "kind": "table",
+                                                          "service": "dynamodb",
+                                                          "action": "putItem",
+                                                          "pattern": "request-response",
+                                                          "sdk": true,
+                                                          "op": "write",
+                                                          "tables": [
+                                                            "library-notices"
+                                                          ]
+                                                        },
+                                                        "parameters": {
+                                                          "TableName": "library-notices",
+                                                          "Item": {
+                                                            "borrowerId": {
+                                                              "S.$": "$.borrowerId"
+                                                            },
+                                                            "notice": {
+                                                              "S.$": "$.notice"
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "edge": {
+                                                      "type": "calls",
+                                                      "confidence": "static"
+                                                    },
+                                                    "children": [
+                                                      {
+                                                        "node": {
+                                                          "id": "db_query:notifications#workflows/borrower-notifications.asl.yaml:30:3",
+                                                          "type": "db_query",
+                                                          "label": "write library-notices",
+                                                          "loc": "workflows/borrower-notifications.asl.yaml:30",
+                                                          "service": "notifications",
+                                                          "meta": {
+                                                            "op": "write",
+                                                            "table": "library-notices",
+                                                            "tables": [
+                                                              "library-notices"
+                                                            ],
+                                                            "service": "dynamodb",
+                                                            "action": "putItem"
+                                                          }
+                                                        },
+                                                        "edge": {
+                                                          "type": "calls",
+                                                          "confidence": "static"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "node": {
+                                                              "id": "table:notifications#library-notices",
+                                                              "type": "table",
+                                                              "label": "library-notices",
+                                                              "service": "notifications"
+                                                            },
+                                                            "edge": {
+                                                              "type": "queries",
+                                                              "confidence": "static"
+                                                            },
+                                                            "children": []
+                                                          }
+                                                        ]
+                                                      }
+                                                    ]
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "node": {
+                                          "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/PublishLoanApproved",
+                                          "type": "function",
+                                          "label": "PublishLoanApproved [Task events:putEvents]",
+                                          "loc": "statemachine/loan-approval.asl.json:179",
+                                          "service": "circulation",
+                                          "kind": "state",
+                                          "meta": {
+                                            "workflow": "loan-approval",
+                                            "stateType": "Task",
+                                            "task": {
+                                              "kind": "channel",
+                                              "service": "events",
+                                              "action": "putEvents",
+                                              "pattern": "request-response",
+                                              "transport": "event-bus",
+                                              "targets": [
+                                                "library-events"
+                                              ]
+                                            },
+                                            "parameters": {
+                                              "Entries": [
+                                                {
+                                                  "EventBusName": "library-events",
+                                                  "Source": "library.circulation",
+                                                  "DetailType": "LoanApproved",
+                                                  "Detail.$": "$"
+                                                }
+                                              ]
+                                            },
+                                            "resultPath": null
+                                          }
+                                        },
+                                        "edge": {
+                                          "type": "calls",
+                                          "confidence": "static"
+                                        },
+                                        "children": [
+                                          {
+                                            "node": {
+                                              "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/ArchiveApplication",
+                                              "type": "function",
+                                              "label": "ArchiveApplication [Task s3:putObject]",
+                                              "loc": "statemachine/loan-approval.asl.json:195",
+                                              "service": "circulation",
+                                              "kind": "state",
+                                              "meta": {
+                                                "workflow": "loan-approval",
+                                                "stateType": "Task",
+                                                "task": {
+                                                  "kind": "service",
+                                                  "service": "s3",
+                                                  "action": "putObject",
+                                                  "pattern": "request-response",
+                                                  "sdk": true
+                                                },
+                                                "parameters": {
+                                                  "Bucket": "library-loan-archive",
+                                                  "Key.$": "States.Format('applications/{}.json', $.borrowerId)",
+                                                  "Body.$": "$"
+                                                },
+                                                "resultPath": null
+                                              }
+                                            },
+                                            "edge": {
+                                              "type": "calls",
+                                              "confidence": "static"
+                                            },
+                                            "children": [
+                                              {
+                                                "node": {
+                                                  "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LookUpBranchPolicy",
+                                                  "type": "function",
+                                                  "label": "LookUpBranchPolicy [Task lambda:invoke]",
+                                                  "loc": "statemachine/loan-approval.asl.json:206",
+                                                  "service": "circulation",
+                                                  "kind": "state",
+                                                  "meta": {
+                                                    "workflow": "loan-approval",
+                                                    "stateType": "Task",
+                                                    "task": {
+                                                      "kind": "function",
+                                                      "service": "lambda",
+                                                      "action": "invoke",
+                                                      "pattern": "request-response"
+                                                    },
+                                                    "parameters": {
+                                                      "FunctionName.$": "$.branch.policyFunction",
+                                                      "Payload.$": "$"
+                                                    },
+                                                    "resultPath": "$.policy"
+                                                  }
+                                                },
+                                                "edge": {
+                                                  "type": "calls",
+                                                  "confidence": "static"
+                                                },
+                                                "children": [
+                                                  {
+                                                    "node": {
+                                                      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy",
+                                                      "type": "function",
+                                                      "label": "ApplyLateFeePolicy [Task lambda:invoke]",
+                                                      "loc": "statemachine/loan-approval.asl.json:216",
+                                                      "service": "circulation",
+                                                      "kind": "state",
+                                                      "meta": {
+                                                        "workflow": "loan-approval",
+                                                        "stateType": "Task",
+                                                        "task": {
+                                                          "kind": "function",
+                                                          "service": "lambda",
+                                                          "action": "invoke",
+                                                          "pattern": "request-response"
+                                                        },
+                                                        "parameters": {
+                                                          "FunctionName": "${LateFeePolicyFunctionArn}",
+                                                          "Payload.$": "$"
+                                                        },
+                                                        "resultPath": null
+                                                      }
+                                                    },
+                                                    "edge": {
+                                                      "type": "calls",
+                                                      "confidence": "static"
+                                                    },
+                                                    "children": [
+                                                      {
+                                                        "node": {
+                                                          "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/WaitForPickupWindow",
+                                                          "type": "function",
+                                                          "label": "WaitForPickupWindow [Wait]",
+                                                          "loc": "statemachine/loan-approval.asl.json:226",
+                                                          "service": "circulation",
+                                                          "kind": "state",
+                                                          "meta": {
+                                                            "workflow": "loan-approval",
+                                                            "stateType": "Wait"
+                                                          }
+                                                        },
+                                                        "edge": {
+                                                          "type": "calls",
+                                                          "confidence": "static"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "node": {
+                                                              "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanApproved",
+                                                              "type": "function",
+                                                              "label": "LoanApproved [Succeed]",
+                                                              "loc": "statemachine/loan-approval.asl.json:231",
+                                                              "service": "circulation",
+                                                              "kind": "state",
+                                                              "meta": {
+                                                                "workflow": "loan-approval",
+                                                                "stateType": "Succeed",
+                                                                "end": true
+                                                              }
+                                                            },
+                                                            "edge": {
+                                                              "type": "calls",
+                                                              "confidence": "static"
+                                                            },
+                                                            "children": []
+                                                          }
+                                                        ]
+                                                      }
+                                                    ]
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "node": {
+                      "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/RejectLoan",
+                      "type": "function",
+                      "label": "RejectLoan [Task sns:publish]",
+                      "loc": "statemachine/loan-approval.asl.json:234",
+                      "service": "circulation",
+                      "kind": "state",
+                      "meta": {
+                        "workflow": "loan-approval",
+                        "stateType": "Task",
+                        "task": {
+                          "kind": "channel",
+                          "service": "sns",
+                          "action": "publish",
+                          "pattern": "request-response",
+                          "transport": "topic",
+                          "targets": [
+                            "loan-decisions"
+                          ]
+                        },
+                        "parameters": {
+                          "TopicArn": "arn:aws:sns:eu-west-1:123456789012:loan-decisions",
+                          "Message.$": "$"
+                        }
+                      }
+                    },
+                    "edge": {
+                      "type": "calls",
+                      "confidence": "static"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/LoanRejected",
+                          "type": "function",
+                          "label": "LoanRejected [Fail]",
+                          "loc": "statemachine/loan-approval.asl.json:243",
+                          "service": "circulation",
+                          "kind": "state",
+                          "meta": {
+                            "workflow": "loan-approval",
+                            "stateType": "Fail",
+                            "end": true
+                          }
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

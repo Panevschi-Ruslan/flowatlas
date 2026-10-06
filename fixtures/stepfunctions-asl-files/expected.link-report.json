@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T11:54:26.779Z",
+  "configHash": "c75767e926fa",
+  "services": [
+    {
+      "name": "circulation",
+      "repo": "./circulation",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 30,
+      "edges": 29,
+      "types": 0,
+      "unresolved": 4,
+      "durationMs": 513
+    },
+    {
+      "name": "notifications",
+      "repo": "./notifications",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 17,
+      "edges": 14,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 512
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:circulation:http:POST:/loans",
+      "entry:notifications:http:GET:/notices/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 14,
+      "reason": "reference-not-found",
+      "message": "CheckBorrowerStanding [Task lambda:invoke] reaches the function check-borrower-standing, which no configured service declares",
+      "hint": "Add the repository that deploys it to the configuration, so this step reaches its code.",
+      "symbol": "circulation#statemachine/loan-approval.asl.json:loan-approval/CheckBorrowerStanding",
+      "meta": {
+        "reference": "invoke:check-borrower-standing"
+      }
+    },
+    {
+      "service": "circulation",
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 155,
+      "reason": "reference-not-found",
+      "message": "ScoreBorrower [Task function] reaches the function score-borrower, which no configured service declares",
+      "hint": "Add the repository that deploys it to the configuration, so this step reaches its code.",
+      "symbol": "circulation#statemachine/loan-approval.asl.json:loan-approval/ScoreBorrower",
+      "meta": {
+        "reference": "invoke:score-borrower"
+      }
+    },
+    {
+      "service": "notifications",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 14,
+      "reason": "reference-not-found",
+      "message": "SendEmail [Task lambda:invoke] reaches the function send-borrower-email, which no configured service declares",
+      "hint": "Add the repository that deploys it to the configuration, so this step reaches its code.",
+      "symbol": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail",
+      "meta": {
+        "reference": "invoke:send-borrower-email"
+      }
+    },
+    {
+      "service": "notifications",
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 22,
+      "reason": "reference-not-found",
+      "message": "SendText [Task lambda:invoke] reaches the function send-borrower-text, which no configured service declares",
+      "hint": "Add the repository that deploys it to the configuration, so this step reaches its code.",
+      "symbol": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText",
+      "meta": {
+        "reference": "invoke:send-borrower-text"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 47,
+    "edges": 44,
+    "types": 0,
+    "unresolved": 10
+  }
+}
