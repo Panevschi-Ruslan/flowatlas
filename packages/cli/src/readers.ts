@@ -103,6 +103,16 @@ export const READERS: readonly ReaderRow[] = [
   ['express', 'express', NESTJS_EXTRACTOR],
   ['fastify', 'fastify', NESTJS_EXTRACTOR],
   ['koa', 'koa', NESTJS_EXTRACTOR],
+  // A repository of Lambda handlers. Below every framework that registers its
+  // own routes, because a server built on one of them and deployed as a function
+  // is that framework's server: the routes are in its code, and the function in
+  // front of it is read by the same adapter whichever type is written. A
+  // repository that gives itself away only by its Terraform - none of these in
+  // any manifest, or no manifest at all - is recognised in `stacks.ts`, which
+  // can look at the directory as well as the manifest.
+  ['lambda', '@types/aws-lambda', NESTJS_EXTRACTOR],
+  ['lambda', 'aws-lambda', NESTJS_EXTRACTOR],
+  ['lambda', '@middy/core', NESTJS_EXTRACTOR],
   ['angular', '@angular/core', ANGULAR_EXTRACTOR],
   // A repository that is only a browser. It has no ways in for the server reader
   // to find, so reading it there would add passes with nothing to read and a

@@ -398,6 +398,7 @@ flowatlas flow "POST /orders/12345"
 flowatlas flow "POST /orders/:param"
 flowatlas flow "entry:orders:http:POST:/orders/:param"
 flowatlas flow "bot:order_confirm"        # a bot command or button
+flowatlas flow "invoke:library-dev-create-loan"   # a function, by its deployed name
 ```
 
 A name matching two services comes back as a choice rather than a guess. A name
@@ -716,6 +717,9 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Bots and handler tables | `bot-handlers-not-found`, `dynamic-bot-trigger`, `entry-registry-unconfigured`, `registry-key-dynamic`, `registry-handler-anonymous`, `orphan-scene-decorator`, `orphan-update-decorator`, `wizard-step-conflict` |
 | Annotations | `marker-route-not-found`, `marker-service-unknown`, `marker-unknown-arg`, `marker-arg-not-a-name`, `marker-names-nothing` |
 | Declared services | `document-age` |
+| Functions and routes declared in Terraform | `function-name-unread`, `function-name-disputed`, `function-repeated-unread`, `function-handler-unread`, `function-handler-not-found`, `function-handler-ambiguous`, `function-source-unread`, `function-runtime-unread` (info), `function-image-unread` (info), `route-path-unread`, `route-target-unread`, `api-body-unread` (info), `deployment-unread` (info) |
+| Terraform files and modules | `infra-file-unparsed`, `infra-file-unread` (info), `infra-module-missing`, `infra-module-undescribed` (info unless its inputs name a handler, a function or a route), `infra-module-description-invalid` |
+| Joining a deployment across repositories | `route-root-not-found`, `route-root-ambiguous`, `invoke-target-not-found`, `invoke-target-ambiguous` |
 
 Three of these are worth knowing before they are met, because each is the
 tool declining to guess:
@@ -788,7 +792,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 |---|---|---|---|
 | `name` | string | required | what this service is called everywhere else |
 | `repo` | string | required unless `document` is given | path to the repository, relative to this file or absolute. A service has a `repo` or a `document`, never both |
-| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `express`, `fastify` or `koa` for anything with a server in it, `angular` or `react` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
+| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `express`, `fastify` or `koa` for anything with a server in it, `lambda` for functions whose ways in are declared in Terraform, `angular` or `react` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
 | `baseUrlEnv` | string[] | `[]` | settings keys other services use to address this one |
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |
@@ -796,6 +800,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `openapi` | string | none | the older spelling of `{ "kind": "openapi", "path": … }`, still read |
 | `tsconfig` | string | found in the repository | which TypeScript configuration to parse with |
 | `bootstrap` | string | `src/main.ts` | the application entry file, when it is elsewhere |
+| `infra.vars` | string[] | none | for a service read from Terraform: the variable files a deployment is read with, in order, relative to the service's directory (`["infra/env/dev.tfvars"]`). Without it, a name two files set differently is reported, never picked |
 | `readTestDirectories` | string[] | `[]` | directories named like tests (`test`, `tests`, `e2e`, `fixtures`, `cypress`, `playwright`, `__tests__`, `__mocks__`, `__snapshots__`, `__fixtures__`) that hold code the application runs, relative to the service's directory: `["src/fixtures"]` |
 
 **A directory named like tests is not read, and says so.** Test code is left out
@@ -1007,6 +1012,7 @@ it.
 | `entry.registries` | object[] | `[]` | a table of handlers you keep yourself, described so each registration is a way in |
 | `entry.http` | object[] | `[]` | an HTTP framework nothing here ships an adapter for, described so its routes are read |
 | `entry.procedures` | object[] | `[]` | a framework whose ways in are the keys of a tree of object literals, described so each one is read |
+| `infra.modules` | object[] | `[]` | a Terraform module whose source is not in the repository, described so the functions and routes declared through it are read |
 
 **Detection reads the workspace, not only the leaf manifest.** A service that is
 a package inside a workspace is asked what it can import, and the answer is
@@ -1535,6 +1541,140 @@ request from outside every application — another service, rooted at a settings
 key — is answered by whatever is deployed behind that key, which no source says,
 so where two applications serve the address it is an
 `ambiguous-route-application` row naming both.
+
+### Functions and routes declared in Terraform
+
+A repository of Lambda handlers has no decorator, no call on an application and
+no routes directory: its handlers are plain exported functions, and the facts
+that one of them is deployed under a name and that `POST /loans` lands on it are
+written in Terraform. A service of type `lambda` is read from both. `init` and
+`link` propose it for a repository whose manifest declares `@types/aws-lambda`,
+`aws-lambda` or `@middy/core`, whose function directories each declare one, or
+which holds Terraform that declares a function or a route — including a
+repository of nothing but Terraform, which is still a service: it has routes and
+no bodies.
+
+**Every function is an `invoke` entry** under the name it is deployed with,
+`entry:<service>:invoke:<name>`, and it `handles` to the export its handler
+names: `index.createLoan` is `createLoan` exported from `index.ts` in the
+directory the function is packaged from. That directory is read from the archive
+the configuration builds (`filename = data.archive_file.x.output_path`, with its
+`source_dir` or `source_file`), and a directory of compiled output is mapped
+back to its source through the `outDir` and `rootDir` of the tsconfig that wrote
+it, so a function packaged from `dist/returns` lands on `src/returns`. Where
+nothing says what the package is built from — a zip a script makes, an object in
+a bucket — the module is searched for by name, and the edge is `heuristic`
+(`handlerFoundBy: "search"`) if exactly one source file of that name exports the
+handler, and a row otherwise. A handler wrapped in a chain —
+`middy(createLoan).use(jsonBodyParser())`, or any call whose first argument is a
+function — lands on the function it wraps, with the chain as middleware in front
+of it, in order. `flow invoke:<name>` starts from a function.
+
+**Every route is an `http` entry onto the same handler.** A REST API's path is
+built from its `aws_api_gateway_resource` tree, `{loanId}` read as a parameter
+and `{proxy+}` as the rest of the path; an HTTP API's from the `route_key`. The
+integration names the function by a reference (`invoke_arn`, `arn`, the ARN
+written inside an invoke address, an alias), or by name through a `data`
+block. An authoriser in front of the route (`authorization`,
+`authorization_type`) is a guard, so `route-unguarded` sees it.
+
+**A shared API is joined across repositories.** A route that hangs from a
+point of an API another repository owns — looked up through a parameter
+(`data.aws_ssm_parameter.x.value`) or another state's output
+(`data.terraform_remote_state.x.outputs.y`) — has the part of its path this
+repository adds and the name of the point. The repository that writes that
+point (an `aws_ssm_parameter` holding a resource's id, or an output of a root
+module with a backend) publishes its path, and the linker joins the two by
+name, the way a channel is joined, so the route has its full address:
+`POST /v1/loans`. A route integrated with a function another repository deploys
+is given that function's handler, joined on the deployed name. Nothing published
+under that name, or two places for it, is a row and no join
+(`fixtures/multi-repo-lambda`).
+
+**What is evaluated, and what is not.** Variables (their defaults,
+`terraform.tfvars`, `*.auto.tfvars`), locals, `path.module`, string templates,
+references to other blocks and modules, and the functions that address things —
+`format`, `lookup`, `merge`, `join`, `replace`, `file`, `templatefile`,
+`jsonencode`, `jsondecode`, `try` and a few dozen more — are evaluated.
+Anything else is unknown, never guessed at: a function name that does not
+evaluate in full is an entry with no name (`${…}@<declaration>` in its id) and
+a row saying what to set, never a name built from the parts that did. A
+`count` or `for_each` over something the files settle is expanded; over
+something they do not, it is one instance with its key unknown, and says so.
+Nothing needs `terraform init` or state: only the checked-out files are read.
+Configuration written as JSON (`*.tf.json`) is not read, and says so.
+
+**Environments.** Several `*.tfvars` files that give one name two values are
+two environments, and the tool does not pick one:
+
+```json
+{ "name": "loans", "repo": "./loans", "type": "lambda", "infra": { "vars": ["infra/env/dev.tfvars"] } }
+```
+
+reads the deployment `dev` describes. Without `infra.vars`, a function whose
+name depends on such a variable has no name and a `function-name-disputed` row
+names the variable and the files.
+
+**A module from elsewhere, described.** A local module (`source = "./modules/x"`)
+is read with its inputs bound. One whose source is a registry or another
+repository cannot be read, so what it declares is described, in the module's own
+language, beside the broker and HTTP descriptions:
+
+```jsonc
+{
+  "adapters": {
+    "infra": {
+      "modules": [
+        {
+          // the source as a call writes it; a pinned ?ref= is ignored, * matches anything
+          "source": "git::https://git.example.com/platform/terraform-api-route.git",
+          // defaults for inputs a call may leave out, as expressions
+          "variables": { "authorization": "\"AWS_IAM\"" },
+          // each resource it declares, by its address in the module,
+          // each argument an expression over var.<input>
+          "resources": {
+            "aws_api_gateway_resource.this": {
+              "rest_api_id": "var.rest_api_id",
+              "parent_id": "var.parent_resource_id",
+              "path_part": "var.path_part"
+            },
+            "aws_api_gateway_method.this": {
+              "rest_api_id": "var.rest_api_id",
+              "resource_id": "aws_api_gateway_resource.this.id",
+              "http_method": "var.http_method",
+              "authorization": "var.authorization"
+            },
+            "aws_api_gateway_integration.this": {
+              "rest_api_id": "var.rest_api_id",
+              "resource_id": "aws_api_gateway_resource.this.id",
+              "http_method": "var.http_method",
+              "uri": "var.lambda_invoke_arn"
+            }
+          },
+          // which output is which attribute, for a caller that hands one on
+          "outputs": { "resource_id": "aws_api_gateway_resource.this.id" }
+        }
+      ]
+    }
+  }
+}
+```
+
+A string is an expression, so a literal is written with its quotes
+(`"\"AWS_PROXY\""`); a number, `true`, `false` and `null` are themselves. A
+resource may repeat with `count` or `for_each` and use `each` like any other, and
+a description is read by exactly the code that reads a module whose source is
+present. `terraform-aws-modules/lambda/aws` and
+`terraform-aws-modules/apigateway-v2/aws` ship described; a description with the
+same source in the configuration is tried first. A remote module nothing
+describes is one `infra-module-undescribed` row naming the module, its source
+and the inputs it was given — at `info` unless one of those inputs looks like a
+handler, a function or a route (`fixtures/lambda-terraform-modules`).
+
+The only infrastructure reader is Terraform. SAM, the Serverless Framework, the
+CDK and CloudFormation are named when a repository is written for one
+(`deployment-unread`), and are a second implementation of the reader interface
+the adapter is written against, not a change to it.
 
 ### Procedures
 

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "trpc-inferred-context",
-  "generatedAt": "2026-09-28T11:06:52.466Z",
+  "generatedAt": "2026-10-06T11:32:34.221Z",
   "nodes": [
     {
       "id": "db_query:trpc-inferred-context#src/procedures.ts:10:23",

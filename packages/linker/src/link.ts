@@ -24,6 +24,7 @@ import {
   type Finding,
   type RouteIndex,
 } from './http-link.js';
+import { joinDeployments } from './deployment-link.js';
 import { mergeGraphs } from './merge.js';
 import {
   isProcedureEntry,
@@ -419,7 +420,9 @@ export const linkGraphs = (
 ): LinkResult => {
   const merged = mergeGraphs(graphs, config);
   const { nodes, edges, types } = merged;
-  const found: Unresolved[] = [];
+  // Before anything reads a route's address: a route hanging from another
+  // repository's API only has its full path once both repositories are here.
+  const found: Unresolved[] = joinDeployments(nodes, edges, merged.unresolved);
   const httpOut = emptyHttpOut();
   const ui = emptyUi();
 

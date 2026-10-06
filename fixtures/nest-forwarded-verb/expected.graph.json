@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-forwarded-verb",
-  "generatedAt": "2026-09-28T09:08:55.138Z",
+  "generatedAt": "2026-10-06T11:32:00.583Z",
   "nodes": [
     {
       "id": "external_api:api.example.com",

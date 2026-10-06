@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-bullmq",
-  "generatedAt": "2026-09-27T15:27:50.649Z",
+  "generatedAt": "2026-10-06T11:31:56.385Z",
   "nodes": [
     {
       "id": "channel:digest",

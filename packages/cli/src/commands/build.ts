@@ -59,6 +59,7 @@ import {
   isFrontend,
 } from '../build/extractor.js';
 import { noReaderNote } from '../stacks.js';
+import { deploymentFiles } from '../build/deployment-files.js';
 import {
   hashGraphFile,
   planRebuild,
@@ -308,7 +309,8 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
   const tsconfig = findTsconfig(repoDir, service.tsconfig);
   // Listed from disk even when the repository is already open: a file created
   // since it was opened is exactly the change the survey must not miss.
-  const files = listRepoSources(repoDir, service.readTestDirectories);
+  const deployed = extractor === null ? [] : deploymentFiles(repoDir);
+  const files = [...listRepoSources(repoDir, service.readTestDirectories), ...deployed];
 
   return {
     service: service.name,
@@ -318,11 +320,11 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
     adapters:
       extractor === null
         ? []
-        : adapterNames(createRegistry(), readResolvedPackageJson(repoDir) ?? {}, config),
+        : adapterNames(createRegistry(), readResolvedPackageJson(repoDir) ?? {}, config, repoDir),
     tsconfigHash: tsconfig === undefined ? hashText('') : hashFile(tsconfig),
     packageJsonHash: hashFile(join(repoDir, 'package.json')),
     dependencies: surveyDependencies(repoDir),
-    globalFiles: session?.globalFiles() ?? [],
+    globalFiles: [...(session?.globalFiles() ?? []), ...deployed],
     files: stampFiles(repoDir, files, previous?.files, {
       ...(options.trustTimestamps === undefined ? {} : { trustTimestamps: options.trustTimestamps }),
     }),
@@ -401,7 +403,7 @@ const readNothing = (
     const declared = isDeclared(item.service);
     const note = declared
       ? undefined
-      : declinedNote(item.service.type, readPackageJson(repoDirOf(item.service)) ?? {}, config);
+      : declinedNote(item.service.type, readPackageJson(repoDirOf(item.service)) ?? {}, config, repoDirOf(item.service));
     return [
       {
         service: item.service.name,
@@ -473,8 +475,8 @@ const armsLengthOf = (
     const repoDir = repoDirOf(item.service);
     const narrow = readResolvedPackageJson(repoDir, { sideways: false });
     if (narrow === undefined) return [];
-    const along = new Set(adapterNames(registry, narrow, config));
-    const found = adapterNames(registry, readResolvedPackageJson(repoDir) ?? {}, config).filter(
+    const along = new Set(adapterNames(registry, narrow, config, repoDir));
+    const found = adapterNames(registry, readResolvedPackageJson(repoDir) ?? {}, config, repoDir).filter(
       (adapter) => !along.has(adapter),
     );
     if (found.length === 0) return [];
@@ -775,7 +777,7 @@ const factsFromSession = (
   previous?: RepoCache,
 ): FileFacts => {
   const imports = session.imports();
-  const held = [...session.files()].sort();
+  const held = [...new Set([...session.files(), ...deploymentFiles(session.repoDir)])].sort();
   const unseen = held.filter((file) => stamps[file] === undefined);
   const late = unseen.length === 0 ? {} : stampFiles(session.repoDir, unseen, previous?.files, {});
   const files: Record<string, FileStamp> = {};
@@ -783,7 +785,7 @@ const factsFromSession = (
     const stamp = stamps[file] ?? late[file];
     if (stamp !== undefined) files[file] = { ...stamp, deps: imports[file] ?? [] };
   }
-  return { files, globalFiles: session.globalFiles() };
+  return { files, globalFiles: [...session.globalFiles(), ...deploymentFiles(session.repoDir)] };
 };
 
 const writeJson = async (path: string, value: unknown): Promise<void> => {

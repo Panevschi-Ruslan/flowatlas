@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "fastify-service",
-  "generatedAt": "2026-09-27T17:37:27.803Z",
+  "generatedAt": "2026-10-06T11:31:42.695Z",
   "nodes": [
     {
       "id": "db_query:fastify-service#src/orders/orders.repository.ts:12:12",

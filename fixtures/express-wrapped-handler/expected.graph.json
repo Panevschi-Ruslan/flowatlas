@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "express-wrapped-handler",
-  "generatedAt": "2026-09-27T19:13:36.558Z",
+  "generatedAt": "2026-10-06T11:31:42.230Z",
   "nodes": [
     {
       "id": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param",

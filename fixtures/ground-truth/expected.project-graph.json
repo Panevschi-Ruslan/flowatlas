@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T18:35:28.119Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T11:31:45.130Z",
   "services": [
     {
       "name": "api",

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-client-wrapper",
-  "generatedAt": "2026-09-28T08:35:39.698Z",
+  "generatedAt": "2026-10-06T11:31:57.059Z",
   "nodes": [
     {
       "id": "config_key:nest-client-wrapper#BILLING_URL",

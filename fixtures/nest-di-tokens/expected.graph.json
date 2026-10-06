@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-di-tokens",
-  "generatedAt": "2026-09-27T09:26:37.417Z",
+  "generatedAt": "2026-10-06T11:31:58.762Z",
   "nodes": [
     {
       "id": "nest-di-tokens#src/app.module.ts:AppModule",

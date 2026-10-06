@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T09:26:28.527Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T11:31:49.679Z",
   "configHash": "6bdd35fd6118",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 14,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 786
+      "durationMs": 0
     },
     {
       "name": "gateway",
@@ -23,7 +23,7 @@
       "edges": 38,
       "types": 7,
       "unresolved": 1,
-      "durationMs": 856
+      "durationMs": 0
     },
     {
       "name": "orders",
@@ -34,7 +34,7 @@
       "edges": 26,
       "types": 5,
       "unresolved": 0,
-      "durationMs": 786
+      "durationMs": 0
     },
     {
       "name": "web",
@@ -45,7 +45,7 @@
       "edges": 21,
       "types": 1,
       "unresolved": 3,
-      "durationMs": 667
+      "durationMs": 0
     }
   ],
   "httpOut": {

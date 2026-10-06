@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "express-chained-app",
-  "generatedAt": "2026-09-27T09:26:18.366Z",
+  "generatedAt": "2026-10-06T11:31:39.839Z",
   "nodes": [
     {
       "id": "entry:express-chained-app:http:GET:/api/v1/items",

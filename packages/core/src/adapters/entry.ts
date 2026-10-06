@@ -1,5 +1,6 @@
 import type { ApplicationMap } from './applications.js';
 import type { FlowatlasConfig } from '../config.js';
+import type { Confidence } from '../model/edges.js';
 import type { EntryKind } from '../model/nodes.js';
 import type { ExtractContext } from './context.js';
 import type { EntryWrapping } from './wrapping.js';
@@ -77,6 +78,17 @@ export interface EntryNode {
    * why nothing can be pointed at.
    */
   handler?: EntryHandler;
+  /**
+   * How far the `handles` edge onto the handler can be trusted, when that is
+   * less than proven.
+   *
+   * Absent means `static`, which is what every reader that names its handler in
+   * the registration itself means. A way in declared somewhere else, whose code
+   * was found by searching for a module of the right name because nothing said
+   * where it was packaged from, is the case that needs it: the edge is real if
+   * the search found the only candidate, and it says so by being `heuristic`.
+   */
+  handlerConfidence?: Confidence;
   /** Repo-relative POSIX path of the declaration site. */
   file: string;
   line?: number;
@@ -117,8 +129,16 @@ export interface EntryAdapter {
    * here does a description decide whether an adapter runs at all: the broker
    * and data-layer descriptions are read by passes that go looking for them
    * whatever was detected, so nothing about them is waiting on this answer.
+   *
+   * `repoDir` is offered for the one kind of adapter whose evidence is neither
+   * the manifest nor the configuration: ways in declared in files that describe
+   * how the service is deployed. A repository of such files may have no manifest
+   * at all, and one with a manifest need not name anything that gives it away,
+   * so asking the manifest alone would switch the adapter off on exactly the
+   * repositories it exists for. Offered and not promised, like the
+   * configuration: a caller with no directory to hand passes none.
    */
-  detect(pkg: PackageJson, config?: FlowatlasConfig): boolean;
+  detect(pkg: PackageJson, config?: FlowatlasConfig, repoDir?: string): boolean;
   extractEntries(ctx: ExtractContext): EntryNode[];
   /**
    * Which applications this adapter reads in the service, for whoever has to

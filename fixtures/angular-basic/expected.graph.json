@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "angular-basic",
-  "generatedAt": "2026-09-27T09:26:14.208Z",
+  "generatedAt": "2026-10-06T11:27:35.883Z",
   "nodes": [
     {
       "id": "angular-basic#node_modules/@angular/common:HttpClient",

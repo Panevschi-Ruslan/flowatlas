@@ -163,6 +163,22 @@ const SOCKET_CASES = [
   ['expected.channel.updated.tree.txt', (io) => runChannel('orders/order:updated', { config: socketConfig, color: false, ascii: true, format: 'tree' }, io)],
 ];
 
+const lambdaFixture = join(root, 'fixtures', 'multi-repo-lambda');
+const lambdaConfig = join(lambdaFixture, 'flowatlas.config.json');
+
+/**
+ * A route declared in Terraform, walked from the request to the table (P21).
+ *
+ * The route hangs from an API another repository owns, so its address is the
+ * one the linker joined; the walk shows the authoriser and the middleware chain
+ * in front of the handler, and the handler's body after it. The health check
+ * holds the two rows a disputed variable leaves, which say what to set.
+ */
+const LAMBDA_CASES = [
+  ['expected.flow.post-loans.tree.txt', (io) => runFlow('POST /v1/loans', { config: lambdaConfig, color: false, ascii: true, format: 'tree' }, io)],
+  ['expected.doctor.txt', (io) => runDoctorCommand({ config: lambdaConfig }, io)],
+];
+
 /**
  * Sets of recordings, in several places.
  *
@@ -177,6 +193,7 @@ const SUITES = [
   { dir: foldedFixture, owned: false, cases: FOLDED_CASES },
   { dir: hollowFixture, owned: false, cases: HOLLOW_CASES },
   { dir: socketFixture, owned: false, cases: SOCKET_CASES },
+  { dir: lambdaFixture, owned: false, cases: LAMBDA_CASES },
 ];
 
 /**

@@ -12,7 +12,7 @@ import {
   type ServiceConfig,
 } from '@flowatlas/core';
 import type { Command } from 'commander';
-import { guessType, UNKNOWN_TYPE } from '../stacks.js';
+import { declaresDeployment, guessDirectoryType, guessType, UNKNOWN_TYPE } from '../stacks.js';
 import { suggestName, toPosixRelative } from './init.js';
 import { installMcp, MCP_FILE, SERVER_KEY } from './mcp.js';
 
@@ -62,17 +62,17 @@ const openProject = (configPath: string): { config: FlowatlasConfig; existed: bo
  * nothing at all and the workspace is the only thing left to ask.
  */
 const describe = (dir: string): { name: string; type: string } => {
-  const pkg = readPackageJson(dir);
+  const pkg = readPackageJson(dir) ?? (declaresDeployment(dir) ? {} : undefined);
   if (pkg === undefined) {
     throw new FlowatlasError(
       'not-a-repository',
-      `${dir} has no package.json`,
-      'Point at the root of a repository, the directory holding its package.json.',
+      `${dir} has no package.json and no Terraform that declares a function or a route`,
+      'Point at the root of a repository: the directory holding its package.json, or its Terraform.',
     );
   }
   const declared = guessType(pkg);
-  const type =
-    declared === UNKNOWN_TYPE ? guessType(readResolvedPackageJson(dir) ?? pkg) : declared;
+  const widened = declared === UNKNOWN_TYPE ? guessType(readResolvedPackageJson(dir) ?? pkg) : declared;
+  const type = widened === UNKNOWN_TYPE ? guessDirectoryType(dir, pkg, undefined) : widened;
   return { name: suggestName(pkg, dir), type };
 };
 

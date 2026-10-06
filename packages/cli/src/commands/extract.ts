@@ -43,6 +43,7 @@ import {
 } from '../build/cache.js';
 import { hashGraphFile } from '../build/incremental.js';
 import { adapterNames, createRegistry, EXTRA_PASSES } from '../build/extractor.js';
+import { deploymentFiles } from '../build/deployment-files.js';
 import { NESTJS_EXTRACTOR } from '../readers.js';
 
 /**
@@ -96,8 +97,12 @@ export const BROWSER_READERS: ReadonlyMap<
 const detectBrowserReader = (
   registry: AdapterRegistry,
   pkg: PackageJson,
+  rootDir: string,
 ): ((options: ExtractRepoOptions) => Promise<RepoGraph>) | undefined => {
-  const detected = registry.detect(pkg, {});
+  // The directory as well as the manifest, because a way in declared in the
+  // files that describe a deployment is evidence of a server that no manifest
+  // carries - and a repository of nothing but those files has no manifest.
+  const detected = registry.detect(pkg, {}, undefined, rootDir);
   if (detected.entry.length > 0) return undefined;
   for (const adapter of detected.frontend) {
     const reader = BROWSER_READERS.get(adapter.name);
@@ -249,7 +254,7 @@ export const runExtract = async (
   // two different answers.
   const readBrowser =
     service === undefined
-      ? detectBrowserReader(registry, readResolvedPackageJson(rootDir) ?? {})
+      ? detectBrowserReader(registry, readResolvedPackageJson(rootDir) ?? {}, rootDir)
       : BROWSER_READERS.get(service.type);
 
   // A server repository is opened here rather than inside the extractor, so the
@@ -317,17 +322,18 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
   );
 
   const imports = importsOf(warm);
-  const files = stampFiles(rootDir, repoFiles(warm), undefined, {});
+  const deployed = deploymentFiles(rootDir);
+  const files = stampFiles(rootDir, [...repoFiles(warm), ...deployed], undefined, {});
   for (const [file, stamp] of Object.entries(files)) stamp.deps = imports[file] ?? [];
 
   const tsconfig = findTsconfig(rootDir, options.tsconfig ?? options.service?.tsconfig);
   cache.repos[repo] = {
     repo: options.service?.repo ?? rootDir,
     extractor: NESTJS_EXTRACTOR,
-    adapters: adapterNames(registry, readResolvedPackageJson(rootDir) ?? {}, config),
+    adapters: adapterNames(registry, readResolvedPackageJson(rootDir) ?? {}, config, rootDir),
     tsconfigHash: tsconfig === undefined ? hashText('') : hashFile(tsconfig),
     packageJsonHash: hashFile(join(rootDir, 'package.json')),
-    globalFiles: globalFiles(warm),
+    globalFiles: [...globalFiles(warm), ...deployed],
     files,
     graphPath: outPath,
     graphHash: hashGraphFile(outPath),

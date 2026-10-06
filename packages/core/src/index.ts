@@ -37,7 +37,9 @@ export {
   makeLeafId,
   makeTableId,
   makeHttpEntryKey,
+  makeInvokeEntryKey,
   makeSymbolId,
+  makeUnnamedInvokeKey,
   makeTypeId,
   normalizeFilePath,
   normalizePath,
@@ -117,6 +119,7 @@ export {
   entryRegistrySchema,
   findConfig,
   flowatlasConfigSchema,
+  infraModuleSchema,
   loadConfig,
   parseConfig,
   serviceConfigSchema,
@@ -133,10 +136,22 @@ export type {
   EntryProcedureDescription,
   EntryRegistryConfig,
   FlowatlasConfig,
+  InfraModuleConfig,
+  InfraModuleDescription,
   LoadConfigOptions,
   LoadedConfig,
   ServiceConfig,
 } from './config.js';
+export type {
+  DeployedFunction,
+  DeployedHandler,
+  DeployedRoute,
+  Deployment,
+  DeploymentReader,
+  DeploymentReadOptions,
+  PublishedRoot,
+  RouteTarget,
+} from './adapters/deployment.js';
 
 export {
   applicationOfFile,

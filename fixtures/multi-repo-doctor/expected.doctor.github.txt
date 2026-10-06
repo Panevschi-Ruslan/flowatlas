@@ -104,7 +104,7 @@ contracts: 4 errors, 1 excused, 4 boundary directions nothing could be compared 
   missing_required  gateway → orders  request    channel       receiver orders requires `channel: string`; sender gateway does not send it
 
 baseline: ok (26 accepted, 26 now, +0)
-  accepted against graph schema 3, and this graph is 5; the counts are still comparable, but a schema change can move them on its own
+  accepted against graph schema 3, and this graph is 6; the counts are still comparable, but a schema change can move them on its own
 
 verdict:
   7 annotations the graph contradicts

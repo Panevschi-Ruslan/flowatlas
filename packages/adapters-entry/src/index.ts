@@ -1,6 +1,7 @@
 import type { AdapterRegistry, EntryAdapter } from '@flowatlas/core';
 import { configuredProceduresAdapter } from './configured-procedures.js';
 import { configuredRoutesAdapter } from './configured-routes.js';
+import { deployedFunctionsAdapter } from './deployed-functions.js';
 import { entryRegistriesAdapter } from './entry-registries.js';
 import {
   expressRoutesAdapter,
@@ -41,12 +42,20 @@ export const entryAdapters: readonly EntryAdapter[] = [
   entryRegistriesAdapter,
   configuredRoutesAdapter,
   configuredProceduresAdapter,
+  deployedFunctionsAdapter,
 ];
 
 export const registerEntryAdapters = (registry: AdapterRegistry): AdapterRegistry =>
   registry.registerAll('entry', entryAdapters);
 
 export { CONFIGURED_ROUTES, configuredRoutesAdapter } from './configured-routes.js';
+export {
+  DEPLOYED_FUNCTIONS,
+  DEPLOYMENT_READERS,
+  LAMBDA_PACKAGES,
+  deployedFunctionsAdapter,
+  deploymentReadersFor,
+} from './deployed-functions.js';
 export {
   CONFIGURED_PROCEDURES,
   configuredProceduresAdapter,

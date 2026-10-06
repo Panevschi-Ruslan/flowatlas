@@ -9,6 +9,9 @@ import type { EntryKind } from './model/nodes.js';
  *            <repo>#<file>:<fn>
  *   entry    entry:<service>:<kind>:<key>
  *            entry:<service>@<application>:<kind>:<key>
+ *            entry:<service>:invoke:<deployed-name>
+ *            entry:<service>:invoke:${…}@<declaration>   — a function whose name
+ *                                                        was not read
  *   channel  channel:<name>              — never repo-prefixed
  *   type     type:<repo>#<TypeName>
  *
@@ -212,6 +215,28 @@ export const makeEntryId = (
  */
 export const makeHttpEntryKey = (method: string, path: string): string =>
   `${required('method', method).toUpperCase()}:${normalizePath(path)}`;
+
+/**
+ * The `key` half of an `invoke` entry id: the name the function is deployed
+ * under, exactly as the deployment spells it.
+ *
+ * The name is the whole address. Whatever invokes a function - a route, a
+ * workflow, a rule, another function - names it and nothing else, and the
+ * linker joins the two on this key alone, across services.
+ */
+export const makeInvokeEntryKey = (name: string): string => required('name', name);
+
+/**
+ * The `key` of an `invoke` entry whose deployed name was not read.
+ *
+ * It still needs an id - the function exists, and its handler is often known -
+ * but nothing may join to it by name, so the key is built from where it is
+ * declared rather than from the parts of the name that did evaluate (I3). It
+ * starts with `UNREAD_SPAN`, which no deployed name can contain, so it can never
+ * be mistaken for one and `wasRead` says no to it.
+ */
+export const makeUnnamedInvokeKey = (declaration: string): string =>
+  `${UNREAD_SPAN}@${required('declaration', declaration)}`;
 
 /**
  * `channel:<name>` — deliberately without a repo prefix, because the whole

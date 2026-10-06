@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-basic",
-  "generatedAt": "2026-09-27T09:26:34.517Z",
+  "generatedAt": "2026-10-06T11:31:54.607Z",
   "nodes": [
     {
       "id": "entry:nest-basic:http:DELETE:/api/orders/:param",

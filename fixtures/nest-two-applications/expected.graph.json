@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-two-applications",
-  "generatedAt": "2026-09-27T12:27:24.445Z",
+  "generatedAt": "2026-10-06T11:32:20.195Z",
   "nodes": [
     {
       "id": "entry:nest-two-applications:http:GET:/legacy",

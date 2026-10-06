@@ -15,8 +15,9 @@ import {
 } from '@flowatlas/core';
 import type { Command } from 'commander';
 import {
-  guessUnread,
-  guessWorkspaceType,
+  declaresDeployment,
+  guessDirectoryType,
+  guessUnreadIn,
   looksLikeApplication,
   UNKNOWN_TYPE,
 } from '../stacks.js';
@@ -138,8 +139,8 @@ const withDistinctNames = (candidates: readonly Candidate[]): Candidate[] => {
  */
 const servicesIn = (absPath: string, configDir: string, pkg: PackageJson): Candidate[] => {
   const asOne = (dir: string, manifest: PackageJson, root?: PackageJson): Candidate => {
-    const type = guessWorkspaceType(manifest, root);
-    const unread = type === UNKNOWN_TYPE ? guessUnread(manifest) : undefined;
+    const type = guessDirectoryType(dir, manifest, root);
+    const unread = type === UNKNOWN_TYPE ? guessUnreadIn(dir, manifest) : undefined;
     return {
       absPath: dir,
       repo: toPosixRelative(configDir, dir),
@@ -202,7 +203,10 @@ export const scanCandidates = (scanDir: string, configDir: string): Candidate[] 
     if (entry.startsWith('.') || SKIPPED.has(entry)) continue;
     const absPath = join(root, entry);
     if (absPath === self) continue;
-    const pkg = readPackageJson(absPath);
+    // A directory counts when it holds a manifest, or when it holds the files
+    // that describe a deployment: a repository that is nothing but the
+    // Terraform for a shared API is a service with no code (P21).
+    const pkg = readPackageJson(absPath) ?? (declaresDeployment(absPath) ? {} : undefined);
     if (pkg === undefined) continue;
     found.push(...servicesIn(absPath, self, pkg));
   }

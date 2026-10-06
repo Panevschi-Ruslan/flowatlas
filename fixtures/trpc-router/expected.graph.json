@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "trpc-router",
-  "generatedAt": "2026-09-28T09:19:43.269Z",
+  "generatedAt": "2026-10-06T11:32:35.260Z",
   "nodes": [
     {
       "id": "entry:trpc-router:http:ALL:/api/trpc/:param",

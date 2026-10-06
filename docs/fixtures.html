@@ -66,9 +66,9 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>106 fixtures</span>
-    <span>202 snapshot files</span>
-    <span>11 areas</span>
+    <span>109 fixtures</span>
+    <span>209 snapshot files</span>
+    <span>12 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
   <section data-area>
@@ -350,6 +350,35 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A workspace whose Prisma client was <strong>never generated</strong>, which is what a clone installed with <code>--ignore-scripts</code> is: <code>prisma generate</code> runs from a postinstall hook, so <code>packages/db/generated/prisma</code> does not exist, and nothing links <code>@acme/db</code> into <code>api</code> either.</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+    </ul>
+  </section>
+  <section data-area>
+    <h2>Serverless, wired in Terraform <span class="count" data-total="3">3</span></h2>
+    <ul>
+      <li class="fixture" data-search="lambda-terraform-modules serverless, wired in terraform the same kind of service declared through modules: one of the repository's own, the public `terraform-aws-modules/lambda/aws` and `terraform-aws-modules/apigateway-v2/aws`, and a module from another repository that the configuration describes.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-terraform-modules">lambda-terraform-modules</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>The same kind of service declared through modules: one of the repository's own, the public <code>terraform-aws-modules/lambda/aws</code> and <code>terraform-aws-modules/apigateway-v2/aws</code>, and a module from another repository that the configuration describes.</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="lambda-terraform-rest serverless, wired in terraform lambda handlers whose ways in are declared in terraform: one `aws_lambda_function` per handler, and a rest api built resource by resource in front of them.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-terraform-rest">lambda-terraform-rest</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>Lambda handlers whose ways in are declared in Terraform: one <code>aws_lambda_function</code> per handler, and a REST API built resource by resource in front of them.</p>
+        <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="multi-repo-lambda serverless, wired in terraform three repositories sharing one rest api: two hang their routes from a point of it the third, a repository of nothing but terraform, publishes.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/multi-repo-lambda">multi-repo-lambda</a>
+          <span class="kind">3 services</span>
+        </div>
+        <p>Three repositories sharing one REST API: two hang their routes from a point of it the third, a repository of nothing but Terraform, publishes.</p>
+        <p class="snapshots"><code>expected.doctor.txt</code> <code>expected.flow.post-loans.tree.txt</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
     </ul>
   </section>

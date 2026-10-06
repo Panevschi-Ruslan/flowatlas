@@ -76,11 +76,13 @@ export const adaptersBySlot = (
   registry: AdapterRegistry,
   pkg: PackageJson,
   config: FlowatlasConfig,
+  repoDir?: string,
 ): Record<AdapterSlot, string[]> => {
   const detected = registry.detect(
     pkg,
     config.adapters.auto ? config.adapters.force : {},
     config,
+    repoDir,
   );
   return Object.fromEntries(
     ADAPTER_SLOTS.map((slot) => [slot, detected[slot].map((adapter) => adapter.name)]),
@@ -91,8 +93,9 @@ export const adapterNames = (
   registry: AdapterRegistry,
   pkg: PackageJson,
   config: FlowatlasConfig,
+  repoDir?: string,
 ): string[] => {
-  const bySlot = adaptersBySlot(registry, pkg, config);
+  const bySlot = adaptersBySlot(registry, pkg, config, repoDir);
   const names = ADAPTER_SLOTS.flatMap((slot) => bySlot[slot]);
   return [...names, ...config.adapters.broker.custom.map((broker) => broker.name)].sort();
 };
@@ -135,10 +138,11 @@ export const declinedNote = (
   type: string,
   pkg: PackageJson,
   config: FlowatlasConfig,
+  repoDir?: string,
 ): string | undefined => {
   const slot = decidingSlot(type);
   if (slot === undefined) return undefined;
-  const claimed = adaptersBySlot(createRegistry(), pkg, config)[slot];
+  const claimed = adaptersBySlot(createRegistry(), pkg, config, repoDir)[slot];
   if (claimed.length > 0) return undefined;
   return (
     `no ${slot} adapter recognises it, so its reader walked the repository and had nowhere to put anything;` +

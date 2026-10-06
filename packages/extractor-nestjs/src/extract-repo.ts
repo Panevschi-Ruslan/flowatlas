@@ -156,6 +156,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     pkg,
     config.adapters.auto ? config.adapters.force : {},
     config,
+    rootDir,
   );
 
   const classes = buildClassIndex({ project, repo, repoDir: rootDir });

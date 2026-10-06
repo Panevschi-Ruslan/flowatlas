@@ -1,0 +1,700 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T11:31:53.147Z",
+  "services": [
+    {
+      "name": "platform",
+      "repo": "./platform",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "loans",
+      "repo": "./loans",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "holds",
+      "repo": "./holds",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:holds:http:DELETE:/v1/holds/:param",
+      "type": "entry",
+      "label": "DELETE /v1/holds/:param",
+      "repo": "holds",
+      "file": "infra/api.tf",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/v1/holds/:param",
+        "rawPath": "/holds/{holdId}",
+        "deployedBy": "terraform",
+        "function": "aws_lambda_function.cancel_hold",
+        "root": "parameter:/lending-library/api/v1-resource-id",
+        "below": "/holds/:param",
+        "declaredAs": "aws_api_gateway_method.cancel_hold",
+        "adapter": "aws-lambda",
+        "rootedIn": "platform",
+        "rootPath": "/v1",
+        "api": "lending-library"
+      }
+    },
+    {
+      "id": "entry:holds:http:POST:/v1/holds",
+      "type": "entry",
+      "label": "POST /v1/holds",
+      "repo": "holds",
+      "file": "infra/api.tf",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/v1/holds",
+        "rawPath": "/holds",
+        "deployedBy": "terraform",
+        "function": "aws_lambda_function.place_hold",
+        "root": "parameter:/lending-library/api/v1-resource-id",
+        "below": "/holds",
+        "declaredAs": "aws_api_gateway_method.place_hold",
+        "adapter": "aws-lambda",
+        "rootedIn": "platform",
+        "rootPath": "/v1",
+        "api": "lending-library"
+      }
+    },
+    {
+      "id": "entry:holds:invoke:${…}@aws_lambda_function.cancel_hold",
+      "type": "entry",
+      "label": "aws_lambda_function.cancel_hold (name not read)",
+      "repo": "holds",
+      "file": "infra/functions.tf",
+      "line": 15,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@aws_lambda_function.cancel_hold",
+        "deployedBy": "terraform",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.cancel_hold",
+        "nameUnread": "var.name_prefix is \"library-production\" in infra/env/production.tfvars and \"library-staging\" in infra/env/staging.tfvars",
+        "handler": "cancel-hold.handler",
+        "packagedFrom": "dist/handlers",
+        "compiledBy": "tsconfig.json",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:holds:invoke:${…}@aws_lambda_function.place_hold",
+      "type": "entry",
+      "label": "aws_lambda_function.place_hold (name not read)",
+      "repo": "holds",
+      "file": "infra/functions.tf",
+      "line": 7,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@aws_lambda_function.place_hold",
+        "deployedBy": "terraform",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.place_hold",
+        "nameUnread": "var.name_prefix is \"library-production\" in infra/env/production.tfvars and \"library-staging\" in infra/env/staging.tfvars",
+        "handler": "place-hold.handler",
+        "packagedFrom": "dist/handlers",
+        "compiledBy": "tsconfig.json",
+        "sourceDirectory": "src/handlers",
+        "handlerVia": "function",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:loans:http:GET:/v1/loans/:param",
+      "type": "entry",
+      "label": "GET /v1/loans/:param",
+      "repo": "loans",
+      "file": "infra/api.tf",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v1/loans/:param",
+        "rawPath": "/loans/{loanId}",
+        "deployedBy": "terraform",
+        "function": "library-dev-get-loan",
+        "root": "state:s3:bucket=lending-library-terraform-state,key=platform/terraform.tfstate#v1_resource_id",
+        "below": "/loans/:param",
+        "declaredAs": "aws_api_gateway_method.get_loan",
+        "adapter": "aws-lambda",
+        "rootedIn": "platform",
+        "rootPath": "/v1",
+        "api": "lending-library"
+      }
+    },
+    {
+      "id": "entry:loans:http:POST:/v1/loans",
+      "type": "entry",
+      "label": "POST /v1/loans",
+      "repo": "loans",
+      "file": "infra/api.tf",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/v1/loans",
+        "rawPath": "/loans",
+        "deployedBy": "terraform",
+        "function": "library-dev-create-loan",
+        "root": "state:s3:bucket=lending-library-terraform-state,key=platform/terraform.tfstate#v1_resource_id",
+        "below": "/loans",
+        "declaredAs": "aws_api_gateway_method.create_loan",
+        "adapter": "aws-lambda",
+        "rootedIn": "platform",
+        "rootPath": "/v1",
+        "api": "lending-library"
+      }
+    },
+    {
+      "id": "entry:loans:invoke:library-dev-create-loan",
+      "type": "entry",
+      "label": "library-dev-create-loan",
+      "repo": "loans",
+      "file": "infra/functions.tf",
+      "line": 22,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-dev-create-loan",
+        "deployedBy": "terraform",
+        "name": "library-dev-create-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.create_loan",
+        "handler": "index.handler",
+        "sourceDirectory": "functions/create-loan",
+        "handlerVia": "wrapped",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:loans:invoke:library-dev-get-loan",
+      "type": "entry",
+      "label": "library-dev-get-loan",
+      "repo": "loans",
+      "file": "infra/functions.tf",
+      "line": 30,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-dev-get-loan",
+        "deployedBy": "terraform",
+        "name": "library-dev-get-loan",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.get_loan",
+        "handler": "index.handler",
+        "sourceDirectory": "functions/get-loan",
+        "handlerVia": "function",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:loans:invoke:library-dev-list-borrower-loans",
+      "type": "entry",
+      "label": "library-dev-list-borrower-loans",
+      "repo": "loans",
+      "file": "infra/functions.tf",
+      "line": 38,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-dev-list-borrower-loans",
+        "deployedBy": "terraform",
+        "name": "library-dev-list-borrower-loans",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.list_borrower_loans",
+        "handler": "index.handler",
+        "sourceDirectory": "functions/list-borrower-loans",
+        "handlerVia": "function",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:platform:http:GET:/v1/borrowers/:param/loans",
+      "type": "entry",
+      "label": "GET /v1/borrowers/:param/loans",
+      "repo": "platform",
+      "file": "api.tf",
+      "line": 51,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v1/borrowers/:param/loans",
+        "rawPath": "/v1/borrowers/{borrowerId}/loans",
+        "deployedBy": "terraform",
+        "api": "lending-library",
+        "invokes": "library-dev-list-borrower-loans",
+        "declaredAs": "aws_api_gateway_method.list_borrower_loans",
+        "adapter": "aws-lambda",
+        "function": "library-dev-list-borrower-loans",
+        "functionService": "loans"
+      }
+    },
+    {
+      "id": "holds#infra/api.tf:AWS_IAM",
+      "type": "guard",
+      "label": "AWS_IAM",
+      "repo": "holds",
+      "file": "infra/api.tf",
+      "line": 14,
+      "kind": "authorizer"
+    },
+    {
+      "id": "holds#src/handlers/cancel-hold.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "holds",
+      "file": "src/handlers/cancel-hold.ts",
+      "line": 4
+    },
+    {
+      "id": "holds#src/handlers/place-hold.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "holds",
+      "file": "src/handlers/place-hold.ts",
+      "line": 4
+    },
+    {
+      "id": "holds#src/lib/holds-table.ts:placeHold",
+      "type": "function",
+      "label": "placeHold",
+      "repo": "holds",
+      "file": "src/lib/holds-table.ts",
+      "line": 9
+    },
+    {
+      "id": "holds#src/lib/holds-table.ts:removeHold",
+      "type": "function",
+      "label": "removeHold",
+      "repo": "holds",
+      "file": "src/lib/holds-table.ts",
+      "line": 14
+    },
+    {
+      "id": "loans#functions/create-loan/index.ts:createLoan",
+      "type": "function",
+      "label": "createLoan",
+      "repo": "loans",
+      "file": "functions/create-loan/index.ts",
+      "line": 11
+    },
+    {
+      "id": "loans#functions/create-loan/index.ts:logged()",
+      "type": "middleware",
+      "label": "logged()",
+      "repo": "loans",
+      "file": "functions/create-loan/index.ts",
+      "line": 17,
+      "kind": "call"
+    },
+    {
+      "id": "loans#functions/get-loan/index.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "loans",
+      "file": "functions/get-loan/index.ts",
+      "line": 4
+    },
+    {
+      "id": "loans#functions/list-borrower-loans/index.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "loans",
+      "file": "functions/list-borrower-loans/index.ts",
+      "line": 4
+    },
+    {
+      "id": "loans#infra/api.tf:AWS_IAM",
+      "type": "guard",
+      "label": "AWS_IAM",
+      "repo": "loans",
+      "file": "infra/api.tf",
+      "line": 14,
+      "kind": "authorizer"
+    },
+    {
+      "id": "loans#shared/loans-table.ts:findLoan",
+      "type": "function",
+      "label": "findLoan",
+      "repo": "loans",
+      "file": "shared/loans-table.ts",
+      "line": 15
+    },
+    {
+      "id": "loans#shared/loans-table.ts:loansOf",
+      "type": "function",
+      "label": "loansOf",
+      "repo": "loans",
+      "file": "shared/loans-table.ts",
+      "line": 17
+    },
+    {
+      "id": "loans#shared/loans-table.ts:saveLoan",
+      "type": "function",
+      "label": "saveLoan",
+      "repo": "loans",
+      "file": "shared/loans-table.ts",
+      "line": 10
+    },
+    {
+      "id": "platform#api.tf:AWS_IAM",
+      "type": "guard",
+      "label": "AWS_IAM",
+      "repo": "platform",
+      "file": "api.tf",
+      "line": 51,
+      "kind": "authorizer"
+    },
+    {
+      "id": "repo:holds",
+      "type": "repo",
+      "label": "holds",
+      "repo": "holds",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:loans",
+      "type": "repo",
+      "label": "loans",
+      "repo": "loans",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:platform",
+      "type": "repo",
+      "label": "platform",
+      "repo": "platform",
+      "meta": {
+        "stats": {
+          "files": 0,
+          "filesRead": 0,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "apiRoots": [
+          {
+            "key": "parameter:/lending-library/api/v1-resource-id",
+            "path": "/v1",
+            "api": "lending-library",
+            "file": "api.tf",
+            "line": 21,
+            "deployedBy": "terraform"
+          },
+          {
+            "key": "state:s3:bucket=lending-library-terraform-state,key=platform/terraform.tfstate#v1_resource_id",
+            "path": "/v1",
+            "api": "lending-library",
+            "file": "outputs.tf",
+            "line": 5,
+            "deployedBy": "terraform"
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:holds:http:DELETE:/v1/holds/:param",
+      "to": "holds#infra/api.tf:AWS_IAM",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "infra/api.tf",
+      "line": 30,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:holds:http:DELETE:/v1/holds/:param",
+      "to": "holds#src/handlers/cancel-hold.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/cancel-hold.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:holds:http:POST:/v1/holds",
+      "to": "holds#infra/api.tf:AWS_IAM",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "infra/api.tf",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:holds:http:POST:/v1/holds",
+      "to": "holds#src/handlers/place-hold.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/place-hold.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:holds:invoke:${…}@aws_lambda_function.cancel_hold",
+      "to": "holds#src/handlers/cancel-hold.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/cancel-hold.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:holds:invoke:${…}@aws_lambda_function.place_hold",
+      "to": "holds#src/handlers/place-hold.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/place-hold.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:loans:http:GET:/v1/loans/:param",
+      "to": "loans#functions/get-loan/index.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "functions/get-loan/index.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:loans:http:GET:/v1/loans/:param",
+      "to": "loans#infra/api.tf:AWS_IAM",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "infra/api.tf",
+      "line": 30,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/v1/loans",
+      "to": "loans#functions/create-loan/index.ts:createLoan",
+      "type": "handles",
+      "confidence": "static",
+      "file": "functions/create-loan/index.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:loans:http:POST:/v1/loans",
+      "to": "loans#functions/create-loan/index.ts:logged()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "functions/create-loan/index.ts",
+      "line": 17,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "use"
+      }
+    },
+    {
+      "from": "entry:loans:http:POST:/v1/loans",
+      "to": "loans#infra/api.tf:AWS_IAM",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "infra/api.tf",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:loans:invoke:library-dev-create-loan",
+      "to": "loans#functions/create-loan/index.ts:createLoan",
+      "type": "handles",
+      "confidence": "static",
+      "file": "functions/create-loan/index.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:loans:invoke:library-dev-create-loan",
+      "to": "loans#functions/create-loan/index.ts:logged()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "functions/create-loan/index.ts",
+      "line": 17,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "use"
+      }
+    },
+    {
+      "from": "entry:loans:invoke:library-dev-get-loan",
+      "to": "loans#functions/get-loan/index.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "functions/get-loan/index.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:loans:invoke:library-dev-list-borrower-loans",
+      "to": "loans#functions/list-borrower-loans/index.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "functions/list-borrower-loans/index.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:platform:http:GET:/v1/borrowers/:param/loans",
+      "to": "loans#functions/list-borrower-loans/index.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "functions/list-borrower-loans/index.ts",
+      "line": 4,
+      "meta": {
+        "via": "function-name",
+        "function": "entry:loans:invoke:library-dev-list-borrower-loans"
+      }
+    },
+    {
+      "from": "entry:platform:http:GET:/v1/borrowers/:param/loans",
+      "to": "platform#api.tf:AWS_IAM",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "api.tf",
+      "line": 51,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "holds#src/handlers/cancel-hold.ts:handler",
+      "to": "holds#src/lib/holds-table.ts:removeHold",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/cancel-hold.ts",
+      "line": 5
+    },
+    {
+      "from": "holds#src/handlers/place-hold.ts:handler",
+      "to": "holds#src/lib/holds-table.ts:placeHold",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/place-hold.ts",
+      "line": 6
+    },
+    {
+      "from": "loans#functions/create-loan/index.ts:createLoan",
+      "to": "loans#shared/loans-table.ts:saveLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "functions/create-loan/index.ts",
+      "line": 13
+    },
+    {
+      "from": "loans#functions/get-loan/index.ts:handler",
+      "to": "loans#shared/loans-table.ts:findLoan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "functions/get-loan/index.ts",
+      "line": 5
+    },
+    {
+      "from": "loans#functions/list-borrower-loans/index.ts:handler",
+      "to": "loans#shared/loans-table.ts:loansOf",
+      "type": "calls",
+      "confidence": "static",
+      "file": "functions/list-borrower-loans/index.ts",
+      "line": 5
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "infra/functions.tf",
+      "line": 7,
+      "reason": "function-name-disputed",
+      "message": "the name of aws_lambda_function.place_hold depends on var.name_prefix, which the variable files set differently: var.name_prefix is \"library-production\" in infra/env/production.tfvars and \"library-staging\" in infra/env/staging.tfvars",
+      "hint": "Choose the environment to read under services[].infra.vars, for example [\"infra/env/production.tfvars\"]. Until then the function has no name and nothing can join to it.",
+      "symbol": "aws_lambda_function.place_hold",
+      "adapter": "aws-lambda",
+      "meta": {
+        "variable": "name_prefix",
+        "files": {
+          "infra/env/production.tfvars": "\"library-production\"",
+          "infra/env/staging.tfvars": "\"library-staging\""
+        }
+      },
+      "service": "holds"
+    },
+    {
+      "file": "infra/functions.tf",
+      "line": 15,
+      "reason": "function-name-disputed",
+      "message": "the name of aws_lambda_function.cancel_hold depends on var.name_prefix, which the variable files set differently: var.name_prefix is \"library-production\" in infra/env/production.tfvars and \"library-staging\" in infra/env/staging.tfvars",
+      "hint": "Choose the environment to read under services[].infra.vars, for example [\"infra/env/production.tfvars\"]. Until then the function has no name and nothing can join to it.",
+      "symbol": "aws_lambda_function.cancel_hold",
+      "adapter": "aws-lambda",
+      "meta": {
+        "variable": "name_prefix",
+        "files": {
+          "infra/env/production.tfvars": "\"library-production\"",
+          "infra/env/staging.tfvars": "\"library-staging\""
+        }
+      },
+      "service": "holds"
+    }
+  ]
+}

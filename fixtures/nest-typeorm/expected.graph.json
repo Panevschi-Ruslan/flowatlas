@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-typeorm",
-  "generatedAt": "2026-09-27T09:26:51.617Z",
+  "generatedAt": "2026-10-06T11:32:20.803Z",
   "nodes": [
     {
       "id": "db_query:nest-typeorm#src/orders/orders.service.ts:22:12",

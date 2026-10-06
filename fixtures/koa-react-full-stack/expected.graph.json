@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "koa-react-full-stack",
-  "generatedAt": "2026-09-27T11:35:50.816Z",
+  "generatedAt": "2026-10-06T11:31:47.419Z",
   "nodes": [
     {
       "id": "db_query:koa-react-full-stack#src/server/orders.repository.ts:16:33",

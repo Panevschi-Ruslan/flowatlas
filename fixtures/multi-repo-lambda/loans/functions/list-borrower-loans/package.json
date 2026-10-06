@@ -1,0 +1,8 @@
+{
+  "name": "list-borrower-loans",
+  "version": "1.0.0",
+  "private": true,
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

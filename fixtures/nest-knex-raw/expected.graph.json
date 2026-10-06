@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-knex-raw",
-  "generatedAt": "2026-09-28T07:26:24.489Z",
+  "generatedAt": "2026-10-06T11:32:05.974Z",
   "nodes": [
     {
       "id": "db_query:nest-knex-raw#src/reports/reports.service.ts:14:12",

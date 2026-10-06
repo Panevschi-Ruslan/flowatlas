@@ -1,4 +1,7 @@
-import { allDependencies, type PackageJson } from '@flowatlas/core';
+import { existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { allDependencies, readPackageJson, type PackageJson } from '@flowatlas/core';
+import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
 import { halfOf, rowsInHalf, type ReaderRow } from './readers.js';
 
 /**
@@ -201,3 +204,71 @@ export const noReaderNote = (pkg: PackageJson | undefined): string | undefined =
   const framework = guessUnread(pkg);
   return framework === undefined ? undefined : `${framework}, no reader yet`;
 };
+
+/** Directories never searched for a manifest of their own. */
+const NOT_NESTED = new Set(['node_modules', 'dist', 'build', 'coverage', 'cdk.out', '.terraform']);
+
+/**
+ * Manifests below a directory that no workspace declares, nearest first.
+ *
+ * A repository of Lambda handlers often keeps one `package.json` per function,
+ * each with its own dependencies and no workspace tying them together, and its
+ * root - if it has a manifest at all - names none of them. Those manifests are
+ * the only place such a repository says what it is built on (P21). Bounded in
+ * depth, and asked only when the directory's own manifest gave nothing away.
+ */
+export const nestedManifests = (dir: string, depth = 4): PackageJson[] => {
+  const out: PackageJson[] = [];
+  const walk = (at: string, level: number): void => {
+    if (level > depth) return;
+    let entries;
+    try {
+      entries = readdirSync(at, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory() || entry.name.startsWith('.') || NOT_NESTED.has(entry.name)) continue;
+      const child = join(at, entry.name);
+      if (existsSync(join(child, 'package.json'))) {
+        const pkg = readPackageJson(child);
+        if (pkg !== undefined) out.push(pkg);
+      }
+      walk(child, level + 1);
+    }
+  };
+  walk(dir, 1);
+  return out;
+};
+
+/** The type a deployment description gives a repository away as, when one does. */
+const DEPLOYED_TYPE = 'lambda';
+
+/** Whether a directory holds infrastructure that declares a function or a route. */
+export const declaresDeployment = (dir: string): boolean => terraformReader.declares(dir);
+
+/**
+ * The type to suggest for a directory, asking more than its manifest.
+ *
+ * The manifest first, as everywhere, then the manifests of the packages below it
+ * that no workspace declares, then the files that describe how it is deployed.
+ * The last two are what a repository of functions has instead of a framework:
+ * a manifest per function, or none at all beside its Terraform.
+ */
+export const guessDirectoryType = (
+  dir: string,
+  pkg: PackageJson | undefined,
+  root: PackageJson | undefined,
+): string => {
+  const own = guessWorkspaceType(pkg ?? {}, root);
+  if (own !== UNKNOWN_TYPE) return own;
+  for (const nested of nestedManifests(dir)) {
+    const found = guessType(nested);
+    if (found !== UNKNOWN_TYPE) return found;
+  }
+  return declaresDeployment(dir) ? DEPLOYED_TYPE : UNKNOWN_TYPE;
+};
+
+/** The stack a directory is built on when nothing here reads it, from its manifest or its files. */
+export const guessUnreadIn = (dir: string, pkg: PackageJson | undefined): string | undefined =>
+  (pkg === undefined ? undefined : guessUnread(pkg)) ?? unreadDeploymentOf(dir);

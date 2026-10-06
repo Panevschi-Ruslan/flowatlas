@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "angular-client-wrapper",
-  "generatedAt": "2026-09-27T09:26:15.119Z",
+  "generatedAt": "2026-10-06T11:27:37.014Z",
   "nodes": [
     {
       "id": "angular-client-wrapper#node_modules/@angular/common:HttpClient",

@@ -579,7 +579,53 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'route-config-unread': () =>
     'A piece of the route configuration was not read, so nothing behind it answers a link. Write the spread, the children or the loadChildren as a name that leads to an array or an object in this repository.',
 
+  // Ways in declared where a service is deployed (adapters-entry/deployed-functions.ts, terraform)
+  'infra-file-unparsed': () =>
+    'This configuration file does not parse, so nothing in it is read. If the file is valid, this is a defect in the reader: report it with the line.',
+  'infra-file-unread': () =>
+    'Configuration written as JSON is not read; only the native syntax is. Whatever this file declares is missing from the graph.',
+  'infra-module-missing': () =>
+    'A module call names a local directory that holds no configuration. Check the path; a local source is relative to the directory of the file that calls it.',
+  'infra-module-undescribed': () =>
+    'A module whose source is not in the repository was called, and nothing describes what it declares, so its functions and routes are not read. Describe it under adapters.infra.modules.',
+  'infra-module-description-invalid': () =>
+    'A value in a module description is not an expression in the module language. Write a string literal with its quotes, as "\"AWS_PROXY\"".',
+  'function-name-unread': () =>
+    'The name a function is deployed under depends on something the files do not settle, so nothing can join to it. Give the variable a default or a variable file, or write the name out.',
+  'function-name-disputed': () =>
+    'The variable files of this repository give a function two different names, one per environment. Choose the environment to read under services[].infra.vars.',
+  'function-repeated-unread': () =>
+    'A function is declared once per element of a collection the files do not settle, so neither how many there are nor their names are known. Give the collection a value the files settle.',
+  'function-handler-unread': () =>
+    'The handler of a function is not read, so the function has no code to point at. Write the handler as "<module>.<export>" and export a function, or a function wrapped by calls that take it as their first argument.',
+  'function-handler-not-found': () =>
+    'The handler a function names is not where the deployment packages it from. Check the handler string, the directory, and the tsconfig that compiles it.',
+  'function-handler-ambiguous': () =>
+    'Nothing says what a function is packaged from, and more than one source file could be its handler. Build the package from an archive of a source directory so the handler is read from where it is.',
+  'function-source-unread': () =>
+    'Nothing says what a function is packaged from, and no source file of the right name exports its handler. Build the package from an archive of a source directory the configuration names.',
+  'function-runtime-unread': () =>
+    'The function runs on a runtime whose code is not read. It is still in the graph under its name. Nothing to do here.',
+  'function-image-unread': () =>
+    'The function is a container image, whose handler is set inside the image. It is in the graph under its name. Nothing to do here.',
+  'route-path-unread': () =>
+    'The path or verb of an API route depends on something the files do not settle, so the route cannot be joined to anything that calls it.',
+  'route-target-unread': () =>
+    'Which function answers a route is not read. Point the integration at a function the files declare, or at one by a name they settle.',
+  'api-body-unread': () =>
+    'An API whose routes are an OpenAPI body is not read as routes. Declare the service with a document of kind openapi to read them.',
+  'deployment-unread': () =>
+    'The repository declares Lambda packages and no deployment description this reads. Functions are read from Terraform; the handlers are still read as code, and nothing reaches them.',
+
   // Joining the repositories (linker)
+  'route-root-not-found': () =>
+    'A route hangs from a point of an API that no configured service publishes, so its full path is not known. Add the repository that declares that API to the configuration.',
+  'route-root-ambiguous': () =>
+    'A route hangs from a point of an API that two declarations place differently. One of them is stale.',
+  'invoke-target-not-found': () =>
+    'A route names its function by the name it is deployed under, and no configured service deploys a function of that name. Add the repository that deploys it to the configuration.',
+  'invoke-target-ambiguous': () =>
+    'Two services deploy a function under one name, so which one answers is not known. One of the two declarations is stale, or two environments need telling apart with services[].infra.vars.',
   'unknown-base-url-env': () =>
     'Add the settings key to services[].baseUrlEnv of exactly one service, so the address names a service.',
   'target-route-not-found': () =>

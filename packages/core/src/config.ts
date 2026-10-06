@@ -111,6 +111,21 @@ const serviceEntrySchema = z.strictObject({
   readTestDirectories: z.array(z.string().min(1)).optional(),
   /** Entry file where global wrapping is installed, when there is one. */
   bootstrap: z.string().min(1).optional(),
+  /**
+   * How this service's infrastructure is read, where its ways in are declared
+   * there rather than in its source.
+   *
+   * `vars` chooses the variable files a deployment is read with, in the order
+   * they apply, relative to the service's directory. A repository commonly keeps
+   * one file per environment, and a name that one of them spells one way and
+   * another spells another way is not a name until somebody says which
+   * environment is meant: without a choice it is reported, never picked.
+   *
+   * A word about what is being chosen rather than the tool that reads it,
+   * because this schema names no technology (I1); the reader that understands
+   * variable files is the one that reads them.
+   */
+  infra: z.strictObject({ vars: z.array(z.string().min(1)).default([]) }).optional(),
 });
 
 /** The directory part of a configured path, in the spelling it was written in. */
@@ -593,6 +608,60 @@ export const entryProcedureSchema = z.strictObject({
   mounts: z.array(entryProcedureMountSchema).default([]),
 });
 
+/**
+ * A literal in a description that holds expressions: a string is an expression
+ * in the infrastructure language, anything else is the value it says.
+ */
+const expressionValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+
+/** `type.name` or `data.type.name`, the address a resource has inside its module. */
+const RESOURCE_ADDRESS = /^(?:data\.)?[A-Za-z_][\w-]*\.[A-Za-z_][\w-]*$/;
+
+/**
+ * A module of infrastructure whose source is not in the repository, described.
+ *
+ * The fourth description this tool accepts instead of code, and it needs its
+ * own justification (P20): the three before it say where a name is written in
+ * source the tool reads, and this one stands in for source the tool cannot read
+ * at all - a module fetched from a registry or another repository when the
+ * deployment is planned. Nothing in the repository says what such a module
+ * declares, so a function or a route declared through one is invisible unless
+ * somebody writes it down.
+ *
+ * What is written down is what the module declares, in the module's own
+ * language: each resource it creates, by its address inside the module, with
+ * each argument as an expression over the module's inputs (`var.<input>`), the
+ * other resources it declares and `each`/`count` where it repeats one. That is a
+ * description rather than a program for the same reason the other three are -
+ * it says where things are - and it is read by the code that reads a module
+ * whose source is present, so a described module and a written one cannot be
+ * read two different ways.
+ *
+ * `outputs` say which of the module's outputs are which attribute, so a caller
+ * that hands one on - an integration naming the invoke address of a function
+ * the module created - lands on the resource that was described.
+ */
+export const infraModuleSchema = z.strictObject({
+  /**
+   * The module's source as a call writes it, or several spellings of it.
+   *
+   * A version pinned on the source (`?ref=v2.1.0`) is ignored, and `*` stands
+   * for any run of characters.
+   */
+  source: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
+  /** Inputs the module gives a default to, as expressions. */
+  variables: z.record(z.string().min(1), expressionValueSchema).default({}),
+  /** What the module declares, by address, each argument an expression. */
+  resources: z
+    .record(
+      z.string().regex(RESOURCE_ADDRESS, 'a resource is named "type.name" or "data.type.name"'),
+      z.record(z.string().min(1), expressionValueSchema),
+    )
+    .refine((resources) => Object.keys(resources).length > 0, 'a module description declares at least one resource'),
+  /** Outputs, each an expression over what the module declares. */
+  outputs: z.record(z.string().min(1), z.string().min(1)).default({}),
+});
+
 export const adapterForceSchema = z.strictObject({
   entry: adapterNamesSchema.optional(),
   db: adapterNamesSchema.optional(),
@@ -623,6 +692,16 @@ export const flowatlasConfigSchema = z
             custom: z.array(customBrokerSchema).default([]),
           })
           .default({ custom: [] }),
+        /**
+         * What a repository's infrastructure is read with, where its ways in are
+         * declared there.
+         */
+        infra: z
+          .strictObject({
+            /** Modules whose source is not in the repository, described. */
+            modules: z.array(infraModuleSchema).default([]),
+          })
+          .default({ modules: [] }),
         db: z
           .strictObject({
             /**
@@ -674,6 +753,7 @@ export const flowatlasConfigSchema = z
         force: {},
         entry: { registries: [], http: [], procedures: [] },
         broker: { custom: [] },
+        infra: { modules: [] },
         db: { localBaseClasses: [] },
         frontend: { localClientClasses: [] },
       }),
@@ -815,6 +895,13 @@ export type EntryProcedureConfig = z.infer<typeof entryProcedureSchema>;
  * the same schema, so a field only configuration had ever tested cannot exist.
  */
 export type EntryProcedureDescription = z.input<typeof entryProcedureSchema>;
+export type InfraModuleConfig = z.infer<typeof infraModuleSchema>;
+/**
+ * A module description as it is written, before the schema fills in what it
+ * leaves out; the descriptions shipped with the tool are written in this shape
+ * and go through the same schema a person's do.
+ */
+export type InfraModuleDescription = z.input<typeof infraModuleSchema>;
 export type CustomConsumerConfig = z.infer<typeof customConsumerSchema>;
 export type CustomProducerConfig = z.infer<typeof customProducerSchema>;
 export type CustomSubscriberConfig = z.infer<typeof customSubscriberSchema>;

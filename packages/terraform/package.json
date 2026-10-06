@@ -1,0 +1,50 @@
+{
+  "name": "@flowatlas/terraform",
+  "version": "0.1.0",
+  "description": "Reads Terraform written in HCL native syntax: functions, the routes in front of them, and the modules they are declared through. Compiled into the `flowatlas` command; not published on its own.",
+  "license": "MIT",
+  "author": {
+    "name": "Ruslan Panevschi",
+    "url": "https://github.com/Panevschi-Ruslan"
+  },
+  "homepage": "https://github.com/Panevschi-Ruslan/flowatlas#readme",
+  "bugs": {
+    "url": "https://github.com/Panevschi-Ruslan/flowatlas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Panevschi-Ruslan/flowatlas.git",
+    "directory": "packages/terraform"
+  },
+  "keywords": [
+    "terraform",
+    "hcl",
+    "aws-lambda",
+    "static-analysis",
+    "dependency-graph"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@flowatlas/core": "workspace:*"
+  },
+  "private": true
+}

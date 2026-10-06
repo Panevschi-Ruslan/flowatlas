@@ -49,6 +49,10 @@ export const ENTRY_KINDS = [
   'event',
   'rpc',
   'cron',
+  // A function reached by the name it is deployed under: whatever invokes it -
+  // a route in front of it, a workflow, a rule, another function - names it and
+  // nothing else, so the name is the whole address (P21).
+  'invoke',
 ] as const;
 
 export type EntryKind = (typeof ENTRY_KINDS)[number];

@@ -15,6 +15,10 @@ export const EXTERNALLY_TRIGGERED = [
   'bot_callback',
   'bot_event',
   'scene_step',
+  // A function the platform invokes. Until whatever invokes it is read - a rule,
+  // a schedule, a queue, another account (P23, P24) - nothing in the graph
+  // reaching it says nothing about whether anything does.
+  'invoke',
 ] as const;
 
 /** Findings the DI resolver records when it cannot say what a token means. */

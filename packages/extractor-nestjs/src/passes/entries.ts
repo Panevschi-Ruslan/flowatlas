@@ -110,7 +110,7 @@ export const entriesPass = definePass('entries', (ctx: NestExtractContext) => {
           from: entry.id,
           to: handler.id,
           type: 'handles',
-          confidence: 'static',
+          confidence: entry.handlerConfidence ?? 'static',
           file: entry.handler.file,
           ...(entry.handler.line === undefined ? {} : { line: entry.handler.line }),
         });

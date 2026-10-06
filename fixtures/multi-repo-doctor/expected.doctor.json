@@ -1,6 +1,6 @@
 {
   "doctorFormatVersion": 2,
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "flowatlasVersion": "0.5.1",
   "generatedAt": "1970-01-01T00:00:00.000Z",
   "strict": false,
@@ -749,7 +749,7 @@
   },
   "baseline": {
     "status": "ok",
-    "note": "accepted against graph schema 3, and this graph is 5; the counts are still comparable, but a schema change can move them on its own",
+    "note": "accepted against graph schema 3, and this graph is 6; the counts are still comparable, but a schema change can move them on its own",
     "total": {
       "baseline": 26,
       "current": 26,

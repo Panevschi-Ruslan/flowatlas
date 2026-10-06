@@ -6,6 +6,44 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+### Added
+
+- **Lambda functions and API Gateway routes, read from Terraform.** A service of
+  type `lambda` is a repository of handlers whose ways in are declared in
+  Terraform rather than in code. Every `aws_lambda_function` is an entry of a
+  new kind, `invoke`, under the name it is deployed with, and lands on the
+  exported handler its `handler` string names — through a middleware chain such
+  as `middy(fn).use(...)`, and through a handler packaged from `dist/`, mapped
+  back to its source by the tsconfig. Every REST API method and HTTP API route
+  is an ordinary `http` entry onto the same handler, with its authoriser as a
+  guard. `init` and `link` propose the type from the manifest, from a manifest
+  per function directory, or from the Terraform alone, so a repository of
+  nothing but Terraform is a service. `fixtures/lambda-terraform-rest`.
+- **A shared API, joined across repositories.** A route that hangs from a point
+  of an API another repository publishes — through a parameter or another
+  state's output — gets its full path from that repository at link time, and a
+  route integrated with a function another repository deploys gets that
+  function's handler, joined on the name. `fixtures/multi-repo-lambda`.
+- **Terraform modules.** A local module is read with its inputs bound. A module
+  from a registry or another repository is described under
+  `adapters.infra.modules`, in the module's own language;
+  `terraform-aws-modules/lambda/aws` and `terraform-aws-modules/apigateway-v2/aws`
+  ship described. A remote module nothing describes is one `doctor` row naming
+  it and the inputs it was given. `fixtures/lambda-terraform-modules`.
+- **`services[].infra.vars`** chooses the variable files a deployment is read
+  with. Without it, a name two `*.tfvars` files set differently is a row naming
+  the variable and the files, never a name picked from one of them.
+- **`flow invoke:<name>`** starts from a function by its deployed name.
+
+### Changed
+
+- **The graph's schema version is 6**, for the `invoke` entry kind. A database
+  built by an earlier version is refused with a message to rebuild.
+- **A `.tf` or `.tfvars` change re-reads the service.** The build cache stamps
+  the files that describe a deployment beside the sources, so changing a
+  function's name in Terraform alone is no longer answered with `0 files
+  changed`.
+
 ### Fixed
 
 - **`build` no longer writes into the repositories it reads.** Each service's

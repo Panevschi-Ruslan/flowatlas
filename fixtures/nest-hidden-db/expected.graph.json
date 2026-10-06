@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "nest-hidden-db",
-  "generatedAt": "2026-09-27T09:26:39.917Z",
+  "generatedAt": "2026-10-06T11:32:02.356Z",
   "nodes": [
     {
       "id": "config_key:nest-hidden-db#MONGO_URL",

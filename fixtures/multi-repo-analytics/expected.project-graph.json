@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 5,
-  "builtAt": "2026-09-27T19:37:52.094Z",
+  "schemaVersion": 6,
+  "builtAt": "2026-10-06T11:31:50.248Z",
   "services": [
     {
       "name": "gateway",

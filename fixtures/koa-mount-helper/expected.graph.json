@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repo": "koa-mount-helper",
-  "generatedAt": "2026-09-27T17:32:41.638Z",
+  "generatedAt": "2026-10-06T11:31:46.435Z",
   "nodes": [
     {
       "id": "entry:koa-mount-helper:http:GET:/health",
