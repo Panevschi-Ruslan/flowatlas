@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-helper-keeps-request",
-  "generatedAt": "2026-10-07T14:34:12.308Z",
+  "generatedAt": "2026-10-07T18:29:22.579Z",
   "nodes": [
     {
       "id": "config_key:nest-helper-keeps-request#LIBRARY_BOT_TOKEN",
@@ -147,7 +147,22 @@
       "label": "sendViaCourier",
       "repo": "nest-helper-keeps-request",
       "file": "src/reminders/courier-api.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "token",
+              "type": "string"
+            },
+            {
+              "name": "job",
+              "type": "type:nest-helper-keeps-request#ReminderJob"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
     },
     {
       "id": "nest-helper-keeps-request#src/reminders/reminder-dispatcher.ts:ReminderDispatcher",
@@ -164,7 +179,18 @@
       "label": "ReminderDispatcher.dispatchOne",
       "repo": "nest-helper-keeps-request",
       "file": "src/reminders/reminder-dispatcher.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:nest-helper-keeps-request#ReminderJob"
+            }
+          ],
+          "returns": "'failed'|'sent'"
+        }
+      }
     },
     {
       "id": "nest-helper-keeps-request#src/reminders/reminder-dispatcher.ts:ReminderDispatcher.dispatchOverdue",
@@ -339,7 +365,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/reminders/reminder-dispatcher.ts",
-      "line": 18
+      "line": 18,
+      "params": [
+        "string",
+        "type:nest-helper-keeps-request#ReminderJob"
+      ],
+      "returns": "boolean"
     },
     {
       "from": "nest-helper-keeps-request#src/reminders/reminder-dispatcher.ts:ReminderDispatcher.dispatchOverdue",
@@ -396,7 +427,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/reminders/reminders.service.ts",
-      "line": 9
+      "line": 9,
+      "params": [
+        "string",
+        "type:nest-helper-keeps-request#ReminderJob"
+      ],
+      "returns": "boolean"
     }
   ],
   "types": {

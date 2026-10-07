@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T17:33:24.097Z",
+  "builtAt": "2026-10-07T18:30:13.182Z",
   "configHash": "c75767e926fa",
   "services": [
     {
@@ -10,9 +10,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 36,
       "edges": 35,
-      "types": 0,
+      "types": 3,
       "unresolved": 3,
-      "durationMs": 792
+      "durationMs": 482
     },
     {
       "name": "notifications",
@@ -21,9 +21,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 17,
       "edges": 14,
-      "types": 0,
+      "types": 2,
       "unresolved": 2,
-      "durationMs": 791
+      "durationMs": 479
     }
   ],
   "httpOut": {
@@ -62,7 +62,7 @@
     "duplicated": []
   },
   "types": {
-    "total": 0,
+    "total": 4,
     "sharedPackage": 0
   },
   "unresolved": [
@@ -118,7 +118,7 @@
   "totals": {
     "nodes": 53,
     "edges": 50,
-    "types": 0,
+    "types": 4,
     "unresolved": 9
   }
 }

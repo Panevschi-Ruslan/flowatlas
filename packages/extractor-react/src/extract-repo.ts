@@ -28,6 +28,7 @@ import { functionsPass } from './passes/functions.js';
 import { httpPass } from './passes/http.js';
 import { proceduresPass } from './passes/procedures.js';
 import { routesPass } from './passes/routes.js';
+import { signaturesPass } from './passes/signatures.js';
 import type { ReactExtractorPass } from './passes/types.js';
 import { createReactProject } from './project.js';
 
@@ -60,7 +61,8 @@ export interface ExtractRepoOptions {
  * a node the walk has already created; a procedure asked for by its path is a
  * request of the same standing and goes beside them; and the ways in are read
  * last, because the edge from a component to a server action needs the
- * component to exist.
+ * component to exist. What a function takes is written after all of them, once
+ * every edge into it is drawn.
  */
 export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   functionsPass,
@@ -70,6 +72,7 @@ export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   httpPass,
   proceduresPass,
   entriesPass,
+  signaturesPass,
 ];
 
 /**
@@ -115,6 +118,7 @@ export const extractReact = (base: ExtractContext, options: FrontendExtractOptio
   recordApplications(base);
 
   for (const pass of BUILT_IN_PASSES) {
+    if (options.noTypes === true && pass.name === 'types') continue;
     base.logger.debug(`pass ${pass.name}`);
     pass.run(ctx);
   }

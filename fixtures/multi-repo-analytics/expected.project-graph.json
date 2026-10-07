@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:33:53.646Z",
+  "builtAt": "2026-10-07T18:29:04.058Z",
   "services": [
     {
       "name": "gateway",
@@ -1822,6 +1822,15 @@
       "file": "src/app/orders-api.service.ts",
       "line": 10,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customerId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        },
         "unreferenced": true
       }
     }
@@ -2027,6 +2036,9 @@
       "to": "billing#src/invoices/orders.consumer.ts:OrdersConsumer.onOrderChanged",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "{orderId:string}"
+      ],
       "returns": "void",
       "file": "src/invoices/orders.consumer.ts",
       "line": 10
@@ -2036,6 +2048,9 @@
       "to": "billing#src/invoices/orphan.consumer.ts:OrphanConsumer.onOrphan",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "{id:string}"
+      ],
       "returns": "void",
       "file": "src/invoices/orphan.consumer.ts",
       "line": 21
@@ -2045,6 +2060,9 @@
       "to": "orders#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceChanged",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "{orderId:string}"
+      ],
       "returns": "void",
       "file": "src/invoices/invoices.consumer.ts",
       "line": 11

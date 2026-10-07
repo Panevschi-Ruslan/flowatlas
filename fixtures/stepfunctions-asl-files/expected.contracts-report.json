@@ -1,0 +1,57 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-07T18:42:52.484Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:circulation#statemachine/loan-approval.asl.json:179:5",
+        "to": "channel:eventbridge/library-events/library.circulation/LoanApproved",
+        "type": "emits"
+      },
+      "edgeKey": "channel:eventbridge/library-events/library.circulation/LoanApproved|emits|producer:circulation#statemachine/loan-approval.asl.json:179:5",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:eventbridge/library-events/library.circulation/LoanApproved is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:circulation#statemachine/loan-approval.asl.json:234:5",
+        "to": "channel:sns/loan-decisions",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sns/loan-decisions|emits|producer:circulation#statemachine/loan-approval.asl.json:234:5",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sns/loan-decisions is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:circulation#statemachine/loan-approval.asl.json:109:5",
+        "to": "channel:sqs/librarian-approvals",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/librarian-approvals|emits|producer:circulation#statemachine/loan-approval.asl.json:109:5",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/librarian-approvals is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 3,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

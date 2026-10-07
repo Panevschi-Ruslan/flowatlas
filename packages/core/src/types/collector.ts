@@ -27,6 +27,18 @@ export interface TypeCollectorOptions {
 /** Shapes the language provides that are written as references, not expanded. */
 const GENERIC_BUILTINS = new Set(['Map', 'Set', 'ReadonlyMap', 'ReadonlySet', 'Record', 'Promise']);
 
+/** The `import("…").` the checker writes in front of a name it cannot reach from the site. */
+const IMPORT_QUALIFIER = /import\("[^"]*"\)\./g;
+
+/**
+ * A type written as it reads at the site: in its terms, and with no
+ * `import("/absolute/path").Name` left over for a name that site cannot
+ * reach - that path is the machine's, so a graph holding it differs between
+ * two checkouts of the same commit.
+ */
+const writtenAt = (type: Type, site: TsNode): string =>
+  type.getText(site).replace(IMPORT_QUALIFIER, '');
+
 /**
  * A declaration file belonging to the language itself rather than to a
  * dependency. Its types are shapes every program has, so recording where they
@@ -256,7 +268,7 @@ export class TypeCollector {
         line: site.getStartLineNumber(),
         reason: 'type-unresolved',
         hint: 'The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.',
-        symbol: type.getText(),
+        symbol: writtenAt(type, site),
       });
       return 'unknown';
     }
@@ -278,10 +290,10 @@ export class TypeCollector {
         line: site.getStartLineNumber(),
         reason: 'type-generic-uninstantiated',
         hint: 'The type argument is not known here, so the reference names the parameter.',
-        symbol: type.getText(),
+        symbol: writtenAt(type, site),
         level: 'info',
       });
-      return type.getText();
+      return writtenAt(type, site);
     }
 
     if (type.isStringLiteral()) return `'${String(type.getLiteralValue())}'`;
@@ -654,7 +666,7 @@ export class TypeCollector {
         line: site.getStartLineNumber(),
         reason: 'type-depth-exceeded',
         hint: `Nesting is written out to ${this.#maxDepth} levels. Raise types.maxDepth to see further.`,
-        symbol: type.getText(),
+        symbol: writtenAt(type, site),
         level: 'info',
       });
       return 'object';

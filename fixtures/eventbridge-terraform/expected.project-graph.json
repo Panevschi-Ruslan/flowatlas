@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T21:45:11.163Z",
+  "builtAt": "2026-10-07T18:36:13.505Z",
   "services": [
     {
       "name": "circulation",
@@ -97,7 +97,18 @@
       "label": "handler",
       "repo": "circulation",
       "file": "src/covers/import-cover.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#EventBridgeEvent<'Object Created',type:circulation#CoverUploaded>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "circulation#src/lib/events.ts:publishLibraryEvent",
@@ -105,7 +116,22 @@
       "label": "publishLibraryEvent",
       "repo": "circulation",
       "file": "src/lib/events.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "detailType",
+              "type": "string"
+            },
+            {
+              "name": "detail",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "circulation#src/lib/loans-table.ts:findLoan",
@@ -113,7 +139,18 @@
       "label": "findLoan",
       "repo": "circulation",
       "file": "src/lib/loans-table.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loanId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:circulation#Loan|undefined"
+        }
+      }
     },
     {
       "id": "circulation#src/lib/loans-table.ts:overdueLoans",
@@ -121,7 +158,18 @@
       "label": "overdueLoans",
       "repo": "circulation",
       "file": "src/lib/loans-table.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "today",
+              "type": "string"
+            }
+          ],
+          "returns": "type:circulation#Loan[]"
+        }
+      }
     },
     {
       "id": "circulation#src/lib/loans-table.ts:saveLoan",
@@ -129,7 +177,18 @@
       "label": "saveLoan",
       "repo": "circulation",
       "file": "src/lib/loans-table.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loan",
+              "type": "type:circulation#Loan"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "circulation#src/lib/notices.ts:sendNotice",
@@ -137,7 +196,18 @@
       "label": "sendNotice",
       "repo": "circulation",
       "file": "src/lib/notices.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "notice",
+              "type": "type:circulation#Notice"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "circulation#src/loans/create-loan.ts:handler",
@@ -145,7 +215,18 @@
       "label": "handler",
       "repo": "circulation",
       "file": "src/loans/create-loan.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
     },
     {
       "id": "circulation#src/loans/renew-loan.ts:handler",
@@ -153,7 +234,18 @@
       "label": "handler",
       "repo": "circulation",
       "file": "src/loans/renew-loan.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
     },
     {
       "id": "circulation#src/notices/notify-borrower.ts:handler",
@@ -161,7 +253,18 @@
       "label": "handler",
       "repo": "circulation",
       "file": "src/notices/notify-borrower.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#EventBridgeEvent<'HoldRequested'|'ItemReturned'|'LoanCreated',{borrowerId:string}>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "circulation#src/overdue/scan-overdue.ts:handler",
@@ -169,7 +272,18 @@
       "label": "handler",
       "repo": "circulation",
       "file": "src/overdue/scan-overdue.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#ScheduledEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "circulation#src/returns/record-return.ts:handler",
@@ -177,7 +291,18 @@
       "label": "handler",
       "repo": "circulation",
       "file": "src/returns/record-return.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
     },
     {
       "id": "circulation#src/reviews/review-loan.ts:handler",
@@ -185,7 +310,18 @@
       "label": "handler",
       "repo": "circulation",
       "file": "src/reviews/review-loan.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{loanId:string}"
+            }
+          ],
+          "returns": "type:circulation#Review"
+        }
+      }
     },
     {
       "id": "circulation#statemachines/loan-review.asl.json:loan-review/Approved?",
@@ -894,6 +1030,10 @@
       "to": "circulation#src/lib/loans-table.ts:saveLoan",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:circulation#Loan"
+      ],
+      "returns": "void",
       "file": "src/loans/create-loan.ts",
       "line": 10
     },
@@ -910,6 +1050,10 @@
       "to": "circulation#src/lib/loans-table.ts:findLoan",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:circulation#Loan|undefined",
       "file": "src/loans/renew-loan.ts",
       "line": 14
     },
@@ -918,6 +1062,10 @@
       "to": "circulation#src/lib/loans-table.ts:saveLoan",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:circulation#Loan"
+      ],
+      "returns": "void",
       "file": "src/loans/renew-loan.ts",
       "line": 17
     },
@@ -934,6 +1082,10 @@
       "to": "circulation#src/lib/notices.ts:sendNotice",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:circulation#Notice"
+      ],
+      "returns": "void",
       "file": "src/notices/notify-borrower.ts",
       "line": 9
     },
@@ -942,6 +1094,10 @@
       "to": "circulation#src/lib/loans-table.ts:overdueLoans",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:circulation#Loan[]",
       "file": "src/overdue/scan-overdue.ts",
       "line": 7
     },
@@ -950,6 +1106,10 @@
       "to": "circulation#src/lib/notices.ts:sendNotice",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:circulation#Notice"
+      ],
+      "returns": "void",
       "file": "src/overdue/scan-overdue.ts",
       "line": 8
     },
@@ -958,6 +1118,11 @@
       "to": "circulation#src/lib/events.ts:publishLibraryEvent",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
       "file": "src/returns/record-return.ts",
       "line": 13
     },
@@ -974,6 +1139,10 @@
       "to": "circulation#src/lib/loans-table.ts:findLoan",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:circulation#Loan|undefined",
       "file": "src/reviews/review-loan.ts",
       "line": 10
     },
@@ -1260,6 +1429,16 @@
         "package": "@types/aws-lambda"
       }
     },
+    "type:@types/aws-lambda#APIGatewayProxyResultV2": {
+      "name": "APIGatewayProxyResultV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0a2dc33db8681605",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
     "type:@types/aws-lambda#EventBridgeEvent<'HoldRequested'|'ItemReturned'|'LoanCreated',{borrowerId:string}>": {
       "name": "EventBridgeEvent",
       "kind": "external",
@@ -1349,6 +1528,28 @@
         "exported": true
       }
     },
+    "type:circulation#Notice": {
+      "name": "Notice",
+      "kind": "object",
+      "declaredIn": "circulation#src/lib/notices.ts",
+      "structuralHash": "723028ddc54faa80",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "subject",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
     "type:circulation#Renewal": {
       "name": "Renewal",
       "kind": "object",
@@ -1395,6 +1596,28 @@
         {
           "name": "returnedAt",
           "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:circulation#Review": {
+      "name": "Review",
+      "kind": "object",
+      "declaredIn": "circulation#src/reviews/review-loan.ts",
+      "structuralHash": "1ace70620fa03eaa",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "approved",
+          "type": "boolean",
           "optional": false
         }
       ],

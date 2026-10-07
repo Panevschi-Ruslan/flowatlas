@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-broker-markers",
-  "generatedAt": "2026-10-07T14:34:04.330Z",
+  "generatedAt": "2026-10-07T18:29:14.650Z",
   "nodes": [
     {
       "id": "channel:order.archived",
@@ -1011,7 +1011,11 @@
       "type": "handles",
       "confidence": "marker",
       "file": "src/orders/projections.service.ts",
-      "line": 32
+      "line": 32,
+      "params": [
+        "type:nest-broker-markers#OrderCancelledEvent"
+      ],
+      "returns": "void"
     },
     {
       "from": "consumer:nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCreated",
@@ -1019,7 +1023,11 @@
       "type": "handles",
       "confidence": "marker",
       "file": "src/orders/projections.service.ts",
-      "line": 25
+      "line": 25,
+      "params": [
+        "type:nest-broker-markers#OrderCreatedEvent"
+      ],
+      "returns": "void"
     },
     {
       "from": "entry:nest-broker-markers:http:POST:/orders",

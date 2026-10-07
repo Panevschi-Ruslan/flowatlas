@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T21:46:48.096Z",
+  "builtAt": "2026-10-07T18:37:44.715Z",
   "services": [
     {
       "name": "lending",
@@ -198,7 +198,18 @@
       "label": "handler",
       "repo": "lending",
       "file": "src/handlers/check-borrower.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{borrowerId:string}"
+            }
+          ],
+          "returns": "{standing:type:lending#Standing}"
+        }
+      }
     },
     {
       "id": "lending#src/handlers/create-loan.ts:handler",
@@ -206,7 +217,18 @@
       "label": "handler",
       "repo": "lending",
       "file": "src/handlers/create-loan.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "lending#src/handlers/notify-borrower.ts:handler",
@@ -214,7 +236,18 @@
       "label": "handler",
       "repo": "lending",
       "file": "src/handlers/notify-borrower.ts",
-      "line": 1
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{loanId:string}"
+            }
+          ],
+          "returns": "{notified:string}"
+        }
+      }
     },
     {
       "id": "lending#src/handlers/resume-run.ts:handler",
@@ -222,7 +255,18 @@
       "label": "handler",
       "repo": "lending",
       "file": "src/handlers/resume-run.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "lending#src/handlers/send-overdue-notices.ts:handler",
@@ -230,7 +274,13 @@
       "label": "handler",
       "repo": "lending",
       "file": "src/handlers/send-overdue-notices.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "lending#src/lib/loans.ts:loanIdOf",
@@ -238,7 +288,18 @@
       "label": "loanIdOf",
       "repo": "lending",
       "file": "src/lib/loans.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:lending#LoanRequest"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower",
@@ -406,6 +467,10 @@
       "to": "lending#src/lib/loans.ts:loanIdOf",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:lending#LoanRequest"
+      ],
+      "returns": "string",
       "file": "src/handlers/create-loan.ts",
       "line": 15
     },
@@ -459,6 +524,52 @@
       "meta": {
         "declKind": "external",
         "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:lending#LoanRequest": {
+      "name": "LoanRequest",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/loans.ts",
+      "structuralHash": "07210ddb6676fb42",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemIds",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:lending#Standing": {
+      "name": "Standing",
+      "kind": "union",
+      "declaredIn": "lending#src/handlers/check-borrower.ts",
+      "structuralHash": "8af2dd81749c2e41",
+      "members": [
+        "'good'",
+        "'suspended'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
       }
     }
   },

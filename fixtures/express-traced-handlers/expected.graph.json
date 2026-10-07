@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "express-traced-handlers",
-  "generatedAt": "2026-10-06T15:56:37.041Z",
+  "generatedAt": "2026-10-07T18:36:17.042Z",
   "nodes": [
     {
       "id": "entry:express-traced-handlers:http:GET:/loans",
@@ -100,7 +100,18 @@
       "label": "closeLoan",
       "repo": "express-traced-handlers",
       "file": "src/lib/loans.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
     },
     {
       "id": "express-traced-handlers#src/lib/loans.ts:findLoan",
@@ -108,7 +119,18 @@
       "label": "findLoan",
       "repo": "express-traced-handlers",
       "file": "src/lib/loans.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
     },
     {
       "id": "express-traced-handlers#src/lib/loans.ts:listLoansFor",
@@ -116,7 +138,18 @@
       "label": "listLoansFor",
       "repo": "express-traced-handlers",
       "file": "src/lib/loans.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrowerId",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string}[]"
+        }
+      }
     },
     {
       "id": "express-traced-handlers#src/lib/loans.ts:saveLoan",
@@ -124,7 +157,18 @@
       "label": "saveLoan",
       "repo": "express-traced-handlers",
       "file": "src/lib/loans.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "isbn",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
     },
     {
       "id": "express-traced-handlers#src/routes/loans.ts:POST /@19",
@@ -132,7 +176,22 @@
       "label": "POST /@19",
       "repo": "express-traced-handlers",
       "file": "src/routes/loans.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,{isbn:string}>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "type:express#Response<unknown>"
+        }
+      }
     },
     {
       "id": "express-traced-handlers#src/routes/loans.ts:getLoan",
@@ -140,7 +199,22 @@
       "label": "getLoan",
       "repo": "express-traced-handlers",
       "file": "src/routes/loans.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "express-traced-handlers#src/routes/loans.ts:listLoans",
@@ -148,7 +222,22 @@
       "label": "listLoans",
       "repo": "express-traced-handlers",
       "file": "src/routes/loans.ts",
-      "line": 35
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "express-traced-handlers#src/routes/loans.ts:returnLoan",
@@ -156,7 +245,22 @@
       "label": "returnLoan",
       "repo": "express-traced-handlers",
       "file": "src/routes/loans.ts",
-      "line": 39
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "repo:express-traced-handlers",
@@ -220,7 +324,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/routes/loans.ts",
-      "line": 20
+      "line": 20,
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string}"
     },
     {
       "from": "express-traced-handlers#src/routes/loans.ts:getLoan",
@@ -228,7 +336,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/routes/loans.ts",
-      "line": 32
+      "line": 32,
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string}"
     },
     {
       "from": "express-traced-handlers#src/routes/loans.ts:listLoans",
@@ -236,7 +348,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/routes/loans.ts",
-      "line": 36
+      "line": 36,
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string}[]"
     },
     {
       "from": "express-traced-handlers#src/routes/loans.ts:returnLoan",
@@ -244,10 +360,45 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/routes/loans.ts",
-      "line": 40
+      "line": 40,
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string}"
     }
   ],
-  "types": {},
+  "types": {
+    "type:express#Request<object,unknown,unknown>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<unknown,unknown,{isbn:string}>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "src/routes/loans.ts",

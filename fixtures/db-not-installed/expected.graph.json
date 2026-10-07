@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "db-not-installed",
-  "generatedAt": "2026-10-07T14:33:27.263Z",
+  "generatedAt": "2026-10-08T07:58:55.601Z",
   "nodes": [
     {
       "id": "db-not-installed#src/app.module.ts:AppModule",
@@ -90,7 +90,18 @@
       "label": "withFaces",
       "repo": "db-not-installed",
       "file": "src/assets/with-faces.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "eb",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "db-not-installed#src/documents/documents.service.ts:DocumentsService",
@@ -406,6 +417,13 @@
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "AssetsService.findAll -> this.db.selectFrom('asset').selectAll().execute",
       "sites": 8
+    },
+    {
+      "file": "src/assets/with-faces.ts",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ExpressionBuilder<DB, \"asset\">"
     }
   ]
 }

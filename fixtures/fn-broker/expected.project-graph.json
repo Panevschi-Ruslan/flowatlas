@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:33:33.347Z",
+  "builtAt": "2026-10-07T18:36:18.893Z",
   "services": [
     {
       "name": "api",
@@ -63,7 +63,18 @@
       "label": "invoices.notifyInvoiced",
       "repo": "api",
       "file": "src/orders/notify.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:api#OrderEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/notify.ts:notifyCreated",
@@ -71,7 +82,18 @@
       "label": "notifyCreated",
       "repo": "api",
       "file": "src/orders/notify.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:api#OrderEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.routes.ts:POST /:orderId/cancel@14",
@@ -79,7 +101,22 @@
       "label": "POST /:orderId/cancel@14",
       "repo": "api",
       "file": "src/orders/orders.routes.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.routes.ts:POST /@19",
@@ -87,7 +124,22 @@
       "label": "POST /@19",
       "repo": "api",
       "file": "src/orders/orders.routes.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService",
@@ -665,6 +717,10 @@
       "to": "api#src/orders/notify.ts:invoices.notifyInvoiced",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:api#OrderEvent"
+      ],
+      "returns": "void",
       "file": "src/orders/orders.routes.ts",
       "line": 23
     },
@@ -673,6 +729,10 @@
       "to": "api#src/orders/notify.ts:notifyCreated",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:api#OrderEvent"
+      ],
+      "returns": "void",
       "file": "src/orders/orders.routes.ts",
       "line": 22
     },
@@ -746,6 +806,9 @@
       "to": "worker#src/projections/declared-projections.service.ts:DeclaredProjections.onCreated",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#OrderEvent"
+      ],
       "returns": "void",
       "file": "src/projections/declared-projections.service.ts",
       "line": 28
@@ -755,6 +818,10 @@
       "to": "worker#src/projections/orders.service.ts:OrderProjections.onCancelled",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#OrderEvent"
+      ],
+      "returns": "void",
       "file": "src/projections/orders.service.ts",
       "line": 24
     },
@@ -763,6 +830,10 @@
       "to": "worker#src/projections/orders.service.ts:OrderProjections.onCreated",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#OrderEvent"
+      ],
+      "returns": "void",
       "file": "src/projections/orders.service.ts",
       "line": 22
     },
@@ -771,6 +842,10 @@
       "to": "worker#src/projections/orders.service.ts:OrderProjections.onInvoiced",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#OrderEvent"
+      ],
+      "returns": "void",
       "file": "src/projections/orders.service.ts",
       "line": 23
     },
@@ -989,6 +1064,26 @@
       "meta": {
         "declKind": "interface",
         "exported": true
+      }
+    },
+    "type:express#Request<object,unknown,unknown>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
       }
     },
     "type:worker#OrderEvent": {

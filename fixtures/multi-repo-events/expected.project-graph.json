@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T20:48:45.364Z",
+  "builtAt": "2026-10-07T18:36:45.710Z",
   "services": [
     {
       "name": "platform-events",
@@ -515,7 +515,18 @@
       "label": "handler",
       "repo": "loans",
       "file": "src/create-loan.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
     },
     {
       "id": "loans#src/return-loan.ts:handler",
@@ -523,7 +534,18 @@
       "label": "handler",
       "repo": "loans",
       "file": "src/return-loan.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
     },
     {
       "id": "notifications#src/loan-digest.ts:handler",
@@ -531,7 +553,18 @@
       "label": "handler",
       "repo": "notifications",
       "file": "src/loan-digest.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "notifications#src/outbox.ts:deliver",
@@ -539,7 +572,22 @@
       "label": "deliver",
       "repo": "notifications",
       "file": "src/outbox.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrowerId",
+              "type": "string"
+            },
+            {
+              "name": "subject",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "notifications#src/welcome-borrower.ts:handler",
@@ -547,7 +595,18 @@
       "label": "handler",
       "repo": "notifications",
       "file": "src/welcome-borrower.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#EventBridgeEvent<'LoanCreated',type:notifications#LoanDetail>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "producer:loans#src/create-loan.ts:11:9",
@@ -975,6 +1034,11 @@
       "to": "notifications#src/outbox.ts:deliver",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
       "file": "src/loan-digest.ts",
       "line": 8
     },
@@ -983,6 +1047,11 @@
       "to": "notifications#src/outbox.ts:deliver",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
       "file": "src/welcome-borrower.ts",
       "line": 11
     },
@@ -1066,6 +1135,16 @@
       "kind": "external",
       "declaredIn": "@types/aws-lambda",
       "structuralHash": "d1b9db28fad35c91",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResultV2": {
+      "name": "APIGatewayProxyResultV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0a2dc33db8681605",
       "meta": {
         "declKind": "external",
         "package": "@types/aws-lambda"

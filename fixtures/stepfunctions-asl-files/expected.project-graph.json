@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T20:50:03.072Z",
+  "builtAt": "2026-10-07T18:37:48.926Z",
   "services": [
     {
       "name": "circulation",
@@ -79,7 +79,22 @@
       "label": "requestLoan",
       "repo": "circulation",
       "file": "src/loans/request-loan.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:circulation#LoanRequest>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy",
@@ -758,7 +773,22 @@
       "label": "listNotices",
       "repo": "notifications",
       "file": "src/server.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<{borrowerId:string},unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/ChooseChannel",
@@ -1756,7 +1786,65 @@
       }
     }
   ],
-  "types": {},
+  "types": {
+    "type:circulation#LoanRequest": {
+      "name": "LoanRequest",
+      "kind": "object",
+      "declaredIn": "circulation#src/loans/request-loan.ts",
+      "structuralHash": "8f409ddcd316c608",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemIds",
+          "type": "string[]",
+          "optional": false
+        },
+        {
+          "name": "branchId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:express#Request<unknown,unknown,type:circulation#LoanRequest>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<{borrowerId:string},unknown,unknown>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "statemachine/loan-approval.asl.json",

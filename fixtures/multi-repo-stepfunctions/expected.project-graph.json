@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T20:48:48.017Z",
+  "builtAt": "2026-10-07T18:36:47.850Z",
   "services": [
     {
       "name": "circulation",
@@ -28,7 +28,18 @@
       "label": "handler",
       "repo": "catalogue",
       "file": "src/handlers/pull-copy.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:catalogue#PullRequests"
+            }
+          ],
+          "returns": "{shelves:string[]}"
+        }
+      }
     },
     {
       "id": "catalogue#src/handlers/pull-copy.ts:shelfOf",
@@ -36,7 +47,18 @@
       "label": "shelfOf",
       "repo": "catalogue",
       "file": "src/handlers/pull-copy.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "copyId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "catalogue#src/handlers/reserve-copy.ts:firstFreeCopy",
@@ -44,7 +66,18 @@
       "label": "firstFreeCopy",
       "repo": "catalogue",
       "file": "src/handlers/reserve-copy.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "titleId",
+              "type": "string"
+            }
+          ],
+          "returns": "string|undefined"
+        }
+      }
     },
     {
       "id": "catalogue#src/handlers/reserve-copy.ts:handler",
@@ -52,7 +85,18 @@
       "label": "handler",
       "repo": "catalogue",
       "file": "src/handlers/reserve-copy.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:catalogue#ReserveRequest"
+            }
+          ],
+          "returns": "{copyId:string}"
+        }
+      }
     },
     {
       "id": "catalogue#src/handlers/reshelve.ts:handler",
@@ -60,7 +104,18 @@
       "label": "handler",
       "repo": "catalogue",
       "file": "src/handlers/reshelve.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{copyId:string}"
+            }
+          ],
+          "returns": "{shelf:string}"
+        }
+      }
     },
     {
       "id": "catalogue#src/handlers/reshelve.ts:shelfOf",
@@ -68,7 +123,18 @@
       "label": "shelfOf",
       "repo": "catalogue",
       "file": "src/handlers/reshelve.ts",
-      "line": 1
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "copyId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "catalogue#src/handlers/update-availability.ts:copiesLeft",
@@ -76,7 +142,18 @@
       "label": "copiesLeft",
       "repo": "catalogue",
       "file": "src/handlers/update-availability.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "titleId",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "catalogue#src/handlers/update-availability.ts:handler",
@@ -84,7 +161,18 @@
       "label": "handler",
       "repo": "catalogue",
       "file": "src/handlers/update-availability.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:catalogue#LoanCheckedOut"
+            }
+          ],
+          "returns": "{available:boolean}"
+        }
+      }
     },
     {
       "id": "catalogue#workflows/reshelve-returns.asl.json:reshelve-returns/Reshelve",
@@ -841,7 +929,18 @@
       "label": "handler",
       "repo": "members",
       "file": "src/handlers/check-standing.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:members#StandingRequest"
+            }
+          ],
+          "returns": "{standing:'good'|'suspended'}"
+        }
+      }
     },
     {
       "id": "members#src/handlers/check-standing.ts:lookUpStanding",
@@ -849,7 +948,18 @@
       "label": "lookUpStanding",
       "repo": "members",
       "file": "src/handlers/check-standing.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrowerId",
+              "type": "string"
+            }
+          ],
+          "returns": "'good'|'suspended'"
+        }
+      }
     },
     {
       "id": "members#src/handlers/record-checkout.ts:handler",
@@ -857,7 +967,18 @@
       "label": "handler",
       "repo": "members",
       "file": "src/handlers/record-checkout.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:members#CheckoutNotifications"
+            }
+          ],
+          "returns": "{recorded:number}"
+        }
+      }
     },
     {
       "id": "members#src/handlers/send-notice.ts:handler",
@@ -865,7 +986,18 @@
       "label": "handler",
       "repo": "members",
       "file": "src/handlers/send-notice.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:members#NoticeRequest"
+            }
+          ],
+          "returns": "{subject:string}"
+        }
+      }
     },
     {
       "id": "members#src/handlers/send-notice.ts:subjectOf",
@@ -873,7 +1005,18 @@
       "label": "subjectOf",
       "repo": "members",
       "file": "src/handlers/send-notice.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "notice",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "members#statemachine/borrower-notices.json:members-borrower-notices/SendNotice",
@@ -1050,6 +1193,10 @@
       "to": "catalogue#src/handlers/pull-copy.ts:shelfOf",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
       "file": "src/handlers/pull-copy.ts",
       "line": 9
     },
@@ -1058,6 +1205,10 @@
       "to": "catalogue#src/handlers/reserve-copy.ts:firstFreeCopy",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string|undefined",
       "file": "src/handlers/reserve-copy.ts",
       "line": 8
     },
@@ -1066,6 +1217,10 @@
       "to": "catalogue#src/handlers/reshelve.ts:shelfOf",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
       "file": "src/handlers/reshelve.ts",
       "line": 4
     },
@@ -1074,6 +1229,10 @@
       "to": "catalogue#src/handlers/update-availability.ts:copiesLeft",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
       "file": "src/handlers/update-availability.ts",
       "line": 11
     },
@@ -1518,6 +1677,10 @@
       "to": "members#src/handlers/check-standing.ts:lookUpStanding",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "'good'|'suspended'",
       "file": "src/handlers/check-standing.ts",
       "line": 9
     },
@@ -1526,6 +1689,10 @@
       "to": "members#src/handlers/send-notice.ts:subjectOf",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
       "file": "src/handlers/send-notice.ts",
       "line": 9
     },

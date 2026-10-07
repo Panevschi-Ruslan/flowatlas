@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T21:12:56.106Z",
+  "builtAt": "2026-10-07T18:36:46.785Z",
   "services": [
     {
       "name": "platform",
@@ -276,7 +276,18 @@
       "label": "handler",
       "repo": "holds",
       "file": "src/handlers/cancel-hold.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "holds#src/handlers/place-hold.ts:handler",
@@ -284,7 +295,18 @@
       "label": "handler",
       "repo": "holds",
       "file": "src/handlers/place-hold.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "holds#src/lib/holds-table.ts:placeHold",
@@ -292,7 +314,18 @@
       "label": "placeHold",
       "repo": "holds",
       "file": "src/lib/holds-table.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "hold",
+              "type": "type:holds#Hold"
+            }
+          ],
+          "returns": "type:holds#Hold"
+        }
+      }
     },
     {
       "id": "holds#src/lib/holds-table.ts:removeHold",
@@ -300,7 +333,18 @@
       "label": "removeHold",
       "repo": "holds",
       "file": "src/lib/holds-table.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "holdId",
+              "type": "string"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
     },
     {
       "id": "loans#functions/create-loan/index.ts:createLoan",
@@ -308,7 +352,18 @@
       "label": "createLoan",
       "repo": "loans",
       "file": "functions/create-loan/index.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "loans#functions/create-loan/index.ts:logged()",
@@ -325,7 +380,18 @@
       "label": "handler",
       "repo": "loans",
       "file": "functions/get-loan/index.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "loans#functions/list-borrower-loans/index.ts:handler",
@@ -333,7 +399,18 @@
       "label": "handler",
       "repo": "loans",
       "file": "functions/list-borrower-loans/index.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "loans#infra/api.tf:AWS_IAM",
@@ -350,7 +427,18 @@
       "label": "findLoan",
       "repo": "loans",
       "file": "shared/loans-table.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loanId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:@flowatlas/fixtures#Loan|undefined"
+        }
+      }
     },
     {
       "id": "loans#shared/loans-table.ts:loansOf",
@@ -358,7 +446,18 @@
       "label": "loansOf",
       "repo": "loans",
       "file": "shared/loans-table.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrowerId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:@flowatlas/fixtures#Loan[]"
+        }
+      }
     },
     {
       "id": "loans#shared/loans-table.ts:saveLoan",
@@ -366,7 +465,18 @@
       "label": "saveLoan",
       "repo": "loans",
       "file": "shared/loans-table.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loan",
+              "type": "type:@flowatlas/fixtures#Loan"
+            }
+          ],
+          "returns": "type:@flowatlas/fixtures#Loan"
+        }
+      }
     },
     {
       "id": "platform#api.tf:AWS_IAM",
@@ -644,6 +754,10 @@
       "to": "holds#src/lib/holds-table.ts:removeHold",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "boolean",
       "file": "src/handlers/cancel-hold.ts",
       "line": 5
     },
@@ -652,6 +766,10 @@
       "to": "holds#src/lib/holds-table.ts:placeHold",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:holds#Hold"
+      ],
+      "returns": "type:holds#Hold",
       "file": "src/handlers/place-hold.ts",
       "line": 6
     },
@@ -660,6 +778,10 @@
       "to": "loans#shared/loans-table.ts:saveLoan",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:@flowatlas/fixtures#Loan"
+      ],
+      "returns": "type:@flowatlas/fixtures#Loan",
       "file": "functions/create-loan/index.ts",
       "line": 13
     },
@@ -668,6 +790,10 @@
       "to": "loans#shared/loans-table.ts:findLoan",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:@flowatlas/fixtures#Loan|undefined",
       "file": "functions/get-loan/index.ts",
       "line": 5
     },
@@ -676,11 +802,25 @@
       "to": "loans#shared/loans-table.ts:loansOf",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:@flowatlas/fixtures#Loan[]",
       "file": "functions/list-borrower-loans/index.ts",
       "line": 5
     }
   ],
   "types": {
+    "type:@flowatlas/fixtures#Loan": {
+      "name": "Loan",
+      "kind": "external",
+      "declaredIn": "@flowatlas/fixtures",
+      "structuralHash": "23b3bf1dc666e869",
+      "meta": {
+        "declKind": "external",
+        "package": "@flowatlas/fixtures"
+      }
+    },
     "type:@types/aws-lambda#APIGatewayProxyEvent": {
       "name": "APIGatewayProxyEvent",
       "kind": "external",
@@ -689,6 +829,43 @@
       "meta": {
         "declKind": "external",
         "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:holds#Hold": {
+      "name": "Hold",
+      "kind": "object",
+      "declaredIn": "holds#src/lib/holds-table.ts",
+      "structuralHash": "953052a9af473b87",
+      "fields": [
+        {
+          "name": "holdId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
       }
     }
   },

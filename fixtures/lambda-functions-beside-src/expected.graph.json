@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "lending-library-hold-shelf",
-  "generatedAt": "2026-10-06T20:54:11.036Z",
+  "generatedAt": "2026-10-07T18:36:26.685Z",
   "nodes": [
     {
       "id": "entry:lending-library-hold-shelf:invoke:library-holds-cancel-hold",
@@ -107,7 +107,18 @@
       "label": "handler",
       "repo": "lending-library-hold-shelf",
       "file": "functions/cancel-hold.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "lending-library-hold-shelf#functions/expire-holds.ts:handler",
@@ -115,7 +126,18 @@
       "label": "handler",
       "repo": "lending-library-hold-shelf",
       "file": "functions/expire-holds.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#ScheduledEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "lending-library-hold-shelf#functions/place-hold.ts:handler",
@@ -123,7 +145,18 @@
       "label": "handler",
       "repo": "lending-library-hold-shelf",
       "file": "functions/place-hold.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "lending-library-hold-shelf#functions/shared/catalogue.ts:titleExists",
@@ -131,7 +164,18 @@
       "label": "titleExists",
       "repo": "lending-library-hold-shelf",
       "file": "functions/shared/catalogue.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "isbn",
+              "type": "string"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
     },
     {
       "id": "lending-library-hold-shelf#functions/shared/request.ts:json",
@@ -139,7 +183,22 @@
       "label": "json",
       "repo": "lending-library-hold-shelf",
       "file": "functions/shared/request.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "statusCode",
+              "type": "number"
+            },
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "lending-library-hold-shelf#functions/shared/request.ts:readHoldRequest",
@@ -147,7 +206,18 @@
       "label": "readHoldRequest",
       "repo": "lending-library-hold-shelf",
       "file": "functions/shared/request.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:lending-library-hold-shelf#HoldRequest"
+        }
+      }
     },
     {
       "id": "lending-library-hold-shelf#src/holds/holds-table.ts:cancelHold",
@@ -155,7 +225,18 @@
       "label": "cancelHold",
       "repo": "lending-library-hold-shelf",
       "file": "src/holds/holds-table.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "holdId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:lending-library-hold-shelf#Hold|undefined"
+        }
+      }
     },
     {
       "id": "lending-library-hold-shelf#src/holds/holds-table.ts:expireHold",
@@ -163,7 +244,18 @@
       "label": "expireHold",
       "repo": "lending-library-hold-shelf",
       "file": "src/holds/holds-table.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "holdId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "lending-library-hold-shelf#src/holds/holds-table.ts:holdsReadyBefore",
@@ -171,7 +263,18 @@
       "label": "holdsReadyBefore",
       "repo": "lending-library-hold-shelf",
       "file": "src/holds/holds-table.ts",
-      "line": 32
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "time",
+              "type": "string"
+            }
+          ],
+          "returns": "type:lending-library-hold-shelf#Hold[]"
+        }
+      }
     },
     {
       "id": "lending-library-hold-shelf#src/holds/holds-table.ts:placeHold",
@@ -179,7 +282,22 @@
       "label": "placeHold",
       "repo": "lending-library-hold-shelf",
       "file": "src/holds/holds-table.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "isbn",
+              "type": "string"
+            },
+            {
+              "name": "borrowerId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:lending-library-hold-shelf#Hold"
+        }
+      }
     },
     {
       "id": "lending-library-hold-shelf#src/notices/notices.ts:tellBorrowerHoldLapsed",
@@ -187,7 +305,22 @@
       "label": "tellBorrowerHoldLapsed",
       "repo": "lending-library-hold-shelf",
       "file": "src/notices/notices.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrowerId",
+              "type": "string"
+            },
+            {
+              "name": "isbn",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "repo:lending-library-hold-shelf",
@@ -249,7 +382,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "functions/cancel-hold.ts",
-      "line": 7
+      "line": 7,
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
     },
     {
       "from": "lending-library-hold-shelf#functions/cancel-hold.ts:handler",
@@ -257,7 +395,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "functions/cancel-hold.ts",
-      "line": 6
+      "line": 6,
+      "params": [
+        "string"
+      ],
+      "returns": "type:lending-library-hold-shelf#Hold|undefined"
     },
     {
       "from": "lending-library-hold-shelf#functions/expire-holds.ts:handler",
@@ -265,7 +407,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "functions/expire-holds.ts",
-      "line": 7
+      "line": 7,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
     },
     {
       "from": "lending-library-hold-shelf#functions/expire-holds.ts:handler",
@@ -273,7 +419,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "functions/expire-holds.ts",
-      "line": 6
+      "line": 6,
+      "params": [
+        "string"
+      ],
+      "returns": "type:lending-library-hold-shelf#Hold[]"
     },
     {
       "from": "lending-library-hold-shelf#functions/expire-holds.ts:handler",
@@ -281,7 +431,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "functions/expire-holds.ts",
-      "line": 8
+      "line": 8,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void"
     },
     {
       "from": "lending-library-hold-shelf#functions/place-hold.ts:handler",
@@ -289,7 +444,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "functions/place-hold.ts",
-      "line": 8
+      "line": 8,
+      "params": [
+        "string"
+      ],
+      "returns": "boolean"
     },
     {
       "from": "lending-library-hold-shelf#functions/place-hold.ts:handler",
@@ -297,7 +456,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "functions/place-hold.ts",
-      "line": 8
+      "line": 8,
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
     },
     {
       "from": "lending-library-hold-shelf#functions/place-hold.ts:handler",
@@ -305,7 +469,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "functions/place-hold.ts",
-      "line": 7
+      "line": 7,
+      "params": [
+        "type:@types/aws-lambda#APIGatewayProxyEvent"
+      ],
+      "returns": "type:lending-library-hold-shelf#HoldRequest"
     },
     {
       "from": "lending-library-hold-shelf#functions/place-hold.ts:handler",
@@ -313,7 +481,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "functions/place-hold.ts",
-      "line": 9
+      "line": 9,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "type:lending-library-hold-shelf#Hold"
     },
     {
       "from": "lending-library-hold-shelf#functions/shared/catalogue.ts:titleExists",
@@ -335,6 +508,16 @@
         "package": "@types/aws-lambda"
       }
     },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
     "type:@types/aws-lambda#ScheduledEvent": {
       "name": "ScheduledEvent",
       "kind": "external",
@@ -343,6 +526,73 @@
       "meta": {
         "declKind": "external",
         "package": "@types/aws-lambda"
+      }
+    },
+    "type:lending-library-hold-shelf#Hold": {
+      "name": "Hold",
+      "kind": "object",
+      "declaredIn": "lending-library-hold-shelf#src/holds/holds-table.ts",
+      "structuralHash": "36ff2e391a691720",
+      "fields": [
+        {
+          "name": "holdId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "placedOn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "readyUntil",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "status",
+          "type": "'cancelled'|'expired'|'ready'|'waiting'",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:lending-library-hold-shelf#HoldRequest": {
+      "name": "HoldRequest",
+      "kind": "object",
+      "declaredIn": "lending-library-hold-shelf#functions/shared/request.ts",
+      "structuralHash": "0ff061d69a2c89fc",
+      "fields": [
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
       }
     }
   },

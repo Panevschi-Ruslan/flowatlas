@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "lending-library-desk",
-  "generatedAt": "2026-10-06T21:12:44.779Z",
+  "generatedAt": "2026-10-07T18:36:36.372Z",
   "nodes": [
     {
       "id": "entry:lending-library-desk:invoke:library-desk-cancel-hold",
@@ -126,7 +126,18 @@
       "label": "cancelHold",
       "repo": "lending-library-desk",
       "file": "src/handlers/cancel-hold.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "lending-library-desk#src/handlers/cancel-hold.ts:span",
@@ -143,7 +154,18 @@
       "label": "handler@15",
       "repo": "lending-library-desk",
       "file": "src/handlers/create-loan.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending-library-desk#CreateLoanEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "lending-library-desk#src/handlers/create-loan.ts:traced",
@@ -160,7 +182,18 @@
       "label": "recordReturn",
       "repo": "lending-library-desk",
       "file": "src/handlers/record-return.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "lending-library-desk#src/handlers/record-return.ts:retried",
@@ -177,7 +210,18 @@
       "label": "renewLoan",
       "repo": "lending-library-desk",
       "file": "src/handlers/renew-loan.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "lending-library-desk#src/handlers/renew-loan.ts:t",
@@ -194,7 +238,22 @@
       "label": "closeLoan",
       "repo": "lending-library-desk",
       "file": "src/lib/desk-table.ts",
-      "line": 28
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loanId",
+              "type": "string"
+            },
+            {
+              "name": "returnedOn",
+              "type": "string"
+            }
+          ],
+          "returns": "type:lending-library-desk#Loan|undefined"
+        }
+      }
     },
     {
       "id": "lending-library-desk#src/lib/desk-table.ts:dropHold",
@@ -202,7 +261,22 @@
       "label": "dropHold",
       "repo": "lending-library-desk",
       "file": "src/lib/desk-table.ts",
-      "line": 42
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "isbn",
+              "type": "string"
+            },
+            {
+              "name": "borrowerId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "lending-library-desk#src/lib/desk-table.ts:extendLoan",
@@ -210,7 +284,22 @@
       "label": "extendLoan",
       "repo": "lending-library-desk",
       "file": "src/lib/desk-table.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loanId",
+              "type": "string"
+            },
+            {
+              "name": "days",
+              "type": "number"
+            }
+          ],
+          "returns": "type:lending-library-desk#Loan|undefined"
+        }
+      }
     },
     {
       "id": "lending-library-desk#src/lib/desk-table.ts:saveLoan",
@@ -218,7 +307,18 @@
       "label": "saveLoan",
       "repo": "lending-library-desk",
       "file": "src/lib/desk-table.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loan",
+              "type": "type:lending-library-desk#Loan"
+            }
+          ],
+          "returns": "type:lending-library-desk#Loan"
+        }
+      }
     },
     {
       "id": "lending-library-desk#src/lib/http.ts:json",
@@ -226,7 +326,22 @@
       "label": "json",
       "repo": "lending-library-desk",
       "file": "src/lib/http.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "statusCode",
+              "type": "number"
+            },
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "repo:lending-library-desk",
@@ -344,7 +459,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/handlers/cancel-hold.ts",
-      "line": 7
+      "line": 7,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void"
     },
     {
       "from": "lending-library-desk#src/handlers/cancel-hold.ts:cancelHold",
@@ -352,7 +472,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/handlers/cancel-hold.ts",
-      "line": 8
+      "line": 8,
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
     },
     {
       "from": "lending-library-desk#src/handlers/create-loan.ts:handler@15",
@@ -360,7 +485,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/handlers/create-loan.ts",
-      "line": 18
+      "line": 18,
+      "params": [
+        "type:lending-library-desk#Loan"
+      ],
+      "returns": "type:lending-library-desk#Loan"
     },
     {
       "from": "lending-library-desk#src/handlers/create-loan.ts:handler@15",
@@ -368,7 +497,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/handlers/create-loan.ts",
-      "line": 24
+      "line": 24,
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
     },
     {
       "from": "lending-library-desk#src/handlers/record-return.ts:recordReturn",
@@ -376,7 +510,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/handlers/record-return.ts",
-      "line": 7
+      "line": 7,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "type:lending-library-desk#Loan|undefined"
     },
     {
       "from": "lending-library-desk#src/handlers/record-return.ts:recordReturn",
@@ -384,7 +523,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/handlers/record-return.ts",
-      "line": 8
+      "line": 8,
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
     },
     {
       "from": "lending-library-desk#src/handlers/renew-loan.ts:renewLoan",
@@ -392,7 +536,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/handlers/renew-loan.ts",
-      "line": 9
+      "line": 9,
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "type:lending-library-desk#Loan|undefined"
     },
     {
       "from": "lending-library-desk#src/handlers/renew-loan.ts:renewLoan",
@@ -400,7 +549,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/handlers/renew-loan.ts",
-      "line": 10
+      "line": 10,
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
     }
   ],
   "types": {
@@ -409,6 +563,16 @@
       "kind": "external",
       "declaredIn": "@types/aws-lambda",
       "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
       "meta": {
         "declKind": "external",
         "package": "@types/aws-lambda"
@@ -429,6 +593,46 @@
       "meta": {
         "declKind": "interface",
         "exported": false
+      }
+    },
+    "type:lending-library-desk#Loan": {
+      "name": "Loan",
+      "kind": "object",
+      "declaredIn": "lending-library-desk#src/lib/desk-table.ts",
+      "structuralHash": "1d4f2355617972f3",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "dueOn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "returnedOn",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
       }
     }
   },

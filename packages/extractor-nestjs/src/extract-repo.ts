@@ -83,7 +83,6 @@ export const BUILT_IN_PASSES: readonly NestExtractorPass[] = [
   entriesPass,
   diPass,
   callsPass,
-  typesPass,
   wrappingEdgesPass,
 ];
 
@@ -91,9 +90,11 @@ export const BUILT_IN_PASSES: readonly NestExtractorPass[] = [
  * The steps that run after every other one, the caller's extra steps included.
  *
  * What they read is what the others made: calls into a function are drawn once
- * every reader that can make that function a node has had its turn (R156).
+ * every reader that can make that function a node has had its turn (R156), and
+ * what a function takes is written on every edge into it once the last of
+ * those edges is drawn.
  */
-export const CLOSING_PASSES: readonly NestExtractorPass[] = [heldCallsPass];
+export const CLOSING_PASSES: readonly NestExtractorPass[] = [heldCallsPass, typesPass];
 
 /** Parses a repository, honouring the tsconfig the caller or the service names. */
 export const createRepoProject = (options: ExtractRepoOptions): Project => {

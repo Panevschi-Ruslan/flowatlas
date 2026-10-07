@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "koa-mount-helper",
-  "generatedAt": "2026-10-06T11:31:46.435Z",
+  "generatedAt": "2026-10-07T18:36:24.798Z",
   "nodes": [
     {
       "id": "entry:koa-mount-helper:http:GET:/health",
@@ -81,7 +81,18 @@
       "label": "POST /documents.info@13",
       "repo": "koa-mount-helper",
       "file": "src/api/documents.routes.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-mount-helper#src/api/documents.routes.ts:POST /documents.list@17",
@@ -89,7 +100,18 @@
       "label": "POST /documents.list@17",
       "repo": "koa-mount-helper",
       "file": "src/api/documents.routes.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-mount-helper#src/health.routes.ts:GET /@7",
@@ -97,7 +119,18 @@
       "label": "GET /@7",
       "repo": "koa-mount-helper",
       "file": "src/health.routes.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "koa-mount-helper#src/pages.ts:GET /pages.list@17",
@@ -105,7 +138,18 @@
       "label": "GET /pages.list@17",
       "repo": "koa-mount-helper",
       "file": "src/pages.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "repo:koa-mount-helper",
@@ -162,7 +206,18 @@
       "line": 17
     }
   ],
-  "types": {},
+  "types": {
+    "type:koa#Context": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "koa",
+      "structuralHash": "002a3105e543026c",
+      "meta": {
+        "declKind": "external",
+        "package": "koa"
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "package.json",

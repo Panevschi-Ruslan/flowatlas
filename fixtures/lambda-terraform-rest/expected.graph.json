@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "lending-library-loans",
-  "generatedAt": "2026-10-06T21:12:41.597Z",
+  "generatedAt": "2026-10-07T18:36:33.339Z",
   "nodes": [
     {
       "id": "entry:lending-library-loans:http:GET:/loans/:param",
@@ -249,7 +249,22 @@
       "label": "json",
       "repo": "lending-library-loans",
       "file": "src/lib/http.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "statusCode",
+              "type": "number"
+            },
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "lending-library-loans#src/lib/loans-table.ts:closeLoan",
@@ -257,7 +272,22 @@
       "label": "closeLoan",
       "repo": "lending-library-loans",
       "file": "src/lib/loans-table.ts",
-      "line": 28
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loanId",
+              "type": "string"
+            },
+            {
+              "name": "returnedOn",
+              "type": "string"
+            }
+          ],
+          "returns": "type:lending-library-loans#Loan|undefined"
+        }
+      }
     },
     {
       "id": "lending-library-loans#src/lib/loans-table.ts:extendLoan",
@@ -265,7 +295,22 @@
       "label": "extendLoan",
       "repo": "lending-library-loans",
       "file": "src/lib/loans-table.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loanId",
+              "type": "string"
+            },
+            {
+              "name": "days",
+              "type": "number"
+            }
+          ],
+          "returns": "type:lending-library-loans#Loan|undefined"
+        }
+      }
     },
     {
       "id": "lending-library-loans#src/lib/loans-table.ts:findLoan",
@@ -273,7 +318,18 @@
       "label": "findLoan",
       "repo": "lending-library-loans",
       "file": "src/lib/loans-table.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loanId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:lending-library-loans#Loan|undefined"
+        }
+      }
     },
     {
       "id": "lending-library-loans#src/lib/loans-table.ts:loansDueBefore",
@@ -281,7 +337,18 @@
       "label": "loansDueBefore",
       "repo": "lending-library-loans",
       "file": "src/lib/loans-table.ts",
-      "line": 36
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "date",
+              "type": "string"
+            }
+          ],
+          "returns": "type:lending-library-loans#Loan[]"
+        }
+      }
     },
     {
       "id": "lending-library-loans#src/lib/loans-table.ts:saveLoan",
@@ -289,7 +356,18 @@
       "label": "saveLoan",
       "repo": "lending-library-loans",
       "file": "src/lib/loans-table.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loan",
+              "type": "type:lending-library-loans#Loan"
+            }
+          ],
+          "returns": "type:lending-library-loans#Loan"
+        }
+      }
     },
     {
       "id": "lending-library-loans#src/lib/notices.ts:sendNotice",
@@ -297,7 +375,26 @@
       "label": "sendNotice",
       "repo": "lending-library-loans",
       "file": "src/lib/notices.ts",
-      "line": 1
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrowerId",
+              "type": "string"
+            },
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "lending-library-loans#src/loans/create-loan.ts:createLoan",
@@ -305,7 +402,18 @@
       "label": "createLoan",
       "repo": "lending-library-loans",
       "file": "src/loans/create-loan.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending-library-loans#CreateLoanEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "lending-library-loans#src/loans/create-loan.ts:httpErrorHandler()",
@@ -331,7 +439,18 @@
       "label": "handler",
       "repo": "lending-library-loans",
       "file": "src/loans/get-loan.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "lending-library-loans#src/loans/renew-loan.ts:handler@10",
@@ -339,7 +458,18 @@
       "label": "handler@10",
       "repo": "lending-library-loans",
       "file": "src/loans/renew-loan.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "lending-library-loans#src/loans/renew-loan.ts:httpErrorHandler()",
@@ -356,7 +486,18 @@
       "label": "handler",
       "repo": "lending-library-loans",
       "file": "src/reminders/send-reminder.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#ScheduledEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "lending-library-loans#src/returns/record-return.ts:handler",
@@ -364,7 +505,18 @@
       "label": "handler",
       "repo": "lending-library-loans",
       "file": "src/returns/record-return.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "repo:lending-library-loans",
@@ -592,7 +744,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/loans/create-loan.ts",
-      "line": 23
+      "line": 23,
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
     },
     {
       "from": "lending-library-loans#src/loans/create-loan.ts:createLoan",
@@ -600,7 +757,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/loans/create-loan.ts",
-      "line": 17
+      "line": 17,
+      "params": [
+        "type:lending-library-loans#Loan"
+      ],
+      "returns": "type:lending-library-loans#Loan"
     },
     {
       "from": "lending-library-loans#src/loans/get-loan.ts:handler",
@@ -608,7 +769,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/loans/get-loan.ts",
-      "line": 7
+      "line": 7,
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
     },
     {
       "from": "lending-library-loans#src/loans/get-loan.ts:handler",
@@ -616,7 +782,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/loans/get-loan.ts",
-      "line": 6
+      "line": 6,
+      "params": [
+        "string"
+      ],
+      "returns": "type:lending-library-loans#Loan|undefined"
     },
     {
       "from": "lending-library-loans#src/loans/renew-loan.ts:handler@10",
@@ -624,7 +794,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/loans/renew-loan.ts",
-      "line": 12
+      "line": 12,
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
     },
     {
       "from": "lending-library-loans#src/loans/renew-loan.ts:handler@10",
@@ -632,7 +807,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/loans/renew-loan.ts",
-      "line": 11
+      "line": 11,
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "type:lending-library-loans#Loan|undefined"
     },
     {
       "from": "lending-library-loans#src/reminders/send-reminder.ts:handler",
@@ -640,7 +820,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/reminders/send-reminder.ts",
-      "line": 7
+      "line": 7,
+      "params": [
+        "string"
+      ],
+      "returns": "type:lending-library-loans#Loan[]"
     },
     {
       "from": "lending-library-loans#src/reminders/send-reminder.ts:handler",
@@ -648,7 +832,13 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/reminders/send-reminder.ts",
-      "line": 8
+      "line": 8,
+      "params": [
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void"
     },
     {
       "from": "lending-library-loans#src/returns/record-return.ts:handler",
@@ -656,7 +846,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/returns/record-return.ts",
-      "line": 8
+      "line": 8,
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
     },
     {
       "from": "lending-library-loans#src/returns/record-return.ts:handler",
@@ -664,7 +859,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/returns/record-return.ts",
-      "line": 7
+      "line": 7,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "type:lending-library-loans#Loan|undefined"
     }
   ],
   "types": {
@@ -673,6 +873,16 @@
       "kind": "external",
       "declaredIn": "@types/aws-lambda",
       "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
       "meta": {
         "declKind": "external",
         "package": "@types/aws-lambda"
@@ -703,6 +913,46 @@
       "meta": {
         "declKind": "interface",
         "exported": false
+      }
+    },
+    "type:lending-library-loans#Loan": {
+      "name": "Loan",
+      "kind": "object",
+      "declaredIn": "lending-library-loans#src/lib/loans-table.ts",
+      "structuralHash": "1d4f2355617972f3",
+      "fields": [
+        {
+          "name": "loanId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "dueOn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "returnedOn",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
       }
     }
   },

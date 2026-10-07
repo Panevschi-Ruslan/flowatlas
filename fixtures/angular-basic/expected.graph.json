@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "angular-basic",
-  "generatedAt": "2026-10-06T11:27:35.883Z",
+  "generatedAt": "2026-10-07T18:36:04.975Z",
   "nodes": [
     {
       "id": "angular-basic#node_modules/@angular/common:HttpClient",
@@ -33,7 +33,13 @@
       "label": "AuthService.token",
       "repo": "angular-basic",
       "file": "src/app/auth.service.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent",
@@ -54,7 +60,13 @@
       "label": "CheckoutComponent.ngOnInit",
       "repo": "angular-basic",
       "file": "src/app/checkout.component.ts",
-      "line": 42
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.onChange",
@@ -62,7 +74,18 @@
       "label": "CheckoutComponent.onChange",
       "repo": "angular-basic",
       "file": "src/app/checkout.component.ts",
-      "line": 54
+      "line": 54,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.onInput",
@@ -70,7 +93,18 @@
       "label": "CheckoutComponent.onInput",
       "repo": "angular-basic",
       "file": "src/app/checkout.component.ts",
-      "line": 58
+      "line": 58,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.save",
@@ -78,7 +112,18 @@
       "label": "CheckoutComponent.save",
       "repo": "angular-basic",
       "file": "src/app/checkout.component.ts",
-      "line": 50
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:angular-basic#CreateOrderDto"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.submit",
@@ -86,7 +131,13 @@
       "label": "CheckoutComponent.submit",
       "repo": "angular-basic",
       "file": "src/app/checkout.component.ts",
-      "line": 46
+      "line": 46,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.token",
@@ -94,7 +145,13 @@
       "label": "CheckoutComponent.token",
       "repo": "angular-basic",
       "file": "src/app/checkout.component.ts",
-      "line": 62
+      "line": 62,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/legacy-panel.component.ts:LegacyPanelComponent",
@@ -129,7 +186,18 @@
       "label": "OrdersApiService.create",
       "repo": "angular-basic",
       "file": "src/app/orders-api.service.ts",
-      "line": 26
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:angular-basic#CreateOrderDto"
+            }
+          ],
+          "returns": "type:angular-basic#OrderDto"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.list",
@@ -137,7 +205,13 @@
       "label": "OrdersApiService.list",
       "repo": "angular-basic",
       "file": "src/app/orders-api.service.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:angular-basic#OrderDto[]"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.onOrderUpdated",
@@ -145,7 +219,18 @@
       "label": "OrdersApiService.onOrderUpdated",
       "repo": "angular-basic",
       "file": "src/app/orders-api.service.ts",
-      "line": 60
+      "line": 60,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:angular-basic#OrderDto"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.refresh",
@@ -153,7 +238,13 @@
       "label": "OrdersApiService.refresh",
       "repo": "angular-basic",
       "file": "src/app/orders-api.service.ts",
-      "line": 41
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:angular-basic#OrderDto[]"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.remove",
@@ -163,6 +254,15 @@
       "file": "src/app/orders-api.service.ts",
       "line": 36,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
         "unreferenced": true
       }
     },
@@ -172,7 +272,18 @@
       "label": "OrdersApiService.send",
       "repo": "angular-basic",
       "file": "src/app/orders-api.service.ts",
-      "line": 50
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.updateStatus",
@@ -180,7 +291,22 @@
       "label": "OrdersApiService.updateStatus",
       "repo": "angular-basic",
       "file": "src/app/orders-api.service.ts",
-      "line": 55
+      "line": 55,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/orders-list.component.ts:OrdersListComponent",
@@ -203,7 +329,13 @@
       "label": "OrdersListComponent.reload",
       "repo": "angular-basic",
       "file": "src/app/orders-list.component.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-basic#src/app/orders.module.ts:OrdersModule",
@@ -689,7 +821,9 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/app/checkout.component.ts",
-      "line": 43
+      "line": 43,
+      "params": [],
+      "returns": "type:angular-basic#OrderDto[]"
     },
     {
       "from": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.save",
@@ -697,7 +831,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/app/checkout.component.ts",
-      "line": 51
+      "line": 51,
+      "params": [
+        "type:angular-basic#CreateOrderDto"
+      ],
+      "returns": "type:angular-basic#OrderDto"
     },
     {
       "from": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.submit",
@@ -705,7 +843,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/app/checkout.component.ts",
-      "line": 47
+      "line": 47,
+      "params": [
+        "type:angular-basic#CreateOrderDto"
+      ],
+      "returns": "type:angular-basic#OrderDto"
     },
     {
       "from": "angular-basic#src/app/checkout.component.ts:CheckoutComponent.token",
@@ -713,7 +855,9 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/app/checkout.component.ts",
-      "line": 63
+      "line": 63,
+      "params": [],
+      "returns": "string"
     },
     {
       "from": "angular-basic#src/app/orders-api.service.ts:OrdersApiService",
@@ -745,7 +889,9 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/app/orders-api.service.ts",
-      "line": 42
+      "line": 42,
+      "params": [],
+      "returns": "type:angular-basic#OrderDto[]"
     },
     {
       "from": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.remove",
@@ -769,7 +915,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/app/orders-api.service.ts",
-      "line": 56
+      "line": 56,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown"
     },
     {
       "from": "angular-basic#src/app/orders-api.service.ts:OrdersApiService.updateStatus",
@@ -793,7 +943,9 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/app/orders-list.component.ts",
-      "line": 14
+      "line": 14,
+      "params": [],
+      "returns": "type:angular-basic#OrderDto[]"
     },
     {
       "from": "angular-basic#src/app/orders.module.ts:OrdersModule",

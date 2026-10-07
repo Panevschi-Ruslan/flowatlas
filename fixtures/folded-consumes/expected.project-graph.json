@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:33:36.095Z",
+  "builtAt": "2026-10-07T18:28:46.460Z",
   "services": [
     {
       "name": "worker",
@@ -323,6 +323,10 @@
       "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onLifecycle",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
       "file": "src/projections/lifecycle.service.ts",
       "line": 38
     },

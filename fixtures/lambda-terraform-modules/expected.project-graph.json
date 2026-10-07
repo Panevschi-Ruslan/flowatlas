@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T20:48:32.428Z",
+  "builtAt": "2026-10-07T18:36:31.568Z",
   "services": [
     {
       "name": "catalogue",
@@ -34,7 +34,18 @@
       "label": "handler",
       "repo": "catalogue",
       "file": "src/handlers/get-borrower.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "catalogue#src/handlers/get-title.ts:handler",
@@ -42,7 +53,18 @@
       "label": "handler",
       "repo": "catalogue",
       "file": "src/handlers/get-title.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "catalogue#src/handlers/register-borrower.ts:audited()",
@@ -59,7 +81,18 @@
       "label": "register",
       "repo": "catalogue",
       "file": "src/handlers/register-borrower.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "catalogue#src/handlers/search-titles.ts:handler",
@@ -67,7 +100,18 @@
       "label": "handler",
       "repo": "catalogue",
       "file": "src/handlers/search-titles.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "catalogue#src/lib/borrowers.ts:findBorrower",
@@ -75,7 +119,18 @@
       "label": "findBorrower",
       "repo": "catalogue",
       "file": "src/lib/borrowers.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrowerId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:catalogue#Borrower|undefined"
+        }
+      }
     },
     {
       "id": "catalogue#src/lib/borrowers.ts:registerBorrower",
@@ -83,7 +138,18 @@
       "label": "registerBorrower",
       "repo": "catalogue",
       "file": "src/lib/borrowers.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrower",
+              "type": "type:catalogue#Borrower"
+            }
+          ],
+          "returns": "type:catalogue#Borrower"
+        }
+      }
     },
     {
       "id": "catalogue#src/lib/catalogue.ts:findTitle",
@@ -91,7 +157,18 @@
       "label": "findTitle",
       "repo": "catalogue",
       "file": "src/lib/catalogue.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "isbn",
+              "type": "string"
+            }
+          ],
+          "returns": "type:catalogue#Title|undefined"
+        }
+      }
     },
     {
       "id": "catalogue#src/lib/catalogue.ts:searchTitles",
@@ -99,7 +176,18 @@
       "label": "searchTitles",
       "repo": "catalogue",
       "file": "src/lib/catalogue.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ],
+          "returns": "type:catalogue#Title[]"
+        }
+      }
     },
     {
       "id": "entry:catalogue:http:GET:/borrowers/:param",
@@ -300,6 +388,10 @@
       "to": "catalogue#src/lib/borrowers.ts:findBorrower",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:catalogue#Borrower|undefined",
       "file": "src/handlers/get-borrower.ts",
       "line": 5
     },
@@ -308,6 +400,10 @@
       "to": "catalogue#src/lib/catalogue.ts:findTitle",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:catalogue#Title|undefined",
       "file": "src/handlers/get-title.ts",
       "line": 5
     },
@@ -316,6 +412,10 @@
       "to": "catalogue#src/lib/borrowers.ts:registerBorrower",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:catalogue#Borrower"
+      ],
+      "returns": "type:catalogue#Borrower",
       "file": "src/handlers/register-borrower.ts",
       "line": 12
     },
@@ -324,6 +424,10 @@
       "to": "catalogue#src/lib/catalogue.ts:searchTitles",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:catalogue#Title[]",
       "file": "src/handlers/search-titles.ts",
       "line": 5
     },
@@ -457,6 +561,65 @@
       "meta": {
         "declKind": "external",
         "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:catalogue#Borrower": {
+      "name": "Borrower",
+      "kind": "object",
+      "declaredIn": "catalogue#src/lib/borrowers.ts",
+      "structuralHash": "0befaf02f088a7f7",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:catalogue#Title": {
+      "name": "Title",
+      "kind": "object",
+      "declaredIn": "catalogue#src/lib/catalogue.ts",
+      "structuralHash": "a7ed5d485c9cdf84",
+      "fields": [
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "copies",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
       }
     }
   },

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:33:58.825Z",
+  "builtAt": "2026-10-07T18:29:09.221Z",
   "services": [
     {
       "name": "gateway",
@@ -1618,6 +1618,9 @@
       "to": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:billing#OrderCreatedEvent"
+      ],
       "returns": "void",
       "file": "src/invoices/invoices.consumer.ts",
       "line": 18
@@ -1627,6 +1630,10 @@
       "to": "billing#src/invoices/invoices.service.ts:InvoicesService.onOrderRefunded",
       "type": "handles",
       "confidence": "marker",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "src/invoices/invoices.service.ts",
       "line": 18
     },

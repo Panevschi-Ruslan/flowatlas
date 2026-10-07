@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:23.548Z",
+  "builtAt": "2026-10-07T18:37:24.509Z",
   "services": [
     {
       "name": "shop",
@@ -92,7 +92,18 @@
       "label": "action archiveOrder@22",
       "repo": "shop",
       "file": "app/actions/orders.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ parsedInput }",
+              "type": "{parsedInput:{id:string}}"
+            }
+          ],
+          "returns": "{archived:true}"
+        }
+      }
     },
     {
       "id": "shop#app/actions/orders.ts:archiveOrder",
@@ -108,7 +119,18 @@
       "label": "cancelOrder",
       "repo": "shop",
       "file": "app/actions/orders.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{cancelled:boolean}"
+        }
+      }
     },
     {
       "id": "shop#app/actions/orders.ts:exportOrders",
@@ -124,7 +146,18 @@
       "label": "renameOrderAction",
       "repo": "shop",
       "file": "app/actions/orders.ts",
-      "line": 28
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{\n  parsedInput,\n}",
+              "type": "{parsedInput:{id:string;name:string}}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "shop#app/orders/page.tsx:OrdersPage",
@@ -135,6 +168,15 @@
       "line": 10,
       "kind": "function",
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "props",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "unknown"
+        },
         "route": "/orders"
       }
     },
@@ -144,7 +186,18 @@
       "label": "archive",
       "repo": "shop",
       "file": "lib/orders-store.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "shop#lib/orders-store.ts:exportAll",
@@ -152,7 +205,13 @@
       "label": "exportAll",
       "repo": "shop",
       "file": "lib/orders-store.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "shop#lib/orders-store.ts:rename",
@@ -160,7 +219,22 @@
       "label": "rename",
       "repo": "shop",
       "file": "lib/orders-store.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "shop#lib/safe-action.ts:withAudit",
@@ -168,7 +242,18 @@
       "label": "withAudit",
       "repo": "shop",
       "file": "lib/safe-action.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "fn",
+              "type": "T"
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "ui_action:shop#app/orders/page.tsx:16:29",
@@ -231,6 +316,10 @@
       "to": "shop#lib/orders-store.ts:archive",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "app/actions/orders.ts",
       "line": 23
     },
@@ -239,6 +328,10 @@
       "to": "shop#lib/orders-store.ts:archive",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "app/actions/orders.ts",
       "line": 23
     },
@@ -247,6 +340,10 @@
       "to": "shop#lib/orders-store.ts:archive",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "app/actions/orders.ts",
       "line": 15
     },
@@ -255,6 +352,8 @@
       "to": "shop#lib/orders-store.ts:exportAll",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "string",
       "file": "app/actions/orders.ts",
       "line": 44
     },
@@ -263,6 +362,10 @@
       "to": "shop#lib/safe-action.ts:withAudit",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "T"
+      ],
+      "returns": "T",
       "file": "app/actions/orders.ts",
       "line": 44
     },
@@ -271,6 +374,11 @@
       "to": "shop#lib/orders-store.ts:rename",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
       "file": "app/actions/orders.ts",
       "line": 33
     },
@@ -303,6 +411,10 @@
       "to": "shop#app/actions/orders.ts:cancelOrder",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{cancelled:boolean}",
       "file": "app/orders/page.tsx",
       "line": 12
     },
@@ -334,6 +446,23 @@
       "hint": "Describe the builder in action-builders.ts by naming its package, the method that receives the action and which argument it is; or declare the action as `export async function name(...)`.",
       "symbol": "app/actions/orders.ts#exportOrders",
       "adapter": "nextjs-routes",
+      "service": "shop"
+    },
+    {
+      "file": "app/orders/page.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "lib/safe-action.ts",
+      "line": 13,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
       "service": "shop"
     }
   ]

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T21:12:35.270Z",
+  "builtAt": "2026-10-07T18:36:27.450Z",
   "services": [
     {
       "name": "desk",
@@ -120,7 +120,22 @@
       "label": "json",
       "repo": "desk",
       "file": "src/lib/http.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "statusCode",
+              "type": "number"
+            },
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "desk#src/operations/holds.ts:placeHold",
@@ -128,7 +143,18 @@
       "label": "placeHold",
       "repo": "desk",
       "file": "src/operations/holds.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "desk#src/operations/holds.ts:withdrawHold",
@@ -136,7 +162,18 @@
       "label": "withdrawHold",
       "repo": "desk",
       "file": "src/operations/holds.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "desk#src/operations/loans.ts:createLoan",
@@ -144,7 +181,18 @@
       "label": "createLoan",
       "repo": "desk",
       "file": "src/operations/loans.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "desk#src/operations/loans.ts:renewLoan",
@@ -152,7 +200,18 @@
       "label": "renewLoan",
       "repo": "desk",
       "file": "src/operations/loans.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "desk#src/operations/returns.ts:processReturns",
@@ -160,7 +219,18 @@
       "label": "processReturns",
       "repo": "desk",
       "file": "src/operations/returns.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "desk#src/operations/returns.ts:recordReturn",
@@ -168,7 +238,18 @@
       "label": "recordReturn",
       "repo": "desk",
       "file": "src/operations/returns.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "entry:desk:http:DELETE:/holds/:param",
@@ -599,6 +680,11 @@
       "to": "desk#src/lib/http.ts:json",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult",
       "file": "src/operations/holds.ts",
       "line": 6
     },
@@ -607,6 +693,11 @@
       "to": "desk#src/lib/http.ts:json",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult",
       "file": "src/operations/holds.ts",
       "line": 10
     },
@@ -632,6 +723,11 @@
       "to": "desk#src/lib/http.ts:json",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult",
       "file": "src/operations/loans.ts",
       "line": 25
     },
@@ -648,6 +744,11 @@
       "to": "desk#src/lib/http.ts:json",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult",
       "file": "src/operations/loans.ts",
       "line": 30
     },
@@ -673,6 +774,11 @@
       "to": "desk#src/lib/http.ts:json",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult",
       "file": "src/operations/returns.ts",
       "line": 21
     },
@@ -830,6 +936,16 @@
       "kind": "external",
       "declaredIn": "@types/aws-lambda",
       "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
       "meta": {
         "declKind": "external",
         "package": "@types/aws-lambda"

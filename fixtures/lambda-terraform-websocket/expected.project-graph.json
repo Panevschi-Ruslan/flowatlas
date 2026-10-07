@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T21:12:42.375Z",
+  "builtAt": "2026-10-07T18:36:34.100Z",
   "services": [
     {
       "name": "reading-room",
@@ -189,7 +189,18 @@
       "label": "forget",
       "repo": "reading-room",
       "file": "src/connections/connections-table.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "connectionId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "reading-room#src/connections/connections-table.ts:remember",
@@ -197,7 +208,18 @@
       "label": "remember",
       "repo": "reading-room",
       "file": "src/connections/connections-table.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "connectionId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "reading-room#src/connections/on-connect.ts:handler",
@@ -205,7 +227,18 @@
       "label": "handler",
       "repo": "reading-room",
       "file": "src/connections/on-connect.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyWebsocketEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
     },
     {
       "id": "reading-room#src/connections/on-disconnect.ts:handler",
@@ -213,7 +246,18 @@
       "label": "handler",
       "repo": "reading-room",
       "file": "src/connections/on-disconnect.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyWebsocketEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
     },
     {
       "id": "reading-room#src/messages/ask-librarian.ts:handler",
@@ -221,7 +265,18 @@
       "label": "handler",
       "repo": "reading-room",
       "file": "src/messages/ask-librarian.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyWebsocketEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
     },
     {
       "id": "reading-room#src/messages/unknown-action.ts:handler",
@@ -229,7 +284,18 @@
       "label": "handler",
       "repo": "reading-room",
       "file": "src/messages/unknown-action.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyWebsocketEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
     },
     {
       "id": "repo:reading-room",
@@ -322,6 +388,10 @@
       "to": "reading-room#src/connections/connections-table.ts:remember",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "src/connections/on-connect.ts",
       "line": 6
     },
@@ -330,11 +400,25 @@
       "to": "reading-room#src/connections/connections-table.ts:forget",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "src/connections/on-disconnect.ts",
       "line": 6
     }
   ],
   "types": {
+    "type:@types/aws-lambda#APIGatewayProxyResultV2": {
+      "name": "APIGatewayProxyResultV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0a2dc33db8681605",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
     "type:@types/aws-lambda#APIGatewayProxyWebsocketEventV2": {
       "name": "APIGatewayProxyWebsocketEventV2",
       "kind": "external",

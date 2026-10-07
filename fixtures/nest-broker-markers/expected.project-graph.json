@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:34:04.354Z",
+  "builtAt": "2026-10-07T18:29:14.667Z",
   "services": [
     {
       "name": "nest-broker-markers",
@@ -1041,6 +1041,10 @@
       "to": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCancelled",
       "type": "handles",
       "confidence": "marker",
+      "params": [
+        "type:nest-broker-markers#OrderCancelledEvent"
+      ],
+      "returns": "void",
       "file": "src/orders/projections.service.ts",
       "line": 32
     },
@@ -1049,6 +1053,10 @@
       "to": "nest-broker-markers#src/orders/projections.service.ts:ProjectionsService.onOrderCreated",
       "type": "handles",
       "confidence": "marker",
+      "params": [
+        "type:nest-broker-markers#OrderCreatedEvent"
+      ],
+      "returns": "void",
       "file": "src/orders/projections.service.ts",
       "line": 25
     },

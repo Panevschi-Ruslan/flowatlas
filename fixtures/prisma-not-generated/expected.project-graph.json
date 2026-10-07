@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:34:47.557Z",
+  "builtAt": "2026-10-07T18:29:57.959Z",
   "services": [
     {
       "name": "api",
@@ -33,7 +33,13 @@
       "label": "oldest",
       "repo": "api",
       "file": "src/legacy/legacy.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/move.ts:move",
@@ -41,7 +47,18 @@
       "label": "move",
       "repo": "api",
       "file": "src/orders/move.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tx",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService",
@@ -80,7 +97,18 @@
       "label": "countUsers",
       "repo": "api",
       "file": "src/reports/count.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ ctx }",
+              "type": "type:api#Options"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "api#src/reports/count.ts:totals",
@@ -88,7 +116,18 @@
       "label": "totals",
       "repo": "api",
       "file": "src/reports/count.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ ctx }",
+              "type": "type:api#Options"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/users/lazy.ts:firstUser",
@@ -96,7 +135,13 @@
       "label": "firstUser",
       "repo": "api",
       "file": "src/users/lazy.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/users/lazy.ts:lastUser",
@@ -104,7 +149,13 @@
       "label": "lastUser",
       "repo": "api",
       "file": "src/users/lazy.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/users/lazy.ts:settle",
@@ -112,7 +163,18 @@
       "label": "settle",
       "repo": "api",
       "file": "src/users/lazy.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "db",
+              "type": "object"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/users/lazy.ts:someUsers",
@@ -120,7 +182,13 @@
       "label": "someUsers",
       "repo": "api",
       "file": "src/users/lazy.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/users/users.service.ts:UsersService",
@@ -594,8 +662,34 @@
       "line": 18
     }
   ],
-  "types": {},
+  "types": {
+    "type:api#Options": {
+      "name": "Options",
+      "kind": "object",
+      "declaredIn": "api#src/reports/count.ts",
+      "structuralHash": "005c4c398765fef3",
+      "fields": [
+        {
+          "name": "ctx",
+          "type": "{prisma:unknown}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
   "unresolved": [
+    {
+      "file": "src/orders/move.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Prisma.TransactionClient",
+      "service": "api"
+    },
     {
       "file": "src/orders/orders.service.ts",
       "line": 7,
@@ -612,6 +706,14 @@
       "sites": 3,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "OrdersService.cancel -> this.db.order.delete",
+      "service": "api"
+    },
+    {
+      "file": "src/reports/count.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "PrismaClient",
       "service": "api"
     }
   ]

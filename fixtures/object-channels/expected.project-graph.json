@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:34:45.286Z",
+  "builtAt": "2026-10-07T18:29:55.663Z",
   "services": [
     {
       "name": "api",
@@ -798,6 +798,9 @@
       "to": "worker#src/jobs/jobs.service.ts:JobsService.handleLegacy",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#MailJob"
+      ],
       "returns": "void",
       "file": "src/jobs/jobs.service.ts",
       "line": 41
@@ -807,6 +810,9 @@
       "to": "worker#src/jobs/jobs.service.ts:JobsService.handleMail",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#MailJob"
+      ],
       "returns": "void",
       "file": "src/jobs/jobs.service.ts",
       "line": 31
@@ -816,6 +822,9 @@
       "to": "worker#src/jobs/jobs.service.ts:JobsService.handleThumbnail",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#ThumbnailJob"
+      ],
       "returns": "void",
       "file": "src/jobs/jobs.service.ts",
       "line": 26

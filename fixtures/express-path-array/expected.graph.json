@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "express-path-array",
-  "generatedAt": "2026-10-06T11:31:41.201Z",
+  "generatedAt": "2026-10-07T18:36:15.520Z",
   "nodes": [
     {
       "id": "entry:express-path-array:http:GET:/api/i/:param",
@@ -99,7 +99,22 @@
       "label": "listItems",
       "repo": "express-path-array",
       "file": "src/items.controller.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "express-path-array#src/items.controller.ts:showItem",
@@ -107,7 +122,22 @@
       "label": "showItem",
       "repo": "express-path-array",
       "file": "src/items.controller.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "repo:express-path-array",
@@ -174,6 +204,27 @@
       "line": 4
     }
   ],
-  "types": {},
+  "types": {
+    "type:express#Request<object,unknown,unknown>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
   "unresolved": []
 }

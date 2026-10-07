@@ -27,7 +27,18 @@
           "type": "function",
           "label": "handler",
           "loc": "src/handlers/create-loan.ts:8",
-          "service": "lending"
+          "service": "lending",
+          "meta": {
+            "signature": {
+              "params": [
+                {
+                  "name": "event",
+                  "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+                }
+              ],
+              "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+            }
+          }
         },
         "edge": {
           "type": "handles",
@@ -40,11 +51,26 @@
               "type": "function",
               "label": "loanIdOf",
               "loc": "src/lib/loans.ts:6",
-              "service": "lending"
+              "service": "lending",
+              "meta": {
+                "signature": {
+                  "params": [
+                    {
+                      "name": "request",
+                      "type": "type:lending#LoanRequest"
+                    }
+                  ],
+                  "returns": "string"
+                }
+              }
             },
             "edge": {
               "type": "calls",
-              "confidence": "static"
+              "confidence": "static",
+              "params": [
+                "type:lending#LoanRequest"
+              ],
+              "returns": "string"
             },
             "children": []
           },
@@ -177,7 +203,18 @@
                               "type": "function",
                               "label": "handler",
                               "loc": "src/handlers/check-borrower.ts:3",
-                              "service": "lending"
+                              "service": "lending",
+                              "meta": {
+                                "signature": {
+                                  "params": [
+                                    {
+                                      "name": "event",
+                                      "type": "{borrowerId:string}"
+                                    }
+                                  ],
+                                  "returns": "{standing:type:lending#Standing}"
+                                }
+                              }
                             },
                             "edge": {
                               "type": "handles",
@@ -196,5 +233,70 @@
         ]
       }
     ]
+  },
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "id": "type:@types/aws-lambda#APIGatewayProxyEvent",
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "fields": [],
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "id": "type:@types/aws-lambda#APIGatewayProxyResult",
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "fields": [],
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:lending#LoanRequest": {
+      "id": "type:lending#LoanRequest",
+      "name": "LoanRequest",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/loans.ts",
+      "structuralHash": "07210ddb6676fb42",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "itemIds",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:lending#Standing": {
+      "id": "type:lending#Standing",
+      "name": "Standing",
+      "kind": "union",
+      "declaredIn": "lending#src/handlers/check-borrower.ts",
+      "structuralHash": "8af2dd81749c2e41",
+      "fields": [],
+      "members": [
+        "'good'",
+        "'suspended'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    }
   }
 }

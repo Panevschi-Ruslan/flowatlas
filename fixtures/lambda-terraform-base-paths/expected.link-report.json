@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T21:12:36.438Z",
+  "builtAt": "2026-10-07T18:28:53.258Z",
   "configHash": "7ae9fc79441a",
   "services": [
     {
@@ -10,9 +10,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 8,
       "edges": 5,
-      "types": 1,
+      "types": 3,
       "unresolved": 0,
-      "durationMs": 573
+      "durationMs": 483
     },
     {
       "name": "kiosk",
@@ -21,9 +21,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 8,
       "edges": 6,
-      "types": 1,
+      "types": 2,
       "unresolved": 0,
-      "durationMs": 573
+      "durationMs": 483
     }
   ],
   "httpOut": {
@@ -55,14 +55,14 @@
     "duplicated": []
   },
   "types": {
-    "total": 1,
+    "total": 3,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
     "nodes": 16,
     "edges": 13,
-    "types": 1,
+    "types": 3,
     "unresolved": 0
   }
 }

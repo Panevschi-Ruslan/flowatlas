@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T21:16:08.949Z",
+  "builtAt": "2026-10-07T18:36:29.544Z",
   "services": [
     {
       "name": "circulation",
@@ -22,7 +22,18 @@
       "label": "handler",
       "repo": "audit",
       "file": "src/audit/flag-renewal.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#EventBridgeEvent<'LoanRenewed',{loanId:string}>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "audit#src/audit/record-entry.ts:handler",
@@ -30,7 +41,18 @@
       "label": "handler",
       "repo": "audit",
       "file": "src/audit/record-entry.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#EventBridgeEvent<'LoanCreated',{loanId:string}>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "channel:eventbridge/library-audit/library.loans/LoanCreated",
@@ -102,7 +124,18 @@
       "label": "saveLoan",
       "repo": "circulation",
       "file": "src/lib/loans-table.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loan",
+              "type": "type:circulation#Loan"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "circulation#src/loans/create-loan.ts:handler",
@@ -110,7 +143,18 @@
       "label": "handler",
       "repo": "circulation",
       "file": "src/loans/create-loan.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
     },
     {
       "id": "circulation#src/loans/renew-loan.ts:handler",
@@ -118,7 +162,18 @@
       "label": "handler",
       "repo": "circulation",
       "file": "src/loans/renew-loan.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
     },
     {
       "id": "consumer:audit#infra/main.tf:aws_cloudwatch_event_target.flag_renewal",
@@ -554,6 +609,10 @@
       "to": "circulation#src/lib/loans-table.ts:saveLoan",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:circulation#Loan"
+      ],
+      "returns": "void",
       "file": "src/loans/create-loan.ts",
       "line": 10
     },
@@ -715,6 +774,16 @@
       "kind": "external",
       "declaredIn": "@types/aws-lambda",
       "structuralHash": "d1b9db28fad35c91",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResultV2": {
+      "name": "APIGatewayProxyResultV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0a2dc33db8681605",
       "meta": {
         "declKind": "external",
         "package": "@types/aws-lambda"

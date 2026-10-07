@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "trpc-router",
-  "generatedAt": "2026-10-06T11:32:35.260Z",
+  "generatedAt": "2026-10-07T18:37:52.235Z",
   "nodes": [
     {
       "id": "entry:trpc-router:http:ALL:/api/trpc/:param",
@@ -136,7 +136,22 @@
       "label": "createOrderOf",
       "repo": "trpc-router",
       "file": "src/client/orders-panel.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "quantity",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "trpc-router#src/client/orders-panel.ts:listOrdersFor",
@@ -144,7 +159,18 @@
       "label": "listOrdersFor",
       "repo": "trpc-router",
       "file": "src/client/orders-panel.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "customerId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "trpc-router#src/server/orders-store.ts:listOrders",
@@ -152,7 +178,18 @@
       "label": "listOrders",
       "repo": "trpc-router",
       "file": "src/server/orders-store.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ input }",
+              "type": "{ctx:unknown;input:unknown}"
+            }
+          ],
+          "returns": "{id:string;customerId:string}[]"
+        }
+      }
     },
     {
       "id": "trpc-router#src/server/orders-store.ts:storeOrder",
@@ -160,7 +197,18 @@
       "label": "storeOrder",
       "repo": "trpc-router",
       "file": "src/server/orders-store.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{sku:string;quantity:number}"
+            }
+          ],
+          "returns": "{sku:string;quantity:number;id:'ord-2'}"
+        }
+      }
     },
     {
       "id": "trpc-router#src/server/orders.ts:ordersRouter",
@@ -176,7 +224,18 @@
       "label": "ordersRouter.mutation@14",
       "repo": "trpc-router",
       "file": "src/server/orders.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ input }",
+              "type": "{ctx:unknown;input:unknown}"
+            }
+          ],
+          "returns": "{sku:string;quantity:number;id:'ord-2'}"
+        }
+      }
     },
     {
       "id": "trpc-router#src/server/procedures.ts:isAdmin",
@@ -202,7 +261,13 @@
       "label": "dailyTotals",
       "repo": "trpc-router",
       "file": "src/server/reports.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{day:string;total:number}[]"
+        }
+      }
     },
     {
       "id": "ui_api_call:trpc-router#src/client/orders-panel.ts:20:3",
@@ -331,7 +396,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/server/orders.ts",
-      "line": 16
+      "line": 16,
+      "params": [
+        "{sku:string;quantity:number}"
+      ],
+      "returns": "{sku:string;quantity:number;id:'ord-2'}"
     },
     {
       "from": "trpc-router#src/server/orders.ts:ordersRouter.mutation@14",
@@ -339,11 +408,29 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/server/orders.ts",
-      "line": 16
+      "line": 16,
+      "params": [
+        "{sku:string;quantity:number}"
+      ],
+      "returns": "{sku:string;quantity:number;id:'ord-2'}"
     }
   ],
   "types": {},
   "unresolved": [
+    {
+      "file": "src/client/orders-panel.ts",
+      "line": 19,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
+    },
+    {
+      "file": "src/client/orders-panel.ts",
+      "line": 22,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
+    },
     {
       "file": "src/pages/api/trpc/[trpc].ts",
       "line": 4,

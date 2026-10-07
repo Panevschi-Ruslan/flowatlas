@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:34:44.116Z",
+  "builtAt": "2026-10-07T18:37:30.128Z",
   "services": [
     {
       "name": "web",
@@ -88,7 +88,18 @@
       "label": "toBookingOutput",
       "repo": "web",
       "file": "../../packages/platform-types/src/index.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{id:number;title:string}"
+            }
+          ],
+          "returns": "type:@sibling-types/platform-types#BookingOutput"
+        }
+      }
     },
     {
       "id": "web#app/api/bookings/route.ts:GET",
@@ -96,7 +107,13 @@
       "label": "GET",
       "repo": "web",
       "file": "app/api/bookings/route.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     }
   ],
   "edges": [
@@ -125,6 +142,10 @@
       "to": "web#../../packages/platform-types/src/index.ts:toBookingOutput",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "{id:number;title:string}"
+      ],
+      "returns": "type:@sibling-types/platform-types#BookingOutput",
       "file": "app/api/bookings/route.ts",
       "line": 9
     }

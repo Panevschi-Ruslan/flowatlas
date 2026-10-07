@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-entries",
-  "generatedAt": "2026-10-07T14:34:09.891Z",
+  "generatedAt": "2026-10-07T18:29:20.163Z",
   "nodes": [
     {
       "id": "channel:order.created",
@@ -461,7 +461,10 @@
       "confidence": "static",
       "file": "src/events/events.controller.ts",
       "line": 6,
-      "returns": "void"
+      "returns": "void",
+      "params": [
+        "{orderId:string}"
+      ]
     },
     {
       "from": "consumer:nest-entries#src/events/events.controller.ts:EventsController.sum",
@@ -470,7 +473,10 @@
       "confidence": "static",
       "file": "src/events/events.controller.ts",
       "line": 11,
-      "returns": "number"
+      "returns": "number",
+      "params": [
+        "number[]"
+      ]
     },
     {
       "from": "entry:nest-entries:cron:TasksService.everyFiveMinutes",

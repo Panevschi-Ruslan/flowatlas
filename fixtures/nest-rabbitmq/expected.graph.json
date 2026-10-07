@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-rabbitmq",
-  "generatedAt": "2026-10-07T14:34:27.869Z",
+  "generatedAt": "2026-10-07T18:29:38.133Z",
   "nodes": [
     {
       "id": "channel:order.cancelled",
@@ -495,7 +495,11 @@
       "confidence": "static",
       "file": "src/orders/orders.consumer.ts",
       "line": 21,
-      "returns": "void"
+      "returns": "void",
+      "params": [
+        "type:nest-rabbitmq#OrderCreatedEvent",
+        "type:amqplib#ConsumeMessage"
+      ]
     },
     {
       "from": "consumer:nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderRefunded",
@@ -504,7 +508,10 @@
       "confidence": "static",
       "file": "src/orders/orders.consumer.ts",
       "line": 33,
-      "returns": "void"
+      "returns": "void",
+      "params": [
+        "type:nest-rabbitmq#OrderRefundedEvent"
+      ]
     },
     {
       "from": "consumer:nest-rabbitmq#src/orders/orders.controller.ts:OrdersController.onOrderCancelled",
@@ -513,7 +520,10 @@
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
       "line": 13,
-      "returns": "void"
+      "returns": "void",
+      "params": [
+        "type:nest-rabbitmq#OrderCancelledEvent"
+      ]
     },
     {
       "from": "entry:nest-rabbitmq:event:order.cancelled",

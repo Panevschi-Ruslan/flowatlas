@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:33:38.503Z",
+  "builtAt": "2026-10-07T18:36:24.081Z",
   "services": [
     {
       "name": "api",
@@ -22,7 +22,18 @@
       "label": "GET /orders/:orderId@15",
       "repo": "api",
       "file": "src/admin/admin.routes.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "api#src/app.module.ts:AppModule",
@@ -183,7 +194,18 @@
       "label": "adminEvents",
       "repo": "api",
       "file": "src/stream/sse.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/stream/sse.ts:orderStream",
@@ -191,7 +213,18 @@
       "label": "orderStream",
       "repo": "api",
       "file": "src/stream/sse.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/stream/sse.ts:stockStream",
@@ -199,7 +232,18 @@
       "label": "stockStream",
       "repo": "api",
       "file": "src/stream/sse.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:DELETE /api/depots/:depotId/cache@42",
@@ -207,7 +251,18 @@
       "label": "DELETE /api/depots/:depotId/cache@42",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 42
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:GET /health@23",
@@ -215,7 +270,18 @@
       "label": "GET /health@23",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:POST /api/messenger/webhook@34",
@@ -223,7 +289,18 @@
       "label": "POST /api/messenger/webhook@34",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 34
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:acceptUpdate",
@@ -231,7 +308,18 @@
       "label": "acceptUpdate",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 67
+      "line": 67,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:all@65",
@@ -239,7 +327,18 @@
       "label": "all@65",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 65
+      "line": 65,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:boot",
@@ -247,7 +346,13 @@
       "label": "boot",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 78
+      "line": 78,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "object"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:forwardToNest",
@@ -255,7 +360,18 @@
       "label": "forwardToNest",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 73
+      "line": 73,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:post@52",
@@ -263,7 +379,18 @@
       "label": "post@52",
       "repo": "api",
       "file": "src/worker.ts",
-      "line": 52
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/worker.ts:requestLogger",
@@ -630,7 +757,18 @@
       "label": "LiveEventsService.open",
       "repo": "web",
       "file": "src/app/live-events.service.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService",
@@ -650,7 +788,18 @@
       "label": "OrdersApiService.list",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "web#src/app/orders.component.ts:OrdersComponent",
@@ -671,7 +820,13 @@
       "label": "OrdersComponent.load",
       "repo": "web",
       "file": "src/app/orders.component.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders.component.ts:OrdersComponent.watch",
@@ -679,7 +834,13 @@
       "label": "OrdersComponent.watch",
       "repo": "web",
       "file": "src/app/orders.component.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     }
   ],
   "edges": [
@@ -770,6 +931,8 @@
       "to": "api#src/worker.ts:boot",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "object",
       "file": "src/worker.ts",
       "line": 35
     },
@@ -791,6 +954,10 @@
       "to": "api#src/worker.ts:forwardToNest",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:hono#Context"
+      ],
+      "returns": "unknown",
       "file": "src/worker.ts",
       "line": 65
     },
@@ -799,6 +966,10 @@
       "to": "api#src/worker.ts:acceptUpdate",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:hono#Context"
+      ],
+      "returns": "unknown",
       "file": "src/worker.ts",
       "line": 52
     },
@@ -1158,6 +1329,10 @@
       "to": "web#src/app/orders-api.service.ts:OrdersApiService.list",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
       "file": "src/app/orders.component.ts",
       "line": 25
     },
@@ -1166,6 +1341,10 @@
       "to": "web#src/app/live-events.service.ts:LiveEventsService.open",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "src/app/orders.component.ts",
       "line": 21
     }
@@ -1196,6 +1375,16 @@
       "meta": {
         "declKind": "interface",
         "exported": true
+      }
+    },
+    "type:hono#Context": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "hono",
+      "structuralHash": "9245dcdd5ac0d844",
+      "meta": {
+        "declKind": "external",
+        "package": "hono"
       }
     }
   },

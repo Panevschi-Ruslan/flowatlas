@@ -27,6 +27,7 @@ import { classesPass } from './passes/classes.js';
 import { httpPass } from './passes/http.js';
 import { markersPass } from './passes/markers.js';
 import { modulesPass } from './passes/modules.js';
+import { signaturesPass } from './passes/signatures.js';
 import { socketsPass } from './passes/sockets.js';
 import { ssePass } from './passes/sse.js';
 import { templatesPass } from './passes/templates.js';
@@ -63,6 +64,9 @@ export interface ExtractRepoOptions {
  * a browser is handed something it did not ask for one message at a time, and
  * they answer the question of what that is differently — a stream is a request
  * to an address, a socket is one end of a named channel (R08).
+ *
+ * What a method takes is written after all of them, once every edge into it is
+ * drawn.
  */
 export const BUILT_IN_PASSES: readonly AngularExtractorPass[] = [
   modulesPass,
@@ -73,6 +77,7 @@ export const BUILT_IN_PASSES: readonly AngularExtractorPass[] = [
   ssePass,
   socketsPass,
   markersPass,
+  signaturesPass,
 ];
 
 /**
@@ -119,6 +124,7 @@ export const extractAngular = (
   recordApplications(base);
 
   for (const pass of BUILT_IN_PASSES) {
+    if (options.noTypes === true && pass.name === 'types') continue;
     base.logger.debug(`pass ${pass.name}`);
     pass.run(ctx);
   }

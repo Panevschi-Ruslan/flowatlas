@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:33:30.800Z",
+  "builtAt": "2026-10-07T18:36:16.322Z",
   "services": [
     {
       "name": "api",
@@ -40,7 +40,22 @@
       "label": "listOrders",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.repository.ts:OrdersRepository",
@@ -109,7 +124,22 @@
       "label": "GET /:orderId@25",
       "repo": "api",
       "file": "src/orders/orders.routes.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.routes.ts:POST /@36",
@@ -117,7 +147,22 @@
       "label": "POST /@36",
       "repo": "api",
       "file": "src/orders/orders.routes.ts",
-      "line": 36
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:api#CreateOrder>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.routes.ts:requireAdmin",
@@ -143,7 +188,22 @@
       "label": "GET /health@14",
       "repo": "api",
       "file": "src/public/public.routes.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "type:express#Response<unknown>"
+        }
+      }
     },
     {
       "id": "api#src/public/public.routes.ts:GET /summary@18",
@@ -151,7 +211,22 @@
       "label": "GET /summary@18",
       "repo": "api",
       "file": "src/public/public.routes.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "db_query:api#src/orders/orders.repository.ts:15:12",
@@ -457,7 +532,18 @@
       "label": "OrdersApiService.create",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService.list",
@@ -465,7 +551,13 @@
       "label": "OrdersApiService.list",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "web#src/app/orders.component.ts:OrdersComponent",
@@ -486,7 +578,13 @@
       "label": "OrdersComponent.load",
       "repo": "web",
       "file": "src/app/orders.component.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders.component.ts:OrdersComponent.place",
@@ -494,7 +592,13 @@
       "label": "OrdersComponent.place",
       "repo": "web",
       "file": "src/app/orders.component.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     }
   ],
   "edges": [
@@ -850,6 +954,8 @@
       "to": "web#src/app/orders-api.service.ts:OrdersApiService.list",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "unknown",
       "file": "src/app/orders.component.ts",
       "line": 17
     },
@@ -858,11 +964,71 @@
       "to": "web#src/app/orders-api.service.ts:OrdersApiService.create",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "unknown",
       "file": "src/app/orders.component.ts",
       "line": 21
     }
   ],
-  "types": {},
+  "types": {
+    "type:api#CreateOrder": {
+      "name": "CreateOrder",
+      "kind": "object",
+      "declaredIn": "api#src/orders/orders.routes.ts",
+      "structuralHash": "98b3726a0865bd42",
+      "fields": [
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:express#Request<object,unknown,unknown>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<unknown,unknown,type:api#CreateOrder>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "src/orders/orders.routes.ts",

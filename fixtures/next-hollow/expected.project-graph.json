@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:24.719Z",
+  "builtAt": "2026-10-07T18:37:26.576Z",
   "services": [
     {
       "name": "shop",
@@ -176,7 +176,13 @@
       "label": "GET",
       "repo": "shop",
       "file": "app/api/invoices/route.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "shop#app/api/orders/route.ts:GET",
@@ -192,7 +198,13 @@
       "label": "listInvoices",
       "repo": "shop",
       "file": "lib/invoices-store.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop#Invoice[]"
+        }
+      }
     },
     {
       "id": "shop#lib/products.ts:handlerBuilder",
@@ -200,7 +212,18 @@
       "label": "handlerBuilder",
       "repo": "shop",
       "file": "lib/products.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "config",
+              "type": "{collection:string}"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        }
+      }
     }
   ],
   "edges": [
@@ -233,6 +256,8 @@
       "to": "shop#lib/invoices-store.ts:listInvoices",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "type:shop#Invoice[]",
       "file": "app/api/invoices/route.ts",
       "line": 11
     },
@@ -241,11 +266,36 @@
       "to": "shop#lib/invoices-store.ts:listInvoices",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "type:shop#Invoice[]",
       "file": "lib/products.ts",
       "line": 12
     }
   ],
-  "types": {},
+  "types": {
+    "type:shop#Invoice": {
+      "name": "Invoice",
+      "kind": "object",
+      "declaredIn": "shop#lib/invoices-store.ts",
+      "structuralHash": "e752b571a9fb0fb7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "app/api/exports/route.ts",

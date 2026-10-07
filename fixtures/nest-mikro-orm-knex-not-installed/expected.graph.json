@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-mikro-orm-knex-not-installed",
-  "generatedAt": "2026-10-07T14:34:20.996Z",
+  "generatedAt": "2026-10-07T18:29:31.290Z",
   "nodes": [
     {
       "id": "db_query:nest-mikro-orm-knex-not-installed#src/inventory/inventory-level.repository.ts:24:12",
@@ -212,7 +212,18 @@
       "label": "reservedLocations",
       "repo": "nest-mikro-orm-knex-not-installed",
       "file": "src/inventory/inventory-level.repository.ts",
-      "line": 62
+      "line": 62,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "{manager?:unknown}"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-mikro-orm-knex-not-installed#src/inventory/manager-base.ts:ManagerBase",

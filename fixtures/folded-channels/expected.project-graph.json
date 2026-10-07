@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:33:34.947Z",
+  "builtAt": "2026-10-07T18:28:45.357Z",
   "services": [
     {
       "name": "api",
@@ -711,6 +711,10 @@
       "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
       "file": "src/projections/lifecycle.service.ts",
       "line": 26
     },
@@ -719,6 +723,10 @@
       "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onHeld",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
       "file": "src/projections/lifecycle.service.ts",
       "line": 25
     },
@@ -727,6 +735,10 @@
       "to": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onOpened",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:worker#LifecycleEvent"
+      ],
+      "returns": "void",
       "file": "src/projections/lifecycle.service.ts",
       "line": 24
     },

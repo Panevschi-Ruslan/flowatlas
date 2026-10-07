@@ -319,10 +319,23 @@ only one of them moved.
   it left closed. *Copy as TypeScript* copies the face with every type written
   out inline. A node with nothing recorded says so. *Types* above the drawing,
   or `T`, writes the same on one line under every node, remembered in the
-  browser and not put in the link. The NestJS reader records each method's
-  parameter names on its node as `meta.signature`
-  (`{ params: [{ name, type, optional?, rest? }], returns }`); the edges keep
-  their bare `params` and `returns`. The page ships only the types those reach:
+  browser and not put in the link. Every reader records each method's and
+  function's parameter names on its node as `meta.signature`
+  (`{ params: [{ name, type, optional?, rest? }], returns }`) - NestJS and the
+  other back ends it reads (methods however written, and the functions it
+  draws: helpers, bot and Lambda handlers), Angular (every method of every class
+  it indexed) and React (components, hooks and functions) - and writes the bare
+  `params` and `returns` on every `calls` edge into them. A route's `handles`
+  edge carries them only where what the handler returns is what the request is
+  answered with (a controller method), since the contracts read it as that. A
+  way in that is not a request - a template event, a bot command, a consumer -
+  shows what it hands its handler (`onSave(order: Order) → void`). On the same
+  project every method and function of all five services now has one (5,648,
+  from 2,645), every edge between two functions carries its types, and every
+  one of its 2,350 ways in shows its handler's; the graph grows by 7% and the
+  page from 2,035 KB to 2,195 KB. Eight fixtures whose graphs held no types
+  before now hold some, so `contracts` reads them and their reports are
+  snapshotted. The page ships only the types those reach:
   on a real five-service project 3,808 nodes have a face and 1,180 types are
   shipped, and the page grows from 1,466 KB to 1,998 KB. Hovering a node, or
   moving the keys onto it, shows the same in a card beside it with one level of

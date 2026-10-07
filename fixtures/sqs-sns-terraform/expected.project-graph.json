@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T21:13:54.117Z",
+  "builtAt": "2026-10-07T18:37:42.511Z",
   "services": [
     {
       "name": "returns",
@@ -800,7 +800,18 @@
       "label": "handler",
       "repo": "returns",
       "file": "src/holds/place-hold.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "returns#src/lib/returns-queue.ts:queueReturn",
@@ -808,7 +819,18 @@
       "label": "queueReturn",
       "repo": "returns",
       "file": "src/lib/returns-queue.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "type:returns#ReturnedItem"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "returns#src/notices/notify-borrower.ts:handler",
@@ -816,7 +838,18 @@
       "label": "handler",
       "repo": "returns",
       "file": "src/notices/notify-borrower.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SNSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "returns#src/notices/send-reminder.ts:handler",
@@ -824,7 +857,18 @@
       "label": "handler",
       "repo": "returns",
       "file": "src/notices/send-reminder.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "returns#src/returns/bulk-return.ts:handler",
@@ -832,7 +876,18 @@
       "label": "handler",
       "repo": "returns",
       "file": "src/returns/bulk-return.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "returns#src/returns/process-return.ts:handler",
@@ -840,7 +895,18 @@
       "label": "handler",
       "repo": "returns",
       "file": "src/returns/process-return.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "returns#src/returns/record-return.ts:handler",
@@ -848,7 +914,18 @@
       "label": "handler",
       "repo": "returns",
       "file": "src/returns/record-return.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "returns#src/stock/restock.ts:handler",
@@ -856,7 +933,18 @@
       "label": "handler",
       "repo": "returns",
       "file": "src/stock/restock.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     }
   ],
   "edges": [
@@ -1247,6 +1335,10 @@
       "to": "returns#src/lib/returns-queue.ts:queueReturn",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:returns#ReturnedItem"
+      ],
+      "returns": "void",
       "file": "src/returns/bulk-return.ts",
       "line": 10
     },
@@ -1304,6 +1396,10 @@
       "to": "returns#src/lib/returns-queue.ts:queueReturn",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:returns#ReturnedItem"
+      ],
+      "returns": "void",
       "file": "src/returns/record-return.ts",
       "line": 6
     }
@@ -1314,6 +1410,16 @@
       "kind": "external",
       "declaredIn": "@types/aws-lambda",
       "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
       "meta": {
         "declKind": "external",
         "package": "@types/aws-lambda"

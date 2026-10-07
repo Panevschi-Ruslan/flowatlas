@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:33:22.360Z",
+  "builtAt": "2026-10-07T18:28:32.710Z",
   "services": [
     {
       "name": "api",
@@ -295,6 +295,15 @@
       "file": "src/app/items.service.ts",
       "line": 51,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        },
         "unreferenced": true
       }
     },
@@ -306,6 +315,10 @@
       "file": "src/app/items.service.ts",
       "line": 74,
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        },
         "unreferenced": true
       }
     },
@@ -317,6 +330,10 @@
       "file": "src/app/items.service.ts",
       "line": 63,
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
         "unreferenced": true
       }
     },
@@ -328,6 +345,15 @@
       "file": "src/app/items.service.ts",
       "line": 84,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "term",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        },
         "unreferenced": true
       }
     }

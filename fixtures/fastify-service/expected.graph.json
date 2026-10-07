@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "fastify-service",
-  "generatedAt": "2026-10-07T14:33:32.416Z",
+  "generatedAt": "2026-10-07T18:36:17.963Z",
   "nodes": [
     {
       "id": "db_query:fastify-service#src/orders/orders.repository.ts:12:12",
@@ -183,7 +183,22 @@
       "label": "listOrders",
       "repo": "fastify-service",
       "file": "src/orders/orders.controller.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:fastify#FastifyRequest<unknown>"
+            },
+            {
+              "name": "reply",
+              "type": "type:fastify#FastifyReply"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "fastify-service#src/orders/orders.repository.ts:OrdersRepository",
@@ -252,7 +267,22 @@
       "label": "DELETE /:orderId@48",
       "repo": "fastify-service",
       "file": "src/orders/orders.routes.ts",
-      "line": 48
+      "line": 48,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:fastify#FastifyRequest<unknown>"
+            },
+            {
+              "name": "reply",
+              "type": "type:fastify#FastifyReply"
+            }
+          ],
+          "returns": "type:fastify#FastifyReply"
+        }
+      }
     },
     {
       "id": "fastify-service#src/orders/orders.routes.ts:GET /:orderId@29",
@@ -260,7 +290,22 @@
       "label": "GET /:orderId@29",
       "repo": "fastify-service",
       "file": "src/orders/orders.routes.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:fastify#FastifyRequest<unknown>"
+            },
+            {
+              "name": "reply",
+              "type": "type:fastify#FastifyReply"
+            }
+          ],
+          "returns": "type:fastify#FastifyReply"
+        }
+      }
     },
     {
       "id": "fastify-service#src/orders/orders.routes.ts:POST /@38",
@@ -268,7 +313,22 @@
       "label": "POST /@38",
       "repo": "fastify-service",
       "file": "src/orders/orders.routes.ts",
-      "line": 38
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:fastify#FastifyRequest<type:fastify-service#CreateOrder>"
+            },
+            {
+              "name": "reply",
+              "type": "type:fastify#FastifyReply"
+            }
+          ],
+          "returns": "type:fastify#FastifyReply"
+        }
+      }
     },
     {
       "id": "fastify-service#src/orders/orders.routes.ts:requireAdmin",
@@ -294,7 +354,22 @@
       "label": "GET /health@10",
       "repo": "fastify-service",
       "file": "src/public/public.routes.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:fastify#FastifyRequest<unknown>"
+            },
+            {
+              "name": "reply",
+              "type": "type:fastify#FastifyReply"
+            }
+          ],
+          "returns": "type:fastify#FastifyReply"
+        }
+      }
     },
     {
       "id": "fastify-service#src/public/public.routes.ts:GET /summary@14",
@@ -302,7 +377,22 @@
       "label": "GET /summary@14",
       "repo": "fastify-service",
       "file": "src/public/public.routes.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:fastify#FastifyRequest<unknown>"
+            },
+            {
+              "name": "reply",
+              "type": "type:fastify#FastifyReply"
+            }
+          ],
+          "returns": "type:fastify#FastifyReply"
+        }
+      }
     },
     {
       "id": "repo:fastify-service",
@@ -602,7 +692,55 @@
       "returns": "unknown"
     }
   ],
-  "types": {},
+  "types": {
+    "type:fastify#FastifyReply": {
+      "name": "FastifyReply",
+      "kind": "external",
+      "declaredIn": "fastify",
+      "structuralHash": "858ce41cb7077ad8",
+      "meta": {
+        "declKind": "external",
+        "package": "fastify"
+      }
+    },
+    "type:fastify#FastifyRequest<type:fastify-service#CreateOrder>": {
+      "name": "FastifyRequest",
+      "kind": "external",
+      "declaredIn": "fastify",
+      "structuralHash": "91e2f7be43e18f93",
+      "meta": {
+        "declKind": "external",
+        "package": "fastify"
+      }
+    },
+    "type:fastify#FastifyRequest<unknown>": {
+      "name": "FastifyRequest",
+      "kind": "external",
+      "declaredIn": "fastify",
+      "structuralHash": "91e2f7be43e18f93",
+      "meta": {
+        "declKind": "external",
+        "package": "fastify"
+      }
+    },
+    "type:fastify-service#CreateOrder": {
+      "name": "CreateOrder",
+      "kind": "object",
+      "declaredIn": "fastify-service#src/orders/orders.routes.ts",
+      "structuralHash": "f571afd1325e8f1e",
+      "fields": [
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "src/orders/orders.routes.ts",

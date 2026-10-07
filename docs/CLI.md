@@ -798,9 +798,11 @@ graph, which on a real project is ten thousand boxes and says nothing:
   sends and expects back, what a producer emits and a channel carries. Long
   lines are shortened in the middle; the hover card gives the whole. A method or call
   whose types were not read says *types not recorded*. The setting is kept in
-  the browser, not in the link. Types are read for NestJS methods and routes and
-  for typed calls and payloads; a front end's own methods and a handler with no
-  types have none.
+  the browser, not in the link. Every reader records them: NestJS, Express,
+  Fastify, Koa and Lambda methods and functions, Angular methods and React
+  components, hooks and functions, routes, typed calls and payloads. A way in
+  that is not a request - a template event, a bot command, a consumer - shows
+  what it hands the function that answers it (`onSave(order: Order) → void`).
 - **The hover card.** Resting the pointer on a node, or moving the keys onto
   one, shows a card beside it with its full name, owner, service and
   `file:line`, what it takes and gives back (a function on one line while it

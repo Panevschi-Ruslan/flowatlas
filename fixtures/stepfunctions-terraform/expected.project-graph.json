@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T20:50:04.342Z",
+  "builtAt": "2026-10-07T18:37:49.951Z",
   "services": [
     {
       "name": "lending",
@@ -502,7 +502,18 @@
       "label": "handler",
       "repo": "lending",
       "file": "src/handlers/assess-late-fee.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending#Overdue"
+            }
+          ],
+          "returns": "{fee:number}"
+        }
+      }
     },
     {
       "id": "lending#src/handlers/check-borrower.ts:handler",
@@ -510,7 +521,18 @@
       "label": "handler",
       "repo": "lending",
       "file": "src/handlers/check-borrower.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending#Borrower"
+            }
+          ],
+          "returns": "{standing:type:lending#Standing}"
+        }
+      }
     },
     {
       "id": "lending#src/handlers/notify-borrower.ts:handler",
@@ -518,7 +540,18 @@
       "label": "handler",
       "repo": "lending",
       "file": "src/handlers/notify-borrower.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending#NotifyEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "lending#src/handlers/release-hold.ts:handler",
@@ -526,7 +559,18 @@
       "label": "handler",
       "repo": "lending",
       "file": "src/handlers/release-hold.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending#ExpiredHold"
+            }
+          ],
+          "returns": "{offeredTo:string}"
+        }
+      }
     },
     {
       "id": "lending#src/handlers/release-hold.ts:nextInQueue",
@@ -534,7 +578,18 @@
       "label": "nextInQueue",
       "repo": "lending",
       "file": "src/handlers/release-hold.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "hold",
+              "type": "type:lending#ExpiredHold"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "lending#src/handlers/score-borrower.ts:handler",
@@ -542,7 +597,18 @@
       "label": "handler",
       "repo": "lending",
       "file": "src/handlers/score-borrower.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:lending#Borrower"
+            }
+          ],
+          "returns": "{score:number}"
+        }
+      }
     },
     {
       "id": "lending#src/handlers/send-overdue-reminder.ts:handler",
@@ -550,7 +616,18 @@
       "label": "handler",
       "repo": "lending",
       "file": "src/handlers/send-overdue-reminder.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{borrowerId:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "lending#src/lib/fees.ts:lateFee",
@@ -558,7 +635,22 @@
       "label": "lateFee",
       "repo": "lending",
       "file": "src/lib/fees.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "daysOverdue",
+              "type": "number"
+            },
+            {
+              "name": "replacementCost",
+              "type": "number"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "lending#src/lib/notices.ts:composeNotice",
@@ -566,7 +658,22 @@
       "label": "composeNotice",
       "repo": "lending",
       "file": "src/lib/notices.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrowerId",
+              "type": "string"
+            },
+            {
+              "name": "kind",
+              "type": "'approved'|'fee-due'|'overdue'|'renewed'"
+            }
+          ],
+          "returns": "type:lending#Notice"
+        }
+      }
     },
     {
       "id": "lending#src/lib/notices.ts:sendNotice",
@@ -574,7 +681,18 @@
       "label": "sendNotice",
       "repo": "lending",
       "file": "src/lib/notices.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "notice",
+              "type": "type:lending#Notice"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "lending#src/lib/standing.ts:scoreOf",
@@ -582,7 +700,18 @@
       "label": "scoreOf",
       "repo": "lending",
       "file": "src/lib/standing.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrower",
+              "type": "type:lending#Borrower"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "lending#src/lib/standing.ts:standingOf",
@@ -590,7 +719,18 @@
       "label": "standingOf",
       "repo": "lending",
       "file": "src/lib/standing.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "borrower",
+              "type": "type:lending#Borrower"
+            }
+          ],
+          "returns": "type:lending#Standing"
+        }
+      }
     },
     {
       "id": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianApproval",
@@ -1462,6 +1602,11 @@
       "to": "lending#src/lib/fees.ts:lateFee",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "number",
+        "number"
+      ],
+      "returns": "number",
       "file": "src/handlers/assess-late-fee.ts",
       "line": 10
     },
@@ -1470,6 +1615,10 @@
       "to": "lending#src/lib/standing.ts:standingOf",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:lending#Borrower"
+      ],
+      "returns": "type:lending#Standing",
       "file": "src/handlers/check-borrower.ts",
       "line": 4
     },
@@ -1478,6 +1627,11 @@
       "to": "lending#src/lib/notices.ts:composeNotice",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "'approved'|'fee-due'|'overdue'|'renewed'"
+      ],
+      "returns": "type:lending#Notice",
       "file": "src/handlers/notify-borrower.ts",
       "line": 11
     },
@@ -1486,6 +1640,10 @@
       "to": "lending#src/lib/notices.ts:sendNotice",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:lending#Notice"
+      ],
+      "returns": "void",
       "file": "src/handlers/notify-borrower.ts",
       "line": 11
     },
@@ -1494,6 +1652,10 @@
       "to": "lending#src/handlers/release-hold.ts:nextInQueue",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:lending#ExpiredHold"
+      ],
+      "returns": "string",
       "file": "src/handlers/release-hold.ts",
       "line": 9
     },
@@ -1502,6 +1664,10 @@
       "to": "lending#src/lib/standing.ts:scoreOf",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:lending#Borrower"
+      ],
+      "returns": "number",
       "file": "src/handlers/score-borrower.ts",
       "line": 4
     },
@@ -1510,6 +1676,11 @@
       "to": "lending#src/lib/notices.ts:composeNotice",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "'approved'|'fee-due'|'overdue'|'renewed'"
+      ],
+      "returns": "type:lending#Notice",
       "file": "src/handlers/send-overdue-reminder.ts",
       "line": 4
     },
@@ -1518,6 +1689,10 @@
       "to": "lending#src/lib/notices.ts:sendNotice",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:lending#Notice"
+      ],
+      "returns": "void",
       "file": "src/handlers/send-overdue-reminder.ts",
       "line": 4
     },
@@ -2161,6 +2336,33 @@
         "exported": false
       }
     },
+    "type:lending#Notice": {
+      "name": "Notice",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/notices.ts",
+      "structuralHash": "932229d30f43675f",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "subject",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
     "type:lending#NotifyEvent": {
       "name": "NotifyEvent",
       "kind": "object",
@@ -2216,6 +2418,21 @@
       "meta": {
         "declKind": "interface",
         "exported": false
+      }
+    },
+    "type:lending#Standing": {
+      "name": "Standing",
+      "kind": "union",
+      "declaredIn": "lending#src/lib/standing.ts",
+      "structuralHash": "3900485074324ef3",
+      "members": [
+        "'good'",
+        "'suspended'",
+        "'overdue'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
       }
     }
   },

@@ -67,7 +67,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
     <span>134 fixtures</span>
-    <span>294 snapshot files</span>
+    <span>302 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -365,7 +365,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>A workspace whose Prisma client was <strong>never generated</strong>, which is what a clone installed with <code>--ignore-scripts</code> is: <code>prisma generate</code> runs from a postinstall hook, so <code>packages/db/generated/prisma</code> does not exist, and nothing links <code>@acme/db</code> into <code>api</code> either.</p>
-        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
     </ul>
   </section>
@@ -551,7 +551,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">2 services</span>
         </div>
         <p>Three state machine definitions kept as files beside the code that runs with them, in two repositories, and one workflow that starts a workflow in the other.</p>
-        <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="stepfunctions-terraform state machines four state machines deployed with terraform over the lambda functions of one lending library, each with its definition written a different way.">
         <div class="head">
@@ -923,7 +923,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">2 services</span>
         </div>
         <p>An Express service and a browser calling it.</p>
-        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="express-traced-handlers express, fastify, koa and hono a lending library's loans api in express, every handler wrapped by a helper that takes the function as a later argument: the http side of r167, read by the same rule as a lambda handler.">
         <div class="head">
@@ -1024,7 +1024,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">2 services</span>
         </div>
         <p>Two repositories, and both of them are here for the same failure: the tool reporting a clean bill of health on something it did not read.</p>
-        <p class="snapshots"><code>expected.doctor.shop.txt</code> <code>expected.doctor.txt</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.doctor.shop.txt</code> <code>expected.doctor.txt</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="next-monorepo next.js and medusa one service whose code is in two directories, which is what r96 turned out to be about.">
         <div class="head">
@@ -1048,7 +1048,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>Three ways in, and not one of them is written in the file that serves it.</p>
-        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="next-sibling-nest-types next.js and medusa a next.js application that imports a dto package built for a nest api, and is not itself a nest application (r143).">
         <div class="head">
@@ -1098,7 +1098,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>One repository, one segment, and two ends that have to agree about it.</p>
-        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="react-local-client react one browser, three client classes it wrote itself, and the question r87 asked: what happens when the thing that makes a request is not a package.">
         <div class="head">
@@ -1172,7 +1172,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>A bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.</p>
-        <p class="snapshots"><code>expected.graph.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.graph.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="custom-http everything else one repository built on a framework this tool has never heard of, read entirely from a description in `flowatlas.config.json`.">
         <div class="head">
@@ -1180,7 +1180,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>One repository built on a framework this tool has never heard of, read entirely from a description in <code>flowatlas.config.json</code>.</p>
-        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="schema-smoke everything else a hand-written sample of the graph schema itself, not a repository: no manifest, no configuration, no sources, nothing for the tool to run over.">
         <div class="head">

@@ -859,6 +859,28 @@ export const faceOf = (model, i) => {
   return { face: faceNames[face[FACE.face]], params, returns: face[FACE.returns] };
 };
 
+/**
+ * The name of the function a way in hands over to: the last part of the label
+ * of what its `handles` edge reaches. Empty when it reaches nothing.
+ */
+const handlerName = (model, i) => {
+  const handles = dictIndex(model.data.dicts.edgeTypes, 'handles');
+  for (const k of model.outgoing[i]) {
+    const edge = model.edges[k];
+    if (edge[EDGE.type] !== handles) continue;
+    const label = model.nodes[edge[EDGE.to]][FIELD.label];
+    return label.slice(label.lastIndexOf('.') + 1);
+  }
+  return '';
+};
+
+/** The name a face is written under: its handler's for a way in, else the node's own. */
+const faceName = (model, i, face) => {
+  if (face.face === 'handler') return handlerName(model, i) || 'handler';
+  const label = model.nodes[i][FIELD.label];
+  return label.slice(label.lastIndexOf('.') + 1);
+};
+
 /** The text of a reference, or '' for none (-1). */
 export const refText = (model, r) => (r < 0 ? '' : shapesOf(model).refs[r][0]);
 
@@ -908,7 +930,8 @@ const paramText = (model, param) => {
  * A face on one line: `(dto: CreateOrder, actor: Actor) → Order` for a
  * function, `body: CreateOrder · params: { id: string } → Order` for a route,
  * `sends { points: number } → Result` for a call, `emits OrderEvent` for a
- * producer and `payload OrderEvent` for its channel. Empty for a node without
+ * producer, `payload OrderEvent` for its channel and `onSave(event: Event)`
+ * for a way in that hands its handler something. Empty for a node without
  * one.
  */
 export const faceLine = (model, i) => {
@@ -917,6 +940,7 @@ export const faceLine = (model, i) => {
   const back = face.returns < 0 ? '' : ' → ' + refText(model, face.returns);
   const listed = face.params.map((param) => paramText(model, param));
   if (face.face === 'method' || face.face === 'bare') return '(' + listed.join(', ') + ')' + back;
+  if (face.face === 'handler') return faceName(model, i, face) + '(' + listed.join(', ') + ')' + back;
   if (face.face === 'route') return (listed.length > 0 ? listed.join(' · ') : 'no request parts read') + back;
   if (face.face === 'channel') {
     return 'payload ' + face.params.map((param) => refText(model, param.ref)).join(' | ');
@@ -1083,6 +1107,7 @@ const asFunction = (name, params, back) =>
 const TS_FACES = {
   method: asFunction,
   bare: asFunction,
+  handler: asFunction,
   route: (name, params, back) =>
     `type Request = {${params.length ? '\n' + listed(params, ';') : ' '}};\ntype Response = ${back};`,
   call: (name, params, back) => (params.length ? `type Sends = ${params[0].type};\n` : '') + `type GetsBack = ${back};`,
@@ -1114,7 +1139,7 @@ export const typeScriptOf = (model, i, bounds = TYPE_BOUNDS) => {
     type: writer.write(param.ref, face.face === 'call' ? '' : '  '),
   }));
   const back = face.returns < 0 ? 'unknown' : writer.write(face.returns);
-  const body = TS_FACES[face.face](functionName(label), params, back);
+  const body = TS_FACES[face.face](functionName(face.face === 'handler' ? faceName(model, i, face) : label), params, back);
   const left = writer.left();
   const note = left > 0 ? `\n// ${left} more ${left === 1 ? 'type' : 'types'} left as names, past the bounds.` : '';
   return { text: `// ${label}\n${body}${note}\n`, left };
@@ -1201,6 +1226,7 @@ const asCardFunction = (name, params, back, chars) => {
 const CARD_FACES = {
   method: asCardFunction,
   bare: asCardFunction,
+  handler: asCardFunction,
   route: (name, params, back) => [
     ...(params.length > 0 ? params.map((p) => p.text) : ['no request parts read']),
     ...(back === '' ? [] : ['→ responds ' + back]),
@@ -1226,14 +1252,13 @@ const CARD_FACES = {
 export const cardOf = (model, i, bounds = CARD_BOUNDS, wide = GLANCE) => {
   const face = faceOf(model, i);
   if (face === null) return null;
-  const label = model.nodes[i][FIELD.label];
   const params = face.params.map((param) => ({
     label: param.label,
     type: middle(refText(model, param.ref), bounds.chars),
     text: middle(paramText(model, param), bounds.chars),
   }));
   const back = face.returns < 0 ? '' : middle(refText(model, face.returns), bounds.chars);
-  const all = CARD_FACES[face.face](label.slice(label.lastIndexOf('.') + 1), params, back, bounds.chars);
+  const all = CARD_FACES[face.face](faceName(model, i, face), params, back, bounds.chars);
   let room = bounds.most;
   const lines = all.slice(0, Math.min(wide.lines ? all.length : bounds.lines, room));
   room -= lines.length;

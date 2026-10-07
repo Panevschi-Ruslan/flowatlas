@@ -93,7 +93,11 @@
                         },
                         "edge": {
                           "type": "calls",
-                          "confidence": "static"
+                          "confidence": "static",
+                          "params": [
+                            "string"
+                          ],
+                          "returns": "number"
                         },
                         "children": []
                       }

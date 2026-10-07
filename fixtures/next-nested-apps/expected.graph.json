@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "next-nested-apps",
-  "generatedAt": "2026-10-06T11:32:25.996Z",
+  "generatedAt": "2026-10-07T18:37:28.274Z",
   "nodes": [
     {
       "id": "entry:next-nested-apps@.:http:GET:/api/orders",
@@ -97,7 +97,13 @@
       "label": "GET",
       "repo": "next-nested-apps",
       "file": "app/api/orders/route.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "next-nested-apps#app/orders-client.ts:loadOrders",
@@ -105,7 +111,13 @@
       "label": "loadOrders",
       "repo": "next-nested-apps",
       "file": "app/orders-client.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "next-nested-apps#examples/blog/src/app/api/orders/route.ts:GET",
@@ -113,7 +125,13 @@
       "label": "GET",
       "repo": "next-nested-apps",
       "file": "examples/blog/src/app/api/orders/route.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "next-nested-apps#examples/blog/src/app/api/posts/route.ts:GET",
@@ -121,7 +139,13 @@
       "label": "GET",
       "repo": "next-nested-apps",
       "file": "examples/blog/src/app/api/posts/route.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "next-nested-apps#examples/blog/src/orders-client.ts:loadOrders",
@@ -129,7 +153,13 @@
       "label": "loadOrders",
       "repo": "next-nested-apps",
       "file": "examples/blog/src/orders-client.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "next-nested-apps#lib/orders-store.ts:listOrders",
@@ -137,7 +167,13 @@
       "label": "listOrders",
       "repo": "next-nested-apps",
       "file": "lib/orders-store.ts",
-      "line": 3
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "repo:next-nested-apps",
@@ -239,7 +275,9 @@
       "type": "calls",
       "confidence": "static",
       "file": "app/api/orders/route.ts",
-      "line": 5
+      "line": 5,
+      "params": [],
+      "returns": "unknown[]"
     },
     {
       "from": "next-nested-apps#app/orders-client.ts:loadOrders",

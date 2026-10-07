@@ -52,8 +52,10 @@ export interface PackedShapes {
  *   call    a call out, by what it sends and what it expects back
  *   channel a channel, by what its producers put on it
  *   bare    a function whose parameters were recorded without names
+ *   handler a way in that is not a request - an event, a command, a
+ *           template binding - by what it hands the function that answers
  */
-export const FACES = ['method', 'route', 'call', 'channel', 'bare'] as const;
+export const FACES = ['method', 'route', 'call', 'channel', 'bare', 'handler'] as const;
 type Face = (typeof FACES)[number];
 
 /** The parts of a request a route's `handles` edge records, in reading order. */
@@ -194,8 +196,8 @@ const isSignature = (value: unknown): value is Signature =>
  * The face of every node that has one, from the graph alone.
  *
  * A function says it on its own node; a route by the request parts its handler
- * reads, on the edge to it; a call and a channel by the types on the edges
- * they send along. A function without a recorded signature whose callers
+ * reads, on the edge to it; any other way in by what its handler takes; a call
+ * and a channel by the types on the edges they send along. A function without a recorded signature whose callers
  * still carry types is shown with those, unnamed.
  */
 const facesOf = (nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Map<string, FaceOf> => {
@@ -222,7 +224,12 @@ const facesOf = (nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Map<
       const entry = byId.get(edge.from);
       if (entry === undefined || out.has(edge.from)) continue;
       const parts = REQUEST_PARTS.filter((part) => typeof edge.meta?.[part] === 'string');
-      if (parts.length === 0 && entry.kind !== 'http') continue;
+      if (parts.length === 0 && entry.kind !== 'http') {
+        // Not a request: what it hands over is what its handler takes.
+        const handler = out.get(edge.to);
+        if (handler?.face === 'method') out.set(edge.from, { ...handler, face: 'handler' });
+        continue;
+      }
       out.set(edge.from, {
         face: 'route',
         params: parts.map((part) => ({ label: part, ref: edge.meta?.[part] as string, flag: FLAG.none })),

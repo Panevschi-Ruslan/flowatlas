@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:33:56.316Z",
+  "builtAt": "2026-10-07T18:36:42.116Z",
   "services": [
     {
       "name": "gateway",
@@ -2046,7 +2046,13 @@
       "label": "CheckoutComponent.place",
       "repo": "web",
       "file": "src/app/checkout.component.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService",
@@ -2066,7 +2072,18 @@
       "label": "OrdersApiService.create",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:web#CreateOrderDto"
+            }
+          ],
+          "returns": "type:web#OrderDto"
+        }
+      }
     }
   ],
   "edges": [
@@ -2118,6 +2135,9 @@
       "to": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:billing#OrderCreatedEvent"
+      ],
       "returns": "void",
       "file": "src/invoices/invoices.consumer.ts",
       "line": 14
@@ -2127,6 +2147,9 @@
       "to": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:orders#GetOrderQuery"
+      ],
       "returns": "type:orders#OrderDto",
       "file": "src/rpc/orders.rpc.controller.ts",
       "line": 15
@@ -3273,6 +3296,10 @@
       "to": "web#src/app/orders-api.service.ts:OrdersApiService.create",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:web#CreateOrderDto"
+      ],
+      "returns": "type:web#OrderDto",
       "file": "src/app/checkout.component.ts",
       "line": 17
     },

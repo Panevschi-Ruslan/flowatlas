@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "express-wrapped-handler",
-  "generatedAt": "2026-10-06T11:31:42.230Z",
+  "generatedAt": "2026-10-07T18:36:17.509Z",
   "nodes": [
     {
       "id": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param",
@@ -117,7 +117,22 @@
       "label": "addVideo",
       "repo": "express-wrapped-handler",
       "file": "src/controllers/videos.ts",
-      "line": 49
+      "line": 49,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,{name:string}>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "express-wrapped-handler#src/controllers/videos.ts:asyncMiddleware(videosGetValidator)",
@@ -143,7 +158,18 @@
       "label": "getRateFactory",
       "repo": "express-wrapped-handler",
       "file": "src/controllers/videos.ts",
-      "line": 54
+      "line": 54,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "kind",
+              "type": "'dislike'|'like'"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        }
+      }
     },
     {
       "id": "express-wrapped-handler#src/controllers/videos.ts:getVideo",
@@ -151,7 +177,22 @@
       "label": "getVideo",
       "repo": "express-wrapped-handler",
       "file": "src/controllers/videos.ts",
-      "line": 44
+      "line": 44,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "express-wrapped-handler#src/lib/videos.ts:countRates",
@@ -159,7 +200,22 @@
       "label": "countRates",
       "repo": "express-wrapped-handler",
       "file": "src/lib/videos.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "kind",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "express-wrapped-handler#src/lib/videos.ts:loadVideo",
@@ -167,7 +223,18 @@
       "label": "loadVideo",
       "repo": "express-wrapped-handler",
       "file": "src/lib/videos.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
     },
     {
       "id": "express-wrapped-handler#src/lib/videos.ts:saveVideo",
@@ -175,7 +242,18 @@
       "label": "saveVideo",
       "repo": "express-wrapped-handler",
       "file": "src/lib/videos.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
     },
     {
       "id": "repo:express-wrapped-handler",
@@ -267,7 +345,11 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/controllers/videos.ts",
-      "line": 50
+      "line": 50,
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string}"
     },
     {
       "from": "express-wrapped-handler#src/controllers/videos.ts:getRateFactory",
@@ -275,7 +357,12 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/controllers/videos.ts",
-      "line": 56
+      "line": 56,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "number"
     },
     {
       "from": "express-wrapped-handler#src/controllers/videos.ts:getVideo",
@@ -283,10 +370,45 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/controllers/videos.ts",
-      "line": 45
+      "line": 45,
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string}"
     }
   ],
-  "types": {},
+  "types": {
+    "type:express#Request<object,unknown,unknown>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<unknown,unknown,{name:string}>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "src/controllers/videos.ts",

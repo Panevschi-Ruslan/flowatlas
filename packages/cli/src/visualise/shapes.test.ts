@@ -510,3 +510,43 @@ describe('where the panel opens what a card showed', () => {
     expect(panelKeysOf(model, 7, [order])).toEqual([]);
   });
 });
+
+describe('a way in that is not a request', () => {
+  const handlerNodes: GraphNode[] = [
+    /* 0 */ { id: 'entry:web:ui:click:save', type: 'entry', kind: 'click', label: 'click Save', repo: 'web' },
+    /* 1 */ {
+      id: 'web#src/order.component.ts:OrderComponent.onSave',
+      type: 'method',
+      label: 'OrderComponent.onSave',
+      repo: 'web',
+      meta: { signature: { params: [{ name: 'order', type: ORDER }], returns: 'void' } },
+    },
+    /* 2 */ { id: 'entry:web:ui:click:nothing', type: 'entry', kind: 'click', label: 'click Nothing', repo: 'web' },
+    /* 3 */ { id: 'web#src/order.component.ts:OrderComponent.untyped', type: 'method', label: 'OrderComponent.untyped', repo: 'web' },
+  ];
+  const handlerEdges: GraphEdge[] = [
+    { from: handlerNodes[0]!.id, to: handlerNodes[1]!.id, type: 'handles', confidence: 'static', params: [ORDER], returns: 'void' },
+    { from: handlerNodes[2]!.id, to: handlerNodes[3]!.id, type: 'handles', confidence: 'static' },
+  ];
+  const handlerModel = createModel(
+    packGraph({
+      builtAt: '2026-10-07T00:00:00.000Z',
+      nodes: handlerNodes,
+      edges: handlerEdges,
+      unresolved: [],
+      report,
+      typeOf: (id) => registry[id],
+    }),
+  );
+
+  it('says what it hands the function that answers it, under that function’s name', () => {
+    expect(faceOf(handlerModel, 0)?.face).toBe('handler');
+    expect(faceLine(handlerModel, 0)).toBe('onSave(order: Order) → void');
+    expect(cardOf(handlerModel, 0)!.lines).toEqual(['onSave(order: Order) → void']);
+    expect(typeScriptOf(handlerModel, 0)!.text).toContain('function onSave(\n  order: {');
+  });
+
+  it('has no face when its handler recorded none', () => {
+    expect(faceOf(handlerModel, 2)).toBeNull();
+  });
+});

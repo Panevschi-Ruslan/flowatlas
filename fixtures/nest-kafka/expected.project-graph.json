@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:34:14.935Z",
+  "builtAt": "2026-10-07T18:29:25.208Z",
   "services": [
     {
       "name": "nest-kafka",
@@ -1303,6 +1303,9 @@
       "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrder",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:nest-kafka#OrderQuery"
+      ],
       "returns": "type:nest-kafka#Order",
       "file": "src/orders/orders.controller.ts",
       "line": 63
@@ -1312,6 +1315,9 @@
       "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrderRaw",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:nest-kafka#OrderQuery"
+      ],
       "returns": "any",
       "file": "src/orders/orders.controller.ts",
       "line": 70
@@ -1321,6 +1327,9 @@
       "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onAnything",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "unknown"
+      ],
       "returns": "void",
       "file": "src/orders/orders.controller.ts",
       "line": 47
@@ -1330,6 +1339,10 @@
       "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onAudit",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:nest-kafka#OrderCreatedEvent",
+        "type:@nestjs/microservices#KafkaContext"
+      ],
       "returns": "void",
       "file": "src/orders/orders.controller.ts",
       "line": 55
@@ -1339,6 +1352,9 @@
       "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onChecksum",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:nest-kafka#OrderCreatedEvent"
+      ],
       "returns": "void",
       "file": "src/orders/orders.controller.ts",
       "line": 40
@@ -1348,6 +1364,9 @@
       "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderCreated",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:nest-kafka#OrderCreatedEvent"
+      ],
       "returns": "void",
       "file": "src/orders/orders.controller.ts",
       "line": 18
@@ -1357,6 +1376,9 @@
       "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderPaid",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:nest-kafka#OrderPaidEvent"
+      ],
       "returns": "void",
       "file": "src/orders/orders.controller.ts",
       "line": 25
@@ -1366,6 +1388,9 @@
       "to": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderSync",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:nest-kafka#OrderCreatedEvent"
+      ],
       "returns": "void",
       "file": "src/orders/orders.controller.ts",
       "line": 32

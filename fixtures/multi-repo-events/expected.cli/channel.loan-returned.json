@@ -190,7 +190,12 @@
                                     },
                                     "edge": {
                                       "type": "calls",
-                                      "confidence": "static"
+                                      "confidence": "static",
+                                      "params": [
+                                        "string",
+                                        "string"
+                                      ],
+                                      "returns": "void"
                                     },
                                     "children": []
                                   }

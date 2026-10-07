@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T21:12:36.438Z",
+  "builtAt": "2026-10-07T18:36:28.491Z",
   "services": [
     {
       "name": "catalogue",
@@ -22,7 +22,18 @@
       "label": "handler",
       "repo": "catalogue",
       "file": "src/holds/place-hold.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "catalogue#src/items/get-item.ts:handler",
@@ -30,7 +41,18 @@
       "label": "handler",
       "repo": "catalogue",
       "file": "src/items/get-item.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "catalogue#src/items/items-table.ts:findItem",
@@ -38,7 +60,18 @@
       "label": "findItem",
       "repo": "catalogue",
       "file": "src/items/items-table.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "itemId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:catalogue#Item|undefined"
+        }
+      }
     },
     {
       "id": "config_key:kiosk#LIBRARY_API_URL",
@@ -250,7 +283,18 @@
       "label": "handler",
       "repo": "kiosk",
       "file": "src/kiosk/check-item.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "kiosk#src/kiosk/request-hold.ts:handler",
@@ -258,7 +302,18 @@
       "label": "handler",
       "repo": "kiosk",
       "file": "src/kiosk/request-hold.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
     },
     {
       "id": "repo:catalogue",
@@ -307,6 +362,10 @@
       "to": "catalogue#src/items/items-table.ts:findItem",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:catalogue#Item|undefined",
       "file": "src/items/get-item.ts",
       "line": 6
     },
@@ -442,6 +501,38 @@
       "meta": {
         "declKind": "external",
         "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:catalogue#Item": {
+      "name": "Item",
+      "kind": "object",
+      "declaredIn": "catalogue#src/items/items-table.ts",
+      "structuralHash": "b65a35b1d3729a5b",
+      "fields": [
+        {
+          "name": "itemId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
       }
     }
   },

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:33:54.794Z",
+  "builtAt": "2026-10-07T18:29:05.207Z",
   "services": [
     {
       "name": "orders",
@@ -425,6 +425,9 @@
       "to": "orders#src/orders/invoice.consumer.ts:InvoiceConsumer.issued",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:orders#InvoiceIssued"
+      ],
       "returns": "void",
       "file": "src/orders/invoice.consumer.ts",
       "line": 16

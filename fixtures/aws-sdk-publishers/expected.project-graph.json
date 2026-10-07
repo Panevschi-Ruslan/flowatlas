@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:33:24.369Z",
+  "builtAt": "2026-10-07T18:36:09.781Z",
   "services": [
     {
       "name": "loans",
@@ -359,7 +359,18 @@
       "label": "publishEvent",
       "repo": "loans",
       "file": "api/events/publish.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "command",
+              "type": "type:@aws-sdk/client-eventbridge#PutEventsCommand"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "loans#api/holds/hold-events.ts:publishHoldCancelled",
@@ -367,7 +378,18 @@
       "label": "publishHoldCancelled",
       "repo": "loans",
       "file": "api/holds/hold-events.ts",
-      "line": 34
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "hold",
+              "type": "type:loans#Hold"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "loans#api/holds/hold-events.ts:publishHoldPlaced",
@@ -375,7 +397,18 @@
       "label": "publishHoldPlaced",
       "repo": "loans",
       "file": "api/holds/hold-events.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "hold",
+              "type": "type:loans#Hold"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "loans#api/holds/holds.routes.ts:cancelHold",
@@ -383,7 +416,22 @@
       "label": "cancelHold",
       "repo": "loans",
       "file": "api/holds/holds.routes.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:loans#Hold>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "loans#api/holds/holds.routes.ts:placeHold",
@@ -391,7 +439,22 @@
       "label": "placeHold",
       "repo": "loans",
       "file": "api/holds/holds.routes.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:loans#Hold>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "loans#api/loans/loan-events.ts:auditLoan",
@@ -399,7 +462,18 @@
       "label": "auditLoan",
       "repo": "loans",
       "file": "api/loans/loan-events.ts",
-      "line": 53
+      "line": 53,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loan",
+              "type": "type:loans#Loan"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "loans#api/loans/loan-events.ts:publishLoanCreated",
@@ -407,7 +481,18 @@
       "label": "publishLoanCreated",
       "repo": "loans",
       "file": "api/loans/loan-events.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loan",
+              "type": "type:loans#Loan"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "loans#api/loans/loan-events.ts:publishLoanRenewed",
@@ -415,7 +500,18 @@
       "label": "publishLoanRenewed",
       "repo": "loans",
       "file": "api/loans/loan-events.ts",
-      "line": 36
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "renewal",
+              "type": "type:loans#Renewal"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "loans#api/loans/loans.routes.ts:createLoan",
@@ -423,7 +519,22 @@
       "label": "createLoan",
       "repo": "loans",
       "file": "api/loans/loans.routes.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:loans#Loan>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "loans#api/loans/loans.routes.ts:renewLoan",
@@ -431,7 +542,22 @@
       "label": "renewLoan",
       "repo": "loans",
       "file": "api/loans/loans.routes.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<{loanId:string},unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "loans#api/returns/returns-queue.ts:queueOverdue",
@@ -439,7 +565,18 @@
       "label": "queueOverdue",
       "repo": "loans",
       "file": "api/returns/returns-queue.ts",
-      "line": 39
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "type:loans#ReturnedItem"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "loans#api/returns/returns-queue.ts:queueReturn",
@@ -447,7 +584,18 @@
       "label": "queueReturn",
       "repo": "loans",
       "file": "api/returns/returns-queue.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "type:loans#ReturnedItem"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "loans#api/returns/returns-queue.ts:queueReturns",
@@ -455,7 +603,18 @@
       "label": "queueReturns",
       "repo": "loans",
       "file": "api/returns/returns-queue.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "items",
+              "type": "type:loans#ReturnedItem[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "loans#api/returns/returns.routes.ts:returnItem",
@@ -463,7 +622,22 @@
       "label": "returnItem",
       "repo": "loans",
       "file": "api/returns/returns.routes.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:loans#ReturnedItem>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "loans#api/returns/returns.routes.ts:returnItems",
@@ -471,7 +645,22 @@
       "label": "returnItems",
       "repo": "loans",
       "file": "api/returns/returns.routes.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:loans#ReturnedItem[]>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "loans#api/returns/returns.routes.ts:returnOverdue",
@@ -479,7 +668,22 @@
       "label": "returnOverdue",
       "repo": "loans",
       "file": "api/returns/returns.routes.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<unknown,unknown,type:loans#ReturnedItem>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "loans#functions/notify-borrower/src/handler.ts:handler",
@@ -487,7 +691,18 @@
       "label": "handler",
       "repo": "loans",
       "file": "functions/notify-borrower/src/handler.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-borrower#LoanDue"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "loans#functions/send-reminder/src/handler.ts:handler",
@@ -495,7 +710,18 @@
       "label": "handler",
       "repo": "loans",
       "file": "functions/send-reminder/src/handler.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reminder",
+              "type": "type:send-reminder#Reminder"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "producer:loans#api/events/library-events.ts:18:11",
@@ -959,6 +1185,10 @@
       "to": "loans#api/events/publish.ts:publishEvent",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:@aws-sdk/client-eventbridge#PutEventsCommand"
+      ],
+      "returns": "void",
       "file": "api/holds/hold-events.ts",
       "line": 35
     },
@@ -983,6 +1213,10 @@
       "to": "loans#api/holds/hold-events.ts:publishHoldCancelled",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:loans#Hold"
+      ],
+      "returns": "void",
       "file": "api/holds/holds.routes.ts",
       "line": 12
     },
@@ -991,6 +1225,10 @@
       "to": "loans#api/holds/hold-events.ts:publishHoldPlaced",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:loans#Hold"
+      ],
+      "returns": "void",
       "file": "api/holds/holds.routes.ts",
       "line": 7
     },
@@ -1031,6 +1269,10 @@
       "to": "loans#api/loans/loan-events.ts:auditLoan",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:loans#Loan"
+      ],
+      "returns": "void",
       "file": "api/loans/loans.routes.ts",
       "line": 9
     },
@@ -1039,6 +1281,10 @@
       "to": "loans#api/loans/loan-events.ts:publishLoanCreated",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:loans#Loan"
+      ],
+      "returns": "void",
       "file": "api/loans/loans.routes.ts",
       "line": 8
     },
@@ -1047,6 +1293,10 @@
       "to": "loans#api/loans/loan-events.ts:publishLoanRenewed",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:loans#Renewal"
+      ],
+      "returns": "void",
       "file": "api/loans/loans.routes.ts",
       "line": 15
     },
@@ -1099,6 +1349,10 @@
       "to": "loans#api/returns/returns-queue.ts:queueReturn",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:loans#ReturnedItem"
+      ],
+      "returns": "void",
       "file": "api/returns/returns.routes.ts",
       "line": 9
     },
@@ -1115,6 +1369,10 @@
       "to": "loans#api/returns/returns-queue.ts:queueReturns",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:loans#ReturnedItem[]"
+      ],
+      "returns": "void",
       "file": "api/returns/returns.routes.ts",
       "line": 15
     },
@@ -1123,6 +1381,10 @@
       "to": "loans#api/returns/returns-queue.ts:queueOverdue",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:loans#ReturnedItem"
+      ],
+      "returns": "void",
       "file": "api/returns/returns.routes.ts",
       "line": 20
     },
@@ -1267,6 +1529,76 @@
     }
   ],
   "types": {
+    "type:@aws-sdk/client-eventbridge#PutEventsCommand": {
+      "name": "PutEventsCommand",
+      "kind": "external",
+      "declaredIn": "@aws-sdk/client-eventbridge",
+      "structuralHash": "861b0205859ca627",
+      "meta": {
+        "declKind": "external",
+        "package": "@aws-sdk/client-eventbridge"
+      }
+    },
+    "type:express#Request<unknown,unknown,type:loans#Hold>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<unknown,unknown,type:loans#Loan>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<unknown,unknown,type:loans#ReturnedItem>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<unknown,unknown,type:loans#ReturnedItem[]>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<{loanId:string},unknown,unknown>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
     "type:loans#Hold": {
       "name": "Hold",
       "kind": "object",

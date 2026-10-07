@@ -187,7 +187,18 @@
                           "type": "function",
                           "label": "handler",
                           "loc": "src/handlers/send-overdue-reminder.ts:3",
-                          "service": "lending"
+                          "service": "lending",
+                          "meta": {
+                            "signature": {
+                              "params": [
+                                {
+                                  "name": "event",
+                                  "type": "{borrowerId:string}"
+                                }
+                              ],
+                              "returns": "void"
+                            }
+                          }
                         },
                         "edge": {
                           "type": "handles",
@@ -200,11 +211,31 @@
                               "type": "function",
                               "label": "composeNotice",
                               "loc": "src/lib/notices.ts:8",
-                              "service": "lending"
+                              "service": "lending",
+                              "meta": {
+                                "signature": {
+                                  "params": [
+                                    {
+                                      "name": "borrowerId",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "name": "kind",
+                                      "type": "'approved'|'fee-due'|'overdue'|'renewed'"
+                                    }
+                                  ],
+                                  "returns": "type:lending#Notice"
+                                }
+                              }
                             },
                             "edge": {
                               "type": "calls",
-                              "confidence": "static"
+                              "confidence": "static",
+                              "params": [
+                                "string",
+                                "'approved'|'fee-due'|'overdue'|'renewed'"
+                              ],
+                              "returns": "type:lending#Notice"
                             },
                             "children": []
                           },
@@ -214,11 +245,26 @@
                               "type": "function",
                               "label": "sendNotice",
                               "loc": "src/lib/notices.ts:19",
-                              "service": "lending"
+                              "service": "lending",
+                              "meta": {
+                                "signature": {
+                                  "params": [
+                                    {
+                                      "name": "notice",
+                                      "type": "type:lending#Notice"
+                                    }
+                                  ],
+                                  "returns": "void"
+                                }
+                              }
                             },
                             "edge": {
                               "type": "calls",
-                              "confidence": "static"
+                              "confidence": "static",
+                              "params": [
+                                "type:lending#Notice"
+                              ],
+                              "returns": "void"
                             },
                             "children": []
                           }
@@ -233,5 +279,35 @@
         ]
       }
     ]
+  },
+  "types": {
+    "type:lending#Notice": {
+      "id": "type:lending#Notice",
+      "name": "Notice",
+      "kind": "object",
+      "declaredIn": "lending#src/lib/notices.ts",
+      "structuralHash": "932229d30f43675f",
+      "fields": [
+        {
+          "name": "borrowerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "subject",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
   }
 }

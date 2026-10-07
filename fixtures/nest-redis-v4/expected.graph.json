@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-redis-v4",
-  "generatedAt": "2026-10-07T14:34:29.261Z",
+  "generatedAt": "2026-10-07T18:29:39.579Z",
   "nodes": [
     {
       "id": "cache_op:nest-redis-v4#src/feed/feed.service.ts:24:11",
@@ -373,7 +373,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/feed/feed.service.ts",
-      "line": 29
+      "line": 29,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
     },
     {
       "from": "consumer:nest-redis-v4#src/feed/feed.service.ts:FeedService.onModeration",
@@ -381,7 +385,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/feed/feed.service.ts",
-      "line": 31
+      "line": 31,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
     },
     {
       "from": "consumer:nest-redis-v4#src/feed/feed.service.ts:FeedService.onShard",
@@ -389,7 +397,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/feed/feed.service.ts",
-      "line": 33
+      "line": 33,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
     },
     {
       "from": "entry:nest-redis-v4:event:feed.item.added",

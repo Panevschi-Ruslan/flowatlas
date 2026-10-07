@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:31.794Z",
+  "builtAt": "2026-10-07T18:37:38.180Z",
   "services": [
     {
       "name": "site",
@@ -124,7 +124,13 @@
       "label": "GET",
       "repo": "site",
       "file": "app/api/things/route.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "site#app/api/things/route.ts:POST",
@@ -132,7 +138,18 @@
       "label": "POST",
       "repo": "site",
       "file": "app/api/things/route.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "Request"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "site#app/things/page.tsx:ThingsPage",
@@ -143,6 +160,10 @@
       "line": 4,
       "kind": "function",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
         "route": "/things"
       }
     },
@@ -152,7 +173,18 @@
       "label": "createThing",
       "repo": "site",
       "file": "lib/things-client.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "site#lib/things-client.ts:deleteThing",
@@ -160,7 +192,18 @@
       "label": "deleteThing",
       "repo": "site",
       "file": "lib/things-client.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "site#lib/things-client.ts:listThings",
@@ -168,7 +211,13 @@
       "label": "listThings",
       "repo": "site",
       "file": "lib/things-client.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "site#lib/things-store.ts:listThings",
@@ -176,7 +225,13 @@
       "label": "listThings",
       "repo": "site",
       "file": "lib/things-store.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string;name:string}[]"
+        }
+      }
     },
     {
       "id": "site#lib/things-store.ts:saveThing",
@@ -184,7 +239,18 @@
       "label": "saveThing",
       "repo": "site",
       "file": "lib/things-store.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "thing",
+              "type": "{id:string;name:string}"
+            }
+          ],
+          "returns": "{id:string;name:string}"
+        }
+      }
     },
     {
       "id": "ui_action:site#app/things/page.tsx:10:29",
@@ -320,6 +386,8 @@
       "to": "site#lib/things-store.ts:listThings",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "{id:string;name:string}[]",
       "file": "app/api/things/route.ts",
       "line": 5
     },
@@ -328,6 +396,10 @@
       "to": "site#lib/things-store.ts:saveThing",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "{id:string;name:string}"
+      ],
+      "returns": "{id:string;name:string}",
       "file": "app/api/things/route.ts",
       "line": 9
     },
@@ -336,6 +408,10 @@
       "to": "site#lib/things-client.ts:createThing",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
       "file": "app/things/page.tsx",
       "line": 10
     },
@@ -344,6 +420,10 @@
       "to": "site#lib/things-client.ts:deleteThing",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
       "file": "app/things/page.tsx",
       "line": 13
     },
@@ -352,6 +432,8 @@
       "to": "site#lib/things-client.ts:listThings",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "unknown",
       "file": "app/things/page.tsx",
       "line": 7
     },
@@ -457,6 +539,14 @@
   ],
   "types": {},
   "unresolved": [
+    {
+      "file": "app/things/page.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "site"
+    },
     {
       "service": "site",
       "file": "lib/things-client.ts",

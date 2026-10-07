@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:30.230Z",
+  "builtAt": "2026-10-07T18:37:35.628Z",
   "services": [
     {
       "name": "web",
@@ -188,7 +188,27 @@
       "label": "send",
       "repo": "web",
       "file": "src/api/transport.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "method",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "object",
+              "optional": true
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "web#src/screens/OrdersPanel.tsx:OrdersPanel",
@@ -197,7 +217,13 @@
       "repo": "web",
       "file": "src/screens/OrdersPanel.tsx",
       "line": 14,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     }
   ],
   "edges": [
@@ -297,6 +323,14 @@
       "reason": "api-path-dynamic",
       "hint": "The address is built at run time. Annotate the function with /** @flowatlas-calls METHOD /path */.",
       "symbol": "fetch(path, { method, body: JSON.stringify(body) })",
+      "service": "web"
+    },
+    {
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 14,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
       "service": "web"
     },
     {

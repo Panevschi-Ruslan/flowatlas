@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:36.385Z",
+  "builtAt": "2026-10-07T18:36:06.106Z",
   "services": [
     {
       "name": "angular-client-wrapper",
@@ -40,7 +40,23 @@
       "label": "BaseService.buildAdminUrl",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/base.service.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            },
+            {
+              "name": "path",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.buildQueryString",
@@ -48,7 +64,19 @@
       "label": "BaseService.buildQueryString",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/base.service.ts",
-      "line": 60
+      "line": 60,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "filters",
+              "type": "object",
+              "optional": true
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.delete",
@@ -56,7 +84,18 @@
       "label": "BaseService.delete",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/base.service.ts",
-      "line": 50
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.get",
@@ -64,7 +103,19 @@
       "label": "BaseService.get",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/base.service.ts",
-      "line": 28
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.getResourcePath",
@@ -72,7 +123,13 @@
       "label": "BaseService.getResourcePath",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/base.service.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.getWithParams",
@@ -80,7 +137,22 @@
       "label": "BaseService.getWithParams",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/base.service.ts",
-      "line": 32
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "params",
+              "type": "object"
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.post",
@@ -88,7 +160,22 @@
       "label": "BaseService.post",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/base.service.ts",
-      "line": 43
+      "line": 43,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.postAction",
@@ -96,7 +183,22 @@
       "label": "BaseService.postAction",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/base.service.ts",
-      "line": 56
+      "line": 56,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.requestWithTenant",
@@ -104,7 +206,18 @@
       "label": "BaseService.requestWithTenant",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/base.service.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "fn",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/admin/crate.service.ts:CrateService",
@@ -124,7 +237,30 @@
       "label": "CrateService.setCrates",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/crate.service.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            },
+            {
+              "name": "entityType",
+              "type": "type:angular-client-wrapper#CrateEntityType"
+            },
+            {
+              "name": "entityId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{locale:string;name?:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/admin/parcel.service.ts:ParcelService",
@@ -146,6 +282,19 @@
       "file": "src/app/admin/parcel.service.ts",
       "line": 68,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "target",
+              "type": "type:angular-client-wrapper#LabelTarget"
+            },
+            {
+              "name": "order",
+              "type": "type:angular-client-wrapper#LabelOrder"
+            }
+          ],
+          "returns": "void"
+        },
         "unreferenced": true
       }
     },
@@ -157,6 +306,10 @@
       "file": "src/app/admin/parcel.service.ts",
       "line": 41,
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:angular-client-wrapper#Parcel[]"
+        },
         "unreferenced": true
       }
     },
@@ -168,6 +321,15 @@
       "file": "src/app/admin/parcel.service.ts",
       "line": 45,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:angular-client-wrapper#Parcel"
+        },
         "unreferenced": true
       }
     },
@@ -179,6 +341,15 @@
       "file": "src/app/admin/parcel.service.ts",
       "line": 54,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
         "unreferenced": true
       }
     },
@@ -190,6 +361,15 @@
       "file": "src/app/admin/parcel.service.ts",
       "line": 72,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "term",
+              "type": "string"
+            }
+          ],
+          "returns": "type:angular-client-wrapper#Parcel[]"
+        },
         "unreferenced": true
       }
     },
@@ -201,6 +381,15 @@
       "file": "src/app/admin/parcel.service.ts",
       "line": 58,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:angular-client-wrapper#Parcel"
+        },
         "unreferenced": true
       }
     },
@@ -212,6 +401,19 @@
       "file": "src/app/admin/parcel.service.ts",
       "line": 49,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "type:angular-client-wrapper#UpdateParcelDto"
+            }
+          ],
+          "returns": "type:angular-client-wrapper#Parcel"
+        },
         "unreferenced": true
       }
     },
@@ -235,6 +437,16 @@
       "file": "src/app/admin/review.service.ts",
       "line": 17,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "filters",
+              "type": "object",
+              "optional": true
+            }
+          ],
+          "returns": "type:angular-client-wrapper#Review[]"
+        },
         "unreferenced": true
       }
     },
@@ -246,6 +458,15 @@
       "file": "src/app/admin/review.service.ts",
       "line": 24,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
         "unreferenced": true
       }
     },
@@ -268,7 +489,13 @@
       "label": "TranslationsTabComponent.save",
       "repo": "angular-client-wrapper",
       "file": "src/app/admin/translations-tab.component.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/deals/deals.client.ts:DealsClient",
@@ -290,6 +517,15 @@
       "file": "src/app/deals/deals.client.ts",
       "line": 28,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:angular-client-wrapper#ClaimDealDto"
+            }
+          ],
+          "returns": "type:angular-client-wrapper#Deal"
+        },
         "unreferenced": true
       }
     },
@@ -301,6 +537,15 @@
       "file": "src/app/deals/deals.client.ts",
       "line": 32,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
         "unreferenced": true
       }
     },
@@ -312,6 +557,15 @@
       "file": "src/app/deals/deals.client.ts",
       "line": 20,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "initData",
+              "type": "string"
+            }
+          ],
+          "returns": "type:angular-client-wrapper#Deal[]"
+        },
         "unreferenced": true
       }
     },
@@ -323,6 +577,19 @@
       "file": "src/app/deals/deals.client.ts",
       "line": 24,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "lang",
+              "type": "string"
+            }
+          ],
+          "returns": "type:angular-client-wrapper#Deal"
+        },
         "unreferenced": true
       }
     },
@@ -344,7 +611,23 @@
       "label": "ApiClient.delete",
       "repo": "angular-client-wrapper",
       "file": "src/app/shared/api-client.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "opts",
+              "type": "type:angular-client-wrapper#RequestOpts",
+              "optional": true
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.get",
@@ -352,7 +635,23 @@
       "label": "ApiClient.get",
       "repo": "angular-client-wrapper",
       "file": "src/app/shared/api-client.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "opts",
+              "type": "type:angular-client-wrapper#RequestOpts",
+              "optional": true
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.httpOpts",
@@ -360,7 +659,19 @@
       "label": "ApiClient.httpOpts",
       "repo": "angular-client-wrapper",
       "file": "src/app/shared/api-client.ts",
-      "line": 48
+      "line": 48,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "opts",
+              "type": "type:angular-client-wrapper#RequestOpts",
+              "optional": true
+            }
+          ],
+          "returns": "{headers?:object}"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.post",
@@ -368,7 +679,28 @@
       "label": "ApiClient.post",
       "repo": "angular-client-wrapper",
       "file": "src/app/shared/api-client.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "unknown",
+              "optional": true
+            },
+            {
+              "name": "opts",
+              "type": "type:angular-client-wrapper#RequestOpts",
+              "optional": true
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.query",
@@ -376,7 +708,18 @@
       "label": "ApiClient.query",
       "repo": "angular-client-wrapper",
       "file": "src/app/shared/api-client.ts",
-      "line": 39
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "params",
+              "type": "object"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.url",
@@ -384,7 +727,23 @@
       "label": "ApiClient.url",
       "repo": "angular-client-wrapper",
       "file": "src/app/shared/api-client.ts",
-      "line": 35
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "opts",
+              "type": "type:angular-client-wrapper#RequestOpts",
+              "optional": true
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "repo:angular-client-wrapper",
@@ -844,6 +1203,8 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.getResourcePath",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "string",
       "file": "src/app/admin/base.service.ts",
       "line": 23
     },
@@ -852,6 +1213,11 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.buildAdminUrl",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "string",
       "file": "src/app/admin/base.service.ts",
       "line": 52
     },
@@ -860,6 +1226,10 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.requestWithTenant",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "T",
       "file": "src/app/admin/base.service.ts",
       "line": 51
     },
@@ -868,6 +1238,11 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.buildAdminUrl",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "string",
       "file": "src/app/admin/base.service.ts",
       "line": 29
     },
@@ -876,6 +1251,10 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.requestWithTenant",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "T",
       "file": "src/app/admin/base.service.ts",
       "line": 29
     },
@@ -884,6 +1263,11 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.buildAdminUrl",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "string",
       "file": "src/app/admin/base.service.ts",
       "line": 34
     },
@@ -892,6 +1276,10 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.requestWithTenant",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "T",
       "file": "src/app/admin/base.service.ts",
       "line": 33
     },
@@ -900,6 +1288,11 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.buildAdminUrl",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "string",
       "file": "src/app/admin/base.service.ts",
       "line": 45
     },
@@ -908,6 +1301,10 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.requestWithTenant",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "T",
       "file": "src/app/admin/base.service.ts",
       "line": 44
     },
@@ -916,6 +1313,11 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.post",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "T",
       "file": "src/app/admin/base.service.ts",
       "line": 57
     },
@@ -956,6 +1358,11 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.post",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "T",
       "file": "src/app/admin/parcel.service.ts",
       "line": 69
     },
@@ -988,6 +1395,10 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.get",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "T",
       "file": "src/app/admin/parcel.service.ts",
       "line": 42
     },
@@ -1004,6 +1415,10 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.get",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "T",
       "file": "src/app/admin/parcel.service.ts",
       "line": 46
     },
@@ -1020,6 +1435,10 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.delete",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "src/app/admin/parcel.service.ts",
       "line": 55
     },
@@ -1036,6 +1455,11 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.getWithParams",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "object"
+      ],
+      "returns": "T",
       "file": "src/app/admin/parcel.service.ts",
       "line": 73
     },
@@ -1052,6 +1476,11 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.postAction",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "T",
       "file": "src/app/admin/parcel.service.ts",
       "line": 59
     },
@@ -1068,6 +1497,11 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.post",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "T",
       "file": "src/app/admin/parcel.service.ts",
       "line": 50
     },
@@ -1084,6 +1518,10 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.buildQueryString",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "string",
       "file": "src/app/admin/review.service.ts",
       "line": 18
     },
@@ -1092,6 +1530,10 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.requestWithTenant",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "T",
       "file": "src/app/admin/review.service.ts",
       "line": 19
     },
@@ -1108,6 +1550,10 @@
       "to": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.delete",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
       "file": "src/app/admin/review.service.ts",
       "line": 25
     },
@@ -1132,6 +1578,13 @@
       "to": "angular-client-wrapper#src/app/admin/crate.service.ts:CrateService.setCrates",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "type:angular-client-wrapper#CrateEntityType",
+        "string",
+        "{locale:string;name?:string}"
+      ],
+      "returns": "unknown",
       "file": "src/app/admin/translations-tab.component.ts",
       "line": 15
     },
@@ -1148,6 +1601,12 @@
       "to": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.post",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "unknown",
+        "type:angular-client-wrapper#RequestOpts"
+      ],
+      "returns": "T",
       "file": "src/app/deals/deals.client.ts",
       "line": 29
     },
@@ -1164,6 +1623,11 @@
       "to": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.delete",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "type:angular-client-wrapper#RequestOpts"
+      ],
+      "returns": "T",
       "file": "src/app/deals/deals.client.ts",
       "line": 33
     },
@@ -1180,6 +1644,11 @@
       "to": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.get",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "type:angular-client-wrapper#RequestOpts"
+      ],
+      "returns": "T",
       "file": "src/app/deals/deals.client.ts",
       "line": 21
     },
@@ -1196,6 +1665,11 @@
       "to": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.get",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "type:angular-client-wrapper#RequestOpts"
+      ],
+      "returns": "T",
       "file": "src/app/deals/deals.client.ts",
       "line": 25
     },
@@ -1220,6 +1694,10 @@
       "to": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.httpOpts",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:angular-client-wrapper#RequestOpts"
+      ],
+      "returns": "{headers?:object}",
       "file": "src/app/shared/api-client.ts",
       "line": 32
     },
@@ -1228,6 +1706,11 @@
       "to": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.url",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "type:angular-client-wrapper#RequestOpts"
+      ],
+      "returns": "string",
       "file": "src/app/shared/api-client.ts",
       "line": 32
     },
@@ -1236,6 +1719,10 @@
       "to": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.httpOpts",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:angular-client-wrapper#RequestOpts"
+      ],
+      "returns": "{headers?:object}",
       "file": "src/app/shared/api-client.ts",
       "line": 24
     },
@@ -1244,6 +1731,11 @@
       "to": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.url",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "type:angular-client-wrapper#RequestOpts"
+      ],
+      "returns": "string",
       "file": "src/app/shared/api-client.ts",
       "line": 24
     },
@@ -1252,6 +1744,10 @@
       "to": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.httpOpts",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "type:angular-client-wrapper#RequestOpts"
+      ],
+      "returns": "{headers?:object}",
       "file": "src/app/shared/api-client.ts",
       "line": 28
     },
@@ -1260,6 +1756,11 @@
       "to": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.url",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string",
+        "type:angular-client-wrapper#RequestOpts"
+      ],
+      "returns": "string",
       "file": "src/app/shared/api-client.ts",
       "line": 28
     },
@@ -1268,6 +1769,10 @@
       "to": "angular-client-wrapper#src/app/shared/api-client.ts:ApiClient.query",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "string",
       "file": "src/app/shared/api-client.ts",
       "line": 36
     },
@@ -1306,6 +1811,21 @@
         "exported": true
       }
     },
+    "type:angular-client-wrapper#CrateEntityType": {
+      "name": "CrateEntityType",
+      "kind": "union",
+      "declaredIn": "angular-client-wrapper#src/app/admin/crate.service.ts",
+      "structuralHash": "c67dd4ac999e812f",
+      "members": [
+        "'item'",
+        "'category'",
+        "'sticker'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
     "type:angular-client-wrapper#Deal": {
       "name": "Deal",
       "kind": "object",
@@ -1328,6 +1848,35 @@
         "exported": true
       }
     },
+    "type:angular-client-wrapper#LabelOrder": {
+      "name": "LabelOrder",
+      "kind": "union",
+      "declaredIn": "angular-client-wrapper#src/app/admin/parcel.service.ts",
+      "structuralHash": "8f4e8870336d5e1d",
+      "members": [
+        "'newest'",
+        "'oldest'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
+    "type:angular-client-wrapper#LabelTarget": {
+      "name": "LabelTarget",
+      "kind": "union",
+      "declaredIn": "angular-client-wrapper#src/app/admin/parcel.service.ts",
+      "structuralHash": "c67dd4ac999e812f",
+      "members": [
+        "'item'",
+        "'category'",
+        "'sticker'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
     "type:angular-client-wrapper#Parcel": {
       "name": "Parcel",
       "kind": "object",
@@ -1343,6 +1892,34 @@
           "name": "name",
           "type": "string",
           "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:angular-client-wrapper#RequestOpts": {
+      "name": "RequestOpts",
+      "kind": "object",
+      "declaredIn": "angular-client-wrapper#src/app/shared/api-client.ts",
+      "structuralHash": "38351d058c962cc3",
+      "fields": [
+        {
+          "name": "initData",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "params",
+          "type": "object",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
         }
       ],
       "meta": {
@@ -1394,6 +1971,16 @@
     }
   },
   "unresolved": [
+    {
+      "file": "src/app/admin/base.service.ts",
+      "line": 18,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "sites": 8,
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "angular-client-wrapper"
+    },
     {
       "service": "angular-client-wrapper",
       "file": "src/app/admin/crate.service.ts",

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "react-no-tsconfig",
-  "generatedAt": "2026-10-06T11:32:31.510Z",
+  "generatedAt": "2026-10-07T18:37:37.419Z",
   "nodes": [
     {
       "id": "react-no-tsconfig#src/OrdersPanel.tsx:OrdersPanel",
@@ -10,7 +10,13 @@
       "repo": "react-no-tsconfig",
       "file": "src/OrdersPanel.tsx",
       "line": 11,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "react-no-tsconfig#src/api/orders.ts:listOrders",
@@ -18,7 +24,13 @@
       "label": "listOrders",
       "repo": "react-no-tsconfig",
       "file": "src/api/orders.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:react-no-tsconfig#OrderDto[]"
+        }
+      }
     },
     {
       "id": "repo:react-no-tsconfig",
@@ -86,7 +98,9 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/OrdersPanel.tsx",
-      "line": 14
+      "line": 14,
+      "params": [],
+      "returns": "type:react-no-tsconfig#OrderDto[]"
     },
     {
       "from": "react-no-tsconfig#src/api/orders.ts:listOrders",
@@ -105,6 +119,37 @@
       "line": 14
     }
   ],
-  "types": {},
-  "unresolved": []
+  "types": {
+    "type:react-no-tsconfig#OrderDto": {
+      "name": "OrderDto",
+      "kind": "object",
+      "declaredIn": "react-no-tsconfig#src/api/orders.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/OrdersPanel.tsx",
+      "line": 11,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
+    }
+  ]
 }

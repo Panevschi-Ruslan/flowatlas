@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:33:52.212Z",
+  "builtAt": "2026-10-07T18:36:37.899Z",
   "services": [
     {
       "name": "gateway",
@@ -1943,7 +1943,13 @@
       "label": "CheckoutComponent.checkout",
       "repo": "web",
       "file": "src/app/checkout.component.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService",
@@ -1965,6 +1971,19 @@
       "file": "src/app/orders-api.service.ts",
       "line": 105,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "step",
+              "type": "'hold'|'resume'"
+            }
+          ],
+          "returns": "unknown"
+        },
         "unreferenced": true
       }
     },
@@ -1976,6 +1995,19 @@
       "file": "src/app/orders-api.service.ts",
       "line": 94,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "action",
+              "type": "'refund'|'ship'"
+            }
+          ],
+          "returns": "unknown"
+        },
         "unreferenced": true
       }
     },
@@ -1987,6 +2019,15 @@
       "file": "src/app/orders-api.service.ts",
       "line": 60,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        },
         "unreferenced": true
       }
     },
@@ -1996,7 +2037,19 @@
       "label": "OrdersApiService.maybeUnder",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 80
+      "line": 80,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService.mirror",
@@ -2006,6 +2059,15 @@
       "file": "src/app/orders-api.service.ts",
       "line": 33,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:web#OrderDto"
+        },
         "unreferenced": true
       }
     },
@@ -2017,6 +2079,15 @@
       "file": "src/app/orders-api.service.ts",
       "line": 72,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:web#OrderDto"
+        },
         "unreferenced": true
       }
     },
@@ -2026,7 +2097,13 @@
       "label": "OrdersApiService.opaque",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 144
+      "line": 144,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService.order",
@@ -2034,7 +2111,18 @@
       "label": "OrdersApiService.order",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:web#OrderDto"
+        }
+      }
     },
     {
       "id": "web#src/app/orders-api.service.ts:OrdersApiService.probe",
@@ -2044,6 +2132,10 @@
       "file": "src/app/orders-api.service.ts",
       "line": 123,
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
         "unreferenced": true
       }
     },
@@ -2055,6 +2147,15 @@
       "file": "src/app/orders-api.service.ts",
       "line": 25,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        },
         "unreferenced": true
       }
     },
@@ -2066,6 +2167,15 @@
       "file": "src/app/orders-api.service.ts",
       "line": 47,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        },
         "unreferenced": true
       }
     },
@@ -2077,6 +2187,10 @@
       "file": "src/app/orders-api.service.ts",
       "line": 138,
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
         "unreferenced": true
       }
     },
@@ -2086,7 +2200,18 @@
       "label": "OrdersApiService.urlFor",
       "repo": "web",
       "file": "src/app/orders-api.service.ts",
-      "line": 76
+      "line": 76,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     }
   ],
   "edges": [
@@ -2175,6 +2300,9 @@
       "to": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:billing#InvoiceRequestedEvent"
+      ],
       "returns": "void",
       "file": "src/invoices/invoices.consumer.ts",
       "line": 28
@@ -2184,6 +2312,9 @@
       "to": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
       "type": "handles",
       "confidence": "static",
+      "params": [
+        "type:billing#OrderCreatedEvent"
+      ],
       "returns": "void",
       "file": "src/invoices/invoices.consumer.ts",
       "line": 17
@@ -3072,6 +3203,10 @@
       "to": "web#src/app/orders-api.service.ts:OrdersApiService.order",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:web#OrderDto",
       "file": "src/app/checkout.component.ts",
       "line": 21
     },
@@ -3112,6 +3247,10 @@
       "to": "web#src/app/orders-api.service.ts:OrdersApiService.urlFor",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
       "file": "src/app/orders-api.service.ts",
       "line": 61
     },
@@ -3136,6 +3275,10 @@
       "to": "web#src/app/orders-api.service.ts:OrdersApiService.maybeUnder",
       "type": "calls",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
       "file": "src/app/orders-api.service.ts",
       "line": 73
     },
@@ -3168,6 +3311,8 @@
       "to": "web#src/app/orders-api.service.ts:OrdersApiService.opaque",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "string",
       "file": "src/app/orders-api.service.ts",
       "line": 124
     },
@@ -3216,6 +3361,8 @@
       "to": "web#src/app/orders-api.service.ts:OrdersApiService.opaque",
       "type": "calls",
       "confidence": "static",
+      "params": [],
+      "returns": "string",
       "file": "src/app/orders-api.service.ts",
       "line": 139
     }

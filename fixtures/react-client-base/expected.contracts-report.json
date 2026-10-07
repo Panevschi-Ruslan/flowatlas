@@ -1,0 +1,93 @@
+{
+  "contractsFormatVersion": 4,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-07T18:42:38.239Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:app#src/app/documents.ts:11:3",
+        "to": "entry:app:http:POST:/api/documents.info",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:app#src/app/documents.ts:11:3|hits|entry:app:http:POST:/api/documents.info",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "app#src/server/documents.routes.ts:POST /documents.info@12 declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:app#src/app/documents.ts:11:3",
+        "to": "entry:app:http:POST:/api/documents.info",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:app#src/app/documents.ts:11:3|hits|entry:app:http:POST:/api/documents.info",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "app#src/server/documents.routes.ts:POST /documents.info@12 declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:app#src/app/documents.ts:14:3",
+        "to": "entry:app:http:POST:/api/documents.update",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:app#src/app/documents.ts:14:3|hits|entry:app:http:POST:/api/documents.update",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "app#src/server/documents.routes.ts:POST /documents.update@16 declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:app#src/app/documents.ts:14:3",
+        "to": "entry:app:http:POST:/api/documents.update",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:app#src/app/documents.ts:14:3|hits|entry:app:http:POST:/api/documents.update",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "app#src/server/documents.routes.ts:POST /documents.update@16 declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:app#src/app/documents.ts:31:3",
+        "to": "entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:app#src/app/documents.ts:31:3|hits|entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "app#src/server/auth.routes.ts:POST /passkeys.generateRegistrationOptions@15 declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:app#src/app/documents.ts:31:3",
+        "to": "entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:app#src/app/documents.ts:31:3|hits|entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "app#src/server/auth.routes.ts:POST /passkeys.generateRegistrationOptions@15 declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 6,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

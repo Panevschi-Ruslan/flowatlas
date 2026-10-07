@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:34.508Z",
+  "builtAt": "2026-10-07T18:37:51.506Z",
   "services": [
     {
       "name": "api",
@@ -28,7 +28,13 @@
       "label": "archiveOrder",
       "repo": "admin",
       "file": "src/server/root.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{archived:true}"
+        }
+      }
     },
     {
       "id": "api#src/pages/orders.tsx:OrdersPage",
@@ -37,7 +43,13 @@
       "repo": "api",
       "file": "src/pages/orders.tsx",
       "line": 8,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/server/root.ts:createOrder",
@@ -45,7 +57,18 @@
       "label": "createOrder",
       "repo": "api",
       "file": "src/server/root.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ input }",
+              "type": "{ctx:unknown;input:unknown}"
+            }
+          ],
+          "returns": "{sku:string;quantity:number;id:'ord-2'}"
+        }
+      }
     },
     {
       "id": "api#src/server/root.ts:dailyTotals",
@@ -53,7 +76,13 @@
       "label": "dailyTotals",
       "repo": "api",
       "file": "src/server/root.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{day:string;total:number}[]"
+        }
+      }
     },
     {
       "id": "api#src/server/root.ts:listOrders",
@@ -61,7 +90,18 @@
       "label": "listOrders",
       "repo": "api",
       "file": "src/server/root.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ input }",
+              "type": "{ctx:unknown;input:unknown}"
+            }
+          ],
+          "returns": "{id:string;customerId:string}[]"
+        }
+      }
     },
     {
       "id": "entry:admin:rpc:orders.archive",
@@ -383,7 +423,13 @@
       "repo": "web",
       "file": "src/Daily.tsx",
       "line": 4,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "web#src/Orders.tsx:Orders",
@@ -392,7 +438,18 @@
       "repo": "web",
       "file": "src/Orders.tsx",
       "line": 13,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ customerId }",
+              "type": "{customerId:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "web#src/Orders.tsx:Section",
@@ -401,7 +458,18 @@
       "repo": "web",
       "file": "src/Orders.tsx",
       "line": 32,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ section }",
+              "type": "{section:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     }
   ],
   "edges": [
@@ -575,6 +643,30 @@
       "service": "api"
     },
     {
+      "file": "src/pages/orders.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "api"
+    },
+    {
+      "file": "src/Daily.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/Orders.tsx",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
       "service": "web",
       "file": "src/Orders.tsx",
       "line": 16,
@@ -591,6 +683,14 @@
       "message": "no procedure orders.archive in web or api",
       "hint": "admin declares it, and nothing says web calls it. If it does, name it in services[].apiTarget of web.",
       "symbol": "ui_api_call:web#src/Orders.tsx:17:19"
+    },
+    {
+      "file": "src/Orders.tsx",
+      "line": 32,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
     },
     {
       "file": "src/Orders.tsx",

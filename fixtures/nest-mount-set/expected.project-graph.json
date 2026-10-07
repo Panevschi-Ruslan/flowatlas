@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:34:24.757Z",
+  "builtAt": "2026-10-07T18:29:35.041Z",
   "services": [
     {
       "name": "api",
@@ -241,7 +241,13 @@
       "label": "listInvoices",
       "repo": "web",
       "file": "src/orders.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "web#src/orders.ts:listOrders",
@@ -249,7 +255,13 @@
       "label": "listOrders",
       "repo": "web",
       "file": "src/orders.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
     },
     {
       "id": "web#src/orders.ts:readOrder",
@@ -257,7 +269,18 @@
       "label": "readOrder",
       "repo": "web",
       "file": "src/orders.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
     }
   ],
   "edges": [

@@ -2058,7 +2058,9 @@ __FRAME_LOGIC__
     /* With Types on, a node is a line taller and the rows open up to match. */
     const BOX_HEIGHTS = { plain: { h: 40, row: 54 }, typed: { h: 54, row: 68 } };
     /* Nodes that have a face to show when one was recorded: the rest say nothing. */
-    const SHAPED = new Set(['method', 'function', 'entry', 'http_out', 'ui_api_call', 'producer', 'channel']);
+    const SHAPED = new Set([
+      'method', 'function', 'ui_component', 'entry', 'ui_action', 'http_out', 'ui_api_call', 'producer', 'channel',
+    ]);
     const PILL = new Set(['table', 'channel', 'external_api', 'config_key']);
     const DOORS = new Set(['entry', 'ui_action']);
     const GROUP_LIMIT = 12;
@@ -3039,6 +3041,10 @@ __FRAME_LOGIC__
       route: { title: 'Request and response', back: 'responds', none: 'Reads no body, path params, query or headers.' },
       call: { title: 'Sends and expects back', back: 'gets back', none: 'Sends nothing typed.' },
       channel: { title: 'Payload', back: '', none: '', note: 'As its producers send it.' },
+      handler: {
+        title: 'Hands its handler', back: 'returns', none: 'Its handler takes no parameters.',
+        note: 'What the function that answers it takes.',
+      },
     };
     const TYPE_KIND_SAYS = { object: 'object', enum: 'enum', union: 'union', generic: 'generic', external: 'external' };
 
@@ -3127,7 +3133,8 @@ __FRAME_LOGIC__
       if (face === null) {
         return SHAPED.has(typeOf(v))
           ? '<section><h4>Takes and returns</h4><p class="g-none">Types not recorded for this node. They are read ' +
-            'for NestJS methods and routes, and for calls and payloads whose code is typed.</p></section>'
+            'for the methods and functions a reader draws, the ways in that reach them, and the calls and ' +
+            'payloads whose code is typed.</p></section>'
           : '';
       }
       const says = FACE_SAYS[face.face];

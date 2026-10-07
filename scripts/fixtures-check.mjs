@@ -172,6 +172,13 @@ const check = (dir, label, expectedPath, actualPath, parse) => {
     problems.push(`${label}: output is not valid\n    ${cause.message}`);
     return;
   }
+  // A path of this checkout in the output is the machine's, not the fixture's:
+  // the snapshot would differ on every other checkout, and it would publish
+  // where the person running it keeps their work. Refused even under --update.
+  if (readFileSync(actualPath, 'utf8').includes(root)) {
+    problems.push(`${label}: output holds this checkout's absolute path (${root}); write it relative`);
+    return;
+  }
   if (stale !== undefined) {
     accept(expectedPath, actualPath);
     console.log(`updated ${label} (was: ${stale})`);
