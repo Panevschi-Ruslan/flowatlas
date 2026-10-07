@@ -120,6 +120,18 @@ export const analyzeUrl = (node: TsNode): UrlInfo => {
 const ORIGIN = /^([a-z][a-z0-9+.-]*:\/\/([^/?#]+))/i;
 
 /**
+ * A caller's value as it fills the hole, which is the text it is and not a
+ * path: reading `'desk-bot'` as a path starts it with a separator, and
+ * `bot${token}` filled with it read `/bot/desk-bot`, a route the request never
+ * reaches. Only a value with no root of its own; one rooted at a setting is
+ * an address, and a separator follows the root.
+ */
+const asWritten = (info: UrlInfo, path: string): string =>
+  info.baseUrlEnv === null && info.url !== null && !info.url.startsWith('/') && path.startsWith('/')
+    ? path.slice(1)
+    : path;
+
+/**
  * Puts an address back together from its two halves.
  *
  * The request knew the fixed half and a caller knew the part it fills in;
@@ -141,7 +153,7 @@ export const composeAddress = (info: UrlInfo, split?: SplitAddress): UrlInfo => 
   const stated = origin?.[1] ?? '';
   const before = split.before.slice(stated.length);
   const unread = info.url === null && holeIn(before, split.after, true) === PARAM_PLACEHOLDER;
-  const filled = info.path ?? (unread ? PARAM_PLACEHOLDER : null);
+  const filled = info.path === null ? (unread ? PARAM_PLACEHOLDER : null) : asWritten(info, info.path);
   const path = filled === null ? null : routePathOf(before + filled + split.after);
   if (origin !== null) {
     return {
@@ -159,3 +171,33 @@ export const composeAddress = (info: UrlInfo, split?: SplitAddress): UrlInfo => 
     host: null,
   };
 };
+
+/**
+ * The route text a path states: what is left once every hole, read as a
+ * parameter or not read at all, is taken out. `/bot${…}/:param` states `bot`;
+ * `/${…}` states nothing, however it is drawn.
+ */
+const statedRouteText = (path: string | null): number =>
+  path === null
+    ? 0
+    : path
+        .split(UNREAD_SPAN)
+        .join('')
+        .split('/')
+        .filter((segment) => segment !== PARAM_PLACEHOLDER)
+        .join('').length;
+
+/**
+ * How sure an address is, for weighing a caller's reading against the
+ * request's own: first how much of the route it states, then whether it says
+ * where it goes - a host, or the setting it is rooted at. Only the order means
+ * anything.
+ *
+ * A caller whose value is not read reads no path, and so states less than
+ * `https://host/bot${token}/…` does: that request stays the helper's, static.
+ * Against `${this.baseUrl}${path}`, which states no route text at all, the
+ * caller loses nothing, and it is where the address is decided and where an
+ * annotation completes it.
+ */
+export const surenessOf = (info: UrlInfo): number =>
+  statedRouteText(info.path) * 2 + (info.host === null && info.baseUrlEnv === null ? 0 : 1);

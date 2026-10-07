@@ -1,0 +1,387 @@
+{
+  "schemaVersion": 6,
+  "repo": "nest-helper-keeps-request",
+  "generatedAt": "2026-10-07T08:18:29.393Z",
+  "nodes": [
+    {
+      "id": "config_key:nest-helper-keeps-request#LIBRARY_BOT_TOKEN",
+      "type": "config_key",
+      "label": "LIBRARY_BOT_TOKEN",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/reminder-dispatcher.ts",
+      "line": 16,
+      "meta": {
+        "key": "LIBRARY_BOT_TOKEN",
+        "source": "binding"
+      }
+    },
+    {
+      "id": "entry:nest-helper-keeps-request:http:POST:/reminders/:param/desk",
+      "type": "entry",
+      "label": "POST /reminders/:param/desk",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/reminders.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/reminders/:param/desk",
+        "rawPath": "/reminders/:chatId/desk",
+        "controller": "RemindersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "external_api:api.example.test",
+      "type": "external_api",
+      "label": "api.example.test",
+      "repo": "nest-helper-keeps-request",
+      "meta": {
+        "host": "api.example.test"
+      }
+    },
+    {
+      "id": "http_out:nest-helper-keeps-request#src/reminders/courier-api.ts:20:26",
+      "type": "http_out",
+      "label": "POST /bot${…}/:param",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/courier-api.ts",
+      "line": 20,
+      "meta": {
+        "method": "POST",
+        "url": "https://api.example.test/bot${…}/${…}",
+        "path": "/bot${…}/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "api.example.test"
+      }
+    },
+    {
+      "id": "http_out:nest-helper-keeps-request#src/reminders/courier-api.ts:31:28",
+      "type": "http_out",
+      "label": "POST /bot${…}/sendMessage",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/courier-api.ts",
+      "line": 31,
+      "meta": {
+        "method": "POST",
+        "url": "https://api.example.test/bot${…}/sendMessage",
+        "path": "/bot${…}/sendMessage",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "api.example.test"
+      }
+    },
+    {
+      "id": "http_out:nest-helper-keeps-request#src/reminders/reminders.service.ts:9:12",
+      "type": "http_out",
+      "label": "POST /botdesk-bot/:param",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/reminders.service.ts",
+      "line": 9,
+      "meta": {
+        "method": "POST",
+        "url": "https://api.example.test/botdesk-bot/:param",
+        "path": "/botdesk-bot/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "api.example.test"
+      }
+    },
+    {
+      "id": "nest-helper-keeps-request#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "RemindersController"
+        ],
+        "providers": [
+          "RemindersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-helper-keeps-request#src/reminders/courier-api.ts:CourierClient",
+      "type": "provider",
+      "label": "CourierClient",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/courier-api.ts",
+      "line": 29,
+      "kind": "injectable"
+    },
+    {
+      "id": "nest-helper-keeps-request#src/reminders/courier-api.ts:CourierClient.send",
+      "type": "method",
+      "label": "CourierClient.send",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/courier-api.ts",
+      "line": 30
+    },
+    {
+      "id": "nest-helper-keeps-request#src/reminders/courier-api.ts:sendViaCourier",
+      "type": "function",
+      "label": "sendViaCourier",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/courier-api.ts",
+      "line": 13
+    },
+    {
+      "id": "nest-helper-keeps-request#src/reminders/reminder-dispatcher.ts:ReminderDispatcher",
+      "type": "provider",
+      "label": "ReminderDispatcher",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/reminder-dispatcher.ts",
+      "line": 9,
+      "kind": "injectable"
+    },
+    {
+      "id": "nest-helper-keeps-request#src/reminders/reminder-dispatcher.ts:ReminderDispatcher.dispatchOne",
+      "type": "method",
+      "label": "ReminderDispatcher.dispatchOne",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/reminder-dispatcher.ts",
+      "line": 15
+    },
+    {
+      "id": "nest-helper-keeps-request#src/reminders/reminder-dispatcher.ts:ReminderDispatcher.dispatchOverdue",
+      "type": "method",
+      "label": "ReminderDispatcher.dispatchOverdue",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/reminder-dispatcher.ts",
+      "line": 22
+    },
+    {
+      "id": "nest-helper-keeps-request#src/reminders/reminders.controller.ts:RemindersController",
+      "type": "provider",
+      "label": "RemindersController",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/reminders.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-helper-keeps-request#src/reminders/reminders.controller.ts:RemindersController.desk",
+      "type": "method",
+      "label": "RemindersController.desk",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/reminders.controller.ts",
+      "line": 9
+    },
+    {
+      "id": "nest-helper-keeps-request#src/reminders/reminders.service.ts:RemindersService",
+      "type": "provider",
+      "label": "RemindersService",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/reminders.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-helper-keeps-request#src/reminders/reminders.service.ts:RemindersService.remindAtDesk",
+      "type": "method",
+      "label": "RemindersService.remindAtDesk",
+      "repo": "nest-helper-keeps-request",
+      "file": "src/reminders/reminders.service.ts",
+      "line": 8
+    },
+    {
+      "id": "repo:nest-helper-keeps-request",
+      "type": "repo",
+      "label": "nest-helper-keeps-request",
+      "repo": "nest-helper-keeps-request",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-helper-keeps-request:http:POST:/reminders/:param/desk",
+      "to": "nest-helper-keeps-request#src/reminders/reminders.controller.ts:RemindersController.desk",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/reminders/reminders.controller.ts",
+      "line": 9,
+      "params": [
+        "string"
+      ],
+      "returns": "boolean",
+      "meta": {
+        "params": "{chatId:string}"
+      }
+    },
+    {
+      "from": "http_out:nest-helper-keeps-request#src/reminders/courier-api.ts:20:26",
+      "to": "external_api:api.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reminders/courier-api.ts",
+      "line": 20
+    },
+    {
+      "from": "http_out:nest-helper-keeps-request#src/reminders/courier-api.ts:31:28",
+      "to": "external_api:api.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reminders/courier-api.ts",
+      "line": 31
+    },
+    {
+      "from": "http_out:nest-helper-keeps-request#src/reminders/reminders.service.ts:9:12",
+      "to": "external_api:api.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reminders/reminders.service.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-helper-keeps-request#src/reminders/courier-api.ts:CourierClient.send",
+      "to": "http_out:nest-helper-keeps-request#src/reminders/courier-api.ts:31:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reminders/courier-api.ts",
+      "line": 31
+    },
+    {
+      "from": "nest-helper-keeps-request#src/reminders/courier-api.ts:sendViaCourier",
+      "to": "http_out:nest-helper-keeps-request#src/reminders/courier-api.ts:20:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reminders/courier-api.ts",
+      "line": 20
+    },
+    {
+      "from": "nest-helper-keeps-request#src/reminders/reminder-dispatcher.ts:ReminderDispatcher.dispatchOne",
+      "to": "config_key:nest-helper-keeps-request#LIBRARY_BOT_TOKEN",
+      "type": "reads_config",
+      "confidence": "heuristic",
+      "file": "src/reminders/reminder-dispatcher.ts",
+      "line": 16
+    },
+    {
+      "from": "nest-helper-keeps-request#src/reminders/reminder-dispatcher.ts:ReminderDispatcher.dispatchOne",
+      "to": "nest-helper-keeps-request#src/reminders/courier-api.ts:sendViaCourier",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reminders/reminder-dispatcher.ts",
+      "line": 18
+    },
+    {
+      "from": "nest-helper-keeps-request#src/reminders/reminder-dispatcher.ts:ReminderDispatcher.dispatchOverdue",
+      "to": "config_key:nest-helper-keeps-request#LIBRARY_BOT_TOKEN",
+      "type": "reads_config",
+      "confidence": "heuristic",
+      "file": "src/reminders/reminder-dispatcher.ts",
+      "line": 23
+    },
+    {
+      "from": "nest-helper-keeps-request#src/reminders/reminder-dispatcher.ts:ReminderDispatcher.dispatchOverdue",
+      "to": "nest-helper-keeps-request#src/reminders/courier-api.ts:CourierClient.send",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reminders/reminder-dispatcher.ts",
+      "line": 25,
+      "params": [
+        "string",
+        "type:nest-helper-keeps-request#ReminderJob"
+      ],
+      "returns": "boolean"
+    },
+    {
+      "from": "nest-helper-keeps-request#src/reminders/reminders.controller.ts:RemindersController",
+      "to": "nest-helper-keeps-request#src/reminders/reminders.service.ts:RemindersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/reminders/reminders.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "nest-helper-keeps-request#src/reminders/reminders.controller.ts:RemindersController.desk",
+      "to": "nest-helper-keeps-request#src/reminders/reminders.service.ts:RemindersService.remindAtDesk",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reminders/reminders.controller.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ],
+      "returns": "boolean"
+    },
+    {
+      "from": "nest-helper-keeps-request#src/reminders/reminders.service.ts:RemindersService.remindAtDesk",
+      "to": "http_out:nest-helper-keeps-request#src/reminders/reminders.service.ts:9:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reminders/reminders.service.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-helper-keeps-request#src/reminders/reminders.service.ts:RemindersService.remindAtDesk",
+      "to": "nest-helper-keeps-request#src/reminders/courier-api.ts:sendViaCourier",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reminders/reminders.service.ts",
+      "line": 9
+    }
+  ],
+  "types": {
+    "type:nest-helper-keeps-request#ReminderJob": {
+      "name": "ReminderJob",
+      "kind": "object",
+      "declaredIn": "nest-helper-keeps-request#src/reminders/courier-api.ts",
+      "structuralHash": "e3b0e9f713acf583",
+      "fields": [
+        {
+          "name": "borrowerChatId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "edit",
+          "type": "boolean",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": []
+}

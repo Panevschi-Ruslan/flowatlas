@@ -4,6 +4,7 @@ import {
   AWAITING_META,
   ENVELOPE_META,
   forwardedFrom,
+  forwardNoWorse,
   makeDeployedReference,
   makeLeafId,
   originsOf,
@@ -75,6 +76,16 @@ const namedBy = (element: AddressedElement, table: Readonly<Record<string, strin
   if (!isResolved(resolution)) return { unread: element };
   const names = resolution.names.map((name) => stated(name) ?? name);
   return { names, declared: resolution.names.some((name) => stated(name) !== undefined) };
+};
+
+/**
+ * How surely an element names what is started, for weighing a caller's
+ * reading against the helper's own: a name read, then a value the deployment
+ * sets, then nothing read. Only the order means anything.
+ */
+const surenessOf = (element: AddressedElement, table?: Readonly<Record<string, string>>): number => {
+  const named = namedBy(element, table);
+  return 'names' in named ? 2 : element.awaiting === undefined ? 0 : 1;
 };
 
 const NOUNS: Readonly<Record<StartedEntry['entry'], string>> = { workflow: 'workflow', invoke: 'function' };
@@ -436,20 +447,28 @@ export const startReader = (ctx: PassContext, holderAt: (site: TsNode) => Holder
     };
     const handedIn = message === undefined ? undefined : parameterOf(message);
     if (elements.length === 1 && only?.parameter !== undefined && part !== undefined) {
-      const forwarded = forwardedFrom(only.parameter);
       const passed = handedIn === undefined ? [] : forwardedFrom(handedIn).calls;
-      let recorded = 0;
-      for (const hop of forwarded.calls) {
-        const owner = holderAt(hop.site);
-        if (owner === undefined || !Node.isCallExpression(hop.site)) continue;
-        const argument = passed.find((each) => each.site === hop.site)?.argument;
+      // A caller is drawn on only where it names what is started at least as
+      // surely as the helper does; one that leaves it less read is the
+      // helper's, drawn where it is written.
+      const forwarding = forwardNoWorse(forwardedFrom(only.parameter), {
+        here: { owner: holder, element: only },
+        at: (hop) => {
+          const owner = holderAt(hop.site);
+          if (owner === undefined || !Node.isCallExpression(hop.site)) return undefined;
+          return { owner, element: readWritten(hop.argument, part, ctx.config) };
+        },
+        sureness: ({ element }) => surenessOf(element, pattern.starts.names),
+      });
+      for (const { site, reading } of forwarding.callers) {
+        if (!Node.isCallExpression(site)) continue;
+        const argument = passed.find((each) => each.site === site)?.argument;
         const payload = handedIn === undefined ? payloadOf(message) : payloadOf(argument === undefined ? undefined : messageValue(argument));
-        record(hop.site, [readWritten(hop.argument, part, ctx.config)], owner, pattern, kind, spec, evidence, payload);
-        recorded += 1;
+        record(site, [reading.element], reading.owner, pattern, kind, spec, evidence, payload);
       }
       // A call that may run this function and may run another decides
       // nothing anyone can attribute, so the call here still answers for it.
-      if (recorded > 0 && !forwarded.undecided) return;
+      if (!forwarding.here) return;
     }
     record(call, elements, holder, pattern, kind, spec, evidence, payloadOf(message));
   };

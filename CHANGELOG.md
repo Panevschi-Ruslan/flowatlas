@@ -296,6 +296,17 @@ only one of them moved.
     row; the deployment's value wins where it is set, and the edge's `defaults`
     says which variables the default stood in for
     (`fixtures/sqs-environment-fallback`).
+- **Following a value out of a helper is never worse than drawing it in the
+  helper.** A request, or the name of what a call starts, is drawn at a caller
+  only where the caller's argument reads it at least as surely as the helper
+  does; otherwise the helper keeps it, with its own node and the caller's call
+  into it. ``fetch(`https://host/bot${token}/${method}`)`` in a function called
+  with a token nobody can read was, since the change above, a `heuristic`
+  request on the caller with a `dynamic-http-url` row, and the helper's node and
+  the call into it were gone; a method of the same shape had always read that
+  way. A caller's value filling part of a segment is now the text it is:
+  `bot${token}` filled with `'desk-bot'` reads `/botdesk-bot`, where it read
+  `/bot/desk-bot` (`fixtures/nest-helper-keeps-request`).
 - **A definition loaded through a local or a variable is watched.** The files a
   Terraform configuration loads are stamped by the paths `file()` and
   `templatefile()` were evaluated with, not read off the `.tf` text, so editing

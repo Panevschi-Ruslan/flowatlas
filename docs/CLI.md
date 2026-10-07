@@ -2378,14 +2378,18 @@ service itself - and the name it starts is that helper's parameter, the start is
 the caller's: each call of the helper is followed out, the argument passed there
 is read as the name would have been, and the start is drawn at that call, in the
 caller. A caller that is itself handing the name on is followed further. Nothing
-is drawn inside the helper unless nothing calls it, or a call may land in
-another implementation. This is the forwarding every reader shares - a shared
+is drawn inside the helper unless nothing calls it, a call may land in another
+implementation, or a caller's argument reads less than the helper's own: a
+caller is drawn on only where it says as much as the helper does, so following
+a value out is never worse than leaving it where it is written. This is the forwarding every reader shares - a shared
 HTTP client's requests get it too - and it follows a method through its
 receiver, and a function written `function start(arn)` or `const start = (arn)
 => …` called by its name, by a name it was imported as, or through its module's
 namespace (`fixtures/start-workflow-function-helper`). A request followed out to
 a caller whose value is not read keeps the address it states: a hole that fills
-one segment stays a route parameter.
+one segment stays a route parameter, and one that fills part of a segment -
+`bot${token}` - leaves the request in the helper, `static`, with the caller's
+call into it (`fixtures/nest-helper-keeps-request`).
 
 **Through a helper whose source is not here, described.** A package shared by
 a project's services is often not installed where someone first reads one: a

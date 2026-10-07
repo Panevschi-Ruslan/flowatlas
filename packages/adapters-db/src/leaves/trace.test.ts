@@ -1,5 +1,6 @@
 import { Project, SyntaxKind, type CallExpression, type SourceFile } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
+import { forwardNoWorse } from '@flowatlas/core';
 import {
   forwardedFrom,
   isReadable,
@@ -7,7 +8,7 @@ import {
   settingReader,
   splitAtParameterIn,
 } from './trace.js';
-import { composeAddress } from './url.js';
+import { analyzeUrl, composeAddress, surenessOf } from './url.js';
 
 const splitAtParameter = (node: Parameters<typeof splitAtParameterIn>[0]) =>
   splitAtParameterIn(node, settingReader);
@@ -336,6 +337,101 @@ describe('putting an address back together around a value nobody read', () => {
   it('leaves an address whose hole may span segments unread', () => {
     expect(around('/repos', '/tarball').path).toBeNull();
     expect(around('', '').path).toBeNull();
+  });
+});
+
+describe('putting an address back together around a value a caller wrote', () => {
+  const split = (before: string, after: string) => ({ parameter: undefined as never, baseUrlEnv: null, before, after });
+  const written = (value: string) => ({ url: value, path: `/${value}`, baseUrlEnv: null, host: null });
+
+  it('fills part of a segment with the text the caller wrote, not a path of its own', () => {
+    expect(composeAddress(written('desk-bot'), split('https://api.example.test/bot', '/sendMessage')).path).toBe(
+      '/botdesk-bot/sendMessage',
+    );
+  });
+
+  it('fills a whole segment as it always has', () => {
+    expect(composeAddress(written('42'), split('/loans/', '/renew')).path).toBe('/loans/42/renew');
+    expect(composeAddress(written('loans'), split('', '/42')).path).toBe('/loans/42');
+  });
+});
+
+/**
+ * Following a request out to its callers must never be worse than drawing it
+ * where it is written: a caller whose argument leaves the address less read
+ * than the helper's own reading is answered by the helper's request.
+ */
+describe('drawing a forwarded request no less surely than the helper does', () => {
+  const callersIn = (client: string, callers: string) => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const file = project.createSourceFile('client.ts', `${HEADER}${client}`);
+    project.createSourceFile('callers.ts', `${HEADER}${callers}`);
+    const urlArg = address(file);
+    const split = splitAtParameter(urlArg)!;
+    const forwarding = forwardNoWorse(forwardedFrom(split.parameter), {
+      here: analyzeUrl(urlArg),
+      at: (hop) => composeAddress(analyzeUrl(hop.argument), split),
+      sureness: surenessOf,
+    });
+    return { callers: forwarding.callers.map((caller) => caller.reading.path), here: forwarding.here };
+  };
+  const helper = (written: string) => `
+    export function send(token: string, edit: boolean) {
+      let method = 'sendMessage';
+      if (edit) method = 'editMessageText';
+      return fetch(\`https://api.example.test/bot\${token}/\${method}\`);
+    }
+    ${written}
+  `;
+
+  it('keeps the request in the helper for a caller whose value fills part of a segment unread', () => {
+    const callers = `
+      import { send } from './client';
+      declare const env: { BOT_TOKEN?: string };
+      export const remind = () => send(env.BOT_TOKEN!, false);
+    `;
+    expect(callersIn(helper(''), callers)).toEqual({ callers: [], here: true });
+  });
+
+  it('draws on a caller that writes the value, and keeps the helper for the one that does not', () => {
+    const callers = `
+      import { send } from './client';
+      declare const env: { BOT_TOKEN?: string };
+      export const remind = () => send(env.BOT_TOKEN!, false);
+      export const desk = () => send('desk-bot', false);
+    `;
+    expect(callersIn(helper(''), callers)).toEqual({ callers: ['/botdesk-bot/:param'], here: true });
+  });
+
+  it('follows a method by the same rule', () => {
+    const client = `export class Courier { send(token: string) { return fetch(\`https://api.example.test/bot\${token}/sendMessage\`); } }`;
+    const callers = `
+      import { Courier } from './client';
+      declare const env: { BOT_TOKEN?: string };
+      export const remind = (courier: Courier) => courier.send(env.BOT_TOKEN!);
+    `;
+    expect(callersIn(client, callers)).toEqual({ callers: [], here: true });
+  });
+
+  it('draws on an unread caller where the helper states no route text either', () => {
+    const client = `export class Api { constructor(private readonly baseUrl: string) {} get(path: string) { return fetch(\`\${this.baseUrl}\${path}\`); } }`;
+    const callers = `
+      import { Api } from './client';
+      export const nearby = (api: Api, lat: number) => {
+        let path = \`/restaurants/nearby?lat=\${lat}\`;
+        if (lat > 0) path += '&north=1';
+        return api.get(path);
+      };
+    `;
+    expect(callersIn(client, callers)).toEqual({ callers: [null], here: false });
+  });
+
+  it('leaves the helper only when every caller is drawn on', () => {
+    const callers = `
+      import { send } from './client';
+      export const desk = () => send('desk-bot', false);
+    `;
+    expect(callersIn(helper(''), callers)).toEqual({ callers: ['/botdesk-bot/:param'], here: false });
   });
 });
 

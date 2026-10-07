@@ -4,6 +4,7 @@ import {
   localBaseTableProperty,
   classifyDbCall,
   declaredParameterType,
+  forwardNoWorse,
   isUniversalMethod,
   narrowUnionByLiteral,
   writtenBodyOutward,
@@ -60,7 +61,7 @@ import { handedBackBy } from './leaves/handed-back.js';
 import { handedOverOrigin, unconfirmedHandover } from './leaves/handover.js';
 import { dataLayerOf } from './leaves/silence.js';
 import { statedOrigin } from './leaves/stated.js';
-import { analyzeUrl, composeAddress } from './leaves/url.js';
+import { analyzeUrl, composeAddress, surenessOf, type UrlInfo } from './leaves/url.js';
 import {
   deref,
   forwardedFrom,
@@ -68,7 +69,6 @@ import {
   parameterBehind,
   settingReader,
   splitAtParameterIn,
-  type SplitAddress,
 } from './leaves/trace.js';
 import { sqlOperation, sqlTables } from './sql.js';
 
@@ -165,8 +165,6 @@ const verbInSettings = (settings: TsNode | undefined, settled = false): string |
 
 /** How one request is recorded, beyond where and by whom. */
 interface RecordOptions {
-  /** The address's fixed half, when a caller supplied the rest. */
-  split?: SplitAddress;
   /** The settings of a `new Request(url, init)` the call was handed. */
   init?: TsNode;
   /**
@@ -1223,13 +1221,12 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    */
   const recordHttp = (
     site: CallExpression,
-    urlArg: TsNode,
+    info: UrlInfo,
     method: string,
     owner: Holder,
     options: RecordOptions = {},
   ): void => {
-    const { split, init, readsSite = true } = options;
-    const info = composeAddress(analyzeUrl(urlArg), split);
+    const { init, readsSite = true } = options;
 
     // A second argument can carry the method for a generic request.
     let verb = method;
@@ -1362,36 +1359,41 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // client knows the base and takes the path as a parameter, so the request
     // belongs to whoever asked for it; recording it here instead would leave
     // one dead end standing in for every caller.
+    const here = analyzeUrl(urlArg);
     const split = isReadable(urlArg) ? undefined : splitAtParameterIn(urlArg, settingReader);
     if (split !== undefined) {
       const verbSource = verbParameterOf(call);
       const stated = statedVerbOf(call, recognised.method, request?.init);
-      const forwarded = forwardedFrom(split.parameter);
-      let recorded = 0;
-      for (const hop of forwarded.calls) {
-        const owner = ownerOf(hop.site);
-        if (owner === undefined || !Node.isCallExpression(hop.site)) continue;
+      // A caller is drawn on only where its argument leaves the address at
+      // least as sure as the request states it here: `bot${token}` with a
+      // token nobody can read stays the helper's static request.
+      const forwarding = forwardNoWorse(forwardedFrom(split.parameter), {
+        here: { owner: holder, info: here },
+        at: (hop) => {
+          const owner = ownerOf(hop.site);
+          if (owner === undefined || !Node.isCallExpression(hop.site)) return undefined;
+          return { owner, info: composeAddress(analyzeUrl(hop.argument), split) };
+        },
+        sureness: ({ info }) => surenessOf(info),
+      });
+      for (const { site, reading } of forwarding.callers) {
+        if (!Node.isCallExpression(site)) continue;
         // What the request states is the request's; a caller's name or
         // argument only stands in for a verb the request leaves open.
         const verb =
           stated?.verb ??
-          verbOfSite(hop.site) ??
-          verbFromSite(hop.site, verbSource) ??
+          verbOfSite(site) ??
+          verbFromSite(site, verbSource) ??
           recognised.method;
-        recordHttp(hop.site, hop.argument, verb, owner, {
-          split,
-          readsSite: stated?.settings !== true,
-        });
-        recorded += 1;
+        recordHttp(site, reading.info, verb, reading.owner, { readsSite: stated?.settings !== true });
       }
-      // A call through an interface this method implements may run it and may
-      // run a sibling, so what it passes is nobody's to attribute (R158). The
-      // request is still made from somewhere, and the one written here is the
-      // answer for it.
-      if (recorded > 0 && !forwarded.undecided) return true;
+      // A caller through an interface this method implements, or one whose
+      // argument says less than the request does here, is answered by the
+      // request written here (R158).
+      if (!forwarding.here) return true;
     }
 
-    recordHttp(call, urlArg, recognised.method, holder, { init: request?.init });
+    recordHttp(call, here, recognised.method, holder, { init: request?.init });
     return true;
   };
 

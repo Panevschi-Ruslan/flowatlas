@@ -1716,6 +1716,52 @@ export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forw
   return out;
 };
 
+/**
+ * How one reader reads what a helper forwards: where it is written, at a
+ * caller, and how sure each reading is. Higher is surer; only the order counts.
+ */
+export interface ForwardReader<R> {
+  /** What the helper itself states, read where the value is used. */
+  here: R;
+  /** What one caller's argument reads as, or nothing when that caller cannot be drawn on. */
+  at: (hop: ForwardedCall) => R | undefined;
+  sureness: (reading: R) => number;
+}
+
+/** Where a forwarded value is drawn, decided by `forwardNoWorse`. */
+export interface Forwarding<R> {
+  /** The callers it is drawn at, each with what it reads as there. */
+  callers: Array<ForwardedCall & { reading: R }>;
+  /** Whether the helper draws it too, where it is written. */
+  here: boolean;
+}
+
+/**
+ * Where a value forwarded out of a helper - a request's address, the name of
+ * what a call starts - is drawn.
+ *
+ * Following a value out to a caller says who decided it, and must never cost
+ * what the helper states: `sendViaTelegram(token, job)` with a token nobody can
+ * read made a static request in the helper a heuristic one at the caller, and
+ * took the helper's node and the caller's call into it with it. So a caller is
+ * drawn on only where its reading is at least as sure as the helper's own; the
+ * helper keeps its own drawing whenever any caller falls short, as it does for
+ * a caller it cannot name (R158) and for no caller at all. A method and a
+ * function are one rule, decided here.
+ */
+export const forwardNoWorse = <R>(forwarded: Forwarded, reader: ForwardReader<R>): Forwarding<R> => {
+  const floor = reader.sureness(reader.here);
+  const callers: Forwarding<R>['callers'] = [];
+  let short = forwarded.undecided;
+  for (const hop of forwarded.calls) {
+    const reading = reader.at(hop);
+    if (reading === undefined) continue;
+    if (reader.sureness(reading) < floor) short = true;
+    else callers.push({ ...hop, reading });
+  }
+  return { callers, here: short || callers.length === 0 };
+};
+
 /** True when a value can be read where it stands, with no caller needed. */
 export const isReadable = (value: TsNode): boolean => {
   const node = deref(value);
