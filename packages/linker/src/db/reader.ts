@@ -53,6 +53,17 @@ export interface UnresolvedRow {
   hint: string | null;
 }
 
+/**
+ * A row with the node it is about, when it is about one.
+ *
+ * The symbol a finding names is stored as `node_id`; most rows name source text
+ * rather than a node, so the field is often a string that is no node's id, and
+ * a reader checks it against the nodes rather than trusting it.
+ */
+export interface AnchoredUnresolvedRow extends UnresolvedRow {
+  node: string | null;
+}
+
 export interface SearchOptions {
   types?: readonly string[];
   limit?: number;
@@ -274,13 +285,14 @@ export class GraphDb {
     ).map(toEdge);
   }
 
-  /** Every finding, in the order a reader would walk them. */
-  allUnresolved(): UnresolvedRow[] {
+  /** Every finding, in the order a reader would walk them, with the symbol it names. */
+  allUnresolved(): AnchoredUnresolvedRow[] {
     return this.#db
       .prepare(
-        'SELECT service, file, line, reason, level, sites, message, hint FROM unresolved ORDER BY service, file, line',
+        `SELECT service, file, line, reason, level, sites, message, hint, node_id AS node
+           FROM unresolved ORDER BY service, file, line`,
       )
-      .all() as UnresolvedRow[];
+      .all() as AnchoredUnresolvedRow[];
   }
 
   search(text: string, options: SearchOptions = {}): GraphNode[] {

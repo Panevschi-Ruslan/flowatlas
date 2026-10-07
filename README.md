@@ -367,7 +367,7 @@ at a pull request.
 ### Seeing it
 
 ```sh
-flowatlas visualise                     # writes graph.html beside the graph
+flowatlas visualise                     # writes graph.html next to the configuration
 flowatlas visualise --out map.html --title "Ledger"
 ```
 
@@ -376,7 +376,9 @@ Google Fonts for two typefaces and falls back to your own if it cannot reach
 them, so it reads offline and is not free of a third party until that is
 inlined. It opens on the reconciliation, lists every way in, follows
 any one of them across service boundaries, and has a tab each for every crossing
-and for everything that did not join.
+and for everything that did not join. A fourth tab, Graph, draws the
+neighbourhood of any node you search for, with its details one click away, and
+walks on from there in either direction; see [`docs/CLI.md`](docs/CLI.md#flowatlas-visualise).
 
 It is a report you can click, not a viewer you keep running. A page generated
 from a build can be attached to a review or kept beside a decision; a UI that

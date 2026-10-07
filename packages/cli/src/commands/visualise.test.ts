@@ -1,6 +1,7 @@
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { runVisualise } from './visualise.js';
 
@@ -91,6 +92,54 @@ describe('writing the graph as a page', () => {
     // holding markup cannot end the block it is written inside.
     expect(page.slice(page.indexOf('id="graph"'))).not.toMatch(/<\/script>[\s\S]*<\/script>[\s\S]*<\/script>/);
     expect(() => dataOf(page)).not.toThrow();
+  });
+
+  it('writes the graph view’s logic into the page, so it is still one file', () => {
+    expect(page).not.toContain('__GRAPH_LOGIC__');
+    expect(page).toContain('export const neighbourhood');
+    expect(page).toContain('<script type="module">');
+  });
+
+  it('writes a script the browser can parse', () => {
+    const opening = '<script type="module">';
+    const start = page.indexOf(opening) + opening.length;
+    const script = join(scratch, 'page-script.mjs');
+    writeFileSync(script, page.slice(start, page.indexOf('</script>', start)));
+    expect(() => execFileSync(process.execPath, ['--check', script], { stdio: 'pipe' })).not.toThrow();
+  });
+
+  it('carries every row, and the ones that name a node point at it', () => {
+    const { rows, nodes, dicts } = dataOf(page);
+    expect(rows.length).toBe(dataOf(page).unresolved.reduce((sum: number, u: { count: number }) => sum + u.count, 0));
+    const anchored = rows.filter((row: unknown[]) => (row[0] as number) >= 0);
+    expect(anchored.length).toBeGreaterThan(0);
+    for (const row of anchored) expect(nodes[row[0]]).toBeDefined();
+    expect(dicts.reasons.length).toBeGreaterThan(0);
+  });
+
+  it('names every metadata key it ships', () => {
+    const { nodes, dicts } = dataOf(page);
+    for (const node of nodes) {
+      for (const key of Object.keys(node[6] || {})) expect(dicts.meta[key]).toBeTypeOf('string');
+    }
+  });
+
+  it('writes next to the configuration when not told where', () => {
+    const result = runVisualise({ config: CONFIG, print: () => {} });
+    try {
+      expect(result.path).toBe(join(dirname(CONFIG), 'graph.html'));
+    } finally {
+      rmSync(result.path, { force: true });
+    }
+    expect(existsSync(result.path)).toBe(false);
+  });
+
+  it('keeps a label holding a replacement pattern as written', () => {
+    // `$'` and `$&` mean something to String.replace; a project is free to
+    // name a route with either.
+    const named = join(scratch, 'dollar.html');
+    runVisualise({ config: CONFIG, out: named, title: "Cost $' and $&", print: () => {} });
+    expect(readFileSync(named, 'utf8')).toContain("<title>Cost $' and $&</title>");
   });
 
   it('refuses when there is no graph to draw, rather than writing an empty page', () => {

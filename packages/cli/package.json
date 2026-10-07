@@ -63,7 +63,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "node ../../scripts/bundle.mjs && mkdir -p dist/visualise && cp src/visualise/page.html dist/visualise/page.html",
+    "build": "node ../../scripts/bundle.mjs && mkdir -p dist/visualise && cp src/visualise/page.html src/visualise/graph.js dist/visualise/",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --passWithNoTests"
   },

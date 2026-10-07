@@ -240,6 +240,22 @@ only one of them moved.
   what the original publisher put. The `subscription-forward-unread` row remains
   only for a schedule, a queue or a pipe that puts what it takes on a bus
   (`fixtures/lambda-terraform-bus-forward`).
+- **A Graph tab in `visualise`.** The page draws the neighbourhood of any node:
+  what reaches it to the left, what it reaches to the right, one column per hop,
+  coloured by service, marked by type, and with every edge styled by how far it
+  can be trusted - `static` solid, `heuristic` dashed, `marker` and `declared`
+  dotted and labelled. A focus is chosen by searching every node (label, type,
+  kind, service, file) or from a *show in graph* link beside every way in and
+  every node the other tabs name. At most a chosen number of nodes is drawn, and
+  the page says how many more there are; a node with neighbours not drawn
+  carries `+N` and expands on a click. Clicking a node opens its details: its
+  metadata, its edges in and out grouped by type with the far node's service and
+  confidence, and the rows that name it with their reasons and hints. Back and
+  forward, the focus kept in the address, arrow keys between neighbours, filters
+  by service, edge type and confidence, light and dark, phone width. Inline SVG
+  and plain JavaScript; nothing is fetched. The page carries the node metadata
+  and the rows the panel shows, packed, and a word the label already says is not
+  shipped again: on a project of twelve thousand nodes it grows by about a tenth.
 
 ### Changed
 
@@ -258,6 +274,10 @@ only one of them moved.
   workflow - a route in another repository, through a rule - where it used to
   stop at eight and say the chain ended before an entry point. The graph
   server's `impact` tool does the same.
+- **`visualise` writes `graph.html` next to the configuration** it read, found
+  the same way the database is, rather than in the working directory; given only
+  `--db`, it still writes to the working directory. The documentation said
+  "beside the graph", which neither was.
 - **The graph's schema version is 6**, for the `invoke` and `workflow` entry
   kinds. A database built by an earlier version is refused with a message to
   rebuild.
@@ -268,6 +288,11 @@ only one of them moved.
 
 ### Fixed
 
+- **The `visualise` page draws a label as text.** A label holding markup -
+  `requireSecret<Ctx>(...)`, `click="save()"` - was written into the page as
+  HTML and broke the row it was in; a title or label holding `$'` or `$&` was
+  read as a replacement pattern while the page was assembled; and the walk's
+  depth and cap controls stayed on screen under the other tabs.
 - **Four names followed through** (R175):
   - A helper written as a module function — `export const startWorkflow =
     (arn, input) => …`, `function notifyFunction(name, event)` — hands its

@@ -81,6 +81,7 @@ export type {
 } from './diff/types.js';
 export { GraphDb, GraphStore, openGraphDb } from './db/reader.js';
 export type {
+  AnchoredUnresolvedRow,
   SearchOptions,
   TraverseOptions,
   TraverseResult,

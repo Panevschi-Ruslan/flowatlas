@@ -713,7 +713,9 @@ Writes the whole graph as one self-contained page. Also spelled `visualize`.
 
 | Flag | Default | Does |
 |---|---|---|
-| `--out <file>` | `graph.html` beside the graph | where to write it |
+| `--config <path>` | found from the working directory | configuration to read the graph of |
+| `--db <path>` | the configured one | database to read instead |
+| `--out <file>` | `graph.html` next to the configuration | where to write it; the working directory when only `--db` is given |
 | `--title <name>` | the folder holding the configuration | what to call the project on the page |
 
 No server and nothing to install. Two typefaces come from Google Fonts, with a
@@ -721,6 +723,48 @@ fallback, so the page reads offline but is not free of a third party. The page o
 reconciliation, lists every way in, follows any one of them across service
 boundaries, and has a tab each for every crossing and for everything that did not
 join.
+
+The **Graph** tab draws the neighbourhood of one node rather than the whole
+graph, which on a real project is ten thousand boxes and says nothing:
+
+- **Choosing a focus.** Search over every node, by label, type, kind, service or
+  file: `table orders` is the table called `orders`. Every way in on the left,
+  and every node named in the Walk, Crossings and Not joined tabs, has a *show in
+  graph* link beside it.
+- **The drawing.** The focus in the middle, what reaches it to the left and what
+  it reaches to the right, one column per hop (one, two or three; two by
+  default). Nodes are coloured by service and marked by type; tables, channels,
+  outside APIs and settings are drawn round. An edge is solid when it was read
+  from the code (`static`), dashed when it was guessed (`heuristic`), and dotted
+  and labelled when an annotation or a document said so (`marker`, `declared`);
+  an edge into another service takes that service's colour, and hovering one
+  names its type.
+- **The cap is said, never silent.** At most 30, 60, 120 or 250 nodes are drawn
+  around a focus. The line under the drawing says how many more there are within
+  the hops, and a node with neighbours that are not drawn carries `+N`; clicking
+  it, or *Expand neighbours* in the panel, draws them.
+- **The details panel.** Clicking a node opens its type, kind, label, service,
+  `file:line` and the metadata the graph holds for it (verb and path, table,
+  channel kind, deployed name, which reader read it and how its name was read),
+  its edges in and out grouped by type with the far node's service and the
+  edge's confidence, and the rows that name it, with their reasons and hints, and
+  apart from those the rows elsewhere in its file. From it: *Centre here*,
+  *Expand neighbours*, and *Open in Walk* for a way in. Clicking a node in its
+  lists walks on to it.
+- **Moving around.** Drag or scroll to pan, pinch or ctrl+scroll to zoom, *Fit*
+  to see it all. Double-click centres on a node. Arrow keys move between drawn
+  nodes, a hop at a time to the side and within a column up and down; Enter
+  opens a node, `+` expands it, Escape closes the panel. *Back* and *Forward*
+  step through the focuses visited, and the focus is in the address
+  (`graph.html#graph/<node>/<hops>`), so a view can be bookmarked or sent with
+  the file.
+- **Filters.** The service rail at the top hides a service's nodes here as it
+  does its ways in; chips hide an edge type or a confidence, so the drawing can
+  show, for instance, only what was guessed. The line under the drawing says
+  which filters are on.
+
+A node in the address is its position in that page, so a link opens the same
+node in the same file and is not kept across a rebuild.
 
 ---
 
