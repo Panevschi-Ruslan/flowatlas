@@ -27,7 +27,7 @@ export declare const ROW: Readonly<{
 }>;
 
 export interface GraphModel {
-  data: Pick<PackedGraph, 'nodes' | 'edges' | 'dicts'> & Partial<Pick<PackedGraph, 'rows'>>;
+  data: Pick<PackedGraph, 'nodes' | 'edges' | 'dicts'> & Partial<Pick<PackedGraph, 'rows' | 'steps'>>;
   nodes: unknown[][];
   edges: number[][];
   outgoing: number[][];
@@ -35,6 +35,7 @@ export interface GraphModel {
   rowsOn: Map<number, number[]>;
   rowsInFile: Map<string, number[]>;
   haystack: string[] | null;
+  owners: Map<number, string> | null;
 }
 
 export interface GraphFilter {
@@ -49,26 +50,80 @@ export interface Hidden {
   confidences?: Set<number>;
 }
 
+/** A node position, or a group's id when grouping is on. */
+export type Unit = number | string;
+
+export interface Group {
+  id: string;
+  /** `service` opens into classes, `class` into its nodes, `rest` into the next page. */
+  level: 'service' | 'class' | 'rest';
+  next: 'service' | 'class' | 'leaf';
+  type: number;
+  /** The service every member is in, or -1 when they are in several. */
+  repo: number;
+  owner: string | null;
+  /** How many classes (or services) it holds. */
+  parts: number;
+  members: number[];
+  side: 1 | -1;
+  /** Nodes past it within the hops, not drawn while it is closed. */
+  behind: number;
+}
+
+export interface Chip {
+  open: boolean;
+  layers: Array<[string, number]>;
+  total: number;
+}
+
+/** Which way a node looks: the flow on, and who else uses it. */
+export type Look = 'in' | 'out' | 'both';
+
+/** A unit drawn as context: who else uses `of`, the way `look` says. */
+export interface Context {
+  of: number;
+  look: 'in' | 'out';
+}
+
 export interface Neighbourhood {
   focus: number;
   hops: number;
   cap: number;
-  nodes: number[];
-  layer: Map<number, number>;
+  nodes: Unit[];
+  layer: Map<Unit, number>;
+  /** The side of the focus each unit is drawn on. */
+  side: Map<Unit, -1 | 0 | 1>;
+  parent: Map<Unit, Unit>;
   edges: number[];
+  bundles: Array<{ from: Unit; to: Unit; edges: number[] }>;
+  groups: Map<string, Group>;
+  chips: Map<number, Chip>;
   more: Map<number, number>;
+  /** Who else uses a flow node, outside the flow, and whether it is drawn. */
+  others: Map<number, { look: 'in' | 'out'; count: number; shown: boolean }>;
+  context: Map<Unit, Context>;
   left: number;
+  behind: number;
   reached: number;
 }
 
 export interface Placed {
-  pos: Map<number, { x: number; y: number; layer: number; row: number }>;
-  columns: Map<number, number[]>;
-  links: Map<number, Set<number>>;
+  pos: Map<Unit, { x: number; y: number; layer: number; row: number }>;
+  columns: Map<number, Unit[]>;
+  links: Map<Unit, Set<Unit>>;
+  lanes: Array<{ repo: number; y: number; rows: number; height: number }>;
   min: number;
   max: number;
   width: number;
   height: number;
+}
+
+export interface Fold {
+  unfolded: Set<number>;
+  walk(edge: number): boolean;
+  edge(edge: number): boolean;
+  chain(node: number): number[];
+  chip(node: number): Chip | null;
 }
 
 export interface History {
@@ -81,7 +136,6 @@ export interface History {
 }
 
 export declare const ALL: GraphFilter;
-export declare const HOPS: readonly number[];
 export declare const createModel: (data: GraphModel['data']) => GraphModel;
 export declare const createFilter: (model: GraphModel, hidden?: Hidden) => GraphFilter;
 export declare const neighbours: (
@@ -90,16 +144,38 @@ export declare const neighbours: (
   node: number,
   direction: 'in' | 'out' | 'both',
 ) => Array<{ node: number; side: 1 | -1 }>;
+export declare const LOOK: Readonly<Record<-1 | 0 | 1, Readonly<{ flow: Look; also: 'in' | 'out' | null }>>>;
+export declare const PLUMBING: readonly string[];
+export declare const GROUPING: Readonly<{ at: number; page: number }>;
+export declare const ownerOf: (model: GraphModel, node: number) => string;
+export declare const labelParts: (model: GraphModel, node: number) => { name: string; owner: string };
+export declare const middle: (text: string, chars: number) => string;
+export declare const zoomLevel: (scale: number) => 'far' | 'mid' | 'near';
+export declare const foldPlumbing: (
+  model: GraphModel,
+  options?: { focus?: number; draw?: boolean; unfolded?: Set<number>; filter?: GraphFilter },
+) => Fold;
 export declare const neighbourhood: (
   model: GraphModel,
-  options: { focus: number; hops?: number; cap?: number; filter?: GraphFilter; expanded?: number[] },
+  options: {
+    focus: number;
+    hops?: number;
+    cap?: number;
+    filter?: GraphFilter;
+    expanded?: number[];
+    also?: number[];
+    fold?: { draw?: boolean; unfolded?: Set<number> } | false;
+    group?: boolean | { at?: number; page?: number };
+    opened?: Set<string>;
+  },
 ) => Neighbourhood;
+export declare const trace: (hood: Neighbourhood, target: Unit) => Unit[];
 export declare const layout: (
   model: GraphModel,
-  hood: Neighbourhood,
-  size?: { column?: number; row?: number },
+  hood: Pick<Neighbourhood, 'focus' | 'nodes' | 'layer' | 'edges'> & Partial<Pick<Neighbourhood, 'bundles' | 'groups'>>,
+  size?: { column?: number; row?: number; laneGap?: number; laneHead?: number },
 ) => Placed;
-export declare const step: (placed: Placed, from: number, direction: 'up' | 'down' | 'left' | 'right') => number;
+export declare const step: (placed: Placed, from: Unit, direction: 'up' | 'down' | 'left' | 'right') => Unit;
 export declare const search: (model: GraphModel, query: string, limit?: number) => { total: number; hits: number[] };
 export declare const describe: (
   model: GraphModel,
@@ -108,8 +184,90 @@ export declare const describe: (
   into: Array<{ type: number; edges: number[] }>;
   out: Array<{ type: number; edges: number[] }>;
   rows: number[];
+  atLine: number[];
   inFile: number[];
 };
 export declare const createHistory: (limit?: number) => History;
-export declare const parseHash: (hash: string, size: number) => { focus: number; hops: number | null } | null;
-export declare const formatHash: (focus: number, hops: number) => string;
+
+export interface Badge {
+  kind: 'rows' | 'line';
+  count: number;
+  title: string;
+}
+
+export interface Problems {
+  of(node: number): { on: number[]; atLine: number[] };
+  count(node: number): number;
+  has(node: number): boolean;
+  badgesFor(node: number): Badge[];
+  reasonsOf(rows: number[]): string[];
+  list(): {
+    waysIn: Array<{ node: number; rows: number; unhandled: boolean }>;
+    crossings: Array<{ edge: number; rows: number }>;
+    calls: Array<{ node: number; rows: number; unjoined: boolean }>;
+  };
+  total: number;
+}
+
+export interface PathAnswer extends Neighbourhood {
+  /** A path is nodes: an answer never groups. */
+  nodes: number[];
+  from: number;
+  to: number;
+  directed: boolean;
+  depth: number;
+  found: boolean;
+  length: number | null;
+  paths: number;
+  searched: number;
+  expandable: false;
+}
+
+export interface Upstream {
+  target: number;
+  depth: number;
+  dist: Map<number, number>;
+  reached: number;
+  doors: number[];
+  entries: number[];
+  services: number[];
+  withoutEntry: number[];
+}
+
+/** Plumbing on a question's drawing: folded into chips unless drawn, and unfolded where asked. */
+export interface QuestionFold {
+  draw?: boolean;
+  unfolded?: Set<number>;
+  filter?: GraphFilter;
+}
+
+export declare const UPSTREAM: readonly string[];
+export declare const CROSSING: readonly string[];
+export declare const IMPACT_DEPTH: number;
+export declare const PATH_DEPTHS: readonly number[];
+export declare const EDITOR_NAMES: readonly string[];
+export declare const createProblems: (model: GraphModel) => Problems;
+export declare const onlyProblems: (
+  model: GraphModel,
+  hood: Neighbourhood,
+  keep: (node: number) => boolean,
+) => Neighbourhood & { clean: number };
+export declare const shortestPath: (
+  model: GraphModel,
+  options: {
+    from: number;
+    to: number;
+    directed?: boolean;
+    depth?: number;
+    cap?: number;
+    filter?: GraphFilter;
+    fold?: QuestionFold;
+  },
+) => PathAnswer;
+export declare const upstream: (model: GraphModel, target: number, options?: { depth?: number }) => Upstream;
+export declare const impactView: (
+  model: GraphModel,
+  found: Upstream,
+  options?: { cap?: number; expanded?: number[]; fold?: QuestionFold },
+) => Neighbourhood;
+export declare const editorUrl: (editor: string, root: string | null, file: string, line: number) => string | null;

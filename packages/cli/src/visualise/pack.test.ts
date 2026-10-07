@@ -1,6 +1,7 @@
 import type { GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { describe, expect, it } from 'vitest';
+import { stableKeys } from './keys.js';
 import { packGraph } from './pack.js';
 
 const report = {
@@ -133,5 +134,27 @@ describe('packing what the details panel shows', () => {
       ['db-receiver-name-only', 2],
       ['dynamic-table-name', 1],
     ]);
+  });
+});
+
+describe('naming nodes in a link', () => {
+  const keyAt = (keys: typeof packed.keys, i: number): string =>
+    keys.longer[String(i)] ?? keys.all.slice(i * keys.width, (i + 1) * keys.width);
+
+  it('ships a stable key for every node, spelled from its id', () => {
+    expect(packed.keys).toEqual(stableKeys(nodes.map((node) => node.id)));
+    expect(packed.keys.all).toHaveLength(nodes.length * packed.keys.width);
+  });
+
+  it('gives a node the same key when nodes before it come and go', () => {
+    const moved = packGraph({
+      builtAt: '2026-10-08T00:00:00.000Z',
+      nodes: [{ ...nodes[0]!, id: 'aaa:first' }, nodes[2]!, nodes[1]!],
+      edges: [],
+      unresolved: [],
+      report,
+    });
+    expect(keyAt(moved.keys, 1)).toBe(keyAt(packed.keys, 2));
+    expect(keyAt(moved.keys, 2)).toBe(keyAt(packed.keys, 1));
   });
 });

@@ -314,6 +314,10 @@ export class GraphDb {
    *
    * The path each row was reached by is carried along, which is what stops a
    * cycle without a visited set and lets a caller rebuild the shape of the walk.
+   * A node is on the path when it is one of the path's `>`-separated ids, not
+   * when its id is part of one: `Auth.refresh` is not on a path through
+   * `Auth.refreshToken`, and was once left out of every walk that came
+   * through it.
    */
   traverse(options: TraverseOptions): TraverseResult {
     const roots = typeof options.from === 'string' ? [options.from] : [...options.from];
@@ -333,7 +337,7 @@ export class GraphDb {
         SELECT e.${far}, w.depth + 1, w.path || '>' || e.${far}, e.id
           FROM walk w JOIN edges e ON e.${near} = w.node_id
          WHERE w.depth < ?
-           AND instr(w.path, e.${far}) = 0
+           AND instr('>' || w.path || '>', '>' || e.${far} || '>') = 0
            AND (? IS NULL OR e.type IN (SELECT value FROM json_each(?)))
       )
       SELECT w.node_id AS id, w.depth, w.path,

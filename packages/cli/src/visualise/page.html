@@ -689,7 +689,7 @@
 
   .g-stage {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 330px;
+    grid-template-columns: minmax(0, 1fr) var(--drawer-w, 330px);
     min-height: 0;
   }
 
@@ -765,6 +765,13 @@
   .g-more text { fill: var(--muted); font-family: var(--f-mono); font-size: 10px; }
   .g-more:hover rect, .g-more:focus-visible rect { stroke: var(--accent); fill: var(--accent-soft); }
   .g-more { cursor: pointer; outline: none; }
+  /* Who else uses a node: outside the flow, so dashed and quiet until drawn. */
+  .g-also { cursor: pointer; outline: none; }
+  .g-also rect { fill: var(--ground); stroke: var(--faint); stroke-dasharray: 3 2; }
+  .g-also text { fill: var(--muted); font-family: var(--f-ui); font-size: 9.5px; }
+  .g-also:hover rect, .g-also:focus-visible rect { stroke: var(--accent); }
+  .g-also.is-shown rect { fill: var(--accent-soft); stroke: var(--accent); stroke-dasharray: none; }
+  .g-also.is-shown text { fill: var(--accent); }
 
   .g-col {
     fill: var(--faint);
@@ -806,6 +813,126 @@
 
   .g-status b { font-weight: 600; color: var(--ink); }
   .g-status.is-cut { color: var(--warn); }
+
+  /* ── reading the drawing: lanes, names, groups, chips, the trace ──────
+     Read like a map: every service a faint band with its name set in the
+     display face, so an edge into another band is visibly a crossing. Names
+     lead in the mono face; whose a thing is follows, muted. */
+
+  .g-canvas { --lane-tint: 6%; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .g-canvas { --lane-tint: 10%; }
+  }
+  :root[data-theme='dark'] .g-canvas { --lane-tint: 10%; }
+
+  .g-lane rect { fill: color-mix(in srgb, var(--hue) var(--lane-tint), transparent); }
+  .g-lane line { stroke: color-mix(in srgb, var(--hue) 35%, transparent); stroke-width: 1; }
+  .g-lane text {
+    fill: var(--hue);
+    font-family: var(--f-display);
+    font-size: var(--lane-size, 12.5px);
+    font-weight: 600;
+    paint-order: stroke;
+    stroke: var(--ground);
+    stroke-width: 3px;
+  }
+
+  .g-label { font-weight: 500; }
+  .g-sub { fill: var(--muted); }
+
+  .g-node.is-group .g-sheet { fill: var(--paper); stroke: var(--rule); }
+  .g-node.is-group .g-box { stroke: color-mix(in srgb, var(--hue) 55%, var(--rule)); }
+  .g-node.is-group:hover .g-box { stroke: var(--hue); }
+  .g-count {
+    fill: var(--hue);
+    font-family: var(--f-display);
+    font-size: 16px;
+    font-weight: 600;
+    text-anchor: end;
+  }
+
+  .g-chip { cursor: pointer; }
+  .g-chip rect { fill: var(--paper); stroke: var(--faint); stroke-dasharray: 3 2; }
+  .g-chip text { fill: var(--muted); font-family: var(--f-ui); font-size: 9.5px; }
+  .g-chip:hover rect { stroke: var(--accent); }
+  .g-chip.is-open rect { fill: var(--accent-soft); stroke: var(--accent); stroke-dasharray: none; }
+  .g-chip.is-open text { fill: var(--accent); }
+
+  .g-badge { color: var(--muted); }
+  .g-badge.is-bad { color: var(--bad); }
+  .g-badge.is-warn { color: var(--warn); }
+  .g-badge rect { fill: var(--raise); stroke: currentColor; }
+  .g-badge text { fill: currentColor; font-family: var(--f-mono); font-size: 9.5px; font-weight: 500; }
+
+  /* An edge says what it is when asked: on hover, and around the open node. */
+  .g-tip { visibility: hidden; }
+  .g-link:hover .g-tip, .g-link.is-lit .g-tip, .g-link.is-on .g-tip { visibility: visible; }
+  .g-link.is-bundle path.g-edge { stroke-opacity: 0.75; }
+
+  /* Hovering a node lights the way the walk took to it and quiets the rest. */
+  #g-world.is-tracing .g-node, #g-world.is-tracing .g-link { opacity: 0.2; }
+  #g-world.is-tracing .g-node.is-on, #g-world.is-tracing .g-link.is-on { opacity: 1; }
+  .g-link.is-on path.g-edge { stroke: var(--accent); stroke-width: 2.25; }
+  .g-node.is-on .g-box { stroke: var(--accent); }
+  .g-node, .g-link { transition: opacity 120ms ease-out; }
+
+  /* Context - who else uses a node of the flow - is drawn, but stands back:
+     a dashed, faded box with what it is to the flow in place of its owner,
+     and faded lines. Hovering it, or the trace, brings it up as usual. */
+  .g-node.is-context { opacity: 0.6; }
+  .g-node.is-context .g-box { fill: var(--ground); stroke-dasharray: 4 3; }
+  .g-node.is-context .g-sub { font-style: italic; }
+  .g-node.is-context:hover { opacity: 1; }
+  .g-link.is-context { opacity: 0.45; }
+  .g-link.is-context path.g-edge { stroke-dasharray: 2 3; }
+
+  /* Semantic zoom: far away a node is its service and its shape; nearer, its
+     name; close, everything. */
+  .z-mid .g-sub, .z-mid .g-link:not(:hover) .g-tip, .z-mid .g-badge text { visibility: hidden; }
+  .z-far .g-label, .z-far .g-sub, .z-far .g-glyph-text, .z-far .g-chip, .z-far .g-more, .z-far .g-also,
+  .z-far .g-tip, .z-far .g-col, .z-far .g-count, .z-far .g-badge { display: none; }
+  .z-far .g-box { fill: color-mix(in srgb, var(--hue) 35%, var(--paper)); stroke: var(--hue); }
+
+  .g-mini {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    width: 168px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.4);
+    cursor: crosshair;
+    touch-action: none;
+  }
+  .g-mini svg { display: block; width: 100%; height: auto; }
+  .g-mini .m-lane { fill: color-mix(in srgb, var(--hue) 14%, transparent); }
+  .g-mini .m-unit { fill: var(--hue); }
+  .g-mini .m-focus { fill: var(--accent); }
+  .g-mini .m-view {
+    fill: color-mix(in srgb, var(--accent) 12%, transparent);
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  @media (max-width: 640px) {
+    .g-mini { width: 108px; }
+  }
+
+  .g-status .g-again {
+    font: inherit;
+    color: var(--accent);
+    background: none;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .g-node, .g-link { transition: none; }
+  }
 
   /* ── details ────────────────────────────────────────────────────────── */
 
@@ -924,7 +1051,339 @@
   .g-row .hint-text { color: var(--muted); font-size: 12px; }
   .g-none { color: var(--faint); margin: 0; }
 
+  /* ── checking: problems, path, impact ───────────────────────────────── */
+
+  .g-check {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  .g-check-group { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 5px; min-width: 0; }
+  .g-check .g-pick input { margin: 0; accent-color: var(--accent); }
+  .g-end { max-width: 230px; overflow: hidden; text-overflow: ellipsis; font-family: var(--f-mono); font-size: 11.5px; }
+  .g-end.is-picking { border-color: var(--accent); background: var(--accent-soft); }
+  .tool[aria-pressed='true'] { border-color: var(--accent); background: var(--raise); }
+
+  .g-answer {
+    padding: 10px 12px 12px;
+    border-bottom: 1px solid var(--rule-soft);
+    background: var(--paper);
+    font-size: 12.5px;
+    max-height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .g-answer p { margin: 0; }
+  .g-answer b { font-weight: 600; }
+  .g-answer.is-none p:first-child { color: var(--warn); }
+  .g-answer h4 {
+    margin: 4px 0 2px;
+    font-family: var(--f-display);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .g-answer ul { list-style: none; margin: 0; padding: 0; }
+  .g-answer li { display: flex; align-items: center; gap: 4px; }
+  .g-answer li + li { border-top: 1px solid var(--rule-soft); }
+  .g-answer .g-far { flex: 1; min-width: 0; }
+  .g-answer .g-far .label { overflow: hidden; text-overflow: ellipsis; }
+  .g-answer .to-graph { width: 26px; height: 22px; }
+
+  .g-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+  a.g-place { color: var(--accent); }
+
   .legend svg { vertical-align: middle; }
+  .legend .g-key-bad, .legend .g-key-warn {
+    padding: 0 5px;
+    border: 1px solid currentColor;
+    border-radius: 8px;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    font-weight: 500;
+  }
+  .legend .g-key-bad { color: var(--bad); }
+  .legend .g-key-warn { color: var(--warn); }
+  .legend .g-key-context {
+    padding: 0 5px;
+    border: 1px dashed var(--faint);
+    border-radius: 3px;
+    color: var(--muted);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  /* ── the frame: tools, the drawer, full screen ──────────────────────── */
+
+  .g-tools { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+  .g-tools .hint { margin-left: 4px; }
+  .g-tools .tool { display: inline-flex; align-items: center; gap: 6px; }
+  .g-tools .tool svg { width: 13px; height: 13px; flex: none; }
+  .g-tools .tool[aria-pressed='true'] { border-color: var(--accent); background: var(--accent-soft); }
+  .g-tools .tool.is-done { color: var(--good); border-color: var(--good); }
+  .g-split { display: inline-flex; }
+  .g-split .tool { border-radius: 0; font-family: var(--f-mono); font-size: 11px; }
+  .g-split .tool:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+  .g-split .tool + .tool { border-left: 0; border-radius: 0 var(--radius) var(--radius) 0; }
+
+  kbd {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    padding: 0 4px;
+    border: 1px solid var(--rule);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    color: var(--muted);
+    background: var(--raise);
+    line-height: 1.4;
+  }
+
+  /* What a link asked for and could not be given, said over the drawing. */
+  .g-notice {
+    position: absolute;
+    z-index: 3;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: calc(100% - 24px);
+    margin: 0;
+    padding: 7px 10px 7px 12px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--ink);
+    background: var(--raise);
+    border: 1px solid var(--warn);
+    border-left-width: 3px;
+    border-radius: var(--radius);
+    box-shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.4);
+    cursor: default;
+  }
+
+  .g-notice code { font-family: var(--f-mono); font-size: 11px; }
+
+  /* The details panel sits in a drawer: a grip on its edge to widen it, and a
+     pull tab to fold it to a rail that still names what is open. */
+  .g-drawer { position: relative; min-width: 0; display: flex; }
+  .g-drawer > .g-details { flex: 1; min-width: 0; }
+  .g-stage.is-closed .g-drawer { display: none; }
+
+  .g-grip {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    bottom: 0;
+    left: -4px;
+    width: 8px;
+    cursor: col-resize;
+    touch-action: none;
+    outline: none;
+  }
+
+  .g-grip::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 3px;
+    width: 2px;
+    background: transparent;
+    transition: background 120ms;
+  }
+
+  .g-grip:hover::after,
+  .g-grip.is-dragging::after,
+  .g-grip:focus-visible::after { background: var(--accent); }
+
+  .g-fold {
+    position: absolute;
+    z-index: 3;
+    top: calc(50% - 24px);
+    left: -17px;
+    width: 17px;
+    height: 48px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-right: 0;
+    border-radius: 6px 0 0 6px;
+    cursor: pointer;
+  }
+
+  .g-fold:hover { color: var(--accent); border-color: var(--accent); }
+  .g-fold svg { width: 10px; height: 10px; transition: transform 160ms; }
+  .g-stage.is-folded .g-fold svg { transform: rotate(180deg); }
+
+  .g-rail {
+    display: none;
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 0;
+    border: 0;
+    border-left: 1px solid var(--rule-soft);
+    background: var(--paper);
+    color: var(--muted);
+    font: inherit;
+    cursor: pointer;
+    writing-mode: vertical-rl;
+  }
+
+  .g-rail:hover { color: var(--ink); background: var(--raise); }
+  .g-rail b {
+    font-family: var(--f-mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-height: 100%;
+    border-left: 3px solid var(--hue, var(--rule));
+    padding-left: 4px;
+  }
+  .g-rail span { font-size: 11px; color: var(--faint); }
+
+  .g-stage.is-folded { grid-template-columns: minmax(0, 1fr) 36px; }
+  .g-stage.is-folded .g-details,
+  .g-stage.is-folded .g-grip { display: none; }
+  .g-stage.is-folded .g-rail { display: flex; }
+
+  /* Under the drawing on a narrow screen: no width to drag, and the pull tab
+     moves to the top edge, a sheet's grabber. */
+  @media (max-width: 1240px) {
+    .g-stage.is-folded { grid-template-columns: minmax(0, 1fr); }
+    .g-grip { display: none; }
+    .g-fold {
+      top: -17px;
+      left: calc(50% - 24px);
+      width: 48px;
+      height: 17px;
+      border: 1px solid var(--rule);
+      border-bottom: 0;
+      border-radius: 6px 6px 0 0;
+    }
+    .g-fold svg { transform: rotate(90deg); }
+    .g-stage.is-folded .g-fold svg { transform: rotate(-90deg); }
+    .g-rail { writing-mode: horizontal-tb; padding: 9px 12px; border-left: 0; border-top: 1px solid var(--rule); }
+    .g-rail b { border-left: 0; padding-left: 0; }
+  }
+
+  /* Full screen: the drawing takes the window; everything above it steps
+     aside, and the details panel lays over the drawing from the right. */
+  :root.is-full,
+  :root.is-full body { overflow: hidden; }
+
+  :root.is-full .masthead,
+  :root.is-full .band,
+  :root.is-full .fleet,
+  :root.is-full #ways,
+  :root.is-full .colophon,
+  :root.is-full #views > .panel-head { display: none; }
+
+  :root.is-full #views {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    border: 0;
+    border-radius: 0;
+  }
+
+  :root.is-full .graph { flex: 1; min-height: 0; }
+
+  :root.is-full .g-stage,
+  :root.is-full .g-stage.is-folded {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  :root.is-full .g-canvas { height: auto; }
+
+  /* An answer over the drawing takes a share of the window, not the window. */
+  :root.is-full .g-answer { flex: none; max-height: min(300px, 26vh); }
+  @media (max-width: 640px) {
+    :root.is-full .g-answer { max-height: 20vh; }
+  }
+
+  :root.is-full .g-drawer {
+    position: absolute;
+    z-index: 4;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(var(--drawer-w, 330px), calc(100% - 44px));
+    box-shadow: -14px 0 28px -22px rgba(0, 0, 0, 0.55);
+    animation: g-drawer-in 160ms ease-out;
+  }
+
+  :root.is-full .g-stage.is-folded .g-drawer { width: 36px; }
+
+  :root.is-full .g-details {
+    max-height: none;
+    border-top: 0;
+    border-left: 1px solid var(--rule);
+  }
+
+  :root.is-full .g-grip { display: block; }
+
+  :root.is-full .g-fold {
+    top: calc(50% - 24px);
+    left: -17px;
+    width: 17px;
+    height: 48px;
+    border: 1px solid var(--rule);
+    border-right: 0;
+    border-radius: 6px 0 0 6px;
+  }
+
+  :root.is-full .g-fold svg { transform: none; }
+  :root.is-full .g-stage.is-folded .g-fold svg { transform: rotate(180deg); }
+
+  :root.is-full .g-rail {
+    writing-mode: vertical-rl;
+    padding: 12px 0;
+    border-top: 0;
+    border-left: 1px solid var(--rule);
+  }
+
+  :root.is-full .g-rail b { border-left: 3px solid var(--hue, var(--rule)); padding-left: 4px; }
+
+  /* On a phone the window is the drawing's: the tools keep their icons, the
+     filters scroll on one line, and the legend gives its lines back. */
+  @media (max-width: 640px) {
+    .g-tools .tool > span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .g-tools kbd { display: none; }
+    :root.is-full .g-filters { flex-wrap: nowrap; overflow-x: auto; }
+    :root.is-full .g-filters > * { flex: none; }
+    :root.is-full #legend { display: none; }
+  }
+
+  @keyframes g-drawer-in {
+    from { transform: translateX(18px); opacity: 0; }
+  }
 
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
@@ -945,7 +1404,7 @@
   <div class="fleet" id="fleet"></div>
 
   <div class="work">
-    <section class="panel">
+    <section class="panel" id="ways">
       <div class="panel-head">
         <h2>Ways in</h2>
         <span class="hint" id="entry-count"></span>
@@ -959,7 +1418,7 @@
       <ul class="list" id="entries"></ul>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="views">
       <div class="panel-head">
         <h2 id="walk-title">The walk</h2>
         <div class="tabs" role="tablist">
@@ -1005,8 +1464,42 @@
               <option>30</option><option selected>60</option><option>120</option><option>250</option>
             </select>
           </label>
+          <div class="g-tools">
+            <button class="tool" id="g-copy" title="Copy a link to this view">
+              <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round"><path d="M6.6 9.4a2.6 2.6 0 0 0 3.7 0l2.5-2.5a2.6 2.6 0 0 0-3.7-3.7l-.9.9"/>
+                <path d="M9.4 6.6a2.6 2.6 0 0 0-3.7 0L3.2 9.1a2.6 2.6 0 0 0 3.7 3.7l.9-.9"/></svg>
+              <span>Copy link</span>
+            </button>
+            <span class="hint">export</span>
+            <span class="g-split" role="group" aria-label="Export the drawing">
+              <button class="tool" id="g-svg-out" title="Save the drawing as an SVG file">SVG</button>
+              <button class="tool" id="g-png-out" title="Save the drawing as a PNG picture">PNG</button>
+            </span>
+            <button class="tool" id="g-full" aria-pressed="false" title="Full screen (F)">
+              <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg>
+              <span>Full screen</span> <kbd>F</kbd>
+            </button>
+          </div>
         </div>
         <div class="g-filters" id="g-filters"></div>
+        <div class="g-check" id="g-check">
+          <button class="tool" id="g-problems" aria-expanded="false" aria-controls="g-answer">Problems</button>
+          <label class="hint g-pick"><input type="checkbox" id="g-only"> problems only</label>
+          <span class="hint" id="g-only-note"></span>
+          <span class="g-check-group" role="group" aria-label="Path between two nodes">
+            <span class="hint">path</span>
+            <button class="tool g-end" id="g-from" data-end="from">from: pick&hellip;</button>
+            <button class="tool" id="g-way" aria-pressed="false" title="Follow edges the way calls run, or either way">&rarr; one way</button>
+            <button class="tool g-end" id="g-to" data-end="to">to: pick&hellip;</button>
+            <label class="hint g-pick">within
+              <select id="g-path-depth"><option>6</option><option selected>12</option><option>24</option></select>
+              steps</label>
+          </span>
+          <button class="tool" id="g-clear" hidden>Back to the neighbourhood</button>
+        </div>
+        <div class="g-answer" id="g-answer" aria-live="polite" hidden></div>
         <div class="g-stage" id="g-stage">
           <div class="g-canvas" id="g-canvas">
             <svg id="g-svg" role="group" aria-roledescription="graph">
@@ -1018,13 +1511,27 @@
               </defs>
               <g id="g-world"></g>
             </svg>
+            <p class="g-notice" id="g-notice" role="status" hidden></p>
             <div class="g-zoom">
               <button class="tool" id="g-zoom-in" aria-label="Zoom in">+</button>
               <button class="tool" id="g-zoom-out" aria-label="Zoom out">&minus;</button>
               <button class="tool" id="g-fit">Fit</button>
             </div>
           </div>
-          <aside class="g-details" id="g-details" aria-label="Node details" hidden></aside>
+          <div class="g-drawer" id="g-drawer">
+            <div class="g-grip" id="g-grip" role="separator" tabindex="0" aria-orientation="vertical"
+              aria-controls="g-details" aria-label="Width of the details panel"
+              title="Drag to resize; arrow keys too"></div>
+            <button class="g-fold" id="g-fold" aria-controls="g-details" aria-expanded="true"
+              aria-label="Fold the details panel" title="Fold the details panel">
+              <svg viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 1.5 7 5 3.5 8.5"/></svg>
+            </button>
+            <button class="g-rail" id="g-rail" aria-controls="g-details" title="Unfold the details panel">
+              <span>details</span><b id="g-rail-name"></b>
+            </button>
+            <aside class="g-details" id="g-details" aria-label="Node details" hidden></aside>
+          </div>
         </div>
         <p class="g-status" id="g-status" role="status"></p>
       </div>
@@ -1041,14 +1548,19 @@
 /* The graph view's logic, written in by the command from graph.js. */
 __GRAPH_LOGIC__
 
+/* The frame's logic - links, touch, pictures - written in from frame.js. */
+__FRAME_LOGIC__
+
   (() => {
     const data = JSON.parse(document.getElementById('graph').textContent);
     const { types, repos, kinds, files, edgeTypes, confidences, reasons } = data.dicts;
 
     /* Node fields, as packed: type, label, repo, kind, file, line, meta. A node
-       is known by its position; only the ways in keep a name, in entryIds. */
+       is known by its position in this page; a link names it by its key, which
+       is the same in every build of the graph. */
     const TY = 0, LB = 1, RP = 2, KD = 3, FL = 4, LN = 5, MT = 6;
     const nodes = data.nodes;
+    const keys = createKeys(data.keys, nodes.length);
 
     const hueOf = (repoIndex) => `var(--s-${repoIndex % 5})`;
     const repoName = (i) => repos[nodes[i][RP]];
@@ -1087,7 +1599,7 @@ __GRAPH_LOGIC__
       'stroke-width="1.4"><circle cx="3.5" cy="8" r="2"/><circle cx="12.5" cy="3.5" r="2"/>' +
       '<circle cx="12.5" cy="12.5" r="2"/><path d="M5.3 7.1 10.7 4.4M5.3 8.9l5.4 2.7"/></svg>';
     const graphLink = (i) =>
-      `<a class="to-graph" href="#graph/${i}" title="Show in graph" ` +
+      `<a class="to-graph" href="#graph/${keys.keyOf(i)}" title="Show in graph" ` +
       `aria-label="Show ${esc(nodes[i][LB])} in the graph">${GRAPH_ICON}</a>`;
 
     /* ── the reconciliation band ─────────────────────────────────────── */
@@ -1136,6 +1648,7 @@ __GRAPH_LOGIC__
       const summary = r.services.find((s) => s.name === name);
       const b = document.createElement('button');
       b.className = 'ship';
+      b.dataset.repo = name;
       b.style.setProperty('--hue', hueOf(i));
       b.setAttribute('aria-pressed', 'true');
       b.innerHTML = `<b>${name}</b><em>${summary ? summary.type : ''}</em>` +
@@ -1400,7 +1913,7 @@ __GRAPH_LOGIC__
     };
 
     /* The drawing's own units. A column is a hop; a row is a node. */
-    const BOX = { w: 196, h: 40, column: 264, row: 54, pad: 40, head: 22 };
+    const BOX = { w: 216, h: 40, column: 284, row: 54, pad: 40, head: 22, laneGap: 14, laneHead: 22 };
     const PILL = new Set(['table', 'channel', 'external_api', 'config_key']);
     const DOORS = new Set(['entry', 'ui_action']);
     const GROUP_LIMIT = 12;
@@ -1409,7 +1922,6 @@ __GRAPH_LOGIC__
     const model = createModel(data);
     const typeOf = (i) => types[nodes[i][TY]];
     const glyphOf = (i) => GLYPH[typeOf(i)] || typeOf(i).slice(0, 4);
-    const clip = (text, chars) => (text.length > chars ? text.slice(0, Math.max(1, chars - 1)) + '…' : text);
     const placeOf = (i) => files[nodes[i][FL]]
       ? files[nodes[i][FL]] + (nodes[i][LN] ? ':' + nodes[i][LN] : '')
       : '';
@@ -1438,7 +1950,10 @@ __GRAPH_LOGIC__
       focus: null,
       hops: Number(hopsSel.value),
       cap: Number(gCapSel.value),
+      // Expanded nodes draw more of the flow; nodes in `also` draw who else
+      // uses them, as context.
       expanded: [],
+      also: [],
       cursor: null,
       open: null,
       openGroups: new Set(),
@@ -1446,6 +1961,22 @@ __GRAPH_LOGIC__
       placed: null,
       hiddenEdgeTypes: new Set(),
       hiddenConfidences: new Set(),
+      // How the drawing reads: plumbing drawn as nodes or folded into chips,
+      // the nodes whose own chain is unfolded, and the groups opened.
+      plumbing: false,
+      unfolded: new Set(),
+      opened: new Set(),
+      // The question asked of the drawing, if any (`{ kind: 'path' }` or
+      // `{ kind: 'impact', target, found }`), the two ends of a path, which end
+      // a search is picking, and which answer the box above the drawing shows.
+      query: null,
+      ends: { from: null, to: null },
+      picking: null,
+      directed: true,
+      pathDepth: 12,
+      problemsOnly: false,
+      answer: null,
+      answerOpen: new Set(),
     };
     const trail = createHistory();
 
@@ -1459,9 +1990,18 @@ __GRAPH_LOGIC__
 
     const camera = (() => {
       let x = 0, y = 0, k = 1;
-      const apply = () => world.setAttribute('transform', `translate(${x} ${y}) scale(${k})`);
+      // What else reads the camera - the zoom level, the minimap - is told
+      // after every move rather than polling it.
+      let watchers = [];
+      const apply = () => {
+        world.setAttribute('transform', `translate(${x} ${y}) scale(${k})`);
+        for (const watcher of watchers) watcher({ x, y, k });
+      };
       const bound = (value) => Math.min(2.4, Math.max(0.2, value));
       const size = () => ({ w: wrap.clientWidth || 800, h: wrap.clientHeight || 500 });
+      /* The canvas size the drawing was last placed in, so a canvas that grows
+         or shrinks under it keeps what was in its middle in its middle. */
+      let seen = null;
       const extent = (placed) => ({
         w: (placed.max - placed.min) * BOX.column + BOX.w + BOX.pad * 2,
         h: placed.height + BOX.pad * 2 + BOX.head,
@@ -1475,12 +2015,22 @@ __GRAPH_LOGIC__
       };
       return {
         zoomAt,
+        watch(watcher) { watchers = [...watchers, watcher]; },
+        view: () => ({ x, y, k, ...size() }),
+        /* Puts a point of the drawing in the middle of the screen. */
+        lookAt(wx, wy) {
+          const screen = size();
+          x = screen.w / 2 - wx * k;
+          y = screen.h / 2 - wy * k;
+          apply();
+        },
         zoom(factor) { const { w, h } = size(); zoomAt(w / 2, h / 2, factor); },
         pan(dx, dy) { x += dx; y += dy; apply(); },
         /* The whole drawing when it fits at a readable size; otherwise the
            focus, readable, with the rest a drag away. `whole` always fits. */
         frame(placed, focusAt, whole) {
           const screen = size();
+          seen = screen;
           const all = extent(placed);
           const fits = Math.min(1, screen.w / all.w, screen.h / all.h);
           if (whole || fits >= 0.8) {
@@ -1493,6 +2043,16 @@ __GRAPH_LOGIC__
             y = screen.h / 2 - (focusAt.y + BOX.h / 2) * k;
           }
           apply();
+        },
+        /* Full screen, a wider or folded panel: the canvas changed size. */
+        resized() {
+          const now = size();
+          if (seen !== null && (now.w !== seen.w || now.h !== seen.h)) {
+            x += (now.w - seen.w) / 2;
+            y += (now.h - seen.h) / 2;
+            apply();
+          }
+          seen = now;
         },
         /* Brings a box into view when a key has moved off the edge. */
         reveal(box) {
@@ -1534,12 +2094,96 @@ __GRAPH_LOGIC__
       return { d: `M${x1} ${y1} C${x1 - c} ${y1} ${x2 + c} ${y2} ${x2} ${y2}`, mid: [(x1 + x2) / 2, (y1 + y2) / 2] };
     };
 
+    /* A unit is a node position, or a group's id when the drawing grouped a
+       busy side; an element names one or the other. */
+    const isGroup = (u) => typeof u === 'string';
+    const unitOf = (el) => (el.dataset.group !== undefined ? el.dataset.group : Number(el.dataset.node));
+    const repoOfUnit = (u) => (isGroup(u) ? state.hood.groups.get(u).repo : nodes[u][RP]);
+    const laneHue = (repo) => (repo >= 0 ? hueOf(repo) : 'var(--faint)');
+    const laneName = (repo) => (repo >= 0 ? repos[repo] : 'several services');
+
+    /* What expanding a node draws, and who else uses it, in words: by which
+       way it looks from the focus (graph.js's LOOK), so the page never decides
+       a direction of its own. */
+    const LOOK_SAYS = {
+      both: { expand: 'Expand neighbours', more: 'neighbours' },
+      out: { expand: 'Expand: what it reaches', more: 'that it reaches' },
+      in: { expand: 'Expand: what reaches it', more: 'that reach it' },
+    };
+    const ALSO_SAYS = {
+      in: {
+        ask: 'Who else uses this',
+        count: (n) => plural(n, 'other caller', 'other callers'),
+        badge: (n) => 'used by ' + plural(n, 'other', 'others'),
+        mark: (of, n = 1) => (n === 1 ? 'also uses ' : 'also use ') + labelParts(model, of).name,
+      },
+      out: {
+        ask: 'What else it uses',
+        count: (n) => plural(n, 'other callee', 'other callees'),
+        badge: (n) => 'uses ' + plural(n, 'other', 'others'),
+        mark: (of) => 'also used by ' + labelParts(model, of).name,
+      },
+    };
+    const lookOf = (v) => LOOK[state.hood.side.get(v) ?? 0];
+    const contextOf = (u) => state.hood.context.get(u);
+    /* An edge, or a bundle, with context at either end is context too. */
+    const isContextLink = (from, to) => state.hood.context.has(from) || state.hood.context.has(to);
+
+    /* Problem badges: the rows on a node, from graph.js's `createProblems`.
+
+       badgesFor(node) takes a node position and returns what to pin on it,
+       worst first, as [{ count, tone, title, label, kind }]:
+         count  a number, drawn unless `label` is given
+         tone   'bad' | 'warn' | 'info' (default 'info')
+         title  what hovering it says (optional)
+         label  short text drawn instead of the count (optional)
+         kind   which problem it is: `rows` name the node, `line` sit at its line
+       The drawing draws whatever comes back, on the node's top edge; a group
+       shows its members' badges summed per tone; the details panel says each
+       in words. An empty list draws nothing. */
+    const problems = createProblems(model);
+    const BADGE = {
+      rows: { tone: 'bad', say: (n) => plural(n, 'row names it', 'rows name it') },
+      line: { tone: 'warn', say: (n) => plural(n, 'row at its line', 'rows at its line') },
+    };
+    const badgesFor = (v) => problems.badgesFor(v).map((badge) => ({
+      kind: badge.kind,
+      count: badge.count,
+      tone: (BADGE[badge.kind] || { tone: 'info' }).tone,
+      title: badge.title,
+    }));
+
+    /* How a group says a count of one type: `56 queries`, `3 ways in`. */
+    const NOUNS = {
+      db_query: 'queries', method: 'methods', function: 'functions', entry: 'ways in',
+      ui_api_call: 'requests', ui_action: 'actions', producer: 'publishers', consumer: 'handlers',
+      http_out: 'calls out', provider: 'providers', ui_component: 'components', cache_op: 'cache calls',
+      guard: 'guards', interceptor: 'interceptors', pipe: 'pipes', middleware: 'middleware',
+      table: 'tables', channel: 'channels', config_key: 'settings', external_api: 'outside APIs',
+      module: 'modules',
+    };
+    const nounOf = (typeName, n) => (n === 1 ? typeName.replace('_', ' ') : NOUNS[typeName] || typeName + 's');
+
+    /* `2 guards · 3 interceptors · 1 pipe`, or shorter when that will not fit. */
+    const chipText = (chip) => {
+      const full = chip.layers.map(([layer, n]) => n + ' ' + nounOf(layer, n)).join(' · ');
+      return full.length * 5.1 <= BOX.w - 24 ? full : plural(chip.total, 'wrapper', 'wrappers');
+    };
+
+    /* How many characters of a face fit in a width. */
+    const fits = (px, perChar) => Math.max(4, Math.floor(px / perChar));
+
+    const edgeName = (k) => {
+      const conf = confidences[data.edges[k][3]];
+      return edgeTypes[data.edges[k][2]] + (conf === 'static' ? '' : ' · ' + conf);
+    };
+
     const drawEdge = (k) => {
       const e = data.edges[k];
       const conf = confidences[e[3]];
       const cross = nodes[e[0]][RP] !== nodes[e[1]][RP];
       const g = svgEl('g', {
-        class: `g-link is-${conf}` + (cross ? ' is-cross' : ''),
+        class: `g-link is-${conf}` + (cross ? ' is-cross' : '') + (isContextLink(e[0], e[1]) ? ' is-context' : ''),
         'data-from': e[0],
         'data-to': e[1],
       });
@@ -1549,60 +2193,239 @@ __GRAPH_LOGIC__
         svgEl('title', {}, `${nodes[e[0]][LB]} → ${nodes[e[1]][LB]}\n${edgeTypes[e[2]]}, ${conf}`),
         svgEl('path', { class: 'g-hit', d: path.d }),
         svgEl('path', { class: 'g-edge', d: path.d, 'marker-end': 'url(#g-arrow)' }),
+        // Said on the line only on hover and around the open node, so a busy
+        // drawing is lines, not words.
+        svgEl('text', { class: 'g-tip', x: path.mid[0], y: path.mid[1] - 4 }, edgeName(k)),
       );
-      // Read off an annotation or a document rather than the code: said on the line.
-      if (conf === 'marker' || conf === 'declared') {
-        g.append(svgEl('text', { class: 'g-tip', x: path.mid[0], y: path.mid[1] - 4 }, conf));
+      return g;
+    };
+
+    /* Every edge between two units where one is a group, as one line as thick
+       as the count. */
+    const drawBundle = (bundle) => {
+      const first = data.edges[bundle.edges[0]];
+      const n = bundle.edges.length;
+      const conf = confidences[first[3]];
+      const to = repoOfUnit(bundle.to);
+      const g = svgEl('g', {
+        class: `g-link is-bundle is-${conf}` + (repoOfUnit(bundle.from) !== to ? ' is-cross' : '') +
+          (isContextLink(bundle.from, bundle.to) ? ' is-context' : ''),
+        'data-from': bundle.from,
+        'data-to': bundle.to,
+      });
+      g.style.setProperty('--hue', laneHue(to));
+      const path = curve(at(bundle.from), at(bundle.to));
+      const label = n.toLocaleString() + ' × ' + edgeTypes[first[2]];
+      g.append(
+        svgEl('title', {}, label),
+        svgEl('path', { class: 'g-hit', d: path.d }),
+        svgEl('path', {
+          class: 'g-edge',
+          d: path.d,
+          'marker-end': 'url(#g-arrow)',
+          'stroke-width': Math.min(5, 1.25 + Math.log2(n) * 0.6).toFixed(2),
+        }),
+        svgEl('text', { class: 'g-tip', x: path.mid[0], y: path.mid[1] - 4 }, label),
+      );
+      return g;
+    };
+
+    /* One band per service, the service's name in its corner. */
+    const laneBox = (lane) => ({
+      y: lane.y + BOX.pad + BOX.head - 6,
+      h: lane.height - (BOX.row - BOX.h) + 14,
+    });
+    const drawLanes = (placed, width) => {
+      const g = svgEl('g', { class: 'g-lanes' });
+      for (const lane of placed.lanes) {
+        const box = laneBox(lane);
+        const band = svgEl('g', { class: 'g-lane' });
+        band.style.setProperty('--hue', laneHue(lane.repo));
+        band.append(
+          svgEl('rect', { x: 0, y: box.y, width, height: box.h }),
+          svgEl('line', { x1: 0, x2: width, y1: box.y, y2: box.y }),
+          svgEl('text', { x: 12, y: box.y + 16 }, laneName(lane.repo)),
+        );
+        g.append(band);
       }
       return g;
+    };
+
+    /* Badges on a node's top edge, from the left: the hook decides what. */
+    const drawBadges = (g, badges) => {
+      let x = 8;
+      for (const badge of badges) {
+        const text = badge.label !== undefined ? String(badge.label) : Number(badge.count).toLocaleString();
+        const w = text.length * 6 + 10;
+        const pin = svgEl('g', { class: 'g-badge is-' + (badge.tone || 'info'), transform: `translate(${x} -8)` });
+        if (badge.title) pin.append(svgEl('title', {}, badge.title));
+        pin.append(svgEl('rect', { width: w, height: 15, rx: 7.5 }), svgEl('text', { x: 5, y: 11 }, text));
+        g.append(pin);
+        x += w + 4;
+      }
     };
 
     const drawNode = (v) => {
       const t = typeOf(v);
       const p = at(v);
       const more = state.hood.more.get(v) || 0;
+      const others = state.hood.others.get(v);
+      const context = contextOf(v);
       const label = nodes[v][LB];
       const pill = PILL.has(t);
       const g = svgEl('g', {
-        class: 'g-node' + (pill ? ' is-pill' : '') + (v === state.focus ? ' is-focus' : ''),
+        class: 'g-node' + (pill ? ' is-pill' : '') + (v === state.focus ? ' is-focus' : '') +
+          (context ? ' is-context' : ''),
         transform: `translate(${p.x} ${p.y})`,
         tabindex: -1,
         role: 'button',
         'data-node': v,
-        'aria-label': `${label}, ${t}, ${repoName(v)}` + (more ? `, ${more} more not drawn` : ''),
+        'aria-label': `${label}, ${t}, ${repoName(v)}` +
+          (context ? `, not in the flow: ${ALSO_SAYS[context.look].mark(context.of)}` : '') +
+          (more ? `, ${more} more not drawn` : '') +
+          (others ? `, ${ALSO_SAYS[others.look].count(others.count)}` : '') +
+          (state.hood.chips.has(v) ? `, ${state.hood.chips.get(v).total} wrappers folded` : ''),
       });
       g.style.setProperty('--hue', hueOf(nodes[v][RP]));
-      g.append(svgEl('title', {}, label + (placeOf(v) ? '\n' + placeOf(v) : '')));
+      // The full name, whose it is and where, on hover: the drawing shortens.
+      // Context says what it is to the flow where its owner would be.
+      const parts = labelParts(model, v);
+      const sub = context ? ALSO_SAYS[context.look].mark(context.of) : parts.owner;
+      g.append(svgEl('title', {}, label + '\n' + parts.owner + ' · ' + repoName(v) +
+        (placeOf(v) ? '\n' + placeOf(v) : '') +
+        (context ? '\nNot in the flow: ' + ALSO_SAYS[context.look].mark(context.of) + '. Double-click to centre on it.' : '')));
       g.append(svgEl('rect', { class: 'g-box', width: BOX.w, height: BOX.h, rx: pill ? BOX.h / 2 : 3 }));
       if (!pill) g.append(svgEl('rect', { class: 'g-rule', width: DOORS.has(t) ? 5 : 3, height: BOX.h, rx: 1 }));
       const glyph = glyphOf(v);
       const gx = pill ? 15 : 11;
       const gw = glyph.length * 5.8 + 8;
+      const right = pill ? 16 : 8;
       g.append(
         svgEl('rect', { class: 'g-glyph', x: gx, y: 7, width: gw, height: 13, rx: 2 }),
         svgEl('text', { class: 'g-glyph-text', x: gx + 4, y: 16.5 }, glyph),
         svgEl('text', { class: 'g-label', x: gx + gw + 6, y: 18 },
-          clip(label, Math.floor((BOX.w - gx - gw - 6 - (pill ? 16 : 8)) / 6.9))),
-        svgEl('text', { class: 'g-sub', x: gx, y: 33 },
-          clip(repoName(v) + ' · ' + (kinds[nodes[v][KD]] || t), pill ? 26 : 30)),
+          middle(parts.name, fits(BOX.w - gx - gw - 6 - right, 7.1))),
+        svgEl('text', { class: 'g-sub', x: gx, y: 33 }, middle(sub, fits(BOX.w - gx - right, 5.7))),
       );
+      const chip = state.hood.chips.get(v);
+      if (chip !== undefined) {
+        const text = chipText(chip);
+        const w = text.length * 5.1 + 12;
+        const tag = svgEl('g', {
+          class: 'g-chip' + (chip.open ? ' is-open' : ''),
+          'data-chip': v,
+          role: 'button',
+          'aria-label': (chip.open ? 'Fold ' : 'Draw ') + chip.layers.map(([layer, n]) => n + ' ' + nounOf(layer, n)).join(', '),
+          transform: `translate(${BOX.w - w - 8} ${BOX.h - 4})`,
+        });
+        tag.append(
+          svgEl('title', {}, chip.open
+            ? 'Drawn beside it. Click, or press W, to fold them back.'
+            : 'What runs in front of it, folded. Click, or press W, to draw them.'),
+          svgEl('rect', { width: w, height: 14, rx: 7 }),
+          svgEl('text', { x: 6, y: 10 }, text),
+        );
+        g.append(tag);
+      }
+      drawBadges(g, badgesFor(v));
+      // From the right edge in: +N, more of the flow, then who else uses it.
+      let edge = BOX.w + 6;
       if (more > 0) {
         const text = '+' + more.toLocaleString();
         const w = text.length * 6.2 + 10;
+        edge -= w;
         const badge = svgEl('g', {
           class: 'g-more',
           'data-more': v,
           role: 'button',
           'aria-label': `Expand ${label}: ${more} more not drawn`,
-          transform: `translate(${BOX.w - w + 6} -8)`,
+          transform: `translate(${edge} -8)`,
         });
         badge.append(
-          svgEl('title', {}, `${more} neighbours not drawn. Click to expand.`),
+          svgEl('title', {}, `${more} ${LOOK_SAYS[lookOf(v).flow].more}, not drawn. Click, or press +, to expand.`),
           svgEl('rect', { width: w, height: 15, rx: 7.5 }),
           svgEl('text', { x: 5, y: 11 }, text),
         );
         g.append(badge);
       }
+      if (others) {
+        const says = ALSO_SAYS[others.look];
+        const text = says.badge(others.count);
+        const w = text.length * 5.1 + 12;
+        edge -= w + 4;
+        const badge = svgEl('g', {
+          class: 'g-also' + (others.shown ? ' is-shown' : ''),
+          'data-also': v,
+          role: 'button',
+          'aria-label': `${others.shown ? 'Hide' : 'Show'} ${says.ask.toLowerCase()}: ${says.count(others.count)}, not in the flow`,
+          transform: `translate(${edge} -8)`,
+        });
+        badge.append(
+          svgEl('title', {}, `${says.count(others.count)}, not in the flow. ` +
+            `Click, or press O, to ${others.shown ? 'hide them' : 'draw them as context'}.`),
+          svgEl('rect', { width: w, height: 15, rx: 7.5 }),
+          svgEl('text', { x: 6, y: 11 }, text),
+        );
+        g.append(badge);
+      }
+      return g;
+    };
+
+    /* A group: a small stack of sheets, whose they are, and how many. */
+    const drawGroup = (id) => {
+      const group = state.hood.groups.get(id);
+      const p = at(id);
+      const count = group.members.length;
+      const typeName = types[group.type];
+      const noun = nounOf(typeName, count);
+      const what = group.next === 'service' ? 'services' : 'classes';
+      const name = group.level === 'class' ? group.owner
+        : group.level === 'service' ? laneName(group.repo)
+        : `${group.parts.toLocaleString()} more ${what}`;
+      const context = contextOf(id);
+      const sub = (group.level === 'service' ? `${noun} in ${group.parts} classes` : noun) +
+        (context ? ' · ' + ALSO_SAYS[context.look].mark(context.of, count) : '');
+      const g = svgEl('g', {
+        class: 'g-node is-group' + (context ? ' is-context' : ''),
+        transform: `translate(${p.x} ${p.y})`,
+        tabindex: -1,
+        role: 'button',
+        'data-group': id,
+        'aria-label': `${count} ${noun}, ${name}, ${laneName(group.repo)}. Open the group.`,
+      });
+      g.style.setProperty('--hue', laneHue(group.repo));
+      g.append(
+        svgEl('title', {}, `${count.toLocaleString()} ${noun}` + (group.owner ? ` of ${group.owner}` : '') +
+          ` in ${laneName(group.repo)}` +
+          (group.behind > 0 ? `\n${group.behind.toLocaleString()} more past them within the hops, drawn once it is open` : '') +
+          (context ? '\nNot in the flow: ' + ALSO_SAYS[context.look].mark(context.of, count) : '') +
+          '\nClick, or press Enter, to open it.'),
+        svgEl('rect', { class: 'g-sheet', x: 6, y: -6, width: BOX.w, height: BOX.h, rx: 3 }),
+        svgEl('rect', { class: 'g-sheet', x: 3, y: -3, width: BOX.w, height: BOX.h, rx: 3 }),
+        svgEl('rect', { class: 'g-box', width: BOX.w, height: BOX.h, rx: 3 }),
+        svgEl('rect', { class: 'g-rule', width: 3, height: BOX.h, rx: 1 }),
+      );
+      const glyph = GLYPH[typeName] || typeName.slice(0, 4);
+      const gw = glyph.length * 5.8 + 8;
+      const digits = count.toLocaleString();
+      const room = BOX.w - 11 - gw - 6 - digits.length * 9.5 - 14;
+      g.append(
+        svgEl('rect', { class: 'g-glyph', x: 11, y: 7, width: gw, height: 13, rx: 2 }),
+        svgEl('text', { class: 'g-glyph-text', x: 15, y: 16.5 }, glyph),
+        svgEl('text', { class: 'g-label', x: 11 + gw + 6, y: 18 }, middle(name, fits(room, 7.1))),
+        svgEl('text', { class: 'g-sub', x: 11, y: 33 }, middle(sub, fits(BOX.w - 19 - digits.length * 9.5, 5.7))),
+        svgEl('text', { class: 'g-count', x: BOX.w - 10, y: 27 }, digits),
+      );
+      // A group carries its members' badges, summed per tone.
+      const tones = new Map();
+      for (const v of group.members) {
+        for (const badge of badgesFor(v)) {
+          const tone = badge.tone || 'info';
+          tones.set(tone, (tones.get(tone) || 0) + (Number(badge.count) || 0));
+        }
+      }
+      drawBadges(g, ['bad', 'warn', 'info'].filter((tone) => tones.get(tone) > 0)
+        .map((tone) => ({ count: tones.get(tone), tone, title: `${tones.get(tone)} across the group` })));
       return g;
     };
 
@@ -1610,17 +2433,142 @@ __GRAPH_LOGIC__
        redraw under a double click would leave the second click nowhere. */
     const paintSelection = (moveFocus) => {
       for (const el of world.querySelectorAll('.g-node')) {
-        const v = Number(el.dataset.node);
+        const v = unitOf(el);
         el.classList.toggle('is-open', v === state.open);
         el.setAttribute('tabindex', v === state.cursor ? '0' : '-1');
         if (moveFocus && v === state.cursor) el.focus({ preventScroll: true });
       }
+      const open = String(state.open);
       for (const el of world.querySelectorAll('.g-link')) {
-        const lit = state.open !== null &&
-          (Number(el.dataset.from) === state.open || Number(el.dataset.to) === state.open);
-        el.classList.toggle('is-lit', lit);
+        el.classList.toggle('is-lit', state.open !== null && (el.dataset.from === open || el.dataset.to === open));
       }
     };
+
+    /* Hovering, or moving the keys onto, a unit lights the way the walk took
+       from the focus to it, and quiets everything else. */
+    const traceTo = (unit) => {
+      const path = unit === null || state.hood === null ? [] : trace(state.hood, unit);
+      const on = new Set(path.map(String));
+      const steps = new Set();
+      for (let i = 1; i < path.length; i += 1) {
+        steps.add(path[i - 1] + '|' + path[i]);
+        steps.add(path[i] + '|' + path[i - 1]);
+      }
+      world.classList.toggle('is-tracing', path.length > 1);
+      for (const el of world.querySelectorAll('.g-node')) el.classList.toggle('is-on', on.has(String(unitOf(el))));
+      for (const el of world.querySelectorAll('.g-link')) {
+        el.classList.toggle('is-on', steps.has(el.dataset.from + '|' + el.dataset.to));
+      }
+    };
+
+    /* ── semantic zoom and the minimap: both follow the camera ── */
+
+    const extentOf = (placed) => ({
+      w: (placed.max - placed.min) * BOX.column + BOX.w + BOX.pad * 2,
+      h: placed.height + BOX.pad * 2 + BOX.head,
+    });
+
+    let zoomNow = null;
+    const paintZoom = (k) => {
+      const level = zoomLevel(k);
+      if (level !== zoomNow) {
+        if (zoomNow !== null) svg.classList.remove('z-' + zoomNow);
+        svg.classList.add('z-' + level);
+        zoomNow = level;
+      }
+      // A lane keeps its name readable however far out, like a region on a map.
+      svg.style.setProperty('--lane-size', Math.min(30, Math.max(12.5, 12.5 / k)).toFixed(1) + 'px');
+    };
+
+    /* A lane's name stays at the left edge of the screen while its band is on
+       it, so the service is named wherever the camera is. */
+    const pinLaneNames = ({ x, k }) => {
+      const left = Math.max(12, (12 - x) / k);
+      for (const name of world.querySelectorAll('.g-lane text')) name.setAttribute('x', left.toFixed(1));
+    };
+
+    const mini = document.createElement('div');
+    mini.className = 'g-mini';
+    mini.dataset.export = 'skip';
+    mini.hidden = true;
+    mini.title = 'The whole drawing. Click or drag to move there.';
+    const miniSvg = svgEl('svg', { 'aria-hidden': 'true' });
+    mini.append(miniSvg);
+    wrap.append(mini);
+    let miniView = null;
+
+    const paintMinimap = () => {
+      if (state.placed === null || miniView === null) return;
+      const { x, y, k, w, h } = camera.view();
+      const all = extentOf(state.placed);
+      const view = { x: -x / k, y: -y / k, w: w / k, h: h / k };
+      // Nothing to find when all of it is on screen.
+      mini.hidden = view.x <= 0 && view.y <= 0 && view.x + view.w >= all.w && view.y + view.h >= all.h;
+      miniView.setAttribute('x', view.x.toFixed(1));
+      miniView.setAttribute('y', view.y.toFixed(1));
+      miniView.setAttribute('width', view.w.toFixed(1));
+      miniView.setAttribute('height', view.h.toFixed(1));
+    };
+
+    /* The minimap is a corner, never a column: it fits a small box whatever
+       the drawing's shape. Sized by its width alone, an opened group of fifty
+       made it taller than the canvas, over the column of callers on the left,
+       and the first click on a group there moved the view instead. */
+    const MINI = { w: 168, h: 120, narrow: { w: 108, h: 84 } };
+    const sizeMinimap = (all) => {
+      const most = wrap.clientWidth < 520 ? MINI.narrow : MINI;
+      const scale = Math.min(most.w / all.w, Math.min(most.h, wrap.clientHeight * 0.3) / all.h);
+      mini.style.width = Math.max(28, Math.round(all.w * scale)) + 'px';
+      miniSvg.style.height = Math.max(20, Math.round(all.h * scale)) + 'px';
+    };
+
+    const drawMinimap = () => {
+      const { hood, placed } = state;
+      const all = extentOf(placed);
+      miniSvg.setAttribute('viewBox', `0 0 ${all.w} ${all.h}`);
+      miniSvg.setAttribute('preserveAspectRatio', 'none');
+      sizeMinimap(all);
+      const parts = [];
+      for (const lane of placed.lanes) {
+        const box = laneBox(lane);
+        const band = svgEl('rect', { class: 'm-lane', x: 0, y: box.y, width: all.w, height: box.h });
+        band.style.setProperty('--hue', laneHue(lane.repo));
+        parts.push(band);
+      }
+      for (const v of hood.nodes) {
+        const p = at(v);
+        const unit = svgEl('rect', { class: v === hood.focus ? 'm-focus' : 'm-unit', x: p.x, y: p.y, width: BOX.w, height: BOX.h, rx: 4 });
+        unit.style.setProperty('--hue', laneHue(repoOfUnit(v)));
+        parts.push(unit);
+      }
+      miniView = svgEl('rect', { class: 'm-view' });
+      parts.push(miniView);
+      miniSvg.replaceChildren(...parts);
+      paintMinimap();
+    };
+
+    camera.watch((view) => {
+      paintZoom(view.k);
+      pinLaneNames(view);
+      paintMinimap();
+    });
+
+    const miniTo = (event) => {
+      const box = miniSvg.getBoundingClientRect();
+      const all = extentOf(state.placed);
+      camera.lookAt(((event.clientX - box.left) / box.width) * all.w, ((event.clientY - box.top) / box.height) * all.h);
+    };
+    let miniDrag = null;
+    mini.addEventListener('pointerdown', (event) => {
+      // The canvas under it pans on a drag; here a drag moves the view.
+      event.stopPropagation();
+      miniDrag = event.pointerId;
+      mini.setPointerCapture(event.pointerId);
+      miniTo(event);
+    });
+    mini.addEventListener('pointermove', (event) => { if (miniDrag === event.pointerId) miniTo(event); });
+    mini.addEventListener('pointerup', () => { miniDrag = null; });
+    mini.addEventListener('pointercancel', () => { miniDrag = null; });
 
     const drawDrawing = () => {
       const hadFocus = svg.contains(document.activeElement);
@@ -1635,20 +2583,40 @@ __GRAPH_LOGIC__
       }
       const links = svgEl('g');
       for (const k of hood.edges) links.append(drawEdge(k));
+      for (const bundle of hood.bundles) links.append(drawBundle(bundle));
       const boxes = svgEl('g');
-      for (const v of hood.nodes) boxes.append(drawNode(v));
-      world.replaceChildren(heads, links, boxes);
+      for (const v of hood.nodes) boxes.append(isGroup(v) ? drawGroup(v) : drawNode(v));
+      world.replaceChildren(drawLanes(placed, extentOf(placed).w), heads, links, boxes);
+      world.classList.remove('is-tracing');
+      pinLaneNames(camera.view());
       svg.setAttribute('aria-label', `Neighbourhood of ${nodes[state.focus][LB]}`);
       paintSelection(hadFocus);
+      drawMinimap();
     };
 
     const drawStatus = () => {
+      if (drawAnswer()) return;
       const { hood } = state;
       const filter = filterNow();
+      const groups = [...hood.groups.values()];
+      const drawnNodes = hood.nodes.length - groups.length;
       const parts = [
-        `<b>${plural(hood.nodes.length, 'node', 'nodes')}</b> drawn within ${plural(state.hops, 'hop', 'hops')} ` +
-        `of <b>${esc(nodes[state.focus][LB])}</b>.`,
+        `<b>${plural(drawnNodes, 'node', 'nodes')}</b>` +
+        (groups.length ? ` and <b>${plural(groups.length, 'group', 'groups')}</b>` : '') +
+        ` drawn within ${plural(state.hops, 'hop', 'hops')} of <b>${esc(nodes[state.focus][LB])}</b>.`,
       ];
+      if (groups.length > 0) {
+        const held = groups.reduce((sum, group) => sum + group.members.length, 0);
+        parts.push(`The groups hold ${plural(held, 'node', 'nodes')}` +
+          (hood.behind > 0 ? `, with ${hood.behind.toLocaleString()} more past them` : '') +
+          '; click one to open it.');
+      }
+      const context = [...hood.context.keys()]
+        .reduce((sum, u) => sum + (isGroup(u) ? hood.groups.get(u).members.length : 1), 0);
+      if (context > 0) {
+        parts.push(`${plural(context, 'node', 'nodes')} faded as context: who else uses ` +
+          `${plural(new Set([...hood.context.values()].map((c) => c.of)).size, 'node', 'nodes')} of the flow.`);
+      }
       if (hood.left > 0) {
         parts.push(`<b>${hood.left.toLocaleString()} more</b> not drawn: the cap is ${state.cap}. ` +
           'Raise it, expand a node marked +N, or filter.');
@@ -1666,6 +2634,11 @@ __GRAPH_LOGIC__
         ].filter(Boolean);
         parts.push('Filters hide ' + off.join(', ') + '.');
       }
+      const folded = [...hood.chips.values()].filter((chip) => !chip.open);
+      if (folded.length > 0) {
+        parts.push(`Plumbing in front of ${plural(folded.length, 'node', 'nodes')} is folded into its chip.`);
+      }
+      if (state.opened.size > 0) parts.push('<button class="g-again" data-again>Group again</button>');
       statusEl.className = 'g-status' + (hood.left > 0 ? ' is-cut' : '');
       statusEl.innerHTML = parts.join(' ');
     };
@@ -1700,7 +2673,7 @@ __GRAPH_LOGIC__
       return `<div class="g-row"><span class="tag${tone ? ' is-' + tone : ''}">${esc(reason)}</span> ` +
         `<span class="hint">${esc(data.dicts.levels[row[ROW.level]])}` +
         (row[ROW.sites] > 1 ? ` &middot; ${row[ROW.sites]} places` : '') +
-        (file ? ` &middot; ${esc(file)}` : '') + '</span>' +
+        (file ? ' &middot; ' + opener(row[ROW.repo], row[ROW.file], row[ROW.line], file) : '') + '</span>' +
         `<p>${esc(row[ROW.message])}</p>` +
         (hint ? `<p class="hint-text">${esc(hint)}</p>` : '') + '</div>';
     };
@@ -1716,6 +2689,8 @@ __GRAPH_LOGIC__
       const hue = hueOf(nodes[v][RP]);
       const meta = metaOf(v);
       const canExpand = state.hood.more.has(v) && !state.expanded.includes(v);
+      const others = state.hood.others.get(v);
+      const context = contextOf(v);
       const total = (groups) => groups.reduce((sum, group) => sum + group.edges.length, 0);
       const fileRows = state.openGroups.has('file') ? d.inFile : d.inFile.slice(0, FILE_LIMIT);
 
@@ -1726,13 +2701,24 @@ __GRAPH_LOGIC__
           '<button class="g-close" data-act="close" aria-label="Close details" title="Close (Escape)">&times;</button></div>' +
           `<h3 id="g-details-title">${esc(nodes[v][LB])}</h3>` +
           `<div><span class="tag" style="color:${hue};border-color:${hue}">${esc(repoName(v))}</span> ` +
-          `<span class="g-place">${esc(placeOf(v))}</span></div>` +
+          opener(nodes[v][RP], nodes[v][FL], nodes[v][LN], placeOf(v)) + '</div>' +
+          badgesHtml(v) +
         '</header>' +
         '<div class="g-actions">' +
-          `<button class="tool" data-act="centre"${v === state.focus ? ' disabled' : ''}>Centre here</button>` +
-          `<button class="tool" data-act="expand"${canExpand ? '' : ' disabled'}>Expand neighbours</button>` +
+          `<button class="tool" data-act="centre"${v === state.focus && state.query === null ? ' disabled' : ''}>Centre here</button>` +
+          `<button class="tool" data-act="expand"${canExpand ? '' : ' disabled'} title="More of the flow, the way it ` +
+          `looks from the focus (+)">${LOOK_SAYS[lookOf(v).flow].expand}</button>` +
+          (others
+            ? `<button class="tool" data-act="also" aria-pressed="${others.shown}" title="${ALSO_SAYS[others.look].count(others.count)}, ` +
+              `not in the flow, drawn faded as context (O)">${ALSO_SAYS[others.look].ask} &middot; ${others.count.toLocaleString()}</button>`
+            : '') +
           (DOORS.has(t) ? '<button class="tool" data-act="walk">Open in Walk</button>' : '') +
         '</div>' +
+        (context
+          ? `<p class="hint">Not in the flow: drawn as context, it ${esc(ALSO_SAYS[context.look].mark(context.of))}. ` +
+            '<i>Centre here</i> to follow it.</p>'
+          : '') +
+        checkActionsHtml(v) +
         (meta.length > 0
           ? '<dl class="g-meta">' + meta.map(([key, value]) => `<dt>${esc(key)}</dt><dd>${esc(value)}</dd>`).join('') + '</dl>'
           : '') +
@@ -1742,8 +2728,13 @@ __GRAPH_LOGIC__
         `<section><h4>Out &middot; ${total(d.out)}</h4>` +
           (d.out.length ? d.out.map((group) => edgeGroup('out', group, 1)).join('') : '<p class="g-none">It reaches nothing.</p>') +
         '</section>' +
-        `<section><h4>Not joined here &middot; ${d.rows.length}</h4>` +
-          (d.rows.length ? d.rows.map(rowHtml).join('') : '<p class="g-none">No row names this node.</p>') +
+        `<section><h4>Problems &middot; ${d.rows.length + d.atLine.length}</h4>` +
+          (d.rows.length ? `<div class="g-group-name">Name this node &middot; ${d.rows.length}</div>` + d.rows.map(rowHtml).join('') : '') +
+          (d.atLine.length
+            ? `<div class="g-group-name" style="margin-top:8px">At its line, naming no node &middot; ${d.atLine.length}</div>` +
+              d.atLine.map(rowHtml).join('')
+            : '') +
+          (d.rows.length + d.atLine.length === 0 ? '<p class="g-none">No row names this node or sits at its line.</p>' : '') +
           (d.inFile.length
             ? `<div class="g-group-name" style="margin-top:8px">Elsewhere in its file &middot; ${d.inFile.length}</div>` +
               fileRows.map(rowHtml).join('') +
@@ -1755,30 +2746,377 @@ __GRAPH_LOGIC__
       panel.setAttribute('aria-labelledby', 'g-details-title');
     };
 
+    /* ── checking: problems, a path between two nodes, impact ── */
+
+    /* Every answer is a set of nodes graph.js shapes like a neighbourhood, so
+       the drawing draws it unchanged. The page keeps which question is asked
+       in `state.query`; `asked` turns that into the hood the drawing reads,
+       and `drawAnswer` says what the answer was and what was searched. */
+
+    const answerEl = document.getElementById('g-answer');
+    const problemsBtn = document.getElementById('g-problems');
+    const onlyBox = document.getElementById('g-only');
+    const onlyNote = document.getElementById('g-only-note');
+    const endBtns = { from: document.getElementById('g-from'), to: document.getElementById('g-to') };
+    const wayBtn = document.getElementById('g-way');
+    const pathDepthSel = document.getElementById('g-path-depth');
+    const clearBtn = document.getElementById('g-clear');
+    const searchEl = document.getElementById('g-search');
+    const searchPrompt = searchEl.placeholder;
+    const ANSWER_LIMIT = 60;
+
+    /* A `file:line` that opens in the editor `--editor-links` named, or plain text. */
+    const editor = data.editor || null;
+    const opener = (repo, file, line, text) => {
+      const url = editor === null || repo < 0 || file < 0
+        ? null
+        : editorUrl(editor.name, editor.roots[repo], files[file], line);
+      return url === null
+        ? `<span class="g-place">${esc(text)}</span>`
+        : `<a class="g-place" href="${esc(url)}" title="Open in ${esc(editor.name)}">${esc(text)}</a>`;
+    };
+
+    /* The same badges the drawing pins on the node, said in words. */
+    const badgesHtml = (v) => {
+      const list = badgesFor(v);
+      if (list.length === 0) return '';
+      return '<div class="g-badges">' + list.map((badge) => {
+        const say = (BADGE[badge.kind] || { say: (n) => n.toLocaleString() }).say;
+        return `<span class="tag is-${badge.tone}" title="${esc(badge.title || '')}">${say(badge.count)}</span>`;
+      }).join('') + '</div>';
+    };
+
+    const checkActionsHtml = (v) => {
+      const impactOn = state.query !== null && state.query.kind === 'impact' && state.query.target === v;
+      const end = (name, text, title) =>
+        `<button class="tool" data-check="${name}" aria-pressed="${state.ends[name] === v}" title="${title}">${text}</button>`;
+      return '<div class="g-actions">' +
+        end('from', 'Path from here', 'Find the shortest path that starts here') +
+        end('to', 'Path to here', 'Find the shortest path that ends here') +
+        `<button class="tool" data-check="impact"${impactOn ? ' disabled' : ''} ` +
+        'title="Everything upstream of this node, to the ways in, as flowatlas impact walks it">Impact</button>' +
+        '</div>';
+    };
+
+    /* What is drawn: the neighbourhood, cut to its problems when asked, or
+       the answer to the question asked. Every one folds plumbing into chips
+       the same way; only the neighbourhood groups, since an answer is every
+       node on it. */
+    const asked = () => {
+      const query = state.query;
+      const fold = { draw: state.plumbing, unfolded: state.unfolded };
+      if (query === null) {
+        const hood = neighbourhood(model, {
+          focus: state.focus,
+          hops: state.hops,
+          cap: state.cap,
+          filter: filterNow(),
+          expanded: state.expanded,
+          also: state.also,
+          fold,
+          group: true,
+          opened: state.opened,
+        });
+        return state.problemsOnly ? onlyProblems(model, hood, problems.has) : hood;
+      }
+      if (query.kind === 'path') {
+        const filter = filterNow();
+        return shortestPath(model, {
+          from: state.ends.from,
+          to: state.ends.to,
+          directed: state.directed,
+          depth: state.pathDepth,
+          cap: state.cap,
+          filter,
+          fold: { ...fold, filter },
+        });
+      }
+      return impactView(model, query.found, { cap: state.cap, expanded: state.expanded, fold });
+    };
+
+    /* Asking goes to the answer's focus the ordinary way, so Back returns to
+       the neighbourhood before it, and draws the answer there. */
+    const ask = (query, focus) => {
+      state.answer = 'query';
+      go(focus, true, query);
+    };
+    const askPath = () => ask({ kind: 'path' }, state.ends.from);
+    const askImpact = (v) => ask({ kind: 'impact', target: v, found: upstream(model, v) }, v);
+
+    const stopPicking = () => {
+      state.picking = null;
+      paintChecks();
+    };
+
+    /* What Escape closes after the panel: the problems list over an answer,
+       then the half-chosen path, then the answer itself. True when it closed
+       something. */
+    const dismissAnswer = () => {
+      if (state.answer === 'problems') {
+        state.answer = state.query === null ? null : 'query';
+        drawAnswer();
+        return true;
+      }
+      if (state.query === null && state.answer === 'ends') {
+        state.ends = { from: null, to: null };
+        state.answer = null;
+        drawAnswer();
+        drawDetails();
+        return true;
+      }
+      if (state.query !== null) {
+        clearQuery();
+        return true;
+      }
+      return false;
+    };
+
+    const chooseEnd = (v, end = state.picking) => {
+      state.ends[end] = v;
+      state.picking = null;
+      if (state.ends.from !== null && state.ends.to !== null) askPath();
+      else {
+        state.answer = 'ends';
+        drawAnswer();
+        drawDetails();
+      }
+    };
+
+    const filtersSaid = () => {
+      const hiddenServices = repos.filter((name) => !shown.has(name)).length;
+      const off = [
+        hiddenServices && plural(hiddenServices, 'service', 'services'),
+        state.hiddenEdgeTypes.size && plural(state.hiddenEdgeTypes.size, 'edge type', 'edge types'),
+        state.hiddenConfidences.size && plural(state.hiddenConfidences.size, 'kind of trust', 'kinds of trust'),
+      ].filter(Boolean);
+      return off.length === 0 ? 'with no filters on' : 'with ' + off.join(', ') + ' hidden by the filters';
+    };
+
+    const nameOf = (v) => `<b>${esc(nodes[v][LB])}</b>`;
+    const pickable = (v, note, text) =>
+      `<li><button class="g-far" data-pick="${v}" style="--hue:${hueOf(nodes[v][RP])}" ` +
+      `title="${esc(nodes[v][LB])}${placeOf(v) ? ', ' + esc(placeOf(v)) : ''}">` +
+      `<span class="label">${esc(text || nodes[v][LB])}</span><small>${esc(note)}</small></button>${graphLink(v)}</li>`;
+    const listHtml = (key, title, items, empty) => {
+      const open = state.answerOpen.has(key);
+      const shownItems = open ? items : items.slice(0, ANSWER_LIMIT);
+      return `<h4>${title} &middot; ${items.length.toLocaleString()}</h4>` +
+        (items.length === 0 ? `<p class="g-none">${empty}</p>` : `<ul>${shownItems.join('')}</ul>`) +
+        (shownItems.length < items.length
+          ? `<button class="g-more-btn" data-list="${key}">Show ${(items.length - shownItems.length).toLocaleString()} more</button>`
+          : '');
+    };
+    const reasonsAt = (v) => {
+      const found = problems.of(v);
+      return problems.reasonsOf([...found.on, ...found.atLine]).join(', ');
+    };
+
+    const problemsHtml = () => {
+      const { waysIn, crossings, calls } = problems.list();
+      const ways = waysIn.map((item) => pickable(item.node,
+        [repoName(item.node), item.unhandled ? 'no handler read' : '', reasonsAt(item.node)].filter(Boolean).join(' · ')));
+      const crossed = crossings.map((item) => {
+        const e = data.edges[item.edge];
+        const v = problems.has(e[1]) ? e[1] : e[0];
+        return pickable(v, `${repoName(e[0])} → ${repoName(e[1])} · ${edgeTypes[e[2]]}, ${confidences[e[3]]} · ` +
+          `${[reasonsAt(e[0]), reasonsAt(e[1])].filter(Boolean).join(', ')}`, `${nodes[e[0]][LB]} → ${nodes[e[1]][LB]}`);
+      });
+      const unjoined = calls.map((item) => pickable(item.node,
+        [repoName(item.node), item.unjoined ? 'joined nothing' : '', reasonsAt(item.node)].filter(Boolean).join(' · ')));
+      return '<p>Where to look first. A problem is a row of <b>Not joined</b> that names a node or sits at its ' +
+        'line; a node carrying one is badged with the count.</p>' +
+        listHtml('ways', 'Ways in with problems', ways, 'Every way in has a handler that was read, and no row.') +
+        listHtml('crossings', 'Crossings with problems', crossed, 'No crossing has a row at either end.') +
+        listHtml('calls', 'Calls that did not join, or carry rows', unjoined, 'Every call joined, and none carries a row.');
+    };
+
+    const pathHtml = (hood) => {
+      const way = state.directed ? 'along edges the way the calls run' : 'along edges either way';
+      const ends = `from ${nameOf(hood.from)} to ${nameOf(hood.to)}`;
+      if (!hood.found) {
+        const tries = [state.directed && 'either way', hood.depth < 24 && 'a longer search', filterNow().active && 'fewer filters']
+          .filter(Boolean);
+        return `<p><b>No path</b> ${ends} within ${plural(hood.depth, 'step', 'steps')} ${way}, ${filtersSaid()}.</p>` +
+          `<p>Searched the ${plural(hood.searched, 'node', 'nodes')} ${nameOf(hood.from)} reaches that way.` +
+          (tries.length ? ' Try ' + tries.join(', or ') + '.' : '') + '</p>';
+      }
+      return `<p><b>${plural(hood.paths, 'shortest path', 'shortest paths')}</b> of ${plural(hood.length, 'step', 'steps')} ` +
+        `${ends}, ${way}, ${filtersSaid()}.` +
+        (hood.left > 0 ? ` ${plural(hood.left, 'node', 'nodes')} on them not drawn: the cap is ${state.cap}; one whole path is drawn first.` : '') +
+        '</p>';
+    };
+
+    const impactHtml = (hood) => {
+      const found = state.query.found;
+      const entries = found.entries.map((v) => pickable(v,
+        `${repoName(v)} · ${kinds[nodes[v][KD]] || typeOf(v)} · ${plural(found.dist.get(v), 'hop', 'hops')} back`));
+      const screens = found.doors.filter((v) => typeOf(v) !== 'entry').map((v) => pickable(v,
+        `${repoName(v)} · ${kinds[nodes[v][KD]] || typeOf(v)} · ${plural(found.dist.get(v), 'hop', 'hops')} back`));
+      const stops = found.withoutEntry.map((s) => esc(repos[s]));
+      if (found.reached === 0) {
+        return `<p><b>Nothing reaches</b> ${nameOf(found.target)} along the edges <code>flowatlas impact</code> walks ` +
+          'back, so a change to it is seen only from it.</p>';
+      }
+      return `<p><b>${plural(found.reached, 'node reaches', 'nodes reach')}</b> ${nameOf(found.target)} within ` +
+        `${plural(found.depth, 'hop', 'hops')} back, walked as <code>flowatlas impact</code> walks it, so no filter applies.` +
+        (hood.left > 0 ? ` ${plural(hood.left, 'node', 'nodes')} not drawn: the cap is ${state.cap}; every way in is drawn first, with one chain down from it.` : '') +
+        '</p>' +
+        (stops.length ? `<p>Also reaches ${stops.join(', ')}, where the chain stops before an entry point.</p>` : '') +
+        listHtml('entries', 'Entry points', entries, 'Nothing that reaches it is an entry point.') +
+        (screens.length ? listHtml('screens', 'Screen actions', screens, '') : '');
+    };
+
+    const endsHtml = () => {
+      const set = state.ends.from !== null ? 'from' : 'to';
+      const other = set === 'from' ? 'to' : 'from';
+      return `<p>Path ${set} ${nameOf(state.ends[set])}. Now choose where it ${other === 'to' ? 'ends' : 'starts'}: ` +
+        `<b>Path ${other} here</b> on another node, or <b>${other}: pick&hellip;</b> above and search.</p>`;
+    };
+
+    const paintChecks = () => {
+      const { waysIn, crossings, calls } = problems.list();
+      problemsBtn.textContent = `Problems · ${(waysIn.length + crossings.length + calls.length).toLocaleString()}`;
+      problemsBtn.setAttribute('aria-expanded', String(state.answer === 'problems'));
+      for (const [end, button] of Object.entries(endBtns)) {
+        const v = state.ends[end];
+        button.textContent = `${end}: ` + (v === null ? 'pick…' : middle(nodes[v][LB], 30));
+        button.title = v === null ? `Pick where the path ${end === 'from' ? 'starts' : 'ends'}` : nodes[v][LB];
+        button.classList.toggle('is-picking', state.picking === end);
+      }
+      wayBtn.innerHTML = state.directed ? '&rarr; one way' : '&harr; either way';
+      wayBtn.setAttribute('aria-pressed', String(!state.directed));
+      pathDepthSel.value = String(state.pathDepth);
+      clearBtn.hidden = state.query === null;
+      onlyBox.checked = state.problemsOnly;
+      onlyBox.disabled = state.query !== null;
+      onlyNote.textContent = state.problemsOnly && state.query === null && state.hood && state.hood.clean
+        ? plural(state.hood.clean, 'node', 'nodes') + ' without problems hidden'
+        : '';
+      searchEl.placeholder = state.picking === null ? searchPrompt
+        : `Pick where the path ${state.picking === 'from' ? 'starts' : 'ends'} (Escape to stop)`;
+    };
+
+    /* The answer box and, while a question is asked, the line under the
+       drawing. True when it wrote that line. */
+    function drawAnswer() {
+      paintChecks();
+      const query = state.query;
+      const showing = state.answer === 'query' ? (query === null ? null : query.kind)
+        : state.answer === 'ends' ? (query === null && (state.ends.from === null) !== (state.ends.to === null) ? 'ends' : null)
+        : state.answer;
+      answerEl.hidden = showing === null;
+      answerEl.classList.toggle('is-none', showing === 'path' && !state.hood.found);
+      if (showing === 'problems') answerEl.innerHTML = problemsHtml();
+      else if (showing === 'path') answerEl.innerHTML = pathHtml(state.hood);
+      else if (showing === 'impact') answerEl.innerHTML = impactHtml(state.hood);
+      else if (showing === 'ends') answerEl.innerHTML = endsHtml();
+      if (query === null || state.hood === null) return false;
+
+      const hood = state.hood;
+      const drawn = `<b>${plural(hood.nodes.length, 'node', 'nodes')}</b> drawn`;
+      statusEl.className = 'g-status' + (hood.left > 0 ? ' is-cut' : '');
+      statusEl.innerHTML = query.kind === 'path'
+        ? (hood.found
+          ? `${drawn} on the shortest ${hood.paths === 1 ? 'path' : 'paths'} from ${nameOf(hood.from)} to ${nameOf(hood.to)}.`
+          : `<b>No path</b> from ${nameOf(hood.from)} to ${nameOf(hood.to)} within ${plural(hood.depth, 'step', 'steps')}.`)
+        : `${drawn} upstream of ${nameOf(query.target)}, of ${plural(query.found.reached, 'node', 'nodes')} that reach it.`;
+      if (hood.left > 0) statusEl.innerHTML += ` <b>${hood.left.toLocaleString()} more</b> not drawn: the cap is ${state.cap}.`;
+      return true;
+    }
+
+    problemsBtn.addEventListener('click', () => {
+      state.answer = state.answer === 'problems' ? (state.query === null ? null : 'query') : 'problems';
+      drawAnswer();
+    });
+    onlyBox.addEventListener('change', () => { state.problemsOnly = onlyBox.checked; draw(false); });
+    for (const [end, button] of Object.entries(endBtns)) {
+      button.addEventListener('click', () => {
+        state.picking = state.picking === end ? null : end;
+        paintChecks();
+        if (state.picking !== null) searchEl.focus();
+      });
+    }
+    wayBtn.addEventListener('click', () => {
+      state.directed = !state.directed;
+      if (state.query !== null && state.query.kind === 'path') draw(true);
+      else paintChecks();
+    });
+    pathDepthSel.addEventListener('change', () => {
+      state.pathDepth = Number(pathDepthSel.value);
+      if (state.query !== null && state.query.kind === 'path') draw(true);
+    });
+    function clearQuery() {
+      state.query = null;
+      state.answer = null;
+      state.expanded = [];
+      state.also = [];
+      draw(true);
+      syncControls();
+    }
+    clearBtn.addEventListener('click', clearQuery);
+    answerEl.addEventListener('click', (event) => {
+      const more = event.target.closest('[data-list]');
+      if (more) { state.answerOpen.add(more.dataset.list); drawAnswer(); return; }
+      const named = event.target.closest('[data-pick]');
+      if (!named) return;
+      const v = Number(named.dataset.pick);
+      if (state.hood.layer.has(v)) { select(v, false); camera.reveal(at(v)); } else go(v);
+    });
+    panel.addEventListener('click', (event) => {
+      const target = event.target.closest('button[data-check]');
+      if (!target || state.open === null) return;
+      if (target.dataset.check === 'impact') askImpact(state.open);
+      else chooseEnd(state.open, target.dataset.check);
+    });
+
     /* ── state changes: every control ends in one of these ── */
+
+    /* The view in the address: the focus, the hops and what was expanded, each
+       node by its key, so the link opens the same view after a rebuild; then
+       the question asked of it, and what the filters hide, by name. */
+    const askNow = () => {
+      const query = state.query;
+      if (query !== null && query.kind === 'impact') return { kind: 'impact' };
+      if (query !== null && query.kind === 'path') {
+        return { kind: 'path', to: state.ends.to, depth: state.pathDepth, directed: state.directed };
+      }
+      return state.problemsOnly ? { kind: 'only' } : null;
+    };
+    const hiddenNow = () => ({
+      services: repos.filter((name) => !shown.has(name)),
+      edgeTypes: [...state.hiddenEdgeTypes].map((i) => edgeTypes[i]),
+      confidences: [...state.hiddenConfidences].map((i) => confidences[i]),
+    });
+    const hashNow = () => formatHash(keys, state.focus, state.hops, state.expanded, {
+      ask: askNow(),
+      hidden: hiddenNow(),
+      also: state.also,
+    });
+    const writeHash = () => {
+      if (view !== 'graph') return;
+      history.replaceState(null, '', hashNow());
+      notice.moved();
+    };
 
     const syncControls = () => {
       backBtn.disabled = !trail.canBack();
       forwardBtn.disabled = !trail.canForward();
-      if (view === 'graph') history.replaceState(null, '', formatHash(state.focus, state.hops));
+      writeHash();
       titleEl.textContent = nodes[state.focus][LB];
     };
 
     const draw = (frame) => {
-      state.hood = neighbourhood(model, {
-        focus: state.focus,
-        hops: state.hops,
-        cap: state.cap,
-        filter: filterNow(),
-        expanded: state.expanded,
+      state.hood = asked();
+      state.placed = layout(model, state.hood, {
+        column: BOX.column, row: BOX.row, laneGap: BOX.laneGap, laneHead: BOX.laneHead,
       });
-      state.placed = layout(model, state.hood, { column: BOX.column, row: BOX.row });
       if (state.open !== null && !state.hood.layer.has(state.open)) state.open = null;
       if (!state.hood.layer.has(state.cursor)) state.cursor = state.focus;
       drawDrawing();
       drawStatus();
       drawDetails();
       if (frame) camera.frame(state.placed, at(state.focus), false);
+      writeHash();
     };
 
     const select = (v, moveFocus) => {
@@ -1789,19 +3127,46 @@ __GRAPH_LOGIC__
       drawDetails();
     };
 
-    const go = (v, record = true) => {
+    const go = (v, record = true, query = null) => {
       if (record) trail.visit(v);
+      state.query = query;
       state.focus = v;
       state.cursor = v;
       state.open = v;
       state.expanded = [];
+      state.also = [];
       state.openGroups.clear();
+      state.unfolded = new Set();
+      state.opened = new Set();
       draw(true);
       syncControls();
     };
 
+    /* A group opens in place into what it holds; a chip draws, or folds back,
+       the plumbing in front of its node. */
+    const openGroup = (id) => {
+      state.opened.add(id);
+      state.cursor = state.hood.parent.get(id) ?? state.focus;
+      draw(false);
+    };
+    const toggleChain = (v) => {
+      if (state.unfolded.has(v)) state.unfolded.delete(v); else state.unfolded.add(v);
+      state.cursor = v;
+      draw(false);
+    };
+
     const expand = (v) => {
       if (!state.expanded.includes(v)) state.expanded.push(v);
+      state.cursor = v;
+      state.open = v;
+      draw(false);
+      writeHash();
+    };
+
+    /* Who else uses a node, drawn as context or put away again. */
+    const toggleAlso = (v) => {
+      if (!state.hood.others.has(v)) return;
+      state.also = state.also.includes(v) ? state.also.filter((u) => u !== v) : [...state.also, v];
       state.cursor = v;
       state.open = v;
       draw(false);
@@ -1825,6 +3190,7 @@ __GRAPH_LOGIC__
 
     /* Filters: services on the rail above, edge types and trust here. */
     const filterBar = document.getElementById('g-filters');
+    const filterChips = [];
     const chips = (title, names, hidden) => {
       const label = document.createElement('span');
       label.className = 'hint';
@@ -1840,24 +3206,71 @@ __GRAPH_LOGIC__
           chip.setAttribute('aria-pressed', String(!hidden.has(i)));
           draw(false);
         });
+        filterChips.push({ chip, hidden, i });
         filterBar.append(chip);
       });
     };
     chips('edges', edgeTypes, state.hiddenEdgeTypes);
     chips('trust', confidences, state.hiddenConfidences);
+    {
+      // Plumbing is folded into a chip on what it wraps unless asked for.
+      const label = document.createElement('span');
+      label.className = 'hint';
+      label.textContent = 'plumbing';
+      const toggle = document.createElement('button');
+      toggle.className = 'chip';
+      toggle.textContent = 'drawn as nodes';
+      toggle.title = 'Guards, interceptors, pipes and middleware: folded into a chip on what they wrap, ' +
+        'or drawn as nodes of their own';
+      toggle.setAttribute('aria-pressed', String(state.plumbing));
+      toggle.addEventListener('click', () => {
+        state.plumbing = !state.plumbing;
+        state.unfolded.clear();
+        toggle.setAttribute('aria-pressed', String(state.plumbing));
+        draw(false);
+      });
+      filterBar.append(label, toggle);
+    }
     filterBar.insertAdjacentHTML('beforeend', '<span class="hint">services: the rail above</span>');
 
-    /* Pointer: drag pans, a wheel or a trackpad pans, a pinch or ctrl+wheel zooms. */
-    let drag = null;
+    /* Pointer: one finger or a mouse drags to pan; two fingers pan and pinch to
+       zoom; a wheel or a trackpad pans, and a trackpad pinch or ctrl+wheel zooms.
+       Every pointer down is kept by id, in the canvas's own pixels, so a second
+       finger joining or one lifting picks up where the gesture is. */
+    const fingers = new Map();
     let dragged = false;
+    const local = (event) => {
+      const box = wrap.getBoundingClientRect();
+      return { x: event.clientX - box.left, y: event.clientY - box.top };
+    };
+    let anchor = null;
     wrap.addEventListener('pointerdown', (event) => {
-      if (event.button !== 0 || event.target.closest('.g-zoom')) return;
-      drag = { x: event.clientX, y: event.clientY, id: event.pointerId };
-      dragged = false;
+      if (event.button !== 0 || event.target.closest('.g-zoom, .g-notice, .g-mini')) return;
+      // A mouse or a pen is one pointer: one let go outside the canvas never
+      // said so, and must not turn the next drag into a pinch.
+      if (event.pointerType !== 'touch') fingers.clear();
+      fingers.set(event.pointerId, local(event));
+      if (fingers.size === 1) { anchor = local(event); dragged = false; }
+      else {
+        // A second finger is a pinch, never a click on whatever it landed on.
+        dragged = true;
+        wrap.classList.add('is-panning');
+      }
     });
     wrap.addEventListener('pointermove', (event) => {
-      if (drag === null || event.pointerId !== drag.id) return;
-      const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+      if (!fingers.has(event.pointerId)) return;
+      const here = local(event);
+      if (fingers.size >= 2) {
+        const before = [...fingers.values()].slice(0, 2);
+        fingers.set(event.pointerId, here);
+        const after = [...fingers.values()].slice(0, 2);
+        const move = pinch(before, after);
+        camera.pan(move.dx, move.dy);
+        camera.zoomAt(move.at.x, move.at.y, move.factor);
+        return;
+      }
+      fingers.set(event.pointerId, here);
+      const dx = here.x - anchor.x, dy = here.y - anchor.y;
       if (!dragged && Math.hypot(dx, dy) < 4) return;
       if (!dragged) {
         dragged = true;
@@ -1865,12 +3278,16 @@ __GRAPH_LOGIC__
         wrap.classList.add('is-panning');
       }
       camera.pan(dx, dy);
-      drag.x = event.clientX;
-      drag.y = event.clientY;
+      anchor = here;
     });
-    const endDrag = () => { drag = null; wrap.classList.remove('is-panning'); };
-    wrap.addEventListener('pointerup', endDrag);
-    wrap.addEventListener('pointercancel', endDrag);
+    const lift = (event) => {
+      fingers.delete(event.pointerId);
+      // The finger left behind carries on panning from where it is now.
+      if (fingers.size === 1) anchor = [...fingers.values()][0];
+      if (fingers.size === 0) wrap.classList.remove('is-panning');
+    };
+    wrap.addEventListener('pointerup', lift);
+    wrap.addEventListener('pointercancel', lift);
     wrap.addEventListener('wheel', (event) => {
       event.preventDefault();
       if (event.ctrlKey || event.metaKey) {
@@ -1881,32 +3298,67 @@ __GRAPH_LOGIC__
 
     svg.addEventListener('click', (event) => {
       if (dragged) { dragged = false; return; }
+      const chip = event.target.closest('.g-chip');
+      if (chip) { toggleChain(Number(chip.dataset.chip)); return; }
       const badge = event.target.closest('.g-more');
       if (badge) { expand(Number(badge.dataset.more)); return; }
+      const also = event.target.closest('.g-also');
+      if (also) { toggleAlso(Number(also.dataset.also)); return; }
       const node = event.target.closest('.g-node');
-      if (node) select(Number(node.dataset.node), false);
+      if (node && node.dataset.group !== undefined) openGroup(node.dataset.group);
+      else if (node) select(Number(node.dataset.node), false);
     });
     svg.addEventListener('dblclick', (event) => {
       const node = event.target.closest('.g-node');
-      if (node && !event.target.closest('.g-more')) go(Number(node.dataset.node));
+      if (node && node.dataset.node !== undefined && !event.target.closest('.g-more, .g-also, .g-chip')) {
+        go(Number(node.dataset.node));
+      }
+    });
+
+    /* The trace follows the pointer, and the keys. */
+    svg.addEventListener('pointerover', (event) => {
+      // Not while panning or pinching: the pointer is moving the drawing.
+      if (fingers.size > 0 && dragged) return;
+      const node = event.target.closest('.g-node');
+      traceTo(node ? unitOf(node) : null);
+    });
+    svg.addEventListener('pointerleave', () => traceTo(null));
+    svg.addEventListener('focusin', (event) => {
+      const node = event.target.closest('.g-node');
+      if (node) traceTo(unitOf(node));
+    });
+    svg.addEventListener('focusout', () => traceTo(null));
+    statusEl.addEventListener('click', (event) => {
+      if (!event.target.closest('[data-again]')) return;
+      state.opened.clear();
+      draw(false);
     });
 
     const KEYS = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
     svg.addEventListener('keydown', (event) => {
       const node = event.target.closest('.g-node');
       if (!node) return;
-      const v = Number(node.dataset.node);
+      const v = unitOf(node);
       if (KEYS[event.key]) {
         event.preventDefault();
         state.cursor = step(state.placed, v, KEYS[event.key]);
         paintSelection(true);
         camera.reveal(at(state.cursor));
+      } else if (isGroup(v) && (event.key === 'Enter' || event.key === ' ' || event.key === '+')) {
+        event.preventDefault();
+        openGroup(v);
       } else if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
         select(v, true);
+      } else if ((event.key === 'w' || event.key === 'W') && state.hood.chips.has(v)) {
+        event.preventDefault();
+        toggleChain(v);
       } else if (event.key === '+') {
         event.preventDefault();
         expand(v);
+      } else if ((event.key === 'o' || event.key === 'O') && !isGroup(v) && state.hood.others.has(v)) {
+        event.preventDefault();
+        toggleAlso(v);
       } else if (event.key === 'Escape' && state.open !== null) {
         event.preventDefault();
         closeDetails();
@@ -1922,6 +3374,7 @@ __GRAPH_LOGIC__
       else if (target.dataset.act === 'close') closeDetails();
       else if (target.dataset.act === 'centre') go(v);
       else if (target.dataset.act === 'expand') expand(v);
+      else if (target.dataset.act === 'also') toggleAlso(v);
       else if (target.dataset.act === 'walk') { current = v; drawEntries(); showView('walk'); }
     });
     panel.addEventListener('keydown', (event) => {
@@ -1974,7 +3427,8 @@ __GRAPH_LOGIC__
     const pick = (i) => {
       closeResults();
       findInput.value = '';
-      go(i);
+      if (state.picking !== null) chooseEnd(i);
+      else go(i);
     };
 
     findInput.addEventListener('input', drawResults);
@@ -1987,8 +3441,14 @@ __GRAPH_LOGIC__
         markActive();
       } else if (event.key === 'Enter') {
         if (active >= 0 && !resultsEl.hidden) { event.preventDefault(); pick(hits[active]); }
-      } else if (event.key === 'Escape') {
+      } else if (event.key === 'Escape' && !resultsEl.hidden) {
+        // Closing the list is all this Escape does; the panel and full screen stay.
+        event.preventDefault();
         closeResults();
+      } else if (event.key === 'Escape' && state.picking !== null) {
+        // So is giving up picking a path's end, the search's other errand.
+        event.preventDefault();
+        stopPicking();
       }
     });
     findInput.addEventListener('blur', () => setTimeout(closeResults, 120));
@@ -2009,7 +3469,377 @@ __GRAPH_LOGIC__
         else { draw(true); syncControls(); }
       },
       setHops(hops) { state.hops = hops; hopsSel.value = String(hops); },
+      /* What a link says the filters hide, by name; a name this page does not
+         have hides nothing. Drawn by whatever opens the view next. */
+      setHidden(hidden) {
+        const pick = (names, list) => new Set(names.map((name) => list.indexOf(name)).filter((i) => i >= 0));
+        const services = new Set(hidden.services);
+        shown.clear();
+        for (const name of repos) if (!services.has(name)) shown.add(name);
+        for (const b of fleet.querySelectorAll('.ship')) b.setAttribute('aria-pressed', String(shown.has(b.dataset.repo)));
+        state.hiddenEdgeTypes.clear();
+        for (const i of pick(hidden.edgeTypes, edgeTypes)) state.hiddenEdgeTypes.add(i);
+        state.hiddenConfidences.clear();
+        for (const i of pick(hidden.confidences, confidences)) state.hiddenConfidences.add(i);
+        for (const { chip, hidden: set, i } of filterChips) chip.setAttribute('aria-pressed', String(!set.has(i)));
+        drawEntries();
+      },
+      /* The question a link asks of the view on its focus. Says why when it
+         cannot be asked here; true when it was. */
+      ask(question, focus) {
+        if (question.kind === 'only') {
+          state.problemsOnly = true;
+          draw(false);
+          return true;
+        }
+        if (question.kind === 'impact') {
+          askImpact(focus);
+          return true;
+        }
+        if (question.to === null) return false;
+        state.ends = { from: focus, to: question.to };
+        state.directed = question.directed;
+        state.pathDepth = PATH_DEPTHS.includes(question.depth) ? question.depth : 12;
+        askPath();
+        return true;
+      },
     };
+
+    /* ── the frame: full screen, the drawer, pictures, links ─────────── */
+
+    /* What a person set for themselves - the panel's width, whether it is
+       folded - kept in this browser only. The page is whole without it: a
+       private window, or storage switched off, just starts from the defaults. */
+    const remembered = {
+      read(key, fallback) {
+        try {
+          const value = localStorage.getItem('flowatlas.graph.' + key);
+          return value === null ? fallback : JSON.parse(value);
+        } catch { return fallback; }
+      },
+      write(key, value) {
+        try { localStorage.setItem('flowatlas.graph.' + key, JSON.stringify(value)); } catch { /* kept for this visit only */ }
+      },
+    };
+
+    /* A button says what it did, in its own words, for a moment. */
+    const flash = (button, text, ok = true) => {
+      const label = button.querySelector('span') || button;
+      if (button.dataset.label === undefined) button.dataset.label = label.textContent;
+      label.textContent = text;
+      button.classList.toggle('is-done', ok);
+      clearTimeout(Number(button.dataset.timer));
+      button.dataset.timer = String(setTimeout(() => {
+        label.textContent = button.dataset.label;
+        button.classList.remove('is-done');
+      }, 1600));
+    };
+
+    /* What a link asked for and could not be given, said over the drawing
+       until the view moves on or it is dismissed. */
+    const noticeEl = document.getElementById('g-notice');
+    let noticeAt = null;
+    const notice = {
+      say(html) {
+        noticeEl.innerHTML = `<span>${html}</span>` +
+          '<button class="g-close" aria-label="Dismiss" title="Dismiss">&times;</button>';
+        noticeEl.hidden = false;
+        noticeAt = hashNow();
+      },
+      clear() {
+        noticeEl.hidden = true;
+        noticeEl.replaceChildren();
+        noticeAt = null;
+      },
+      /* Called whenever the address changes: a notice is about the view it
+         was said over, not the next one. */
+      moved() { if (noticeAt !== null && hashNow() !== noticeAt) notice.clear(); },
+    };
+    noticeEl.addEventListener('click', (event) => { if (event.target.closest('button')) notice.clear(); });
+
+    /* What a link had expanded, and whose "who else" it drew, on top of its
+       focus. */
+    const reopen = (expanded, also) => {
+      state.expanded = [...expanded];
+      state.also = [...also];
+      draw(true);
+      writeHash();
+    };
+
+    /* Full screen is the page's, not the browser's: the browser's own takes
+       Escape for itself, and Escape here closes the panel first. */
+    const root = document.documentElement;
+    const fullBtn = document.getElementById('g-full');
+    const fullScreen = (() => {
+      let on = false;
+      const set = (next) => {
+        if (next === on) return;
+        on = next;
+        root.classList.toggle('is-full', on);
+        fullBtn.setAttribute('aria-pressed', String(on));
+        fullBtn.title = on ? 'Leave full screen (Escape)' : 'Full screen (F)';
+        fullBtn.querySelector('span').textContent = on ? 'Leave full screen' : 'Full screen';
+        fullBtn.querySelector('kbd').textContent = on ? 'Esc' : 'F';
+        if (state.placed !== null && view === 'graph') camera.frame(state.placed, at(state.focus), false);
+      };
+      return { set, toggle: () => set(!on), isOn: () => on };
+    })();
+    fullBtn.addEventListener('click', () => fullScreen.toggle());
+
+    /* The drawer: drag its edge to widen it, fold it to a rail. */
+    const grip = document.getElementById('g-grip');
+    const foldBtn = document.getElementById('g-fold');
+    const rail = document.getElementById('g-rail');
+    const railName = document.getElementById('g-rail-name');
+    const drawer = (() => {
+      let width = Number(remembered.read('width', 330)) || 330;
+      let folded = remembered.read('folded', false) === true;
+      const room = () => stage.clientWidth || window.innerWidth;
+      const apply = () => {
+        stage.style.setProperty('--drawer-w', width + 'px');
+        stage.classList.toggle('is-folded', folded);
+        const say = folded ? 'Unfold the details panel' : 'Fold the details panel';
+        foldBtn.setAttribute('aria-expanded', String(!folded));
+        foldBtn.setAttribute('aria-label', say);
+        foldBtn.title = say;
+        rail.setAttribute('aria-expanded', String(!folded));
+        grip.setAttribute('aria-valuemin', String(DRAWER.min));
+        grip.setAttribute('aria-valuemax', String(drawerWidth(Infinity, room())));
+        grip.setAttribute('aria-valuenow', String(width));
+      };
+      const resize = (wanted) => {
+        width = drawerWidth(wanted, room());
+        apply();
+        remembered.write('width', width);
+      };
+      const fold = (next) => {
+        folded = next;
+        apply();
+        remembered.write('folded', folded);
+      };
+      /* The rail names what is open, so a folded panel still says what it holds. */
+      const name = () => {
+        const v = state.open;
+        railName.textContent = v === null ? '' : nodes[v][LB];
+        rail.style.setProperty('--hue', v === null ? 'var(--rule)' : hueOf(nodes[v][RP]));
+        rail.setAttribute('aria-label', v === null ? 'Unfold the details panel'
+          : `Unfold the details of ${nodes[v][LB]}`);
+      };
+      new MutationObserver(name).observe(panel, { childList: true });
+      width = drawerWidth(width, window.innerWidth);
+      apply();
+      return { resize, fold, width: () => width, folded: () => folded };
+    })();
+
+    foldBtn.addEventListener('click', () => drawer.fold(!drawer.folded()));
+    rail.addEventListener('click', () => { drawer.fold(false); foldBtn.focus(); });
+
+    let gripFrom = null;
+    grip.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      gripFrom = { x: event.clientX, width: drawer.width() };
+      grip.setPointerCapture(event.pointerId);
+      grip.classList.add('is-dragging');
+    });
+    grip.addEventListener('pointermove', (event) => {
+      // The drawer is on the right, so dragging its edge left widens it.
+      if (gripFrom !== null) drawer.resize(gripFrom.width + gripFrom.x - event.clientX);
+    });
+    const letGrip = () => { gripFrom = null; grip.classList.remove('is-dragging'); };
+    grip.addEventListener('pointerup', letGrip);
+    grip.addEventListener('pointercancel', letGrip);
+    const GRIP_KEYS = {
+      ArrowLeft: (w) => w + 24,
+      ArrowRight: (w) => w - 24,
+      Home: () => DRAWER.min,
+      End: () => Infinity,
+    };
+    grip.addEventListener('keydown', (event) => {
+      if (GRIP_KEYS[event.key]) {
+        event.preventDefault();
+        drawer.resize(GRIP_KEYS[event.key](drawer.width()));
+      } else if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        drawer.fold(true);
+        rail.focus();
+      }
+    });
+
+    /* A canvas that changes size - full screen, a wider or folded panel, a
+       turned phone - keeps what was in its middle in its middle. */
+    new ResizeObserver(() => {
+      camera.resized();
+      if (state.placed !== null) sizeMinimap(extentOf(state.placed));
+    }).observe(wrap);
+
+    /* A picture of the drawing as it stands, at its own size rather than the
+       window's: every style the page gives it written onto the element, since
+       the file will not have the page's stylesheet, and anything the page hides
+       left out. A part of the drawing that is not part of the picture says so
+       with `data-export="skip"`.
+
+       A picture is taken at full detail whatever the zoom: zoomed out, the
+       screen shows shapes without names, but a picture is read at its own
+       size, so its names, counts and badges are drawn, and each service's name
+       sits at the left of its band rather than wherever the camera left it. */
+    const atFullDetail = (take) => {
+      const was = zoomNow || 'near';
+      if (was !== 'near') {
+        svg.classList.remove('z-' + was);
+        svg.classList.add('z-near');
+      }
+      const laneSize = svg.style.getPropertyValue('--lane-size');
+      svg.style.setProperty('--lane-size', '12.5px');
+      for (const name of world.querySelectorAll('.g-lane text')) name.setAttribute('x', '12');
+      try {
+        return take();
+      } finally {
+        if (was !== 'near') {
+          svg.classList.remove('z-near');
+          svg.classList.add('z-' + was);
+        }
+        svg.style.setProperty('--lane-size', laneSize);
+        pinLaneNames(camera.view());
+      }
+    };
+    const PICTURE_STYLES = ['display', 'visibility', 'opacity', 'fill', 'fill-opacity', 'stroke',
+      'stroke-width', 'stroke-dasharray', 'stroke-linecap', 'stroke-linejoin', 'stroke-opacity',
+      'paint-order', 'font-family', 'font-size', 'font-weight', 'font-style', 'letter-spacing',
+      'text-transform', 'text-anchor', 'dominant-baseline'];
+    const PICTURE_PAD = 24;
+    const picture = () => atFullDetail(() => {
+      const box = world.getBBox();
+      const width = Math.ceil(box.width + PICTURE_PAD * 2);
+      const height = Math.ceil(box.height + PICTURE_PAD * 2);
+      const copy = svg.cloneNode(true);
+      const from = [...svg.querySelectorAll('*')];
+      const to = [...copy.querySelectorAll('*')];
+      const dropped = [];
+      from.forEach((el, n) => {
+        const out = to[n];
+        const style = getComputedStyle(el);
+        if (el.closest('[data-export="skip"]') || style.display === 'none' || style.visibility === 'hidden') {
+          dropped.push(out);
+          return;
+        }
+        out.setAttribute('style', PICTURE_STYLES.map((name) => `${name}:${style.getPropertyValue(name)}`).join(';'));
+        for (const attr of [...out.attributes]) {
+          if (/^(class|tabindex|role|aria-|data-)/.test(attr.name)) out.removeAttribute(attr.name);
+        }
+      });
+      for (const el of dropped) el.remove();
+      for (const attr of [...copy.attributes]) copy.removeAttribute(attr.name);
+      copy.setAttribute('xmlns', SVG_NS);
+      copy.setAttribute('width', String(width));
+      copy.setAttribute('height', String(height));
+      copy.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      copy.querySelector('#g-world').setAttribute('transform', `translate(${PICTURE_PAD - box.x} ${PICTURE_PAD - box.y})`);
+      const ground = getComputedStyle(wrap).backgroundColor;
+      copy.prepend(
+        svgEl('title', {}, `${document.title}: around ${nodes[state.focus][LB]}`),
+        svgEl('rect', { width, height, fill: ground }),
+      );
+      const text = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(copy);
+      return { text, width, height };
+    });
+
+    const save = (blob, name) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = name;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    };
+    const pictureFile = (ext) => pictureName(document.title, nodes[state.focus][LB], ext);
+
+    const svgOut = document.getElementById('g-svg-out');
+    const pngOut = document.getElementById('g-png-out');
+    svgOut.addEventListener('click', () => {
+      const shot = picture();
+      save(new Blob([shot.text], { type: 'image/svg+xml' }), pictureFile('svg'));
+      flash(svgOut, 'Saved');
+    });
+    /* PNG: the same SVG drawn onto a canvas, in the page, offline. */
+    pngOut.addEventListener('click', async () => {
+      try {
+        const shot = picture();
+        const scale = pictureScale(shot.width, shot.height, Math.max(2, window.devicePixelRatio || 1));
+        const image = new Image();
+        image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(shot.text);
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(shot.width * scale);
+        canvas.height = Math.round(shot.height * scale);
+        const context = canvas.getContext('2d');
+        context.scale(scale, scale);
+        context.drawImage(image, 0, 0, shot.width, shot.height);
+        const blob = await new Promise((done) => canvas.toBlob(done, 'image/png'));
+        if (blob === null) throw new Error('the browser would not encode the picture');
+        save(blob, pictureFile('png'));
+        flash(pngOut, 'Saved');
+      } catch (error) {
+        pngOut.title = 'Could not save the picture: ' + (error && error.message ? error.message : error);
+        flash(pngOut, 'Failed', false);
+      }
+    });
+
+    /* Copy link: this view's address, which names nodes by key and so opens the
+       same view in this file after the graph is rebuilt. */
+    const copyBtn = document.getElementById('g-copy');
+    copyBtn.addEventListener('click', async () => {
+      const link = location.href.split('#')[0] + hashNow();
+      let copied = false;
+      try {
+        await navigator.clipboard.writeText(link);
+        copied = true;
+      } catch {
+        // No clipboard API here (an older browser, or a page it does not trust):
+        // the selection still copies.
+        const area = document.createElement('textarea');
+        area.value = link;
+        area.setAttribute('readonly', '');
+        area.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+        document.body.append(area);
+        area.select();
+        try { copied = document.execCommand('copy'); } catch { copied = false; }
+        area.remove();
+      }
+      if (copied) flash(copyBtn, 'Copied');
+      else window.prompt('Copy this link', link);
+    });
+
+    /* Keys for the frame. `F` is full screen anywhere but a text field; `W`,
+       `+`, Enter and the arrows belong to a node with the keyboard on it.
+
+       Escape closes one thing at a time, the nearest first:
+         1. the search's list of nodes, or picking a path's end with it;
+         2. the details panel, which is the drawer in full screen;
+         3. the problems list, a half-chosen path, then a path or impact
+            answer, back to the neighbourhood;
+         4. full screen.
+       The search, a node and the panel close what is theirs and say so with
+       preventDefault; whatever is left comes here. */
+    const typing = (el) => el instanceof HTMLElement &&
+      (el.isContentEditable || el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA');
+    document.addEventListener('keydown', (event) => {
+      if (view !== 'graph' || event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
+      if ((event.key === 'f' || event.key === 'F') && !typing(event.target)) {
+        event.preventDefault();
+        fullScreen.toggle();
+      } else if (event.key === 'Escape') {
+        if (!resultsEl.hidden) closeResults();
+        else if (state.picking !== null) stopPicking();
+        else if (state.open !== null) closeDetails();
+        else if (dismissAnswer()) { /* closed */ }
+        else if (fullScreen.isOn()) fullScreen.set(false);
+        else return;
+        event.preventDefault();
+      }
+    });
 
     /* ── wiring ──────────────────────────────────────────────────────── */
 
@@ -2026,11 +3856,19 @@ __GRAPH_LOGIC__
     const GRAPH_LEGEND =
       `<span>${line('')} static</span><span>${line('6 4')} heuristic</span>` +
       `<span>${line('0.5 4')} marker, declared</span>` +
-      '<span><b>coloured line</b> crosses into another service</span>' +
-      '<span><b>+N</b> not drawn; click to expand</span>' +
-      '<span><b>keys</b> arrows move &middot; Enter opens &middot; + expands &middot; Escape closes &middot; double-click centres</span>';
+      '<span><b>band</b> one service; a coloured line leaving it crosses into another</span>' +
+      '<span><b>stacked box</b> a group, with its count; click to open</span>' +
+      '<span><b>2 guards &middot; 1 pipe</b> plumbing folded onto a way in; click to draw it</span>' +
+      '<span><b>+N</b> more of the flow, not drawn; click to expand</span>' +
+      '<span><b class="g-key-context">faded, dashed</b> context: who else uses a node, outside the flow; ' +
+      'its <b>used by N others</b> badge, or O, draws it</span>' +
+      '<span><b class="g-key-bad">3</b> rows name the node &middot; <b class="g-key-warn">2</b> rows at its line</span>' +
+      '<span><b>hover</b> lights the way from the focus</span>' +
+      '<span><b>keys</b> arrows move &middot; Enter opens &middot; + expands &middot; O who else &middot; W unfolds plumbing &middot; ' +
+      'F full screen &middot; Escape closes &middot; double-click centres</span>';
 
     function showView(name, asked) {
+      if (name !== 'graph') fullScreen.set(false);
       view = name;
       for (const tab of tabs) tab.setAttribute('aria-selected', String(tab.dataset.view === name));
       controls.hidden = name !== 'walk';
@@ -2048,12 +3886,38 @@ __GRAPH_LOGIC__
 
     for (const tab of tabs) tab.addEventListener('click', () => showView(tab.dataset.view));
 
-    /* A link to a node is a hash; following one opens the graph there. */
+    /* A link to a node is a hash; following one opens the graph there. A link
+       made before nodes had keys names a position, and still opens whatever
+       sits there; a key this page does not hold is said, not guessed at. */
     const followHash = () => {
-      const asked = parseHash(location.hash, nodes.length);
+      const asked = parseHash(location.hash, keys);
       if (asked === null) return false;
+      notice.clear();
       if (asked.hops !== null) graph.setHops(asked.hops);
+      if (asked.focus === null) {
+        showView('graph');
+        if (asked.among.length > 0) {
+          const hops = asked.hops === null ? '' : '/' + asked.hops;
+          notice.say(`This link's key, <code>${esc(asked.key)}</code>, now names ${asked.among.length} nodes, ` +
+            'since one was added after the link was made. Open ' + asked.among.map((v) =>
+              `<a href="#graph/${keys.keyOf(v)}${hops}">${esc(nodes[v][LB])}</a> (${esc(repoName(v))})`).join(' or ') + '.');
+        } else {
+          notice.say(`This link names a node this page does not hold, <code>${esc(asked.key)}</code>: ` +
+            'it was removed or renamed after the link was made.');
+        }
+        return true;
+      }
+      if (asked.hidden !== null) graph.setHidden(asked.hidden);
       showView('graph', asked.focus);
+      const answered = asked.ask === null || graph.ask(asked.ask, asked.focus);
+      if (asked.expanded.length > 0 || asked.also.length > 0) reopen(asked.expanded, asked.also);
+      if (!answered) {
+        notice.say(`This link asks for a path to a node this page does not hold, <code>${esc(asked.ask.key)}</code>: ` +
+          'it was removed or renamed after the link was made. Its start is drawn.');
+      } else if (asked.byPosition) {
+        notice.say('This older link names a node by its place in the page, so it opens what is there in this ' +
+          'build. The address now names it by key, which lasts.');
+      }
       return true;
     };
     window.addEventListener('hashchange', followHash);

@@ -1,14 +1,16 @@
-import type { GraphEdge, GraphNode } from '@flowatlas/core';
+import { STEP_OF_META, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
+import { stableKeys, type PackedKeys } from './keys.js';
 
 /**
  * The graph, small enough to ship inside one file.
  *
  * Every repeated string becomes an index into a dictionary and every node loses
  * its id, since the page never shows one and a position identifies a node just
- * as well. On a project of eleven thousand nodes that is thirteen megabytes down
- * to one, which is the difference between a page that opens and one that does
- * not.
+ * as well within the page. On a project of eleven thousand nodes that is
+ * thirteen megabytes down to one, which is the difference between a page that
+ * opens and one that does not. What a link carries from one build's page to the
+ * next is a six-character key hashed from the id, not the id.
  */
 export interface PackedGraph {
   builtAt: string;
@@ -44,6 +46,22 @@ export interface PackedGraph {
   rows: unknown[][];
   /** Ids of the ways in, so a link can name one. */
   entryIds: Record<string, number>;
+  /**
+   * A short key per node, from its id, so a link names a node the same way in
+   * every build where a position names whatever sits there now.
+   */
+  keys: PackedKeys;
+  /**
+   * Positions of the nodes that are one step of a chain (`STEP_OF_META`), so
+   * an impact walk in the page lengthens itself the way `impact` does.
+   */
+  steps: number[];
+  /**
+   * Present only when asked for with `--editor-links`: which editor opens a
+   * `file:line`, and each service's absolute root, by `dicts.repos` position.
+   * Absent by default, since it writes local paths into the page.
+   */
+  editor?: { name: string; roots: Array<string | null> };
   report: unknown;
 }
 
@@ -171,6 +189,8 @@ export interface PackInput {
   edges: readonly GraphEdge[];
   unresolved: readonly AnchoredUnresolvedRow[];
   report: LinkReport;
+  /** The editor `--editor-links` names, and where each service's sources are. */
+  editor?: { name: string; rootOf: (service: string) => string | undefined };
 }
 
 export const packGraph = (input: PackInput): PackedGraph => {
@@ -191,8 +211,10 @@ export const packGraph = (input: PackInput): PackedGraph => {
 
   const position = new Map(input.nodes.map((node, index) => [node.id, index]));
   const entryIds: Record<string, number> = {};
+  const steps: number[] = [];
   input.nodes.forEach((node, index) => {
     if (node.type === 'entry') entryIds[node.id] = index;
+    if (node.meta?.[STEP_OF_META] !== undefined) steps.push(index);
   });
 
   const nodes = input.nodes.map((node) => [
@@ -252,6 +274,11 @@ export const packGraph = (input: PackInput): PackedGraph => {
     unresolved: byReason(rowsIn),
     rows,
     entryIds,
+    keys: stableKeys(input.nodes.map((node) => node.id)),
+    steps,
+    ...(input.editor === undefined
+      ? {}
+      : { editor: { name: input.editor.name, roots: repos.map((name) => input.editor?.rootOf(name) ?? null) } }),
     report: {
       httpOut: report.httpOut,
       ui: report.ui ?? null,

@@ -256,6 +256,59 @@ only one of them moved.
   and plain JavaScript; nothing is fetched. The page carries the node metadata
   and the rows the panel shows, packed, and a word the label already says is not
   shipped again: on a project of twelve thousand nodes it grows by about a tenth.
+- **A graph you can read.** The Graph tab folds guards, interceptors, pipes and
+  middleware into a chip on the way in they wrap (`2 guards · 3 interceptors ·
+  1 pipe`), drawn beside it on a click or all at once from a toggle, so a NestJS
+  route is one node rather than a node among its guards. More than six
+  neighbours of one type on one side of a node are grouped by service and then
+  by owning class, each group a stack with its count that opens in place, and
+  grouping comes before the cap: a table with two hundred queries draws as eight
+  groups instead of hitting the cap at once. Every service is a faint band with
+  its name, so an edge into another band is a crossing. A node reads as its
+  method, strong, over its class, muted, shortened in the middle with the full
+  name on hover; an edge names its type only on hover and around the open node.
+  Hovering a node lights the way from the focus to it and dims the rest. Zoomed
+  out, nodes are shapes in their service's colour; a minimap shows the whole
+  drawing and moves the view. About 38 KB more page, whatever the project.
+- **The Graph tab's frame: full screen, a drawer, bookmarks that last, pictures,
+  touch.** A *Full screen* button and the `F` key give the drawing the whole
+  window, with the details panel laid over it from the right; `Escape` closes
+  the panel first and leaves full screen after. The details panel can be widened
+  by dragging its edge (or with the arrow keys on it) and folded to a rail that
+  still names the open node; both are remembered in the browser. Every node now
+  carries a six-character key hashed from its graph id, checked for collisions
+  when the page is written, so `#graph/<key>/<hops>` - with any expanded nodes
+  after it - opens the same view after the graph is rebuilt; a link from before,
+  which names a node by its position, still opens, and says it did; a key the
+  page does not hold is said rather than guessed at, and a key two nodes have
+  come to share offers both. *Copy link* copies that
+  address; *SVG* and *PNG* save the drawing as it stands, at its own size, the
+  PNG drawn from the SVG in the page with nothing fetched. Two fingers pan and
+  pinch to zoom. The keys add six bytes a node: on a project of twelve thousand
+  nodes the page goes from 1,268 to 1,369 KB, on the largest fixture from 103 to
+  134 KB.
+- **Checking tools in the Graph tab.** *Problems*: a node with rows naming it, or
+  rows at its line, carries the count, the two said apart (`badgesFor(node)` is
+  the hook the drawing reads); *problems only* cuts the drawing to them and what
+  joins them to the focus; one *Problems* list holds the ways in, crossings and
+  calls that did not join or carry rows. *Path*: the shortest path or paths
+  between two nodes picked from the panel or the search, one way or either way,
+  or "no path" with the steps, direction and filters searched. *Impact*:
+  everything upstream of a node to the ways in, drawn, with the entry points
+  listed; it agrees with `flowatlas impact` on every node of three fixtures,
+  under test. The page grows by about 36 KB of code; the data by a list of
+  workflow steps.
+- **The three parts of the Graph tab work as one page.** Problem badges are
+  drawn on the nodes of every view, a group summing its members'; a path and an
+  impact fold plumbing into chips and light the way back on hover like the
+  neighbourhood. A link also carries the question asked (`impact`,
+  `path.<key>.<steps>`, `only`) and what the filters hide, by name. A picture
+  taken zoomed out has every name in it. Escape closes the search's list, then
+  the panel, then the answer, then full screen, one at a time. The minimap
+  keeps to a small box in its corner whatever the drawing's shape.
+- **`visualise --editor-links <vscode|cursor|idea|file>`** makes every
+  `file:line` on the page open in that editor. Off by default: it writes each
+  repository's absolute local path into the page.
 
 ### Changed
 
@@ -288,6 +341,28 @@ only one of them moved.
 
 ### Fixed
 
+- **Expanding a node in the Graph tab keeps to the flow.** The neighbourhood
+  reads left to right - the focus looks both ways, a node on the right only
+  further right, a node on the left only further left - but expanding a node
+  (its `+N`, `+`, or the panel's button) drew its neighbours both ways, so
+  expanding a shared helper the flow calls drew every other caller of it. It
+  now goes on the way the node looks: a node on the right adds what it reaches,
+  a node on the left what reaches it, the focus both. Who else uses a node is a
+  separate action - its *used by N others* badge, `O`, or *Who else uses this*
+  in the panel, which counts them - drawn faded and dashed as context, labelled
+  *also uses …*, grouped by service and class, with a legend entry; `+N`
+  counts only the flow. The address carries it as a sixth segment, after the
+  filters. **Links made before still open**, and the nodes they expanded are
+  expanded in the flow, so such a link now draws less than it did. On a real
+  five-service project, a route with seven helpers expanded drew 35 nodes and
+  12 groups, most of them other routes' callers; it now draws 25 nodes, all of
+  the flow.
+- **A walk goes on to a node whose id is part of another's.** The cycle check of
+  every walk - `flow`, `impact`, the graph server's - asked whether a node's id
+  appeared anywhere in the path so far, so `Auth.refresh` was never
+  reached through `Auth.refreshToken`. It now compares whole ids.
+  On a real five-service project, `impact` on a busy channel reached 37 nodes
+  where 50 reach it.
 - **The `visualise` page draws a label as text.** A label holding markup -
   `requireSecret<Ctx>(...)`, `click="save()"` - was written into the page as
   HTML and broke the row it was in; a title or label holding `$'` or `$&` was

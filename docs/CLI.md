@@ -717,6 +717,7 @@ Writes the whole graph as one self-contained page. Also spelled `visualize`.
 | `--db <path>` | the configured one | database to read instead |
 | `--out <file>` | `graph.html` next to the configuration | where to write it; the working directory when only `--db` is given |
 | `--title <name>` | the folder holding the configuration | what to call the project on the page |
+| `--editor-links <editor>` | off | make every `file:line` on the page a link that opens it: `vscode`, `cursor`, `idea` or `file`. **Writes each repository's absolute local path into the page**; needs the configuration |
 
 No server and nothing to install. Two typefaces come from Google Fonts, with a
 fallback, so the page reads offline but is not free of a third party. The page opens on the
@@ -733,38 +734,159 @@ graph, which on a real project is ten thousand boxes and says nothing:
   graph* link beside it.
 - **The drawing.** The focus in the middle, what reaches it to the left and what
   it reaches to the right, one column per hop (one, two or three; two by
-  default). Nodes are coloured by service and marked by type; tables, channels,
-  outside APIs and settings are drawn round. An edge is solid when it was read
-  from the code (`static`), dashed when it was guessed (`heuristic`), and dotted
-  and labelled when an annotation or a document said so (`marker`, `declared`);
-  an edge into another service takes that service's colour, and hovering one
-  names its type.
+  default). Every service is a faint band across the drawing with its name in
+  the corner, the focus's service first, so an edge that leaves a band is a
+  crossing; the edge takes the colour of the service it enters. Nodes are marked
+  by type; tables, channels, outside APIs and settings are drawn round. A node
+  is written as what it is, strong, over whose it is, muted: `list` over
+  `OrdersService`, a route's address over the controller that handles it. Long
+  names are shortened in the middle, so a path keeps its verb and its last
+  segment; hovering a node gives the full name, its service and `file:line`.
+  An edge is solid when it was read from the code (`static`), dashed when it was
+  guessed (`heuristic`), and dotted when an annotation or a document said so
+  (`marker`, `declared`). An edge says its type only when hovered and around the
+  open node, so a busy drawing is lines rather than words.
+- **Plumbing is folded.** Guards, interceptors, pipes and middleware are not
+  drawn as nodes: a way in carries a chip saying what runs in front of it
+  (`2 guards · 3 interceptors · 1 pipe`). Clicking the chip, or `W` on the node,
+  draws that chain beside it and folds it back again; the *plumbing* chip above
+  the drawing draws all of it as ordinary nodes. A guard chosen as the focus
+  shows the ways in it stands in front of.
+- **Busy sides are grouped.** More than six neighbours of one type on one side
+  of a node (the queries on a table, the publishers on a channel, the callers of
+  a route) are drawn as groups: by service, then by the class that owns them,
+  each a stack with its count. A level with more than eight groups shows the
+  busiest seven and one group holding the rest. Clicking a group opens it in
+  place, into its classes and then into its nodes; *Group again* under the
+  drawing closes them all. Grouping comes before the cap, so a table with two
+  hundred queries is a handful of groups, not "348 more". What lies past a
+  closed group within the hops is counted under the drawing and drawn once the
+  group is open.
+- **Hover shows the way.** Hovering a node, or moving the keys onto it, lights
+  the way the walk took from the focus to it and dims everything else.
+- **Zoom shows what it can.** Far out, a node is its service's colour and its
+  shape; nearer, its name; close, everything. While the drawing is bigger than
+  the screen a minimap in the corner shows all of it and where the view is;
+  clicking or dragging on it moves there. It keeps to a small box in the corner
+  whatever the drawing's shape, so it never sits over a column of nodes.
 - **The cap is said, never silent.** At most 30, 60, 120 or 250 nodes are drawn
   around a focus. The line under the drawing says how many more there are within
-  the hops, and a node with neighbours that are not drawn carries `+N`; clicking
-  it, or *Expand neighbours* in the panel, draws them.
+  the hops, and a node with more of the flow not drawn carries `+N`; clicking
+  it, `+`, or *Expand* in the panel, draws them.
+- **Expanding keeps to the flow.** The focus looks both ways; a node to its
+  right looks only further right and a node to its left only further left, and
+  expanding a node goes on the same way: a node on the right adds what it
+  reaches (calls, queries, emits, requests, …), a node on the left what reaches
+  it, and the focus both. The panel's button says which (*Expand: what it
+  reaches*, *Expand: what reaches it*). A node reached through a group follows
+  the side it is drawn on. `+N` counts only that way, so a shared helper whose
+  only undrawn neighbours are its other callers carries no `+N`.
+- **Who else uses this.** The other way from a node - the other callers of a
+  helper on the right, the other callees of a caller on the left - is not the
+  flow, and is drawn only when asked for: by the node's *used by N others* (or
+  *uses N others*) badge, by `O`, or by *Who else uses this* (*What else it
+  uses*) in the panel, which says how many there are. They are drawn as
+  context: faded, in dashed boxes, with *also uses parseRole* (or *also used by
+  …*) where the owner would be, on faded lines, grouped by service and class as
+  a busy side is, so a helper used by ninety methods is a few groups. They do
+  not expand; *Centre here* follows one. The line under the drawing counts them
+  apart.
 - **The details panel.** Clicking a node opens its type, kind, label, service,
   `file:line` and the metadata the graph holds for it (verb and path, table,
   channel kind, deployed name, which reader read it and how its name was read),
   its edges in and out grouped by type with the far node's service and the
-  edge's confidence, and the rows that name it, with their reasons and hints, and
-  apart from those the rows elsewhere in its file. From it: *Centre here*,
-  *Expand neighbours*, and *Open in Walk* for a way in. Clicking a node in its
-  lists walks on to it.
+  edge's confidence, and its problems: the rows that name it, with their reasons
+  and hints, the rows that name no node but sit at its line, said apart, and
+  below them the rows elsewhere in its file. From it: *Centre here*, *Expand*,
+  *Who else uses this* with its count, *Open in Walk* for a way in, *Path from here*, *Path to here* and
+  *Impact*. Clicking a node in its lists walks on to it.
+- **Problems.** A node carrying rows is badged with the count on its top edge,
+  red for rows naming it and amber for rows at its line, counted apart; a group
+  carries its members' badges summed, so a closed group still says it holds
+  problems. The same badges, drawn on every view - the neighbourhood, a path,
+  an impact - are said in words at the top of the details panel. *Problems only* cuts the drawing down to
+  the nodes with problems and the steps that join them to the focus, and says
+  how many it hid. The *Problems* button lists, in one place, the ways in with
+  rows or with no handler read, the crossings with rows at either end, and the
+  calls that joined nothing or carry rows, each with *show in graph*.
+- **A path between two nodes.** Choose the two ends with *Path from here* and
+  *Path to here* in the panel, or with *from* and *to* above the drawing and the
+  search. Every shortest path is drawn, one column per step, with how many there
+  are; past the cap one whole path is drawn first. The edges are followed the
+  way the calls run unless *either way* is pressed, within 6, 12 or 24 steps,
+  through what the filters let through (the two ends always count). With no
+  path the page says so, and what it searched: the steps, the direction, the
+  filters and how many nodes it reached.
+- **Impact.** *Impact* in the panel draws everything upstream of a node, to the
+  ways in that reach it, and lists the entry points and the screen actions among
+  them, nearest first. It is `flowatlas impact` drawn: the same edges, the same
+  eight hops lengthened by the workflow steps it climbs, no filter, and a test
+  holds the two to the same answer on the fixtures. Past the cap, every way in is
+  drawn first with one chain from it down to the node. *Back to the
+  neighbourhood* leaves a path or an impact; so does *Back*. A path and an
+  impact draw every node on them rather than grouping, and fold plumbing into
+  the same chips the neighbourhood does.
+- **Editor links.** With `--editor-links`, the `file:line` in the panel and on
+  every row opens the file in that editor: `vscode://file/<path>:<line>`,
+  `cursor://file/<path>:<line>`, `idea://open?file=<path>&line=<line>`, or
+  `file://<path>` with no line. Off by default, because it writes each
+  repository's absolute local path into the page, which is then no longer one
+  to send to somebody else.
 - **Moving around.** Drag or scroll to pan, pinch or ctrl+scroll to zoom, *Fit*
   to see it all. Double-click centres on a node. Arrow keys move between drawn
   nodes, a hop at a time to the side and within a column up and down; Enter
-  opens a node, `+` expands it, Escape closes the panel. *Back* and *Forward*
-  step through the focuses visited, and the focus is in the address
-  (`graph.html#graph/<node>/<hops>`), so a view can be bookmarked or sent with
-  the file.
+  opens a node or a group, `+` expands it, `O` draws who else uses it, `W`
+  unfolds its plumbing. On a
+  touch screen one
+  finger pans, and two fingers pan and pinch to zoom. *Back* and *Forward* step
+  through the focuses visited.
+- **Full screen.** *Full screen*, or `F`, gives the drawing the whole window:
+  the heading, the numbers, the service rail and the ways in step aside, and the
+  details panel lays over the drawing from the right.
+- **Escape closes one thing at a time, nearest first**: the search's list of
+  nodes (or picking a path's end with it), then the details panel - the drawer
+  in full screen - then the *Problems* list, a half-chosen path, and a path or
+  impact answer, back to the neighbourhood, and last full screen.
+- **The details panel** widens or narrows by dragging its left edge, or with the
+  arrow keys once its edge has focus (`Home` and `End` for the narrowest and
+  widest), and folds to a narrow rail with the tab on its edge; the rail still
+  names the open node, and clicking it unfolds the panel. The width and the fold
+  are kept in the browser, not in the page.
+- **Links that last.** The view is in the address,
+  `graph.html#graph/<key>/<hops>/<expanded>.<expanded>/<question>/<hidden>/<also>.<also>`,
+  so it can be bookmarked or sent with the file. The last three appear only when
+  they, or one after them, say something: the question is `impact`, `path.<key>.<steps>` (with
+  `.either` when edges are walked either way) from the focus, or `only` for
+  *problems only*; what the filters hide is listed by name, `s:<service>`,
+  `e:<edge type>` and `t:<trust>`, so it reads the same in the next build. A
+  link without them leaves the filters as the person has them. `<also>` names
+  the nodes whose *who else uses this* is drawn. An expanded node is expanded
+  in the flow, so a link made when expanding drew both ways opens with the same
+  nodes expanded, keeping to the flow. A node is named by a key of six letters and digits
+  hashed from its graph id, the same in every build, so a link made today opens
+  the same node in tomorrow's page even though nodes were added and removed
+  around it. When two ids hash to the same key, which the command checks as it
+  writes the page, each takes a longer key of its own, and a link carrying the
+  short key they share - one made before the second node existed - offers both
+  rather than opening either. A link made before keys names a node by its
+  position in the page; it still opens whatever sits there, and the page says
+  so. A key the page does not
+  hold - a node removed or renamed since - is said over the drawing, not
+  guessed at. *Copy link* copies the address of what is on screen.
+- **Pictures.** *SVG* and *PNG* save the drawing as it stands - the
+  neighbourhood, the selection, the filters - at its own size rather than the
+  window's, in the theme on screen. A picture is at full detail whatever the
+  zoom, with every name, count and badge, and leaves the minimap out. The PNG is the SVG drawn onto a canvas in
+  the page, at twice its size where the browser allows, so nothing is sent
+  anywhere. Without the page's typefaces loaded, a picture falls back to the
+  system's monospace.
 - **Filters.** The service rail at the top hides a service's nodes here as it
   does its ways in; chips hide an edge type or a confidence, so the drawing can
   show, for instance, only what was guessed. The line under the drawing says
   which filters are on.
 
-A node in the address is its position in that page, so a link opens the same
-node in the same file and is not kept across a rebuild.
+A link carries the page's own address, which for a file on disk is that file's
+path: it opens on the machine that has the file, at that path.
 
 ---
 

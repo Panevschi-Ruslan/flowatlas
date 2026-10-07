@@ -100,6 +100,25 @@ describe('writing the graph as a page', () => {
     expect(page).toContain('<script type="module">');
   });
 
+  it('writes the frame’s logic in beside it: links, touch, pictures', () => {
+    expect(page).not.toContain('__FRAME_LOGIC__');
+    expect(page).toContain('export const parseHash');
+    expect(page).toContain('export const pinch');
+  });
+
+  it('names every node by a key of its own, the same key in the next build', () => {
+    const { nodes, keys } = dataOf(page);
+    const keyAt = (i: number): string =>
+      keys.longer[String(i)] ?? keys.all.slice(i * keys.width, (i + 1) * keys.width);
+    const all = nodes.map((_: unknown, i: number) => keyAt(i));
+    expect(new Set(all).size).toBe(nodes.length);
+    for (const key of all) expect(key).toMatch(/^[a-z][a-z0-9]{5,}$/);
+
+    const again = join(scratch, 'again.html');
+    runVisualise({ config: CONFIG, out: again, print: () => {} });
+    expect(dataOf(readFileSync(again, 'utf8')).keys).toEqual(keys);
+  });
+
   it('writes a script the browser can parse', () => {
     const opening = '<script type="module">';
     const start = page.indexOf(opening) + opening.length;
@@ -146,5 +165,37 @@ describe('writing the graph as a page', () => {
     expect(() =>
       runVisualise({ db: join(scratch, 'nothing.db'), out: join(scratch, 'x.html'), print: () => {} }),
     ).toThrow(/graph\.db not found|not found/);
+  });
+});
+
+describe('editor links', () => {
+  const FIXTURE = dirname(CONFIG);
+
+  it('are off by default, so no local path is written into the page', () => {
+    expect(dataOf(page).editor).toBeUndefined();
+    expect(page).not.toContain(FIXTURE);
+  });
+
+  it('carry each service’s absolute root and the editor when asked for', () => {
+    const path = join(scratch, 'editor.html');
+    runVisualise({ config: CONFIG, out: path, editorLinks: 'vscode', print: () => {} });
+    const { editor, dicts } = dataOf(readFileSync(path, 'utf8'));
+    expect(editor.name).toBe('vscode');
+    expect(editor.roots).toEqual(dicts.repos.map((name: string) => join(FIXTURE, name)));
+  });
+
+  it('refuses an editor it does not know, and a page with nowhere to point', () => {
+    expect(() =>
+      runVisualise({ config: CONFIG, out: join(scratch, 'e.html'), editorLinks: 'emacs', print: () => {} }),
+    ).toThrow(/--editor-links takes one of vscode, cursor, idea, file/);
+    expect(() =>
+      runVisualise({ db: join(scratch, 'nothing.db'), out: join(scratch, 'e.html'), editorLinks: 'file', print: () => {} }),
+    ).toThrow(/needs the configuration/);
+  });
+});
+
+describe('what the checking tools read', () => {
+  it('names the steps of a chain, so impact in the page lengthens the way the command does', () => {
+    expect(Array.isArray(dataOf(page).steps)).toBe(true);
   });
 });
