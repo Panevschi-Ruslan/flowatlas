@@ -27,7 +27,7 @@ export declare const ROW: Readonly<{
 }>;
 
 export interface GraphModel {
-  data: Pick<PackedGraph, 'nodes' | 'edges' | 'dicts'> & Partial<Pick<PackedGraph, 'rows' | 'steps'>>;
+  data: Pick<PackedGraph, 'nodes' | 'edges' | 'dicts'> & Partial<Pick<PackedGraph, 'rows' | 'steps' | 'shapes'>>;
   nodes: unknown[][];
   edges: number[][];
   outgoing: number[][];
@@ -36,6 +36,7 @@ export interface GraphModel {
   rowsInFile: Map<string, number[]>;
   haystack: string[] | null;
   owners: Map<number, string> | null;
+  faces: Map<number, unknown[]> | null;
 }
 
 export interface GraphFilter {
@@ -187,6 +188,99 @@ export declare const describe: (
   atLine: number[];
   inFile: number[];
 };
+export declare const FACE: Readonly<{ node: 0; face: 1; params: 2; returns: 3 }>;
+export declare const PARAM_FLAG: Readonly<{ none: 0; optional: 1; rest: 2 }>;
+
+export interface Face {
+  face: 'method' | 'route' | 'call' | 'channel' | 'bare';
+  /** `label` is '' for a parameter recorded without a name; `ref` indexes `shapes.refs`. */
+  params: Array<{ label: string; ref: number; flag: number }>;
+  /** A position in `shapes.refs`, or -1. */
+  returns: number;
+}
+
+export interface TypeInfo {
+  name: string;
+  kind: string;
+  declaredIn: string;
+  fields: Array<{ name: string; ref: number; optional: boolean }>;
+  members: Array<{ ref: number } | { text: string }>;
+  typeParams: string[];
+}
+
+export declare const faceOf: (model: GraphModel, node: number) => Face | null;
+export declare const refText: (model: GraphModel, ref: number) => string;
+export declare const refParts: (model: GraphModel, ref: number) => Array<{ text: string; type?: number }>;
+export declare const typeInfo: (model: GraphModel, type: number) => TypeInfo | null;
+export declare const faceLine: (model: GraphModel, node: number) => string;
+
+export interface TypeBounds {
+  /** Levels opened below the row asked about. */
+  depth: number;
+  /** Rows the openings may draw in all. */
+  rows: number;
+}
+export declare const TYPE_BOUNDS: Readonly<TypeBounds>;
+export declare const insideOf: (at: string) => Set<number>;
+export declare const openAll: (
+  model: GraphModel,
+  roots: Array<{ at: string; ref: number; only?: number }>,
+  open?: ReadonlySet<string>,
+  bounds?: TypeBounds,
+) => { keys: string[]; left: number };
+export declare const typeScriptOf: (
+  model: GraphModel,
+  node: number,
+  bounds?: TypeBounds,
+) => { text: string; left: number } | null;
+
+export interface CardBounds {
+  /** Lines of a face. */
+  lines: number;
+  /** Types peeked at. */
+  types: number;
+  /** Rows of each peek. */
+  rows: number;
+  /** Characters a type is cut to. */
+  chars: number;
+  /** Rows a card holds however much of it is asked for. */
+  most: number;
+}
+/** What of a card's cut was asked for after all. */
+export interface CardWide {
+  lines: boolean;
+  types: boolean;
+  /** Types whose every row is shown. */
+  rows: readonly number[];
+}
+export interface Peek {
+  /** The type's position in the registry. */
+  type: number;
+  name: string;
+  kind: string;
+  from: string;
+  rows: Array<{ name: string; text: string }>;
+  /** Rows past the bounds. */
+  more: number;
+  /** Why there are no rows, or ''. */
+  note: string;
+}
+export interface Card {
+  face: Face['face'];
+  lines: string[];
+  /** Lines past the bounds. */
+  more: number;
+  peeks: Peek[];
+  /** Types past the bounds. */
+  left: number;
+  /** The ceiling, not the glance, is what still leaves something out. */
+  capped: boolean;
+}
+export declare const CARD_BOUNDS: Readonly<CardBounds>;
+export declare const GLANCE: Readonly<CardWide>;
+export declare const peekOf: (model: GraphModel, type: number, bounds?: CardBounds) => Peek | null;
+export declare const cardOf: (model: GraphModel, node: number, bounds?: CardBounds, wide?: CardWide) => Card | null;
+export declare const panelKeysOf: (model: GraphModel, node: number, types: readonly number[]) => string[];
 export declare const createHistory: (limit?: number) => History;
 
 export interface Badge {

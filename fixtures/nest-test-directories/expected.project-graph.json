@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:19.346Z",
+  "builtAt": "2026-10-07T14:34:33.544Z",
   "services": [
     {
       "name": "api",
@@ -54,7 +54,13 @@
       "label": "OrdersController.create",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:OrdersController.findAll",
@@ -62,7 +68,13 @@
       "label": "OrdersController.findAll",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService",
@@ -82,7 +94,18 @@
       "label": "OrdersService.create",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.findAll",
@@ -90,7 +113,13 @@
       "label": "OrdersService.findAll",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "db_query:api#src/fixtures/catalogue.ts:8:3",

@@ -1,4 +1,4 @@
-import type { TypeRef } from '@flowatlas/core';
+import { SIGNATURE_META, type TypeRef } from '@flowatlas/core';
 import type { MethodDeclaration, ParameterDeclaration } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
 import { NEST_COMMON } from '../index-classes.js';
@@ -62,7 +62,8 @@ const requestShape = (
 };
 
 /**
- * Fills the type registry and points the edges at it.
+ * Fills the type registry, points the edges at it, and records on each method
+ * what it takes and gives back, by name.
  *
  * Types are never written into an edge: an edge carries references, and the
  * structures live in the registry once. That is what keeps a graph small enough
@@ -79,7 +80,14 @@ export const typesPass = definePass('types', (ctx: NestExtractContext) => {
       if (id === undefined) continue;
       if (!ctx.builder.has(id)) continue;
 
-      signatures.set(id, collector.collectSignature(method));
+      const collected = collector.collectSignature(method);
+      signatures.set(id, collected);
+      // The names are the method's own, so they go on its node once rather
+      // than on every edge into it.
+      const node = ctx.builder.getNode(id);
+      if (node !== undefined) {
+        ctx.builder.addNode({ ...node, meta: { [SIGNATURE_META]: collected.signature } });
+      }
       const shape = requestShape(method, (parameter) =>
         collector.collectType(parameter.getType(), parameter),
       );

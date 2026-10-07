@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-mongoose",
-  "generatedAt": "2026-10-06T11:32:10.677Z",
+  "generatedAt": "2026-10-07T14:34:22.725Z",
   "nodes": [
     {
       "id": "db_query:nest-mongoose#src/orders/orders.service.ts:11:12",
@@ -227,7 +227,18 @@
       "label": "OrdersController.create",
       "repo": "nest-mongoose",
       "file": "src/orders/orders.controller.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:nest-mongoose#OrderDocument"
+            }
+          ],
+          "returns": "type:nest-mongoose#OrderDocument"
+        }
+      }
     },
     {
       "id": "nest-mongoose#src/orders/orders.controller.ts:OrdersController.findAll",
@@ -235,7 +246,13 @@
       "label": "OrdersController.findAll",
       "repo": "nest-mongoose",
       "file": "src/orders/orders.controller.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-mongoose#OrderDocument[]"
+        }
+      }
     },
     {
       "id": "nest-mongoose#src/orders/orders.controller.ts:OrdersController.remove",
@@ -243,7 +260,13 @@
       "label": "OrdersController.remove",
       "repo": "nest-mongoose",
       "file": "src/orders/orders.controller.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService",
@@ -263,7 +286,18 @@
       "label": "OrdersService.countOf",
       "repo": "nest-mongoose",
       "file": "src/orders/orders.service.ts",
-      "line": 43
+      "line": 43,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "collection",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService.create",
@@ -271,7 +305,18 @@
       "label": "OrdersService.create",
       "repo": "nest-mongoose",
       "file": "src/orders/orders.service.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:nest-mongoose#OrderDocument"
+            }
+          ],
+          "returns": "type:nest-mongoose#OrderDocument"
+        }
+      }
     },
     {
       "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService.findAll",
@@ -279,7 +324,13 @@
       "label": "OrdersService.findAll",
       "repo": "nest-mongoose",
       "file": "src/orders/orders.service.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-mongoose#OrderDocument[]"
+        }
+      }
     },
     {
       "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService.findOne",
@@ -287,7 +338,18 @@
       "label": "OrdersService.findOne",
       "repo": "nest-mongoose",
       "file": "src/orders/orders.service.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-mongoose#OrderDocument"
+        }
+      }
     },
     {
       "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService.markPaid",
@@ -295,7 +357,18 @@
       "label": "OrdersService.markPaid",
       "repo": "nest-mongoose",
       "file": "src/orders/orders.service.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService.note",
@@ -303,7 +376,18 @@
       "label": "OrdersService.note",
       "repo": "nest-mongoose",
       "file": "src/orders/orders.service.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:nest-mongoose#OrderDocument"
+            }
+          ],
+          "returns": "type:nest-mongoose#OrderDocument"
+        }
+      }
     },
     {
       "id": "nest-mongoose#src/orders/orders.service.ts:OrdersService.remove",
@@ -311,7 +395,18 @@
       "label": "OrdersService.remove",
       "repo": "nest-mongoose",
       "file": "src/orders/orders.service.ts",
-      "line": 36
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "repo:nest-mongoose",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:11.524Z",
+  "builtAt": "2026-10-07T14:34:24.757Z",
   "services": [
     {
       "name": "api",
@@ -50,7 +50,13 @@
       "label": "OrdersController.list",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:OrdersController.one",
@@ -58,7 +64,18 @@
       "label": "OrdersController.one",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "entry:api:http:GET:/${…}v1/orders",

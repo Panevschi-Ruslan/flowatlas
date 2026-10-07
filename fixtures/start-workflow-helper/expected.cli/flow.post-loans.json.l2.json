@@ -72,7 +72,22 @@
               "type": "method",
               "label": "WorkflowClient.start",
               "loc": "../packages/workflows/src/index.ts:11",
-              "service": "lending"
+              "service": "lending",
+              "meta": {
+                "signature": {
+                  "params": [
+                    {
+                      "name": "stateMachineArn",
+                      "type": "string|undefined"
+                    },
+                    {
+                      "name": "input",
+                      "type": "unknown"
+                    }
+                  ],
+                  "returns": "string|undefined"
+                }
+              }
             },
             "edge": {
               "type": "calls",

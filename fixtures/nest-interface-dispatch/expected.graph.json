@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-interface-dispatch",
-  "generatedAt": "2026-10-06T11:32:03.542Z",
+  "generatedAt": "2026-10-07T14:34:14.021Z",
   "nodes": [
     {
       "id": "config_key:nest-interface-dispatch#BASECAMP_URL",
@@ -143,7 +143,18 @@
       "label": "BasecampCalendarService.deleteEvent",
       "repo": "nest-interface-dispatch",
       "file": "src/calendars/basecamp.service.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "uid",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-interface-dispatch#src/calendars/basecamp.service.ts:BasecampCalendarService.updateEvent",
@@ -151,7 +162,18 @@
       "label": "BasecampCalendarService.updateEvent",
       "repo": "nest-interface-dispatch",
       "file": "src/calendars/basecamp.service.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "uid",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-interface-dispatch#src/calendars/calendar-manager.service.ts:CalendarManagerService",
@@ -171,7 +193,13 @@
       "label": "CalendarManagerService.archive",
       "repo": "nest-interface-dispatch",
       "file": "src/calendars/calendar-manager.service.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-interface-dispatch#src/calendars/calendar-manager.service.ts:CalendarManagerService.remove",
@@ -179,7 +207,18 @@
       "label": "CalendarManagerService.remove",
       "repo": "nest-interface-dispatch",
       "file": "src/calendars/calendar-manager.service.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "calendar",
+              "type": "type:nest-interface-dispatch#Calendar"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-interface-dispatch#src/calendars/zoho.service.ts:ZohoCalendarService",
@@ -199,7 +238,18 @@
       "label": "ZohoCalendarService.deleteEvent",
       "repo": "nest-interface-dispatch",
       "file": "src/calendars/zoho.service.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "uid",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-interface-dispatch#src/calendars/zoho.service.ts:ZohoCalendarService.updateEvent",
@@ -207,7 +257,18 @@
       "label": "ZohoCalendarService.updateEvent",
       "repo": "nest-interface-dispatch",
       "file": "src/calendars/zoho.service.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "uid",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "repo:nest-interface-dispatch",

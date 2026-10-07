@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:26.838Z",
+  "builtAt": "2026-10-07T14:34:44.116Z",
   "services": [
     {
       "name": "web",
@@ -69,7 +69,18 @@
       "label": "BookingOutputMapper.map",
       "repo": "web",
       "file": "../../packages/platform-types/src/index.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{id:number;title:string}"
+            }
+          ],
+          "returns": "type:@sibling-types/platform-types#BookingOutput"
+        }
+      }
     },
     {
       "id": "web#../../packages/platform-types/src/index.ts:toBookingOutput",

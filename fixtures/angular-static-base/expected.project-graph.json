@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:37.401Z",
+  "builtAt": "2026-10-07T14:33:22.360Z",
   "services": [
     {
       "name": "api",
@@ -50,7 +50,18 @@
       "label": "ItemsController.findOne",
       "repo": "api",
       "file": "src/items/items.controller.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/items/items.controller.ts:ItemsController.list",
@@ -58,7 +69,13 @@
       "label": "ItemsController.list",
       "repo": "api",
       "file": "src/items/items.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "api#src/items/items.controller.ts:ItemsController.pay",
@@ -66,7 +83,13 @@
       "label": "ItemsController.pay",
       "repo": "api",
       "file": "src/items/items.controller.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "entry:api:http:GET:/items",

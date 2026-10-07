@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-no-data",
-  "generatedAt": "2026-10-06T11:32:12.379Z",
+  "generatedAt": "2026-10-07T14:34:25.575Z",
   "nodes": [
     {
       "id": "entry:nest-no-data:http:DELETE:/notifications/:param",
@@ -72,7 +72,18 @@
       "label": "NotificationsController.dismiss",
       "repo": "nest-no-data",
       "file": "src/notifications/notifications.controller.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-no-data#Message"
+        }
+      }
     },
     {
       "id": "nest-no-data#src/notifications/notifications.controller.ts:NotificationsController.greet",
@@ -80,7 +91,18 @@
       "label": "NotificationsController.greet",
       "repo": "nest-no-data",
       "file": "src/notifications/notifications.controller.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-no-data#Message"
+        }
+      }
     },
     {
       "id": "nest-no-data#src/notifications/notifications.service.ts:NotificationsService",
@@ -100,7 +122,18 @@
       "label": "NotificationsService.dismiss",
       "repo": "nest-no-data",
       "file": "src/notifications/notifications.service.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-no-data#Message"
+        }
+      }
     },
     {
       "id": "nest-no-data#src/notifications/notifications.service.ts:NotificationsService.greet",
@@ -108,7 +141,18 @@
       "label": "NotificationsService.greet",
       "repo": "nest-no-data",
       "file": "src/notifications/notifications.service.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-no-data#Message"
+        }
+      }
     },
     {
       "id": "nest-no-data#src/notifications/templates.service.ts:TemplatesService",
@@ -128,7 +172,18 @@
       "label": "TemplatesService.farewell",
       "repo": "nest-no-data",
       "file": "src/notifications/templates.service.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-no-data#src/notifications/templates.service.ts:TemplatesService.greeting",
@@ -136,7 +191,18 @@
       "label": "TemplatesService.greeting",
       "repo": "nest-no-data",
       "file": "src/notifications/templates.service.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "repo:nest-no-data",

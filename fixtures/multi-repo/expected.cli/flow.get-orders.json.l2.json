@@ -24,7 +24,18 @@
           "type": "method",
           "label": "OrdersController.findOne",
           "loc": "src/orders/orders.controller.ts:30",
-          "service": "gateway"
+          "service": "gateway",
+          "meta": {
+            "signature": {
+              "params": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+            }
+          }
         },
         "edge": {
           "type": "handles",
@@ -41,7 +52,18 @@
               "type": "method",
               "label": "OrdersClient.fetchOne",
               "loc": "src/clients/orders.client.ts:32",
-              "service": "gateway"
+              "service": "gateway",
+              "meta": {
+                "signature": {
+                  "params": [
+                    {
+                      "name": "id",
+                      "type": "string"
+                    }
+                  ],
+                  "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+                }
+              }
             },
             "edge": {
               "type": "calls",
@@ -120,7 +142,18 @@
                           "type": "method",
                           "label": "OrdersController.findOne",
                           "loc": "src/orders/orders.controller.ts:25",
-                          "service": "orders"
+                          "service": "orders",
+                          "meta": {
+                            "signature": {
+                              "params": [
+                                {
+                                  "name": "id",
+                                  "type": "string"
+                                }
+                              ],
+                              "returns": "type:@fx/contracts#OrderDto"
+                            }
+                          }
                         },
                         "edge": {
                           "type": "handles",
@@ -137,7 +170,18 @@
                               "type": "method",
                               "label": "OrdersService.findOne",
                               "loc": "src/orders/orders.service.ts:25",
-                              "service": "orders"
+                              "service": "orders",
+                              "meta": {
+                                "signature": {
+                                  "params": [
+                                    {
+                                      "name": "id",
+                                      "type": "string"
+                                    }
+                                  ],
+                                  "returns": "type:@fx/contracts#OrderDto"
+                                }
+                              }
                             },
                             "edge": {
                               "type": "calls",

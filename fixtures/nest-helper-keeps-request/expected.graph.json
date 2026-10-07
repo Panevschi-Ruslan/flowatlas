@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-helper-keeps-request",
-  "generatedAt": "2026-10-07T08:18:29.393Z",
+  "generatedAt": "2026-10-07T14:34:12.308Z",
   "nodes": [
     {
       "id": "config_key:nest-helper-keeps-request#LIBRARY_BOT_TOKEN",
@@ -124,7 +124,22 @@
       "label": "CourierClient.send",
       "repo": "nest-helper-keeps-request",
       "file": "src/reminders/courier-api.ts",
-      "line": 30
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "token",
+              "type": "string"
+            },
+            {
+              "name": "job",
+              "type": "type:nest-helper-keeps-request#ReminderJob"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
     },
     {
       "id": "nest-helper-keeps-request#src/reminders/courier-api.ts:sendViaCourier",
@@ -157,7 +172,18 @@
       "label": "ReminderDispatcher.dispatchOverdue",
       "repo": "nest-helper-keeps-request",
       "file": "src/reminders/reminder-dispatcher.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:nest-helper-keeps-request#ReminderJob"
+            }
+          ],
+          "returns": "'failed'|'sent'"
+        }
+      }
     },
     {
       "id": "nest-helper-keeps-request#src/reminders/reminders.controller.ts:RemindersController",
@@ -177,7 +203,18 @@
       "label": "RemindersController.desk",
       "repo": "nest-helper-keeps-request",
       "file": "src/reminders/reminders.controller.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "chatId",
+              "type": "string"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
     },
     {
       "id": "nest-helper-keeps-request#src/reminders/reminders.service.ts:RemindersService",
@@ -197,7 +234,18 @@
       "label": "RemindersService.remindAtDesk",
       "repo": "nest-helper-keeps-request",
       "file": "src/reminders/reminders.service.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "chatId",
+              "type": "string"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
     },
     {
       "id": "repo:nest-helper-keeps-request",

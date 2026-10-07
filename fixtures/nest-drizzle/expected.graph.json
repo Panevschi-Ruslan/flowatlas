@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-drizzle",
-  "generatedAt": "2026-10-06T11:31:59.355Z",
+  "generatedAt": "2026-10-07T14:34:09.288Z",
   "nodes": [
     {
       "id": "db_query:nest-drizzle#src/orders/orders.service.ts:14:12",
@@ -218,7 +218,13 @@
       "label": "OrdersController.create",
       "repo": "nest-drizzle",
       "file": "src/orders/orders.controller.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-drizzle#src/orders/orders.controller.ts:OrdersController.findAll",
@@ -226,7 +232,13 @@
       "label": "OrdersController.findAll",
       "repo": "nest-drizzle",
       "file": "src/orders/orders.controller.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-drizzle#src/orders/orders.controller.ts:OrdersController.remove",
@@ -234,7 +246,13 @@
       "label": "OrdersController.remove",
       "repo": "nest-drizzle",
       "file": "src/orders/orders.controller.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService",
@@ -254,7 +272,18 @@
       "label": "OrdersService.create",
       "repo": "nest-drizzle",
       "file": "src/orders/orders.service.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService.findAll",
@@ -262,7 +291,13 @@
       "label": "OrdersService.findAll",
       "repo": "nest-drizzle",
       "file": "src/orders/orders.service.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService.findOne",
@@ -270,7 +305,18 @@
       "label": "OrdersService.findOne",
       "repo": "nest-drizzle",
       "file": "src/orders/orders.service.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService.invoice",
@@ -278,7 +324,18 @@
       "label": "OrdersService.invoice",
       "repo": "nest-drizzle",
       "file": "src/orders/orders.service.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService.markPaid",
@@ -286,7 +343,18 @@
       "label": "OrdersService.markPaid",
       "repo": "nest-drizzle",
       "file": "src/orders/orders.service.ts",
-      "line": 33
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService.purge",
@@ -294,7 +362,18 @@
       "label": "OrdersService.purge",
       "repo": "nest-drizzle",
       "file": "src/orders/orders.service.ts",
-      "line": 44
+      "line": 44,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "table",
+              "type": "type:drizzle-orm#PgTable<string>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-drizzle#src/orders/orders.service.ts:OrdersService.remove",
@@ -302,7 +381,18 @@
       "label": "OrdersService.remove",
       "repo": "nest-drizzle",
       "file": "src/orders/orders.service.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "repo:nest-drizzle",

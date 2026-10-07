@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:09.814Z",
+  "builtAt": "2026-10-07T14:34:21.891Z",
   "services": [
     {
       "name": "api",
@@ -58,7 +58,13 @@
       "label": "BaseRepository.coll",
       "repo": "api",
       "file": "src/db/base.repository.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:mongodb#Collection<T>"
+        }
+      }
     },
     {
       "id": "api#src/db/base.repository.ts:BaseRepository.findAll",
@@ -66,7 +72,13 @@
       "label": "BaseRepository.findAll",
       "repo": "api",
       "file": "src/db/base.repository.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "T[]"
+        }
+      }
     },
     {
       "id": "api#src/db/base.repository.ts:BaseRepository.findById",
@@ -74,7 +86,18 @@
       "label": "BaseRepository.findById",
       "repo": "api",
       "file": "src/db/base.repository.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "T"
+        }
+      }
     },
     {
       "id": "api#src/db/connection.ts:MongoConnection",
@@ -94,7 +117,18 @@
       "label": "MongoConnection.collection",
       "repo": "api",
       "file": "src/db/connection.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:mongodb#Collection<T>"
+        }
+      }
     },
     {
       "id": "api#src/db/legacy.repository.ts:LegacyRepository",
@@ -111,7 +145,13 @@
       "label": "LegacyRepository.list",
       "repo": "api",
       "file": "src/db/legacy.repository.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "T[]"
+        }
+      }
     },
     {
       "id": "api#src/db/migrations.ts:Migrations",
@@ -131,7 +171,18 @@
       "label": "Migrations.backfillUsers",
       "repo": "api",
       "file": "src/db/migrations.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "db",
+              "type": "type:mongodb#Db"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/db/migrations.ts:Migrations.dropDecorations",
@@ -139,7 +190,18 @@
       "label": "Migrations.dropDecorations",
       "repo": "api",
       "file": "src/db/migrations.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "db",
+              "type": "type:mongodb#Db"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
     },
     {
       "id": "api#src/db/migrations.ts:Migrations.purge",
@@ -147,7 +209,22 @@
       "label": "Migrations.purge",
       "repo": "api",
       "file": "src/db/migrations.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "db",
+              "type": "type:mongodb#Db"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/menu/menu.repository.ts:MenuRepository",
@@ -167,7 +244,18 @@
       "label": "MenuRepository.findByCategory",
       "repo": "api",
       "file": "src/menu/menu.repository.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "category",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#MenuItem[]"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.repository.ts:OrdersRepository",
@@ -187,7 +275,13 @@
       "label": "OrdersRepository.large",
       "repo": "api",
       "file": "src/orders/orders.repository.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:api#Order[]"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService",
@@ -207,7 +301,13 @@
       "label": "OrdersService.history",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.item",
@@ -215,7 +315,18 @@
       "label": "OrdersService.item",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.list",
@@ -223,7 +334,13 @@
       "label": "OrdersService.list",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:api#Order[]"
+        }
+      }
     },
     {
       "id": "db_query:api#src/db/base.repository.ts:19:12",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:41.490Z",
+  "builtAt": "2026-10-07T14:33:30.800Z",
   "services": [
     {
       "name": "api",
@@ -57,7 +57,18 @@
       "label": "OrdersRepository.byId",
       "repo": "api",
       "file": "src/orders/orders.repository.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.repository.ts:OrdersRepository.insert",
@@ -65,7 +76,18 @@
       "label": "OrdersRepository.insert",
       "repo": "api",
       "file": "src/orders/orders.repository.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.repository.ts:OrdersRepository.list",
@@ -73,7 +95,13 @@
       "label": "OrdersRepository.list",
       "repo": "api",
       "file": "src/orders/orders.repository.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.routes.ts:GET /:orderId@25",

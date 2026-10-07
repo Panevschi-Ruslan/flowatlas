@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:50.842Z",
+  "builtAt": "2026-10-07T14:33:54.794Z",
   "services": [
     {
       "name": "orders",
@@ -207,7 +207,22 @@
       "label": "EventBus.pSubscribe",
       "repo": "orders",
       "file": "src/bus/event-bus.service.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "pattern",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "orders#src/bus/event-bus.service.ts:EventBus.publish",
@@ -215,7 +230,22 @@
       "label": "EventBus.publish",
       "repo": "orders",
       "file": "src/bus/event-bus.service.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "payload",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "orders#src/orders/invoice.consumer.ts:InvoiceConsumer",
@@ -235,7 +265,18 @@
       "label": "InvoiceConsumer.issued",
       "repo": "orders",
       "file": "src/orders/invoice.consumer.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:orders#InvoiceIssued"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService",
@@ -255,7 +296,18 @@
       "label": "OrdersService.created",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:orders#OrderCreated"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "producer:billing#contracts/billing.asyncapi.json:issueInvoice",

@@ -5,7 +5,7 @@ import { Node, ts } from 'ts-morph';
 import type { GraphBuilder } from '../builder.js';
 import { makeTypeId, normalizeFilePath } from '../ids.js';
 import type { Unresolved } from '../model/graph.js';
-import type { TypeEntry, TypeField, TypeKind, TypeRegistry } from '../model/types.js';
+import type { Signature, TypeEntry, TypeField, TypeKind, TypeRegistry } from '../model/types.js';
 import { mergeFieldMeta, type FieldDeclaration, type FieldMetaReader } from './field-meta.js';
 import { DEFAULT_HASH_DEPTH, structuralHash } from './structural-hash.js';
 import { formatFieldKey, formatTypeRef, parseTypeRef, type TypeRef } from './type-ref.js';
@@ -203,13 +203,40 @@ export class TypeCollector {
     return current;
   }
 
+  /**
+   * The parameter types and return type of a function, and the same parameters
+   * with their names, as a `Signature` for the function's own node.
+   *
+   * A destructured parameter has no one name, so it is called by the pattern
+   * as written, which is what a reader would look for in the source.
+   */
   collectSignature(fn: {
-    getParameters(): Array<{ getType(): Type; getName(): string }>;
+    getParameters(): Array<{
+      getType(): Type;
+      getName(): string;
+      isOptional?(): boolean;
+      isRestParameter?(): boolean;
+    }>;
     getReturnType(): Type;
-  } & TsNode): { params: TypeRef[]; returns: TypeRef } {
-    const params = fn.getParameters().map((parameter) => this.collectType(parameter.getType(), fn));
+  } & TsNode): { params: TypeRef[]; returns: TypeRef; signature: Signature } {
+    const parameters = fn.getParameters();
+    const params = parameters.map((parameter) => this.collectType(parameter.getType(), fn));
     const returns = this.collectType(this.unwrapAsync(fn.getReturnType()), fn);
-    return { params, returns };
+    const signature: Signature = {
+      params: parameters.map((parameter, index) => {
+        // A rest parameter counts as optional to the checker; saying both
+        // would say the same thing twice.
+        const rest = parameter.isRestParameter?.() === true;
+        return {
+          name: parameter.getName(),
+          type: params[index] as TypeRef,
+          ...(!rest && parameter.isOptional?.() === true ? { optional: true as const } : {}),
+          ...(rest ? { rest: true as const } : {}),
+        };
+      }),
+      returns,
+    };
+    return { params, returns, signature };
   }
 
   collectType(type: Type, site: TsNode, depth = 0): TypeRef {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:45.694Z",
+  "builtAt": "2026-10-07T14:33:38.503Z",
   "services": [
     {
       "name": "api",
@@ -68,7 +68,22 @@
       "label": "OrdersController.cancel",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:OrdersController.list",
@@ -76,7 +91,18 @@
       "label": "OrdersController.list",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#Order[]"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService",
@@ -96,7 +122,22 @@
       "label": "OrdersService.cancel",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.changesFor",
@@ -104,7 +145,18 @@
       "label": "OrdersService.changesFor",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.list",
@@ -112,7 +164,18 @@
       "label": "OrdersService.list",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "depotId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#Order[]"
+        }
+      }
     },
     {
       "id": "api#src/stream/sse.ts:adminEvents",

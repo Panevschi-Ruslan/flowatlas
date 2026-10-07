@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "pg-no-table",
-  "generatedAt": "2026-10-06T11:32:28.254Z",
+  "generatedAt": "2026-10-07T14:34:46.111Z",
   "nodes": [
     {
       "id": "db_query:pg-no-table#src/orders/orders.service.ts:10:12",
@@ -158,7 +158,18 @@
       "label": "OrdersController.countIn",
       "repo": "pg-no-table",
       "file": "src/orders/orders.controller.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "table",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "pg-no-table#src/orders/orders.controller.ts:OrdersController.findAll",
@@ -166,7 +177,13 @@
       "label": "OrdersController.findAll",
       "repo": "pg-no-table",
       "file": "src/orders/orders.controller.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "pg-no-table#src/orders/orders.controller.ts:OrdersController.ping",
@@ -174,7 +191,13 @@
       "label": "OrdersController.ping",
       "repo": "pg-no-table",
       "file": "src/orders/orders.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "pg-no-table#src/orders/orders.controller.ts:OrdersController.place",
@@ -182,7 +205,13 @@
       "label": "OrdersController.place",
       "repo": "pg-no-table",
       "file": "src/orders/orders.controller.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "pg-no-table#src/orders/orders.service.ts:OrdersService",
@@ -202,7 +231,18 @@
       "label": "OrdersService.countIn",
       "repo": "pg-no-table",
       "file": "src/orders/orders.service.ts",
-      "line": 30
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "table",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "pg-no-table#src/orders/orders.service.ts:OrdersService.findAll",
@@ -210,7 +250,13 @@
       "label": "OrdersService.findAll",
       "repo": "pg-no-table",
       "file": "src/orders/orders.service.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "pg-no-table#src/orders/orders.service.ts:OrdersService.ping",
@@ -218,7 +264,13 @@
       "label": "OrdersService.ping",
       "repo": "pg-no-table",
       "file": "src/orders/orders.service.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "pg-no-table#src/orders/orders.service.ts:OrdersService.place",
@@ -226,7 +278,18 @@
       "label": "OrdersService.place",
       "repo": "pg-no-table",
       "file": "src/orders/orders.service.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "repo:pg-no-table",

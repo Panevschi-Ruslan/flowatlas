@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T21:46:42.391Z",
+  "builtAt": "2026-10-07T14:34:53.322Z",
   "services": [
     {
       "name": "api",
@@ -53,7 +53,18 @@
       "label": "AuditGateway.audit",
       "repo": "api",
       "file": "src/orders/audit.gateway.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "update",
+              "type": "type:api#OrderUpdate"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/audit.gateway.ts:AuditGateway.record",
@@ -61,7 +72,18 @@
       "label": "AuditGateway.record",
       "repo": "api",
       "file": "src/orders/audit.gateway.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "update",
+              "type": "type:api#OrderUpdate"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.gateway.ts:OrdersGateway",
@@ -81,7 +103,18 @@
       "label": "OrdersGateway.cancel",
       "repo": "api",
       "file": "src/orders/orders.gateway.ts",
-      "line": 28
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "command",
+              "type": "type:api#CancelOrder"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.gateway.ts:OrdersGateway.notifyRegion",
@@ -89,7 +122,22 @@
       "label": "OrdersGateway.notifyRegion",
       "repo": "api",
       "file": "src/orders/orders.gateway.ts",
-      "line": 65
+      "line": 65,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "region",
+              "type": "string"
+            },
+            {
+              "name": "update",
+              "type": "type:api#OrderUpdate"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.gateway.ts:OrdersGateway.publishLifecycle",
@@ -97,7 +145,22 @@
       "label": "OrdersGateway.publishLifecycle",
       "repo": "api",
       "file": "src/orders/orders.gateway.ts",
-      "line": 52
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "state",
+              "type": "type:api#OrderState"
+            },
+            {
+              "name": "update",
+              "type": "type:api#OrderUpdate"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.gateway.ts:OrdersGateway.summarise",
@@ -105,7 +168,18 @@
       "label": "OrdersGateway.summarise",
       "repo": "api",
       "file": "src/orders/orders.gateway.ts",
-      "line": 40
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#OrderSummary"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService",
@@ -125,7 +199,18 @@
       "label": "OrdersService.cancel",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "command",
+              "type": "type:api#CancelOrder"
+            }
+          ],
+          "returns": "type:api#OrderUpdate"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.summarise",
@@ -133,7 +218,18 @@
       "label": "OrdersService.summarise",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#OrderSummary"
+        }
+      }
     },
     {
       "id": "api#src/orders/reports.gateway.ts:ReportsGateway",
@@ -153,7 +249,18 @@
       "label": "ReportsGateway.request",
       "repo": "api",
       "file": "src/orders/reports.gateway.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "summary",
+              "type": "type:api#OrderSummary"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "channel:order:updated",

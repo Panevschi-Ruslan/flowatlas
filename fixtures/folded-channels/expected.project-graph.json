@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:44.012Z",
+  "builtAt": "2026-10-07T14:33:34.947Z",
   "services": [
     {
       "name": "api",
@@ -53,7 +53,22 @@
       "label": "EventBus.pSubscribe",
       "repo": "api",
       "file": "src/bus/event-bus.service.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "pattern",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/bus/event-bus.service.ts:EventBus.publish",
@@ -61,7 +76,22 @@
       "label": "EventBus.publish",
       "repo": "api",
       "file": "src/bus/event-bus.service.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "payload",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:OrdersController",
@@ -81,7 +111,22 @@
       "label": "OrdersController.setState",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{state:type:api#OrderState}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService",
@@ -101,7 +146,26 @@
       "label": "OrdersService.archiveInRegion",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 36
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "region",
+              "type": "string"
+            },
+            {
+              "name": "event",
+              "type": "type:api#LifecycleEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.publishLifecycle",
@@ -111,6 +175,23 @@
       "file": "src/orders/orders.service.ts",
       "line": 21,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "state",
+              "type": "type:api#OrderState"
+            },
+            {
+              "name": "event",
+              "type": "type:api#LifecycleEvent"
+            }
+          ],
+          "returns": "void"
+        },
         "markers": [
           {
             "name": "Emits",
@@ -404,7 +485,22 @@
       "label": "EventBus.pSubscribe",
       "repo": "worker",
       "file": "src/bus/event-bus.service.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "pattern",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "worker#src/bus/event-bus.service.ts:EventBus.publish",
@@ -412,7 +508,22 @@
       "label": "EventBus.publish",
       "repo": "worker",
       "file": "src/bus/event-bus.service.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "payload",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections",
@@ -432,7 +543,18 @@
       "label": "LifecycleProjections.onClosed",
       "repo": "worker",
       "file": "src/projections/lifecycle.service.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:worker#LifecycleEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onHeld",
@@ -440,7 +562,18 @@
       "label": "LifecycleProjections.onHeld",
       "repo": "worker",
       "file": "src/projections/lifecycle.service.ts",
-      "line": 33
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:worker#LifecycleEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onModuleInit",
@@ -448,7 +581,13 @@
       "label": "LifecycleProjections.onModuleInit",
       "repo": "worker",
       "file": "src/projections/lifecycle.service.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "worker#src/projections/lifecycle.service.ts:LifecycleProjections.onOpened",
@@ -456,7 +595,18 @@
       "label": "LifecycleProjections.onOpened",
       "repo": "worker",
       "file": "src/projections/lifecycle.service.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:worker#LifecycleEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     }
   ],
   "edges": [

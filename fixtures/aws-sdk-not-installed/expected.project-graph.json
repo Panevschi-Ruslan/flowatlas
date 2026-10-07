@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T18:17:26.392Z",
+  "builtAt": "2026-10-07T14:33:23.345Z",
   "services": [
     {
       "name": "catalogue",
@@ -34,7 +34,18 @@
       "label": "CatalogueEvents.catalogued",
       "repo": "catalogue",
       "file": "src/catalogue-events.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "type:catalogue#CatalogueItem"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "catalogue#src/catalogue-events.ts:announceWithdrawal",
@@ -67,7 +78,18 @@
       "label": "Mailer.send",
       "repo": "catalogue",
       "file": "src/catalogue.handlers.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "{to:string;body:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "catalogue#src/catalogue.handlers.ts:catalogueItem",

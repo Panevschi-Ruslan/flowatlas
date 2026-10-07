@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:29.122Z",
+  "builtAt": "2026-10-07T14:34:47.557Z",
   "services": [
     {
       "name": "api",
@@ -61,7 +61,18 @@
       "label": "OrdersService.cancel",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "api#src/reports/count.ts:countUsers",
@@ -129,7 +140,13 @@
       "label": "UsersService.findAll",
       "repo": "api",
       "file": "src/users/users.service.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "api#src/users/users.service.ts:UsersService.place",
@@ -137,7 +154,18 @@
       "label": "UsersService.place",
       "repo": "api",
       "file": "src/users/users.service.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "userId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "db_query:api#src/legacy/legacy.ts:10:47",

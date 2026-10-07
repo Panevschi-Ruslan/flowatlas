@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:45.130Z",
+  "builtAt": "2026-10-07T14:33:37.326Z",
   "services": [
     {
       "name": "api",
@@ -54,7 +54,18 @@
       "label": "FilesController.any",
       "repo": "api",
       "file": "src/files/files.controller.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "params",
+              "type": "object"
+            }
+          ],
+          "returns": "{params:object}"
+        }
+      }
     },
     {
       "id": "api#src/files/files.controller.ts:FilesController.latest",
@@ -62,7 +73,13 @@
       "label": "FilesController.latest",
       "repo": "api",
       "file": "src/files/files.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{name:string}"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:OrdersController",
@@ -82,7 +99,18 @@
       "label": "OrdersController.findOne",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:OrdersController.rename",
@@ -90,7 +118,22 @@
       "label": "OrdersController.rename",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{name:string}"
+            }
+          ],
+          "returns": "{id:string;name:string}"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService",
@@ -110,7 +153,18 @@
       "label": "OrdersService.findOne",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.rename",
@@ -118,7 +172,22 @@
       "label": "OrdersService.rename",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string;name:string}"
+        }
+      }
     },
     {
       "id": "api#src/reports/reports.controller.ts:ReportsController",
@@ -138,7 +207,18 @@
       "label": "ReportsController.ofKind",
       "repo": "api",
       "file": "src/reports/reports.controller.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            }
+          ],
+          "returns": "{kind:string}"
+        }
+      }
     },
     {
       "id": "client#node_modules/@nestjs/axios:HttpService",
@@ -198,7 +278,13 @@
       "label": "OrdersClient.newest",
       "repo": "client",
       "file": "src/orders/orders.client.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
     },
     {
       "id": "client#src/orders/orders.client.ts:OrdersClient.rename",
@@ -206,7 +292,22 @@
       "label": "OrdersClient.rename",
       "repo": "client",
       "file": "src/orders/orders.client.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
     },
     {
       "id": "client#src/orders/orders.client.ts:OrdersClient.report",
@@ -214,7 +315,18 @@
       "label": "OrdersClient.report",
       "repo": "client",
       "file": "src/orders/orders.client.ts",
-      "line": 34
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
     },
     {
       "id": "config_key:client#API_URL",

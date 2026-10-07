@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:57.904Z",
+  "builtAt": "2026-10-07T14:34:07.898Z",
   "services": [
     {
       "name": "api",
@@ -60,7 +60,18 @@
       "label": "OrdersController.place",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "{id:string;email:string}"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
     },
     {
       "id": "config_key:api#E2E_API_URL",

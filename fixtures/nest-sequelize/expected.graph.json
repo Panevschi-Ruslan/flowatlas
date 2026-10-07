@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-sequelize",
-  "generatedAt": "2026-10-06T11:32:17.302Z",
+  "generatedAt": "2026-10-07T14:34:30.999Z",
   "nodes": [
     {
       "id": "db_query:nest-sequelize#src/invoices/invoices.service.ts:13:12",
@@ -218,7 +218,13 @@
       "label": "InvoicesController.create",
       "repo": "nest-sequelize",
       "file": "src/invoices/invoices.controller.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-sequelize#src/invoices/invoices.controller.ts:InvoicesController.findAll",
@@ -226,7 +232,13 @@
       "label": "InvoicesController.findAll",
       "repo": "nest-sequelize",
       "file": "src/invoices/invoices.controller.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-sequelize#src/invoices/invoices.controller.ts:InvoicesController.remove",
@@ -234,7 +246,13 @@
       "label": "InvoicesController.remove",
       "repo": "nest-sequelize",
       "file": "src/invoices/invoices.controller.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-sequelize#src/invoices/invoices.service.ts:InvoicesService",
@@ -254,7 +272,18 @@
       "label": "InvoicesService.countOf",
       "repo": "nest-sequelize",
       "file": "src/invoices/invoices.service.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-sequelize#src/invoices/invoices.service.ts:InvoicesService.create",
@@ -262,7 +291,18 @@
       "label": "InvoicesService.create",
       "repo": "nest-sequelize",
       "file": "src/invoices/invoices.service.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "amount",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-sequelize#src/invoices/invoices.service.ts:InvoicesService.findAll",
@@ -270,7 +310,13 @@
       "label": "InvoicesService.findAll",
       "repo": "nest-sequelize",
       "file": "src/invoices/invoices.service.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-sequelize#src/invoices/invoices.service.ts:InvoicesService.findOne",
@@ -278,7 +324,18 @@
       "label": "InvoicesService.findOne",
       "repo": "nest-sequelize",
       "file": "src/invoices/invoices.service.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-sequelize#src/invoices/invoices.service.ts:InvoicesService.markPaid",
@@ -286,7 +343,18 @@
       "label": "InvoicesService.markPaid",
       "repo": "nest-sequelize",
       "file": "src/invoices/invoices.service.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-sequelize#src/invoices/invoices.service.ts:InvoicesService.payments",
@@ -294,7 +362,13 @@
       "label": "InvoicesService.payments",
       "repo": "nest-sequelize",
       "file": "src/invoices/invoices.service.ts",
-      "line": 26
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "nest-sequelize#src/invoices/invoices.service.ts:InvoicesService.remove",
@@ -302,7 +376,18 @@
       "label": "InvoicesService.remove",
       "repo": "nest-sequelize",
       "file": "src/invoices/invoices.service.ts",
-      "line": 30
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "repo:nest-sequelize",

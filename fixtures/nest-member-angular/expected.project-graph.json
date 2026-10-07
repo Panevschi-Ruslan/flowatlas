@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:07.536Z",
+  "builtAt": "2026-10-07T14:34:18.468Z",
   "services": [
     {
       "name": "api",
@@ -25,7 +25,18 @@
       "label": "MailPreview.preview",
       "repo": "api",
       "file": "../../packages/mailer/src/index.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{html:string}"
+        }
+      }
     },
     {
       "id": "api#../../packages/sdk/src/index.ts:SdkClient",
@@ -42,7 +53,18 @@
       "label": "SdkClient.lookup",
       "repo": "api",
       "file": "../../packages/sdk/src/index.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "email",
+              "type": "string"
+            }
+          ],
+          "returns": "{email:string}"
+        }
+      }
     },
     {
       "id": "api#../../packages/widgets/src/status.service.ts:StatusService",
@@ -64,6 +86,15 @@
       "file": "../../packages/widgets/src/status.service.ts",
       "line": 9,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string;status:string}"
+        },
         "unreferenced": true
       }
     },
@@ -113,7 +144,18 @@
       "label": "OrdersController.place",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "{id:string;email:string}"
+            }
+          ],
+          "returns": "{id:string;label:string}"
+        }
+      }
     },
     {
       "id": "entry:api:http:POST:/orders",

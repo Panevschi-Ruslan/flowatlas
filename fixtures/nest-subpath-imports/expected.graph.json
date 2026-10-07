@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-subpath-imports",
-  "generatedAt": "2026-10-06T11:32:18.466Z",
+  "generatedAt": "2026-10-07T14:34:32.117Z",
   "nodes": [
     {
       "id": "entry:nest-subpath-imports:http:GET:/health-check",
@@ -103,7 +103,13 @@
       "label": "HealthController.check",
       "repo": "nest-subpath-imports",
       "file": "src/health/health.controller.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-subpath-imports#src/health/health.controller.ts:HealthController.idempotency",
@@ -111,7 +117,18 @@
       "label": "HealthController.idempotency",
       "repo": "nest-subpath-imports",
       "file": "src/health/health.controller.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-subpath-imports#src/health/health.controller.ts:HealthController.ready",
@@ -119,7 +136,13 @@
       "label": "HealthController.ready",
       "repo": "nest-subpath-imports",
       "file": "src/health/health.controller.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-subpath-imports#src/reports/reports.controller.ts:ReportsController",
@@ -139,7 +162,13 @@
       "label": "ReportsController.daily",
       "repo": "nest-subpath-imports",
       "file": "src/reports/reports.controller.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
     },
     {
       "id": "repo:nest-subpath-imports",

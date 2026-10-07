@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:32.919Z",
+  "builtAt": "2026-10-07T14:34:54.362Z",
   "services": [
     {
       "name": "api",
@@ -31,7 +31,18 @@
       "label": "PeerSockets.init",
       "repo": "api",
       "file": "src/live/peer-sockets.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "httpServer",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/live/peer-sockets.ts:PeerSockets.pong",
@@ -39,7 +50,13 @@
       "label": "PeerSockets.pong",
       "repo": "api",
       "file": "src/live/peer-sockets.ts",
-      "line": 74
+      "line": 74,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/live/peer-sockets.ts:PeerSockets.remember",
@@ -47,7 +64,22 @@
       "label": "PeerSockets.remember",
       "repo": "api",
       "file": "src/live/peer-sockets.ts",
-      "line": 78
+      "line": 78,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "userId",
+              "type": "number"
+            },
+            {
+              "name": "socket",
+              "type": "type:socket.io#Socket"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/live/peer-sockets.ts:PeerSockets.sendNotification",
@@ -71,7 +103,18 @@
       "label": "PeerSockets.subscribe",
       "repo": "api",
       "file": "src/live/peer-sockets.ts",
-      "line": 66
+      "line": 66,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "params",
+              "type": "type:api#Subscription"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "api#src/live/peer-sockets.ts:PeerSockets.unsubscribe",
@@ -79,7 +122,18 @@
       "label": "PeerSockets.unsubscribe",
       "repo": "api",
       "file": "src/live/peer-sockets.ts",
-      "line": 70
+      "line": 70,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "params",
+              "type": "type:api#Subscription"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "channel:live-videos/state-change",

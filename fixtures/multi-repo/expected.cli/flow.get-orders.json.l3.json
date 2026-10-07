@@ -26,6 +26,17 @@
           "label": "OrdersController.findOne",
           "loc": "src/orders/orders.controller.ts:30",
           "service": "gateway",
+          "meta": {
+            "signature": {
+              "params": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+            }
+          },
           "code": "  @Get(':id')\n  findOne(@Param('id') id: string) {\n    return this.orders.fetchOne(id);\n  }"
         },
         "edge": {
@@ -44,6 +55,17 @@
               "label": "OrdersClient.fetchOne",
               "loc": "src/clients/orders.client.ts:32",
               "service": "gateway",
+              "meta": {
+                "signature": {
+                  "params": [
+                    {
+                      "name": "id",
+                      "type": "string"
+                    }
+                  ],
+                  "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+                }
+              },
               "code": "  fetchOne(id: string) {\n    return this.http.get<OrderDto>(`${this.config.get('ORDERS_URL')}/orders/${id}`);\n  }"
             },
             "edge": {
@@ -127,6 +149,17 @@
                           "label": "OrdersController.findOne",
                           "loc": "src/orders/orders.controller.ts:25",
                           "service": "orders",
+                          "meta": {
+                            "signature": {
+                              "params": [
+                                {
+                                  "name": "id",
+                                  "type": "string"
+                                }
+                              ],
+                              "returns": "type:@fx/contracts#OrderDto"
+                            }
+                          },
                           "code": "  @Get(':id')\n  findOne(@Param('id') id: string): Promise<OrderDto> {\n    return this.orders.findOne(id);\n  }"
                         },
                         "edge": {
@@ -145,6 +178,17 @@
                               "label": "OrdersService.findOne",
                               "loc": "src/orders/orders.service.ts:25",
                               "service": "orders",
+                              "meta": {
+                                "signature": {
+                                  "params": [
+                                    {
+                                      "name": "id",
+                                      "type": "string"
+                                    }
+                                  ],
+                                  "returns": "type:@fx/contracts#OrderDto"
+                                }
+                              },
                               "code": "  async findOne(id: string): Promise<OrderDto> {\n    const row = await this.orders.findOne({ where: { id } });\n    return toDto(row);\n  }"
                             },
                             "edge": {

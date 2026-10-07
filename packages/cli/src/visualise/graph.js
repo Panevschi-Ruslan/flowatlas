@@ -17,8 +17,11 @@
  *                 per service
  *   step          where an arrow key moves from a drawn node
  *   createHistory where the person has been; the address is frame.js's
- * plus `search` over every node, `describe` for the details panel, and
- * `labelParts`, `middle` and `zoomLevel` for how a node is written.
+ * plus `search` over every node, `describe` for the details panel, the
+ * shapes (`faceOf`, `faceLine`, `refParts`, `typeInfo`) for what a node takes
+ * and gives back, `openAll` and `typeScriptOf` for all of it at once, and
+ * `labelParts`, `middle` and `zoomLevel` for how a node is
+ * written.
  */
 
 /** Node fields, as packed. */
@@ -62,7 +65,7 @@ export const createModel = (data) => {
     if (row[ROW.node] >= 0) pushTo(rowsOn, row[ROW.node], r);
     if (row[ROW.file] >= 0) pushTo(rowsInFile, fileKey(row[ROW.repo], row[ROW.file]), r);
   });
-  return { data, nodes, edges, outgoing, incoming, rowsOn, rowsInFile, haystack: null, owners: null };
+  return { data, nodes, edges, outgoing, incoming, rowsOn, rowsInFile, haystack: null, owners: null, faces: null };
 };
 
 /** Nothing hidden. */
@@ -820,6 +823,458 @@ export const describe = (model, i) => {
     atLine,
     inFile,
   };
+};
+
+/*
+ * Shapes: what a node takes and gives back, from `data.shapes`.
+ *
+ *   faceOf     a node's parameters by name, a route's request parts, a call's
+ *              or a channel's payload, and what comes back; null when the
+ *              graph recorded none
+ *   refParts   a reference cut into text and named types, for links
+ *   typeInfo   a named type's fields, members and where it is declared
+ *   faceLine   all of a face on one line, for the drawing
+ *
+ * A page built before shapes were packed has none, and every one of these
+ * answers as if the node had no face.
+ */
+
+/** Packed face fields, by position. */
+export const FACE = Object.freeze({ node: 0, face: 1, params: 2, returns: 3 });
+
+/** A parameter's flag, as packed. */
+export const PARAM_FLAG = Object.freeze({ none: 0, optional: 1, rest: 2 });
+
+const NO_SHAPES = Object.freeze({ refs: [], types: [], faces: [], labels: [], faceNames: [] });
+const shapesOf = (model) => model.data.shapes || NO_SHAPES;
+
+export const faceOf = (model, i) => {
+  if (!model.faces) model.faces = new Map(shapesOf(model).faces.map((face) => [face[FACE.node], face]));
+  const face = model.faces.get(i);
+  if (face === undefined) return null;
+  const { labels, faceNames } = shapesOf(model);
+  const flat = face[FACE.params];
+  const params = [];
+  for (let k = 0; k < flat.length; k += 3) params.push({ label: labels[flat[k]], ref: flat[k + 1], flag: flat[k + 2] });
+  return { face: faceNames[face[FACE.face]], params, returns: face[FACE.returns] };
+};
+
+/** The text of a reference, or '' for none (-1). */
+export const refText = (model, r) => (r < 0 ? '' : shapesOf(model).refs[r][0]);
+
+/**
+ * A reference as runs of text, a named type being a run with `type` set: its
+ * position in `data.shapes.types`, or -1 when the registry did not hold it.
+ */
+export const refParts = (model, r) => {
+  if (r < 0) return [];
+  const [text, spans] = shapesOf(model).refs[r];
+  const parts = [];
+  let at = 0;
+  for (let k = 0; k < spans.length; k += 3) {
+    const [start, end, type] = [spans[k], spans[k + 1], spans[k + 2]];
+    if (start > at) parts.push({ text: text.slice(at, start) });
+    parts.push({ text: text.slice(start, end), type });
+    at = end;
+  }
+  if (at < text.length) parts.push({ text: text.slice(at) });
+  return parts;
+};
+
+export const typeInfo = (model, t) => {
+  const entry = shapesOf(model).types[t];
+  if (entry === undefined) return null;
+  const [name, kind, declaredIn, fields, members, typeParams] = entry;
+  return {
+    name,
+    kind,
+    declaredIn,
+    fields: fields === 0 ? [] : fields.map(([field, ref, optional]) => ({ name: field, ref, optional: optional === 1 })),
+    // A union's members are references; an enum's are its values.
+    members: members === 0 ? [] : members.map((member) => (typeof member === 'number' ? { ref: member } : { text: member })),
+    typeParams: typeParams === 0 ? [] : typeParams,
+  };
+};
+
+const paramText = (model, param) => {
+  const type = refText(model, param.ref);
+  if (param.label === '') return type;
+  const name = (param.flag === PARAM_FLAG.rest ? '...' : '') + param.label +
+    (param.flag === PARAM_FLAG.optional ? '?' : '');
+  return name + ': ' + type;
+};
+
+/**
+ * A face on one line: `(dto: CreateOrder, actor: Actor) → Order` for a
+ * function, `body: CreateOrder · params: { id: string } → Order` for a route,
+ * `sends { points: number } → Result` for a call, `emits OrderEvent` for a
+ * producer and `payload OrderEvent` for its channel. Empty for a node without
+ * one.
+ */
+export const faceLine = (model, i) => {
+  const face = faceOf(model, i);
+  if (face === null) return '';
+  const back = face.returns < 0 ? '' : ' → ' + refText(model, face.returns);
+  const listed = face.params.map((param) => paramText(model, param));
+  if (face.face === 'method' || face.face === 'bare') return '(' + listed.join(', ') + ')' + back;
+  if (face.face === 'route') return (listed.length > 0 ? listed.join(' · ') : 'no request parts read') + back;
+  if (face.face === 'channel') {
+    return 'payload ' + face.params.map((param) => refText(model, param.ref)).join(' | ');
+  }
+  const [sent] = face.params;
+  if (sent === undefined) return 'sends nothing typed' + back;
+  return (sent.label === 'payload' ? 'emits ' : 'sends ') + refText(model, sent.ref) + back;
+};
+
+/*
+ * Opening everything: what "Expand all" opens in the panel, and what "Copy as
+ * TypeScript" writes, by one rule.
+ *
+ * The panel names an opening by where it sits: a row is `p0` (a parameter),
+ * `r` (what comes back), or `<type key>.<k>` (the k-th field or member of an
+ * opened type); a type opened in a row is `<row>:<type>`. So the types a row
+ * sits inside are read off its own name, and a type already open on the way
+ * down is shown as the name it is, never opened again - which is what keeps a
+ * type that holds itself from opening forever.
+ *
+ *   openAll       the openings under some rows, breadth first, within bounds
+ *   typeScriptOf  a node's face written out as TypeScript, nested inline
+ */
+
+/** How far one "Expand all" goes: levels below the row, and rows drawn. */
+export const TYPE_BOUNDS = Object.freeze({ depth: 6, rows: 300 });
+
+/** The types a row sits inside: the type after every `:` of its name. */
+export const insideOf = (at) => {
+  const inside = new Set();
+  for (const segment of at.split(':').slice(1)) inside.add(Number(segment.split('.')[0]));
+  return inside;
+};
+
+/** The rows an opened type draws, `k` being the row's place in it. */
+const rowsOf = (info) => {
+  if (info === null || info.kind === 'external' || info.kind === 'enum') return [];
+  if (info.members.length > 0) {
+    return info.members.flatMap((member, k) => (member.ref === undefined ? [] : [{ k, ref: member.ref }]));
+  }
+  return info.fields.map((field, k) => ({ k, ref: field.ref }));
+};
+
+/** The named types in a row that can open: registered, and not one it sits inside. */
+const openableIn = (model, ref, inside) => {
+  const out = [];
+  for (const part of refParts(model, ref)) {
+    if (part.type === undefined || part.type < 0 || inside.has(part.type) || out.includes(part.type)) continue;
+    out.push(part.type);
+  }
+  return out;
+};
+
+/**
+ * The openings that show everything under `roots` - `{ at, ref, only? }`, a
+ * row and optionally the one type in it to open from.
+ *
+ * Breadth first, so when the bounds stop it, it is the deepest that stays
+ * closed. What `open` already holds is walked through and not counted, so
+ * asking again after a stop opens the next stretch. `left` counts the types
+ * the bounds left closed.
+ */
+export const openAll = (model, roots, open = new Set(), bounds = TYPE_BOUNDS) => {
+  const keys = [];
+  let rows = 0;
+  let left = 0;
+  const queue = roots.map((root) => ({ ...root, depth: 0 }));
+  for (let n = 0; n < queue.length; n += 1) {
+    const row = queue[n];
+    for (const type of openableIn(model, row.ref, insideOf(row.at))) {
+      if (row.only !== undefined && type !== row.only) continue;
+      const key = row.at + ':' + type;
+      const under = rowsOf(typeInfo(model, type));
+      const already = open.has(key);
+      if (!already) {
+        if (row.depth >= bounds.depth || rows + under.length + 1 > bounds.rows) {
+          left += 1;
+          continue;
+        }
+        keys.push(key);
+        rows += under.length + 1;
+      }
+      const depth = already ? row.depth : row.depth + 1;
+      for (const child of under) queue.push({ at: key + '.' + child.k, ref: child.ref, depth });
+    }
+  }
+  return { keys, left };
+};
+
+/**
+ * Writing a reference out with every named type in it opened inline, within
+ * the same bounds. A type it already sits inside, one past the bounds, one
+ * from a dependency or a template still waiting for its arguments stays its
+ * name; an enum stays its name with its values in a comment.
+ */
+const typeWriter = (model, bounds) => {
+  let rows = 0;
+  let left = 0;
+
+  const named = (type, name, pad, path, depth) => {
+    if (path.has(type)) return name;
+    const info = typeInfo(model, type);
+    if (info === null || info.kind === 'external' || info.typeParams.length > 0) return name;
+    if (info.kind === 'enum') {
+      return info.members.length > 0 ? `${name} /* ${info.members.map((m) => m.text).join(' | ')} */` : name;
+    }
+    const under = rowsOf(info);
+    if (info.members.length === 0 && info.fields.length === 0) return name;
+    if (depth >= bounds.depth || rows + under.length + 1 > bounds.rows) {
+      left += 1;
+      return name;
+    }
+    rows += under.length + 1;
+    const within = new Set(path).add(type);
+    if (info.members.length > 0) {
+      const members = info.members.map((m) => (m.ref === undefined ? m.text : write(m.ref, pad, within, depth + 1)));
+      return `(/* ${name} */ ${members.join(' | ')})`;
+    }
+    const inner = pad + '  ';
+    const fields = info.fields.map((field) =>
+      `${inner}${field.name}${field.optional ? '?' : ''}: ${write(field.ref, inner, within, depth + 1)};\n`);
+    return `{ // ${name}\n${fields.join('')}${pad}}`;
+  };
+
+  // An opened `Page` drops the `<Order>` written after it: the opening is
+  // already of `Page<Order>`.
+  const write = (ref, pad, path, depth) => {
+    let out = '';
+    let skip = 0;
+    let opened = false;
+    for (const part of refParts(model, ref)) {
+      if (part.type !== undefined) {
+        if (skip > 0) continue;
+        const text = part.type < 0 ? part.text : named(part.type, part.text, pad, path, depth);
+        opened = text !== part.text;
+        out += text;
+        continue;
+      }
+      let k = 0;
+      if (opened && part.text.startsWith('<')) [skip, k] = [1, 1];
+      opened = false;
+      for (; k < part.text.length && skip > 0; k += 1) {
+        if (part.text[k] === '<') skip += 1;
+        else if (part.text[k] === '>') skip -= 1;
+      }
+      out += part.text.slice(k);
+    }
+    return out;
+  };
+
+  return {
+    write: (ref, pad = '') => (ref < 0 ? 'unknown' : write(ref, pad, new Set(), 0)),
+    left: () => left,
+  };
+};
+
+/** Rows one to a line, each ended the way its block ends them. */
+const listed = (params, end) => params.map((p) => `  ${p.label}: ${p.type}${end}\n`).join('');
+
+const asFunction = (name, params, back) =>
+  `function ${name}(${params.length ? '\n' + listed(params, ',') : ''}): ${back};`;
+
+/** How each face is written as TypeScript, from its rows already written. */
+const TS_FACES = {
+  method: asFunction,
+  bare: asFunction,
+  route: (name, params, back) =>
+    `type Request = {${params.length ? '\n' + listed(params, ';') : ' '}};\ntype Response = ${back};`,
+  call: (name, params, back) => (params.length ? `type Sends = ${params[0].type};\n` : '') + `type GetsBack = ${back};`,
+  channel: (name, params) => `type Payload =\n${params.map((p) => `  | ${p.type}`).join('\n')};`,
+};
+
+/** The name a function is written under: its method's, or `fn` when that is no name. */
+const functionName = (label) => {
+  const name = label.slice(label.lastIndexOf('.') + 1).replace(/[^\w$]/g, '');
+  return /^[A-Za-z_$]/.test(name) ? name : 'fn';
+};
+
+/**
+ * A node's face written as TypeScript, every named type opened inline: a
+ * function as a declaration, a route as its `Request` and `Response`, a call
+ * as what it `Sends` and `GetsBack`, a channel as its `Payload`. A type it
+ * sits inside stays its name. `left` counts the types the bounds kept as
+ * names; null for a node without a face.
+ */
+export const typeScriptOf = (model, i, bounds = TYPE_BOUNDS) => {
+  const face = faceOf(model, i);
+  if (face === null) return null;
+  const writer = typeWriter(model, bounds);
+  const label = model.nodes[i][FIELD.label];
+  const params = face.params.map((param, k) => ({
+    label: param.label === ''
+      ? 'arg' + (k + 1)
+      : (param.flag === PARAM_FLAG.rest ? '...' : '') + param.label + (param.flag === PARAM_FLAG.optional ? '?' : ''),
+    type: writer.write(param.ref, face.face === 'call' ? '' : '  '),
+  }));
+  const back = face.returns < 0 ? 'unknown' : writer.write(face.returns);
+  const body = TS_FACES[face.face](functionName(label), params, back);
+  const left = writer.left();
+  const note = left > 0 ? `\n// ${left} more ${left === 1 ? 'type' : 'types'} left as names, past the bounds.` : '';
+  return { text: `// ${label}\n${body}${note}\n`, left };
+};
+
+/*
+ * Peeking: what a hover card shows - a node's face, and one level of each
+ * named type in it - without opening anything in the panel.
+ *
+ *   peekOf      one type, one level, a few rows
+ *   cardOf      a node's face as lines, with a peek at each type it names;
+ *               asked to, the rest of what it cut, up to a ceiling
+ *   panelKeysOf where the panel opens the types a card showed
+ */
+
+/**
+ * How much one card shows: lines of a face, types peeked, rows of each, and
+ * the characters a type is cut to. A card is read at a glance; the panel is
+ * where everything opens. `most` is the ceiling on rows a card holds however
+ * much of it is asked for - lines of the face, and a head and the rows of
+ * each peek - so a card stays a card (I9).
+ */
+export const CARD_BOUNDS = Object.freeze({ lines: 12, types: 4, rows: 8, chars: 72, most: 200 });
+
+/**
+ * What a card was asked to show past its first glance: all of its face's
+ * `lines`, all of its `types`, and every row of the types in `rows`.
+ */
+export const GLANCE = Object.freeze({ lines: false, types: false, rows: Object.freeze([]) });
+
+/** The rows a peek lists, by the kind of type it is. */
+const PEEK_ROWS = {
+  enum: (info) => info.members.map((member) => ({ name: '|', ref: -1, text: member.text })),
+  union: (info) => info.members.map((member) => ({ name: '|', ref: member.ref ?? -1, text: member.text })),
+  fields: (info) => info.fields.map((field) => ({ name: field.name + (field.optional ? '?' : ''), ref: field.ref })),
+};
+
+/**
+ * One type, one level: its name, kind and where it is declared, and its first
+ * fields - or members of a union or an enum - with how many more there are.
+ * A type from a dependency has no rows and says why. Null for a type the
+ * page does not hold.
+ */
+export const peekOf = (model, t, bounds = CARD_BOUNDS) => {
+  const info = typeInfo(model, t);
+  if (info === null) return null;
+  const name = info.name + (info.typeParams.length > 0 ? '<' + info.typeParams.join(', ') + '>' : '');
+  const head = { type: t, name, kind: info.kind, from: info.declaredIn };
+  if (info.kind === 'external') return { ...head, rows: [], more: 0, note: 'Declared by a dependency; its fields are not read.' };
+  const rowsOfKind = info.kind === 'enum' ? PEEK_ROWS.enum : info.members.length > 0 ? PEEK_ROWS.union : PEEK_ROWS.fields;
+  const all = rowsOfKind(info);
+  const rows = all.slice(0, bounds.rows).map((row) => ({
+    name: row.name,
+    text: middle(row.ref >= 0 ? refText(model, row.ref) : row.text, bounds.chars),
+  }));
+  return { ...head, rows, more: all.length - rows.length, note: all.length === 0 ? 'No fields recorded.' : '' };
+};
+
+/** The registered types a face names, each once, in the order it names them. */
+const namedIn = (model, face) => {
+  const out = [];
+  for (const ref of [...face.params.map((param) => param.ref), face.returns]) {
+    for (const part of refParts(model, ref)) {
+      if (part.type >= 0 && !out.includes(part.type)) out.push(part.type);
+    }
+  }
+  return out;
+};
+
+/** A type worth a peek: one with rows of its own to show. */
+const peekable = (model, t) => {
+  const info = typeInfo(model, t);
+  return info !== null && info.kind !== 'external' && (info.fields.length > 0 || info.members.length > 0);
+};
+
+/** A function on one line while it fits, else a parameter to a line. */
+const asCardFunction = (name, params, back, chars) => {
+  const end = back === '' ? '' : ' → ' + back;
+  const one = `${name}(${params.map((p) => p.text).join(', ')})${end}`;
+  return one.length <= chars ? [one] : [`${name}(`, ...params.map((p) => `  ${p.text},`), `)${end}`];
+};
+
+/** How each face is written on a card, as lines, from its parts cut short. */
+const CARD_FACES = {
+  method: asCardFunction,
+  bare: asCardFunction,
+  route: (name, params, back) => [
+    ...(params.length > 0 ? params.map((p) => p.text) : ['no request parts read']),
+    ...(back === '' ? [] : ['→ responds ' + back]),
+  ],
+  call: (name, params, back) => [
+    params.length > 0 ? (params[0].label === 'payload' ? 'emits ' : 'sends ') + params[0].type : 'sends nothing typed',
+    ...(back === '' ? [] : ['→ gets back ' + back]),
+  ],
+  channel: (name, params) => (params.length === 1
+    ? ['payload ' + params[0].type]
+    : ['payload', ...params.map((p) => '  | ' + p.type)]),
+};
+
+/**
+ * What a hover card shows for a node: its face as `lines` (a function on one
+ * line while it fits, else a parameter to a line), `more` lines past the
+ * bounds, a peek at each type it names, and `left` types past the bounds.
+ * `wide` says what of the cut was asked for after all (see GLANCE); however
+ * much is, the card holds at most `bounds.most` rows, and `capped` says the
+ * ceiling, not the glance, is what still leaves something out.
+ * Null for a node without a face.
+ */
+export const cardOf = (model, i, bounds = CARD_BOUNDS, wide = GLANCE) => {
+  const face = faceOf(model, i);
+  if (face === null) return null;
+  const label = model.nodes[i][FIELD.label];
+  const params = face.params.map((param) => ({
+    label: param.label,
+    type: middle(refText(model, param.ref), bounds.chars),
+    text: middle(paramText(model, param), bounds.chars),
+  }));
+  const back = face.returns < 0 ? '' : middle(refText(model, face.returns), bounds.chars);
+  const all = CARD_FACES[face.face](label.slice(label.lastIndexOf('.') + 1), params, back, bounds.chars);
+  let room = bounds.most;
+  const lines = all.slice(0, Math.min(wide.lines ? all.length : bounds.lines, room));
+  room -= lines.length;
+  const types = namedIn(model, face).filter((t) => peekable(model, t));
+  const asked = wide.types ? types : types.slice(0, bounds.types);
+  const peeks = [];
+  // A peek is its head and its rows; one with no room for a row is not begun.
+  for (const t of asked) {
+    if (room < 2) break;
+    const rows = Math.min(wide.rows.includes(t) ? Infinity : bounds.rows, room - 1);
+    const peek = peekOf(model, t, { ...bounds, rows });
+    room -= 1 + peek.rows.length;
+    peeks.push(peek);
+  }
+  const more = all.length - lines.length;
+  const left = types.length - peeks.length;
+  const cut = more > 0 || left > 0 || peeks.some((peek) => peek.more > 0);
+  return { face: face.face, lines, more, peeks, left, capped: cut && room < 2 };
+};
+
+/**
+ * Where the panel opens the types a card showed: one level each, in every
+ * row of the face that names it - a parameter `p<k>`, what comes back `r` -
+ * by the keys the panel's own opening uses, so a click carries over what
+ * the card had on it.
+ */
+export const panelKeysOf = (model, i, types) => {
+  const face = faceOf(model, i);
+  if (face === null) return [];
+  const rows = [
+    ...face.params.map((param, k) => ({ at: 'p' + k, ref: param.ref })),
+    ...(face.returns >= 0 ? [{ at: 'r', ref: face.returns }] : []),
+  ];
+  const keys = [];
+  for (const { at, ref } of rows) {
+    for (const part of refParts(model, ref)) {
+      const key = at + ':' + part.type;
+      if (types.includes(part.type) && !keys.includes(key)) keys.push(key);
+    }
+  }
+  return keys;
 };
 
 /*

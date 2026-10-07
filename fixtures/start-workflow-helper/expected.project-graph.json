@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T21:13:58.725Z",
+  "builtAt": "2026-10-07T14:35:01.053Z",
   "services": [
     {
       "name": "lending",
@@ -253,7 +253,22 @@
       "label": "WorkflowClient.start",
       "repo": "lending",
       "file": "../packages/workflows/src/index.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "stateMachineArn",
+              "type": "string|undefined"
+            },
+            {
+              "name": "input",
+              "type": "unknown"
+            }
+          ],
+          "returns": "string|undefined"
+        }
+      }
     },
     {
       "id": "lending#src/handlers/check-borrower.ts:handler",

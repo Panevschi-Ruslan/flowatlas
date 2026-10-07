@@ -306,6 +306,33 @@ only one of them moved.
   taken zoomed out has every name in it. Escape closes the search's list, then
   the panel, then the answer, then full screen, one at a time. The minimap
   keeps to a small box in its corner whatever the drawing's shape.
+- **What a function takes and gives back, in the Graph tab.** The details panel
+  shows a method's parameters by name and type and what it returns
+  (`create(dto: CreateOrder, note?: string) → Order`), a route's body, path
+  params, query and headers and what it responds with, what a call sends and
+  expects back, and what a channel's producers put on it. Every named type opens
+  underneath to its fields, an enum to its values, a union to its members, as
+  deep as asked, or all at once: *expand all* on a row or `E` on a type opens
+  everything under it, the section's *Expand all* and *Collapse all* every row,
+  a type holding itself is marked `↻ … — see above` rather than opened again,
+  and one opening stops at six levels or three hundred rows and says how many
+  it left closed. *Copy as TypeScript* copies the face with every type written
+  out inline. A node with nothing recorded says so. *Types* above the drawing,
+  or `T`, writes the same on one line under every node, remembered in the
+  browser and not put in the link. The NestJS reader records each method's
+  parameter names on its node as `meta.signature`
+  (`{ params: [{ name, type, optional?, rest? }], returns }`); the edges keep
+  their bare `params` and `returns`. The page ships only the types those reach:
+  on a real five-service project 3,808 nodes have a face and 1,180 types are
+  shipped, and the page grows from 1,466 KB to 1,998 KB. Hovering a node, or
+  moving the keys onto it, shows the same in a card beside it with one level of
+  each type it names (four types of eight rows at most, the rest counted), and
+  hovering a type in the details peeks at its fields without opening it; the
+  card replaces the node's browser tooltip and never shows on a touch. The
+  pointer can move onto the card, which scrolls, and what it counted opens
+  there: *+N more — show* on a type, the rest of a long face, the types it left
+  out, up to 200 rows a card. A type's name on it, its title, or a click on its
+  node opens the details with what the card showed already open.
 - **`visualise --editor-links <vscode|cursor|idea|file>`** makes every
   `file:line` on the page open in that editor. Off by default: it writes each
   repository's absolute local path into the page.

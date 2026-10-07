@@ -73,8 +73,15 @@ export {
 } from './model/edges.js';
 export type { Confidence, EdgeType, GraphEdge } from './model/edges.js';
 
-export { TYPE_KINDS } from './model/types.js';
-export type { TypeEntry, TypeField, TypeKind, TypeRegistry } from './model/types.js';
+export { SIGNATURE_META, TYPE_KINDS } from './model/types.js';
+export type {
+  Signature,
+  SignatureParam,
+  TypeEntry,
+  TypeField,
+  TypeKind,
+  TypeRegistry,
+} from './model/types.js';
 
 export {
   DEFAULT_DETAIL,

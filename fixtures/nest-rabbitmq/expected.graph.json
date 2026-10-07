@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-rabbitmq",
-  "generatedAt": "2026-10-06T21:46:15.086Z",
+  "generatedAt": "2026-10-07T14:34:27.869Z",
   "nodes": [
     {
       "id": "channel:order.cancelled",
@@ -215,7 +215,22 @@
       "label": "OrdersConsumer.onOrderCreated",
       "repo": "nest-rabbitmq",
       "file": "src/orders/orders.consumer.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-rabbitmq#OrderCreatedEvent"
+            },
+            {
+              "name": "amqpMsg",
+              "type": "type:amqplib#ConsumeMessage"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-rabbitmq#src/orders/orders.consumer.ts:OrdersConsumer.onOrderRefunded",
@@ -223,7 +238,18 @@
       "label": "OrdersConsumer.onOrderRefunded",
       "repo": "nest-rabbitmq",
       "file": "src/orders/orders.consumer.ts",
-      "line": 33
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-rabbitmq#OrderRefundedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-rabbitmq#src/orders/orders.controller.ts:OrdersController",
@@ -243,7 +269,18 @@
       "label": "OrdersController.onOrderCancelled",
       "repo": "nest-rabbitmq",
       "file": "src/orders/orders.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-rabbitmq#OrderCancelledEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService",
@@ -263,7 +300,18 @@
       "label": "OrdersService.cancel",
       "repo": "nest-rabbitmq",
       "file": "src/orders/orders.service.ts",
-      "line": 54
+      "line": 54,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-rabbitmq#OrderCancelledEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService.create",
@@ -271,7 +319,18 @@
       "label": "OrdersService.create",
       "repo": "nest-rabbitmq",
       "file": "src/orders/orders.service.ts",
-      "line": 33
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-rabbitmq#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService.publishTo",
@@ -279,7 +338,22 @@
       "label": "OrdersService.publishTo",
       "repo": "nest-rabbitmq",
       "file": "src/orders/orders.service.ts",
-      "line": 47
+      "line": 47,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "routingKey",
+              "type": "string"
+            },
+            {
+              "name": "event",
+              "type": "type:nest-rabbitmq#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-rabbitmq#src/orders/orders.service.ts:OrdersService.refund",
@@ -287,7 +361,18 @@
       "label": "OrdersService.refund",
       "repo": "nest-rabbitmq",
       "file": "src/orders/orders.service.ts",
-      "line": 40
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-rabbitmq#OrderRefundedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "producer:nest-rabbitmq#src/orders/orders.service.ts:34:12",
@@ -454,6 +539,19 @@
         "type:amqplib#ConsumeMessage"
       ],
       "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "event",
+            "type": "type:nest-rabbitmq#OrderCreatedEvent"
+          },
+          {
+            "name": "amqpMsg",
+            "type": "type:amqplib#ConsumeMessage"
+          }
+        ],
+        "returns": "void"
+      },
       "meta": {
         "body": "type:nest-rabbitmq#OrderCreatedEvent"
       }
@@ -469,6 +567,15 @@
         "type:nest-rabbitmq#OrderRefundedEvent"
       ],
       "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "event",
+            "type": "type:nest-rabbitmq#OrderRefundedEvent"
+          }
+        ],
+        "returns": "void"
+      },
       "meta": {
         "body": "type:nest-rabbitmq#OrderRefundedEvent"
       }

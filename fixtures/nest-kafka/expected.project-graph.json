@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T21:46:01.188Z",
+  "builtAt": "2026-10-07T14:34:14.935Z",
   "services": [
     {
       "name": "nest-kafka",
@@ -484,7 +484,18 @@
       "label": "OrdersController.getOrder",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 63
+      "line": 63,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "query",
+              "type": "type:nest-kafka#OrderQuery"
+            }
+          ],
+          "returns": "type:nest-kafka#Order"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.getOrderRaw",
@@ -492,7 +503,18 @@
       "label": "OrdersController.getOrderRaw",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 70
+      "line": 70,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "query",
+              "type": "type:nest-kafka#OrderQuery"
+            }
+          ],
+          "returns": "any"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onAnything",
@@ -500,7 +522,18 @@
       "label": "OrdersController.onAnything",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 47
+      "line": 47,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onAudit",
@@ -508,7 +541,22 @@
       "label": "OrdersController.onAudit",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 55
+      "line": 55,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-kafka#OrderCreatedEvent"
+            },
+            {
+              "name": "context",
+              "type": "type:@nestjs/microservices#KafkaContext"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onChecksum",
@@ -516,7 +564,18 @@
       "label": "OrdersController.onChecksum",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 40
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-kafka#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderCreated",
@@ -524,7 +583,18 @@
       "label": "OrdersController.onOrderCreated",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-kafka#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderPaid",
@@ -532,7 +602,18 @@
       "label": "OrdersController.onOrderPaid",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-kafka#OrderPaidEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.controller.ts:OrdersController.onOrderSync",
@@ -540,7 +621,18 @@
       "label": "OrdersController.onOrderSync",
       "repo": "nest-kafka",
       "file": "src/orders/orders.controller.ts",
-      "line": 32
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:nest-kafka#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService",
@@ -560,7 +652,18 @@
       "label": "OrdersService.archive",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 71
+      "line": 71,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-kafka#OrderArchivedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.checksum",
@@ -568,7 +671,18 @@
       "label": "OrdersService.checksum",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 103
+      "line": 103,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-kafka#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.create",
@@ -576,7 +690,18 @@
       "label": "OrdersService.create",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 34
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-kafka#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitConfigured",
@@ -584,7 +709,18 @@
       "label": "OrdersService.emitConfigured",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 111
+      "line": 111,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-kafka#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitDynamic",
@@ -592,7 +728,22 @@
       "label": "OrdersService.emitDynamic",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 116
+      "line": 116,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "topic",
+              "type": "string"
+            },
+            {
+              "name": "dto",
+              "type": "type:nest-kafka#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitLegacy",
@@ -600,7 +751,18 @@
       "label": "OrdersService.emitLegacy",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 90
+      "line": 90,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-kafka#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitRegional",
@@ -608,7 +770,18 @@
       "label": "OrdersService.emitRegional",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 84
+      "line": 84,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-kafka#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.emitSpread",
@@ -616,7 +789,19 @@
       "label": "OrdersService.emitSpread",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 122
+      "line": 122,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "args",
+              "type": "[string,type:nest-kafka#OrderCreatedEvent]",
+              "rest": true
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.getAnything",
@@ -624,7 +809,18 @@
       "label": "OrdersService.getAnything",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 135
+      "line": 135,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "query",
+              "type": "type:nest-kafka#OrderQuery"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.getOrder",
@@ -632,7 +828,18 @@
       "label": "OrdersService.getOrder",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 129
+      "line": 129,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "query",
+              "type": "type:nest-kafka#OrderQuery"
+            }
+          ],
+          "returns": "type:nest-kafka#Order"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.importAll",
@@ -640,7 +847,18 @@
       "label": "OrdersService.importAll",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 48
+      "line": 48,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "rows",
+              "type": "type:nest-kafka#OrderCreatedEvent[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.markPaid",
@@ -648,7 +866,18 @@
       "label": "OrdersService.markPaid",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 58
+      "line": 58,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-kafka#OrderPaidEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.replay",
@@ -656,7 +885,18 @@
       "label": "OrdersService.replay",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 41
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-kafka#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.ship",
@@ -664,7 +904,18 @@
       "label": "OrdersService.ship",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 65
+      "line": 65,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-kafka#OrderShippedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.sync",
@@ -672,7 +923,18 @@
       "label": "OrdersService.sync",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 77
+      "line": 77,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-kafka#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/orders.service.ts:OrdersService.track",
@@ -680,7 +942,18 @@
       "label": "OrdersService.track",
       "repo": "nest-kafka",
       "file": "src/orders/orders.service.ts",
-      "line": 142
+      "line": 142,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "dto",
+              "type": "type:nest-kafka#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-kafka#src/orders/telemetry.service.ts:TelemetryService",
@@ -700,7 +973,22 @@
       "label": "TelemetryService.emit",
       "repo": "nest-kafka",
       "file": "src/orders/telemetry.service.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "attributes",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "producer:nest-kafka#src/orders/orders.service.ts:104:5",

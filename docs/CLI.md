@@ -791,13 +791,53 @@ graph, which on a real project is ten thousand boxes and says nothing:
   a busy side is, so a helper used by ninety methods is a few groups. They do
   not expand; *Centre here* follows one. The line under the drawing counts them
   apart.
+- **What it takes and gives back.** *Types* above the drawing, or `T`, writes a
+  third line under every node: a method's parameters and what it returns
+  (`(dto: CreateOrder, note?: string) → Order`), a route's request parts and
+  response (`body: CreateOrder · params: { id: string } → Order`), what a call
+  sends and expects back, what a producer emits and a channel carries. Long
+  lines are shortened in the middle; the hover card gives the whole. A method or call
+  whose types were not read says *types not recorded*. The setting is kept in
+  the browser, not in the link. Types are read for NestJS methods and routes and
+  for typed calls and payloads; a front end's own methods and a handler with no
+  types have none.
+- **The hover card.** Resting the pointer on a node, or moving the keys onto
+  one, shows a card beside it with its full name, owner, service and
+  `file:line`, what it takes and gives back (a function on one line while it
+  fits, else a parameter to a line; a route's request parts and response; what
+  a call sends and expects back; a channel's payload), and one level of each
+  type it names: up to four types of eight rows each, the rest counted. A node
+  whose types were not read says so. Resting on a type in the details panel
+  peeks at its fields the same way without opening it. The card works with
+  *Types* on or off, keeps inside the window, goes on Escape, a scroll, a pan
+  or a zoom, and never shows on a touch, where a tap opens the details.
+  The pointer can move onto the card and stay; past a height it scrolls. What
+  it counted is shown there on a click — *+12 more — show* lists every row of
+  that type, *… N more lines — show* the rest of the face, *N more types —
+  show* the types it left out — up to 200 rows a card, past which it says the
+  rest is in the details. Clicking a type's name on the card opens the details
+  with that type open; clicking the card's title, or the node while its card
+  is up (or Enter on it from the keys), opens the details with every type the
+  card showed open one level.
 - **The details panel.** Clicking a node opens its type, kind, label, service,
   `file:line` and the metadata the graph holds for it (verb and path, table,
   channel kind, deployed name, which reader read it and how its name was read),
   its edges in and out grouped by type with the far node's service and the
   edge's confidence, and its problems: the rows that name it, with their reasons
   and hints, the rows that name no node but sit at its line, said apart, and
-  below them the rows elsewhere in its file. From it: *Centre here*, *Expand*,
+  below them the rows elsewhere in its file. Above the edges, what the node takes
+  and gives back, named as the face line is: each named type is a link that
+  opens its fields underneath, an enum its values and a union its members, as
+  deep as asked, and says where it is declared; a type from a dependency says
+  so rather than opening. *expand all* on a row, or `E` on a type, opens
+  everything under it at once, and the section's *Expand all* every row of it;
+  a type already open above it is marked `↻ Name — see above` instead of
+  opening again. One opening stops at six levels or three hundred rows and says
+  how many types it left closed; asking there again opens the next stretch.
+  *Collapse all* closes them, and *Copy as TypeScript* copies the same face
+  with every type written out inline (`function create(dto: { // CreateOrder …
+  }): { // Order … };`, a route as `type Request` and `type Response`), within
+  the same bounds, a type inside itself kept as its name. From it: *Centre here*, *Expand*,
   *Who else uses this* with its count, *Open in Walk* for a way in, *Path from here*, *Path to here* and
   *Impact*. Clicking a node in its lists walks on to it.
 - **Problems.** A node carrying rows is badged with the count on its top edge,

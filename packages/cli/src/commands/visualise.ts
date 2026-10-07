@@ -137,6 +137,7 @@ export const runVisualise = (options: VisualiseOptions = {}): VisualiseResult =>
       edges,
       unresolved: db.allUnresolved(),
       report,
+      typeOf: (id) => db.type(id),
       ...(editor === undefined ? {} : { editor }),
     });
   } finally {

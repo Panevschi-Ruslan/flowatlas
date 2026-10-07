@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:51.419Z",
+  "builtAt": "2026-10-07T14:33:56.316Z",
   "services": [
     {
       "name": "gateway",
@@ -88,7 +88,18 @@
       "label": "InvoicesConsumer.onOrderCreated",
       "repo": "billing",
       "file": "src/invoices/invoices.consumer.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:billing#OrderCreatedEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "billing#src/invoices/orders.rpc.client.ts:OrdersRpcClient",
@@ -108,7 +119,18 @@
       "label": "OrdersRpcClient.ask",
       "repo": "billing",
       "file": "src/invoices/orders.rpc.client.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "query",
+              "type": "type:billing#GetOrderQuery"
+            }
+          ],
+          "returns": "type:billing#OrderDto"
+        }
+      }
     },
     {
       "id": "channel:order.created",
@@ -551,7 +573,18 @@
       "label": "OrdersClient.address",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 39
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:gateway#AddressDto"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#AddressDto>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.batchDrafts",
@@ -559,7 +592,18 @@
       "label": "OrdersClient.batchDrafts",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 148
+      "line": 148,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:gateway#BatchDraftDto[]"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#DraftResultDto[]>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.create",
@@ -567,7 +611,18 @@
       "label": "OrdersClient.create",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:gateway#CreateOrderDto"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#OrderDto>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.draftDeclared",
@@ -575,7 +630,18 @@
       "label": "OrdersClient.draftDeclared",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 63
+      "line": 63,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:gateway#DraftDto"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#DraftResultDto>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.draftSpread",
@@ -583,7 +649,18 @@
       "label": "OrdersClient.draftSpread",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 73
+      "line": 73,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "base",
+              "type": "type:gateway#DraftDto"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#DraftResultDto>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.draftWritten",
@@ -591,7 +668,13 @@
       "label": "OrdersClient.draftWritten",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 50
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:axios#AxiosResponse<type:gateway#DraftResultDto>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchDraft",
@@ -599,7 +682,18 @@
       "label": "OrdersClient.fetchDraft",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 86
+      "line": 86,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#DraftResultDto>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
@@ -607,7 +701,18 @@
       "label": "OrdersClient.fetchOne",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#OrderDto>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.legacy",
@@ -617,6 +722,15 @@
       "file": "src/clients/orders.client.ts",
       "line": 98,
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:gateway#CreateOrderDto"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#OrderDto>"
+        },
         "markers": [
           {
             "name": "ContractIgnore",
@@ -631,7 +745,13 @@
       "label": "OrdersClient.previewDraft",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 133
+      "line": 133,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:axios#AxiosResponse<type:gateway#DraftResultDto>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.price",
@@ -639,7 +759,18 @@
       "label": "OrdersClient.price",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 34
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:@fx/wire#MoneyDto"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:@fx/wire#MoneyDto>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.storeDraft",
@@ -647,7 +778,13 @@
       "label": "OrdersClient.storeDraft",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 109
+      "line": 109,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:axios#AxiosResponse<type:gateway#DraftResultDto>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.tagDraft",
@@ -655,7 +792,13 @@
       "label": "OrdersClient.tagDraft",
       "repo": "gateway",
       "file": "src/clients/orders.client.ts",
-      "line": 121
+      "line": 121,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:axios#AxiosResponse<type:gateway#DraftResultDto>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/wire.client.ts:WireClient",
@@ -675,7 +818,18 @@
       "label": "WireClient.send",
       "repo": "gateway",
       "file": "src/clients/wire.client.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:gateway#WireDto"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<void>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/wire.client.ts:WireClient.sendBroken",
@@ -683,7 +837,18 @@
       "label": "WireClient.sendBroken",
       "repo": "gateway",
       "file": "src/clients/wire.client.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:gateway#WireBrokenDto"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<void>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/wire.client.ts:WireClient.sendCategory",
@@ -691,7 +856,18 @@
       "label": "WireClient.sendCategory",
       "repo": "gateway",
       "file": "src/clients/wire.client.ts",
-      "line": 32
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:gateway#CategoryDto"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<void>"
+        }
+      }
     },
     {
       "id": "gateway#src/clients/wire.client.ts:WireClient.sendDeep",
@@ -699,7 +875,18 @@
       "label": "WireClient.sendDeep",
       "repo": "gateway",
       "file": "src/clients/wire.client.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:gateway#DeepDto"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<void>"
+        }
+      }
     },
     {
       "id": "http_out:gateway#src/clients/orders.client.ts:100:12",
@@ -1135,7 +1322,18 @@
       "label": "DeepController.accept",
       "repo": "orders",
       "file": "src/deep/deep.controller.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#DeepDto"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "orders#src/deep/deep.controller.ts:DeepController.categories",
@@ -1143,7 +1341,18 @@
       "label": "DeepController.categories",
       "repo": "orders",
       "file": "src/deep/deep.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#CategoryDto"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.controller.ts:OrdersController",
@@ -1163,7 +1372,18 @@
       "label": "OrdersController.address",
       "repo": "orders",
       "file": "src/orders/orders.controller.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#AddressDto"
+            }
+          ],
+          "returns": "type:orders#AddressDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.controller.ts:OrdersController.batchDrafts",
@@ -1171,7 +1391,18 @@
       "label": "OrdersController.batchDrafts",
       "repo": "orders",
       "file": "src/orders/orders.controller.ts",
-      "line": 109
+      "line": 109,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#CreateDraftDto[]"
+            }
+          ],
+          "returns": "type:orders#CreateDraftDto[]"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.controller.ts:OrdersController.create",
@@ -1179,7 +1410,18 @@
       "label": "OrdersController.create",
       "repo": "orders",
       "file": "src/orders/orders.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#CreateOrderDto"
+            }
+          ],
+          "returns": "type:orders#OrderDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.controller.ts:OrdersController.draft",
@@ -1187,7 +1429,18 @@
       "label": "OrdersController.draft",
       "repo": "orders",
       "file": "src/orders/orders.controller.ts",
-      "line": 49
+      "line": 49,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#CreateDraftDto"
+            }
+          ],
+          "returns": "type:orders#CreateDraftDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
@@ -1195,7 +1448,18 @@
       "label": "OrdersController.findOne",
       "repo": "orders",
       "file": "src/orders/orders.controller.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:orders#OrderDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.controller.ts:OrdersController.legacy",
@@ -1203,7 +1467,18 @@
       "label": "OrdersController.legacy",
       "repo": "orders",
       "file": "src/orders/orders.controller.ts",
-      "line": 68
+      "line": 68,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#CreateOrderDto"
+            }
+          ],
+          "returns": "type:orders#OrderDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.controller.ts:OrdersController.previewDraft",
@@ -1211,7 +1486,18 @@
       "label": "OrdersController.previewDraft",
       "repo": "orders",
       "file": "src/orders/orders.controller.ts",
-      "line": 95
+      "line": 95,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#CreateDraftDto"
+            }
+          ],
+          "returns": "type:orders#CreateDraftDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.controller.ts:OrdersController.price",
@@ -1219,7 +1505,18 @@
       "label": "OrdersController.price",
       "repo": "orders",
       "file": "src/orders/orders.controller.ts",
-      "line": 28
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:@fx/wire#MoneyDto"
+            }
+          ],
+          "returns": "type:@fx/wire#MoneyDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.controller.ts:OrdersController.readDraft",
@@ -1227,7 +1524,18 @@
       "label": "OrdersController.readDraft",
       "repo": "orders",
       "file": "src/orders/orders.controller.ts",
-      "line": 62
+      "line": 62,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:orders#CreateDraftDto|type:orders#LockedDraftDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.controller.ts:OrdersController.storeDraft",
@@ -1235,7 +1543,18 @@
       "label": "OrdersController.storeDraft",
       "repo": "orders",
       "file": "src/orders/orders.controller.ts",
-      "line": 83
+      "line": 83,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#CreateDraftDto"
+            }
+          ],
+          "returns": "type:orders#CreateDraftDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.controller.ts:OrdersController.tagDraft",
@@ -1243,7 +1562,18 @@
       "label": "OrdersController.tagDraft",
       "repo": "orders",
       "file": "src/orders/orders.controller.ts",
-      "line": 89
+      "line": 89,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#CreateDraftDto"
+            }
+          ],
+          "returns": "type:orders#CreateDraftDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService",
@@ -1263,7 +1593,18 @@
       "label": "OrdersService.address",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 45
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#AddressDto"
+            }
+          ],
+          "returns": "type:orders#AddressDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService.create",
@@ -1271,7 +1612,18 @@
       "label": "OrdersService.create",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 63
+      "line": 63,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#CreateOrderDto"
+            }
+          ],
+          "returns": "type:orders#OrderDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService.draft",
@@ -1279,7 +1631,18 @@
       "label": "OrdersService.draft",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 49
+      "line": 49,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#CreateDraftDto"
+            }
+          ],
+          "returns": "type:orders#CreateDraftDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
@@ -1287,7 +1650,18 @@
       "label": "OrdersService.findOne",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:orders#OrderDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService.previewDraft",
@@ -1295,7 +1669,18 @@
       "label": "OrdersService.previewDraft",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 33
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#CreateDraftDto"
+            }
+          ],
+          "returns": "type:orders#CreateDraftDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService.price",
@@ -1303,7 +1688,18 @@
       "label": "OrdersService.price",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 41
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:@fx/wire#MoneyDto"
+            }
+          ],
+          "returns": "type:@fx/wire#MoneyDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService.readDraft",
@@ -1311,7 +1707,18 @@
       "label": "OrdersService.readDraft",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 53
+      "line": 53,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:orders#CreateDraftDto|type:orders#LockedDraftDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService.storeDraft",
@@ -1319,7 +1726,18 @@
       "label": "OrdersService.storeDraft",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#CreateDraftDto"
+            }
+          ],
+          "returns": "type:orders#CreateDraftDto"
+        }
+      }
     },
     {
       "id": "orders#src/orders/orders.service.ts:OrdersService.storeDrafts",
@@ -1327,7 +1745,18 @@
       "label": "OrdersService.storeDrafts",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
-      "line": 80
+      "line": 80,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#CreateDraftDto[]"
+            }
+          ],
+          "returns": "type:orders#CreateDraftDto[]"
+        }
+      }
     },
     {
       "id": "orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController",
@@ -1347,7 +1776,18 @@
       "label": "OrdersRpcController.get",
       "repo": "orders",
       "file": "src/rpc/orders.rpc.controller.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "query",
+              "type": "type:orders#GetOrderQuery"
+            }
+          ],
+          "returns": "type:orders#OrderDto"
+        }
+      }
     },
     {
       "id": "orders#src/wire/wire.controller.ts:WireController",
@@ -1367,7 +1807,18 @@
       "label": "WireController.accept",
       "repo": "orders",
       "file": "src/wire/wire.controller.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#WireDto"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "orders#src/wire/wire.controller.ts:WireController.broken",
@@ -1375,7 +1826,18 @@
       "label": "WireController.broken",
       "repo": "orders",
       "file": "src/wire/wire.controller.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders#WireBrokenDto"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "producer:billing#src/invoices/orders.rpc.client.ts:15:12",

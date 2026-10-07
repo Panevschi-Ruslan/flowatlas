@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-pg",
-  "generatedAt": "2026-10-06T11:32:12.960Z",
+  "generatedAt": "2026-10-07T14:34:26.134Z",
   "nodes": [
     {
       "id": "db_query:nest-pg#src/orders/orders.service.ts:10:12",
@@ -222,7 +222,13 @@
       "label": "OrdersController.create",
       "repo": "nest-pg",
       "file": "src/orders/orders.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-pg#src/orders/orders.controller.ts:OrdersController.findAll",
@@ -230,7 +236,13 @@
       "label": "OrdersController.findAll",
       "repo": "nest-pg",
       "file": "src/orders/orders.controller.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-pg#src/orders/orders.service.ts:OrdersService",
@@ -250,7 +262,18 @@
       "label": "OrdersService.create",
       "repo": "nest-pg",
       "file": "src/orders/orders.service.ts",
-      "line": 22
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-pg#src/orders/orders.service.ts:OrdersService.findAll",
@@ -258,7 +281,13 @@
       "label": "OrdersService.findAll",
       "repo": "nest-pg",
       "file": "src/orders/orders.service.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-pg#src/orders/orders.service.ts:OrdersService.findWithCustomer",
@@ -266,7 +295,18 @@
       "label": "OrdersService.findWithCustomer",
       "repo": "nest-pg",
       "file": "src/orders/orders.service.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-pg#src/orders/orders.service.ts:OrdersService.invoices",
@@ -274,7 +314,13 @@
       "label": "OrdersService.invoices",
       "repo": "nest-pg",
       "file": "src/orders/orders.service.ts",
-      "line": 37
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-pg#src/orders/orders.service.ts:OrdersService.markPaid",
@@ -282,7 +328,18 @@
       "label": "OrdersService.markPaid",
       "repo": "nest-pg",
       "file": "src/orders/orders.service.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-pg#src/orders/orders.service.ts:OrdersService.recentTotals",
@@ -290,7 +347,13 @@
       "label": "OrdersService.recentTotals",
       "repo": "nest-pg",
       "file": "src/orders/orders.service.ts",
-      "line": 43
+      "line": 43,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-pg#src/orders/orders.service.ts:OrdersService.remove",
@@ -298,7 +361,18 @@
       "label": "OrdersService.remove",
       "repo": "nest-pg",
       "file": "src/orders/orders.service.ts",
-      "line": 32
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "nest-pg#src/orders/orders.service.ts:OrdersService.search",
@@ -306,7 +380,22 @@
       "label": "OrdersService.search",
       "repo": "nest-pg",
       "file": "src/orders/orders.service.ts",
-      "line": 51
+      "line": 51,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "column",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "repo:nest-pg",

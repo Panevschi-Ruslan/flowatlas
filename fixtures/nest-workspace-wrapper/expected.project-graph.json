@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:22.942Z",
+  "builtAt": "2026-10-07T14:34:37.522Z",
   "services": [
     {
       "name": "api",
@@ -46,7 +46,13 @@
       "label": "OrdersController.all",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@acme/db#Order[]"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:OrdersController.recent",
@@ -54,7 +60,13 @@
       "label": "OrdersController.recent",
       "repo": "api",
       "file": "src/orders/orders.controller.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@acme/db#Order[]"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService",
@@ -74,7 +86,13 @@
       "label": "OrdersService.all",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 24
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@acme/db#Order[]"
+        }
+      }
     },
     {
       "id": "api#src/orders/orders.service.ts:OrdersService.recent",
@@ -82,7 +100,13 @@
       "label": "OrdersService.recent",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@acme/db#Order[]"
+        }
+      }
     },
     {
       "id": "entry:api:http:GET:/orders",

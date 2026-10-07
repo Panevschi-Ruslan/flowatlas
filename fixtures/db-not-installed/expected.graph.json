@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "db-not-installed",
-  "generatedAt": "2026-10-06T11:31:39.382Z",
+  "generatedAt": "2026-10-07T14:33:27.263Z",
   "nodes": [
     {
       "id": "db-not-installed#src/app.module.ts:AppModule",
@@ -38,7 +38,18 @@
       "label": "AssetsService.create",
       "repo": "db-not-installed",
       "file": "src/assets/assets.service.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "db-not-installed#src/assets/assets.service.ts:AssetsService.findAll",
@@ -46,7 +57,13 @@
       "label": "AssetsService.findAll",
       "repo": "db-not-installed",
       "file": "src/assets/assets.service.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "db-not-installed#src/assets/assets.service.ts:AssetsService.remove",
@@ -54,7 +71,18 @@
       "label": "AssetsService.remove",
       "repo": "db-not-installed",
       "file": "src/assets/assets.service.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "db-not-installed#src/assets/with-faces.ts:withFaces",
@@ -82,7 +110,18 @@
       "label": "DocumentsService.create",
       "repo": "db-not-installed",
       "file": "src/documents/documents.service.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "title",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "db-not-installed#src/documents/documents.service.ts:DocumentsService.findAll",
@@ -90,7 +129,13 @@
       "label": "DocumentsService.findAll",
       "repo": "db-not-installed",
       "file": "src/documents/documents.service.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
     },
     {
       "id": "db_query:db-not-installed#src/assets/assets.service.ts:20:12",

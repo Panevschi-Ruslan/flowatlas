@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-two-applications",
-  "generatedAt": "2026-10-06T11:32:20.195Z",
+  "generatedAt": "2026-10-07T14:34:34.365Z",
   "nodes": [
     {
       "id": "entry:nest-two-applications:http:GET:/legacy",
@@ -121,7 +121,13 @@
       "label": "HealthController.check",
       "repo": "nest-two-applications",
       "file": "src/health/health.controller.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-two-applications#src/health/health.module.ts:HealthModule",
@@ -154,7 +160,13 @@
       "label": "LegacyController.list",
       "repo": "nest-two-applications",
       "file": "src/legacy/legacy.controller.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-two-applications#src/legacy/legacy.module.ts:LegacyModule",
@@ -188,7 +200,13 @@
       "label": "StatusController.status",
       "repo": "nest-two-applications",
       "file": "src/shared/status.controller.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-two-applications#src/worker/worker-health.controller.ts:WorkerHealthController",
@@ -208,7 +226,13 @@
       "label": "WorkerHealthController.check",
       "repo": "nest-two-applications",
       "file": "src/worker/worker-health.controller.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-two-applications#src/worker/worker.module.ts:WorkerModule",

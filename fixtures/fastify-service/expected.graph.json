@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "fastify-service",
-  "generatedAt": "2026-10-06T11:31:42.695Z",
+  "generatedAt": "2026-10-07T14:33:32.416Z",
   "nodes": [
     {
       "id": "db_query:fastify-service#src/orders/orders.repository.ts:12:12",
@@ -200,7 +200,18 @@
       "label": "OrdersRepository.byId",
       "repo": "fastify-service",
       "file": "src/orders/orders.repository.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "fastify-service#src/orders/orders.repository.ts:OrdersRepository.insert",
@@ -208,7 +219,18 @@
       "label": "OrdersRepository.insert",
       "repo": "fastify-service",
       "file": "src/orders/orders.repository.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "fastify-service#src/orders/orders.repository.ts:OrdersRepository.list",
@@ -216,7 +238,13 @@
       "label": "OrdersRepository.list",
       "repo": "fastify-service",
       "file": "src/orders/orders.repository.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "fastify-service#src/orders/orders.routes.ts:DELETE /:orderId@48",

@@ -1,6 +1,7 @@
-import { STEP_OF_META, type GraphEdge, type GraphNode } from '@flowatlas/core';
+import { STEP_OF_META, type GraphEdge, type GraphNode, type TypeEntry } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { stableKeys, type PackedKeys } from './keys.js';
+import { packShapes, type PackedShapes } from './shapes.js';
 
 /**
  * The graph, small enough to ship inside one file.
@@ -62,6 +63,11 @@ export interface PackedGraph {
    * Absent by default, since it writes local paths into the page.
    */
   editor?: { name: string; roots: Array<string | null> };
+  /**
+   * What each function takes and gives back, a route's request, a call's and
+   * a channel's payload, and the types those reach. See `shapes.ts`.
+   */
+  shapes: PackedShapes;
   report: unknown;
 }
 
@@ -191,6 +197,8 @@ export interface PackInput {
   report: LinkReport;
   /** The editor `--editor-links` names, and where each service's sources are. */
   editor?: { name: string; rootOf: (service: string) => string | undefined };
+  /** The type registry, one entry at a time; without it no type opens to its fields. */
+  typeOf?: (id: string) => TypeEntry | undefined;
 }
 
 export const packGraph = (input: PackInput): PackedGraph => {
@@ -276,6 +284,12 @@ export const packGraph = (input: PackInput): PackedGraph => {
     entryIds,
     keys: stableKeys(input.nodes.map((node) => node.id)),
     steps,
+    shapes: packShapes({
+      nodes: input.nodes,
+      edges: input.edges,
+      position,
+      typeOf: input.typeOf ?? (() => undefined),
+    }),
     ...(input.editor === undefined
       ? {}
       : { editor: { name: input.editor.name, roots: repos.map((name) => input.editor?.rootOf(name) ?? null) } }),

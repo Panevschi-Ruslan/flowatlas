@@ -1051,6 +1051,143 @@
   .g-row .hint-text { color: var(--muted); font-size: 12px; }
   .g-none { color: var(--faint); margin: 0; }
 
+  /* What a node takes and gives back: one row per parameter or request part,
+     a named type a link that opens its fields underneath, as deep as asked. */
+  .g-shape-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    align-items: baseline;
+    padding: 2px 0;
+    font-family: var(--f-mono);
+    font-size: 11.5px;
+  }
+  .g-shape-name { color: var(--muted); white-space: nowrap; }
+  .g-shape-type { word-break: break-word; }
+  .g-shape-back .g-shape-name { color: var(--faint); }
+  .g-type {
+    background: none;
+    border: 0;
+    border-bottom: 1px dotted var(--accent);
+    padding: 0;
+    color: var(--accent);
+    font: inherit;
+    cursor: pointer;
+  }
+  .g-type[aria-expanded="true"] { border-bottom-style: solid; font-weight: 600; }
+  .g-type.is-plain { color: inherit; border-bottom: 0; cursor: default; }
+  .g-type.is-cycle { color: var(--muted); }
+  .g-shape-see { color: var(--faint); white-space: nowrap; }
+
+  /* "Expand all" on a row is there for whoever reaches for it: shown on a
+     row being pointed at or tabbed into, and always where nothing hovers. */
+  .g-type-all {
+    margin-left: 6px;
+    padding: 0 4px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    font-size: 10px;
+    cursor: pointer;
+  }
+  .g-type-all:hover { color: var(--accent); border-color: var(--accent); }
+  @media (hover: hover) {
+    .g-type-all { opacity: 0; }
+    .g-shape-row:hover > .g-shape-type > .g-type-all, .g-type-all:focus-visible { opacity: 1; }
+  }
+  .g-type-more {
+    display: block;
+    margin: 2px 0 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    font: inherit;
+    font-size: 11px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .g-type-more:hover { text-decoration: underline; }
+  .g-shape-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 8px; }
+  .g-shape-tools { display: flex; flex-wrap: wrap; gap: 4px; }
+  .g-shape-tools .tool { padding: 2px 7px; font-size: 11px; }
+  .g-shape-tools .tool.is-done { color: var(--good); border-color: var(--good); }
+  .g-type-body {
+    margin: 2px 0 4px 6px;
+    padding: 2px 0 2px 9px;
+    border-left: 2px solid var(--rule);
+  }
+  .g-type-head { font-family: var(--f-mono); font-size: 10.5px; color: var(--faint); word-break: break-all; }
+  .g-shape-note { font-size: 11px; color: var(--faint); margin: 2px 0 0; }
+
+  /* The signature line the Types toggle puts under a node's name. */
+  .g-sig { fill: var(--muted); font-family: var(--f-mono); font-size: 9.5px; }
+  .g-sig.is-none { fill: var(--faint); font-style: italic; }
+  .z-mid .g-sig, .z-far .g-sig { visibility: hidden; }
+
+  /* The hover card: a node's face and a peek at its types, or one type's
+     fields from the panel. It floats over everything, and the pointer can
+     move onto it - to show what it cut, or to open a type in the panel - and
+     scroll it, past a height of its own. */
+  .g-card {
+    position: fixed;
+    z-index: 60;
+    max-width: min(440px, calc(100vw - 16px));
+    max-height: min(480px, calc(100vh - 16px));
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 8px 10px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--raise);
+    color: var(--ink);
+    box-shadow: 0 10px 28px -14px rgba(0, 0, 0, 0.45);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .g-card[hidden] { display: none; }
+  .g-card button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .g-card button:hover { text-decoration: underline; }
+  .g-card button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .g-card button.g-card-show { color: var(--accent); font-size: 11px; margin-top: 4px; display: block; }
+  .g-card-face button.g-card-show { display: inline; margin: 0; }
+  .g-card .g-card-title { display: block; font-weight: 600; word-break: break-word; }
+  .g-card-sub { color: var(--muted); font-size: 11px; word-break: break-all; }
+  .g-card-note { color: var(--faint); font-size: 11px; margin-top: 4px; }
+  .g-card-face {
+    margin: 6px 0 0;
+    padding: 4px 6px;
+    border-radius: var(--radius);
+    background: var(--paper);
+    font-family: var(--f-mono);
+    font-size: 11px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .g-card-peek { margin-top: 6px; padding-left: 8px; border-left: 2px solid var(--rule); }
+  .g-card > .g-card-peek:first-child { margin-top: 0; padding-left: 0; border-left: 0; }
+  .g-card-type { font-family: var(--f-mono); font-size: 11px; font-weight: 600; color: var(--accent); }
+  .g-card-type span { font-weight: 400; color: var(--faint); }
+  .g-card-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    font-family: var(--f-mono);
+    font-size: 11px;
+  }
+  .g-card-row > :first-child { color: var(--muted); white-space: nowrap; }
+  .g-card-row > :last-child { word-break: break-word; }
+
   /* ── checking: problems, path, impact ───────────────────────────────── */
 
   .g-check {
@@ -1465,6 +1602,10 @@
             </select>
           </label>
           <div class="g-tools">
+            <button class="tool" id="g-types" aria-pressed="false"
+              title="Write under each node what it takes and gives back (T)">
+              <span>Types</span> <kbd>T</kbd>
+            </button>
             <button class="tool" id="g-copy" title="Copy a link to this view">
               <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
                 stroke-linecap="round"><path d="M6.6 9.4a2.6 2.6 0 0 0 3.7 0l2.5-2.5a2.6 2.6 0 0 0-3.7-3.7l-.9.9"/>
@@ -1914,6 +2055,10 @@ __FRAME_LOGIC__
 
     /* The drawing's own units. A column is a hop; a row is a node. */
     const BOX = { w: 216, h: 40, column: 284, row: 54, pad: 40, head: 22, laneGap: 14, laneHead: 22 };
+    /* With Types on, a node is a line taller and the rows open up to match. */
+    const BOX_HEIGHTS = { plain: { h: 40, row: 54 }, typed: { h: 54, row: 68 } };
+    /* Nodes that have a face to show when one was recorded: the rest say nothing. */
+    const SHAPED = new Set(['method', 'function', 'entry', 'http_out', 'ui_api_call', 'producer', 'channel']);
     const PILL = new Set(['table', 'channel', 'external_api', 'config_key']);
     const DOORS = new Set(['entry', 'ui_action']);
     const GROUP_LIMIT = 12;
@@ -1957,6 +2102,13 @@ __FRAME_LOGIC__
       cursor: null,
       open: null,
       openGroups: new Set(),
+      // Types opened in the details panel, by where they sit in it.
+      openTypes: new Set(),
+      // Where an "Expand all" stopped at the bounds: what it was asked from,
+      // and how many types it left closed.
+      typeMore: new Map(),
+      // Whether each node carries a line of what it takes and gives back.
+      types: false,
       hood: null,
       placed: null,
       hiddenEdgeTypes: new Set(),
@@ -2287,13 +2439,12 @@ __FRAME_LOGIC__
           (state.hood.chips.has(v) ? `, ${state.hood.chips.get(v).total} wrappers folded` : ''),
       });
       g.style.setProperty('--hue', hueOf(nodes[v][RP]));
-      // The full name, whose it is and where, on hover: the drawing shortens.
-      // Context says what it is to the flow where its owner would be.
+      // The full name, whose it is, where, and its types are the hover card's
+      // (nodeCardHtml): the drawing shortens. Context says what it is to the
+      // flow where its owner would be.
       const parts = labelParts(model, v);
       const sub = context ? ALSO_SAYS[context.look].mark(context.of) : parts.owner;
-      g.append(svgEl('title', {}, label + '\n' + parts.owner + ' · ' + repoName(v) +
-        (placeOf(v) ? '\n' + placeOf(v) : '') +
-        (context ? '\nNot in the flow: ' + ALSO_SAYS[context.look].mark(context.of) + '. Double-click to centre on it.' : '')));
+      const shape = faceLine(model, v);
       g.append(svgEl('rect', { class: 'g-box', width: BOX.w, height: BOX.h, rx: pill ? BOX.h / 2 : 3 }));
       if (!pill) g.append(svgEl('rect', { class: 'g-rule', width: DOORS.has(t) ? 5 : 3, height: BOX.h, rx: 1 }));
       const glyph = glyphOf(v);
@@ -2307,6 +2458,12 @@ __FRAME_LOGIC__
           middle(parts.name, fits(BOX.w - gx - gw - 6 - right, 7.1))),
         svgEl('text', { class: 'g-sub', x: gx, y: 33 }, middle(sub, fits(BOX.w - gx - right, 5.7))),
       );
+      // The Types toggle's third line: the whole face, cut in the middle so
+      // both the first parameter and what comes back survive.
+      if (state.types && (shape || SHAPED.has(t))) {
+        g.append(svgEl('text', { class: 'g-sig' + (shape ? '' : ' is-none'), x: gx, y: 47 },
+          shape ? middle(shape, fits(BOX.w - gx - right, 5.75)) : 'types not recorded'));
+      }
       const chip = state.hood.chips.get(v);
       if (chip !== undefined) {
         const text = chipText(chip);
@@ -2461,6 +2618,199 @@ __FRAME_LOGIC__
       }
     };
 
+    /* ── the hover card: a node's types, or one type's fields ── */
+
+    /* One floating card, shown after a pause on whatever it describes and
+       moved, not hidden, while the pointer goes from one thing to the next.
+       It describes what it is anchored to (aria-describedby), so the keys
+       read it too; touch never shows it, since a tap already opens details.
+       The pointer can cross onto it and stay: leaving what it describes only
+       hides it after a pause, and being on it holds it. */
+    const card = (() => {
+      const el = document.createElement('div');
+      el.className = 'g-card';
+      el.id = 'g-card';
+      el.setAttribute('role', 'tooltip');
+      el.hidden = true;
+      document.body.append(el);
+      const DELAY = { first: 250, next: 60, leave: 120 };
+      const GAP = 10;
+      const EDGE = 8;
+      let timer = 0;
+      let key = null;
+      let anchor = null;
+      let side = 'side';
+      let build = null;
+
+      const clear = () => { clearTimeout(timer); timer = 0; };
+      const hide = () => {
+        clear();
+        if (anchor !== null) anchor.removeAttribute('aria-describedby');
+        anchor = null;
+        key = null;
+        el.hidden = true;
+      };
+      /* Beside the anchor - to its right, or below it - and flipped or held
+         inside the window when there is no room that way. */
+      const place = (box, side) => {
+        const w = el.offsetWidth, h = el.offsetHeight;
+        const vw = window.innerWidth, vh = window.innerHeight;
+        let x, y;
+        if (side === 'below') {
+          x = box.left;
+          y = box.bottom + 6 + h <= vh - EDGE ? box.bottom + 6 : box.top - 6 - h;
+        } else {
+          x = box.right + GAP + w <= vw - EDGE ? box.right + GAP : box.left - GAP - w;
+          y = box.top;
+        }
+        el.style.left = Math.round(Math.max(EDGE, Math.min(x, vw - EDGE - w))) + 'px';
+        el.style.top = Math.round(Math.max(EDGE, Math.min(y, vh - EDGE - h))) + 'px';
+      };
+      const show = (target, asked, make, where) => {
+        clear();
+        if (anchor !== null && anchor !== target) anchor.removeAttribute('aria-describedby');
+        el.innerHTML = make();
+        el.hidden = false;
+        el.scrollTop = 0;
+        place(target.getBoundingClientRect(), where);
+        target.setAttribute('aria-describedby', el.id);
+        anchor = target;
+        key = asked;
+        side = where;
+        build = make;
+      };
+      const soon = () => {
+        clear();
+        if (!el.hidden) timer = setTimeout(hide, DELAY.leave);
+      };
+      document.addEventListener('keydown', (event) => { if (event.key === 'Escape') hide(); });
+      // Scrolling the card itself is reading it; any other scroll moves what it points at.
+      window.addEventListener('scroll', (event) => { if (!el.contains(event.target)) hide(); }, true);
+      window.addEventListener('resize', hide);
+      el.addEventListener('pointerenter', clear);
+      el.addEventListener('pointerleave', soon);
+      // A press on one of its buttons keeps the keyboard where it was, so the
+      // node it describes does not lose focus and take the card with it.
+      el.addEventListener('mousedown', (event) => { if (event.target.closest('button')) event.preventDefault(); });
+      return {
+        el,
+        /* After a pause: a long one onto the first thing, a short one between. */
+        later(target, asked, make, where) {
+          if (asked === key) { clear(); return; }
+          clear();
+          timer = setTimeout(() => show(target, asked, make, where), el.hidden ? DELAY.first : DELAY.next);
+        },
+        now: (target, asked, make, where) => show(target, asked, make, where),
+        /* Off what it describes onto nothing: gone unless something else is hovered first. */
+        soon,
+        hide,
+        /* What it shows, or null. */
+        showing: () => (el.hidden ? null : key),
+        /* The keys or the pointer are on it: focus leaving what it describes
+           for the card, or text on it being selected, is not leaving. */
+        holds: (node) => !el.hidden && ((node !== null && el.contains(node)) || el.matches(':hover')),
+        /* Drawn again where it is, after what it shows grew: it keeps its
+           corner, under the pointer that asked, and only moves up as far as
+           the window needs. Placed afresh, a taller card flips away from its
+           anchor and out from under the pointer, which then leaves it. */
+        refresh() {
+          if (el.hidden || build === null) return;
+          const top = el.scrollTop;
+          el.innerHTML = build();
+          const y = Math.min(parseFloat(el.style.top) || EDGE, window.innerHeight - EDGE - el.offsetHeight);
+          el.style.top = Math.round(Math.max(EDGE, y)) + 'px';
+          el.scrollTop = top;
+        },
+      };
+    })();
+
+    const cardRowsHtml = (rows) => rows.map((row) =>
+      `<div class="g-card-row"><span>${esc(row.name)}</span><span>${esc(row.text)}</span></div>`).join('');
+
+    /* What a card was asked to show past its glance, for the one thing it is
+       on; a card on anything else starts from a glance again. */
+    let wideNow = { asked: null, ...GLANCE };
+    const wideFor = (asked) => {
+      if (wideNow.asked !== asked) wideNow = { asked, ...GLANCE };
+      return wideNow;
+    };
+    /* The types the last node card showed, which a click on its node opens. */
+    let cardSeen = { v: -1, types: [] };
+
+    /* "+N more — show" where the card may grow, a plain count where its
+       ceiling is what cut it. */
+    const showHtml = (can, attr, text) => (can
+      ? `<button class="g-card-show" ${attr}>${text} &mdash; show</button>`
+      : `<div class="g-card-note">${text}</div>`);
+
+    /* `open`: its name opens it in the details; `show`: what it cut can be shown. */
+    const peekHtml = (peek, { open = false, show = true } = {}) =>
+      `<div class="g-card-peek"><div class="g-card-type">` +
+      (open
+        ? `<button data-card-open="${peek.type}" title="Open it in the details">${esc(peek.name)}</button>`
+        : esc(peek.name)) +
+      ` <span>${esc(TYPE_KIND_SAYS[peek.kind] || peek.kind)} &middot; ${esc(peek.from)}</span></div>` +
+      cardRowsHtml(peek.rows) +
+      (peek.more > 0 ? showHtml(show, `data-card-rows="${peek.type}"`, '+' + plural(peek.more, 'more', 'more')) : '') +
+      (peek.note ? `<div class="g-card-note">${esc(peek.note)}</div>` : '') +
+      '</div>';
+
+    /* A node's card: its full name, whose and where, what it is to the flow
+       when it is context, and what it takes and gives back with a peek at
+       each type that names. What it cut can be shown on it, up to its
+       ceiling; its name, and each type's, go on to the details. */
+    const nodeCardHtml = (v) => {
+      const parts = labelParts(model, v);
+      const context = contextOf(v);
+      const found = cardOf(model, v, CARD_BOUNDS, wideFor('node:' + v));
+      cardSeen = { v, types: found === null ? [] : found.peeks.map((peek) => peek.type) };
+      const head = `<button class="g-card-title" data-card-node title="Open it in the details">${esc(nodes[v][LB])}</button>` +
+        `<div class="g-card-sub">${esc([parts.owner, repoName(v), placeOf(v)].filter(Boolean).join(' · '))}</div>` +
+        (context
+          ? `<div class="g-card-note">Not in the flow: ${esc(ALSO_SAYS[context.look].mark(context.of))}. ` +
+            'Double-click to centre on it.</div>'
+          : '');
+      if (found === null) {
+        return head + (SHAPED.has(typeOf(v)) ? '<div class="g-card-note">Types not recorded.</div>' : '');
+      }
+      const show = !found.capped;
+      return head +
+        `<pre class="g-card-face">${esc(found.lines.join('\n'))}` +
+          (found.more > 0
+            ? '\n' + (show
+              ? `<button class="g-card-show" data-card-lines>… ${plural(found.more, 'more line', 'more lines')} &mdash; show</button>`
+              : `… ${plural(found.more, 'more line', 'more lines')}`)
+            : '') + '</pre>' +
+        found.peeks.map((peek) => peekHtml(peek, { open: true, show })).join('') +
+        (found.left > 0 ? showHtml(show, 'data-card-types', plural(found.left, 'more type', 'more types')) : '') +
+        (found.capped
+          ? `<div class="g-card-note">A card holds ${CARD_BOUNDS.most} rows; the rest is in the details.</div>`
+          : '') +
+        '<div class="g-card-note">Click the node for everything &middot; E in the panel opens all</div>';
+    };
+
+    /* A type's card, from the panel: one level of it, without opening it, and
+       every row of it when asked, up to a card's ceiling. */
+    const typeCardHtml = (t, asked) => {
+      const all = wideFor(asked).rows.includes(t);
+      const peek = peekOf(model, t, all ? { ...CARD_BOUNDS, rows: CARD_BOUNDS.most - 1 } : CARD_BOUNDS);
+      return peek === null
+        ? ''
+        : peekHtml(peek, { show: !all }) +
+          '<div class="g-card-note">Click to open it here &middot; E opens everything under it</div>';
+    };
+
+    /* Only what a person can point at: not a touch, and not the badges on a
+       node, which say what a click on them does. */
+    const NODE_PARTS = '.g-more, .g-also, .g-chip';
+    const cardNode = (event) => {
+      const node = event.target.closest('.g-node');
+      return node && node.dataset.node !== undefined && !event.target.closest(NODE_PARTS) ? node : null;
+    };
+    const visibleFocus = (el) => {
+      try { return el.matches(':focus-visible'); } catch { return true; }
+    };
+
     /* ── semantic zoom and the minimap: both follow the camera ── */
 
     const extentOf = (placed) => ({
@@ -2571,6 +2921,7 @@ __FRAME_LOGIC__
     mini.addEventListener('pointercancel', () => { miniDrag = null; });
 
     const drawDrawing = () => {
+      card.hide();
       const hadFocus = svg.contains(document.activeElement);
       const { hood, placed } = state;
       const heads = svgEl('g');
@@ -2678,7 +3029,131 @@ __FRAME_LOGIC__
         (hint ? `<p class="hint-text">${esc(hint)}</p>` : '') + '</div>';
     };
 
+    /* What a node takes and gives back, worded by what kind of thing it is. */
+    const FACE_SAYS = {
+      method: { title: 'Takes and returns', back: 'returns', none: 'Takes no parameters.' },
+      bare: {
+        title: 'Takes and returns', back: 'returns', none: 'Takes no parameters.',
+        note: 'Only the types were recorded, not the parameter names.',
+      },
+      route: { title: 'Request and response', back: 'responds', none: 'Reads no body, path params, query or headers.' },
+      call: { title: 'Sends and expects back', back: 'gets back', none: 'Sends nothing typed.' },
+      channel: { title: 'Payload', back: '', none: '', note: 'As its producers send it.' },
+    };
+    const TYPE_KIND_SAYS = { object: 'object', enum: 'enum', union: 'union', generic: 'generic', external: 'external' };
+
+    /* A reference with each named type a button that opens it underneath.
+       `at` names where the row sits, so one type opened in two rows is two
+       openings; `inside` holds the types this row is already within, and one
+       of those is marked as open above rather than opened again. */
+    const refHtml = (r, at, inside) => refParts(model, r).map((part) => {
+      if (part.type === undefined) return esc(part.text);
+      if (part.type < 0) return `<span class="g-type is-plain" title="Not in the type registry">${esc(part.text)}</span>`;
+      if (inside.has(part.type)) {
+        return `<span class="g-type is-plain is-cycle" title="Already open above: this type holds itself">` +
+          `&#8635; ${esc(part.text)}</span>`;
+      }
+      const open = state.openTypes.has(at + ':' + part.type);
+      return `<button class="g-type" data-type="${part.type}" data-at="${esc(at)}" data-ref="${r}" ` +
+        `aria-expanded="${open}">${esc(part.text)}</button>`;
+    }).join('');
+
+    /* What an "Expand all" left closed at the bounds, under where it was asked. */
+    const moreHtml = (asked) => {
+      const more = state.typeMore.get(asked);
+      return more
+        ? `<button class="g-type-more" data-more="${esc(asked)}">${plural(more.left, 'more type', 'more types')} ` +
+          'left closed &mdash; open them</button>'
+        : '';
+    };
+
+    const shapeRowHtml = (name, r, at, inside, back = false) => {
+      const opened = [];
+      let openable = false;
+      let cycle = false;
+      for (const part of refParts(model, r)) {
+        if (part.type === undefined || part.type < 0) continue;
+        if (inside.has(part.type)) { cycle = true; continue; }
+        openable = true;
+        if (state.openTypes.has(at + ':' + part.type) && !opened.includes(part.type)) opened.push(part.type);
+      }
+      return `<div class="g-shape-row${back ? ' g-shape-back' : ''}">` +
+        `<span class="g-shape-name">${esc(name)}</span>` +
+        `<span class="g-shape-type">${refHtml(r, at, inside)}` +
+          (cycle ? ' <span class="g-shape-see">&mdash; see above</span>' : '') +
+          (openable
+            ? `<button class="g-type-all" data-all="${esc(at)}" data-ref="${r}" ` +
+              'title="Open everything under this row">expand all</button>'
+            : '') +
+        '</span></div>' +
+        moreHtml(at) +
+        opened.map((t) => typeBodyHtml(t, at + ':' + t, inside)).join('');
+    };
+
+    const typeBodyHtml = (t, at, inside) => {
+      const info = typeInfo(model, t);
+      if (info === null) return '';
+      const within = new Set(inside).add(t);
+      const head = `${TYPE_KIND_SAYS[info.kind] || info.kind}` +
+        (info.typeParams.length ? '&lt;' + esc(info.typeParams.join(', ')) + '&gt;' : '') +
+        ` &middot; ${esc(info.declaredIn)}`;
+      let body = '';
+      if (info.kind === 'external') {
+        body = `<p class="g-shape-note">Declared by a dependency; its fields are not read.</p>`;
+      } else if (info.kind === 'enum') {
+        body = `<div class="g-shape-row"><span class="g-shape-name">one of</span>` +
+          `<span class="g-shape-type">${esc(info.members.map((m) => m.text).join(' | '))}</span></div>`;
+      } else if (info.members.length > 0) {
+        body = info.members.map((m, k) => (m.ref !== undefined
+          ? shapeRowHtml('|', m.ref, at + '.' + k, within)
+          : `<div class="g-shape-row"><span class="g-shape-name">|</span><span class="g-shape-type">${esc(m.text)}</span></div>`)).join('');
+      } else if (info.fields.length > 0) {
+        body = info.fields.map((f, k) => shapeRowHtml(f.name + (f.optional ? '?' : ''), f.ref, at + '.' + k, within)).join('');
+      } else {
+        body = '<p class="g-shape-note">No fields recorded.</p>';
+      }
+      return `<div class="g-type-body"><div class="g-type-head">${head}</div>${body}</div>`;
+    };
+
+    /* The rows of a face, by the names the panel gives them: a parameter or
+       request part `p<k>`, what comes back `r`. */
+    const faceRows = (face) => [
+      ...face.params.map((param, k) => ({ at: 'p' + k, ref: param.ref })),
+      ...(face.returns >= 0 ? [{ at: 'r', ref: face.returns }] : []),
+    ];
+
+    const shapeHtml = (v) => {
+      const face = faceOf(model, v);
+      if (face === null) {
+        return SHAPED.has(typeOf(v))
+          ? '<section><h4>Takes and returns</h4><p class="g-none">Types not recorded for this node. They are read ' +
+            'for NestJS methods and routes, and for calls and payloads whose code is typed.</p></section>'
+          : '';
+      }
+      const says = FACE_SAYS[face.face];
+      const none = new Set();
+      const label = (param) => param.label === ''
+        ? ''
+        : (param.flag === PARAM_FLAG.rest ? '...' : '') + param.label + (param.flag === PARAM_FLAG.optional ? '?' : '');
+      const rows = face.params.map((param, k) => shapeRowHtml(label(param) || '#' + (k + 1), param.ref, 'p' + k, none));
+      const openable = faceRows(face).some(({ ref }) => refParts(model, ref).some((part) => part.type >= 0));
+      const tools = '<span class="g-shape-tools">' +
+        (openable
+          ? `<button class="tool" data-types="all" title="Open every type in this section, as deep as the bounds allow">Expand all</button>` +
+            `<button class="tool" data-types="none"${state.openTypes.size ? '' : ' disabled'}>Collapse all</button>`
+          : '') +
+        '<button class="tool" data-types="copy" title="Copy what it takes and gives back as TypeScript, every type ' +
+        'opened inline"><span>Copy as TypeScript</span></button></span>';
+      return `<section><div class="g-shape-head"><h4>${says.title}</h4>${tools}</div>` +
+        moreHtml('all') +
+        (rows.length > 0 ? rows.join('') : (says.none ? `<p class="g-none">${says.none}</p>` : '')) +
+        (face.returns >= 0 ? shapeRowHtml('→ ' + says.back, face.returns, 'r', none, true) : '') +
+        (says.note ? `<p class="g-shape-note">${says.note}</p>` : '') +
+        '</section>';
+    };
+
     const drawDetails = () => {
+      card.hide();
       const v = state.open;
       stage.classList.toggle('is-closed', v === null);
       panel.hidden = v === null;
@@ -2722,6 +3197,7 @@ __FRAME_LOGIC__
         (meta.length > 0
           ? '<dl class="g-meta">' + meta.map(([key, value]) => `<dt>${esc(key)}</dt><dd>${esc(value)}</dd>`).join('') + '</dl>'
           : '') +
+        shapeHtml(v) +
         `<section><h4>In &middot; ${total(d.into)}</h4>` +
           (d.into.length ? d.into.map((group) => edgeGroup('in', group, 0)).join('') : '<p class="g-none">Nothing reaches it.</p>') +
         '</section>' +
@@ -3121,11 +3597,47 @@ __FRAME_LOGIC__
 
     const select = (v, moveFocus) => {
       state.cursor = v;
-      if (state.open !== v) state.openGroups.clear();
+      if (state.open !== v) { state.openGroups.clear(); state.openTypes.clear(); state.typeMore.clear(); }
       state.open = v;
       paintSelection(moveFocus);
       drawDetails();
     };
+
+    /* The details for a node with the types its card showed - or only the
+       one asked for - opened one level, so nothing seen on the card is lost. */
+    const openWithCard = (v, only, moveFocus) => {
+      const shown = only !== null ? [only] : cardSeen.v === v ? cardSeen.types : [];
+      select(v, moveFocus);
+      const keys = panelKeysOf(model, v, shown);
+      if (keys.length === 0) return;
+      for (const key of keys) state.openTypes.add(key);
+      drawDetails();
+      const [first] = keys;
+      const at = first.slice(0, first.lastIndexOf(':'));
+      const type = first.slice(first.lastIndexOf(':') + 1);
+      const opened = panel.querySelector(`button.g-type[data-at="${CSS.escape(at)}"][data-type="${type}"]`);
+      if (opened) opened.scrollIntoView({ block: 'nearest' });
+    };
+
+    /* A click on the card shows, there on it, what it cut; or goes on to the
+       details, with what it showed open. */
+    card.el.addEventListener('click', (event) => {
+      const button = event.target.closest('button');
+      const asked = card.showing();
+      if (button === null || asked === null) return;
+      const wide = wideFor(asked);
+      const { cardRows, cardLines, cardTypes, cardOpen } = button.dataset;
+      if (cardRows !== undefined) wide.rows = [...wide.rows, Number(cardRows)];
+      else if (cardLines !== undefined) wide.lines = true;
+      else if (cardTypes !== undefined) wide.types = true;
+      else {
+        if (!asked.startsWith('node:')) return;
+        card.hide();
+        openWithCard(Number(asked.slice('node:'.length)), cardOpen !== undefined ? Number(cardOpen) : null, false);
+        return;
+      }
+      card.refresh();
+    });
 
     const go = (v, record = true, query = null) => {
       if (record) trail.visit(v);
@@ -3136,6 +3648,8 @@ __FRAME_LOGIC__
       state.expanded = [];
       state.also = [];
       state.openGroups.clear();
+      state.openTypes.clear();
+      state.typeMore.clear();
       state.unfolded = new Set();
       state.opened = new Set();
       draw(true);
@@ -3306,7 +3820,11 @@ __FRAME_LOGIC__
       if (also) { toggleAlso(Number(also.dataset.also)); return; }
       const node = event.target.closest('.g-node');
       if (node && node.dataset.group !== undefined) openGroup(node.dataset.group);
-      else if (node) select(Number(node.dataset.node), false);
+      else if (node) {
+        const v = Number(node.dataset.node);
+        if (pressedCard === 'node:' + v) openWithCard(v, null, false);
+        else select(v, false);
+      }
     });
     svg.addEventListener('dblclick', (event) => {
       const node = event.target.closest('.g-node');
@@ -3315,19 +3833,40 @@ __FRAME_LOGIC__
       }
     });
 
-    /* The trace follows the pointer, and the keys. */
+    /* The trace follows the pointer, and the keys; so does the card. */
     svg.addEventListener('pointerover', (event) => {
       // Not while panning or pinching: the pointer is moving the drawing.
       if (fingers.size > 0 && dragged) return;
       const node = event.target.closest('.g-node');
       traceTo(node ? unitOf(node) : null);
+      const pointed = event.pointerType === 'touch' ? null : cardNode(event);
+      if (pointed === null) card.soon();
+      else {
+        const v = unitOf(pointed);
+        card.later(pointed, 'node:' + v, () => nodeCardHtml(v), 'side');
+      }
     });
-    svg.addEventListener('pointerleave', () => traceTo(null));
+    // Off the drawing may be onto the card, which holds itself while the pointer is on it.
+    svg.addEventListener('pointerleave', () => { traceTo(null); card.soon(); });
+    /* A press hides the card, and remembers what it was on: a click on the
+       node it described opens the details with what it showed. */
+    let pressedCard = null;
+    svg.addEventListener('pointerdown', () => { pressedCard = card.showing(); card.hide(); });
     svg.addEventListener('focusin', (event) => {
       const node = event.target.closest('.g-node');
       if (node) traceTo(unitOf(node));
+      // A node the keys moved onto, not one a click focused on its way.
+      if (node && node.dataset.node !== undefined && visibleFocus(node)) {
+        const v = unitOf(node);
+        card.now(node, 'node:' + v, () => nodeCardHtml(v), 'side');
+      }
     });
-    svg.addEventListener('focusout', () => traceTo(null));
+    svg.addEventListener('focusout', (event) => {
+      traceTo(null);
+      if (!card.holds(event.relatedTarget)) card.hide();
+    });
+    // A drawing that moves leaves the card pointing at where a node was.
+    camera.watch(() => card.hide());
     statusEl.addEventListener('click', (event) => {
       if (!event.target.closest('[data-again]')) return;
       state.opened.clear();
@@ -3342,14 +3881,16 @@ __FRAME_LOGIC__
       if (KEYS[event.key]) {
         event.preventDefault();
         state.cursor = step(state.placed, v, KEYS[event.key]);
-        paintSelection(true);
+        // Into view first, so the card the focus brings is placed where the node ends up.
         camera.reveal(at(state.cursor));
+        paintSelection(true);
       } else if (isGroup(v) && (event.key === 'Enter' || event.key === ' ' || event.key === '+')) {
         event.preventDefault();
         openGroup(v);
       } else if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
-        select(v, true);
+        if (card.showing() === 'node:' + v) openWithCard(v, null, true);
+        else select(v, true);
       } else if ((event.key === 'w' || event.key === 'W') && state.hood.chips.has(v)) {
         event.preventDefault();
         toggleChain(v);
@@ -3370,6 +3911,21 @@ __FRAME_LOGIC__
       if (!target) return;
       const v = state.open;
       if (target.dataset.go !== undefined) go(Number(target.dataset.go));
+      else if (target.dataset.type !== undefined) toggleType(target.dataset.at + ':' + target.dataset.type);
+      else if (target.dataset.all !== undefined) {
+        openEverything([{ at: target.dataset.all, ref: Number(target.dataset.ref) }], target.dataset.all,
+          `button.g-type-all[data-all="${CSS.escape(target.dataset.all)}"]`);
+      } else if (target.dataset.more !== undefined) {
+        const more = state.typeMore.get(target.dataset.more);
+        if (more) openEverything(more.roots, target.dataset.more, `button[data-more="${CSS.escape(target.dataset.more)}"]`);
+      } else if (target.dataset.types === 'all') {
+        openEverything(faceRows(faceOf(model, v)), 'all', 'button[data-types="all"]');
+      } else if (target.dataset.types === 'none') {
+        state.openTypes.clear();
+        state.typeMore.clear();
+        drawDetails();
+        refocus('button[data-types="all"]');
+      } else if (target.dataset.types === 'copy') copyTypes(v, target);
       else if (target.dataset.group !== undefined) { state.openGroups.add(target.dataset.group); drawDetails(); }
       else if (target.dataset.act === 'close') closeDetails();
       else if (target.dataset.act === 'centre') go(v);
@@ -3378,8 +3934,38 @@ __FRAME_LOGIC__
       else if (target.dataset.act === 'walk') { current = v; drawEntries(); showView('walk'); }
     });
     panel.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') { event.preventDefault(); closeDetails(); }
+      if (event.key === 'Escape') { event.preventDefault(); closeDetails(); return; }
+      // `E` (or `*`, as a tree has it) on a type opens everything under it.
+      const type = event.target.closest && event.target.closest('button.g-type');
+      if (type && (event.key === 'e' || event.key === 'E' || event.key === '*') &&
+          !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        const { at, ref } = type.dataset;
+        openEverything([{ at, ref: Number(ref), only: Number(type.dataset.type) }], at,
+          `button.g-type[data-at="${CSS.escape(at)}"][data-type="${type.dataset.type}"]`);
+      }
     });
+
+    /* A type in the details peeks on hover, or on the keys: one level of it,
+       without opening it. */
+    const panelType = (event) => (event.target.closest && event.target.closest('button.g-type')) || null;
+    const peekType = (type, now) => {
+      const asked = 'type:' + type.dataset.at + ':' + type.dataset.type;
+      const build = () => typeCardHtml(Number(type.dataset.type), asked);
+      if (now) card.now(type, asked, build, 'below');
+      else card.later(type, asked, build, 'below');
+    };
+    panel.addEventListener('pointerover', (event) => {
+      const type = event.pointerType === 'touch' ? null : panelType(event);
+      if (type === null) card.soon();
+      else peekType(type, false);
+    });
+    panel.addEventListener('pointerleave', () => card.soon());
+    panel.addEventListener('focusin', (event) => {
+      const type = panelType(event);
+      if (type !== null && visibleFocus(type)) peekType(type, true);
+    });
+    panel.addEventListener('focusout', (event) => { if (!card.holds(event.relatedTarget)) card.hide(); });
 
     /* ── search over every node, as a combobox ── */
 
@@ -3520,6 +4106,86 @@ __FRAME_LOGIC__
       write(key, value) {
         try { localStorage.setItem('flowatlas.graph.' + key, JSON.stringify(value)); } catch { /* kept for this visit only */ }
       },
+    };
+
+    /* Types: a line under every node of what it takes and gives back. A way of
+       reading, not a view, so it is remembered like the panel's width and not
+       put in the link; a link opened elsewhere draws the same nodes either way. */
+    const typesBtn = document.getElementById('g-types');
+    const setTypes = (on) => {
+      state.types = on;
+      Object.assign(BOX, on ? BOX_HEIGHTS.typed : BOX_HEIGHTS.plain);
+      typesBtn.setAttribute('aria-pressed', String(on));
+      remembered.write('types', on);
+      if (state.focus !== null) draw(false);
+    };
+    typesBtn.addEventListener('click', () => setTypes(!state.types));
+    if (remembered.read('types', false) === true) {
+      state.types = true;
+      Object.assign(BOX, BOX_HEIGHTS.typed);
+      typesBtn.setAttribute('aria-pressed', 'true');
+    }
+
+    /* A type in the details panel opens underneath its row, and closing it
+       closes whatever was opened inside it. The button keeps the keyboard. */
+    /* The keyboard stays on what it was on after the panel is drawn again;
+       a control that went with the drawing - a note that is all opened now -
+       hands it to the section's own *Expand all*. */
+    const refocus = (selector) => {
+      const again = panel.querySelector(selector) || panel.querySelector('button[data-types="all"]');
+      if (again) again.focus();
+    };
+    const toggleType = (key) => {
+      if (state.openTypes.has(key)) {
+        for (const open of [...state.openTypes]) if (open === key || open.startsWith(key + '.')) state.openTypes.delete(open);
+        for (const asked of [...state.typeMore.keys()]) if (asked.startsWith(key + '.')) state.typeMore.delete(asked);
+      } else state.openTypes.add(key);
+      const [at, type] = [key.slice(0, key.lastIndexOf(':')), key.slice(key.lastIndexOf(':') + 1)];
+      drawDetails();
+      refocus(`button.g-type[data-at="${CSS.escape(at)}"][data-type="${type}"]`);
+    };
+
+    /* "Expand all": everything under some rows opened at once, within the
+       bounds. What the bounds left closed is said under where it was asked,
+       and asking there again opens the next stretch, since what is open is
+       walked through and not counted again. */
+    const openEverything = (roots, asked, focus) => {
+      const { keys, left } = openAll(model, roots, state.openTypes);
+      for (const key of keys) state.openTypes.add(key);
+      if (left > 0) state.typeMore.set(asked, { roots, left });
+      else state.typeMore.delete(asked);
+      drawDetails();
+      refocus(focus);
+    };
+
+    /* Text onto the clipboard, true when it got there. */
+    const copyText = async (text) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        // No clipboard API here (an older browser, or a page it does not trust):
+        // the selection still copies.
+        const area = document.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+        document.body.append(area);
+        area.select();
+        let copied = false;
+        try { copied = document.execCommand('copy'); } catch { copied = false; }
+        area.remove();
+        return copied;
+      }
+    };
+
+    /* Copy as TypeScript: the node's face with every type opened inline. */
+    const copyTypes = async (v, button) => {
+      const written = typeScriptOf(model, v);
+      if (written === null) return;
+      const copied = await copyText(written.text);
+      const cut = written.left > 0 ? ` · ${plural(written.left, 'type', 'types')} kept as names` : '';
+      flash(button, copied ? 'Copied' + cut : 'Could not copy', copied);
     };
 
     /* A button says what it did, in its own words, for a moment. */
@@ -3792,28 +4458,14 @@ __FRAME_LOGIC__
     const copyBtn = document.getElementById('g-copy');
     copyBtn.addEventListener('click', async () => {
       const link = location.href.split('#')[0] + hashNow();
-      let copied = false;
-      try {
-        await navigator.clipboard.writeText(link);
-        copied = true;
-      } catch {
-        // No clipboard API here (an older browser, or a page it does not trust):
-        // the selection still copies.
-        const area = document.createElement('textarea');
-        area.value = link;
-        area.setAttribute('readonly', '');
-        area.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
-        document.body.append(area);
-        area.select();
-        try { copied = document.execCommand('copy'); } catch { copied = false; }
-        area.remove();
-      }
-      if (copied) flash(copyBtn, 'Copied');
+      if (await copyText(link)) flash(copyBtn, 'Copied');
       else window.prompt('Copy this link', link);
     });
 
-    /* Keys for the frame. `F` is full screen anywhere but a text field; `W`,
-       `+`, Enter and the arrows belong to a node with the keyboard on it.
+    /* Keys for the frame. `F` is full screen and `T` the Types line anywhere
+       but a text field; `W`, `O`,
+       `+`, Enter and the arrows belong to a node with the keyboard on it, and
+       `E` to a type in the details panel.
 
        Escape closes one thing at a time, the nearest first:
          1. the search's list of nodes, or picking a path's end with it;
@@ -3830,6 +4482,9 @@ __FRAME_LOGIC__
       if ((event.key === 'f' || event.key === 'F') && !typing(event.target)) {
         event.preventDefault();
         fullScreen.toggle();
+      } else if ((event.key === 't' || event.key === 'T') && !typing(event.target)) {
+        event.preventDefault();
+        setTypes(!state.types);
       } else if (event.key === 'Escape') {
         if (!resultsEl.hidden) closeResults();
         else if (state.picking !== null) stopPicking();
@@ -3863,9 +4518,12 @@ __FRAME_LOGIC__
       '<span><b class="g-key-context">faded, dashed</b> context: who else uses a node, outside the flow; ' +
       'its <b>used by N others</b> badge, or O, draws it</span>' +
       '<span><b class="g-key-bad">3</b> rows name the node &middot; <b class="g-key-warn">2</b> rows at its line</span>' +
-      '<span><b>hover</b> lights the way from the focus</span>' +
+      '<span><b>Types</b> a line under each node of what it takes and gives back; click a type in the ' +
+      'details to open its fields, <i>expand all</i> or E to open everything under it</span>' +
+      '<span><b>hover</b> lights the way from the focus, and shows what a node takes and gives back; ' +
+      'on a type in the details, its fields</span>' +
       '<span><b>keys</b> arrows move &middot; Enter opens &middot; + expands &middot; O who else &middot; W unfolds plumbing &middot; ' +
-      'F full screen &middot; Escape closes &middot; double-click centres</span>';
+      'T types &middot; E opens a type all the way &middot; F full screen &middot; Escape closes &middot; double-click centres</span>';
 
     function showView(name, asked) {
       if (name !== 'graph') fullScreen.set(false);

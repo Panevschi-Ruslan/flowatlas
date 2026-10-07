@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-incremental",
-  "generatedAt": "2026-10-06T11:32:02.950Z",
+  "generatedAt": "2026-10-07T14:34:13.445Z",
   "nodes": [
     {
       "id": "config_key:nest-incremental#BILLING_URL",
@@ -143,7 +143,18 @@
       "label": "BillingClient.charge",
       "repo": "nest-incremental",
       "file": "src/billing/billing.client.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
     },
     {
       "id": "nest-incremental#src/billing/billing.client.ts:BillingClient.refund",
@@ -151,7 +162,18 @@
       "label": "BillingClient.refund",
       "repo": "nest-incremental",
       "file": "src/billing/billing.client.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        }
+      }
     },
     {
       "id": "nest-incremental#src/guards/api-key.guard.ts:ApiKeyGuard",
@@ -179,7 +201,18 @@
       "label": "OrdersController.create",
       "repo": "nest-incremental",
       "file": "src/orders/orders.controller.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:nest-incremental#CreateOrderDto"
+            }
+          ],
+          "returns": "type:nest-incremental#OrderDto"
+        }
+      }
     },
     {
       "id": "nest-incremental#src/orders/orders.controller.ts:OrdersController.findOne",
@@ -187,7 +220,18 @@
       "label": "OrdersController.findOne",
       "repo": "nest-incremental",
       "file": "src/orders/orders.controller.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-incremental#OrderDto"
+        }
+      }
     },
     {
       "id": "nest-incremental#src/orders/orders.module.ts:OrdersModule",
@@ -227,7 +271,18 @@
       "label": "OrdersRepository.find",
       "repo": "nest-incremental",
       "file": "src/orders/orders.repository.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-incremental#OrderDto"
+        }
+      }
     },
     {
       "id": "nest-incremental#src/orders/orders.repository.ts:OrdersRepository.save",
@@ -235,7 +290,18 @@
       "label": "OrdersRepository.save",
       "repo": "nest-incremental",
       "file": "src/orders/orders.repository.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:nest-incremental#OrderDto"
+            }
+          ],
+          "returns": "type:nest-incremental#OrderDto"
+        }
+      }
     },
     {
       "id": "nest-incremental#src/orders/orders.service.ts:OrdersService",
@@ -255,7 +321,18 @@
       "label": "OrdersService.create",
       "repo": "nest-incremental",
       "file": "src/orders/orders.service.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:nest-incremental#CreateOrderDto"
+            }
+          ],
+          "returns": "type:nest-incremental#OrderDto"
+        }
+      }
     },
     {
       "id": "nest-incremental#src/orders/orders.service.ts:OrdersService.findOne",
@@ -263,7 +340,18 @@
       "label": "OrdersService.findOne",
       "repo": "nest-incremental",
       "file": "src/orders/orders.service.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:nest-incremental#OrderDto"
+        }
+      }
     },
     {
       "id": "repo:nest-incremental",

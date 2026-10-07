@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "koa-service",
-  "generatedAt": "2026-10-06T11:31:47.887Z",
+  "generatedAt": "2026-10-07T14:33:40.611Z",
   "nodes": [
     {
       "id": "db_query:koa-service#src/orders/orders.repository.ts:12:12",
@@ -173,7 +173,18 @@
       "label": "OrdersRepository.byId",
       "repo": "koa-service",
       "file": "src/orders/orders.repository.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "koa-service#src/orders/orders.repository.ts:OrdersRepository.insert",
@@ -181,7 +192,18 @@
       "label": "OrdersRepository.insert",
       "repo": "koa-service",
       "file": "src/orders/orders.repository.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "koa-service#src/orders/orders.repository.ts:OrdersRepository.list",
@@ -189,7 +211,13 @@
       "label": "OrdersRepository.list",
       "repo": "koa-service",
       "file": "src/orders/orders.repository.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
     },
     {
       "id": "koa-service#src/orders/orders.routes.ts:GET /:orderId@27",

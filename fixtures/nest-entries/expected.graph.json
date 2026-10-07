@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-entries",
-  "generatedAt": "2026-10-06T11:31:59.986Z",
+  "generatedAt": "2026-10-07T14:34:09.891Z",
   "nodes": [
     {
       "id": "channel:order.created",
@@ -259,7 +259,13 @@
       "label": "CatalogController.detail",
       "repo": "nest-entries",
       "file": "src/catalog/catalog.controller.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-entries#src/catalog/catalog.controller.ts:CatalogController.fallback",
@@ -267,7 +273,13 @@
       "label": "CatalogController.fallback",
       "repo": "nest-entries",
       "file": "src/catalog/catalog.controller.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
     },
     {
       "id": "nest-entries#src/catalog/catalog.controller.ts:CatalogController.variants",
@@ -275,7 +287,13 @@
       "label": "CatalogController.variants",
       "repo": "nest-entries",
       "file": "src/catalog/catalog.controller.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
     },
     {
       "id": "nest-entries#src/events/events.controller.ts:EventsController",
@@ -295,7 +313,18 @@
       "label": "EventsController.handleOrderCreated",
       "repo": "nest-entries",
       "file": "src/events/events.controller.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "data",
+              "type": "{orderId:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-entries#src/events/events.controller.ts:EventsController.sum",
@@ -303,7 +332,18 @@
       "label": "EventsController.sum",
       "repo": "nest-entries",
       "file": "src/events/events.controller.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "numbers",
+              "type": "number[]"
+            }
+          ],
+          "returns": "number"
+        }
+      }
     },
     {
       "id": "nest-entries#src/tasks/tasks.service.ts:TasksService",
@@ -323,7 +363,13 @@
       "label": "TasksService.everyFiveMinutes",
       "repo": "nest-entries",
       "file": "src/tasks/tasks.service.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-entries#src/tasks/tasks.service.ts:TasksService.everyHour",
@@ -331,7 +377,13 @@
       "label": "TasksService.everyHour",
       "repo": "nest-entries",
       "file": "src/tasks/tasks.service.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-entries#src/tasks/tasks.service.ts:TasksService.ticker",
@@ -339,7 +391,13 @@
       "label": "TasksService.ticker",
       "repo": "nest-entries",
       "file": "src/tasks/tasks.service.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "nest-entries#src/tasks/tasks.service.ts:TasksService.warmUp",
@@ -347,7 +405,13 @@
       "label": "TasksService.warmUp",
       "repo": "nest-entries",
       "file": "src/tasks/tasks.service.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
     },
     {
       "id": "repo:nest-entries",
