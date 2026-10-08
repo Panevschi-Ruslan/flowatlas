@@ -299,7 +299,7 @@ describe('what a request carries, read the way its framework puts it', () => {
  * all the helpers' calls have to be matched by.
  */
 const HELPED = `
-import { respond as answer, readJson } from '@acme/http-kit';
+import { respond as answer, readJson, fail } from '@acme/http-kit';
 import * as kit from '@acme/http-kit';
 export interface Event { body: string | null; pathParameters: Record<string, string | undefined> | null }
 export interface CreateOrder { total: number }
@@ -333,6 +333,11 @@ export const lookalike = async (event: Event) => {
 };
 export const local = (req: unknown, res: unknown) => {
   sendOk(res, { id: 'o8', total: 5 } as Order);
+};
+export const severalArguments = async (event: Event, missing: boolean, detail: { field: string }) => {
+  if (missing) return fail(404, 'not_found', \`no order \${event.body}\`);
+  if (event.body === null) return fail(400, 'bad_input', 'no body', detail);
+  return answer(200, { id: 'o9', total: 6 } as Order);
 };
 `;
 
@@ -376,6 +381,7 @@ describe("a project's own helpers, read beside its framework's places (P30)", ()
     answers: [
       { by: 'helper', name: 'respond', package: '@acme/http-kit', statusArg: 0, arg: 1 },
       { by: 'helper', name: 'sendOk', arg: 1, status: 200 },
+      { by: 'helper', name: 'fail', package: '@acme/http-kit', statusArg: 0, fields: { code: 1, message: 2, detail: 3 } },
     ],
   };
 
@@ -427,6 +433,17 @@ describe("a project's own helpers, read beside its framework's places (P30)", ()
 
   it("matches a helper of the project's own by its declaration, with the status it always answers", () => {
     expect(read(HELPED, 'local')?.response).toEqual({ ref: 'type:shop#Order', claimed: true });
+  });
+
+  it('builds a failure from several arguments of a helper, each field typed by its argument (P33)', () => {
+    expect(read(HELPED, 'severalArguments')).toEqual({
+      parts: {},
+      response: { ref: 'type:shop#Order', claimed: true },
+      failures: {
+        '400': '{code:string;detail:{field:string};message:string}',
+        '404': '{code:string;message:string}',
+      },
+    });
   });
 
   it('reads a status assigned before the answer, in the block the answer is in or one around it', () => {

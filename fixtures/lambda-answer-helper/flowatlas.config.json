@@ -9,7 +9,8 @@
           { "name": "readJson", "package": "@acme/http-kit", "part": "body" }
         ],
         "answers": [
-          { "by": "helper", "name": "respond", "package": "@acme/http-kit", "statusArg": 0, "arg": 1 }
+          { "by": "helper", "name": "respond", "package": "@acme/http-kit", "statusArg": 0, "arg": 1 },
+          { "by": "helper", "name": "fail", "package": "@acme/http-kit", "statusArg": 0, "fields": { "code": 1, "message": 2 } }
         ]
       }
     }

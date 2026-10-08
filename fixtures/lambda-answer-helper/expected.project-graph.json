@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T09:12:40.422Z",
+  "builtAt": "2026-10-08T18:47:22.027Z",
   "services": [
     {
       "name": "stations",
@@ -326,7 +326,7 @@
       "label": "handler",
       "repo": "stations",
       "file": "src/rentals/end-rental.ts",
-      "line": 11,
+      "line": 13,
       "meta": {
         "signature": {
           "params": [
@@ -529,14 +529,17 @@
       "confidence": "static",
       "returns": "type:stations#Receipt",
       "file": "src/rentals/end-rental.ts",
-      "line": 11,
+      "line": 13,
       "meta": {
         "requestRead": true,
         "body": "type:stations#EndRental",
         "params": "{rentalId:string}",
         "claimed": [
           "body"
-        ]
+        ],
+        "failures": {
+          "422": "{code:string;message:string}"
+        }
       }
     },
     {
@@ -545,7 +548,7 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/rentals/end-rental.ts",
-      "line": 11
+      "line": 13
     },
     {
       "from": "entry:stations:invoke:bikes-dev-get-rental",
@@ -603,7 +606,7 @@
       ],
       "returns": "type:stations#Receipt",
       "file": "src/rentals/end-rental.ts",
-      "line": 13
+      "line": 16
     },
     {
       "from": "stations#src/rentals/get-rental.ts:handler",
@@ -831,7 +834,7 @@
   "unresolved": [
     {
       "file": "src/rentals/end-rental.ts",
-      "line": 11,
+      "line": 13,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "any",
@@ -839,10 +842,10 @@
     },
     {
       "file": "src/rentals/end-rental.ts",
-      "line": 12,
+      "line": 14,
       "reason": "call-dynamic-receiver",
       "level": "info",
-      "sites": 2,
+      "sites": 3,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "handler -> kit.readJson",
       "service": "stations"

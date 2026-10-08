@@ -6,7 +6,8 @@ the repository declares and nobody installed. The handler returns what the
 helper builds, so the gateway's own reading (an object with the body as text at
 `body`) finds nothing; the configuration says once, under
 `adapters.entry.request`, that `respond` answers with argument 1 under the
-status at argument 0, and that `readJson` hands back the body (P30).
+status at argument 0, that `fail` builds a failure `{ code, message }` from
+arguments 1 and 2 (P33), and that `readJson` hands back the body (P30).
 
 Type-checked, never executed or deployed. The configuration at the root is the
 project; the repository is the fixture itself.
@@ -25,7 +26,7 @@ reports one error per file that imports `@acme/http-kit` - "Cannot find module"
 |---|---|---|---|---|
 | `POST /rentals` | `StartRental`, claimed | `Rental` | `409: Refusal` | a cast on `event.body`, which a body parser in front turned into the object; the helper imported by name |
 | `GET /rentals/:param` | - | `Rental` | `404: Refusal` | statuses written as enum members; params `{rentalId:string}` named by the path |
-| `POST /rentals/:param/return` | `EndRental`, claimed | `Receipt` | - | `kit.readJson<EndRental>(event)` through a namespace import; status a constant |
+| `POST /rentals/:param/return` | `EndRental`, claimed | `Receipt` | `422: {code:string;message:string}` | `kit.readJson<EndRental>(event)` through a namespace import; status a constant; the failure built by `kit.fail` from two arguments |
 | `GET /stations` | - | - | - | the status is worked out at run time: `Station[]` is kept as `statusUnknown`, neither answer nor failure |
 | `GET /stations/:param` | - | - | - | a local function also called `respond` is not the kit's helper, so nothing is read as the answer |
 

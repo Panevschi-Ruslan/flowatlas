@@ -12,6 +12,12 @@ mark an answer sent under a status its code works out (`status ? → ...`), and
 a service's details on the Map count the routes with failures and with an
 unknown status.
 
+A helper that builds its answer from several arguments - `fail(400,
+'bad_input', message)` - is described with `fields` on its `answers` row under
+`adapters.entry.request`: each field of the answer names the argument it comes
+from, and the route records `{ code: string; message: string }` as its failure
+under the status, with nothing of the helper's package installed.
+
 ## [0.5.1][] - 2026-10-08
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0. Two things

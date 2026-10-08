@@ -2076,7 +2076,9 @@ are, and they are read beside every framework's own places (P30):
         // `return respond(201, order)`: the answer is argument 1, the status argument 0
         { "by": "helper", "name": "respond", "package": "@acme/http-kit", "statusArg": 0, "arg": 1 },
         // `sendOk(res, order)`: a helper of this repository that always answers 200
-        { "by": "helper", "name": "sendOk", "arg": 1, "status": 200 }
+        { "by": "helper", "name": "sendOk", "arg": 1, "status": 200 },
+        // `return fail(400, 'bad_input', message)`: a failure built from several arguments
+        { "by": "helper", "name": "fail", "package": "@acme/http-kit", "statusArg": 0, "fields": { "code": 1, "message": 2 } }
       ],
       "helpers": [
         // `readJson<CreateOrder>(event)`: hands back the body, typed by what the call asks for
@@ -2092,8 +2094,12 @@ A helper with a `package` is matched by the import in the handler's own file -
 `kit.respond` on a namespace or default import of it - so the package does not
 have to be installed; one without is matched by a declaration of that name in
 the repository, and a function of the same name declared anywhere else is not
-it. An answer may sit in an object handed to the helper (`"at": ["body"]`). A
-body helper's result is typed by a type argument written at the call, else by
+it. An answer may sit in an object handed to the helper (`"at": ["body"]`), or
+be built from several of its arguments: `"fields"` names each field of the
+answer and the argument it comes from, so `fail(400, 'bad_input', message)`
+answers `{ code: string; message: string }` under 400 - each field typed by
+what is written at the call, a literal by its kind, and an argument whose type
+says nothing left out (P33). A body helper's result is typed by a type argument written at the call, else by
 what it is declared to return, and is recorded as claimed unless `"claim":
 false` says the helper checks what it parses. `param` and `arg` say which of the
 handler's parameters is the request and which argument of the helper it must

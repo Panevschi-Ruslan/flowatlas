@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { pathFrom, sameKeys } from './envelope.js';
 import type { GraphEdge } from './model/edges.js';
 import { functionLikeOf, type FunctionLike } from './types/signatures.js';
-import { formatTypeRef, type TypeRef } from './types/type-ref.js';
+import { formatTypeRef, parseTypeRef, type TypeRef, type TypeRefField } from './types/type-ref.js';
 
 /**
  * What a request carries and what it is answered with, read from a handler a
@@ -145,12 +145,17 @@ export const requestAnswerSchema = z.discriminatedUnion('by', [
    * order)`, `sendOk(res, order)`. The answer is argument `arg`, or the value
    * at `at` of an object written there; the status is argument `statusArg`, or
    * `status` when the helper always answers with one.
+   *
+   * `fields` builds the answer from several arguments instead - `fail(400,
+   * 'bad_input', message)` answers `{ code, message }` - each field typed by
+   * the argument at its index (P33).
    */
   z.strictObject({
     by: z.literal('helper'),
     ...helperFields,
     arg: z.number().int().min(0).default(0),
     at: keysSchema,
+    fields: z.record(z.string().min(1), z.number().int().min(0)).optional(),
     statusArg: z.number().int().min(0).optional(),
     status: z.number().int().min(100).max(599).optional(),
   }),
@@ -680,6 +685,8 @@ interface Sent {
   value: TsNode;
   status: Status;
   handed: boolean;
+  /** The arguments an answer is built from, by the field each becomes (P33). */
+  fields?: ReadonlyArray<readonly [string, TsNode]>;
 }
 
 /** The expression inside brackets, down to a cast if there is one. */
@@ -704,6 +711,31 @@ const answerType = (sent: Sent, defaults: ReadonlySet<string>): Candidate | unde
   const written = settled(value.getType());
   const own = written.isLiteral() ? written.getBaseTypeOfLiteralType() : written;
   return saysSomething(own, defaults) ? { type: own, site: value, claimed } : undefined;
+};
+
+/**
+ * An answer as a reference: the type of the value sent, or an object built
+ * from the arguments a helper is handed, each field typed by its argument as
+ * written there - a literal by its kind - and a field whose argument says
+ * nothing left out (P33).
+ */
+const sentRef = (sent: Sent, defaults: ReadonlySet<string>, collect: Collect): { ref: TypeRef; claimed: boolean } | undefined => {
+  if (sent.fields === undefined) {
+    const type = answerType(sent, defaults);
+    return type === undefined ? undefined : { ref: collect(type.type, type.site), claimed: type.claimed };
+  }
+  const fields: TypeRefField[] = [];
+  for (const [name, argument] of sent.fields) {
+    const written = settled(argument.getType());
+    const own = written.isLiteral() ? written.getBaseTypeOfLiteralType() : written;
+    if (!saysSomething(own, defaults)) continue;
+    const ref = collect(own, argument);
+    if (SAYS_NOTHING.has(ref)) continue;
+    fields.push({ name, optional: false, type: parseTypeRef(ref) });
+  }
+  if (fields.length === 0) return undefined;
+  fields.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  return { ref: formatTypeRef({ kind: 'object', fields }), claimed: false };
 };
 
 /** The calls of a function's own body, and the returns that are its own. */
@@ -781,9 +813,6 @@ const sentBy = (fn: FunctionLike, answers: readonly RequestAnswer[]): Sent[] => 
         if (!callsHelper(site, answer)) continue;
         answering.add(site);
         const args = site.getArguments();
-        const handed = args[answer.arg];
-        const value = handed === undefined ? undefined : answer.at.length === 0 ? handed : valueAt(handed, answer.at);
-        if (value === undefined) continue;
         const status: Status =
           answer.status !== undefined
             ? answer.status
@@ -792,6 +821,17 @@ const sentBy = (fn: FunctionLike, answers: readonly RequestAnswer[]): Sent[] => 
               : args[answer.statusArg] === undefined
                 ? null
                 : literalStatus(args[answer.statusArg]);
+        if (answer.fields !== undefined) {
+          const fields = Object.entries(answer.fields).flatMap(([name, index]) => {
+            const argument = args[index];
+            return argument === undefined ? [] : [[name, argument] as const];
+          });
+          sent.push({ value: site, status, handed: false, fields });
+          continue;
+        }
+        const handed = args[answer.arg];
+        const value = handed === undefined ? undefined : answer.at.length === 0 ? handed : valueAt(handed, answer.at);
+        if (value === undefined) continue;
         sent.push({ value, status, handed: answer.at.length === 0 });
       }
     }
@@ -931,9 +971,9 @@ export const readRequest = (
   let claimed = false;
   const failures: Record<string, Set<TypeRef>> = {};
   for (const sent of sentBy(fn, reading.answers)) {
-    const type = answerType(sent, defaults);
+    const type = sentRef(sent, defaults, collect);
     if (type === undefined) continue;
-    const ref = collect(type.type, type.site);
+    const { ref } = type;
     if (SAYS_NOTHING.has(ref)) continue;
     // A status the code computes could be either, so the answer is kept apart
     // from both rather than guessed into one (P30).
