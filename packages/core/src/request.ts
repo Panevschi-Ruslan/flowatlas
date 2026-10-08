@@ -570,9 +570,15 @@ const boundByImport = (name: TsNode): boolean =>
     (declaration) => Node.isImportSpecifier(declaration) || Node.isNamespaceImport(declaration) || Node.isImportClause(declaration),
   );
 
-export const callsHelper = (site: TsNode, helper: { name: string; package?: string | undefined }): boolean => {
-  if (!Node.isCallExpression(site)) return false;
-  const callee = site.getExpression();
+export const callsHelper = (site: TsNode, helper: { name: string; package?: string | undefined }): boolean =>
+  Node.isCallExpression(site) && namesHelper(site.getExpression(), helper);
+
+/**
+ * Whether a name is the helper's, wherever it is written: the callee of a call,
+ * the `createClient` of `ReturnType<typeof createClient>`, or a type the same
+ * package exports (P44). Matched the way {@link callsHelper} matches a call.
+ */
+export const namesHelper = (callee: TsNode, helper: { name: string; package?: string | undefined }): boolean => {
   const called = calledBy(callee);
   if (called === undefined) return false;
   if (helper.package === undefined) {
@@ -580,7 +586,7 @@ export const callsHelper = (site: TsNode, helper: { name: string; package?: stri
     const declarations = calleeDeclarations(callee);
     return declarations.length > 0 && declarations.every((declaration) => !declaration.getSourceFile().getFilePath().includes('/node_modules/'));
   }
-  for (const declaration of site.getSourceFile().getImportDeclarations()) {
+  for (const declaration of callee.getSourceFile().getImportDeclarations()) {
     if (!fromPackage(declaration.getModuleSpecifierValue(), helper.package)) continue;
     if (called.root === called.name && Node.isIdentifier(callee)) {
       const named = declaration

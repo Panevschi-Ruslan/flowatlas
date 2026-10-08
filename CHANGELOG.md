@@ -6,6 +6,12 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+A data kit's client handed in rather than made in place is followed too: a
+parameter or an injected field declared `ReturnType<typeof createClient>`,
+`typeof db`, or the type named by a row's new `clientType` under
+`adapters.db.tables` is the factory's client, so `this.db.insert('orders', row)`
+is a query of `orders`.
+
 A Remix `action` that compares `request.method` to string literals answers the
 verbs it names rather than a POST. React Router v7's `app/routes.ts` is read:
 `route()`, `index()`, `layout()` and `prefix()` give each named module its

@@ -88,3 +88,51 @@ export const run = async () => {
     expect(read).toEqual(['write orders', 'write orders', 'read customers', 'write audit']);
   });
 });
+
+describe('a table named by the configuration, at a client handed in (P44)', () => {
+  const project = new Project({ useInMemoryFileSystem: true });
+  const file = project.createSourceFile(
+    '/src/members.ts',
+    `
+import { createClient, type DataClient } from '@acme/data-kit';
+import type { DataClient as OtherClient } from '@acme/other-kit';
+const shared = createClient();
+type Client = ReturnType<typeof createClient>;
+export const byReturnType = (db: ReturnType<typeof createClient>) => db.insert('members', {});
+export const byAwaited = (db: Awaited<ReturnType<typeof createClient>> | undefined) => db?.findOne('teams', {});
+export const byName = (db: DataClient) => db.insert('invites', {});
+export const byTypeof = (db: typeof shared) => db.findOne('seats', {});
+class Members {
+  private readonly later: DataClient;
+  constructor(private readonly db: DataClient, later: DataClient) { this.later = later; }
+  save() { return this.db.insert('members', {}); }
+  find() { return this.later.findOne('members', {}); }
+}
+export const lookalikes = (a: OtherClient, b: { insert(t: string, r: object): void }, c: Client) => {
+  a.insert('nope', {});
+  b.insert('nope', {});
+  c.insert('aliased', {});
+};
+`,
+  );
+  const described = [
+    { factory: 'createClient', clientType: 'DataClient', name: 'insert', package: '@acme/data-kit', table: 0, op: 'write' },
+    { factory: 'createClient', clientType: 'DataClient', name: 'findOne', package: '@acme/data-kit', table: 0, op: 'read' },
+  ].map((row) => dbTableAccessSchema.parse(row));
+
+  it('follows a parameter or an injected field by its declared type, and leaves lookalikes alone', () => {
+    const read = file
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .map((call) => configuredAccessOf(call, described))
+      .flatMap((found) => (found === undefined ? [] : [`${found.op ?? '?'} ${found.table ?? '?'}`]));
+    expect(read).toEqual([
+      'write members',
+      'read teams',
+      'write invites',
+      'read seats',
+      'write members',
+      'read members',
+      'write aliased',
+    ]);
+  });
+});

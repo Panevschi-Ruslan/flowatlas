@@ -781,6 +781,12 @@ export const dbTableAccessSchema = z.strictObject({
    * (P39). The call is matched by following the receiver to that factory's call.
    */
   factory: z.string().min(1).optional(),
+  /**
+   * The type the same package names the factory's client by, so a client
+   * handed in - a parameter, an injected field - typed `DataClient` is one
+   * (P44). `ReturnType<typeof factory>` is recognised without it.
+   */
+  clientType: z.string().min(1).optional(),
   /** The argument that is the table's name, or the table itself for a function that always touches one. */
   table: z.union([z.number().int().min(0), z.string().min(1)]),
   op: z.enum(['read', 'write', 'delete']).optional(),

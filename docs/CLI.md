@@ -1456,7 +1456,7 @@ it.
 | `auto` | boolean | `true` | detect which adapters apply from each repository's manifest |
 | `force` | object | `{}` | use these adapters regardless of what was detected |
 | `db.localBaseClasses` | (string \| object)[] | `[]` | classes of your own that behave like a repository, so calls through them are data access — including classes a workspace package of yours declares. An entry may be `{ "name": "BaseRepository", "tableProperty": "collectionName" }` to say which property each class extending it sets to its table |
-| `db.tables` | object[] | `[]` | functions your data access goes through that name their table at the call — `insert('orders', row)` from a data kit of your own, installed or not: `{ "name", "package"?, "factory"?, "table": argIndex \| "name", "op"?: "read" \| "write" \| "delete" }`; with `factory`, `name` is a method of the client that factory returns (see [Tables named in configuration](#tables-named-in-configuration)) |
+| `db.tables` | object[] | `[]` | functions your data access goes through that name their table at the call — `insert('orders', row)` from a data kit of your own, installed or not: `{ "name", "package"?, "factory"?, "clientType"?, "table": argIndex \| "name", "op"?: "read" \| "write" \| "delete" }`; with `factory`, `name` is a method of the client that factory returns, and `clientType` the type a client handed in is declared as (see [Tables named in configuration](#tables-named-in-configuration)) |
 | `frontend.localClientClasses` | string[] | `[]` | classes of your own that make HTTP requests, so `get`/`post`/… called on them are requests |
 | `broker.custom` | object[] | `[]` | an in-house message bus, described so its publishers and handlers are found |
 | `starters` | object[] | `[]` | a helper of your own that starts a workflow or invokes a function by its deployed name, described so the start is joined to what it starts (see [Code that starts a workflow or a function](#code-that-starts-a-workflow-or-a-function)) |
@@ -1629,6 +1629,20 @@ call itself (`createClient().insert(…)`), awaited or not, or a variable or cla
 field initialised with it, followed a few names back. The factory is matched by
 the import as above; an object of the repository's own with a method of the same
 name is not the client.
+
+A client handed in rather than made there - a function's parameter, a
+constructor's injected field, a field assigned elsewhere - is followed by its
+declared type (P44): `ReturnType<typeof createClient>` (also behind `Awaited<…>`,
+in a union with `undefined`, or through a type alias of the repository's), `typeof
+db` of a client the factory made, or the type the package names its client by,
+given as `clientType` on the row:
+
+```jsonc
+{ "factory": "createClient", "clientType": "DataClient", "package": "@acme/data-kit", "name": "insert", "table": 0, "op": "write" }
+```
+
+A parameter typed as anything else is not the client, whatever its methods are
+called.
 
 Two things a wrapper can hide are not configuration, and no key reaches them.
 The library has to be among the service's dependencies — directly or along the

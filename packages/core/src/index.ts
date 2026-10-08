@@ -389,6 +389,7 @@ export {
 export type { Envelope } from './envelope.js';
 export {
   callsHelper,
+  namesHelper,
   CLAIMED_META,
   extendReading,
   FAILURES_META,

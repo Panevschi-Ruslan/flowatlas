@@ -28,6 +28,9 @@ else of note: that is the state being read.
 | `archive` | ``insert(`loans_${year}`, loan)`` | write `?` | the table is worked out at run time: the query is kept, with a `dynamic-table-name` row |
 | `joinLibrary` | `db.insert(MEMBERS, …)` | write `members` | `db` is what the kit's `createClient()` returned, the factory named on the row (P39) |
 | `leaveLibrary` | `db.remove('members', …)` | delete `members` | the same client |
+| `Reservations.hold` | `this.db.insert('reservations', …)` | write `reservations` | `db` is injected through the constructor, typed `DataClient` - the `clientType` named on the row (P44) |
+| `releaseHold` | `db.remove('reservations', …)` | delete `reservations` | a parameter typed `ReturnType<typeof createClient>` (P44) |
+| `notifyHold` | `mailer.insert('hold-notices', …)` | - | a parameter typed as something else |
 | `queueWelcome` | `outbox.insert('welcome', …)` | - | an object of the repository's own, not a client the factory made |
 | `lookalike` | `findOne('members')` | - | a local of the same name shadows the import, so it is not the kit's |
 
