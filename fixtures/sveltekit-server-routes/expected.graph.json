@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "sveltekit-server-routes",
-  "generatedAt": "2026-10-08T19:57:07.700Z",
+  "generatedAt": "2026-10-08T20:53:13.436Z",
   "nodes": [
     {
       "id": "entry:sveltekit-server-routes:http:DELETE:/api/orders/:param",
@@ -21,6 +21,22 @@
       }
     },
     {
+      "id": "entry:sveltekit-server-routes:http:GET:/",
+      "type": "entry",
+      "label": "GET /",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/(shop)/+layout.server.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+layout.server",
+        "handlerVia": "function"
+      }
+    },
+    {
       "id": "entry:sveltekit-server-routes:http:GET:/:param/files/*",
       "type": "entry",
       "label": "GET /:param/files/*",
@@ -34,6 +50,22 @@
         "rawPath": "/:lang?/files/:path",
         "adapter": "sveltekit-routes",
         "registration": "routes/+server",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:sveltekit-server-routes:http:GET:/about",
+      "type": "entry",
+      "label": "GET /about",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/about/+page.server.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/about",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+page.server",
         "handlerVia": "function"
       }
     },
@@ -71,6 +103,23 @@
       }
     },
     {
+      "id": "entry:sveltekit-server-routes:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/orders/[id]/+page.server.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+page.server",
+        "handlerVia": "function"
+      }
+    },
+    {
       "id": "entry:sveltekit-server-routes:http:POST:/api/cart",
       "type": "entry",
       "label": "POST /api/cart",
@@ -87,14 +136,49 @@
       }
     },
     {
+      "id": "entry:sveltekit-server-routes:http:POST:/orders/:param",
+      "type": "entry",
+      "label": "POST /orders/:param",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/orders/[id]/+page.server.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+page.server",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:sveltekit-server-routes:http:POST:/orders/:param?/note",
+      "type": "entry",
+      "label": "POST /orders/:param?/note",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/orders/[id]/+page.server.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "action": "note",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+page.server",
+        "handlerVia": "inline"
+      }
+    },
+    {
       "id": "repo:sveltekit-server-routes",
       "type": "repo",
       "label": "sveltekit-server-routes",
       "repo": "sveltekit-server-routes",
       "meta": {
         "stats": {
-          "files": 6,
-          "filesRead": 6,
+          "files": 8,
+          "filesRead": 8,
           "filesUnreadable": 0,
           "classes": 0,
           "skippedExternalCalls": {}
@@ -159,6 +243,20 @@
       }
     },
     {
+      "id": "sveltekit-server-routes#src/routes/(shop)/+layout.server.ts:load",
+      "type": "function",
+      "label": "load",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/(shop)/+layout.server.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{section:'shop'}"
+        }
+      }
+    },
+    {
       "id": "sveltekit-server-routes#src/routes/(shop)/api/cart/+server.ts:POST",
       "type": "function",
       "label": "POST",
@@ -193,6 +291,20 @@
             }
           ],
           "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "sveltekit-server-routes#src/routes/about/+page.server.ts:load",
+      "type": "function",
+      "label": "load",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/about/+page.server.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{title:'About'}"
         }
       }
     },
@@ -247,6 +359,63 @@
           "returns": "Response"
         }
       }
+    },
+    {
+      "id": "sveltekit-server-routes#src/routes/orders/[id]/+page.server.ts:POST /orders/:param?/note@20",
+      "type": "function",
+      "label": "POST /orders/:param?/note@20",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/orders/[id]/+page.server.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ request }",
+              "type": "type:@sveltejs/kit#RequestEvent<object>"
+            }
+          ],
+          "returns": "{note:string}"
+        }
+      }
+    },
+    {
+      "id": "sveltekit-server-routes#src/routes/orders/[id]/+page.server.ts:cancel",
+      "type": "function",
+      "label": "cancel",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/orders/[id]/+page.server.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "type:@sveltejs/kit#RequestEvent<object>"
+            }
+          ],
+          "returns": "{cancelled:true}"
+        }
+      }
+    },
+    {
+      "id": "sveltekit-server-routes#src/routes/orders/[id]/+page.server.ts:load",
+      "type": "function",
+      "label": "load",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/orders/[id]/+page.server.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "type:@sveltejs/kit#RequestEvent<object>"
+            }
+          ],
+          "returns": "{order:type:sveltekit-server-routes#Order}"
+        }
+      }
     }
   ],
   "edges": [
@@ -263,6 +432,17 @@
       }
     },
     {
+      "from": "entry:sveltekit-server-routes:http:GET:/",
+      "to": "sveltekit-server-routes#src/routes/(shop)/+layout.server.ts:load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/(shop)/+layout.server.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
       "from": "entry:sveltekit-server-routes:http:GET:/:param/files/*",
       "to": "sveltekit-server-routes#src/routes/[[lang]]/files/[...path]/+server.ts:GET",
       "type": "handles",
@@ -272,6 +452,17 @@
       "meta": {
         "requestRead": true,
         "params": "{lang?:string;path:string}"
+      }
+    },
+    {
+      "from": "entry:sveltekit-server-routes:http:GET:/about",
+      "to": "sveltekit-server-routes#src/routes/about/+page.server.ts:load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/about/+page.server.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
       }
     },
     {
@@ -300,6 +491,18 @@
       "returns": "type:sveltekit-server-routes#Order"
     },
     {
+      "from": "entry:sveltekit-server-routes:http:GET:/orders/:param",
+      "to": "sveltekit-server-routes#src/routes/orders/[id]/+page.server.ts:load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/orders/[id]/+page.server.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
       "from": "entry:sveltekit-server-routes:http:POST:/api/cart",
       "to": "sveltekit-server-routes#src/routes/(shop)/api/cart/+server.ts:POST",
       "type": "handles",
@@ -314,6 +517,30 @@
         ]
       },
       "returns": "{sku:string;quantity:number}"
+    },
+    {
+      "from": "entry:sveltekit-server-routes:http:POST:/orders/:param",
+      "to": "sveltekit-server-routes#src/routes/orders/[id]/+page.server.ts:cancel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/orders/[id]/+page.server.ts",
+      "line": 12,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:sveltekit-server-routes:http:POST:/orders/:param?/note",
+      "to": "sveltekit-server-routes#src/routes/orders/[id]/+page.server.ts:POST /orders/:param?/note@20",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/orders/[id]/+page.server.ts",
+      "line": 20,
+      "meta": {
+        "requestRead": true,
+        "body": "FormData"
+      }
     },
     {
       "from": "sveltekit-server-routes#src/routes/api/orders/+server.ts:GET",
@@ -343,6 +570,30 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/routes/api/orders/[id=integer]/+server.ts",
+      "line": 6,
+      "params": [
+        "string"
+      ],
+      "returns": "type:sveltekit-server-routes#Order"
+    },
+    {
+      "from": "sveltekit-server-routes#src/routes/orders/[id]/+page.server.ts:cancel",
+      "to": "sveltekit-server-routes#src/lib/orders.ts:removeOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/routes/orders/[id]/+page.server.ts",
+      "line": 13,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "sveltekit-server-routes#src/routes/orders/[id]/+page.server.ts:load",
+      "to": "sveltekit-server-routes#src/lib/orders.ts:oneOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/routes/orders/[id]/+page.server.ts",
       "line": 6,
       "params": [
         "string"

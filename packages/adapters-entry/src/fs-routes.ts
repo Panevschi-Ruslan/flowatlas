@@ -13,8 +13,8 @@ import {
   type Reach,
 } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
-import { Node } from 'ts-morph';
-import { builtByFactory, builtExportFunction, handsOverWork, unwrapValue } from './shared.js';
+import { Node, SyntaxKind } from 'ts-morph';
+import { builtByFactory, builtExportFunction, handsOverWork, repoFunctionOf, unwrapValue } from './shared.js';
 
 /**
  * A router whose address space is the file system, described rather than
@@ -723,6 +723,74 @@ export const reportUnreadHandler = (
 /** The exports a route file answers by, where each is named after its verb. */
 const VERB_EXPORTS: ReadonlyMap<string, string> = new Map(HTTP_METHODS.map((method) => [method, method]));
 
+const NO_EXPORTS: ReadonlyMap<string, string> = new Map();
+
+/** The action a form posts to when it names none. */
+const DEFAULT_ACTION = 'default';
+
+/** One member of an object of ways in, and what stands behind it. */
+interface ActionMember {
+  readonly name: string;
+  readonly node: TsNode;
+  readonly handler?: NamedFunction;
+  readonly inline?: TsNode;
+}
+
+/** `{ … } satisfies Actions` and `({ … }) as Actions` are the object inside. */
+const objectOf = (value: TsNode): TsNode =>
+  Node.isSatisfiesExpression(value) ? objectOf(value.getExpression()) : unwrapValue(value);
+
+/**
+ * What one member of an exported object of ways in stands for, by how it was
+ * written: an arrow or function written there is its own handler; a name is
+ * the function it names. A method has no node a way in can point at, and says
+ * so through the unread row.
+ */
+const MEMBER_READINGS: ReadonlyMap<SyntaxKind, (property: TsNode) => Omit<ActionMember, 'name' | 'node'>> = new Map([
+  [
+    SyntaxKind.PropertyAssignment,
+    (property: TsNode) => {
+      const written = Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+      const value = written === undefined ? undefined : unwrapValue(written);
+      if (value === undefined) return {};
+      if (Node.isArrowFunction(value) || Node.isFunctionExpression(value)) return { inline: value };
+      const fn = repoFunctionOf(value);
+      return fn === undefined ? {} : { handler: fn };
+    },
+  ],
+  [
+    SyntaxKind.ShorthandPropertyAssignment,
+    (property: TsNode) => {
+      // The name node's symbol is the property's; the value's is the function.
+      // An imported one is the import's until its alias is followed.
+      const symbol = Node.isShorthandPropertyAssignment(property) ? property.getValueSymbol() : undefined;
+      const declaration = (symbol?.isAlias() === true ? symbol.getAliasedSymbol() : symbol)?.getDeclarations()[0];
+      const fn = declaration === undefined ? undefined : namedFunction(declaration);
+      return fn === undefined ? {} : { handler: fn };
+    },
+  ],
+]);
+
+/**
+ * The members of an exported object whose every member is a way in.
+ *
+ * SvelteKit's `export const actions = { default: …, login: … }`: each key is an
+ * action a form posts to, and the page's address with `?/key` after it is the
+ * address of every one but the default (P42).
+ */
+const actionMembers = (declaration: TsNode): ActionMember[] => {
+  if (!Node.isVariableDeclaration(declaration)) return [];
+  const initializer = declaration.getInitializer();
+  const literal = initializer === undefined ? undefined : objectOf(initializer);
+  if (literal === undefined || !Node.isObjectLiteralExpression(literal)) return [];
+  return literal.getProperties().flatMap((property): ActionMember[] => {
+    if (Node.isSpreadAssignment(property)) return [];
+    const name = property.getName();
+    const reading = MEMBER_READINGS.get(property.getKind());
+    return [{ name, node: property, ...(reading === undefined ? {} : reading(property)) }];
+  });
+};
+
 /** One way in a file-system router declares, as the reader of one describes it. */
 export interface FsRouteVerb {
   method: string;
@@ -739,13 +807,21 @@ export interface FsRouteVerb {
    */
   at: Reach;
   handler?: NamedFunction;
+  /** A function written in place as the way in, found again by where it starts (P42). */
+  inline?: TsNode;
+  /**
+   * The named form action this way in is, where it is one: SvelteKit posts
+   * `?/login` to the page that declares `actions.login` (P42). The default
+   * action is the page's own POST and has none.
+   */
+  action?: string;
   /**
    * How the handler was named, as the entry's `handlerVia` says it: `unread`
    * where there is none, `call` where it is a factory the verb's call ran (R153).
    * Decided here rather than by each reader, which is how two readers of one
    * route file would come to say two things about it.
    */
-  handlerVia: VerbReading['via'] | 'unread';
+  handlerVia: VerbReading['via'] | 'inline' | 'unread';
   /** False when a handler was named and there is nothing behind the name. */
   bodyRead: boolean;
 }
@@ -786,10 +862,45 @@ export const readVerbFile = (
      * and most of them only render.
      */
     pagesServed?: boolean;
+    /**
+     * Exports that are objects of ways in, and the verb each member answers:
+     * SvelteKit's `actions`, every one of them a POST (P42).
+     */
+    actions?: ReadonlyMap<string, string>;
   },
 ): void => {
   const exported = sourceFile.getExportedDeclarations();
   let found = 0;
+  for (const [name, method] of options.actions ?? NO_EXPORTS) {
+    const [declaration] = exported.get(name) ?? [];
+    if (declaration === undefined) continue;
+    found += 1;
+    for (const member of actionMembers(declaration)) {
+      const at = reachOf(member.node, sourceFile, `${name}.${member.name}`, ctx.repoDir);
+      const handled = member.handler !== undefined || member.inline !== undefined;
+      options.emit({
+        method,
+        path: options.path,
+        ...(options.rawPath === undefined ? {} : { rawPath: options.rawPath }),
+        ...(member.name === DEFAULT_ACTION ? {} : { action: member.name }),
+        at,
+        ...(member.handler === undefined ? {} : { handler: member.handler }),
+        ...(member.inline === undefined ? {} : { inline: member.inline }),
+        handlerVia: member.inline !== undefined ? 'inline' : handled ? 'function' : 'unread',
+        bodyRead: handled,
+      });
+      if (!handled) {
+        reportUnreadHandler(ctx, {
+          file: at.reached.file,
+          line: at.reached.line,
+          label: `${method} ${options.path}${member.name === DEFAULT_ACTION ? '' : `?/${member.name}`}`,
+          path: options.path,
+          why: 'none',
+          adapter: options.adapter,
+        });
+      }
+    }
+  }
   for (const [name, method] of options.verbs ?? VERB_EXPORTS) {
     const [declaration] = exported.get(name) ?? [];
     if (declaration === undefined) continue;

@@ -222,7 +222,12 @@ description, read by one walk, so they cannot drift on what counts as a verb rea
 or a file served at no address (`fixtures/react-next`, `fixtures/medusa-fs-router`).
 SvelteKit's `src/routes/**/+server.ts` exports its verbs by name; a group in
 brackets drops out, `[id]` and `[[id]]` are params (a matcher after `=` is no part
-of the name) and `[...rest]` is the rest of the path
+of the name) and `[...rest]` is the rest of the path. Beside a page,
+`+page.server.ts` and `+layout.server.ts` answer the page's GET by their `load`,
+and each member of a page's `actions` is a POST to it - the `default` one at the
+page's address, a named one at `?/name` after it (an entry keyed
+`POST:/orders/:param?/note`, its `meta.action` the name); an action written as a
+method has nothing to point at and is a `route-handler-unread` row
 (`fixtures/sveltekit-server-routes`). Remix's flat routes are one name per route,
 its segments separated by dots - `app/routes/api.orders.$id.ts`, or a folder of
 that name holding `route.ts` - where a leading underscore is a layout that adds no

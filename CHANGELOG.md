@@ -6,6 +6,12 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+A SvelteKit page's server module is read as ways in: the `load` of a
+`+page.server.ts` or `+layout.server.ts` answers the page's GET, and each of a
+page's `actions` a POST - the default at the page's address, a named one at
+`?/name` (keyed `POST:/orders/:param?/note`, with `meta.action`). A form action's
+`request.formData()` is read as its body.
+
 Angular directives and pipes have nodes and signatures: a directive (a
 `ui_component` of kind `directive`, with its selector) takes its inputs and gives
 back its outputs, read the way a component's are; a pipe (a `provider` of kind

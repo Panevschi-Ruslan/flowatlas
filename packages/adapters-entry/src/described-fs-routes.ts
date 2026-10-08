@@ -11,7 +11,7 @@ import {
 } from '@flowatlas/core';
 import { fsAddressSpace, fsApplicationMap, readVerbFile, type FsRouter, type FsRouteVerb } from './fs-routes.js';
 import { readingOf } from './request-readings.js';
-import { handlerOfFunction, repoSources } from './shared.js';
+import { handlerOfFunction, inlineHandlerOf, repoSources } from './shared.js';
 
 /**
  * A file-system router whose whole reading is a description (P38).
@@ -30,10 +30,34 @@ export interface FsRoutesDescription {
   readonly verbs?: ReadonlyMap<string, string>;
   /** Whether a route module that exports no way in is a page and says nothing. */
   readonly pagesServed?: boolean;
+  /**
+   * The route files whose ways in are other exports than the rest's, by file
+   * name: SvelteKit's `+page.server` answers by `load` and `actions`, not by
+   * verbs (P42).
+   */
+  readonly files?: ReadonlyMap<string, FsRouteExports>;
   readonly request: RequestReadingDescription;
   /** What the entry's `registration` says it was declared by. */
   readonly registration: string;
 }
+
+/** Which exports of one kind of route file are ways in. */
+export interface FsRouteExports {
+  readonly verbs: ReadonlyMap<string, string>;
+  /** Exports that are objects of ways in, and the verb each member answers. */
+  readonly actions?: ReadonlyMap<string, string>;
+  readonly pagesServed?: boolean;
+  /** What the entry's `registration` says, where it is not the router's. */
+  readonly registration?: string;
+}
+
+const FILE_NAME = /^(?:.*\/)?([^/]+?)\.[cm]?[jt]sx?$/;
+
+/** The exports one route file is read by: its own row, or the router's. */
+const exportsOf = (file: string, description: FsRoutesDescription): FsRouteExports | undefined => {
+  const name = FILE_NAME.exec(file)?.[1];
+  return name === undefined ? undefined : description.files?.get(name);
+};
 
 /** The entry adapter one description reads as. */
 export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter => {
@@ -50,20 +74,25 @@ export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter 
     extractEntries(ctx: ExtractContext): EntryNode[] {
       const entries: EntryNode[] = [];
       const seen = new Set<string>();
-      const httpEntry = (verb: FsRouteVerb, application: string | undefined): void => {
-        const key = makeHttpEntryKey(verb.method, verb.path);
+      const httpEntry = (verb: FsRouteVerb, application: string | undefined, registration: string): void => {
+        // A named action is posted to the page's address with `?/name` after
+        // it; the query is kept out of the path, so params are named as before.
+        const query = verb.action === undefined ? '' : `?/${verb.action}`;
+        const key = `${makeHttpEntryKey(verb.method, verb.path)}${query}`;
         const id = makeEntryId(ctx.repo, 'http', key, application);
         if (seen.has(id)) return;
         seen.add(id);
+        const label = `${verb.method} ${verb.path}${query}`;
+        const handler =
+          verb.handler !== undefined
+            ? handlerOfFunction(verb.handler, ctx)
+            : inlineHandlerOf(verb.inline, label, ctx);
         entries.push({
           id,
           kind: 'http',
-          label:
-            application === undefined
-              ? `${verb.method} ${verb.path}`
-              : `${verb.method} ${verb.path} (${application})`,
+          label: application === undefined ? label : `${label} (${application})`,
           key,
-          ...(verb.handler === undefined ? {} : { handler: handlerOfFunction(verb.handler, ctx) }),
+          ...(handler === undefined ? {} : { handler }),
           request,
           file: verb.at.reached.file,
           line: verb.at.reached.line,
@@ -71,8 +100,9 @@ export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter 
             method: verb.method,
             path: verb.path,
             ...(verb.rawPath === undefined ? {} : { rawPath: verb.rawPath }),
+            ...(verb.action === undefined ? {} : { action: verb.action }),
             adapter: description.name,
-            registration: description.registration,
+            registration,
             ...(application === undefined ? {} : { application }),
             handlerVia: verb.handlerVia,
             ...(verb.bodyRead ? {} : { handlerBodyRead: false }),
@@ -86,14 +116,18 @@ export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter 
         const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);
         const address = space.addressOf(file, description.router);
         if (address === null) continue;
+        const own = exportsOf(file, description);
+        const verbs = own?.verbs ?? description.verbs;
+        const pagesServed = own === undefined ? description.pagesServed : own.pagesServed;
         readVerbFile(ctx, sourceFile, {
           file,
           path: address.path,
           rawPath: address.rawPath,
           adapter: description.name,
-          emit: (verb) => httpEntry(verb, address.application),
-          ...(description.verbs === undefined ? {} : { verbs: description.verbs }),
-          ...(description.pagesServed === true ? { pagesServed: true } : {}),
+          emit: (verb) => httpEntry(verb, address.application, own?.registration ?? description.registration),
+          ...(verbs === undefined ? {} : { verbs }),
+          ...(pagesServed === true ? { pagesServed: true } : {}),
+          ...(own?.actions === undefined ? {} : { actions: own.actions }),
         });
       }
       return entries;
@@ -110,17 +144,22 @@ export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter 
  */
 const EVENT_REQUEST = {
   parts: { params: [{ param: 0, at: ['params'] }] },
-  calls: [{ param: 0, at: ['request'], method: 'json', part: 'body' as const }],
+  calls: [
+    { param: 0, at: ['request'], method: 'json', part: 'body' as const },
+    { param: 0, at: ['request'], method: 'formData', part: 'body' as const },
+  ],
 } satisfies Pick<RequestReadingDescription, 'parts' | 'calls'>;
 
 /**
- * SvelteKit: `src/routes/**\/+server.ts`, exporting its verbs by name. A group
- * in brackets drops out, `[id]` and `[[id]]` are params (a matcher after `=` is
- * no part of the name) and `[...rest]` is the rest of the path.
+ * SvelteKit: `src/routes/**\/+server.ts`, exporting its verbs by name, and the
+ * `+page.server.ts` / `+layout.server.ts` beside a page, whose `load` answers
+ * the page's GET and whose `actions` its form POSTs (P42). A group in brackets
+ * drops out, `[id]` and `[[id]]` are params (a matcher after `=` is no part of
+ * the name) and `[...rest]` is the rest of the path.
  */
 export const SVELTEKIT_ROUTES: FsRouter = {
   root: 'src/routes',
-  routeFiles: ['+server'],
+  routeFiles: ['+server', '+page.server', '+layout.server'],
   segments: ['group', 'param', 'catch-all'],
 };
 
@@ -145,10 +184,26 @@ const REMIX_VERBS: ReadonlyMap<string, string> = new Map([
   ['action', 'POST'],
 ]);
 
+/**
+ * A page's server module: `load` is its GET, and each of `actions` a POST to it
+ * - the default at the page's address, a named one at `?/name`. A page module
+ * exporting neither only renders, as a layout's usually does.
+ */
+const SVELTEKIT_PAGE: FsRouteExports = {
+  verbs: new Map([['load', 'GET']]),
+  actions: new Map([['actions', 'POST']]),
+  pagesServed: true,
+  registration: 'routes/+page.server',
+};
+
 export const sveltekitRoutesAdapter = fsRoutesAdapter({
   name: 'sveltekit-routes',
   packages: ['@sveltejs/kit'],
   router: SVELTEKIT_ROUTES,
+  files: new Map([
+    ['+page.server', SVELTEKIT_PAGE],
+    ['+layout.server', { verbs: SVELTEKIT_PAGE.verbs, pagesServed: true, registration: 'routes/+layout.server' }],
+  ]),
   registration: 'routes/+server',
   request: {
     ...EVENT_REQUEST,
