@@ -11,6 +11,7 @@ import {
 } from './call-routes.js';
 import { nestjsHttpAdapter } from './nestjs-http.js';
 import { medusaRoutesAdapter } from './medusa-routes.js';
+import { remixRoutesAdapter, sveltekitRoutesAdapter } from './described-fs-routes.js';
 import { nextjsRoutesAdapter } from './nextjs-routes.js';
 import { trpcProceduresAdapter } from './procedure-routers.js';
 import { nestjsMicroserviceAdapter } from './nestjs-microservice.js';
@@ -30,6 +31,8 @@ export const entryAdapters: readonly EntryAdapter[] = [
   nestjsHttpAdapter,
   nextjsRoutesAdapter,
   medusaRoutesAdapter,
+  sveltekitRoutesAdapter,
+  remixRoutesAdapter,
   honoRoutesAdapter,
   expressRoutesAdapter,
   fastifyRoutesAdapter,
@@ -100,6 +103,14 @@ export type {
   VerbReading,
 } from './fs-routes.js';
 export { MEDUSA_API } from './medusa-routes.js';
+export {
+  fsRoutesAdapter,
+  REMIX_ROUTES,
+  remixRoutesAdapter,
+  SVELTEKIT_ROUTES,
+  sveltekitRoutesAdapter,
+} from './described-fs-routes.js';
+export type { FsRoutesDescription } from './described-fs-routes.js';
 export {
   entryRegistriesAdapter,
   honoRoutesAdapter,

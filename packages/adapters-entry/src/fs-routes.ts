@@ -64,6 +64,15 @@ export interface FsRouter {
    * group that drops out would move every route under it.
    */
   readonly segments: readonly SegmentConvention[];
+  /**
+   * How a route's segments are laid out on disk, where not one per directory.
+   *
+   * `flat` is Remix's: a route is a file directly under the root, or a directory
+   * directly under it holding one of `routeFiles`, and its segments are the
+   * dots of that one name - `api.orders.$id.ts` is `/api/orders/:id`, and a dot
+   * inside brackets (`[sitemap.xml]`) is a literal one (P38).
+   */
+  readonly layout?: 'flat';
 }
 
 /**
@@ -73,7 +82,14 @@ export interface FsRouter {
  * tool reads have between them, and a framework with a fifth adds a name here
  * and a rule to the table below, which is one place rather than two files.
  */
-export type SegmentConvention = 'group' | 'slot' | 'private' | 'param' | 'catch-all';
+export type SegmentConvention =
+  | 'group'
+  | 'slot'
+  | 'private'
+  | 'param'
+  | 'catch-all'
+  | 'pathless'
+  | 'dollar';
 
 /** A directory that groups files without appearing in the address. */
 const GROUP = /^\(.*\)$/;
@@ -91,9 +107,36 @@ const SLOT = /^@/;
  */
 const PRIVATE = /^_/;
 
-/** `[id]` is one segment of any value; `[...rest]` and `[[...rest]]` are any number. */
+/**
+ * `[id]` is one segment of any value; `[...rest]` and `[[...rest]]` are any
+ * number; `[[lang]]` is one that may be absent, and `[id=integer]` names a
+ * matcher after the param, which is no part of its name (SvelteKit).
+ */
 const DYNAMIC = /^\[(\.\.\.)?(.+?)\]$/;
-const OPTIONAL_CATCH_ALL = /^\[\[\.\.\..+\]\]$/;
+const OPTIONAL = /^\[\[.+\]\]$/;
+
+/** `$id` is a param, `$` alone the rest of the path, `($lang)` an optional one (Remix). */
+const DOLLAR = /^(\()?\$([\w-]*)\)?$/;
+
+/**
+ * One segment as a router reads it: what it contributes to the address (the
+ * key, every param renamed) and to the path as written (each param named, so a
+ * handler's params can be named by the route the way a registered path names
+ * them - P34).
+ */
+interface SegmentReading {
+  readonly read: string;
+  readonly raw: string;
+}
+
+/** A bracketed segment's name, without the brackets, the dots or a matcher. */
+const dynamicName = (segment: string): string | undefined =>
+  DYNAMIC.exec(segment.replace(/^\[(\[.*\])\]$/, '$1'))?.[2]?.replace(/=.*$/, '');
+
+const named = (read: string, name: string | undefined, optional: boolean): SegmentReading => ({
+  read,
+  raw: name === undefined || name === '' ? read : `:${name}${optional ? '?' : ''}`,
+});
 
 /**
  * What one segment contributes to an address, by the convention that claims it.
@@ -101,14 +144,14 @@ const OPTIONAL_CATCH_ALL = /^\[\[\.\.\..+\]\]$/;
  * A lookup rather than a chain of branches, so that a router's `segments` list
  * is the whole of what decides which spellings apply to it. Each rule answers
  * `undefined` when the segment is not its business, `null` when the segment
- * contributes nothing, and a string when it contributes that.
+ * contributes nothing, and a reading when it contributes that.
  *
  * `null` is a different answer from an empty string: a repository that spells a
  * group as a path serves `app/api/(admin)/users/route.ts` at `/api/users`, and
  * getting that wrong moves every route under it.
  */
 const SEGMENT_RULES: Readonly<
-  Record<SegmentConvention, (segment: string) => string | null | undefined>
+  Record<SegmentConvention, (segment: string) => SegmentReading | null | undefined>
 > = Object.freeze({
   group: (segment) => (GROUP.test(segment) ? null : undefined),
   slot: (segment) => (SLOT.test(segment) ? null : undefined),
@@ -117,13 +160,28 @@ const SEGMENT_RULES: Readonly<
   // which does not honour underscores is not read as if it did.
   private: (segment) => (PRIVATE.test(segment) ? null : undefined),
   'catch-all': (segment) => {
-    if (OPTIONAL_CATCH_ALL.test(segment)) return '*';
-    const dynamic = DYNAMIC.exec(segment);
-    return dynamic !== null && dynamic[1] !== undefined ? '*' : undefined;
+    const dynamic = DYNAMIC.exec(segment.replace(/^\[(\[.*\])\]$/, '$1'));
+    if (dynamic?.[1] === undefined) return undefined;
+    return named('*', dynamicName(segment), OPTIONAL.test(segment));
   },
   param: (segment) => {
-    const dynamic = DYNAMIC.exec(segment);
-    return dynamic !== null && dynamic[1] === undefined ? PARAM_PLACEHOLDER : undefined;
+    const dynamic = DYNAMIC.exec(segment.replace(/^\[(\[.*\])\]$/, '$1'));
+    if (dynamic === null || dynamic[1] !== undefined) return undefined;
+    return named(PARAM_PLACEHOLDER, dynamicName(segment), OPTIONAL.test(segment));
+  },
+  // Remix: a leading underscore is a layout that adds no segment (`_index`
+  // among them), and a trailing one only opts out of a parent's layout.
+  pathless: (segment) => {
+    if (PRIVATE.test(segment)) return null;
+    if (!segment.endsWith('_')) return undefined;
+    const literal = segment.slice(0, -1);
+    return { read: literal, raw: literal };
+  },
+  dollar: (segment) => {
+    const dollar = DOLLAR.exec(segment);
+    if (dollar === null) return undefined;
+    const name = dollar[2] ?? '';
+    return name === '' ? { read: '*', raw: '*' } : named(PARAM_PLACEHOLDER, name, dollar[1] !== undefined);
   },
 });
 
@@ -132,32 +190,43 @@ const CONVENTION_ORDER: readonly SegmentConvention[] = [
   'group',
   'slot',
   'private',
+  'pathless',
   'catch-all',
   'param',
+  'dollar',
 ];
 
 /** One segment of a directory path, as this router reads it. */
-const segmentOf = (segment: string, router: FsRouter): string | null => {
+const segmentOf = (segment: string, router: FsRouter): SegmentReading | null => {
   if (segment === '') return null;
   for (const convention of CONVENTION_ORDER) {
     if (!router.segments.includes(convention)) continue;
     const read = SEGMENT_RULES[convention](segment);
     if (read !== undefined) return read;
   }
-  return segment;
+  return { read: segment, raw: segment };
 };
 
 /**
- * A segment as the path is written with its params named: `[id]` is `:id`,
- * `[...slug]` is `:slug` and `[[...slug]]` is `:slug?`, so a handler's params
- * can be named by the route the way a registered path names them (P34).
+ * The segments of one flat name: split at each dot outside brackets, and the
+ * brackets of an escaped part dropped (`[sitemap.xml]` is one literal segment).
  */
-const rawSegmentOf = (segment: string, read: string): string => {
-  if (read !== PARAM_PLACEHOLDER && read !== '*') return read;
-  const dynamic = DYNAMIC.exec(segment.replace(/^\[(\[.*\])\]$/, '$1'));
-  const name = dynamic?.[2];
-  if (name === undefined) return read;
-  return OPTIONAL_CATCH_ALL.test(segment) ? `:${name}?` : `:${name}`;
+const dottedSegments = (name: string): string[] =>
+  (name.match(/(?:\[[^\]]*\]|[^.])+/g) ?? []).map((part) =>
+    /^\[[^\]]*\]$/.test(part) ? part.slice(1, -1) : part,
+  );
+
+/**
+ * The segments of a route laid out flat, or nothing when the file is not one:
+ * a route module directly under the root, or a folder's route file there.
+ */
+const flatSegments = (after: readonly string[], name: string, router: FsRouter): string[] | undefined => {
+  if (after.length === 0) return dottedSegments(name);
+  const [folder] = after;
+  if (after.length === 1 && folder !== undefined && router.routeFiles?.includes(name) === true) {
+    return dottedSegments(folder);
+  }
+  return undefined;
 };
 
 /** Whether a segment opts its whole subtree out of routing, for this router. */
@@ -241,6 +310,30 @@ type FsFileReading =
 
 const ELSEWHERE: FsFileReading = { kind: 'elsewhere' };
 
+/**
+ * The segments of a route laid out one per directory, `private` when the
+ * convention takes it out of service, or nothing when it is not a route file.
+ */
+const directorySegments = (
+  after: string[],
+  name: string,
+  router: FsRouter,
+): string[] | 'private' | undefined => {
+  if (router.routeFiles !== undefined) {
+    if (!router.routeFiles.includes(name)) return undefined;
+  } else {
+    // The older router: the file name is the last segment, and a private file
+    // is not a route at all.
+    if (optsOut(name, router)) return 'private';
+    if (name !== 'index') after.push(name);
+  }
+
+  // A directory the underscore opts out of routing serves nothing at all, so a
+  // file under one is not a route with a segment missing — it is not a route.
+  if (after.some((segment) => optsOut(segment, router))) return 'private';
+  return after;
+};
+
 const readFsFile = (file: string, router: FsRouter): FsFileReading => {
   if (file.startsWith('../')) return ELSEWHERE;
   const parts = file.split('/');
@@ -256,24 +349,15 @@ const readFsFile = (file: string, router: FsRouter): FsFileReading => {
   const name = (after.pop() ?? '').replace(FILE_EXTENSION, '');
   if (name === '') return ELSEWHERE;
 
-  if (router.routeFiles !== undefined) {
-    if (!router.routeFiles.includes(name)) return ELSEWHERE;
-  } else {
-    // The older router: the file name is the last segment, and a private file
-    // is not a route at all.
-    if (optsOut(name, router)) return { kind: 'not-served', why: 'private' };
-    if (name !== 'index') after.push(name);
-  }
-
-  // A directory the underscore opts out of routing serves nothing at all, so a
-  // file under one is not a route with a segment missing — it is not a route.
-  if (after.some((segment) => optsOut(segment, router))) return { kind: 'not-served', why: 'private' };
+  const segments = router.layout === 'flat' ? flatSegments(after, name, router) : directorySegments(after, name, router);
+  if (segments === undefined) return ELSEWHERE;
+  if (segments === 'private') return { kind: 'not-served', why: 'private' };
 
   // A grouped or slot directory drops out; nothing else may, because a segment
   // that could not be read would make the address a different one.
-  const kept = after.flatMap((segment) => {
+  const kept = segments.flatMap((segment) => {
     const read = segmentOf(segment, router);
-    return read === null ? [] : [{ read, raw: rawSegmentOf(segment, read) }];
+    return read === null ? [] : [read];
   });
   const prefix = router.prefix ?? '';
   return {
@@ -636,6 +720,9 @@ export const reportUnreadHandler = (
   });
 };
 
+/** The exports a route file answers by, where each is named after its verb. */
+const VERB_EXPORTS: ReadonlyMap<string, string> = new Map(HTTP_METHODS.map((method) => [method, method]));
+
 /** One way in a file-system router declares, as the reader of one describes it. */
 export interface FsRouteVerb {
   method: string;
@@ -687,15 +774,27 @@ export const readVerbFile = (
     rawPath?: string | undefined;
     adapter: string;
     emit: (verb: FsRouteVerb) => void;
+    /**
+     * Which exports are ways in, and the verb each answers: the verbs' own
+     * names unless the framework names them otherwise - Remix's `loader` is a
+     * GET and its `action` a POST (P38).
+     */
+    verbs?: ReadonlyMap<string, string>;
+    /**
+     * Whether a file exporting none of them is a page rather than a route with
+     * its verb missing, and so says nothing: every Remix route module is served,
+     * and most of them only render.
+     */
+    pagesServed?: boolean;
   },
 ): void => {
   const exported = sourceFile.getExportedDeclarations();
   let found = 0;
-  for (const method of HTTP_METHODS) {
-    const [declaration] = exported.get(method) ?? [];
+  for (const [name, method] of options.verbs ?? VERB_EXPORTS) {
+    const [declaration] = exported.get(name) ?? [];
     if (declaration === undefined) continue;
     found += 1;
-    const at = reachOf(declaration, sourceFile, method, ctx.repoDir);
+    const at = reachOf(declaration, sourceFile, name, ctx.repoDir);
     const reading = verbReading(declaration);
     const read = reading?.bodyRead === true;
     options.emit({
@@ -723,7 +822,7 @@ export const readVerbFile = (
     }
   }
 
-  if (found > 0) return;
+  if (found > 0 || options.pagesServed === true) return;
   ctx.builder.addUnresolved({
     file: options.file,
     line: 1,

@@ -402,6 +402,12 @@ const saidOf = (value: TsNode, validators: readonly RequestValidator[]): Candida
 };
 
 /** Every expression in a function that reads a path of keys off one of its parameters. */
+/** Whether a name is the key of an access, `x.name`, rather than a value of its own. */
+const isAccessedName = (node: TsNode): boolean => {
+  const parent = node.getParent();
+  return parent !== undefined && Node.isPropertyAccessExpression(parent) && parent.getNameNode() === node;
+};
+
 const readsOf = (fn: FunctionLike, parameter: ParameterDeclaration, at: readonly string[]): TsNode[] => {
   const out: TsNode[] = [];
   const body = fn.getBody();
@@ -411,7 +417,10 @@ const readsOf = (fn: FunctionLike, parameter: ParameterDeclaration, at: readonly
     const fits =
       (Node.isPropertyAccessExpression(node) && node.getName() === last) ||
       (Node.isElementAccessExpression(node) && last !== undefined) ||
-      (Node.isIdentifier(node) && !Node.isPropertyAccessExpression(node.getParent()));
+      // A name read as itself or as the object of an access - `params.id`,
+      // where `params` was bound in the parameter list (P38) - but not the
+      // name an access reads off something else.
+      (Node.isIdentifier(node) && !isAccessedName(node));
     if (!fits) continue;
     if (Node.isIdentifier(node)) {
       // A name bound to the part - `const { body } = req` - and read: its

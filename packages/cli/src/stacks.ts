@@ -40,14 +40,13 @@ export const UNKNOWN_TYPE = 'unknown';
  * strength of a second dependency it happens to declare.
  */
 export const UNREAD_SIGNATURES: ReadonlyArray<readonly [framework: string, dependency: string]> = [
-  // The file-system routers that are left. What they have in common with the two
+  // The file-system routers that are left. What they have in common with the four
   // that are now read is that the path a route is served at is the path of the
   // file declaring it — a different fact from a call with a path in it — and by
   // now that part is a row of data rather than a reader (`fs-routes.ts`). What
   // they do not have in common with them is the language the rest is written in,
   // which is what would have to be read next.
   ['Nuxt', 'nuxt'],
-  ['Remix', '@remix-run/react'],
   ['Vue', 'vue'],
   ['Svelte', 'svelte'],
 ];

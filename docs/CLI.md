@@ -118,15 +118,16 @@ Run init again with --list-unknown to name every one; each is in the configurati
 
 The type of a repository is read from its manifest: `@nestjs/core` makes it
 `nestjs`, `@medusajs/framework` or `@medusajs/medusa` makes it `medusa`, `next`
-makes it `nextjs`, `express`, `fastify` and `koa` make it each of those,
+makes it `nextjs`, `@sveltejs/kit` makes it `sveltekit`, `@remix-run/node` or
+`@remix-run/react` makes it `remix`, `express`, `fastify` and `koa` make it each of those,
 `@angular/core` makes it `angular`, `react` makes it `react`, and anything else is
-written as `unknown`. Those eight are every type there is. Hono and Telegraf have
+written as `unknown`. Those ten are every type there is. Hono and Telegraf have
 no type of their own: they are frameworks the server reader finds inside a
 repository whichever server type it is given, so a repository whose only
 framework is Hono is
 given any of the server types — `express` will do — and its routes are read. Where
-the manifest names a framework there is no reader for — Nuxt, Remix, Vue or
-Svelte — `init` says so by name, and `build` repeats it on that repository's line:
+the manifest names a framework there is no reader for — Nuxt, Vue or Svelte
+without SvelteKit — `init` says so by name, and `build` repeats it on that repository's line:
 
 ```
 web            skipped (no-extractor: Nuxt, no reader yet)
@@ -216,9 +217,18 @@ repository with fewer routes.
 rather than an argument of a call, what differs between one router and another
 is the root directory, which file names declare a route, the prefix in front,
 and which segment spellings are honoured. Next.js (the app router, the pages
-router and its API routes) and Medusa are rows of that description, read by one
-walk, so the two cannot drift on what counts as a verb read or a file served at
-no address (`fixtures/react-next`, `fixtures/medusa-fs-router`). A file-system
+router and its API routes), Medusa, SvelteKit and Remix are rows of that
+description, read by one walk, so they cannot drift on what counts as a verb read
+or a file served at no address (`fixtures/react-next`, `fixtures/medusa-fs-router`).
+SvelteKit's `src/routes/**/+server.ts` exports its verbs by name; a group in
+brackets drops out, `[id]` and `[[id]]` are params (a matcher after `=` is no part
+of the name) and `[...rest]` is the rest of the path
+(`fixtures/sveltekit-server-routes`). Remix's flat routes are one name per route,
+its segments separated by dots - `app/routes/api.orders.$id.ts`, or a folder of
+that name holding `route.ts` - where a leading underscore is a layout that adds no
+segment, `$id` a param, `$` the rest of the path and a dot in brackets a literal
+one; a `loader` answers GET and an `action` POST, and a route module with neither
+is a page and says nothing (`fixtures/remix-flat-routes`). A file-system
 router nobody has described — `@fastify/autoload`, or a convention of the
 repository's own — is not guessed at: the reader says, at `info`, that it cannot
 tell such a repository from a library that merely depends on the framework
@@ -1218,7 +1228,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 |---|---|---|---|
 | `name` | string | required | what this service is called everywhere else |
 | `repo` | string | required unless `document` is given | path to the repository, relative to this file or absolute. A service has a `repo` or a `document`, never both |
-| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `express`, `fastify` or `koa` for anything with a server in it, `lambda` for functions whose ways in are declared in Terraform, `angular` or `react` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
+| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `sveltekit`, `remix`, `express`, `fastify` or `koa` for anything with a server in it, `lambda` for functions whose ways in are declared in Terraform, `angular` or `react` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
 | `baseUrlEnv` | string[] | `[]` | settings keys other services use to address this one |
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |

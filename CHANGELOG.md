@@ -6,6 +6,16 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+SvelteKit and Remix routes are read as ways in. A SvelteKit `+server.ts` under
+`src/routes` answers at its directories' address (groups drop out, `[id]`,
+`[[id]]` and `[id=matcher]` are params, `[...rest]` the rest), and a Remix flat
+route - `app/routes/api.orders.$id.ts`, or that folder's `route.ts` - answers a
+GET by its `loader` and a POST by its `action`. Both keep the path with its params
+named as `rawPath`, and the repository types `sveltekit` and `remix` are guessed
+from `@sveltejs/kit` and `@remix-run/*`. A handler's params bound in its parameter
+list - `({ params }) => params.id` - now count as read, so they are named by the
+route too.
+
 `visualise` shows what a route answers besides its own response: the hover
 card and the details panel list its failures by status (`404 → Problem`) and
 mark an answer sent under a status its code works out (`status ? → ...`), and

@@ -1,0 +1,388 @@
+{
+  "schemaVersion": 6,
+  "repo": "sveltekit-server-routes",
+  "generatedAt": "2026-10-08T19:57:07.700Z",
+  "nodes": [
+    {
+      "id": "entry:sveltekit-server-routes:http:DELETE:/api/orders/:param",
+      "type": "entry",
+      "label": "DELETE /api/orders/:param",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/api/orders/[id=integer]/+server.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:id",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+server",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:sveltekit-server-routes:http:GET:/:param/files/*",
+      "type": "entry",
+      "label": "GET /:param/files/*",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/[[lang]]/files/[...path]/+server.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/:param/files/*",
+        "rawPath": "/:lang?/files/:path",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+server",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:sveltekit-server-routes:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/api/orders/+server.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+server",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:sveltekit-server-routes:http:GET:/api/orders/:param",
+      "type": "entry",
+      "label": "GET /api/orders/:param",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/api/orders/[id=integer]/+server.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:id",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+server",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:sveltekit-server-routes:http:POST:/api/cart",
+      "type": "entry",
+      "label": "POST /api/cart",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/(shop)/api/cart/+server.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/cart",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+server",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "repo:sveltekit-server-routes",
+      "type": "repo",
+      "label": "sveltekit-server-routes",
+      "repo": "sveltekit-server-routes",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "sveltekit-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sveltekit-server-routes#src/lib/orders.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "sveltekit-server-routes",
+      "file": "src/lib/orders.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:sveltekit-server-routes#Order[]"
+        }
+      }
+    },
+    {
+      "id": "sveltekit-server-routes#src/lib/orders.ts:oneOrder",
+      "type": "function",
+      "label": "oneOrder",
+      "repo": "sveltekit-server-routes",
+      "file": "src/lib/orders.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:sveltekit-server-routes#Order"
+        }
+      }
+    },
+    {
+      "id": "sveltekit-server-routes#src/lib/orders.ts:removeOrder",
+      "type": "function",
+      "label": "removeOrder",
+      "repo": "sveltekit-server-routes",
+      "file": "src/lib/orders.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "sveltekit-server-routes#src/routes/(shop)/api/cart/+server.ts:POST",
+      "type": "function",
+      "label": "POST",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/(shop)/api/cart/+server.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ request }",
+              "type": "type:@sveltejs/kit#RequestEvent<object>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "sveltekit-server-routes#src/routes/[[lang]]/files/[...path]/+server.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/[[lang]]/files/[...path]/+server.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "type:@sveltejs/kit#RequestEvent<object>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "sveltekit-server-routes#src/routes/api/orders/+server.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/api/orders/+server.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "sveltekit-server-routes#src/routes/api/orders/[id=integer]/+server.ts:DELETE",
+      "type": "function",
+      "label": "DELETE",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/api/orders/[id=integer]/+server.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "type:@sveltejs/kit#RequestEvent<object>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "sveltekit-server-routes#src/routes/api/orders/[id=integer]/+server.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "sveltekit-server-routes",
+      "file": "src/routes/api/orders/[id=integer]/+server.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "type:@sveltejs/kit#RequestEvent<object>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:sveltekit-server-routes:http:DELETE:/api/orders/:param",
+      "to": "sveltekit-server-routes#src/routes/api/orders/[id=integer]/+server.ts:DELETE",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/api/orders/[id=integer]/+server.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:sveltekit-server-routes:http:GET:/:param/files/*",
+      "to": "sveltekit-server-routes#src/routes/[[lang]]/files/[...path]/+server.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/[[lang]]/files/[...path]/+server.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "params": "{lang?:string;path:string}"
+      }
+    },
+    {
+      "from": "entry:sveltekit-server-routes:http:GET:/api/orders",
+      "to": "sveltekit-server-routes#src/routes/api/orders/+server.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/api/orders/+server.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "type:sveltekit-server-routes#Order[]"
+    },
+    {
+      "from": "entry:sveltekit-server-routes:http:GET:/api/orders/:param",
+      "to": "sveltekit-server-routes#src/routes/api/orders/[id=integer]/+server.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/api/orders/[id=integer]/+server.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      },
+      "returns": "type:sveltekit-server-routes#Order"
+    },
+    {
+      "from": "entry:sveltekit-server-routes:http:POST:/api/cart",
+      "to": "sveltekit-server-routes#src/routes/(shop)/api/cart/+server.ts:POST",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/(shop)/api/cart/+server.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "body": "{sku:string;quantity:number}",
+        "claimed": [
+          "body"
+        ]
+      },
+      "returns": "{sku:string;quantity:number}"
+    },
+    {
+      "from": "sveltekit-server-routes#src/routes/api/orders/+server.ts:GET",
+      "to": "sveltekit-server-routes#src/lib/orders.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/routes/api/orders/+server.ts",
+      "line": 4,
+      "params": [],
+      "returns": "type:sveltekit-server-routes#Order[]"
+    },
+    {
+      "from": "sveltekit-server-routes#src/routes/api/orders/[id=integer]/+server.ts:DELETE",
+      "to": "sveltekit-server-routes#src/lib/orders.ts:removeOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/routes/api/orders/[id=integer]/+server.ts",
+      "line": 10,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "sveltekit-server-routes#src/routes/api/orders/[id=integer]/+server.ts:GET",
+      "to": "sveltekit-server-routes#src/lib/orders.ts:oneOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/routes/api/orders/[id=integer]/+server.ts",
+      "line": 6,
+      "params": [
+        "string"
+      ],
+      "returns": "type:sveltekit-server-routes#Order"
+    }
+  ],
+  "types": {
+    "type:@sveltejs/kit#RequestEvent<object>": {
+      "name": "RequestEvent",
+      "kind": "external",
+      "declaredIn": "@sveltejs/kit",
+      "structuralHash": "6c2a2dd33b1ba65f",
+      "meta": {
+        "declKind": "external",
+        "package": "@sveltejs/kit"
+      }
+    },
+    "type:sveltekit-server-routes#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "sveltekit-server-routes#src/lib/orders.ts",
+      "structuralHash": "e752b571a9fb0fb7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": []
+}

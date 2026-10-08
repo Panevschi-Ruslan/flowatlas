@@ -100,6 +100,12 @@ export const READERS: readonly ReaderRow[] = [
   // and broker passes, the contract types and an incremental session - without
   // losing a component, an action or a route handler written in markup.
   ['nextjs', 'next', NESTJS_EXTRACTOR],
+  // The two file-system routers whose reading is a row of data (P38), read by
+  // the server reader for the reason above: each is a server and a browser in
+  // one directory, and Remix declares React beside it.
+  ['sveltekit', '@sveltejs/kit', NESTJS_EXTRACTOR],
+  ['remix', '@remix-run/node', NESTJS_EXTRACTOR],
+  ['remix', '@remix-run/react', NESTJS_EXTRACTOR],
   ['express', 'express', NESTJS_EXTRACTOR],
   ['fastify', 'fastify', NESTJS_EXTRACTOR],
   ['koa', 'koa', NESTJS_EXTRACTOR],

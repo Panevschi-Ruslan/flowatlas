@@ -1,0 +1,428 @@
+{
+  "schemaVersion": 6,
+  "repo": "remix-flat-routes",
+  "generatedAt": "2026-10-08T19:56:52.761Z",
+  "nodes": [
+    {
+      "id": "entry:remix-flat-routes:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "remix-flat-routes",
+      "file": "app/routes/api.orders._index/route.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:remix-flat-routes:http:GET:/api/orders/:param",
+      "type": "entry",
+      "label": "GET /api/orders/:param",
+      "repo": "remix-flat-routes",
+      "file": "app/routes/api.orders.$orderId.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:orderId",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:remix-flat-routes:http:GET:/files/*",
+      "type": "entry",
+      "label": "GET /files/*",
+      "repo": "remix-flat-routes",
+      "file": "app/routes/files.$.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/files/*",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:remix-flat-routes:http:GET:/sitemap.xml",
+      "type": "entry",
+      "label": "GET /sitemap.xml",
+      "repo": "remix-flat-routes",
+      "file": "app/routes/[sitemap.xml].ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/sitemap.xml",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:remix-flat-routes:http:POST:/api/orders",
+      "type": "entry",
+      "label": "POST /api/orders",
+      "repo": "remix-flat-routes",
+      "file": "app/routes/api.orders._index/route.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/orders",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:remix-flat-routes:http:POST:/login",
+      "type": "entry",
+      "label": "POST /login",
+      "repo": "remix-flat-routes",
+      "file": "app/routes/_auth.login.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/login",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "remix-flat-routes#app/models/orders.ts:createOrder",
+      "type": "function",
+      "label": "createOrder",
+      "repo": "remix-flat-routes",
+      "file": "app/models/orders.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "type:remix-flat-routes#Order"
+        }
+      }
+    },
+    {
+      "id": "remix-flat-routes#app/models/orders.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "remix-flat-routes",
+      "file": "app/models/orders.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:remix-flat-routes#Order[]"
+        }
+      }
+    },
+    {
+      "id": "remix-flat-routes#app/models/orders.ts:oneOrder",
+      "type": "function",
+      "label": "oneOrder",
+      "repo": "remix-flat-routes",
+      "file": "app/models/orders.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:remix-flat-routes#Order"
+        }
+      }
+    },
+    {
+      "id": "remix-flat-routes#app/routes/[sitemap.xml].ts:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "remix-flat-routes",
+      "file": "app/routes/[sitemap.xml].ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "remix-flat-routes#app/routes/_auth.login.ts:action",
+      "type": "function",
+      "label": "action",
+      "repo": "remix-flat-routes",
+      "file": "app/routes/_auth.login.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ request }",
+              "type": "type:@remix-run/node#LoaderFunctionArgs"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "remix-flat-routes#app/routes/api.orders.$orderId.ts:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "remix-flat-routes",
+      "file": "app/routes/api.orders.$orderId.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "type:@remix-run/node#LoaderFunctionArgs"
+            }
+          ],
+          "returns": "type:remix-flat-routes#Order"
+        }
+      }
+    },
+    {
+      "id": "remix-flat-routes#app/routes/api.orders._index/route.ts:action",
+      "type": "function",
+      "label": "action",
+      "repo": "remix-flat-routes",
+      "file": "app/routes/api.orders._index/route.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ request }",
+              "type": "type:@remix-run/node#LoaderFunctionArgs"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "remix-flat-routes#app/routes/api.orders._index/route.ts:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "remix-flat-routes",
+      "file": "app/routes/api.orders._index/route.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "remix-flat-routes#app/routes/files.$.ts:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "remix-flat-routes",
+      "file": "app/routes/files.$.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "type:@remix-run/node#LoaderFunctionArgs"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "repo:remix-flat-routes",
+      "type": "repo",
+      "label": "remix-flat-routes",
+      "repo": "remix-flat-routes",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "remix-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:remix-flat-routes:http:GET:/api/orders",
+      "to": "remix-flat-routes#app/routes/api.orders._index/route.ts:loader",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/api.orders._index/route.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "type:remix-flat-routes#Order[]"
+    },
+    {
+      "from": "entry:remix-flat-routes:http:GET:/api/orders/:param",
+      "to": "remix-flat-routes#app/routes/api.orders.$orderId.ts:loader",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/api.orders.$orderId.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "params": "{orderId:string}"
+      },
+      "returns": "type:remix-flat-routes#Order"
+    },
+    {
+      "from": "entry:remix-flat-routes:http:GET:/files/*",
+      "to": "remix-flat-routes#app/routes/files.$.ts:loader",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/files.$.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "Response"
+    },
+    {
+      "from": "entry:remix-flat-routes:http:GET:/sitemap.xml",
+      "to": "remix-flat-routes#app/routes/[sitemap.xml].ts:loader",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/[sitemap.xml].ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "Response"
+    },
+    {
+      "from": "entry:remix-flat-routes:http:POST:/api/orders",
+      "to": "remix-flat-routes#app/routes/api.orders._index/route.ts:action",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/api.orders._index/route.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "body": "{total:number}",
+        "claimed": [
+          "body"
+        ]
+      },
+      "returns": "type:remix-flat-routes#Order"
+    },
+    {
+      "from": "entry:remix-flat-routes:http:POST:/login",
+      "to": "remix-flat-routes#app/routes/_auth.login.ts:action",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/_auth.login.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "Response"
+    },
+    {
+      "from": "remix-flat-routes#app/routes/api.orders.$orderId.ts:loader",
+      "to": "remix-flat-routes#app/models/orders.ts:oneOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/routes/api.orders.$orderId.ts",
+      "line": 6,
+      "params": [
+        "string"
+      ],
+      "returns": "type:remix-flat-routes#Order"
+    },
+    {
+      "from": "remix-flat-routes#app/routes/api.orders._index/route.ts:action",
+      "to": "remix-flat-routes#app/models/orders.ts:createOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/routes/api.orders._index/route.ts",
+      "line": 9,
+      "params": [
+        "number"
+      ],
+      "returns": "type:remix-flat-routes#Order"
+    },
+    {
+      "from": "remix-flat-routes#app/routes/api.orders._index/route.ts:loader",
+      "to": "remix-flat-routes#app/models/orders.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/routes/api.orders._index/route.ts",
+      "line": 5,
+      "params": [],
+      "returns": "type:remix-flat-routes#Order[]"
+    }
+  ],
+  "types": {
+    "type:@remix-run/node#LoaderFunctionArgs": {
+      "name": "LoaderFunctionArgs",
+      "kind": "external",
+      "declaredIn": "@remix-run/node",
+      "structuralHash": "1025dad88eeeb8f1",
+      "meta": {
+        "declKind": "external",
+        "package": "@remix-run/node"
+      }
+    },
+    "type:remix-flat-routes#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "remix-flat-routes#app/models/orders.ts",
+      "structuralHash": "e752b571a9fb0fb7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": []
+}
