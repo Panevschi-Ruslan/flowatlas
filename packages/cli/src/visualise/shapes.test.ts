@@ -610,6 +610,37 @@ describe('what a route answers besides its own response (P32)', () => {
     expect(cardOf(answered, 0)?.lines.slice(-3)).toEqual(['404 → Order', '422 → { error: string }', 'status ? → { open: boolean }']);
   });
 
+  it('marks them on the route\'s one line (P46)', () => {
+    expect(faceLine(answered, 0)).toBe('body: CreateOrder → Order · +2 failures · status ?');
+  });
+
+  it('says what a route answering only under a worked-out status sends, rather than that nothing was read (P46)', () => {
+    const only = (meta: Record<string, unknown>, returns?: string) =>
+      createModel(
+        packGraph({
+          builtAt: '2026-10-08T00:00:00.000Z',
+          nodes: [nodes[0]!, nodes[1]!],
+          edges: [
+            {
+              from: nodes[0]!.id,
+              to: nodes[1]!.id,
+              type: 'handles',
+              confidence: 'static',
+              ...(returns === undefined ? {} : { returns }),
+              meta,
+            },
+          ],
+          unresolved: [],
+          report: { ...report, services: [{ name: 'api', type: 'nestjs', nodes: 2, edges: 1, unresolved: 0, durationMs: 0 }] } as unknown as LinkReport,
+          typeOf: (id) => registry[id],
+        }),
+      );
+    expect(faceLine(only({ requestRead: true, statusUnknown: '{open:boolean}' }), 0)).toBe('status ? → { open: boolean }');
+    expect(faceLine(only({ requestRead: true, failures: { '404': ORDER } }), 0)).toBe('+1 failure');
+    expect(faceLine(only({ requestRead: true, failures: { '404': ORDER } }, ORDER), 0)).toBe('→ Order · +1 failure');
+    expect(faceLine(only({ requestRead: true }, ORDER), 0)).toBe('→ Order');
+  });
+
   it('counts the routes giving each on their service in the map', () => {
     const service = answering.map.boxes.find((box) => box.n === 'api');
     expect(service?.s).toMatchObject({ failing: 1, statusUnknown: 1 });

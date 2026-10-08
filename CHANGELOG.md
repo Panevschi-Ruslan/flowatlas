@@ -6,6 +6,10 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+In `visualise`, a route's one line marks its other answers - `+2 failures`,
+`status ?` - and a route that answers only under a worked-out status shows that
+answer (`status ? → Station[]`) instead of saying no request parts were read.
+
 An Angular directive's (or component's) host bindings - its `host` object and
 its `@HostBinding` / `@HostListener` members - are recorded as
 `meta.hostBindings` (`[class.active]=isActive`, `(click)=toggle($event)`), with

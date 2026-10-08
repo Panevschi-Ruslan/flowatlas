@@ -895,6 +895,42 @@ export const answersOf = (model, i) => {
   return model.answers.get(i) || [];
 };
 
+/**
+ * How a route's one line marks the answers besides its own, by kind (P46):
+ * a count of failures, and a mark for an answer under a worked-out status -
+ * with what it sends, where the route sends nothing else.
+ */
+const ANSWER_MARKS = Object.freeze({
+  failure: (answers) => `+${answers.length} ${answers.length === 1 ? 'failure' : 'failures'}`,
+  unknown: (answers, model, alone) =>
+    alone && answers.length === 1 ? 'status ? → ' + refText(model, answers[0].ref) : 'status ?',
+});
+
+/**
+ * The marks one route's line carries for its other answers, in the order of
+ * `ANSWER_MARKS`. `alone` when the route answers nothing under a known
+ * success, so the one answer it has is said in full.
+ */
+const answerMarks = (model, i, alone) => {
+  const answers = answersOf(model, i);
+  return Object.entries(ANSWER_MARKS).flatMap(([kind, mark]) => {
+    const of = answers.filter((answer) => answer.kind === kind);
+    return of.length === 0 ? [] : [mark(of, model, alone)];
+  });
+};
+
+/**
+ * A route on one line: the request parts it reads, what it responds, and a
+ * mark for its other answers. It says no request parts were read only when
+ * there is nothing else to say, so a route that answers only under a
+ * worked-out status does not read as one nothing was read of.
+ */
+const routeLine = (model, i, listed, back) => {
+  const marks = answerMarks(model, i, back === '');
+  const head = listed.length > 0 ? listed.join(' · ') : back === '' && marks.length === 0 ? 'no request parts read' : '';
+  return [head + back, ...marks].filter((part) => part !== '').join(' · ').trim();
+};
+
 /** An answer on one line: `404 → Problem`, `status ? → { open: boolean }`. */
 const answerLine = (model, answer, chars) => {
   const says = ANSWER_SAYS[answer.kind];
@@ -983,7 +1019,7 @@ export const faceLine = (model, i) => {
   const listed = face.params.map((param) => paramText(model, param));
   if (face.face === 'method' || face.face === 'bare') return '(' + listed.join(', ') + ')' + back;
   if (face.face === 'handler') return faceName(model, i, face) + '(' + listed.join(', ') + ')' + back;
-  if (face.face === 'route') return (listed.length > 0 ? listed.join(' · ') : 'no request parts read') + back;
+  if (face.face === 'route') return routeLine(model, i, listed, back);
   if (face.face === 'channel') {
     return 'payload ' + face.params.map((param) => refText(model, param.ref)).join(' | ');
   }
