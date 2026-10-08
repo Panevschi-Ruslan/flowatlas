@@ -79,6 +79,7 @@ const survey = (over: Partial<RepoSurvey> = {}): RepoSurvey => ({
   tsconfigHash: 'sha1:ts',
   packageJsonHash: 'sha1:pkg',
   dependencies: installed(),
+  packages: {},
   globalFiles: ['src/main.ts', 'src/orders/orders.module.ts'],
   files: files(),
   graphPath: '.flowatlas/services/orders/graph.json',
@@ -191,6 +192,24 @@ describe('planning what to re-read', () => {
         { cache: cacheOf(['orders', entry()]) },
       ).orders?.reason,
     ).toBe('pnpm-lock.yaml changed');
+  });
+
+  it('re-reads a repository whose installed declarations were edited, and only then', () => {
+    const typings = { 'node_modules/typeorm/index.d.ts': stamp('sha1:stub') };
+    const cache = cacheOf(['orders', entry({ packages: typings })]);
+    expect(planRebuild([survey({ packages: typings })], { cache }).orders).toEqual({
+      mode: 'skip',
+      reason: '0 files changed',
+    });
+    expect(
+      planRebuild(
+        [survey({ packages: { 'node_modules/typeorm/index.d.ts': stamp('sha1:stub-edited') } })],
+        { cache },
+      ).orders,
+    ).toEqual({ mode: 'full', reason: 'installed node_modules/typeorm/index.d.ts changed' });
+    expect(planRebuild([survey()], { cache }).orders?.reason).toBe(
+      'installed node_modules/typeorm/index.d.ts changed',
+    );
   });
 
   it('re-reads a repository the last build recorded nothing about the dependencies of', () => {

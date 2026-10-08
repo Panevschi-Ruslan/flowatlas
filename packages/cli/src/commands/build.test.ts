@@ -493,6 +493,30 @@ describe('building a project a second time', () => {
       .toBeLessThanOrEqual(result.timing.total);
   }, 240_000);
 
+  it('reads a repository again when a type stub it was read against is edited', async () => {
+    const config = configFor('stubbed', services);
+    await buildProject({ config, builtAt: FIXED });
+    const stub = join(FIXTURE, 'orders', 'node_modules', 'typeorm', 'index.d.ts');
+    const original = readFileSync(stub, 'utf8');
+
+    // Rewritten with the same content, the way a reinstall does: no change.
+    writeFileSync(stub, original);
+    const reinstalled = await buildProject({ config, builtAt: FIXED });
+    expect(reinstalled.plan['orders']).toEqual({ mode: 'skip', reason: '0 files changed' });
+
+    try {
+      writeFileSync(stub, `${original}\n// edited\n`);
+      const edited = await buildProject({ config, builtAt: FIXED });
+      expect(edited.plan['orders']).toEqual({
+        mode: 'full',
+        reason: 'installed node_modules/typeorm/index.d.ts changed',
+      });
+      expect(edited.plan['billing']).toEqual({ mode: 'skip', reason: '0 files changed' });
+    } finally {
+      writeFileSync(stub, original);
+    }
+  }, 240_000);
+
   it('reads everything again when told to ignore the cache, and rewrites it', async () => {
     const config = configFor('ignored', services);
     await buildProject({ config, builtAt: FIXED });

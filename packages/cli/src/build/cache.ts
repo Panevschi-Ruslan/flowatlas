@@ -19,8 +19,12 @@ import { z } from 'zod';
  * older cache records points at the old place, so the first build after the
  * upgrade reads everything once, says `cache-invalid:version` for why, and is
  * incremental again from the next.
+ *
+ * 4 records the declaration files out of installed packages that a reading
+ * used (P36), so an edited stub re-reads. An older cache does not say which
+ * they were, and saying so once beats guessing per repository.
  */
-export const CACHE_VERSION = 3;
+export const CACHE_VERSION = 4;
 
 export const CACHE_FILENAME = 'cache.json';
 
@@ -67,6 +71,12 @@ const repoCacheSchema = z.strictObject({
    * the wrong one half the time.
    */
   dependencies: dependencyStateSchema.optional(),
+  /**
+   * Declaration files out of installed packages the reading used, by path
+   * relative to the repository, as they were when it was read. Judged in
+   * `dependencies.ts`; absent where the writer could not say.
+   */
+  packages: z.record(z.string(), fileStampSchema).optional(),
   globalFiles: z.array(z.string()),
   files: z.record(z.string(), fileStampSchema),
   graphPath: z.string(),

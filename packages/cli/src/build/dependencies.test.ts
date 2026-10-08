@@ -2,7 +2,15 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import { dependencyChange, surveyDependencies, NO_DEPENDENCIES } from './dependencies.js';
+import {
+  boundedPackageFiles,
+  dependencyChange,
+  MAX_PACKAGE_FILES,
+  packageChange,
+  stampPackageFiles,
+  surveyDependencies,
+  NO_DEPENDENCIES,
+} from './dependencies.js';
 
 const scratch = mkdtempSync(join(tmpdir(), 'flowatlas-deps-'));
 
@@ -91,5 +99,35 @@ describe('what changed about the dependencies', () => {
     expect(dependencyChange(undefined, NO_DEPENDENCIES)).toBe(
       'dependencies not recorded by the last build',
     );
+  });
+});
+
+describe('the installed declarations a reading used', () => {
+  it('sees a stub edited in place, and not one rewritten with the same content', () => {
+    const repo = join(scratch, 'stubbed');
+    const stub = join(repo, 'node_modules', 'queue', 'index.d.ts');
+    write(stub, 'export declare const send: (name: string) => void;\n');
+    const file = 'node_modules/queue/index.d.ts';
+    const before = stampPackageFiles(repo, [file], undefined);
+
+    write(stub, 'export declare const send: (name: string) => void;\n');
+    expect(packageChange(before, stampPackageFiles(repo, [file], before))).toBeUndefined();
+
+    write(stub, 'export declare const send: (name: string, body: unknown) => void;\n');
+    expect(packageChange(before, stampPackageFiles(repo, [file], before))).toBe(
+      `installed ${file} changed`,
+    );
+
+    rmSync(stub);
+    expect(packageChange(before, stampPackageFiles(repo, [file], before))).toBe(
+      `installed ${file} changed`,
+    );
+  });
+
+  it('keeps the repository\'s own installs over hoisted ones when there are too many', () => {
+    const hoisted = Array.from({ length: MAX_PACKAGE_FILES }, (_, i) => `../node_modules/a/${i}.d.ts`);
+    const kept = boundedPackageFiles([...hoisted, 'node_modules/z/index.d.ts']);
+    expect(kept).toHaveLength(MAX_PACKAGE_FILES);
+    expect(kept[0]).toBe('node_modules/z/index.d.ts');
   });
 });

@@ -27,6 +27,7 @@ import {
   globalFiles,
   importsOf,
   openRepo,
+  packageFiles,
   repoFiles,
   type ExtractRepoOptions,
 } from '@flowatlas/extractor-nestjs';
@@ -45,6 +46,7 @@ import {
 import { hashGraphFile } from '../build/incremental.js';
 import { adapterNames, createRegistry, EXTRA_PASSES } from '../build/extractor.js';
 import { deploymentFiles } from '../build/deployment-files.js';
+import { stampPackageFiles } from '../build/dependencies.js';
 import { NESTJS_EXTRACTOR } from '../readers.js';
 
 /**
@@ -344,6 +346,7 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
     packageJsonHash: hashFile(join(rootDir, 'package.json')),
     globalFiles: [...globalFiles(warm), ...deployed],
     files,
+    packages: stampPackageFiles(rootDir, packageFiles(warm), undefined),
     graphPath: outPath,
     graphHash: hashGraphFile(outPath),
     counts: {

@@ -54,7 +54,7 @@ import {
   type RepoCache,
 } from '../build/cache.js';
 import { isDeclared, readDeclaredService } from '../build/declared.js';
-import { surveyDependencies } from '../build/dependencies.js';
+import { stampPackageFiles, surveyDependencies } from '../build/dependencies.js';
 import { readFailure } from '../build/failure.js';
 import { heapArgs, heapForReaders } from '../build/heap.js';
 import {
@@ -250,7 +250,7 @@ export const inPools = async <T, R>(
 };
 
 /** What only the extraction knows about a repository's files. */
-type FileFacts = Pick<RepoCache, 'files' | 'globalFiles'>;
+type FileFacts = Pick<RepoCache, 'files' | 'globalFiles' | 'packages'>;
 
 interface Extracted {
   service: ServiceConfig;
@@ -336,6 +336,7 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
     tsconfigHash: tsconfig === undefined ? hashText('') : hashFile(tsconfig),
     packageJsonHash: hashFile(join(repoDir, 'package.json')),
     dependencies: surveyDependencies(repoDir),
+    packages: stampPackageFiles(repoDir, Object.keys(previous?.packages ?? {}), previous?.packages),
     globalFiles: [...(session?.globalFiles() ?? []), ...deployed],
     files: stampFiles(repoDir, files, previous?.files, {
       ...(options.trustTimestamps === undefined ? {} : { trustTimestamps: options.trustTimestamps }),
@@ -581,11 +582,18 @@ const extractApart = async (
 };
 
 /** The single entry a lone `flowatlas extract` leaves behind for the build. */
+/** What an entry knows about a repository's files, carried to the next cache. */
+const factsOf = (entry: RepoCache): FileFacts => ({
+  files: entry.files,
+  globalFiles: entry.globalFiles,
+  ...(entry.packages === undefined ? {} : { packages: entry.packages }),
+});
+
 const readRepoFacts = (path: string, name: string): FileFacts | undefined => {
   const loaded = loadBuildCache(path);
   if (loaded === null || 'problem' in loaded) return undefined;
   const entry = loaded.cache.repos[name] ?? Object.values(loaded.cache.repos)[0];
-  return entry === undefined ? undefined : { files: entry.files, globalFiles: entry.globalFiles };
+  return entry === undefined ? undefined : factsOf(entry);
 };
 
 interface ExtractOneOptions {
@@ -712,7 +720,7 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
       report: { ...base, ...countsOf(graph) },
       ...(previous === undefined
         ? {}
-        : { facts: { files: previous.files, globalFiles: previous.globalFiles } }),
+        : { facts: factsOf(previous) }),
     };
   }
 
@@ -817,7 +825,11 @@ const factsFromSession = (
     const stamp = stamps[file] ?? late[file];
     if (stamp !== undefined) files[file] = { ...stamp, deps: imports[file] ?? [] };
   }
-  return { files, globalFiles: [...session.globalFiles(), ...deployed] };
+  return {
+    files,
+    globalFiles: [...session.globalFiles(), ...deployed],
+    packages: stampPackageFiles(session.repoDir, session.packages(), previous?.packages),
+  };
 };
 
 const writeJson = async (path: string, value: unknown): Promise<void> => {
@@ -1178,6 +1190,7 @@ const nextCache = (
       dependencies: survey.dependencies,
       globalFiles: carried?.globalFiles ?? survey.globalFiles,
       files: carried?.files ?? survey.files,
+      packages: carried?.packages ?? survey.packages,
       graphPath: survey.graphPath,
       graphHash: hashGraphFile(survey.graphPath),
       counts: countsOf(item.graph),
