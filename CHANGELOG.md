@@ -6,6 +6,12 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+`visualise` shows what a route answers besides its own response: the hover
+card and the details panel list its failures by status (`404 → Problem`) and
+mark an answer sent under a status its code works out (`status ? → ...`), and
+a service's details on the Map count the routes with failures and with an
+unknown status.
+
 ## [0.5.1][] - 2026-10-08
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0. Two things

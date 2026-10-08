@@ -263,6 +263,12 @@ export const packGraph = (input: PackInput): PackedGraph => {
     indexOr(hintIx, row.hint),
   ]);
 
+  const shapes = packShapes({
+    nodes: input.nodes,
+    edges: input.edges,
+    position,
+    typeOf: input.typeOf ?? (() => undefined),
+  });
   const report = input.report;
   return {
     builtAt: input.builtAt,
@@ -294,13 +300,9 @@ export const packGraph = (input: PackInput): PackedGraph => {
       confidences,
       services: input.report.services,
       rows: rowsIn,
+      answers: shapes.answers.map(([node, kind]) => [node, shapes.answerKinds[kind] as string]),
     }),
-    shapes: packShapes({
-      nodes: input.nodes,
-      edges: input.edges,
-      position,
-      typeOf: input.typeOf ?? (() => undefined),
-    }),
+    shapes,
     ...(input.editor === undefined
       ? {}
       : { editor: { name: input.editor.name, roots: repos.map((name) => input.editor?.rootOf(name) ?? null) } }),

@@ -848,7 +848,7 @@ export const PARAM_FLAG = Object.freeze({ none: 0, optional: 1, rest: 2, claimed
 /** What a part of a request only a cast types is marked with, wherever it is shown (P29). */
 export const CLAIMED_MARK = ' (cast)';
 
-const NO_SHAPES = Object.freeze({ refs: [], types: [], faces: [], labels: [], faceNames: [] });
+const NO_SHAPES = Object.freeze({ refs: [], types: [], faces: [], labels: [], faceNames: [], answers: [], answerKinds: [] });
 const shapesOf = (model) => model.data.shapes || NO_SHAPES;
 
 export const faceOf = (model, i) => {
@@ -860,6 +860,45 @@ export const faceOf = (model, i) => {
   const params = [];
   for (let k = 0; k < flat.length; k += 3) params.push({ label: labels[flat[k]], ref: flat[k + 1], flag: flat[k + 2] });
   return { face: faceNames[face[FACE.face]], params, returns: face[FACE.returns] };
+};
+
+/** Packed answer fields, by position. */
+export const ANSWER = Object.freeze({ node: 0, kind: 1, status: 2, ref: 3 });
+
+/**
+ * How each kind of answer a route gives besides its own is named, by kind:
+ * `name` heads its row, `note` says once what the kind means.
+ */
+export const ANSWER_SAYS = Object.freeze({
+  failure: { name: (status) => status, note: 'Answered with a failure status, as its code sends it.' },
+  unknown: {
+    name: () => 'status ?',
+    note: 'Answered under a status its code works out, so whether it is a success or a failure is not known.',
+  },
+});
+
+/**
+ * What a route answers besides its own response: failures by status, then
+ * what is sent under a status its code works out. Empty for any other node,
+ * and on a page built before answers were packed.
+ */
+export const answersOf = (model, i) => {
+  if (!model.answers) {
+    model.answers = new Map();
+    const { answers = [], answerKinds = [] } = shapesOf(model);
+    for (const answer of answers) {
+      pushTo(model.answers, answer[ANSWER.node], {
+        kind: answerKinds[answer[ANSWER.kind]], status: answer[ANSWER.status], ref: answer[ANSWER.ref],
+      });
+    }
+  }
+  return model.answers.get(i) || [];
+};
+
+/** An answer on one line: `404 → Problem`, `status ? → { open: boolean }`. */
+const answerLine = (model, answer, chars) => {
+  const says = ANSWER_SAYS[answer.kind];
+  return (says ? says.name(answer.status) : answer.kind) + ' → ' + middle(refText(model, answer.ref), chars);
 };
 
 /**
@@ -1261,7 +1300,10 @@ export const cardOf = (model, i, bounds = CARD_BOUNDS, wide = GLANCE) => {
     text: middle(paramText(model, param), bounds.chars),
   }));
   const back = face.returns < 0 ? '' : middle(refText(model, face.returns), bounds.chars);
-  const all = CARD_FACES[face.face](faceName(model, i, face), params, back, bounds.chars);
+  const all = [
+    ...CARD_FACES[face.face](faceName(model, i, face), params, back, bounds.chars),
+    ...answersOf(model, i).map((answer) => answerLine(model, answer, bounds.chars)),
+  ];
   let room = bounds.most;
   const lines = all.slice(0, Math.min(wide.lines ? all.length : bounds.lines, room));
   room -= lines.length;

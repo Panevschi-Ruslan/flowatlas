@@ -1,9 +1,11 @@
 import {
   CLAIMED_META,
+  FAILURES_META,
   formatTypeRef,
   parseTypeRef,
   REQUEST_PARTS,
   SIGNATURE_META,
+  STATUS_UNKNOWN_META,
   type GraphEdge,
   type GraphNode,
   type Signature,
@@ -44,6 +46,14 @@ export interface PackedShapes {
   labels: string[];
   /** `FACES`, so the page reads a face by name. */
   faceNames: readonly string[];
+  /**
+   * `[node, kind, status, ref]` per answer a route gives besides its own (P32):
+   * `kind` a position in `ANSWER_KINDS`, `status` the status it is sent with,
+   * '' when the code works it out, and `ref` a position in `refs`.
+   */
+  answers: Array<[node: number, kind: number, status: string, ref: number]>;
+  /** `ANSWER_KINDS`, so the page reads an answer's kind by name. */
+  answerKinds: readonly string[];
 }
 
 /**
@@ -60,6 +70,34 @@ export interface PackedShapes {
 export const FACES = ['method', 'route', 'call', 'channel', 'bare', 'handler'] as const;
 type Face = (typeof FACES)[number];
 
+/**
+ * The answers a route gives besides the one its face shows:
+ *
+ *   failure  sent with a literal status of 400 or more
+ *   unknown  sent with a status the code works out, so success or failure
+ */
+export const ANSWER_KINDS = ['failure', 'unknown'] as const;
+type AnswerKind = (typeof ANSWER_KINDS)[number];
+
+interface Answer {
+  kind: AnswerKind;
+  status: string;
+  ref: string;
+}
+
+/** What a `handles` edge says its route answers besides its response, failures by status first. */
+export const answersOf = (edge: GraphEdge): Answer[] => {
+  const failures = edge.meta?.[FAILURES_META];
+  const unknown = edge.meta?.[STATUS_UNKNOWN_META];
+  const listed: Answer[] =
+    typeof failures === 'object' && failures !== null
+      ? Object.entries(failures as Record<string, unknown>)
+          .filter((entry): entry is [string, string] => typeof entry[1] === 'string')
+          .sort(([a], [b]) => Number(a) - Number(b))
+          .map(([status, ref]) => ({ kind: 'failure', status, ref }))
+      : [];
+  return typeof unknown === 'string' ? [...listed, { kind: 'unknown', status: '', ref: unknown }] : listed;
+};
 
 /** Edges out of a call whose types are what the call sends and expects back. */
 const SENDING = new Set(['http_calls', 'hits', 'emits']);
@@ -353,6 +391,17 @@ export const packShapes = (input: ShapesInput): PackedShapes => {
   }
   packedFaces.sort((a, b) => a[0] - b[0]);
 
+  const answers: PackedShapes['answers'] = [];
+  for (const edge of input.edges) {
+    if (edge.type !== 'handles') continue;
+    const node = input.position.get(edge.from);
+    if (node === undefined) continue;
+    for (const answer of answersOf(edge)) {
+      answers.push([node, ANSWER_KINDS.indexOf(answer.kind), answer.status, refAt(answer.ref)]);
+    }
+  }
+  answers.sort((a, b) => a[0] - b[0]);
+
   // Fields reach further types, which reach further still: a queue, so the
   // registry is walked once however deep it goes.
   while (pending.length > 0) {
@@ -374,7 +423,7 @@ export const packShapes = (input: ShapesInput): PackedShapes => {
     ];
   }
 
-  return { refs, types, faces: packedFaces, labels, faceNames: FACES };
+  return { refs, types, faces: packedFaces, labels, faceNames: FACES, answers, answerKinds: ANSWER_KINDS };
 };
 
 /** Exposed for the tests: a reference as the page shows it. */

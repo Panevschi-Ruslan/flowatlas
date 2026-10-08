@@ -3254,11 +3254,23 @@ __MAP_LOGIC__
     };
 
     /* The rows of a face, by the names the panel gives them: a parameter or
-       request part `p<k>`, what comes back `r`. */
-    const faceRows = (face) => [
+       request part `p<k>`, what comes back `r`, a route's other answers `a<k>`. */
+    const faceRows = (face, v) => [
       ...face.params.map((param, k) => ({ at: 'p' + k, ref: param.ref })),
       ...(face.returns >= 0 ? [{ at: 'r', ref: face.returns }] : []),
+      ...answersOf(model, v).map((answer, k) => ({ at: 'a' + k, ref: answer.ref })),
     ];
+
+    /* A route's failures and answers under a worked-out status, a row each,
+       and once per kind what that kind means. */
+    const answersHtml = (v, none) => {
+      const answers = answersOf(model, v);
+      if (answers.length === 0) return '';
+      const kinds = [...new Set(answers.map((answer) => answer.kind))];
+      return answers.map((answer, k) => shapeRowHtml('→ ' + (ANSWER_SAYS[answer.kind]?.name(answer.status) ?? answer.kind),
+        answer.ref, 'a' + k, none, true)).join('') +
+        kinds.map((kind) => (ANSWER_SAYS[kind] ? `<p class="g-shape-note">${esc(ANSWER_SAYS[kind].note)}</p>` : '')).join('');
+    };
 
     const shapeHtml = (v) => {
       const face = faceOf(model, v);
@@ -3279,7 +3291,7 @@ __MAP_LOGIC__
       const cast = face.params.some((param) => param.flag === PARAM_FLAG.claimed)
         ? `<p class="g-shape-note">A part marked${CLAIMED_MARK} is what a cast in the handler says it is; nothing checks it.</p>`
         : '';
-      const openable = faceRows(face).some(({ ref }) => refParts(model, ref).some((part) => part.type >= 0));
+      const openable = faceRows(face, v).some(({ ref }) => refParts(model, ref).some((part) => part.type >= 0));
       const tools = '<span class="g-shape-tools">' +
         (openable
           ? `<button class="tool" data-types="all" title="Open every type in this section, as deep as the bounds allow">Expand all</button>` +
@@ -3291,6 +3303,7 @@ __MAP_LOGIC__
         moreHtml('all') +
         (rows.length > 0 ? rows.join('') : (says.none ? `<p class="g-none">${says.none}</p>` : '')) +
         (face.returns >= 0 ? shapeRowHtml('→ ' + says.back, face.returns, 'r', none, true) : '') +
+        answersHtml(v, none) +
         (says.note ? `<p class="g-shape-note">${says.note}</p>` : '') +
         cast +
         '</section>';
@@ -4063,7 +4076,7 @@ __MAP_LOGIC__
         const more = state.typeMore.get(target.dataset.more);
         if (more) openEverything(more.roots, target.dataset.more, `button[data-more="${CSS.escape(target.dataset.more)}"]`);
       } else if (target.dataset.types === 'all') {
-        openEverything(faceRows(faceOf(model, v)), 'all', 'button[data-types="all"]');
+        openEverything(faceRows(faceOf(model, v), v), 'all', 'button[data-types="all"]');
       } else if (target.dataset.types === 'none') {
         state.openTypes.clear();
         state.typeMore.clear();
@@ -4927,6 +4940,8 @@ __MAP_LOGIC__
         `<dt>ways in</dt><dd>${(s.ways || 0).toLocaleString()}${counts ? ' · ' + esc(counts) : ''}</dd>` +
         `<dt>rows to act on</dt><dd>${(s.problems || 0).toLocaleString()}</dd>` +
         (s.uncalled ? `<dt>routes nothing calls</dt><dd>${s.uncalled.toLocaleString()}</dd>` : '') +
+        (s.failing ? `<dt>routes with failures</dt><dd>${s.failing.toLocaleString()}</dd>` : '') +
+        (s.statusUnknown ? `<dt>routes answering an unknown status</dt><dd>${s.statusUnknown.toLocaleString()}</dd>` : '') +
         (s.unread ? '<dt>read</dt><dd>no: nothing could read it</dd>' : '') +
         '</dl></section>' +
         linksOf(unit.id) +

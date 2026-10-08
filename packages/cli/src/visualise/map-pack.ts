@@ -88,7 +88,12 @@ export interface MapInput {
   confidences: readonly string[];
   services: readonly Pick<ServiceReport, 'name' | 'type' | 'skipped' | 'packages'>[];
   rows: readonly Pick<AnchoredUnresolvedRow, 'service' | 'level'>[];
+  /** `[node, kind]` per answer a route gives besides its own, as `shapes.ts` packs them. */
+  answers?: ReadonlyArray<readonly [node: number, kind: string]>;
 }
+
+/** The count a service box keeps per kind of answer, of the routes that give one (P32). */
+const ANSWER_STATS: Readonly<Record<string, string>> = { failure: 'failing', unknown: 'statusUnknown' };
 
 /** Best first, as the walk ranks them. */
 const CONFIDENCE_RANK = ['static', 'marker', 'declared', 'runtime', 'heuristic'];
@@ -289,6 +294,14 @@ export const packMap = (input: MapInput): PackedMap => {
   for (const i of neverCalled) {
     const box = boxes[owner[i] as number] as MapBox;
     box.s['uncalled'] = (box.s['uncalled'] ?? 0) + 1;
+  }
+  const answered = new Set<string>();
+  for (const [node, kind] of input.answers ?? []) {
+    const stat = ANSWER_STATS[kind];
+    if (stat === undefined || answered.has(`${node}>${stat}`)) continue;
+    answered.add(`${node}>${stat}`);
+    const box = boxes[owner[node] as number] as MapBox;
+    box.s[stat] = (box.s[stat] ?? 0) + 1;
   }
   for (const link of links) {
     const from = boxes[link.f] as MapBox;

@@ -2,6 +2,7 @@ import type { GraphEdge, GraphNode, TypeEntry } from '@flowatlas/core';
 import type { LinkReport } from '@flowatlas/linker';
 import { describe, expect, it } from 'vitest';
 import {
+  answersOf,
   CARD_BOUNDS,
   cardOf,
   createModel,
@@ -572,5 +573,45 @@ describe('a way in that is not a request', () => {
 
   it('has no face when its handler recorded none', () => {
     expect(faceOf(handlerModel, 2)).toBeNull();
+  });
+});
+
+describe('what a route answers besides its own response (P32)', () => {
+  const answering = packGraph({
+    builtAt: '2026-10-08T00:00:00.000Z',
+    nodes: [nodes[0]!, nodes[1]!],
+    edges: [
+      {
+        from: nodes[0]!.id,
+        to: nodes[1]!.id,
+        type: 'handles',
+        confidence: 'static',
+        returns: ORDER,
+        meta: { body: CREATE, failures: { '422': '{error:string}', '404': ORDER }, statusUnknown: '{open:boolean}' },
+      },
+    ],
+    unresolved: [],
+    report: { ...report, services: [{ name: 'api', type: 'nestjs', nodes: 2, edges: 1, unresolved: 0, durationMs: 0 }] } as unknown as LinkReport,
+    typeOf: (id) => registry[id],
+  });
+  const answered = createModel(answering);
+
+  it('lists its failures by status, then what it sends under a status the code works out', () => {
+    expect(answersOf(answered, 0).map((answer) => [answer.kind, answer.status, refText(answered, answer.ref)])).toEqual([
+      ['failure', '404', 'Order'],
+      ['failure', '422', '{ error: string }'],
+      ['unknown', '', '{ open: boolean }'],
+    ]);
+    expect(answersOf(answered, 1)).toEqual([]);
+    expect(answersOf(model, 0)).toEqual([]);
+  });
+
+  it('shows them on the hover card, under the response', () => {
+    expect(cardOf(answered, 0)?.lines.slice(-3)).toEqual(['404 → Order', '422 → { error: string }', 'status ? → { open: boolean }']);
+  });
+
+  it('counts the routes giving each on their service in the map', () => {
+    const service = answering.map.boxes.find((box) => box.n === 'api');
+    expect(service?.s).toMatchObject({ failing: 1, statusUnknown: 1 });
   });
 });

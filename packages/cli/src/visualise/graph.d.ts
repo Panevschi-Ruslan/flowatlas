@@ -215,6 +215,17 @@ export declare const refParts: (model: GraphModel, ref: number) => Array<{ text:
 export declare const typeInfo: (model: GraphModel, type: number) => TypeInfo | null;
 export declare const faceLine: (model: GraphModel, node: number) => string;
 
+export declare const ANSWER: Readonly<{ node: 0; kind: 1; status: 2; ref: 3 }>;
+export interface Answer {
+  kind: 'failure' | 'unknown';
+  /** The status it is sent with; '' when the code works it out. */
+  status: string;
+  /** A position in `shapes.refs`. */
+  ref: number;
+}
+export declare const ANSWER_SAYS: Readonly<Record<Answer['kind'], { name: (status: string) => string; note: string }>>;
+export declare const answersOf: (model: GraphModel, node: number) => Answer[];
+
 export interface TypeBounds {
   /** Levels opened below the row asked about. */
   depth: number;
