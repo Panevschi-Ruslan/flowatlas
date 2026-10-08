@@ -370,6 +370,8 @@ export const medusaRoutesAdapter: EntryAdapter = {
         meta: {
           method: verb.method,
           path: verb.path,
+          // The params as the directories name them, which the key renamed (P34).
+          ...(verb.rawPath === undefined ? {} : { rawPath: verb.rawPath }),
           adapter: ADAPTER,
           registration: 'api/route',
           // Only where the service holds more than one, which is where it says
@@ -410,6 +412,7 @@ export const medusaRoutesAdapter: EntryAdapter = {
       readVerbFile(ctx, sourceFile, {
         file,
         path: address.path,
+        rawPath: address.rawPath,
         adapter: ADAPTER,
         emit: (verb) => httpEntry(verb, address.application),
       });

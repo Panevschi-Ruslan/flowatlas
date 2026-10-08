@@ -18,6 +18,12 @@ A helper that builds its answer from several arguments - `fail(400,
 from, and the route records `{ code: string; message: string }` as its failure
 under the status, with nothing of the helper's package installed.
 
+A route a file-system router serves (Next.js `app/` and `pages/api/`, Medusa
+`src/api/`) keeps the path with its params named by its directories -
+`[id]` is `:id`, `[...slug]` is `:slug`, `[[...slug]]` is `:slug?` - as
+`rawPath`, so a handler that reads params nothing types gets them named by the
+route, as a registered route's already were.
+
 ## [0.5.1][] - 2026-10-08
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0. Two things

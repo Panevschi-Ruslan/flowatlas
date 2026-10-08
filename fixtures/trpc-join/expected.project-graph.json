@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:51.506Z",
+  "builtAt": "2026-10-08T18:56:57.955Z",
   "services": [
     {
       "name": "api",
@@ -131,6 +131,7 @@
       "meta": {
         "method": "ALL",
         "path": "/api/trpc/:param",
+        "rawPath": "/api/trpc/:trpc",
         "adapter": "nextjs-routes",
         "registration": "pages/api",
         "middlewareRead": true,

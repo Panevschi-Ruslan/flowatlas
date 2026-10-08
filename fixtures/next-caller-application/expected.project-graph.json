@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:28:08.828Z",
+  "builtAt": "2026-10-08T18:56:29.628Z",
   "services": [
     {
       "name": "shop",
@@ -89,6 +89,7 @@
       "meta": {
         "method": "GET",
         "path": "/api/*",
+        "rawPath": "/api/:slug",
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "application": "examples/blog",
@@ -125,6 +126,7 @@
       "meta": {
         "method": "GET",
         "path": "/api/*",
+        "rawPath": "/api/:slug",
         "adapter": "nextjs-routes",
         "registration": "app/route",
         "application": "examples/template",

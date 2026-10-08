@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "medusa-fs-router",
-  "generatedAt": "2026-10-08T07:27:20.268Z",
+  "generatedAt": "2026-10-08T18:55:38.667Z",
   "nodes": [
     {
       "id": "entry:medusa-fs-router:http:GET:/admin/orders",
@@ -31,6 +31,7 @@
       "meta": {
         "method": "GET",
         "path": "/admin/orders/:param",
+        "rawPath": "/admin/orders/:id",
         "adapter": "medusa-routes",
         "registration": "api/route",
         "middlewareRead": false,
@@ -82,6 +83,7 @@
       "meta": {
         "method": "HEAD",
         "path": "/admin/orders/:param",
+        "rawPath": "/admin/orders/:id",
         "adapter": "medusa-routes",
         "registration": "api/route",
         "middlewareRead": false,
@@ -116,6 +118,7 @@
       "meta": {
         "method": "POST",
         "path": "/hooks/:param",
+        "rawPath": "/hooks/:provider",
         "adapter": "medusa-routes",
         "registration": "api/route",
         "middlewareRead": false,
@@ -391,7 +394,8 @@
       "file": "src/api/admin/orders/[id]/route.ts",
       "line": 5,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{id:string}"
       }
     },
     {
@@ -453,7 +457,8 @@
       "file": "src/api/admin/orders/[id]/route.ts",
       "line": 5,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{id:string}"
       }
     },
     {

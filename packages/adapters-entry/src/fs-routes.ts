@@ -147,6 +147,19 @@ const segmentOf = (segment: string, router: FsRouter): string | null => {
   return segment;
 };
 
+/**
+ * A segment as the path is written with its params named: `[id]` is `:id`,
+ * `[...slug]` is `:slug` and `[[...slug]]` is `:slug?`, so a handler's params
+ * can be named by the route the way a registered path names them (P34).
+ */
+const rawSegmentOf = (segment: string, read: string): string => {
+  if (read !== PARAM_PLACEHOLDER && read !== '*') return read;
+  const dynamic = DYNAMIC.exec(segment.replace(/^\[(\[.*\])\]$/, '$1'));
+  const name = dynamic?.[2];
+  if (name === undefined) return read;
+  return OPTIONAL_CATCH_ALL.test(segment) ? `:${name}?` : `:${name}`;
+};
+
 /** Whether a segment opts its whole subtree out of routing, for this router. */
 const optsOut = (segment: string, router: FsRouter): boolean =>
   router.segments.includes('private') && PRIVATE.test(segment);
@@ -222,7 +235,7 @@ const applicationOf = (before: readonly string[]): string => {
  * (R91, R111).
  */
 type FsFileReading =
-  | { readonly kind: 'route'; readonly path: string; readonly application: string }
+  | { readonly kind: 'route'; readonly path: string; readonly rawPath: string; readonly application: string }
   | { readonly kind: 'not-served'; readonly why: 'private' }
   | { readonly kind: 'elsewhere' };
 
@@ -258,12 +271,16 @@ const readFsFile = (file: string, router: FsRouter): FsFileReading => {
 
   // A grouped or slot directory drops out; nothing else may, because a segment
   // that could not be read would make the address a different one.
-  const kept = after
-    .map((segment) => segmentOf(segment, router))
-    .filter((segment): segment is string => segment !== null);
+  const kept = after.flatMap((segment) => {
+    const read = segmentOf(segment, router);
+    return read === null ? [] : [{ read, raw: rawSegmentOf(segment, read) }];
+  });
+  const prefix = router.prefix ?? '';
   return {
     kind: 'route',
-    path: normalizePath(`${router.prefix ?? ''}/${kept.join('/')}`),
+    path: normalizePath(`${prefix}/${kept.map((segment) => segment.read).join('/')}`),
+    // Joined as written: normalising would rename every param `:param` again.
+    rawPath: `/${[...prefix.split('/'), ...kept.map((segment) => segment.raw)].filter((segment) => segment !== '').join('/')}`,
     application,
   };
 };
@@ -285,6 +302,11 @@ export const routePathOfFile = (file: string, router: FsRouter): string | null =
 export interface FsAddress {
   /** What the framework answers on, with nothing in front of it. */
   readonly path: string;
+  /**
+   * The path with its params named, where it names any - the key has every
+   * param renamed - so a handler's params are named by the route (P34).
+   */
+  readonly rawPath?: string;
   /**
    * The qualifier the entry id carries, absent where the service holds one
    * application and the address is therefore the identity by itself.
@@ -348,7 +370,11 @@ export const fsAddressSpace = (map: ApplicationMap): FsAddressSpace => {
       const reading = readFsFile(file, router);
       if (reading.kind !== 'route') return null;
       const [application] = applicationsServing(map, reading.application);
-      return { path: reading.path, ...(application === undefined ? {} : { application }) };
+      return {
+        path: reading.path,
+        ...(reading.rawPath === reading.path ? {} : { rawPath: reading.rawPath }),
+        ...(application === undefined ? {} : { application }),
+      };
     },
   };
 };
@@ -614,6 +640,8 @@ export const reportUnreadHandler = (
 export interface FsRouteVerb {
   method: string;
   path: string;
+  /** The path with its params named, where it names any (P34). */
+  rawPath?: string;
   /**
    * Where the way in was found, and where its verb was written.
    *
@@ -656,6 +684,7 @@ export const readVerbFile = (
   options: {
     file: string;
     path: string;
+    rawPath?: string | undefined;
     adapter: string;
     emit: (verb: FsRouteVerb) => void;
   },
@@ -672,6 +701,7 @@ export const readVerbFile = (
     options.emit({
       method,
       path: options.path,
+      ...(options.rawPath === undefined ? {} : { rawPath: options.rawPath }),
       at,
       ...(reading === undefined ? {} : { handler: reading.fn }),
       handlerVia: reading?.via ?? 'unread',

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "trpc-router",
-  "generatedAt": "2026-10-07T18:37:52.235Z",
+  "generatedAt": "2026-10-08T18:56:58.716Z",
   "nodes": [
     {
       "id": "entry:trpc-router:http:ALL:/api/trpc/:param",
@@ -14,6 +14,7 @@
       "meta": {
         "method": "ALL",
         "path": "/api/trpc/:param",
+        "rawPath": "/api/trpc/:trpc",
         "adapter": "nextjs-routes",
         "registration": "pages/api",
         "middlewareRead": true,
@@ -32,6 +33,7 @@
       "meta": {
         "method": "ALL",
         "path": "/api/trpc/reports/:param",
+        "rawPath": "/api/trpc/reports/:trpc",
         "adapter": "nextjs-routes",
         "registration": "pages/api",
         "middlewareRead": true,

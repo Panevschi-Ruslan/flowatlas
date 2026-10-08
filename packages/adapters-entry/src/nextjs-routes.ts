@@ -129,6 +129,8 @@ const readMiddleware = (ctx: ExtractContext): Middleware | undefined => {
 interface HttpEntryOptions {
   method: string;
   path: string;
+  /** The path with its params named, where it names any (P34). */
+  rawPath?: string | undefined;
   /**
    * Where the way in was found, and where its verb was written.
    *
@@ -263,6 +265,8 @@ export const nextjsRoutesAdapter: EntryAdapter = {
         meta: {
           method: options.method,
           path: options.path,
+          // The params as the directories name them, which the key renamed (P34).
+          ...(options.rawPath === undefined ? {} : { rawPath: options.rawPath }),
           adapter: 'nextjs-routes',
           registration: options.via,
           // Only where there is more than one, which is where it says
@@ -305,6 +309,7 @@ export const nextjsRoutesAdapter: EntryAdapter = {
         readVerbFile(ctx, sourceFile, {
           file,
           path: appAddress.path,
+          rawPath: appAddress.rawPath,
           adapter: 'nextjs-routes',
           emit: (verb) => httpEntry({ ...verb, ...appAddress, via: 'app/route' }),
         });

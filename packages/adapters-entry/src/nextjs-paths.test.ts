@@ -70,6 +70,27 @@ describe('routePathOfFile', () => {
     expect(space.addressOf('pages/api/legacy.ts', PAGES_API)).toEqual({ path: '/api/legacy' });
   });
 
+  it('names the params a route file\'s directories name, beside the address that renames them (P34)', () => {
+    const space = fsAddressSpace(fsApplicationMap(['app/api/orders/route.ts'], [APP_ROUTER, PAGES_API]));
+    expect(space.addressOf('app/api/orders/[orderId]/lines/[line]/route.ts', APP_ROUTER)).toEqual({
+      path: '/api/orders/:param/lines/:param',
+      rawPath: '/api/orders/:orderId/lines/:line',
+    });
+    expect(space.addressOf('app/(shop)/api/files/[...slug]/route.ts', APP_ROUTER)).toEqual({
+      path: '/api/files/*',
+      rawPath: '/api/files/:slug',
+    });
+    expect(space.addressOf('app/api/docs/[[...page]]/route.ts', APP_ROUTER)).toEqual({
+      path: '/api/docs/*',
+      rawPath: '/api/docs/:page?',
+    });
+    expect(space.addressOf('pages/api/users/[userId].ts', PAGES_API)).toEqual({
+      path: '/api/users/:param',
+      rawPath: '/api/users/:userId',
+    });
+    expect(space.addressOf('app/api/orders/route.ts', APP_ROUTER)).toEqual({ path: '/api/orders' });
+  });
+
   it('keeps an inner directory called app as the segment it is', () => {
     // The application's own `app/components/app/…`: one application, and the
     // second `app` is an ordinary part of the address.
