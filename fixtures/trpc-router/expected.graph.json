@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "trpc-router",
-  "generatedAt": "2026-10-08T18:56:58.716Z",
+  "generatedAt": "2026-10-08T19:06:35.924Z",
   "nodes": [
     {
       "id": "entry:trpc-router:http:ALL:/api/trpc/:param",
@@ -50,6 +50,15 @@
       "line": 14,
       "kind": "rpc",
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{sku:string;quantity:number}"
+            }
+          ],
+          "returns": "{sku:string;quantity:number;id:'ord-2'}"
+        },
         "key": "orders.create",
         "adapter": "trpc-procedures",
         "call": "mutation",
@@ -71,6 +80,15 @@
       "line": 11,
       "kind": "rpc",
       "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{customerId:string}"
+            }
+          ],
+          "returns": "{id:string;customerId:string}[]"
+        },
         "key": "orders.list",
         "adapter": "trpc-procedures",
         "call": "query",
@@ -92,6 +110,10 @@
       "line": 7,
       "kind": "rpc",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{day:string;total:number}[]"
+        },
         "key": "reportsRouter.daily",
         "adapter": "trpc-procedures",
         "call": "query",

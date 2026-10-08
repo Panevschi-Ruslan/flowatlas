@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:42.116Z",
+  "builtAt": "2026-10-08T19:05:21.448Z",
   "services": [
     {
       "name": "gateway",
@@ -2036,6 +2036,10 @@
       "line": 12,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-checkout"
       }

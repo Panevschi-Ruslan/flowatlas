@@ -464,8 +464,8 @@ export type {
 
 export { isLibFile, TypeCollector } from './types/collector.js';
 export type { TypeCollectorOptions } from './types/collector.js';
-export { functionLikeOf, recordSignatures } from './types/signatures.js';
-export type { FunctionLike, RecordedSignature } from './types/signatures.js';
+export { functionLikeOf, recordSignatures, recordStatedSignatures } from './types/signatures.js';
+export type { FunctionLike, RecordedSignature, StatedPart, StatedSignature, StatedType } from './types/signatures.js';
 export { mergeFieldMeta } from './types/field-meta.js';
 export type { FieldDeclaration, FieldMetaReader, FieldMetaResult, UnreadAnnotation } from './types/field-meta.js';
 export { DEFAULT_HASH_DEPTH, normalizeStructure, structuralHash } from './types/structural-hash.js';

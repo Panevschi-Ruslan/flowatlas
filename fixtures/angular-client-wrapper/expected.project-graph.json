@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:06.106Z",
+  "builtAt": "2026-10-08T19:04:42.464Z",
   "services": [
     {
       "name": "angular-client-wrapper",
@@ -479,6 +479,10 @@
       "line": 4,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-translations-tab"
       }

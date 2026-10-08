@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:39.373Z",
+  "builtAt": "2026-10-08T19:06:22.570Z",
   "services": [
     {
       "name": "api",
@@ -861,6 +861,10 @@
       "line": 6,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-orders"
       }

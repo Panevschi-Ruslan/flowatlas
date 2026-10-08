@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "angular-lazy-routes",
-  "generatedAt": "2026-10-06T11:31:37.117Z",
+  "generatedAt": "2026-10-08T19:04:43.192Z",
   "nodes": [
     {
       "id": "angular-lazy-routes#src/app/admin/admin-shell.component.ts:AdminShellComponent",
@@ -12,6 +12,10 @@
       "line": 3,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-admin-shell"
       }
@@ -25,6 +29,10 @@
       "line": 3,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-plugins"
       }
@@ -38,6 +46,10 @@
       "line": 3,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-reports"
       }
@@ -60,6 +72,10 @@
       "line": 3,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-home"
       }
@@ -73,6 +89,10 @@
       "line": 10,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-shell"
       }

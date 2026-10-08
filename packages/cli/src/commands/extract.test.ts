@@ -968,8 +968,20 @@ describe('angular-basic', () => {
   const graph = (): RepoGraph => load('angular-basic');
 
   it('reads a repository the frontend adapter recognises, without being told to', () => {
-    expect(nodesOf(graph(), 'ui_component')).toHaveLength(6);
+    expect(nodesOf(graph(), 'ui_component')).toHaveLength(7);
     expect(nodesOf(graph(), 'ui_api_call')).toHaveLength(5);
+  });
+
+  it('says what a component is handed and what it emits, both spellings of each (P35)', () => {
+    const card = nodesOf(graph(), 'ui_component').find((node) => node.label === 'OrderCardComponent');
+    expect(card?.meta?.['signature']).toEqual({
+      params: [
+        { name: 'order', type: 'type:angular-basic#OrderDto' },
+        { name: 'dense', type: 'boolean', optional: true },
+        { name: 'currency', type: 'string', optional: true },
+      ],
+      returns: '{cancelled:string;opened:type:angular-basic#OrderDto}',
+    });
   });
 
   it('tells a standalone component from one a module declares', () => {
@@ -983,6 +995,7 @@ describe('angular-basic', () => {
       SettingsComponent: 'standalone',
       ReportsComponent: 'standalone',
       ProfileComponent: 'standalone',
+      OrderCardComponent: 'standalone',
     });
     const declared = nodesOf(graph(), 'ui_component').find(
       (node) => node.label === 'OrdersListComponent',

@@ -24,6 +24,13 @@ A route a file-system router serves (Next.js `app/` and `pages/api/`, Medusa
 `rawPath`, so a handler that reads params nothing types gets them named by the
 route, as a registered route's already were.
 
+An Angular component says what it takes and gives back in the Types view: its
+inputs (`@Input()`, `input()`, `input.required()`, under the name a template
+binds) as its parameters, and its outputs (`@Output()` emitters, `output()`)
+as an object it gives back. A tRPC procedure says the input its schema checks
+(a zod-style schema's output, a parser's result, or the object itself) and what
+its resolver answers.
+
 ## [0.5.1][] - 2026-10-08
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0. Two things

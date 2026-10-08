@@ -10,6 +10,7 @@ import {
   readRequest,
   routeOf,
   routeShapeEdge,
+  recordStatedSignatures,
   type EntryHandler,
   type EntryNode,
 } from '@flowatlas/core';
@@ -146,6 +147,8 @@ export const entriesPass = definePass('entries', (ctx: ReactExtractContext) => {
       if (entry.wrapping !== undefined) {
         addEntryWrapping(ctx.builder, ctx.repo, entry.id, entry.wrapping);
       }
+      // A way in that is not a function says what it takes where it is declared (P35).
+      if (entry.signature !== undefined) recordStatedSignatures(ctx.builder, ctx.types, [[entry.id, entry.signature]]);
 
       const handler = resolveHandler(ctx, entry.handler);
       if (handler !== undefined) {

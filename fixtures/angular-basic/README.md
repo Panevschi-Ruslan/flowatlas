@@ -33,6 +33,7 @@ settings key nobody configured.
 | `SettingsComponent` | `src/app/settings.component.ts` | inline | loaded, not named — see Routes |
 | `ReportsComponent` | `src/app/reports.component.ts` | inline | the same, exported as the module's default |
 | `ProfileComponent` | `src/app/profile.component.ts` | inline | the same, reached through `await` |
+| `OrderCardComponent` | `src/app/order-card.component.ts` | inline | `meta.signature`: inputs `order` (required), `dense`, `currency` as what it takes, outputs `{cancelled:string;opened:OrderDto}` as what it gives back (P35) |
 
 Whether a component is standalone is read from the module that declares it, not
 from its own `standalone` flag: the framework refuses to declare a standalone

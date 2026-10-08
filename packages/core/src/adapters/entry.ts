@@ -7,6 +7,7 @@ import type { EntryWrapping } from './wrapping.js';
 import type { PackageJson } from './manifest.js';
 import type { Envelope } from '../envelope.js';
 import type { RequestReading } from '../request.js';
+import type { StatedSignature } from '../types/signatures.js';
 
 /** A method of a class, which is where most handlers live. */
 export interface MethodHandler {
@@ -124,6 +125,13 @@ export interface EntryNode {
    * shape of route whatever framework declared it (P29).
    */
   request?: RequestReading;
+  /**
+   * What a way in that is not a function takes and answers, where the adapter
+   * found it in the declaration - a procedure's input schema and its resolver -
+   * pointed at rather than collected: the extractor records it on the entry's
+   * node as a function's node carries one (P35).
+   */
+  signature?: StatedSignature;
   meta?: Record<string, unknown>;
 }
 

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { GraphBuilder } from '../builder.js';
 import { SIGNATURE_META } from '../model/types.js';
 import { TypeCollector } from './collector.js';
-import { functionLikeOf, recordSignatures } from './signatures.js';
+import { functionLikeOf, recordSignatures, recordStatedSignatures } from './signatures.js';
 
 const SOURCE = `
 export interface Order { id: string }
@@ -108,5 +108,41 @@ describe('what a function takes, whichever way it was written', () => {
       params: [{ name: 'ids', type: 'string[]', rest: true }],
       returns: 'void',
     });
+  });
+});
+
+describe('a signature a reader states for a node that is not a function (P35)', () => {
+  it('writes the parts it is handed and an object of the parts it gives back, async unwrapped', () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const file = project.createSourceFile(
+      'card.ts',
+      `export interface Order { id: string }
+       export class Card { order!: Order; dense = false; opened!: Order; closed!: string }
+       export const resolve = async (): Promise<Order> => ({ id: 'o1' });`,
+    );
+    const builder = new GraphBuilder({ repo: 'shop', generatedAt: '2026-01-01T00:00:00.000Z' });
+    const collector = new TypeCollector({ builder, repo: 'shop' });
+    const card = file.getClassOrThrow('Card');
+    const part = (name: string, optional?: boolean) => {
+      const property = card.getPropertyOrThrow(name);
+      return { name, type: property.getType(), site: property, ...(optional === undefined ? {} : { optional }) };
+    };
+    builder.addNode({ id: 'card', type: 'ui_component', label: 'Card', repo: 'shop' });
+    builder.addNode({ id: 'rpc', type: 'entry', label: 'rpc', repo: 'shop' });
+    const resolver = file.getVariableDeclarationOrThrow('resolve');
+    recordStatedSignatures(builder, collector, [
+      ['card', { params: [part('order'), part('dense', true)], returns: { fields: [part('opened'), part('closed')] } }],
+      ['rpc', { params: [], returns: { type: resolver.getType().getCallSignatures()[0]!.getReturnType(), site: resolver } }],
+      ['never-drawn', { params: [] }],
+    ]);
+    expect(builder.getNode('card')?.meta?.[SIGNATURE_META]).toEqual({
+      params: [
+        { name: 'order', type: 'type:shop#Order' },
+        { name: 'dense', type: 'boolean', optional: true },
+      ],
+      returns: '{closed:string;opened:type:shop#Order}',
+    });
+    expect(builder.getNode('rpc')?.meta?.[SIGNATURE_META]).toEqual({ params: [], returns: 'type:shop#Order' });
+    expect(builder.getNode('never-drawn')).toBeUndefined();
   });
 });

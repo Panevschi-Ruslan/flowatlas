@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "angular-basic",
-  "generatedAt": "2026-10-07T18:36:04.975Z",
+  "generatedAt": "2026-10-08T19:11:19.019Z",
   "nodes": [
     {
       "id": "angular-basic#node_modules/@angular/common:HttpClient",
@@ -50,6 +50,10 @@
       "line": 15,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-checkout"
       }
@@ -162,10 +166,46 @@
       "line": 10,
       "kind": "declared",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": false,
         "module": "OrdersModule",
         "selector": "app-legacy-panel",
         "templateUrl": "./legacy-panel.component.html"
+      }
+    },
+    {
+      "id": "angular-basic#src/app/order-card.component.ts:OrderCardComponent",
+      "type": "ui_component",
+      "label": "OrderCardComponent",
+      "repo": "angular-basic",
+      "file": "src/app/order-card.component.ts",
+      "line": 11,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:angular-basic#OrderDto"
+            },
+            {
+              "name": "dense",
+              "type": "boolean",
+              "optional": true
+            },
+            {
+              "name": "currency",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "{cancelled:string;opened:type:angular-basic#OrderDto}"
+        },
+        "standalone": true,
+        "selector": "app-order-card"
       }
     },
     {
@@ -317,6 +357,10 @@
       "line": 6,
       "kind": "declared",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": false,
         "module": "OrdersModule",
         "selector": "app-orders-list",
@@ -360,6 +404,10 @@
       "line": 4,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-profile"
       }
@@ -373,6 +421,10 @@
       "line": 4,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-reports"
       }
@@ -386,6 +438,10 @@
       "line": 4,
       "kind": "standalone",
       "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
         "standalone": true,
         "selector": "app-settings"
       }
@@ -435,11 +491,11 @@
       "repo": "angular-basic",
       "meta": {
         "stats": {
-          "files": 15,
-          "filesRead": 15,
+          "files": 16,
+          "filesRead": 16,
           "filesUnreadable": 0,
-          "classes": 10,
-          "templates": 5,
+          "classes": 11,
+          "templates": 6,
           "skippedExternalCalls": {
             "@angular/common": 4
           }
