@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "express-traced-handlers",
-  "generatedAt": "2026-10-07T18:36:17.042Z",
+  "generatedAt": "2026-10-08T07:27:00.499Z",
   "nodes": [
     {
       "id": "entry:express-traced-handlers:http:GET:/loans",
@@ -292,7 +292,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/routes/loans.ts",
-      "line": 35
+      "line": 35,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}[]"
     },
     {
       "from": "entry:express-traced-handlers:http:GET:/loans/:param",
@@ -300,7 +304,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/routes/loans.ts",
-      "line": 31
+      "line": 31,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}"
     },
     {
       "from": "entry:express-traced-handlers:http:POST:/loans",
@@ -308,7 +316,12 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/routes/loans.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "requestRead": true,
+        "body": "{isbn:string}"
+      },
+      "returns": "{id:string}"
     },
     {
       "from": "entry:express-traced-handlers:http:POST:/loans/:param/return",
@@ -316,7 +329,11 @@
       "type": "handles",
       "confidence": "heuristic",
       "file": "src/routes/loans.ts",
-      "line": 39
+      "line": 39,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}"
     },
     {
       "from": "express-traced-handlers#src/routes/loans.ts:POST /@19",

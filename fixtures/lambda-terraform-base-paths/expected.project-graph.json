@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:28.491Z",
+  "builtAt": "2026-10-08T07:27:11.906Z",
   "services": [
     {
       "name": "catalogue",
@@ -375,15 +375,26 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/items/get-item.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:catalogue:http:POST:/holds/requests",
       "to": "catalogue#src/holds/place-hold.ts:handler",
       "type": "handles",
       "confidence": "static",
+      "returns": "{itemId:string}",
       "file": "src/holds/place-hold.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "requestRead": true,
+        "body": "{itemId:string}",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:catalogue:invoke:library-catalogue-get-item",

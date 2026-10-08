@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:48.926Z",
+  "builtAt": "2026-10-08T07:28:33.582Z",
   "services": [
     {
       "name": "circulation",
@@ -1567,8 +1567,13 @@
       "to": "circulation#src/loans/request-loan.ts:requestLoan",
       "type": "handles",
       "confidence": "static",
+      "returns": "{borrowerId:string;items:number;status:string}",
       "file": "src/loans/request-loan.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "requestRead": true,
+        "body": "type:circulation#LoanRequest"
+      }
     },
     {
       "from": "entry:circulation:workflow:loan-approval",
@@ -1583,8 +1588,13 @@
       "to": "notifications#src/server.ts:listNotices",
       "type": "handles",
       "confidence": "static",
+      "returns": "{borrowerId:string;notices:undefined[]}",
       "file": "src/server.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "requestRead": true,
+        "params": "{borrowerId:string}"
+      }
     },
     {
       "from": "entry:notifications:workflow:borrower-notifications",

@@ -8,7 +8,9 @@ import {
   isInlineHandler,
   makeSymbolId,
   messageTypeAt,
+  readRequest,
   READS_META,
+  routeShapeEdge,
   type EntryHandler,
   type EntryNode,
   type NamedFunction,
@@ -110,6 +112,22 @@ const readsOf = (
 };
 
 /**
+ * What a route's handler reads from its request and answers it with, where the
+ * adapter described where its framework puts them (P29), as the `handles` edge
+ * carries it. Nothing for a handler that is not a function written here.
+ */
+const requestOf = (
+  ctx: NestExtractContext,
+  entry: EntryNode,
+  handler: ResolvedHandler,
+): ReturnType<typeof routeShapeEdge> | undefined => {
+  const declaration = handler.method ?? handler.fn?.declaration;
+  if (entry.request === undefined || declaration === undefined) return undefined;
+  const shape = readRequest(declaration, entry.request, (type, site) => ctx.types.collectType(type, site));
+  return shape === undefined ? undefined : routeShapeEdge(shape);
+};
+
+/**
  * Turns what the entry adapters found into nodes and edges.
  *
  * The adapters describe entry points; making the node, the handler node and the
@@ -156,6 +174,7 @@ export const entriesPass = definePass('entries', (ctx: NestExtractContext) => {
           confidence: entry.handlerConfidence ?? 'static',
           file: entry.handler.file,
           ...(entry.handler.line === undefined ? {} : { line: entry.handler.line }),
+          ...requestOf(ctx, entry, handler),
         });
       }
 

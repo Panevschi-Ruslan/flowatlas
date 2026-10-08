@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:38.180Z",
+  "builtAt": "2026-10-08T07:28:22.762Z",
   "services": [
     {
       "name": "site",
@@ -370,16 +370,24 @@
       "to": "site#app/api/things/route.ts:GET",
       "type": "handles",
       "confidence": "static",
+      "returns": "{id:string;name:string}[]",
       "file": "app/api/things/route.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:site:http:POST:/api/things",
       "to": "site#app/api/things/route.ts:POST",
       "type": "handles",
       "confidence": "static",
+      "returns": "{id:string;name:string}",
       "file": "app/api/things/route.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "site#app/api/things/route.ts:GET",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:27.574Z",
+  "builtAt": "2026-10-08T07:28:10.886Z",
   "services": [
     {
       "name": "web",
@@ -225,7 +225,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "app/api/orders/route.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:web:http:POST:/api/orders",
@@ -233,7 +236,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "app/api/orders/route.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "web#../../packages/orders-lib/src/index.ts:listOrders",

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "fastify-service",
-  "generatedAt": "2026-10-07T18:36:17.963Z",
+  "generatedAt": "2026-10-08T07:27:01.426Z",
   "nodes": [
     {
       "id": "db_query:fastify-service#src/orders/orders.repository.ts:12:12",
@@ -469,7 +469,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
-      "line": 48
+      "line": 48,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:fastify-service:http:DELETE:/orders/:param",
@@ -505,7 +508,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:fastify-service:http:GET:/orders",
@@ -541,7 +547,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:fastify-service:http:GET:/orders/:param",
@@ -563,7 +572,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/public/public.routes.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{status:string}"
     },
     {
       "from": "entry:fastify-service:http:GET:/public/summary",
@@ -571,7 +584,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/public/public.routes.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{orders:unknown}"
     },
     {
       "from": "entry:fastify-service:http:POST:/orders",
@@ -593,7 +610,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
-      "line": 38
+      "line": 38,
+      "meta": {
+        "requestRead": true,
+        "body": "type:fastify-service#CreateOrder"
+      }
     },
     {
       "from": "entry:fastify-service:http:POST:/orders",

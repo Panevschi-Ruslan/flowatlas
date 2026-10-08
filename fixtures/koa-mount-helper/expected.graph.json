@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "koa-mount-helper",
-  "generatedAt": "2026-10-07T18:36:24.798Z",
+  "generatedAt": "2026-10-08T07:27:08.206Z",
   "nodes": [
     {
       "id": "entry:koa-mount-helper:http:GET:/health",
@@ -179,7 +179,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/health.routes.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "string"
     },
     {
       "from": "entry:koa-mount-helper:http:GET:/pages.list",
@@ -187,7 +191,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/pages.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:koa-mount-helper:http:POST:/api/documents.info",
@@ -195,7 +202,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/documents.routes.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}"
     },
     {
       "from": "entry:koa-mount-helper:http:POST:/api/documents.list",
@@ -203,7 +214,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/documents.routes.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "requestRead": true
+      }
     }
   ],
   "types": {

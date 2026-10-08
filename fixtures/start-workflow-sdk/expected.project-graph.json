@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:47.882Z",
+  "builtAt": "2026-10-08T07:28:32.533Z",
   "services": [
     {
       "name": "lending",
@@ -762,8 +762,16 @@
       "to": "lending#src/handlers/create-loan.ts:handler",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:lending#Loan",
       "file": "src/handlers/create-loan.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "body": "type:lending#LoanRequest",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:lending:http:POST:/loans/:param/renewals",
@@ -771,7 +779,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/handlers/renew-loan.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:lending:http:POST:/reviews",
@@ -779,7 +790,14 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/handlers/record-review.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "requestRead": true,
+        "body": "type:lending#Review",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:lending:invoke:lending-check-borrower",
@@ -1154,6 +1172,36 @@
       "meta": {
         "declKind": "interface",
         "exported": true
+      }
+    },
+    "type:lending#Review": {
+      "name": "Review",
+      "kind": "object",
+      "declaredIn": "lending#src/handlers/record-review.ts",
+      "structuralHash": "922b920bfe344bd6",
+      "fields": [
+        {
+          "name": "taskToken",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "approved",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
       }
     },
     "type:lending#Standing": {

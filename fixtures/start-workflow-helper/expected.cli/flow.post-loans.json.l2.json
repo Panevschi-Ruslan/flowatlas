@@ -42,7 +42,8 @@
         },
         "edge": {
           "type": "handles",
-          "confidence": "static"
+          "confidence": "static",
+          "returns": "type:lending#Loan"
         },
         "children": [
           {

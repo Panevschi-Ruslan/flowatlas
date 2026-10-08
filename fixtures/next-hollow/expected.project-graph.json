@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:26.576Z",
+  "builtAt": "2026-10-08T07:28:09.874Z",
   "services": [
     {
       "name": "shop",
@@ -232,8 +232,12 @@
       "to": "shop#app/api/invoices/route.ts:GET",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:shop#Invoice[]",
       "file": "app/api/invoices/route.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop:http:GET:/api/orders",
@@ -248,8 +252,12 @@
       "to": "shop#lib/products.ts:handlerBuilder",
       "type": "handles",
       "confidence": "static",
+      "returns": "{collection:string;rows:type:shop#Invoice[]}",
       "file": "lib/products.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "shop#app/api/invoices/route.ts:GET",

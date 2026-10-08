@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:32.601Z",
+  "builtAt": "2026-10-08T07:27:16.050Z",
   "services": [
     {
       "name": "circulation",
@@ -685,7 +685,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/catalogue/get-item.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:circulation:http:GET:/loans/:param",
@@ -707,7 +710,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/loans/get-loan.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:circulation:http:POST:/holds",
@@ -725,16 +731,28 @@
       "to": "circulation#src/loans/create-loan.ts:handler",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:circulation#Loan",
       "file": "src/loans/create-loan.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "body": "{borrowerId:string;itemId:string}",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:circulation:http:POST:/loans/:param/renewals",
       "to": "circulation#src/loans/renew-loan.ts:handler",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:circulation#Loan",
       "file": "src/loans/renew-loan.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:circulation:http:POST:/returns",

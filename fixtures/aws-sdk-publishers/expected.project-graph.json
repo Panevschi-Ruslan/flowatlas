@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:09.781Z",
+  "builtAt": "2026-10-08T07:26:53.271Z",
   "services": [
     {
       "name": "loans",
@@ -1030,7 +1030,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "api/holds/holds.routes.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "requestRead": true,
+        "body": "type:loans#Hold"
+      }
     },
     {
       "from": "entry:loans:http:POST:/holds/cancellations",
@@ -1052,7 +1056,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "api/holds/holds.routes.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "body": "type:loans#Hold"
+      }
     },
     {
       "from": "entry:loans:http:POST:/loans",
@@ -1073,8 +1081,13 @@
       "to": "loans#api/loans/loans.routes.ts:createLoan",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:loans#Loan",
       "file": "api/loans/loans.routes.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "requestRead": true,
+        "body": "type:loans#Loan"
+      }
     },
     {
       "from": "entry:loans:http:POST:/loans/:param/renewals",
@@ -1095,8 +1108,13 @@
       "to": "loans#api/loans/loans.routes.ts:renewLoan",
       "type": "handles",
       "confidence": "static",
+      "returns": "{loanId:string;dueOn:string;renewals:number}",
       "file": "api/loans/loans.routes.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "requestRead": true,
+        "params": "{loanId:string}"
+      }
     },
     {
       "from": "entry:loans:http:POST:/returns",
@@ -1118,7 +1136,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "api/returns/returns.routes.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "body": "type:loans#ReturnedItem"
+      }
     },
     {
       "from": "entry:loans:http:POST:/returns/batch",
@@ -1140,7 +1162,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "api/returns/returns.routes.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "requestRead": true,
+        "body": "type:loans#ReturnedItem[]"
+      }
     },
     {
       "from": "entry:loans:http:POST:/returns/overdue",
@@ -1162,7 +1188,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "api/returns/returns.routes.ts",
-      "line": 19
+      "line": 19,
+      "meta": {
+        "requestRead": true,
+        "body": "type:loans#ReturnedItem"
+      }
     },
     {
       "from": "loans#api/events/library-events.ts:LibraryEventBus.put",

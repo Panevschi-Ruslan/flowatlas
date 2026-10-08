@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "express-wrapped-handler",
-  "generatedAt": "2026-10-07T18:36:17.509Z",
+  "generatedAt": "2026-10-08T07:27:00.962Z",
   "nodes": [
     {
       "id": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param",
@@ -313,7 +313,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/controllers/videos.ts",
-      "line": 44
+      "line": 44,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}"
     },
     {
       "from": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param/likes",
@@ -321,7 +325,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/controllers/videos.ts",
-      "line": 54
+      "line": 54,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param/plain",
@@ -329,7 +336,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/controllers/videos.ts",
-      "line": 44
+      "line": 44,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}"
     },
     {
       "from": "entry:express-wrapped-handler:http:POST:/api/v1/videos",
@@ -337,7 +348,12 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/controllers/videos.ts",
-      "line": 49
+      "line": 49,
+      "meta": {
+        "requestRead": true,
+        "body": "{name:string}"
+      },
+      "returns": "{id:string}"
     },
     {
       "from": "express-wrapped-handler#src/controllers/videos.ts:addVideo",

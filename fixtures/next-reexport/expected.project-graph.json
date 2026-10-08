@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:29.029Z",
+  "builtAt": "2026-10-08T07:28:12.354Z",
   "services": [
     {
       "name": "web",
@@ -223,8 +223,12 @@
       "to": "web#../../packages/handlers/src/legacy.ts:legacyHandler",
       "type": "handles",
       "confidence": "static",
+      "returns": "{method:string}",
       "file": "../../packages/handlers/src/legacy.ts",
-      "line": 26
+      "line": 26,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:web:http:GET:/api/invoices",
@@ -232,7 +236,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "lib/invoices.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:web:http:POST:/api/webhook",
@@ -240,7 +247,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "../../packages/handlers/src/index.ts",
-      "line": 20
+      "line": 20,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "web#../../packages/handlers/src/index.ts:POST",

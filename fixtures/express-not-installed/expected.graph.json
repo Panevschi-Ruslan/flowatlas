@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "express-not-installed",
-  "generatedAt": "2026-10-07T18:36:15.085Z",
+  "generatedAt": "2026-10-08T07:26:58.535Z",
   "nodes": [
     {
       "id": "entry:express-not-installed:http:GET:/admin",
@@ -227,7 +227,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/admin.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "string"
     },
     {
       "from": "entry:express-not-installed:http:GET:/admin",
@@ -249,7 +253,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/admin.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "string"
     },
     {
       "from": "entry:express-not-installed:http:GET:/admin/*",
@@ -285,7 +293,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/videos.controller.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}[]"
     },
     {
       "from": "entry:express-not-installed:http:GET:/api/v1/videos/:param",
@@ -307,7 +319,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/videos.controller.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:unknown}"
     },
     {
       "from": "entry:express-not-installed:http:GET:/health",
@@ -315,7 +331,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 23
+      "line": 23,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{ok:boolean}"
     },
     {
       "from": "entry:express-not-installed:http:GET:/health",
@@ -384,6 +404,13 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "Response"
+    },
+    {
+      "file": "src/videos.controller.ts",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
     }
   ]
 }

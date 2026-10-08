@@ -385,6 +385,16 @@ export {
   READS_META,
 } from './envelope.js';
 export type { Envelope } from './envelope.js';
+export {
+  CLAIMED_META,
+  FAILURES_META,
+  readRequest,
+  REQUEST_PARTS,
+  REQUEST_READ_META,
+  requestReadingSchema,
+  routeShapeEdge,
+} from './request.js';
+export type { FoundType, RequestPart, RequestReading, RequestReadingDescription, RouteShape } from './request.js';
 export { suppliedTypes } from './supplied.js';
 export type { SuppliedTypes } from './supplied.js';
 export type { NamedFunction } from './functions.js';

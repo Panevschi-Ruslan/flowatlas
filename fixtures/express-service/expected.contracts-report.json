@@ -1,8 +1,35 @@
 {
-  "contractsFormatVersion": 4,
+  "contractsFormatVersion": 5,
   "schemaVersion": 6,
-  "generatedAt": "2026-10-07T18:41:20.142Z",
-  "edges": [],
+  "generatedAt": "2026-10-08T07:27:00.039Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:16:12",
+        "to": "entry:api:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:16:12|hits|entry:api:http:POST:/orders",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{total:number}",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+        "writes": [
+          "total"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "type:api#CreateOrder",
+        "symbol": "api#src/orders/orders.routes.ts:POST /@36"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
   "findings": [],
   "ignored": [],
   "unchecked": [
@@ -27,20 +54,8 @@
       "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:12:12|hits|entry:api:http:GET:/orders",
       "direction": "response",
       "reason": "no-type-on-sender",
-      "message": "api#src/orders/orders.controller.ts:listOrders declares no type for what it sends",
-      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
-    },
-    {
-      "edge": {
-        "from": "ui_api_call:web#src/app/orders-api.service.ts:16:12",
-        "to": "entry:api:http:POST:/orders",
-        "type": "hits"
-      },
-      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:16:12|hits|entry:api:http:POST:/orders",
-      "direction": "request",
-      "reason": "no-type-on-receiver",
-      "message": "api#src/orders/orders.routes.ts:POST /@36 declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+      "message": "api#src/orders/orders.controller.ts:listOrders answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
     },
     {
       "edge": {
@@ -51,16 +66,16 @@
       "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:16:12|hits|entry:api:http:POST:/orders",
       "direction": "response",
       "reason": "no-type-on-sender",
-      "message": "api#src/orders/orders.routes.ts:POST /@36 declares no type for what it sends",
-      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+      "message": "api#src/orders/orders.routes.ts:POST /@36 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
     }
   ],
   "summary": {
-    "edges": 0,
+    "edges": 1,
     "shared": 0,
     "identical": 0,
-    "hash_differs": 0,
-    "unchecked": 4,
+    "hash_differs": 1,
+    "unchecked": 3,
     "errors": 0,
     "warnings": 0,
     "infos": 0,

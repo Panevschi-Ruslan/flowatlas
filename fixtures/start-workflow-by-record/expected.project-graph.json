@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:44.715Z",
+  "builtAt": "2026-10-08T07:28:29.324Z",
   "services": [
     {
       "name": "lending",
@@ -403,8 +403,16 @@
       "to": "lending#src/handlers/create-loan.ts:handler",
       "type": "handles",
       "confidence": "static",
+      "returns": "{loanId:string;runId:unknown}",
       "file": "src/handlers/create-loan.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "requestRead": true,
+        "body": "type:lending#LoanRequest",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:lending:http:POST:/runs/:param/resume",
@@ -412,7 +420,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/handlers/resume-run.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:lending:invoke:lending-check-borrower",
@@ -605,6 +616,14 @@
           ]
         }
       },
+      "service": "lending"
+    },
+    {
+      "file": "src/handlers/create-loan.ts",
+      "line": 24,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
       "service": "lending"
     },
     {

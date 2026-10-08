@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "koa-plugin-registry",
-  "generatedAt": "2026-10-07T18:36:25.280Z",
+  "generatedAt": "2026-10-08T07:27:08.683Z",
   "nodes": [
     {
       "id": "entry:koa-plugin-registry:http:GET:/auth/passkey",
@@ -216,7 +216,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/plugins/passkeys/server/auth/passkeys.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "string"
     },
     {
       "from": "entry:koa-plugin-registry:http:POST:/api/documents.info",
@@ -224,7 +228,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/routes/documents.routes.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{data:object}"
     },
     {
       "from": "entry:koa-plugin-registry:http:POST:/api/passkeys.list",
@@ -232,7 +240,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/plugins/passkeys/server/api/passkeys.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{data:undefined[]}"
     },
     {
       "from": "entry:koa-plugin-registry:http:POST:/api/passkeys.update",
@@ -240,7 +252,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/plugins/passkeys/server/api/passkeys.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{data:object}"
     },
     {
       "from": "entry:koa-plugin-registry:http:POST:/api/webhooks.create",
@@ -248,7 +264,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/plugins/webhooks/server/index.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{data:object}"
     }
   ],
   "types": {

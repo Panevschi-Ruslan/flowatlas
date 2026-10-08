@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:42.511Z",
+  "builtAt": "2026-10-08T07:28:27.100Z",
   "services": [
     {
       "name": "returns",
@@ -1136,7 +1136,14 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/returns/record-return.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "body": "type:returns#ReturnedItem",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:returns:http:POST:/returns/bulk",
@@ -1144,7 +1151,14 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/returns/bulk-return.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "requestRead": true,
+        "body": "type:returns#ReturnedItem[]",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:returns:invoke:library-bulk-return",

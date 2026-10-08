@@ -1,6 +1,8 @@
 import {
+  CLAIMED_META,
   formatTypeRef,
   parseTypeRef,
+  REQUEST_PARTS,
   SIGNATURE_META,
   type GraphEdge,
   type GraphNode,
@@ -58,8 +60,6 @@ export interface PackedShapes {
 export const FACES = ['method', 'route', 'call', 'channel', 'bare', 'handler'] as const;
 type Face = (typeof FACES)[number];
 
-/** The parts of a request a route's `handles` edge records, in reading order. */
-const REQUEST_PARTS = ['body', 'params', 'query', 'headers'] as const;
 
 /** Edges out of a call whose types are what the call sends and expects back. */
 const SENDING = new Set(['http_calls', 'hits', 'emits']);
@@ -67,7 +67,8 @@ const SENDING = new Set(['http_calls', 'hits', 'emits']);
 /** Distinct payloads a channel shows, before the rest are left to its producers. */
 const PAYLOADS = 4;
 
-const FLAG = { none: 0, optional: 1, rest: 2 } as const;
+/** How a parameter is marked: optional, a rest, or a part of a request only a cast types (P29). */
+const FLAG = { none: 0, optional: 1, rest: 2, claimed: 3 } as const;
 
 /** The last part of a registry id: `type:orders#Cart@src/a.ts` is `Cart`. */
 const nameOfId = (id: string): string => {
@@ -192,6 +193,12 @@ const isSignature = (value: unknown): value is Signature =>
   Array.isArray((value as Signature).params) &&
   typeof (value as Signature).returns === 'string';
 
+/** The parts of a route only a cast in its handler types (P29). */
+const claimedParts = (edge: GraphEdge): readonly string[] => {
+  const claimed = edge.meta?.[CLAIMED_META];
+  return Array.isArray(claimed) ? (claimed as string[]) : [];
+};
+
 /**
  * The face of every node that has one, from the graph alone.
  *
@@ -232,7 +239,11 @@ const facesOf = (nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Map<
       }
       out.set(edge.from, {
         face: 'route',
-        params: parts.map((part) => ({ label: part, ref: edge.meta?.[part] as string, flag: FLAG.none })),
+        params: parts.map((part) => ({
+          label: part,
+          ref: edge.meta?.[part] as string,
+          flag: claimedParts(edge).includes(part) ? FLAG.claimed : FLAG.none,
+        })),
         returns: edge.returns,
       });
     }

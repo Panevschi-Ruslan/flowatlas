@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "koa-service",
-  "generatedAt": "2026-10-07T18:36:26.221Z",
+  "generatedAt": "2026-10-08T07:27:09.643Z",
   "nodes": [
     {
       "id": "db_query:koa-service#src/orders/orders.repository.ts:12:12",
@@ -393,7 +393,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:koa-service:http:GET:/orders",
@@ -429,7 +432,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
-      "line": 27
+      "line": 27,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:koa-service:http:GET:/orders/:param",
@@ -465,7 +471,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/public/public.routes.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{status:string}"
     },
     {
       "from": "entry:koa-service:http:GET:/public/summary",
@@ -473,7 +483,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/public/public.routes.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{orders:unknown}"
     },
     {
       "from": "entry:koa-service:http:POST:/orders",
@@ -481,7 +495,14 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
-      "line": 32
+      "line": 32,
+      "meta": {
+        "requestRead": true,
+        "body": "type:koa-service#CreateOrder",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:koa-service:http:POST:/orders",
@@ -603,6 +624,23 @@
       "meta": {
         "declKind": "external",
         "package": "koa"
+      }
+    },
+    "type:koa-service#CreateOrder": {
+      "name": "CreateOrder",
+      "kind": "object",
+      "declaredIn": "koa-service#src/orders/orders.routes.ts",
+      "structuralHash": "f571afd1325e8f1e",
+      "fields": [
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
       }
     }
   },

@@ -93,10 +93,23 @@ describe('a repository that serves routes from two frameworks', () => {
       'entry:api:http:GET:/api/depots/:param/stock-stream',
       'entry:api:http:GET:/api/depots/:param/stream',
       'entry:api:http:GET:/health',
+      'entry:api:http:POST:/api/admin/notes',
       'entry:api:http:POST:/api/depots/:param/orders/:param/cancel',
       'entry:api:http:POST:/api/messenger/webhook',
       'entry:api:http:POST:/internal/reload',
+      'entry:api:http:PUT:/api/admin/notes/:param',
     ]);
+  });
+
+  it('reads what a worker route takes from the validator in front of it, and a type argument as a claim (P29)', () => {
+    const handles = (id: string) => project.edges.find((edge) => edge.from === id && edge.type === 'handles');
+    expect(handles('entry:api:http:POST:/api/admin/notes')?.meta).toMatchObject({
+      body: '{text:string;pinned:boolean}',
+    });
+    expect(handles('entry:api:http:PUT:/api/admin/notes/:param')?.meta).toMatchObject({
+      body: 'type:api#NoteChange',
+      claimed: ['body'],
+    });
   });
 
   it('draws the application guard on its own routes and on none of the worker routes', () => {
@@ -195,7 +208,7 @@ describe('a repository that serves routes from two frameworks', () => {
     const inline = project.nodes.filter(
       (node) => node.type === 'entry' && node.repo === 'api' && node.meta?.['handlerVia'] === 'inline',
     );
-    expect(inline.length).toBe(4);
+    expect(inline.length).toBe(6);
     for (const entry of inline) expect(goesTo(entry.id, 'handles')).toHaveLength(1);
   });
 });

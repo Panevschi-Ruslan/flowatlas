@@ -1906,6 +1906,21 @@ An HTTP framework entry:
     "verbKey": "method",
     "pathKey": "url",
     "handlerKey": "handler"
+  },
+  "request": {                               // where a handler finds the request, and how it answers
+    "parts": {
+      "body": [{ "param": 0, "at": ["payload"] }],     // a parameter and keys from it
+      "params": [{ "param": 0, "at": ["params"] }],
+      "query": [{ "param": 0, "at": ["query"] }]
+    },
+    "calls": [                               // methods that hand a part back: `await req.read()`
+      { "param": 0, "at": [], "method": "read", "part": "body", "claim": true }
+    ],
+    "answers": [                             // how a handler answers it
+      { "by": "call", "param": 1, "methods": ["reply"], "statusMethods": ["status"] }
+    ],
+    "defaults": ["HeaderMap"],               // types the framework hands over when nothing narrower was written
+    "validators": [{ "package": "my-checks", "methods": ["check"], "arg": 0 }]
   }
 }
 ```
@@ -1921,6 +1936,34 @@ Express, Fastify, Koa and Hono are rows of exactly this shape in
 and turned into a reader by the same function, so a description that reads a
 repository correctly for one of them reads it correctly for yours. A field
 nothing here uses would be a field only configuration had ever tested.
+
+**What a request carries is described the same way** (P29). `request` says
+where a handler finds the parts of a request and how it answers: each part as a
+parameter and keys from it - `"text": true` where the part is text the handler
+parses - or as a method handing it back, with `byArgument` mapping the string a
+call passes first (`valid('json')`) to the part it stands for. An answer is a
+method called on a parameter (`call`, with the methods in front of it that set
+the status), a function the framework exports (`named`, with `statusArg` or
+`statusKey` for the status beside it), an assignment to a parameter's key
+(`assign`), or what the handler returns, at a key and as text where the
+platform carries it so (`return`, with `statusAt`). What is found goes on the
+route's `handles` edge under the keys a NestJS route has always had - `body`,
+`params`, `query`, `headers`, and the answer as its `returns` - so the Graph tab,
+`flow` and `contracts` read it the same way whatever framework declared the
+route.
+
+What counts, in order: a type the handler's parameter declares at that place; a
+validator's output (`schema.parse(req.body)`, where `schema`'s `parse` is
+declared by a package `validators` names - zod, valibot, yup and superstruct are
+always listed); and a cast or an annotation (`req.body as CreateOrder`), which is
+recorded under `meta.claimed` because nothing checks it. A framework's own
+default - `any`, `unknown`, a dictionary of strings, a type `defaults` names - is
+no type, and two different claims for one part are none either. An answer sent
+with a literal status of 400 or more is kept apart under `meta.failures`; one
+whose status is not a literal is left out. The shipped frameworks - Express,
+Fastify, Koa, Hono, both Next.js routers, Medusa, and a Lambda behind an API
+Gateway - are rows of this shape in
+`packages/adapters-entry/src/request-readings.ts`.
 
 **A description turns its own reader on.** Detection is offered the
 configuration as well as the manifest, so `entry-http-custom` recognises a

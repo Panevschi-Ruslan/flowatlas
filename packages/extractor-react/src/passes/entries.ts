@@ -6,7 +6,10 @@ import {
   isFunctionHandler,
   isInlineHandler,
   makeSymbolId,
+  readRequest,
+  routeShapeEdge,
   type EntryHandler,
+  type EntryNode,
 } from '@flowatlas/core';
 import type { CallExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -50,6 +53,21 @@ const resolveHandler = (
   }
   if (!isFunctionHandler(handler)) return undefined;
   return ctx.functions.byId(makeSymbolId(ctx.repo, handler.file, handler.functionName));
+};
+
+/**
+ * What a route's handler reads from its request and answers it with, where the
+ * adapter described where its framework puts them (P29). The same reading the
+ * server half does, so a route read by both halves carries one shape.
+ */
+const requestOf = (
+  ctx: ReactExtractContext,
+  entry: EntryNode,
+  handler: IndexedFunction,
+): ReturnType<typeof routeShapeEdge> | undefined => {
+  if (entry.request === undefined) return undefined;
+  const shape = readRequest(handler.fn.declaration, entry.request, (type, site) => ctx.types.collectType(type, site));
+  return shape === undefined ? undefined : routeShapeEdge(shape);
 };
 
 /** Every call to a function of this repository, found by name. */
@@ -136,6 +154,7 @@ export const entriesPass = definePass('entries', (ctx: ReactExtractContext) => {
           confidence: 'static',
           file: handler.file,
           line: handler.line,
+          ...requestOf(ctx, entry, handler),
         });
       }
 

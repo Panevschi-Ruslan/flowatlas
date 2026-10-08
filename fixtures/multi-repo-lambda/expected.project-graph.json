@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:46.785Z",
+  "builtAt": "2026-10-08T07:27:30.179Z",
   "services": [
     {
       "name": "platform",
@@ -587,7 +587,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/handlers/cancel-hold.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:holds:http:POST:/v1/holds",
@@ -608,8 +611,16 @@
       "to": "holds#src/handlers/place-hold.ts:handler",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:holds#Hold",
       "file": "src/handlers/place-hold.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "body": "{borrowerId:string;isbn:string}",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:holds:invoke:${…}@aws_lambda_function.cancel_hold",
@@ -633,7 +644,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "functions/get-loan/index.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:loans:http:GET:/v1/loans/:param",
@@ -654,8 +668,16 @@
       "to": "loans#functions/create-loan/index.ts:createLoan",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:@flowatlas/fixtures#Loan",
       "file": "functions/create-loan/index.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "body": "{borrowerId:string;isbn:string}",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:loans:http:POST:/v1/loans",

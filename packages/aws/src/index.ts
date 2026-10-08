@@ -27,6 +27,7 @@ export {
   topicChannel,
 } from './channels.js';
 export { deliveryEnvelope, ENVELOPES, ONWARD, STARTED, type DeliveryEnvelope } from './envelopes.js';
+export { GATEWAY_REQUEST } from './requests.js';
 export {
   DEPLOYED_FORMS,
   deployedArn,

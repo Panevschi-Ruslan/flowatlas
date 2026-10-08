@@ -6,6 +6,7 @@ import type { ExtractContext } from './context.js';
 import type { EntryWrapping } from './wrapping.js';
 import type { PackageJson } from './manifest.js';
 import type { Envelope } from '../envelope.js';
+import type { RequestReading } from '../request.js';
 
 /** A method of a class, which is where most handlers live. */
 export interface MethodHandler {
@@ -113,6 +114,16 @@ export interface EntryNode {
    * compared with what the handler actually reads (R172).
    */
   reads?: readonly Envelope[];
+  /**
+   * Where a request's parts sit in what the handler is handed, and how it
+   * answers, for a framework whose handler does not say so in its signature.
+   *
+   * Described rather than read, like `reads`: the extractor reads the handler
+   * by it and records what it found on the `handles` edge, under the keys a
+   * NestJS route's edge has always used, so every reader downstream sees one
+   * shape of route whatever framework declared it (P29).
+   */
+  request?: RequestReading;
   meta?: Record<string, unknown>;
 }
 

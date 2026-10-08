@@ -1,0 +1,9 @@
+{
+  "name": "orders-api",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "express": "^4.21.2",
+    "zod": "^3.24.1"
+  }
+}

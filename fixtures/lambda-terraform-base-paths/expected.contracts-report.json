@@ -1,7 +1,7 @@
 {
-  "contractsFormatVersion": 4,
+  "contractsFormatVersion": 5,
   "schemaVersion": 6,
-  "generatedAt": "2026-10-06T21:12:36.742Z",
+  "generatedAt": "2026-10-08T07:27:12.182Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -27,8 +27,8 @@
       "edgeKey": "http_out:kiosk#src/kiosk/check-item.ts:9:26|http_calls|entry:catalogue:http:GET:/v1/items/:param",
       "direction": "response",
       "reason": "no-type-on-sender",
-      "message": "catalogue#src/items/get-item.ts:handler declares no type for what it sends",
-      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+      "message": "catalogue#src/items/get-item.ts:handler answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
     },
     {
       "edge": {
@@ -50,9 +50,9 @@
       },
       "edgeKey": "http_out:kiosk#src/kiosk/request-hold.ts:5:26|http_calls|entry:catalogue:http:POST:/holds/requests",
       "direction": "response",
-      "reason": "no-type-on-sender",
-      "message": "catalogue#src/holds/place-hold.ts:handler declares no type for what it sends",
-      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+      "reason": "no-type-on-receiver",
+      "message": "kiosk#src/kiosk/request-hold.ts:handler declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     }
   ],
   "summary": {

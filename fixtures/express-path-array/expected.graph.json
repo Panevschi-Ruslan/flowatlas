@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "express-path-array",
-  "generatedAt": "2026-10-07T18:36:15.520Z",
+  "generatedAt": "2026-10-08T07:26:58.975Z",
   "nodes": [
     {
       "id": "entry:express-path-array:http:GET:/api/i/:param",
@@ -169,7 +169,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/items.controller.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}"
     },
     {
       "from": "entry:express-path-array:http:GET:/api/items",
@@ -177,7 +181,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/items.controller.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}[]"
     },
     {
       "from": "entry:express-path-array:http:GET:/api/items/:param",
@@ -185,7 +193,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/items.controller.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}"
     },
     {
       "from": "entry:express-path-array:http:GET:/api/legacy/items",
@@ -193,7 +205,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/items.controller.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}[]"
     },
     {
       "from": "entry:express-path-array:http:GET:/api/old/items",
@@ -201,7 +217,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/items.controller.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}[]"
     }
   ],
   "types": {

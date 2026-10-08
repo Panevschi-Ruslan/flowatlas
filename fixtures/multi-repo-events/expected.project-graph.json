@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:45.710Z",
+  "builtAt": "2026-10-08T07:27:29.094Z",
   "services": [
     {
       "name": "platform-events",
@@ -936,8 +936,16 @@
       "to": "loans#src/create-loan.ts:handler",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:loans#Loan",
       "file": "src/create-loan.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "requestRead": true,
+        "body": "type:loans#Loan",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:loans:http:POST:/loans/:param/return",
@@ -945,7 +953,14 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/return-loan.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "requestRead": true,
+        "body": "type:loans#Loan",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:loans:invoke:library-create-loan",

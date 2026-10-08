@@ -33,6 +33,8 @@ const partySchema = z.strictObject({
   writesEvery: z.boolean().optional(),
   /** The document a service nobody here can read was taken from (P19). */
   declaredBy: z.string().optional(),
+  /** The type at this end is a cast in the code, not a checked declaration (P29). */
+  claimed: z.boolean().optional(),
 });
 
 export const contractFindingSchema = z.strictObject({

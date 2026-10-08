@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { isUniversalMethod } from './adapters/db.js';
 import { ConfigInvalidError, ConfigNotFoundError } from './errors.js';
 import { ENTRY_KINDS } from './model/nodes.js';
+import { requestReadingSchema } from './request.js';
 
 export const CONFIG_FILENAME = 'flowatlas.config.json';
 export const DEFAULT_OUTPUT = '.flowatlas';
@@ -638,6 +639,11 @@ export const entryHttpSchema = z.strictObject({
   mount: entryHttpMountSchema.optional(),
   middleware: entryHttpMiddlewareSchema.optional(),
   routeObject: entryHttpRouteObjectSchema.optional(),
+  /**
+   * Where a handler finds the parts of a request and how it answers - places,
+   * never code, read by the same reading every shipped framework is (P29).
+   */
+  request: requestReadingSchema.optional(),
 });
 
 /**

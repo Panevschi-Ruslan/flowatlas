@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "koa-react-full-stack",
-  "generatedAt": "2026-10-07T18:36:25.764Z",
+  "generatedAt": "2026-10-08T07:27:09.174Z",
   "nodes": [
     {
       "id": "db_query:koa-react-full-stack#src/server/orders.repository.ts:16:33",
@@ -393,7 +393,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/server/orders.routes.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:koa-react-full-stack:http:POST:/api/orders",
@@ -401,7 +404,14 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/server/orders.routes.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "requestRead": true,
+        "body": "{total:number}",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "koa-react-full-stack#src/server/orders.repository.ts:orders.insert",

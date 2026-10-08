@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:30.547Z",
+  "builtAt": "2026-10-08T07:27:13.973Z",
   "services": [
     {
       "name": "catalogue",
@@ -239,7 +239,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/items/get-item.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:catalogue:http:POST:/items",
@@ -260,8 +263,16 @@
       "to": "catalogue#src/items/add-item.ts:handler",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:catalogue#Item",
       "file": "src/items/add-item.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "body": "type:catalogue#Item",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:catalogue:invoke:library-dev-add-item",

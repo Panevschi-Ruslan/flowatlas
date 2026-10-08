@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:16.322Z",
+  "builtAt": "2026-10-08T07:26:59.769Z",
   "services": [
     {
       "name": "api",
@@ -728,7 +728,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.controller.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:api:http:GET:/orders",
@@ -778,7 +781,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
-      "line": 25
+      "line": 25,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:api:http:GET:/orders/:param",
@@ -799,16 +805,24 @@
       "to": "api#src/public/public.routes.ts:GET /health@14",
       "type": "handles",
       "confidence": "static",
+      "returns": "{status:string}",
       "file": "src/public/public.routes.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:api:http:GET:/public/summary",
       "to": "api#src/public/public.routes.ts:GET /summary@18",
       "type": "handles",
       "confidence": "static",
+      "returns": "{count:number}",
       "file": "src/public/public.routes.ts",
-      "line": 18
+      "line": 18,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:api:http:POST:/orders",
@@ -844,7 +858,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/orders/orders.routes.ts",
-      "line": 36
+      "line": 36,
+      "meta": {
+        "requestRead": true,
+        "body": "type:api#CreateOrder"
+      }
     },
     {
       "from": "entry:api:http:POST:/orders",

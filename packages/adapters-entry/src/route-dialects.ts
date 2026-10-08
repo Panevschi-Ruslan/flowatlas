@@ -1,5 +1,6 @@
-import type { EntryHttpConfig, EntryHttpDescription } from '@flowatlas/core';
+import type { EntryHttpConfig, EntryHttpDescription, RequestReading } from '@flowatlas/core';
 import { entryHttpSchema } from '@flowatlas/core';
+import { EXPRESS_REQUEST, FASTIFY_REQUEST, HONO_REQUEST, KOA_REQUEST, readingOf } from './request-readings.js';
 
 /**
  * The frameworks that register a route by calling the application, described
@@ -212,6 +213,8 @@ export interface RouteDialect extends StatedApps {
   readonly mount?: MountShape;
   readonly middleware?: MiddlewareShape;
   readonly routeObject?: RouteObjectShape;
+  /** Where a handler finds the parts of a request and how it answers (P29). */
+  readonly request?: RequestReading;
 }
 
 /** The verbs every one of these frameworks spells as a method of its own. */
@@ -284,6 +287,7 @@ export const dialectOf = (
   ...(config.mount === undefined ? {} : { mount: mountOf(config.mount) }),
   ...(config.middleware === undefined ? {} : { middleware: middlewareOf(config.middleware) }),
   ...(config.routeObject === undefined ? {} : { routeObject: config.routeObject }),
+  ...(config.request === undefined ? {} : { request: readingOf(config.request) }),
 });
 
 /**
@@ -342,6 +346,7 @@ export const EXPRESS: RouteDialect = described({
   // argument is an application. Nothing but the type can say.
   mount: { method: 'use', appArg: -1, pathArg: 0 },
   middleware: { method: 'use', scoped: true },
+  request: EXPRESS_REQUEST,
 }, {
   // `express()` makes the application; `Router()` and `express.Router()` need
   // no row, because `Router` is already one of the types above.
@@ -376,6 +381,7 @@ export const FASTIFY: RouteDialect = described({
     optionKeys: ['preHandler', 'onRequest', 'preValidation', 'preParsing'],
   },
   routeObject: { method: 'route', verbKey: 'method', pathKey: 'url', handlerKey: 'handler' },
+  request: FASTIFY_REQUEST,
 }, {
   // `Fastify()` from the default export, and `fastify()` from the named one.
   makers: [
@@ -415,6 +421,7 @@ export const KOA: RouteDialect = described({
   prefixOption: 'prefix',
   mount: { method: 'use', appArg: -1, pathArg: 0, through: ['routes', 'allowedMethods'] },
   middleware: { method: 'use', scoped: true },
+  request: KOA_REQUEST,
 }, {
   // `new Koa()` and `new Router()`, each a default export named by the importer.
   makers: [
@@ -455,6 +462,7 @@ export const HONO: RouteDialect = described({
   prefixMethod: 'basePath',
   mount: { method: 'route', appArg: 1, pathArg: 0 },
   middleware: { method: 'use', scoped: true },
+  request: HONO_REQUEST,
 });
 
 /**

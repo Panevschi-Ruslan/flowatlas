@@ -1561,6 +1561,7 @@ export const callRoutesAdapter = (
               file,
               line,
               ...(wrapping.length > 0 ? { wrapping } : {}),
+              ...(dialect.request === undefined ? {} : { request: dialect.request }),
               meta: {
                 method,
                 path,

@@ -25,8 +25,13 @@ import type { GraphEdge, GraphNode, TypeEntry } from '@flowatlas/core';
  * would present a declared end exactly as it presents a read one, which is the
  * single thing this way in must never be allowed to do, so the widening is a
  * version rather than a quiet addition (P19).
+ *
+ * 5 — a party may carry `claimed`: the type at that end is what a cast in the
+ * handler says, which nothing checked. A finding against it is never more than
+ * a warning, and a reader that did not know the field would present an
+ * assertion as a declaration (P29).
  */
-export const CONTRACTS_FORMAT_VERSION = 4;
+export const CONTRACTS_FORMAT_VERSION = 5;
 
 /** How bad a finding is. */
 export const SEVERITIES = ['error', 'warning', 'info'] as const;
@@ -151,6 +156,12 @@ export interface ContractParty {
    * read the prose. Absent for every end that was read, which is most of them.
    */
   declaredBy?: string;
+  /**
+   * True when the type at this end is only what a cast in the code says it is
+   * - `req.body as CreateOrder` - rather than a declaration anything checks
+   * (P29).
+   */
+  claimed?: boolean;
 }
 
 /** One disagreement between two shapes, as the comparator found it. */

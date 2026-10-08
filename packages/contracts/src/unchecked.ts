@@ -32,13 +32,40 @@ const missing = (direction: Direction, side: 'sender' | 'receiver'): UncheckedNo
     : 'Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class.';
 };
 
+/**
+ * The same missing type at the end of a handler that reads its request and
+ * answers through what it is handed (P29). Its signature says nothing either
+ * way, so the sentence names what it does not state and the hint points at
+ * where such a handler states it.
+ */
+const unstated = (direction: Direction, side: 'sender' | 'receiver', subject: string): UncheckedNote | undefined => {
+  if (direction === 'response' && side === 'sender') {
+    return {
+      message: `${subject} answers through the response it is handed, and states no type for the answer`,
+      hint: 'Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare.',
+    };
+  }
+  if (direction === 'request' && side === 'receiver') {
+    return {
+      message: `${subject} reads no typed body from the request it is handed`,
+      hint: "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape.",
+    };
+  }
+  return undefined;
+};
+
 /** What is missing, and where to put it. `subject` names the symbol involved. */
 export const uncheckedNote = (
   reason: UncheckedReason,
   subject: string,
   direction: Direction = 'request',
   detail?: string,
+  described = false,
 ): UncheckedNote => {
+  if (described && (reason === 'no-type-on-sender' || reason === 'no-type-on-receiver')) {
+    const said = unstated(direction, reason === 'no-type-on-sender' ? 'sender' : 'receiver', subject);
+    if (said !== undefined) return said;
+  }
   switch (reason) {
     case 'no-type-on-sender':
       return {

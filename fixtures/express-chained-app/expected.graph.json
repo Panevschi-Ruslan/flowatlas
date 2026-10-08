@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "express-chained-app",
-  "generatedAt": "2026-10-07T18:36:14.215Z",
+  "generatedAt": "2026-10-08T07:26:57.667Z",
   "nodes": [
     {
       "id": "entry:express-chained-app:http:GET:/api/v1/items",
@@ -115,7 +115,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/items.controller.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{id:string}[]"
     },
     {
       "from": "entry:express-chained-app:http:GET:/health",
@@ -123,7 +127,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{ok:boolean}"
     }
   ],
   "types": {

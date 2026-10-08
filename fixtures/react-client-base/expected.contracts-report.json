@@ -1,7 +1,7 @@
 {
-  "contractsFormatVersion": 4,
+  "contractsFormatVersion": 5,
   "schemaVersion": 6,
-  "generatedAt": "2026-10-07T18:42:38.239Z",
+  "generatedAt": "2026-10-08T07:28:18.242Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -15,8 +15,8 @@
       "edgeKey": "ui_api_call:app#src/app/documents.ts:11:3|hits|entry:app:http:POST:/api/documents.info",
       "direction": "request",
       "reason": "no-type-on-receiver",
-      "message": "app#src/server/documents.routes.ts:POST /documents.info@12 declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+      "message": "app#src/server/documents.routes.ts:POST /documents.info@12 reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
     },
     {
       "edge": {
@@ -26,9 +26,9 @@
       },
       "edgeKey": "ui_api_call:app#src/app/documents.ts:11:3|hits|entry:app:http:POST:/api/documents.info",
       "direction": "response",
-      "reason": "no-type-on-sender",
-      "message": "app#src/server/documents.routes.ts:POST /documents.info@12 declares no type for what it sends",
-      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+      "reason": "no-type-on-receiver",
+      "message": "app#src/app/documents.ts:readDocument declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     },
     {
       "edge": {
@@ -39,8 +39,8 @@
       "edgeKey": "ui_api_call:app#src/app/documents.ts:14:3|hits|entry:app:http:POST:/api/documents.update",
       "direction": "request",
       "reason": "no-type-on-receiver",
-      "message": "app#src/server/documents.routes.ts:POST /documents.update@16 declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+      "message": "app#src/server/documents.routes.ts:POST /documents.update@16 reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
     },
     {
       "edge": {
@@ -50,9 +50,9 @@
       },
       "edgeKey": "ui_api_call:app#src/app/documents.ts:14:3|hits|entry:app:http:POST:/api/documents.update",
       "direction": "response",
-      "reason": "no-type-on-sender",
-      "message": "app#src/server/documents.routes.ts:POST /documents.update@16 declares no type for what it sends",
-      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+      "reason": "no-type-on-receiver",
+      "message": "app#src/app/documents.ts:renameDocument declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     },
     {
       "edge": {
@@ -63,8 +63,8 @@
       "edgeKey": "ui_api_call:app#src/app/documents.ts:31:3|hits|entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
       "direction": "request",
       "reason": "no-type-on-receiver",
-      "message": "app#src/server/auth.routes.ts:POST /passkeys.generateRegistrationOptions@15 declares no type for what it expects",
-      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+      "message": "app#src/server/auth.routes.ts:POST /passkeys.generateRegistrationOptions@15 reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
     },
     {
       "edge": {
@@ -74,9 +74,9 @@
       },
       "edgeKey": "ui_api_call:app#src/app/documents.ts:31:3|hits|entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
       "direction": "response",
-      "reason": "no-type-on-sender",
-      "message": "app#src/server/auth.routes.ts:POST /passkeys.generateRegistrationOptions@15 declares no type for what it sends",
-      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+      "reason": "no-type-on-receiver",
+      "message": "app#src/app/documents.ts:registerPasskey declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     }
   ],
   "summary": {

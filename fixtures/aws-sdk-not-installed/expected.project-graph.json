@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:08.678Z",
+  "builtAt": "2026-10-08T07:26:52.168Z",
   "services": [
     {
       "name": "catalogue",
@@ -409,7 +409,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/catalogue.handlers.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:catalogue:http:POST:/items",
@@ -430,8 +433,16 @@
       "to": "catalogue#src/catalogue.handlers.ts:catalogueItem",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:catalogue#CatalogueItem",
       "file": "src/catalogue.handlers.ts",
-      "line": 21
+      "line": 21,
+      "meta": {
+        "requestRead": true,
+        "body": "type:catalogue#CatalogueItem",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "producer:catalogue#src/catalogue-events.ts:21:11",

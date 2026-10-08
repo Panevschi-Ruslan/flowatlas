@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:30.128Z",
+  "builtAt": "2026-10-08T07:28:13.456Z",
   "services": [
     {
       "name": "web",
@@ -122,8 +122,12 @@
       "to": "web#app/api/bookings/route.ts:GET",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:@sibling-types/platform-types#BookingOutput[]",
       "file": "app/api/bookings/route.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "web#../../packages/platform-types/src/index.ts:toBookingOutput",

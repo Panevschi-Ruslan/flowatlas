@@ -843,7 +843,10 @@ export const describe = (model, i) => {
 export const FACE = Object.freeze({ node: 0, face: 1, params: 2, returns: 3 });
 
 /** A parameter's flag, as packed. */
-export const PARAM_FLAG = Object.freeze({ none: 0, optional: 1, rest: 2 });
+export const PARAM_FLAG = Object.freeze({ none: 0, optional: 1, rest: 2, claimed: 3 });
+
+/** What a part of a request only a cast types is marked with, wherever it is shown (P29). */
+export const CLAIMED_MARK = ' (cast)';
 
 const NO_SHAPES = Object.freeze({ refs: [], types: [], faces: [], labels: [], faceNames: [] });
 const shapesOf = (model) => model.data.shapes || NO_SHAPES;
@@ -922,7 +925,7 @@ const paramText = (model, param) => {
   const type = refText(model, param.ref);
   if (param.label === '') return type;
   const name = (param.flag === PARAM_FLAG.rest ? '...' : '') + param.label +
-    (param.flag === PARAM_FLAG.optional ? '?' : '');
+    (param.flag === PARAM_FLAG.optional ? '?' : '') + (param.flag === PARAM_FLAG.claimed ? CLAIMED_MARK : '');
   return name + ': ' + type;
 };
 

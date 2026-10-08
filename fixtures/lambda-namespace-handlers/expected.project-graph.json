@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:27.450Z",
+  "builtAt": "2026-10-08T07:27:10.873Z",
   "services": [
     {
       "name": "desk",
@@ -796,7 +796,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/operations/holds.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:desk:http:POST:/holds",
@@ -804,7 +807,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/operations/holds.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:desk:http:POST:/loans",
@@ -812,7 +818,14 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/operations/loans.ts",
-      "line": 17
+      "line": 17,
+      "meta": {
+        "requestRead": true,
+        "body": "type:desk#LoanOpened",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:desk:http:POST:/loans/:param/archive",
@@ -831,7 +844,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/operations/loans.ts",
-      "line": 29
+      "line": 29,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:desk:http:POST:/returns",
@@ -839,7 +855,14 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/operations/returns.ts",
-      "line": 13
+      "line": 13,
+      "meta": {
+        "requestRead": true,
+        "body": "type:desk#ReturnedItem",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:desk:invoke:library-desk-cancel-hold",

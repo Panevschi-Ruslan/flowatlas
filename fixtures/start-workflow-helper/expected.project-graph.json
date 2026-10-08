@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:46.833Z",
+  "builtAt": "2026-10-08T07:28:31.475Z",
   "services": [
     {
       "name": "lending",
@@ -592,8 +592,16 @@
       "to": "lending#src/handlers/create-loan.ts:handler",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:lending#Loan",
       "file": "src/handlers/create-loan.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "body": "type:lending#LoanRequest",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:lending:http:POST:/loans/:param/renewals",
@@ -601,7 +609,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/handlers/renew-loan.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:lending:invoke:lending-check-borrower",

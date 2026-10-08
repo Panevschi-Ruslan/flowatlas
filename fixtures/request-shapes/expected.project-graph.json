@@ -1,0 +1,1972 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T07:28:21.718Z",
+  "services": [
+    {
+      "name": "orders-api",
+      "repo": "./orders-api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "fastify",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "cart-api",
+      "repo": "./cart-api",
+      "type": "koa",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "admin#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "admin",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "admin#src/app/admin-api.service.ts:AdminApiService",
+      "type": "provider",
+      "label": "AdminApiService",
+      "repo": "admin",
+      "file": "src/app/admin-api.service.ts",
+      "line": 30,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "admin#src/app/admin-api.service.ts:AdminApiService.importBatch",
+      "type": "method",
+      "label": "AdminApiService.importBatch",
+      "repo": "admin",
+      "file": "src/app/admin-api.service.ts",
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "batch",
+              "type": "type:admin#ImportBatch"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/admin-api.service.ts:AdminApiService.item",
+      "type": "method",
+      "label": "AdminApiService.item",
+      "repo": "admin",
+      "file": "src/app/admin-api.service.ts",
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:admin#CatalogItem"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/admin-api.service.ts:AdminApiService.orders",
+      "type": "method",
+      "label": "AdminApiService.orders",
+      "repo": "admin",
+      "file": "src/app/admin-api.service.ts",
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:admin#OrderRow[]"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/admin-api.service.ts:AdminApiService.place",
+      "type": "method",
+      "label": "AdminApiService.place",
+      "repo": "admin",
+      "file": "src/app/admin-api.service.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:admin#NewOrder"
+            }
+          ],
+          "returns": "type:admin#OrderRow"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/admin.component.ts:AdminComponent",
+      "type": "ui_component",
+      "label": "AdminComponent",
+      "repo": "admin",
+      "file": "src/app/admin.component.ts",
+      "line": 5,
+      "kind": "standalone",
+      "meta": {
+        "standalone": true,
+        "selector": "app-admin"
+      }
+    },
+    {
+      "id": "admin#src/app/admin.component.ts:AdminComponent.importBatch",
+      "type": "method",
+      "label": "AdminComponent.importBatch",
+      "repo": "admin",
+      "file": "src/app/admin.component.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/admin.component.ts:AdminComponent.item",
+      "type": "method",
+      "label": "AdminComponent.item",
+      "repo": "admin",
+      "file": "src/app/admin.component.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/admin.component.ts:AdminComponent.load",
+      "type": "method",
+      "label": "AdminComponent.load",
+      "repo": "admin",
+      "file": "src/app/admin.component.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "admin#src/app/admin.component.ts:AdminComponent.place",
+      "type": "method",
+      "label": "AdminComponent.place",
+      "repo": "admin",
+      "file": "src/app/admin.component.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cart-api#src/server.ts:GET /:id@26",
+      "type": "function",
+      "label": "GET /:id@26",
+      "repo": "cart-api",
+      "file": "src/server.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cart-api#src/server.ts:POST /:id/lines@18",
+      "type": "function",
+      "label": "POST /:id/lines@18",
+      "repo": "cart-api",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/server.ts:DELETE /items/:id@30",
+      "type": "function",
+      "label": "DELETE /items/:id@30",
+      "repo": "catalog-api",
+      "file": "src/server.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:fastify#FastifyRequest<type:fastify#RouteGenericInterface>"
+            },
+            {
+              "name": "reply",
+              "type": "type:fastify#FastifyReply<type:fastify#RouteGenericInterface>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/server.ts:GET /items/:id@24",
+      "type": "function",
+      "label": "GET /items/:id@24",
+      "repo": "catalog-api",
+      "file": "src/server.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:fastify#FastifyRequest<{Params:{id:string}}>"
+            }
+          ],
+          "returns": "type:catalog-api#Item"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/server.ts:POST /items@18",
+      "type": "function",
+      "label": "POST /items@18",
+      "repo": "catalog-api",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:fastify#FastifyRequest<{Body:type:catalog-api#CreateItem;Reply:type:catalog-api#Item}>"
+            },
+            {
+              "name": "reply",
+              "type": "type:fastify#FastifyReply<{Body:type:catalog-api#CreateItem;Reply:type:catalog-api#Item}>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:cart-api:http:GET:/carts/:param",
+      "type": "entry",
+      "label": "GET /carts/:param",
+      "repo": "cart-api",
+      "file": "src/server.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/carts/:param",
+        "rawPath": "/carts/:id",
+        "adapter": "koa-routes",
+        "registration": "router.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:cart-api:http:POST:/carts/:param/lines",
+      "type": "entry",
+      "label": "POST /carts/:param/lines",
+      "repo": "cart-api",
+      "file": "src/server.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/carts/:param/lines",
+        "rawPath": "/carts/:id/lines",
+        "adapter": "koa-routes",
+        "registration": "router.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:DELETE:/items/:param",
+      "type": "entry",
+      "label": "DELETE /items/:param",
+      "repo": "catalog-api",
+      "file": "src/server.ts",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/items/:param",
+        "rawPath": "/items/:id",
+        "adapter": "fastify-routes",
+        "registration": "app.delete",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/items/:param",
+      "type": "entry",
+      "label": "GET /items/:param",
+      "repo": "catalog-api",
+      "file": "src/server.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items/:param",
+        "rawPath": "/items/:id",
+        "adapter": "fastify-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:POST:/items",
+      "type": "entry",
+      "label": "POST /items",
+      "repo": "catalog-api",
+      "file": "src/server.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/items",
+        "rawPath": "/items",
+        "adapter": "fastify-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders-api:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 43,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "express-routes",
+        "registration": "ordersRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders-api:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "adapter": "express-routes",
+        "registration": "ordersRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders-api:http:PATCH:/orders/:param",
+      "type": "entry",
+      "label": "PATCH /orders/:param",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "adapter": "express-routes",
+        "registration": "ordersRouter.patch",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders-api:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "express-routes",
+        "registration": "ordersRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders-api:http:POST:/orders/import",
+      "type": "entry",
+      "label": "POST /orders/import",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 36,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/import",
+        "rawPath": "/orders/import",
+        "adapter": "express-routes",
+        "registration": "ordersRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:shop:http:ALL:/api/health",
+      "type": "entry",
+      "label": "ALL /api/health",
+      "repo": "shop",
+      "file": "pages/api/health.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/health",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/carts",
+      "type": "entry",
+      "label": "POST /api/carts",
+      "repo": "shop",
+      "file": "app/api/carts/route.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/carts",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "orders-api#src/app.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "orders-api",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "function"
+    },
+    {
+      "id": "orders-api#src/orders.routes.ts:GET /:id@16",
+      "type": "function",
+      "label": "GET /:id@16",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<{id:string},any,any,type:express#ParsedQs>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders.routes.ts:GET /@43",
+      "type": "function",
+      "label": "GET /@43",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 43,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<type:express#ParamsDictionary,any,any,type:express#ParsedQs>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders.routes.ts:PATCH /:id@29",
+      "type": "function",
+      "label": "PATCH /:id@29",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<type:express#ParamsDictionary,any,any,type:express#ParsedQs>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders.routes.ts:POST /@10",
+      "type": "function",
+      "label": "POST /@10",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,type:orders-api#Order,type:orders-api#CreateOrder,type:express#ParsedQs>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<type:orders-api#Order>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders.routes.ts:POST /import@36",
+      "type": "function",
+      "label": "POST /import@36",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<type:express#ParamsDictionary,any,any,type:express#ParsedQs>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders.store.ts:store.add",
+      "type": "function",
+      "label": "store.add",
+      "repo": "orders-api",
+      "file": "src/orders.store.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:orders-api#CreateOrder"
+            }
+          ],
+          "returns": "type:orders-api#Order"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders.store.ts:store.all",
+      "type": "function",
+      "label": "store.all",
+      "repo": "orders-api",
+      "file": "src/orders.store.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders.store.ts:store.find",
+      "type": "function",
+      "label": "store.find",
+      "repo": "orders-api",
+      "file": "src/orders.store.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:orders-api#Order|undefined"
+        }
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "templates": 1,
+          "skippedExternalCalls": {
+            "@angular/common": 4,
+            "rxjs": 4
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:cart-api",
+      "type": "repo",
+      "label": "cart-api",
+      "repo": "cart-api",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "koa-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:catalog-api",
+      "type": "repo",
+      "label": "catalog-api",
+      "repo": "catalog-api",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "fastify": 4
+          }
+        },
+        "adapters": {
+          "entry": [
+            "fastify-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:orders-api",
+      "type": "repo",
+      "label": "orders-api",
+      "repo": "orders-api",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 8,
+            "zod": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "next": 10
+          },
+          "functions": 2,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop#app/api/carts/route.ts:POST",
+      "type": "function",
+      "label": "POST",
+      "repo": "shop",
+      "file": "app/api/carts/route.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:next#NextRequest"
+            }
+          ],
+          "returns": "type:next#NextResponse"
+        }
+      }
+    },
+    {
+      "id": "shop#pages/api/health.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "pages/api/health.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:next#NextApiRequest"
+            },
+            {
+              "name": "res",
+              "type": "type:next#NextApiResponse<type:shop#Health>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_action:admin#src/app/admin.component.ts:10:13",
+      "type": "ui_action",
+      "label": "click=\"importBatch()\"",
+      "repo": "admin",
+      "file": "src/app/admin.component.ts",
+      "line": 10,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "importBatch()",
+        "component": "admin#src/app/admin.component.ts:AdminComponent",
+        "template": "src/app/admin.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:admin#src/app/admin.component.ts:11:13",
+      "type": "ui_action",
+      "label": "click=\"load()\"",
+      "repo": "admin",
+      "file": "src/app/admin.component.ts",
+      "line": 11,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "load()",
+        "component": "admin#src/app/admin.component.ts:AdminComponent",
+        "template": "src/app/admin.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:admin#src/app/admin.component.ts:12:13",
+      "type": "ui_action",
+      "label": "click=\"item()\"",
+      "repo": "admin",
+      "file": "src/app/admin.component.ts",
+      "line": 12,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "item()",
+        "component": "admin#src/app/admin.component.ts:AdminComponent",
+        "template": "src/app/admin.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:admin#src/app/admin.component.ts:9:13",
+      "type": "ui_action",
+      "label": "click=\"place()\"",
+      "repo": "admin",
+      "file": "src/app/admin.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "place()",
+        "component": "admin#src/app/admin.component.ts:AdminComponent",
+        "template": "src/app/admin.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/app/admin-api.service.ts:36:12",
+      "type": "ui_api_call",
+      "label": "POST /orders",
+      "repo": "admin",
+      "file": "src/app/admin-api.service.ts",
+      "line": 36,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${ordersUrl}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "ordersUrl",
+        "responseType": "type:admin#OrderRow",
+        "bodyType": "type:admin#NewOrder",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "total"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/app/admin-api.service.ts:41:12",
+      "type": "ui_api_call",
+      "label": "POST /orders/import",
+      "repo": "admin",
+      "file": "src/app/admin-api.service.ts",
+      "line": 41,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${ordersUrl}/orders/import",
+        "path": "/orders/import",
+        "baseUrlEnv": "ordersUrl",
+        "responseType": "unknown",
+        "bodyType": "type:admin#ImportBatch",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "source"
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/app/admin-api.service.ts:46:12",
+      "type": "ui_api_call",
+      "label": "GET /orders",
+      "repo": "admin",
+      "file": "src/app/admin-api.service.ts",
+      "line": 46,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${ordersUrl}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "ordersUrl",
+        "responseType": "type:admin#OrderRow[]",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/app/admin-api.service.ts:51:12",
+      "type": "ui_api_call",
+      "label": "GET /items/:param",
+      "repo": "admin",
+      "file": "src/app/admin-api.service.ts",
+      "line": 51,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${catalogUrl}/items/:param",
+        "path": "/items/:param",
+        "baseUrlEnv": "catalogUrl",
+        "responseType": "type:admin#CatalogItem",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "catalog-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "admin#src/app/admin-api.service.ts:AdminApiService",
+      "to": "admin#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/admin-api.service.ts",
+      "line": 32
+    },
+    {
+      "from": "admin#src/app/admin-api.service.ts:AdminApiService.importBatch",
+      "to": "ui_api_call:admin#src/app/admin-api.service.ts:41:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/admin-api.service.ts",
+      "line": 41
+    },
+    {
+      "from": "admin#src/app/admin-api.service.ts:AdminApiService.item",
+      "to": "ui_api_call:admin#src/app/admin-api.service.ts:51:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/admin-api.service.ts",
+      "line": 51
+    },
+    {
+      "from": "admin#src/app/admin-api.service.ts:AdminApiService.orders",
+      "to": "ui_api_call:admin#src/app/admin-api.service.ts:46:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/admin-api.service.ts",
+      "line": 46
+    },
+    {
+      "from": "admin#src/app/admin-api.service.ts:AdminApiService.place",
+      "to": "ui_api_call:admin#src/app/admin-api.service.ts:36:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/admin-api.service.ts",
+      "line": 36
+    },
+    {
+      "from": "admin#src/app/admin.component.ts:AdminComponent",
+      "to": "admin#src/app/admin-api.service.ts:AdminApiService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/admin.component.ts",
+      "line": 16
+    },
+    {
+      "from": "admin#src/app/admin.component.ts:AdminComponent.importBatch",
+      "to": "admin#src/app/admin-api.service.ts:AdminApiService.importBatch",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:admin#ImportBatch"
+      ],
+      "returns": "unknown",
+      "file": "src/app/admin.component.ts",
+      "line": 23
+    },
+    {
+      "from": "admin#src/app/admin.component.ts:AdminComponent.item",
+      "to": "admin#src/app/admin-api.service.ts:AdminApiService.item",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:admin#CatalogItem",
+      "file": "src/app/admin.component.ts",
+      "line": 31
+    },
+    {
+      "from": "admin#src/app/admin.component.ts:AdminComponent.load",
+      "to": "admin#src/app/admin-api.service.ts:AdminApiService.orders",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:admin#OrderRow[]",
+      "file": "src/app/admin.component.ts",
+      "line": 27
+    },
+    {
+      "from": "admin#src/app/admin.component.ts:AdminComponent.place",
+      "to": "admin#src/app/admin-api.service.ts:AdminApiService.place",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:admin#NewOrder"
+      ],
+      "returns": "type:admin#OrderRow",
+      "file": "src/app/admin.component.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:cart-api:http:GET:/carts/:param",
+      "to": "cart-api#src/server.ts:GET /:id@26",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 26,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cart-api:http:POST:/carts/:param/lines",
+      "to": "cart-api#src/server.ts:POST /:id/lines@18",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:cart-api#Cart",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "requestRead": true,
+        "body": "type:cart-api#AddLine",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:DELETE:/items/:param",
+      "to": "catalog-api#src/server.ts:DELETE /items/:id@30",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 30,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/items/:param",
+      "to": "catalog-api#src/server.ts:GET /items/:id@24",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:catalog-api#Item",
+      "file": "src/server.ts",
+      "line": 24,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:POST:/items",
+      "to": "catalog-api#src/server.ts:POST /items@18",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:catalog-api#Item",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "requestRead": true,
+        "body": "type:catalog-api#CreateItem"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:GET:/orders",
+      "to": "orders-api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:GET:/orders",
+      "to": "orders-api#src/orders.routes.ts:GET /@43",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.routes.ts",
+      "line": 43,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders-api:http:GET:/orders/:param",
+      "to": "orders-api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:GET:/orders/:param",
+      "to": "orders-api#src/orders.routes.ts:GET /:id@16",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:orders-api#Order",
+      "file": "src/orders.routes.ts",
+      "line": 16,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}",
+        "failures": {
+          "404": "type:orders-api#Problem"
+        }
+      }
+    },
+    {
+      "from": "entry:orders-api:http:PATCH:/orders/:param",
+      "to": "orders-api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:PATCH:/orders/:param",
+      "to": "orders-api#src/orders.routes.ts:PATCH /:id@29",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string;total:number}",
+      "file": "src/orders.routes.ts",
+      "line": 29,
+      "meta": {
+        "requestRead": true,
+        "body": "{total:number;note?:string}"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:POST:/orders",
+      "to": "orders-api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:POST:/orders",
+      "to": "orders-api#src/orders.routes.ts:POST /@10",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:orders-api#Order",
+      "file": "src/orders.routes.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true,
+        "body": "type:orders-api#CreateOrder"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:POST:/orders/import",
+      "to": "orders-api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:POST:/orders/import",
+      "to": "orders-api#src/orders.routes.ts:POST /import@36",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{imported:number}",
+      "file": "src/orders.routes.ts",
+      "line": 36,
+      "meta": {
+        "requestRead": true,
+        "body": "type:orders-api#ImportedOrders",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:shop:http:ALL:/api/health",
+      "to": "shop#pages/api/health.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:shop#Health",
+      "file": "pages/api/health.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/carts",
+      "to": "shop#app/api/carts/route.ts:POST",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:shop#CartCreated",
+      "file": "app/api/carts/route.ts",
+      "line": 17,
+      "meta": {
+        "requestRead": true,
+        "body": "type:shop#CartInput",
+        "claimed": [
+          "body"
+        ],
+        "failures": {
+          "422": "{error:string}"
+        }
+      }
+    },
+    {
+      "from": "orders-api#src/orders.routes.ts:GET /:id@16",
+      "to": "orders-api#src/orders.store.ts:store.find",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:orders-api#Order|undefined",
+      "file": "src/orders.routes.ts",
+      "line": 17
+    },
+    {
+      "from": "orders-api#src/orders.routes.ts:GET /@43",
+      "to": "orders-api#src/orders.store.ts:store.all",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "src/orders.routes.ts",
+      "line": 44
+    },
+    {
+      "from": "orders-api#src/orders.routes.ts:POST /@10",
+      "to": "orders-api#src/orders.store.ts:store.add",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:orders-api#CreateOrder"
+      ],
+      "returns": "type:orders-api#Order",
+      "file": "src/orders.routes.ts",
+      "line": 11
+    },
+    {
+      "from": "ui_action:admin#src/app/admin.component.ts:10:13",
+      "to": "admin#src/app/admin.component.ts:AdminComponent.importBatch",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/admin.component.ts",
+      "line": 10
+    },
+    {
+      "from": "ui_action:admin#src/app/admin.component.ts:11:13",
+      "to": "admin#src/app/admin.component.ts:AdminComponent.load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/admin.component.ts",
+      "line": 11
+    },
+    {
+      "from": "ui_action:admin#src/app/admin.component.ts:12:13",
+      "to": "admin#src/app/admin.component.ts:AdminComponent.item",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/admin.component.ts",
+      "line": 12
+    },
+    {
+      "from": "ui_action:admin#src/app/admin.component.ts:9:13",
+      "to": "admin#src/app/admin.component.ts:AdminComponent.place",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/admin.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_api_call:admin#src/app/admin-api.service.ts:36:12",
+      "to": "entry:orders-api:http:POST:/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/admin-api.service.ts",
+      "line": 36,
+      "params": [
+        "type:admin#NewOrder"
+      ],
+      "returns": "type:admin#OrderRow",
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/app/admin-api.service.ts:41:12",
+      "to": "entry:orders-api:http:POST:/orders/import",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/admin-api.service.ts",
+      "line": 41,
+      "params": [
+        "type:admin#ImportBatch"
+      ],
+      "returns": "unknown",
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/app/admin-api.service.ts:46:12",
+      "to": "entry:orders-api:http:GET:/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/admin-api.service.ts",
+      "line": 46,
+      "returns": "type:admin#OrderRow[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/app/admin-api.service.ts:51:12",
+      "to": "entry:catalog-api:http:GET:/items/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/admin-api.service.ts",
+      "line": 51,
+      "returns": "type:admin#CatalogItem",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog-api"
+      }
+    }
+  ],
+  "types": {
+    "type:admin#CatalogItem": {
+      "name": "CatalogItem",
+      "kind": "object",
+      "declaredIn": "admin#src/app/admin-api.service.ts",
+      "structuralHash": "1a20fe29db8e8757",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:admin#ImportBatch": {
+      "name": "ImportBatch",
+      "kind": "object",
+      "declaredIn": "admin#src/app/admin-api.service.ts",
+      "structuralHash": "a57c38a43e6479f3",
+      "fields": [
+        {
+          "name": "source",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:admin#NewOrder": {
+      "name": "NewOrder",
+      "kind": "object",
+      "declaredIn": "admin#src/app/admin-api.service.ts",
+      "structuralHash": "f571afd1325e8f1e",
+      "fields": [
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:admin#OrderRow": {
+      "name": "OrderRow",
+      "kind": "object",
+      "declaredIn": "admin#src/app/admin-api.service.ts",
+      "structuralHash": "e752b571a9fb0fb7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:cart-api#AddLine": {
+      "name": "AddLine",
+      "kind": "object",
+      "declaredIn": "cart-api#src/server.ts",
+      "structuralHash": "a379d6fa9fe8e967",
+      "fields": [
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:cart-api#Cart": {
+      "name": "Cart",
+      "kind": "object",
+      "declaredIn": "cart-api#src/server.ts",
+      "structuralHash": "3b28be2367ea6de4",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "lines",
+          "type": "type:cart-api#AddLine[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:catalog-api#CreateItem": {
+      "name": "CreateItem",
+      "kind": "object",
+      "declaredIn": "catalog-api#src/server.ts",
+      "structuralHash": "df608caaa849a62e",
+      "fields": [
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:catalog-api#Item": {
+      "name": "Item",
+      "kind": "object",
+      "declaredIn": "catalog-api#src/server.ts",
+      "structuralHash": "1a20fe29db8e8757",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:express#ParamsDictionary": {
+      "name": "ParamsDictionary",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "b1e00919583da3f5",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#ParsedQs": {
+      "name": "ParsedQs",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "be4c480489ba7448",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<object,type:orders-api#Order,type:orders-api#CreateOrder,type:express#ParsedQs>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<type:express#ParamsDictionary,any,any,type:express#ParsedQs>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Request<{id:string},any,any,type:express#ParsedQs>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<any>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<type:orders-api#Order>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:fastify#FastifyReply<type:fastify#RouteGenericInterface>": {
+      "name": "FastifyReply",
+      "kind": "external",
+      "declaredIn": "fastify",
+      "structuralHash": "858ce41cb7077ad8",
+      "meta": {
+        "declKind": "external",
+        "package": "fastify"
+      }
+    },
+    "type:fastify#FastifyReply<{Body:type:catalog-api#CreateItem;Reply:type:catalog-api#Item}>": {
+      "name": "FastifyReply",
+      "kind": "external",
+      "declaredIn": "fastify",
+      "structuralHash": "858ce41cb7077ad8",
+      "meta": {
+        "declKind": "external",
+        "package": "fastify"
+      }
+    },
+    "type:fastify#FastifyRequest<type:fastify#RouteGenericInterface>": {
+      "name": "FastifyRequest",
+      "kind": "external",
+      "declaredIn": "fastify",
+      "structuralHash": "91e2f7be43e18f93",
+      "meta": {
+        "declKind": "external",
+        "package": "fastify"
+      }
+    },
+    "type:fastify#FastifyRequest<{Body:type:catalog-api#CreateItem;Reply:type:catalog-api#Item}>": {
+      "name": "FastifyRequest",
+      "kind": "external",
+      "declaredIn": "fastify",
+      "structuralHash": "91e2f7be43e18f93",
+      "meta": {
+        "declKind": "external",
+        "package": "fastify"
+      }
+    },
+    "type:fastify#FastifyRequest<{Params:{id:string}}>": {
+      "name": "FastifyRequest",
+      "kind": "external",
+      "declaredIn": "fastify",
+      "structuralHash": "91e2f7be43e18f93",
+      "meta": {
+        "declKind": "external",
+        "package": "fastify"
+      }
+    },
+    "type:fastify#RouteGenericInterface": {
+      "name": "RouteGenericInterface",
+      "kind": "external",
+      "declaredIn": "fastify",
+      "structuralHash": "4888c9e1aef4eb31",
+      "meta": {
+        "declKind": "external",
+        "package": "fastify"
+      }
+    },
+    "type:koa#Context": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "koa",
+      "structuralHash": "002a3105e543026c",
+      "meta": {
+        "declKind": "external",
+        "package": "koa"
+      }
+    },
+    "type:next#NextApiRequest": {
+      "name": "NextApiRequest",
+      "kind": "external",
+      "declaredIn": "next",
+      "structuralHash": "5da30a7de2f38311",
+      "meta": {
+        "declKind": "external",
+        "package": "next"
+      }
+    },
+    "type:next#NextApiResponse<type:shop#Health>": {
+      "name": "NextApiResponse",
+      "kind": "external",
+      "declaredIn": "next",
+      "structuralHash": "ee9b5bbd927702bf",
+      "meta": {
+        "declKind": "external",
+        "package": "next"
+      }
+    },
+    "type:next#NextRequest": {
+      "name": "NextRequest",
+      "kind": "external",
+      "declaredIn": "next",
+      "structuralHash": "531d309c9aaade04",
+      "meta": {
+        "declKind": "external",
+        "package": "next"
+      }
+    },
+    "type:next#NextResponse": {
+      "name": "NextResponse",
+      "kind": "external",
+      "declaredIn": "next",
+      "structuralHash": "e66ea11099933fef",
+      "meta": {
+        "declKind": "external",
+        "package": "next"
+      }
+    },
+    "type:orders-api#CreateOrder": {
+      "name": "CreateOrder",
+      "kind": "object",
+      "declaredIn": "orders-api#src/orders.types.ts",
+      "structuralHash": "ca1b11048a0b9049",
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders-api#ImportedOrders": {
+      "name": "ImportedOrders",
+      "kind": "object",
+      "declaredIn": "orders-api#src/orders.types.ts",
+      "structuralHash": "1ac19bd5a9f2d494",
+      "fields": [
+        {
+          "name": "source",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders-api#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "orders-api#src/orders.types.ts",
+      "structuralHash": "980fca0c01d1261e",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders-api#Problem": {
+      "name": "Problem",
+      "kind": "object",
+      "declaredIn": "orders-api#src/orders.types.ts",
+      "structuralHash": "f3574f4b0af09e05",
+      "fields": [
+        {
+          "name": "message",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop#CartCreated": {
+      "name": "CartCreated",
+      "kind": "object",
+      "declaredIn": "shop#app/api/carts/route.ts",
+      "structuralHash": "57b79a1acc2491c2",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:shop#CartInput": {
+      "name": "CartInput",
+      "kind": "object",
+      "declaredIn": "shop#app/api/carts/route.ts",
+      "structuralHash": "fd70414e0bfe9370",
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:shop#Health": {
+      "name": "Health",
+      "kind": "object",
+      "declaredIn": "shop#pages/api/health.ts",
+      "structuralHash": "0be0a063a5f21552",
+      "fields": [
+        {
+          "name": "ok",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": []
+}

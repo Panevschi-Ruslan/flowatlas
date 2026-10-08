@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T07:28:21.718Z",
+  "configHash": "a81751a6539d",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 20,
+      "edges": 14,
+      "types": 4,
+      "unresolved": 0,
+      "durationMs": 630
+    },
+    {
+      "name": "cart-api",
+      "repo": "./cart-api",
+      "type": "koa",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 3,
+      "unresolved": 0,
+      "durationMs": 619
+    },
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "fastify",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 3,
+      "types": 8,
+      "unresolved": 0,
+      "durationMs": 615
+    },
+    {
+      "name": "orders-api",
+      "repo": "./orders-api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 15,
+      "edges": 13,
+      "types": 11,
+      "unresolved": 0,
+      "durationMs": 654
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 7,
+      "unresolved": 0,
+      "durationMs": 628
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 4,
+    "resolved": 4,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 12,
+    "called": 4,
+    "uncalled": [
+      "entry:cart-api:http:GET:/carts/:param",
+      "entry:cart-api:http:POST:/carts/:param/lines",
+      "entry:catalog-api:http:DELETE:/items/:param",
+      "entry:catalog-api:http:POST:/items",
+      "entry:orders-api:http:GET:/orders/:param",
+      "entry:orders-api:http:PATCH:/orders/:param",
+      "entry:shop:http:ALL:/api/health",
+      "entry:shop:http:POST:/api/carts"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 33,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 52,
+    "edges": 38,
+    "types": 33,
+    "unresolved": 0
+  }
+}

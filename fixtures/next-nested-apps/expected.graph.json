@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "next-nested-apps",
-  "generatedAt": "2026-10-07T18:37:28.274Z",
+  "generatedAt": "2026-10-08T07:28:11.598Z",
   "nodes": [
     {
       "id": "entry:next-nested-apps@.:http:GET:/api/orders",
@@ -251,7 +251,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "app/api/orders/route.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:next-nested-apps@examples/blog:http:GET:/api/orders",
@@ -259,7 +262,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "examples/blog/src/app/api/orders/route.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:next-nested-apps@examples/blog:http:GET:/api/posts",
@@ -267,7 +273,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "examples/blog/src/app/api/posts/route.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "next-nested-apps#app/api/orders/route.ts:GET",

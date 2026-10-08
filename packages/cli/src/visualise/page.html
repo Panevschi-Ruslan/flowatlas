@@ -3141,8 +3141,12 @@ __FRAME_LOGIC__
       const none = new Set();
       const label = (param) => param.label === ''
         ? ''
-        : (param.flag === PARAM_FLAG.rest ? '...' : '') + param.label + (param.flag === PARAM_FLAG.optional ? '?' : '');
+        : (param.flag === PARAM_FLAG.rest ? '...' : '') + param.label + (param.flag === PARAM_FLAG.optional ? '?' : '') +
+          (param.flag === PARAM_FLAG.claimed ? CLAIMED_MARK : '');
       const rows = face.params.map((param, k) => shapeRowHtml(label(param) || '#' + (k + 1), param.ref, 'p' + k, none));
+      const cast = face.params.some((param) => param.flag === PARAM_FLAG.claimed)
+        ? `<p class="g-shape-note">A part marked${CLAIMED_MARK} is what a cast in the handler says it is; nothing checks it.</p>`
+        : '';
       const openable = faceRows(face).some(({ ref }) => refParts(model, ref).some((part) => part.type >= 0));
       const tools = '<span class="g-shape-tools">' +
         (openable
@@ -3156,6 +3160,7 @@ __FRAME_LOGIC__
         (rows.length > 0 ? rows.join('') : (says.none ? `<p class="g-none">${says.none}</p>` : '')) +
         (face.returns >= 0 ? shapeRowHtml('→ ' + says.back, face.returns, 'r', none, true) : '') +
         (says.note ? `<p class="g-shape-note">${says.note}</p>` : '') +
+        cast +
         '</section>';
     };
 

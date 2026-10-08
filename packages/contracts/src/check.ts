@@ -346,7 +346,7 @@ const findingOf = (
   impact?: StripImpact,
 ): ContractFinding => ({
   severity:
-    unreached !== null && severityOf(diff.kind, diff.rule, impact) === 'error'
+    (unreached !== null || claimedEnd(exchange)) && severityOf(diff.kind, diff.rule, impact) === 'error'
       ? 'warning'
       : severityOf(diff.kind, diff.rule, impact),
   kind: diff.kind,
@@ -375,10 +375,29 @@ const findingOf = (
     }) +
     (unreached === null ? '' : `; nothing in the project calls ${unreached}`) +
     (exchange.via ?? []).map((clause) => `; ${clause}`).join('') +
-    declaredNote(exchange),
+    declaredNote(exchange) +
+    claimedNote(exchange),
   ignored: ignoredBy !== null,
   ignoredBy,
 });
+
+/** Whether either end's type is only what a cast in the code says (P29). */
+const claimedEnd = (exchange: Exchange): boolean =>
+  exchange.sender.claimed === true || exchange.receiver.claimed === true;
+
+/**
+ * The clause that says one end's type is a cast rather than a declaration.
+ *
+ * A cast is the author's word for what arrives and nothing holds the code to
+ * it, so a disagreement with one may be the cast that is wrong rather than
+ * the other end. The finding stays, at most a warning, and says why.
+ */
+const claimedNote = (exchange: Exchange): string => {
+  const ends = [exchange.sender, exchange.receiver]
+    .filter((end) => end.claimed === true)
+    .map((end) => `${end.service}'s type here is a cast in its code, which nothing checks`);
+  return ends.length === 0 ? '' : `; ${[...new Set(ends)].join('; ')}`;
+};
 
 /**
  * The clause that says one end of this was believed rather than read.
@@ -638,7 +657,7 @@ export const checkContracts = (
     const verdict = judge(lookup, exchange, options);
     if (verdict.blocked !== undefined) {
       const { reason, subject, detail } = verdict.blocked;
-      const note = uncheckedNote(reason, subject, exchange.direction, detail);
+      const note = uncheckedNote(reason, subject, exchange.direction, detail, exchange.described === true);
       unchecked.push({
         edge: exchange.edge,
         edgeKey: exchange.edgeKey,

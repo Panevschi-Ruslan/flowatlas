@@ -182,6 +182,30 @@ describe('what each node takes and gives back', () => {
     expect(faceLine(model, 0)).toBe('body: CreateOrder · params: { id: string } → Order');
   });
 
+  it('marks a part of a request only a cast in the handler types', () => {
+    const claimed = createModel(
+      packGraph({
+        builtAt: '2026-10-08T00:00:00.000Z',
+        nodes: [nodes[0]!, { id: 'api#src/import.ts:importOrders', type: 'function', label: 'importOrders', repo: 'api' }],
+        edges: [
+          {
+            from: nodes[0]!.id,
+            to: 'api#src/import.ts:importOrders',
+            type: 'handles',
+            confidence: 'static',
+            returns: ORDER,
+            meta: { requestRead: true, body: CREATE, claimed: ['body'] },
+          },
+        ],
+        unresolved: [],
+        report,
+        typeOf: (id) => registry[id],
+      }),
+    );
+    expect(faceOf(claimed, 0)?.params[0]?.flag).toBe(3);
+    expect(faceLine(claimed, 0)).toBe('body (cast): CreateOrder → Order');
+  });
+
   it('reads a call by what it sends and expects back, and a channel by its payload', () => {
     expect(faceLine(model, 3)).toBe('sends { lines: { sku: string; qty: number }[] } → null | Order');
     expect(faceLine(model, 5)).toBe('emits Order');

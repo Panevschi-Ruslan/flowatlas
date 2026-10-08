@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:34.622Z",
+  "builtAt": "2026-10-08T07:28:17.968Z",
   "services": [
     {
       "name": "app",
@@ -800,8 +800,12 @@
       "to": "app#src/server/documents.routes.ts:POST /documents.info@12",
       "type": "handles",
       "confidence": "static",
+      "returns": "{id:unknown}",
       "file": "src/server/documents.routes.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:app:http:POST:/api/documents.update",
@@ -822,8 +826,12 @@
       "to": "app#src/server/documents.routes.ts:POST /documents.update@16",
       "type": "handles",
       "confidence": "static",
+      "returns": "{id:unknown;title:unknown}",
       "file": "src/server/documents.routes.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:app:http:POST:/auth/passkeys.generateRegistrationOptions",
@@ -844,8 +852,12 @@
       "to": "app#src/server/auth.routes.ts:POST /passkeys.generateRegistrationOptions@15",
       "type": "handles",
       "confidence": "static",
+      "returns": "{id:unknown}",
       "file": "src/server/auth.routes.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "ui_action:app#src/app/DocumentsPanel.tsx:19:15",
@@ -1013,6 +1025,30 @@
       "message": "no configured service serves POST /passkeys.verify",
       "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /passkeys.verify */.",
       "symbol": "ui_api_call:app#src/app/documents.ts:34:3"
+    },
+    {
+      "file": "src/server/auth.routes.ts",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "app"
+    },
+    {
+      "file": "src/server/documents.routes.ts",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "app"
+    },
+    {
+      "file": "src/server/documents.routes.ts",
+      "line": 17,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "app"
     }
   ]
 }

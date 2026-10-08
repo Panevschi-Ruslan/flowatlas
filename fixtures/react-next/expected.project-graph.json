@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:36.717Z",
+  "builtAt": "2026-10-08T07:28:20.063Z",
   "services": [
     {
       "name": "shop",
@@ -1086,8 +1086,12 @@
       "to": "shop#pages/api/legacy-orders.ts:handler",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:@prisma/client#Order[]",
       "file": "pages/api/legacy-orders.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop:http:GET:/api/invoices",
@@ -1116,8 +1120,12 @@
       "to": "shop#app/api/orders/route.ts:GET",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:@prisma/client#Order[]",
       "file": "app/api/orders/route.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop:http:GET:/api/orders",
@@ -1138,8 +1146,13 @@
       "to": "shop#app/api/orders/[id]/route.ts:GET",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:@prisma/client#Order",
       "file": "app/api/orders/[id]/route.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
     },
     {
       "from": "entry:shop:http:GET:/api/orders/:param",
@@ -1182,8 +1195,13 @@
       "to": "shop#app/api/orders/[id]/route.ts:PATCH",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:@prisma/client#Order",
       "file": "app/api/orders/[id]/route.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
     },
     {
       "from": "entry:shop:http:PATCH:/api/orders/:param",
@@ -1248,8 +1266,12 @@
       "to": "shop#app/api/orders/route.ts:POST",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:@prisma/client#Order",
       "file": "app/api/orders/route.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop:http:POST:/api/orders",
@@ -1292,8 +1314,13 @@
       "to": "shop#app/api/orders/[id]/route.ts:PATCH",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:@prisma/client#Order",
       "file": "app/api/orders/[id]/route.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
     },
     {
       "from": "entry:shop:http:PUT:/api/orders/:param",

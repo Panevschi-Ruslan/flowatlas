@@ -8,7 +8,15 @@
  * edge points the other way. Getting that backwards would report every answer
  * as a missing request.
  */
-import { envelopePath, STARTS_META, type Envelope, type GraphEdge, type GraphNode } from '@flowatlas/core';
+import {
+  CLAIMED_META,
+  envelopePath,
+  REQUEST_READ_META,
+  STARTS_META,
+  type Envelope,
+  type GraphEdge,
+  type GraphNode,
+} from '@flowatlas/core';
 import { envelopeOf, readThrough, wrapped, type Blocked } from './envelope.js';
 import { edgeKeyOf } from './key.js';
 import type { ContractParty, Direction, GraphLookup, UncheckedReason } from './types.js';
@@ -36,6 +44,12 @@ export interface Exchange {
   wrapperKeys?: readonly string[];
   /** Clauses a finding adds, saying what the message passed through on the way (R172). */
   via?: string[];
+  /**
+   * The handler's end was read by its framework's description (P29): it reads
+   * its request and answers through what it is handed, so a missing type is
+   * one nothing there states rather than a signature that declares none.
+   */
+  described?: boolean;
 }
 
 /** References that name no shape, so there is nothing to compare against. */
@@ -204,6 +218,7 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
   const sender = lookup.node(edge.from)?.meta;
   const written = sender?.['bodyKeys'];
   const readable = Array.isArray(written) && written.every((key) => typeof key === 'string');
+  const described = handles[0]?.meta?.[REQUEST_READ_META] === true ? { described: true } : {};
   const request = both(
     'request',
     {
@@ -212,15 +227,27 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
         ? { writes: written as string[], writesEvery: sender?.['bodyFrom'] === 'literal' }
         : {}),
     },
-    party(lookup, handlerService, bodyTypeOf(handles[0]), handler),
+    { ...party(lookup, handlerService, bodyTypeOf(handles[0]), handler), ...claimedOf(handles[0], 'body') },
   );
   const replied = answer(
     lookup,
     { service: handlerService, handles: handles[0], symbol: handler },
     { service: callerService, asked: edge, symbol: caller },
   );
-  const response = both('response', replied.sender, replied.receiver);
-  return [request, response];
+  const response = both('response', { ...replied.sender, ...claimedOf(handles[0], 'response') }, replied.receiver);
+  return [
+    { ...request, ...described },
+    { ...response, ...described },
+  ];
+};
+
+/**
+ * `claimed` for an end whose type only a cast in the handler states (P29): what
+ * the author says the body is, which nothing checked.
+ */
+const claimedOf = (handles: GraphEdge | undefined, part: string): { claimed?: true } => {
+  const claimed = handles?.meta?.[CLAIMED_META];
+  return Array.isArray(claimed) && claimed.includes(part) ? { claimed: true } : {};
 };
 
 /** The entry point a consumer answers, which is where its payload type is. */

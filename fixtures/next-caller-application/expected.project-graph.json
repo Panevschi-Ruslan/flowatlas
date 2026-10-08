@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:25.542Z",
+  "builtAt": "2026-10-08T07:28:08.828Z",
   "services": [
     {
       "name": "shop",
@@ -607,7 +607,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "app/api/orders/route.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop@.:http:GET:/api/posts",
@@ -615,7 +618,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "app/api/posts/route.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop@examples/blog:http:GET:/api/*",
@@ -623,7 +629,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "examples/blog/src/app/api/[...slug]/route.ts",
-      "line": 8
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop@examples/blog:http:GET:/api/orders",
@@ -631,7 +640,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "examples/blog/src/app/api/orders/route.ts",
-      "line": 2
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:shop@examples/template:http:GET:/api/*",
@@ -639,7 +651,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "examples/template/src/app/api/[...slug]/route.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "http_out:shop#app/orders-upstream.ts:10:24",

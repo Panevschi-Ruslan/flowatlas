@@ -189,7 +189,8 @@ export declare const describe: (
   inFile: number[];
 };
 export declare const FACE: Readonly<{ node: 0; face: 1; params: 2; returns: 3 }>;
-export declare const PARAM_FLAG: Readonly<{ none: 0; optional: 1; rest: 2 }>;
+export declare const PARAM_FLAG: Readonly<{ none: 0; optional: 1; rest: 2; claimed: 3 }>;
+export declare const CLAIMED_MARK: string;
 
 export interface Face {
   face: 'method' | 'route' | 'call' | 'channel' | 'bare';

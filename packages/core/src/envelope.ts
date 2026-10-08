@@ -75,7 +75,7 @@ const parametersOf = (fn: TsNode): ParameterDeclaration[] =>
  * `Records[].body`; so is the same written with `.map(record => …)`, with a
  * destructured `{ body }`, or with `event.Records[0].body`.
  */
-const pathFrom = (expression: TsNode, parameter: ParameterDeclaration): string[] | undefined => {
+export const pathFrom = (expression: TsNode, parameter: ParameterDeclaration): string[] | undefined => {
   const walk = (node: TsNode, hops: number): string[] | undefined => {
     if (hops > MOST_HOPS) return undefined;
     if (Node.isParenthesizedExpression(node) || Node.isNonNullExpression(node) || Node.isAsExpression(node)) {
@@ -156,7 +156,7 @@ const parsedAs = (call: TsNode): Type | undefined => {
   return undefined;
 };
 
-const sameKeys = (a: readonly string[], b: readonly string[]): boolean =>
+export const sameKeys = (a: readonly string[], b: readonly string[]): boolean =>
   a.length === b.length && a.every((step, index) => step === b[index]);
 
 /** The type at a path of keys and elements, or nothing where the path does not fit. */

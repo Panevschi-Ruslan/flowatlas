@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "lending-library-loans",
-  "generatedAt": "2026-10-07T18:36:33.339Z",
+  "generatedAt": "2026-10-08T07:27:16.785Z",
   "nodes": [
     {
       "id": "entry:lending-library-loans:http:GET:/loans/:param",
@@ -546,7 +546,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/loans/get-loan.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:lending-library-loans:http:POST:/loans",
@@ -568,7 +571,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/loans/create-loan.ts",
-      "line": 14
+      "line": 14,
+      "meta": {
+        "requestRead": true,
+        "body": "{borrowerId:string;isbn:string}"
+      }
     },
     {
       "from": "entry:lending-library-loans:http:POST:/loans",
@@ -618,7 +625,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/loans/renew-loan.ts",
-      "line": 10
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:lending-library-loans:http:POST:/loans/:param/renewal",
@@ -654,7 +664,14 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/returns/record-return.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true,
+        "body": "{loanId:string}",
+        "claimed": [
+          "body"
+        ]
+      }
     },
     {
       "from": "entry:lending-library-loans:invoke:${…}@aws_lambda_function.send_reminder[?]",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:31.568Z",
+  "builtAt": "2026-10-08T07:27:15.000Z",
   "services": [
     {
       "name": "catalogue",
@@ -451,15 +451,22 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/handlers/get-borrower.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:catalogue:http:GET:/titles",
       "to": "catalogue#src/handlers/search-titles.ts:handler",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:catalogue#Title[]",
       "file": "src/handlers/search-titles.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:catalogue:http:GET:/titles/:param",
@@ -467,7 +474,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/handlers/get-title.ts",
-      "line": 4
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:catalogue:http:POST:/borrowers",
@@ -502,8 +512,12 @@
       "to": "catalogue#src/handlers/register-borrower.ts:register",
       "type": "handles",
       "confidence": "static",
+      "returns": "type:catalogue#Borrower",
       "file": "src/handlers/register-borrower.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:catalogue:invoke:catalogue-get-borrower",

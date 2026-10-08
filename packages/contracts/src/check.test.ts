@@ -958,3 +958,55 @@ describe('a procedure asked for by its path', () => {
     expect(request?.message).toContain('takes OrderQuery');
   });
 });
+
+describe('a route whose handler reads its request and answers through what it is handed (P29)', () => {
+  /** A caller sending a body that lacks a field the route requires, and a route read by a description. */
+  const described = (handles: { returns?: string; meta: Record<string, unknown> }): ContractReport =>
+    checkContracts(
+      graphOf({
+        nodes: [
+          node('caller#Client.create', 'method', 'caller'),
+          node('http_out:caller#1', 'http_out', 'caller'),
+          node('entry:api:http:POST:/orders', 'entry', 'api', { kind: 'http' }),
+          node('api#src/orders.ts:create', 'function', 'api'),
+        ],
+        edges: [
+          edge('caller#Client.create', 'calls', 'http_out:caller#1'),
+          edge('http_out:caller#1', 'http_calls', 'entry:api:http:POST:/orders', {
+            params: ['type:caller#Body'],
+            returns: 'type:caller#Answer',
+          }),
+          edge('entry:api:http:POST:/orders', 'handles', 'api#src/orders.ts:create', handles),
+        ],
+        types: {
+          ...registry,
+          'type:api#Body': object('Body', [field('id', 'string'), field('channel', 'string')]),
+        },
+      }),
+      { generatedAt: FIXED },
+    );
+
+  it('compares a body the route states as it compares any other', () => {
+    const report = described({ meta: { requestRead: true, body: 'type:api#Body' } });
+    const missing = report.findings.find((finding) => finding.field === 'channel');
+    expect(missing?.severity).toBe('error');
+    expect(missing?.receiver.claimed).toBeUndefined();
+  });
+
+  it('holds a finding against a body only a cast types to a warning, and says why', () => {
+    const report = described({ meta: { requestRead: true, body: 'type:api#Body', claimed: ['body'] } });
+    const missing = report.findings.find((finding) => finding.field === 'channel');
+    expect(missing?.severity).toBe('warning');
+    expect(missing?.receiver.claimed).toBe(true);
+    expect(missing?.message).toContain("api's type here is a cast in its code, which nothing checks");
+  });
+
+  it('says an answer the handler states no type for is not stated, rather than declared as nothing', () => {
+    const report = described({ meta: { requestRead: true, body: 'type:api#Body' } });
+    const response = report.unchecked.find((row) => row.direction === 'response');
+    expect(response?.reason).toBe('no-type-on-sender');
+    expect(response?.message).toBe(
+      'api#src/orders.ts:create answers through the response it is handed, and states no type for the answer',
+    );
+  });
+});

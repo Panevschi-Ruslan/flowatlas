@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "medusa-fs-router",
-  "generatedAt": "2026-10-07T18:36:36.817Z",
+  "generatedAt": "2026-10-08T07:27:20.268Z",
   "nodes": [
     {
       "id": "entry:medusa-fs-router:http:GET:/admin/orders",
@@ -378,7 +378,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/admin/orders/route.ts",
-      "line": 12
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:medusa-fs-router:http:GET:/admin/orders/:param",
@@ -386,7 +389,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/admin/orders/[id]/route.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:medusa-fs-router:http:GET:/admin/orders/:param",
@@ -408,7 +414,11 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/store/(group)/route.ts",
-      "line": 16
+      "line": 16,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{grouped:boolean}"
     },
     {
       "from": "entry:medusa-fs-router:http:GET:/store/products",
@@ -430,7 +440,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/store/products/route.ts",
-      "line": 11
+      "line": 11,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:medusa-fs-router:http:HEAD:/admin/orders/:param",
@@ -438,7 +451,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/admin/orders/[id]/route.ts",
-      "line": 5
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "entry:medusa-fs-router:http:HEAD:/admin/orders/:param",
@@ -488,7 +504,10 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/api/store/products/route.ts",
-      "line": 15
+      "line": 15,
+      "meta": {
+        "requestRead": true
+      }
     },
     {
       "from": "medusa-fs-router#src/api/admin/orders/[id]/route.ts:GET",

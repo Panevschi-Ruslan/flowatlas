@@ -306,6 +306,23 @@ only one of them moved.
   taken zoomed out has every name in it. Escape closes the search's list, then
   the panel, then the answer, then full screen, one at a time. The minimap
   keeps to a small box in its corner whatever the drawing's shape.
+- **What a request carries, in every framework.** A route declared by a call -
+  Express, Fastify, Koa, Hono - a Next.js route file or `pages/api` handler, a
+  Medusa route and a Lambda behind an API Gateway now say what their body, path
+  params, query and headers are and what they answer with, as a NestJS route
+  has: from the type arguments a route or its request states, a validator's
+  output (`schema.parse(req.body)`), the value handed to `res.json` /
+  `reply.send` / `c.json` / `NextResponse.json`, the value assigned to
+  `ctx.body`, or the body a Lambda returns as text. A cast is recorded as
+  claimed (`meta.claimed`), a framework's default is no type, and an answer
+  sent with a failure status is kept apart (`meta.failures`). Each framework is
+  a description of places, and a framework described under
+  `adapters.entry.http` can say the same with `request`.
+  `fixtures/request-shapes`.
+- **`contracts` compares those routes.** A finding against a type only a cast
+  states is at most a warning and says so, and a handler that answers through
+  the response it is handed is said to state no type for the answer rather than
+  to declare none. `contracts.json` is format 5: a party may carry `claimed`.
 - **What a function takes and gives back, in the Graph tab.** The details panel
   shows a method's parameters by name and type and what it returns
   (`create(dto: CreateOrder, note?: string) → Order`), a route's body, path

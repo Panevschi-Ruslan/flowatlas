@@ -1,4 +1,4 @@
-import { methodsOfClass, recordSignatures, type TypeRef } from '@flowatlas/core';
+import { methodsOfClass, recordSignatures, REQUEST_READ_META, type GraphEdge, type TypeRef } from '@flowatlas/core';
 import type { Node as TsNode, ParameterDeclaration } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
@@ -83,12 +83,23 @@ function* functionsOf(ctx: NestExtractContext): Generator<readonly [string, TsNo
  * to hand to a reader with a budget. A controller method answers a request with
  * what it returns, so its route's edge carries that too, and says which part of
  * the request each parameter is; a function handed a request and a response
- * answers through the response, so its route's edge carries nothing it
- * returns.
+ * answers through the response, so its route's edge carries what the entries
+ * pass read it answer with there (P29), and nothing it returns.
  */
 export const typesPass = definePass('types', (ctx: NestExtractContext) => {
-  const methods = recordSignatures(ctx.builder, ctx.types, methodsOf(ctx), ['calls', 'handles']);
+  const methods = recordSignatures(ctx.builder, ctx.types, methodsOf(ctx));
   recordSignatures(ctx.builder, ctx.types, functionsOf(ctx));
+
+  // A controller method answers with what it returns. A route a description
+  // was read for (P29) already says what it reads and answers, and a method
+  // behind it answers through the response it is handed, so what it returns
+  // is not the answer and is not written as one.
+  const described = (edge: GraphEdge): boolean => edge.meta?.[REQUEST_READ_META] === true;
+  for (const edge of ctx.builder.edges) {
+    if (edge.type !== 'handles' || described(edge)) continue;
+    const found = methods.get(edge.to);
+    if (found !== undefined) ctx.builder.addEdge({ ...edge, params: found.params, returns: found.returns });
+  }
 
   const requestShapes = new Map<string, Record<string, TypeRef>>();
   for (const [id, declaration] of methodsOf(ctx)) {
@@ -99,7 +110,7 @@ export const typesPass = definePass('types', (ctx: NestExtractContext) => {
     if (Object.keys(shape).length > 0) requestShapes.set(id, shape);
   }
   for (const edge of ctx.builder.edges) {
-    if (edge.type !== 'handles') continue;
+    if (edge.type !== 'handles' || described(edge)) continue;
     const shape = requestShapes.get(edge.to);
     if (shape !== undefined) ctx.builder.addEdge({ ...edge, meta: { ...edge.meta, ...shape } });
   }

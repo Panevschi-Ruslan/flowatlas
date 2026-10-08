@@ -20,11 +20,12 @@ import {
   type ExtractContext,
   type Unresolved,
 } from '@flowatlas/core';
-import { ENVELOPES } from '@flowatlas/aws';
+import { ENVELOPES, GATEWAY_REQUEST } from '@flowatlas/aws';
 import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
 import { Node, ts, type CallExpression, type Node as TsNode, type SourceFile } from 'ts-morph';
 import { drawDeliveries, drawRouteSends, environmentMeta } from './deployed-channels.js';
 import { drawDeployedWorkflows } from './deployed-workflows.js';
+import { readingOf } from './request-readings.js';
 import { builtByFactory, fileOfNode, isWrittenFunction, repoFunctionOf, unwrapValue } from './shared.js';
 import { boundCall, evidenceOf, functionArguments, wrappedBy, type Wrapped } from './wrapped-work.js';
 
@@ -55,6 +56,9 @@ const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts'];
  * compared with what the handler reads (R172).
  */
 const FUNCTION_READS = [ENVELOPES.invoke, ENVELOPES.queue, ENVELOPES.topic, ENVELOPES.bus];
+
+/** What a route in front of a function hands it, and how the function answers (P29). */
+const GATEWAY = readingOf(GATEWAY_REQUEST);
 
 /**
  * How a handler was found when the function found is the one handed the event.
@@ -563,6 +567,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
           file: route.file,
           line: route.line,
           ...(wrapping.length === 0 ? {} : { wrapping }),
+          ...(reading?.handler === undefined ? {} : { request: GATEWAY }),
           meta: {
             method: route.method,
             path: route.path,
