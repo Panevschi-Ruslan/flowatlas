@@ -43,6 +43,16 @@ const nodes: GraphNode[] = [
     line: 3,
     meta: { handler: 'loans/create.handler', deployedBy: 'terraform', bodyKeys: ['name'], unreferenced: true },
   },
+  {
+    id: 'shop#src/app/total.pipe.ts:TotalPipe',
+    type: 'provider',
+    kind: 'pipe',
+    label: 'TotalPipe',
+    repo: 'shop',
+    file: 'src/app/total.pipe.ts',
+    line: 4,
+    meta: { name: 'total', pure: false, hostBindings: [], exportAs: 'total' },
+  },
 ];
 
 const row = (over: Partial<AnchoredUnresolvedRow>): AnchoredUnresolvedRow => ({
@@ -91,6 +101,10 @@ describe('packing what the details panel shows', () => {
       bodyKeys: ['name'],
       unreferenced: true,
     });
+  });
+
+  it('ships a pipe that says it is impure, and leaves an empty list out (P45)', () => {
+    expect(metaOf(3)).toEqual({ name: 'total', pure: false, exportAs: 'total' });
   });
 
   it('ships a word that takes few values once, as an index into one list', () => {

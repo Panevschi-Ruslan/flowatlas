@@ -871,7 +871,11 @@ graph, which on a real project is ten thousand boxes and says nothing:
   Fastify, Koa and Lambda methods and functions, Angular methods and
   components (its inputs as what it takes, its outputs as what it gives back:
   `(order: OrderDto, dense?: boolean) → {opened: OrderDto}`; a directive the
-  same way, a pipe as its `transform`), React components,
+  same way, a pipe as its `transform`; the details panel also lists what a
+  directive or component binds on its element - `host` entries, `@HostBinding`
+  and `@HostListener` members, as `[class.active]=isActive` and
+  `(click)=toggle($event)` - the name it is exported as (`exportAs`), and
+  whether a pipe is `pure`), React components,
   hooks and functions, tRPC procedures (the input its schema checks, and what
   its resolver answers), routes, typed calls and payloads. A way in
   that is not a request - a template event, a bot command, a consumer - shows

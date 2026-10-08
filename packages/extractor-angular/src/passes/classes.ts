@@ -13,7 +13,8 @@ import {
   type AngularRole,
   type IndexedClass,
 } from '../index-classes.js';
-import { arrayProperty, metadataOf, stringProperty } from '../util/metadata.js';
+import { hostBindingsOf } from '../host.js';
+import { arrayProperty, booleanProperty, metadataOf, stringProperty } from '../util/metadata.js';
 import { definePass } from './types.js';
 
 /** Roles the container instantiates, and therefore injects into. */
@@ -30,6 +31,38 @@ const IMPORTABLE: ReadonlySet<AngularRole> = new Set(['component', 'directive', 
  * a row saying why it could not be followed. Nothing is dropped in between,
  * because a missing edge here is what makes a chain from a button end early.
  */
+/**
+ * What a component or directive is exported to a template as, and what it binds
+ * on its host element (P45). Nothing at all when it says neither.
+ */
+const boundBy = (declaration: ClassDeclaration, metadata: ReturnType<typeof metadataOf>): Record<string, unknown> => {
+  const exportAs = stringProperty(metadata, 'exportAs');
+  const hostBindings = hostBindingsOf(declaration, metadata);
+  return {
+    ...(exportAs === undefined ? {} : { exportAs }),
+    ...(hostBindings.length === 0 ? {} : { hostBindings }),
+  };
+};
+
+/**
+ * A directive by its selector, the name a template exports it as and what
+ * it binds on its element (P40, P45); a pipe by the name a template writes
+ * it as and whether it is pure, which it is unless it says otherwise.
+ */
+const DECLARABLE_META: Readonly<
+  Record<'directive' | 'pipe', (declaration: ClassDeclaration, metadata: ReturnType<typeof metadataOf>) => Record<string, unknown>>
+> = {
+  directive: (declaration, metadata) => {
+    const selector = stringProperty(metadata, 'selector');
+    return { ...(selector === undefined ? {} : { selector }), ...boundBy(declaration, metadata) };
+  },
+  pipe: (_declaration, metadata) => {
+    const name = stringProperty(metadata, 'name');
+    return { ...(name === undefined ? {} : { name }), pure: booleanProperty(metadata, 'pure') ?? true };
+  },
+};
+
+
 export const classesPass = definePass('classes', (ctx) => {
   const options = angularDiOptions(ctx);
 
@@ -40,6 +73,7 @@ export const classesPass = definePass('classes', (ctx) => {
     ctx.ensureClassNode(indexed.declaration, {
       ...(selector === undefined ? {} : { selector }),
       ...(templateUrl === undefined ? {} : { templateUrl }),
+      ...boundBy(indexed.declaration, metadata),
     });
 
     for (const element of arrayProperty(metadata, 'imports')) {
@@ -65,12 +99,10 @@ export const classesPass = definePass('classes', (ctx) => {
     ctx.ensureClassNode(indexed.declaration, providedIn === undefined ? undefined : { providedIn });
   };
 
-  /** A directive by its selector, a pipe by the name a template writes it as (P40). */
   const declarable = (indexed: IndexedClass, role: 'directive' | 'pipe'): void => {
     const metadata = metadataOf(declarableDecorator(indexed.declaration, role));
-    const key = role === 'directive' ? 'selector' : 'name';
-    const value = stringProperty(metadata, key);
-    ctx.ensureClassNode(indexed.declaration, value === undefined ? undefined : { [key]: value });
+    const meta = DECLARABLE_META[role](indexed.declaration, metadata);
+    ctx.ensureClassNode(indexed.declaration, Object.keys(meta).length === 0 ? undefined : meta);
   };
 
   const inject = (indexed: IndexedClass, declaration: ClassDeclaration): void => {

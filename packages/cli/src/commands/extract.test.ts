@@ -1005,6 +1005,19 @@ describe('angular-basic', () => {
     });
   });
 
+  it('says what a directive binds on its element, what it is exported as, and whether a pipe is pure (P45)', () => {
+    const directive = nodesOf(graph(), 'ui_component').find((node) => node.label === 'HighlightDirective');
+    expect(directive?.meta?.['exportAs']).toBe('highlight');
+    expect(directive?.meta?.['hostBindings']).toEqual([
+      'role=note',
+      '[attr.aria-live]=politeness',
+      '[class.is-highlighted]=active',
+      '(mouseenter)=onEnter($event)',
+    ]);
+    const pipe = nodesOf(graph(), 'provider').find((node) => node.label === 'OrderTotalPipe');
+    expect(pipe?.meta?.['pure']).toBe(false);
+  });
+
   it('tells a standalone component from one a module declares', () => {
     const byKind = Object.fromEntries(
       nodesOf(graph(), 'ui_component').map((node) => [node.label, node.kind]),

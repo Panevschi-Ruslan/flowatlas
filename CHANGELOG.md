@@ -6,6 +6,12 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+An Angular directive's (or component's) host bindings - its `host` object and
+its `@HostBinding` / `@HostListener` members - are recorded as
+`meta.hostBindings` (`[class.active]=isActive`, `(click)=toggle($event)`), with
+its `exportAs`; a pipe's node says whether it is `pure`. The `visualise` details
+panel shows all three, a pipe that is not pure as `pure no`.
+
 A data kit's client handed in rather than made in place is followed too: a
 parameter or an injected field declared `ReturnType<typeof createClient>`,
 `typeof db`, or the type named by a row's new `clientType` under

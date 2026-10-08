@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T20:08:58.812Z",
+  "builtAt": "2026-10-08T21:18:38.114Z",
   "services": [
     {
       "name": "angular-basic",
@@ -170,7 +170,7 @@
       "label": "HighlightDirective",
       "repo": "angular-basic",
       "file": "src/app/highlight.directive.ts",
-      "line": 7,
+      "line": 9,
       "kind": "directive",
       "meta": {
         "signature": {
@@ -188,7 +188,14 @@
           ],
           "returns": "{highlighted:boolean}"
         },
-        "selector": "[appHighlight]"
+        "selector": "[appHighlight]",
+        "exportAs": "highlight",
+        "hostBindings": [
+          "role=note",
+          "[attr.aria-live]=politeness",
+          "[class.is-highlighted]=active",
+          "(mouseenter)=onEnter($event)"
+        ]
       }
     },
     {
@@ -248,7 +255,7 @@
       "label": "OrderTotalPipe",
       "repo": "angular-basic",
       "file": "src/app/order-total.pipe.ts",
-      "line": 9,
+      "line": 10,
       "kind": "pipe",
       "meta": {
         "signature": {
@@ -265,7 +272,8 @@
           ],
           "returns": "string"
         },
-        "name": "orderTotal"
+        "name": "orderTotal",
+        "pure": false
       }
     },
     {
@@ -559,6 +567,7 @@
           "classes": 13,
           "templates": 6,
           "skippedExternalCalls": {
+            "@angular/core": 1,
             "@angular/common": 4
           }
         },

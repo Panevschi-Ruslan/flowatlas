@@ -92,7 +92,7 @@ const dictionary = (values: Iterable<string>): [string[], Map<string, number>] =
  * what the details panel shows: the address, the table, the deployed name, and
  * how each of those was read.
  */
-const META_FIELDS: ReadonlyArray<readonly [field: string, key: string, enumerated: boolean]> = [
+const META_FIELDS: ReadonlyArray<readonly [field: string, key: string, enumerated: boolean, either?: boolean]> = [
   ['method', 'm', false],
   ['path', 'p', false],
   ['targetService', 't', false],
@@ -125,6 +125,10 @@ const META_FIELDS: ReadonlyArray<readonly [field: string, key: string, enumerate
   ['guessed', 'gu', false],
   ['client', 'cl', true],
   ['selector', 'sl', false],
+  ['exportAs', 'ea', false],
+  ['hostBindings', 'hb', false],
+  // A pipe is pure unless it says otherwise, so both answers are worth a line (P45).
+  ['pure', 'pu', false, true],
   ['route', 'rt', false],
   ['event', 'ev', true],
   ['stateType', 'st', true],
@@ -139,8 +143,12 @@ const META_FIELDS: ReadonlyArray<readonly [field: string, key: string, enumerate
 /** How many of `META_FIELDS` the walk and the lists read, and so always ship. */
 const LISTED = 8;
 
-/** A value worth a line in the panel: a word, a number, a yes, or a list of words. */
-const shippable = (value: unknown): boolean =>
+/**
+ * A value worth a line in the panel: a word, a number, a yes, or a list of
+ * words - and a no, for a field where either answer says something.
+ */
+const shippable = (value: unknown, either = false): boolean =>
+  (either && value === false) ||
   typeof value === 'string'
     ? value !== ''
     : typeof value === 'number' || value === true
@@ -159,9 +167,9 @@ const metaPacker = (nodes: readonly GraphNode[]) => {
   const pack = (node: GraphNode): Record<string, unknown> | 0 => {
     const meta = node.meta ?? {};
     const out: Record<string, unknown> = {};
-    META_FIELDS.forEach(([field, key, isEnum], index) => {
+    META_FIELDS.forEach(([field, key, isEnum, either], index) => {
       const value = meta[field];
-      if (!shippable(value)) return;
+      if (!shippable(value, either)) return;
       // Past the fields the lists read, a word the label already says is not
       // said twice: `write orders` carries its table, `click="save()"` its
       // event and handler. On a real project that is a third of what the

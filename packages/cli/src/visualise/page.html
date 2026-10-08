@@ -2210,7 +2210,7 @@ __MAP_LOGIC__
       data.dicts.meta[key] || key,
       enumerated.has(key) ? data.dicts.values[value]
         : Array.isArray(value) ? value.join(', ')
-        : value === true ? 'yes' : String(value),
+        : value === true ? 'yes' : value === false ? 'no' : String(value),
     ]);
 
     const graphView = document.getElementById('graph-view');
