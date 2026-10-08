@@ -3,7 +3,8 @@
 **A command-line tool that reads several TypeScript repositories without running
 them, joins them into one graph, and answers questions about it.** It knows
 NestJS and Angular, React and Next.js, Express, Fastify, Koa and Hono, Medusa,
-tRPC and Telegraf; TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Kysely, Knex,
+tRPC and Telegraf; AWS Lambda, API Gateway, Step Functions, EventBridge, SQS
+and SNS as Terraform deploys them; TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Kysely, Knex,
 MongoDB and node-postgres; Redis, Kafka, RabbitMQ, BullMQ and socket.io; and
 OpenAPI and AsyncAPI documents for the services whose source you do not have. It
 also serves the graph to a coding agent over the Model Context Protocol.
@@ -45,6 +46,17 @@ steps with a recording of each.
 - Express, Fastify, Koa and Hono, where a route is registered by a call
 - Next.js and Medusa, where a route is the path of a file
 - tRPC procedures, and Telegraf bot commands, callbacks and events
+- what a request carries and what it answers, in every one of them: a
+  validator, a typed request or reply, or a helper of your own that builds the
+  answer
+
+**Serverless on AWS**
+
+- Lambda functions and API Gateway routes, read from the Terraform that deploys
+  them, modules and variable files included
+- Step Functions state machines as ways in whose states are steps
+- EventBridge, SQS and SNS from the SDK call to the rule or mapping it meets
+- code that starts a workflow or invokes a function by its deployed name
 
 **Browsers**
 
@@ -80,7 +92,7 @@ steps with a recording of each.
 - test code left out, and every test directory named so you can see it
 
 Every shape above is held by a fixture: a small repository written to prove it,
-compared on every push. There are 106 of them, and
+compared on every push. There are 136 of them, and
 [the fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
 lists them all, generated from their READMEs.
 
@@ -96,7 +108,7 @@ lists them all, generated from their READMEs.
 | `flowatlas contracts` | what each service sends against what the other declares |
 | `flowatlas doctor` | what could not be read, and what has drifted |
 | `flowatlas diff <base>` | what a branch changes and who would notice |
-| `flowatlas visualise` | the whole graph as one page you can open |
+| `flowatlas visualise` | the whole graph as one page you can open, with a graph to walk and every type on hover |
 | `flowatlas mcp` | serve it to an agent over stdio |
 
 `flowatlas --help` lists all twenty.

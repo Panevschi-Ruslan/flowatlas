@@ -378,7 +378,12 @@ inlined. It opens on the reconciliation, lists every way in, follows
 any one of them across service boundaries, and has a tab each for every crossing
 and for everything that did not join. A fourth tab, Graph, draws the
 neighbourhood of any node you search for, with its details one click away, and
-walks on from there in either direction; see [`docs/CLI.md`](docs/CLI.md#flowatlas-visualise).
+walks on from there in either direction. It folds the plumbing round a route,
+groups a busy table's callers, finds a path between two nodes and what reaches
+one, marks the nodes with problems, and keeps a view as a link. Hovering a node
+shows what it takes and gives back - a method's parameters by name and type, a
+route's body, query and response - and any type opens to its fields; see
+[`docs/CLI.md`](docs/CLI.md#flowatlas-visualise).
 
 It is a report you can click, not a viewer you keep running. A page generated
 from a build can be attached to a review or kept beside a decision; a UI that

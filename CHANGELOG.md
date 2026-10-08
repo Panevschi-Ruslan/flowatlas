@@ -6,6 +6,23 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+## [0.5.1][] - 2026-10-08
+
+`@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0. Two things
+to do after upgrading:
+
+- **Rebuild once.** The graph's schema version moved to 6, so a database built
+  by 0.5.0 is refused with a message to rebuild: run `flowatlas build`.
+- **Delete the old per-repository output.** A service's own graph and file
+  hashes now go under the configured output, at `<output>/services/<name>/`,
+  not into `<repo>/.flowatlas/`; `build` names any `.flowatlas/` an earlier
+  version left in a repository, and says it is safe to delete.
+
+Serverless on AWS is read from Terraform and Step Functions definitions; the
+`visualise` page gains a Graph tab you can walk, check with and read types in;
+and what a request carries is read in every framework, not only NestJS. The
+npm page (README and keywords) is brought up to date as well.
+
 ### Added
 
 - **Lambda functions and API Gateway routes, read from Terraform.** A service of
@@ -625,11 +642,6 @@ only one of them moved.
   The rows a function's handler leaves are now recorded against its entry, and
   `doctor` names the entry; the count also takes in the nodes a walk reaches past
   the `maxNodes` it shows. The CLI and the MCP `get_flow` give the same number.
-
-## [0.5.1][] - 2026-09-28
-
-`@flowatlas/cli` only: the npm page (README and keywords) brought up to date
-with what 0.5.0 reads, and no change to the tool.
 
 ## [0.5.0][] - 2026-09-28
 
