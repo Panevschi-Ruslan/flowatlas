@@ -858,7 +858,8 @@ graph, which on a real project is ten thousand boxes and says nothing:
   the browser, not in the link. Every reader records them: NestJS, Express,
   Fastify, Koa and Lambda methods and functions, Angular methods and
   components (its inputs as what it takes, its outputs as what it gives back:
-  `(order: OrderDto, dense?: boolean) → {opened: OrderDto}`), React components,
+  `(order: OrderDto, dense?: boolean) → {opened: OrderDto}`; a directive the
+  same way, a pipe as its `transform`), React components,
   hooks and functions, tRPC procedures (the input its schema checks, and what
   its resolver answers), routes, typed calls and payloads. A way in
   that is not a request - a template event, a bot command, a consumer - shows

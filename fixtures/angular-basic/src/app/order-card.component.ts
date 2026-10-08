@@ -1,5 +1,7 @@
 import { Component, EventEmitter, Input, Output, input, output } from '@angular/core';
 
+import { HighlightDirective } from './highlight.directive';
+import { OrderTotalPipe } from './order-total.pipe';
 import type { OrderDto } from './order.dto';
 
 /**
@@ -11,7 +13,8 @@ import type { OrderDto } from './order.dto';
 @Component({
   standalone: true,
   selector: 'app-order-card',
-  template: `<article>{{ order.id }}</article>`,
+  imports: [HighlightDirective, OrderTotalPipe],
+  template: `<article appHighlight>{{ order | orderTotal }}</article>`,
 })
 export class OrderCardComponent {
   @Input({ required: true }) order!: OrderDto;

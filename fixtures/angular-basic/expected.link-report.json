@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T19:11:19.034Z",
+  "builtAt": "2026-10-08T20:08:58.812Z",
   "configHash": "b1d164ec2ac5",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": ".",
       "type": "angular",
       "extractor": "@flowatlas/extractor-angular",
-      "nodes": 50,
-      "edges": 32,
+      "nodes": 52,
+      "edges": 34,
       "types": 2,
       "unresolved": 6,
-      "durationMs": 516,
+      "durationMs": 531,
       "packages": {
         "name": "angular-basic",
         "runtime": [
@@ -101,8 +101,8 @@
     }
   ],
   "totals": {
-    "nodes": 50,
-    "edges": 32,
+    "nodes": 52,
+    "edges": 34,
     "types": 2,
     "unresolved": 10
   }

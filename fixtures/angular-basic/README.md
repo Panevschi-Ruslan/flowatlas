@@ -34,6 +34,8 @@ settings key nobody configured.
 | `ReportsComponent` | `src/app/reports.component.ts` | inline | the same, exported as the module's default |
 | `ProfileComponent` | `src/app/profile.component.ts` | inline | the same, reached through `await` |
 | `OrderCardComponent` | `src/app/order-card.component.ts` | inline | `meta.signature`: inputs `order` (required), `dense`, `currency` as what it takes, outputs `{cancelled:string;opened:OrderDto}` as what it gives back (P35) |
+| `HighlightDirective` | `src/app/highlight.directive.ts` | none | a `ui_component` of kind `directive`, its selector in `meta`; `meta.signature`: `appHighlight`, `delay` as what it takes, `{highlighted:boolean}` as what it gives back (P40) |
+| `OrderTotalPipe` | `src/app/order-total.pipe.ts` | none | a `provider` of kind `pipe`, its name in `meta`; `meta.signature` is its `transform`: `(order: OrderDto, currency?: string) → string` (P40) |
 
 Whether a component is standalone is read from the module that declares it, not
 from its own `standalone` flag: the framework refuses to declare a standalone

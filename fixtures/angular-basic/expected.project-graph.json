@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T19:11:19.034Z",
+  "builtAt": "2026-10-08T20:08:58.812Z",
   "services": [
     {
       "name": "angular-basic",
@@ -165,6 +165,33 @@
       }
     },
     {
+      "id": "angular-basic#src/app/highlight.directive.ts:HighlightDirective",
+      "type": "ui_component",
+      "label": "HighlightDirective",
+      "repo": "angular-basic",
+      "file": "src/app/highlight.directive.ts",
+      "line": 7,
+      "kind": "directive",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "appHighlight",
+              "type": "string",
+              "optional": true
+            },
+            {
+              "name": "delay",
+              "type": "number",
+              "optional": true
+            }
+          ],
+          "returns": "{highlighted:boolean}"
+        },
+        "selector": "[appHighlight]"
+      }
+    },
+    {
       "id": "angular-basic#src/app/legacy-panel.component.ts:LegacyPanelComponent",
       "type": "ui_component",
       "label": "LegacyPanelComponent",
@@ -189,7 +216,7 @@
       "label": "OrderCardComponent",
       "repo": "angular-basic",
       "file": "src/app/order-card.component.ts",
-      "line": 11,
+      "line": 13,
       "kind": "standalone",
       "meta": {
         "signature": {
@@ -213,6 +240,32 @@
         },
         "standalone": true,
         "selector": "app-order-card"
+      }
+    },
+    {
+      "id": "angular-basic#src/app/order-total.pipe.ts:OrderTotalPipe",
+      "type": "provider",
+      "label": "OrderTotalPipe",
+      "repo": "angular-basic",
+      "file": "src/app/order-total.pipe.ts",
+      "line": 9,
+      "kind": "pipe",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:angular-basic#OrderDto"
+            },
+            {
+              "name": "currency",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "string"
+        },
+        "name": "orderTotal"
       }
     },
     {
@@ -500,10 +553,10 @@
       "repo": "angular-basic",
       "meta": {
         "stats": {
-          "files": 16,
-          "filesRead": 16,
+          "files": 18,
+          "filesRead": 18,
           "filesUnreadable": 0,
-          "classes": 11,
+          "classes": 13,
           "templates": 6,
           "skippedExternalCalls": {
             "@angular/common": 4
@@ -923,6 +976,22 @@
       "returns": "string",
       "file": "src/app/checkout.component.ts",
       "line": 63
+    },
+    {
+      "from": "angular-basic#src/app/order-card.component.ts:OrderCardComponent",
+      "to": "angular-basic#src/app/highlight.directive.ts:HighlightDirective",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app/order-card.component.ts",
+      "line": 16
+    },
+    {
+      "from": "angular-basic#src/app/order-card.component.ts:OrderCardComponent",
+      "to": "angular-basic#src/app/order-total.pipe.ts:OrderTotalPipe",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app/order-card.component.ts",
+      "line": 16
     },
     {
       "from": "angular-basic#src/app/orders-api.service.ts:OrdersApiService",

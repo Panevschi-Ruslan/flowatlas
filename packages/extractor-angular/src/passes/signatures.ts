@@ -10,7 +10,7 @@ import {
 } from '@flowatlas/core';
 import { Node, type ClassDeclaration, type Decorator, type PropertyDeclaration, type Type } from 'ts-morph';
 import type { AngularExtractContext } from '../context.js';
-import { ANGULAR_CORE } from '../index-classes.js';
+import { ANGULAR_CORE, type AngularRole } from '../index-classes.js';
 import { definePass } from './types.js';
 
 /** Every method of every class this reader indexed, by the id its node has. */
@@ -117,17 +117,45 @@ const componentSignature = (declaration: ClassDeclaration): StatedSignature => {
   return { params, returns: { fields } };
 };
 
-/** Every component this reader indexed, with the signature its inputs and outputs make. */
-function* componentsOf(ctx: AngularExtractContext): Generator<readonly [string, StatedSignature]> {
+/**
+ * A pipe's `transform(value, ...args)`: what a template hands it, and what it
+ * gives back (P40). A pipe without one says nothing.
+ */
+const pipeSignature = (declaration: ClassDeclaration): StatedSignature | undefined => {
+  const transform = declaration.getMethod('transform');
+  if (transform === undefined) return undefined;
+  return {
+    params: transform.getParameters().map((parameter) => ({
+      name: parameter.getName(),
+      type: parameter.getType(),
+      site: parameter,
+      ...(parameter.isOptional() || parameter.hasInitializer() ? { optional: true } : {}),
+    })),
+    returns: { type: transform.getReturnType(), site: transform },
+  };
+};
+
+/**
+ * How each role that has a signature of its own states it: a directive is
+ * bound like a component, by its inputs and outputs.
+ */
+const STATED: Readonly<Partial<Record<AngularRole, (declaration: ClassDeclaration) => StatedSignature | undefined>>> = {
+  component: componentSignature,
+  directive: componentSignature,
+  pipe: pipeSignature,
+};
+
+/** Every component, directive and pipe this reader indexed, with the signature it states. */
+function* statedOf(ctx: AngularExtractContext): Generator<readonly [string, StatedSignature]> {
   for (const indexed of ctx.classes.all()) {
-    if (indexed.role !== 'component') continue;
-    yield [indexed.id, componentSignature(indexed.declaration)];
+    const signature = STATED[indexed.role]?.(indexed.declaration);
+    if (signature !== undefined) yield [indexed.id, signature];
   }
 }
 
 /**
- * What each method takes and gives back, and what each component is handed
- * and emits.
+ * What each method takes and gives back, what each component and directive is
+ * handed and emits, and what each pipe transforms into what.
  *
  * Last, so that every edge into a method - a call from another one, and a
  * template event bound to it - is drawn before the method's types are written
@@ -135,5 +163,5 @@ function* componentsOf(ctx: AngularExtractContext): Generator<readonly [string, 
  */
 export const signaturesPass = definePass('types', (ctx) => {
   recordSignatures(ctx.builder, ctx.types, methodsOf(ctx));
-  recordStatedSignatures(ctx.builder, ctx.types, componentsOf(ctx));
+  recordStatedSignatures(ctx.builder, ctx.types, statedOf(ctx));
 });

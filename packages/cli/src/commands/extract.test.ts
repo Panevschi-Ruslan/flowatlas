@@ -968,7 +968,8 @@ describe('angular-basic', () => {
   const graph = (): RepoGraph => load('angular-basic');
 
   it('reads a repository the frontend adapter recognises, without being told to', () => {
-    expect(nodesOf(graph(), 'ui_component')).toHaveLength(7);
+    // Seven components and a directive (P40).
+    expect(nodesOf(graph(), 'ui_component')).toHaveLength(8);
     expect(nodesOf(graph(), 'ui_api_call')).toHaveLength(5);
   });
 
@@ -984,6 +985,26 @@ describe('angular-basic', () => {
     });
   });
 
+  it('says what a directive is bound by and what a pipe transforms (P40)', () => {
+    const directive = nodesOf(graph(), 'ui_component').find((node) => node.label === 'HighlightDirective');
+    expect(directive?.meta?.['signature']).toEqual({
+      params: [
+        { name: 'appHighlight', type: 'string', optional: true },
+        { name: 'delay', type: 'number', optional: true },
+      ],
+      returns: '{highlighted:boolean}',
+    });
+    const pipe = nodesOf(graph(), 'provider').find((node) => node.label === 'OrderTotalPipe');
+    expect(pipe?.kind).toBe('pipe');
+    expect(pipe?.meta?.['signature']).toEqual({
+      params: [
+        { name: 'order', type: 'type:angular-basic#OrderDto' },
+        { name: 'currency', type: 'string', optional: true },
+      ],
+      returns: 'string',
+    });
+  });
+
   it('tells a standalone component from one a module declares', () => {
     const byKind = Object.fromEntries(
       nodesOf(graph(), 'ui_component').map((node) => [node.label, node.kind]),
@@ -996,6 +1017,7 @@ describe('angular-basic', () => {
       ReportsComponent: 'standalone',
       ProfileComponent: 'standalone',
       OrderCardComponent: 'standalone',
+      HighlightDirective: 'directive',
     });
     const declared = nodesOf(graph(), 'ui_component').find(
       (node) => node.label === 'OrdersListComponent',

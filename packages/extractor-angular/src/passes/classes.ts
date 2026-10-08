@@ -8,6 +8,7 @@ import type { ClassDeclaration } from 'ts-morph';
 import { angularDiOptions } from '../di.js';
 import {
   componentDecorator,
+  declarableDecorator,
   injectableDecorator,
   type AngularRole,
   type IndexedClass,
@@ -16,10 +17,10 @@ import { arrayProperty, metadataOf, stringProperty } from '../util/metadata.js';
 import { definePass } from './types.js';
 
 /** Roles the container instantiates, and therefore injects into. */
-const MANAGED: ReadonlySet<AngularRole> = new Set(['component', 'injectable']);
+const MANAGED: ReadonlySet<AngularRole> = new Set(['component', 'directive', 'pipe', 'injectable']);
 
 /** What a standalone component may import and the graph has a node for. */
-const IMPORTABLE: ReadonlySet<AngularRole> = new Set(['component', 'module']);
+const IMPORTABLE: ReadonlySet<AngularRole> = new Set(['component', 'directive', 'pipe', 'module']);
 
 /**
  * Turns every class the container knows about into a node, and every injection
@@ -62,6 +63,14 @@ export const classesPass = definePass('classes', (ctx) => {
     const metadata = metadataOf(injectableDecorator(indexed.declaration));
     const providedIn = stringProperty(metadata, 'providedIn');
     ctx.ensureClassNode(indexed.declaration, providedIn === undefined ? undefined : { providedIn });
+  };
+
+  /** A directive by its selector, a pipe by the name a template writes it as (P40). */
+  const declarable = (indexed: IndexedClass, role: 'directive' | 'pipe'): void => {
+    const metadata = metadataOf(declarableDecorator(indexed.declaration, role));
+    const key = role === 'directive' ? 'selector' : 'name';
+    const value = stringProperty(metadata, key);
+    ctx.ensureClassNode(indexed.declaration, value === undefined ? undefined : { [key]: value });
   };
 
   const inject = (indexed: IndexedClass, declaration: ClassDeclaration): void => {
@@ -109,6 +118,7 @@ export const classesPass = definePass('classes', (ctx) => {
   for (const indexed of ctx.classes.all()) {
     if (indexed.role === 'component') component(indexed);
     if (indexed.role === 'injectable') injectable(indexed);
+    if (indexed.role === 'directive' || indexed.role === 'pipe') declarable(indexed, indexed.role);
     if (MANAGED.has(indexed.role)) inject(indexed, indexed.declaration);
   }
 });

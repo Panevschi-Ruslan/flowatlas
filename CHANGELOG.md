@@ -6,6 +6,13 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+Angular directives and pipes have nodes and signatures: a directive (a
+`ui_component` of kind `directive`, with its selector) takes its inputs and gives
+back its outputs, read the way a component's are; a pipe (a `provider` of kind
+`pipe`, with its name) says what its `transform(value, ...args)` takes and gives
+back. Both are injected into and imported by standalone components like any
+other declarable.
+
 A row under `adapters.db.tables` may name a `factory`: `name` is then a method
 of the client that factory returns, so `const db = createClient();
 db.insert('orders', row)` from a data kit nobody installed is a query of
