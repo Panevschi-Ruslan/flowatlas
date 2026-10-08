@@ -6,6 +6,13 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+A Remix `action` that compares `request.method` to string literals answers the
+verbs it names rather than a POST. React Router v7's `app/routes.ts` is read:
+`route()`, `index()`, `layout()` and `prefix()` give each named module its
+address, params named as configured, and its `loader` and `action` are ways in as
+a Remix route module's are; a repository with `@react-router/dev` is typed
+`react-router`. `data(x, { status })` is read as an answer beside `json`.
+
 A SvelteKit page's server module is read as ways in: the `load` of a
 `+page.server.ts` or `+layout.server.ts` answers the page's GET, and each of a
 page's `actions` a POST - the default at the page's address, a named one at

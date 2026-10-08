@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>139 fixtures</span>
-    <span>313 snapshot files</span>
+    <span>140 fixtures</span>
+    <span>314 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -1098,7 +1098,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>React <span class="count" data-total="4">4</span></h2>
+    <h2>React <span class="count" data-total="5">5</span></h2>
     <ul>
       <li class="fixture" data-search="react-client-base react one repository, one segment, and two ends that have to agree about it.">
         <div class="head">
@@ -1130,6 +1130,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>A browser repository with no tsconfig in it, which is the shape <code>extract</code> meets whenever it is pointed at a bare directory rather than at a configured project.</p>
+        <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="react-router-config react a react router v7 repository whose routes are declared in `app/routes.ts` rather than spelled by file names (p43).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/react-router-config">react-router-config</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A React Router v7 repository whose routes are declared in <code>app/routes.ts</code> rather than spelled by file names (P43).</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
     </ul>

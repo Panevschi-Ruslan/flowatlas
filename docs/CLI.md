@@ -119,9 +119,10 @@ Run init again with --list-unknown to name every one; each is in the configurati
 The type of a repository is read from its manifest: `@nestjs/core` makes it
 `nestjs`, `@medusajs/framework` or `@medusajs/medusa` makes it `medusa`, `next`
 makes it `nextjs`, `@sveltejs/kit` makes it `sveltekit`, `@remix-run/node` or
-`@remix-run/react` makes it `remix`, `express`, `fastify` and `koa` make it each of those,
+`@remix-run/react` makes it `remix`, `@react-router/dev` makes it `react-router`,
+`express`, `fastify` and `koa` make it each of those,
 `@angular/core` makes it `angular`, `react` makes it `react`, and anything else is
-written as `unknown`. Those ten are every type there is. Hono and Telegraf have
+written as `unknown`. Those eleven are every type there is. Hono and Telegraf have
 no type of their own: they are frameworks the server reader finds inside a
 repository whichever server type it is given, so a repository whose only
 framework is Hono is
@@ -232,8 +233,14 @@ method has nothing to point at and is a `route-handler-unread` row
 its segments separated by dots - `app/routes/api.orders.$id.ts`, or a folder of
 that name holding `route.ts` - where a leading underscore is a layout that adds no
 segment, `$id` a param, `$` the rest of the path and a dot in brackets a literal
-one; a `loader` answers GET and an `action` POST, and a route module with neither
-is a page and says nothing (`fixtures/remix-flat-routes`). A file-system
+one; a `loader` answers GET and an `action` POST - or, where the action compares
+`request.method` to string literals (`=== 'DELETE'`, `case 'PUT':`), the verbs it
+names - and a route module with neither is a page and says nothing
+(`fixtures/remix-flat-routes`). React Router v7 declares its routes in
+`app/routes.ts` instead: the default export's `route(path, file, children)`,
+`index(file)`, `layout(file, children)` and `...prefix(path, children)` are read
+into each module's address, its params named as configured (`rawPath`), and each
+module is read the way a Remix route module is (`fixtures/react-router-config`). A file-system
 router nobody has described — `@fastify/autoload`, or a convention of the
 repository's own — is not guessed at: the reader says, at `info`, that it cannot
 tell such a repository from a library that merely depends on the framework
@@ -1234,7 +1241,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 |---|---|---|---|
 | `name` | string | required | what this service is called everywhere else |
 | `repo` | string | required unless `document` is given | path to the repository, relative to this file or absolute. A service has a `repo` or a `document`, never both |
-| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `sveltekit`, `remix`, `express`, `fastify` or `koa` for anything with a server in it, `lambda` for functions whose ways in are declared in Terraform, `angular` or `react` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
+| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `sveltekit`, `remix`, `react-router`, `express`, `fastify` or `koa` for anything with a server in it, `lambda` for functions whose ways in are declared in Terraform, `angular` or `react` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
 | `baseUrlEnv` | string[] | `[]` | settings keys other services use to address this one |
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |

@@ -36,6 +36,8 @@ export interface FsRoutesDescription {
    * verbs (P42).
    */
   readonly files?: ReadonlyMap<string, FsRouteExports>;
+  /** Exports whose verbs are the literals the handler compares `request.method` to (P43). */
+  readonly narrowed?: ReadonlySet<string>;
   readonly request: RequestReadingDescription;
   /** What the entry's `registration` says it was declared by. */
   readonly registration: string;
@@ -59,6 +61,60 @@ const exportsOf = (file: string, description: FsRoutesDescription): FsRouteExpor
   return name === undefined ? undefined : description.files?.get(name);
 };
 
+/** The ways in one reading collects, each once, and how one is added. */
+export interface FsEntries {
+  readonly entries: EntryNode[];
+  readonly add: (verb: FsRouteVerb, application: string | undefined, registration: string) => void;
+}
+
+/**
+ * The entries of a router whose ways in are route modules, built one way for
+ * every such router: the rows above and a route config alike (P43).
+ */
+export const fsEntries = (
+  ctx: ExtractContext,
+  adapter: string,
+  request: EntryNode['request'],
+): FsEntries => {
+  const entries: EntryNode[] = [];
+  const seen = new Set<string>();
+  const add = (verb: FsRouteVerb, application: string | undefined, registration: string): void => {
+    // A named action is posted to the page's address with `?/name` after
+    // it; the query is kept out of the path, so params are named as before.
+    const query = verb.action === undefined ? '' : `?/${verb.action}`;
+    const key = `${makeHttpEntryKey(verb.method, verb.path)}${query}`;
+    const id = makeEntryId(ctx.repo, 'http', key, application);
+    if (seen.has(id)) return;
+    seen.add(id);
+    const label = `${verb.method} ${verb.path}${query}`;
+    const handler =
+      verb.handler !== undefined ? handlerOfFunction(verb.handler, ctx) : inlineHandlerOf(verb.inline, label, ctx);
+    entries.push({
+      id,
+      kind: 'http',
+      label: application === undefined ? label : `${label} (${application})`,
+      key,
+      ...(handler === undefined ? {} : { handler }),
+      ...(request === undefined ? {} : { request }),
+      file: verb.at.reached.file,
+      line: verb.at.reached.line,
+      meta: {
+        method: verb.method,
+        path: verb.path,
+        ...(verb.rawPath === undefined ? {} : { rawPath: verb.rawPath }),
+        ...(verb.action === undefined ? {} : { action: verb.action }),
+        adapter,
+        registration,
+        ...(application === undefined ? {} : { application }),
+        handlerVia: verb.handlerVia,
+        ...(verb.bodyRead ? {} : { handlerBodyRead: false }),
+        ...reachMeta(verb.at),
+      },
+    });
+  };
+  return { entries, add };
+};
+
 /** The entry adapter one description reads as. */
 export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter => {
   const request = readingOf(description.request);
@@ -72,44 +128,7 @@ export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter 
     applications: (ctx) => applicationsOf(ctx),
 
     extractEntries(ctx: ExtractContext): EntryNode[] {
-      const entries: EntryNode[] = [];
-      const seen = new Set<string>();
-      const httpEntry = (verb: FsRouteVerb, application: string | undefined, registration: string): void => {
-        // A named action is posted to the page's address with `?/name` after
-        // it; the query is kept out of the path, so params are named as before.
-        const query = verb.action === undefined ? '' : `?/${verb.action}`;
-        const key = `${makeHttpEntryKey(verb.method, verb.path)}${query}`;
-        const id = makeEntryId(ctx.repo, 'http', key, application);
-        if (seen.has(id)) return;
-        seen.add(id);
-        const label = `${verb.method} ${verb.path}${query}`;
-        const handler =
-          verb.handler !== undefined
-            ? handlerOfFunction(verb.handler, ctx)
-            : inlineHandlerOf(verb.inline, label, ctx);
-        entries.push({
-          id,
-          kind: 'http',
-          label: application === undefined ? label : `${label} (${application})`,
-          key,
-          ...(handler === undefined ? {} : { handler }),
-          request,
-          file: verb.at.reached.file,
-          line: verb.at.reached.line,
-          meta: {
-            method: verb.method,
-            path: verb.path,
-            ...(verb.rawPath === undefined ? {} : { rawPath: verb.rawPath }),
-            ...(verb.action === undefined ? {} : { action: verb.action }),
-            adapter: description.name,
-            registration,
-            ...(application === undefined ? {} : { application }),
-            handlerVia: verb.handlerVia,
-            ...(verb.bodyRead ? {} : { handlerBodyRead: false }),
-            ...reachMeta(verb.at),
-          },
-        });
-      };
+      const collected = fsEntries(ctx, description.name, request);
 
       const space = fsAddressSpace(applicationsOf(ctx));
       for (const sourceFile of repoSources(ctx)) {
@@ -124,13 +143,14 @@ export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter 
           path: address.path,
           rawPath: address.rawPath,
           adapter: description.name,
-          emit: (verb) => httpEntry(verb, address.application, own?.registration ?? description.registration),
+          emit: (verb) => collected.add(verb, address.application, own?.registration ?? description.registration),
           ...(verbs === undefined ? {} : { verbs }),
           ...(pagesServed === true ? { pagesServed: true } : {}),
           ...(own?.actions === undefined ? {} : { actions: own.actions }),
+          ...(description.narrowed === undefined ? {} : { narrowed: description.narrowed }),
         });
       }
-      return entries;
+      return collected.entries;
     },
   };
 };
@@ -177,9 +197,10 @@ export const REMIX_ROUTES: FsRouter = {
 
 /**
  * A loader answers a GET; an action answers every other verb, and is keyed by
- * the one a form sends.
+ * the ones it compares `request.method` to, or by the POST a form sends when it
+ * compares none (P43).
  */
-const REMIX_VERBS: ReadonlyMap<string, string> = new Map([
+export const REMIX_VERBS: ReadonlyMap<string, string> = new Map([
   ['loader', 'GET'],
   ['action', 'POST'],
 ]);
@@ -194,6 +215,23 @@ const SVELTEKIT_PAGE: FsRouteExports = {
   actions: new Map([['actions', 'POST']]),
   pagesServed: true,
   registration: 'routes/+page.server',
+};
+
+/** The export whose verbs are the ones it branches on. */
+export const REMIX_NARROWED: ReadonlySet<string> = new Set(['action']);
+
+/**
+ * How a Remix or React Router route module is handed its request, and answers.
+ * The same for a route found by its file name and one a route config names.
+ */
+export const REMIX_REQUEST: RequestReadingDescription = {
+  ...EVENT_REQUEST,
+  // React Router's `data(x, { status })` is the `json` it replaced.
+  answers: [
+    { by: 'named', callee: 'json', statusKey: 'status' },
+    { by: 'named', callee: 'data', statusKey: 'status' },
+    { by: 'return' },
+  ],
 };
 
 export const sveltekitRoutesAdapter = fsRoutesAdapter({
@@ -216,10 +254,8 @@ export const remixRoutesAdapter = fsRoutesAdapter({
   packages: ['@remix-run/node', '@remix-run/react', '@remix-run/server-runtime'],
   router: REMIX_ROUTES,
   verbs: REMIX_VERBS,
+  narrowed: REMIX_NARROWED,
   pagesServed: true,
   registration: 'routes/loader-action',
-  request: {
-    ...EVENT_REQUEST,
-    answers: [{ by: 'named', callee: 'json', statusKey: 'status' }, { by: 'return' }],
-  },
+  request: REMIX_REQUEST,
 });

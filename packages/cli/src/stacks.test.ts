@@ -63,6 +63,9 @@ describe('the stack a repository is built on', () => {
   it('reads the two file-system routers described as rows (P38)', () => {
     expect(guessType({ dependencies: { '@remix-run/react': '2.0.0', react: '18.3.1' } })).toBe('remix');
     expect(guessType({ devDependencies: { '@sveltejs/kit': '2.8.0', svelte: '5.0.0' } })).toBe('sveltekit');
+    expect(
+      guessType({ dependencies: { 'react-router': '7.1.0', react: '19.0.0' }, devDependencies: { '@react-router/dev': '7.1.0' } }),
+    ).toBe('react-router');
   });
 
   it('names the framework when there is no reader for it', () => {

@@ -17,7 +17,8 @@ import {
   SVELTEKIT_ROUTES,
   sveltekitRoutesAdapter,
 } from './described-fs-routes.js';
-import { routePathOfFile } from './fs-routes.js';
+import { methodsCompared, routePathOfFile } from './fs-routes.js';
+import { configuredRoutes, reactRouterRoutesAdapter } from './route-config.js';
 
 interface Read {
   entries: EntryNode[];
@@ -131,5 +132,85 @@ describe('Remix routes', () => {
       'POST /api/orders/:param': '/api/orders/:orderId',
     });
     expect(read.unresolved.filter((row) => row.reason === 'route-verb-unread')).toEqual([]);
+  });
+});
+
+describe('Remix actions by method', () => {
+  it('keys an action by the verbs it compares request.method to, else POST', () => {
+    const read = extract(remixRoutesAdapter, {
+      '/app/routes/api.orders.$id.ts': [
+        'export async function action({ request }) {',
+        "  if (request.method === 'DELETE') return null;",
+        '  switch (request.method.toUpperCase()) {',
+        "    case 'PUT': return null;",
+        "    case 'patch': return null;",
+        '  }',
+        "  if (request.method === someVerb) return null;",
+        '  return null;',
+        '}',
+      ].join('\n'),
+      '/app/routes/api.carts.ts': 'export async function action({ request }) { return request.json(); }',
+    });
+    expect(Object.keys(rawPaths(read)).sort()).toEqual([
+      'DELETE /api/orders/:param',
+      'PATCH /api/orders/:param',
+      'POST /api/carts',
+      'PUT /api/orders/:param',
+    ]);
+  });
+
+  it('reads only literal verbs compared to a method', () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const file = project.createSourceFile(
+      '/a.ts',
+      "const { method } = req; if (method !== 'post') {} if (kind === 'GET') {} if (req.method == 'NOPE') {}",
+    );
+    expect(methodsCompared(file)).toEqual(['POST']);
+  });
+});
+
+describe('React Router route config', () => {
+  const CONFIG = [
+    "import { index, layout, prefix, route, type RouteConfig } from '@react-router/dev/routes';",
+    'export default [',
+    "  index('routes/home.tsx'),",
+    "  route('orders/:orderId', 'routes/order.tsx', [route('edit', 'routes/order-edit.tsx')]),",
+    "  layout('routes/auth.tsx', [route('login', 'routes/login.tsx')]),",
+    "  ...prefix('api', [index('routes/api/root.ts'), route('carts/:cartId?', 'routes/api/cart.ts'), route('files/*', './routes/api/files.ts')]),",
+    "  route(path, 'routes/unknown.tsx'),",
+    '] satisfies RouteConfig;',
+  ].join('\n');
+
+  it('reads each helper into a module and an address', () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    expect(configuredRoutes(project.createSourceFile('/app/routes.ts', CONFIG))).toEqual([
+      { module: 'routes/home.tsx', rawPath: '/' },
+      { module: 'routes/order.tsx', rawPath: '/orders/:orderId' },
+      { module: 'routes/order-edit.tsx', rawPath: '/orders/:orderId/edit' },
+      { module: 'routes/auth.tsx', rawPath: '/' },
+      { module: 'routes/login.tsx', rawPath: '/login' },
+      { module: 'routes/api/root.ts', rawPath: '/api' },
+      { module: 'routes/api/cart.ts', rawPath: '/api/carts/:cartId?' },
+      { module: './routes/api/files.ts', rawPath: '/api/files/*' },
+    ]);
+  });
+
+  it('reads the modules the config names as ways in', () => {
+    const read = extract(reactRouterRoutesAdapter, {
+      '/app/routes.ts': CONFIG,
+      '/app/routes/order.tsx':
+        'export async function loader({ params }) { return params.orderId; }\nexport default function Order() { return null; }',
+      '/app/routes/api/cart.ts':
+        "export async function action({ request, params }) { if (request.method === 'DELETE') return params.cartId; return null; }",
+      '/app/routes/api/files.ts': 'export const loader = () => null;',
+      '/app/routes/login.tsx': 'export default function Login() { return null; }',
+    });
+    expect(rawPaths(read)).toEqual({
+      'GET /orders/:param': '/orders/:orderId',
+      'DELETE /api/carts/:param': '/api/carts/:cartId?',
+      'GET /api/files/*': '/api/files/*',
+    });
+    expect(read.entries[0]?.meta?.['registration']).toBe('routes.ts/route-config');
+    expect(read.unresolved).toEqual([]);
   });
 });

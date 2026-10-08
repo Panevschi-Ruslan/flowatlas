@@ -9,3 +9,7 @@ export const listOrders = async (): Promise<Order[]> => [];
 export const oneOrder = async (id: string): Promise<Order> => ({ id, total: 0 });
 
 export const createOrder = async (total: number): Promise<Order> => ({ id: 'new', total });
+
+export const removeOrder = async (id: string): Promise<void> => {
+  void id;
+};

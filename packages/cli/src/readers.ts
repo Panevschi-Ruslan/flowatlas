@@ -106,6 +106,8 @@ export const READERS: readonly ReaderRow[] = [
   ['sveltekit', '@sveltejs/kit', NESTJS_EXTRACTOR],
   ['remix', '@remix-run/node', NESTJS_EXTRACTOR],
   ['remix', '@remix-run/react', NESTJS_EXTRACTOR],
+  // Remix's successor, whose routes are declared in `app/routes.ts` (P43).
+  ['react-router', '@react-router/dev', NESTJS_EXTRACTOR],
   ['express', 'express', NESTJS_EXTRACTOR],
   ['fastify', 'fastify', NESTJS_EXTRACTOR],
   ['koa', 'koa', NESTJS_EXTRACTOR],

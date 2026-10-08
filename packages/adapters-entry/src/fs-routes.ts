@@ -725,6 +725,73 @@ const VERB_EXPORTS: ReadonlyMap<string, string> = new Map(HTTP_METHODS.map((meth
 
 const NO_EXPORTS: ReadonlyMap<string, string> = new Map();
 
+const KNOWN_METHODS: ReadonlySet<string> = new Set(HTTP_METHODS);
+
+/** `request.method`, `method` taken out of it, or either upper- or lower-cased. */
+const isMethodRead = (node: TsNode): boolean => {
+  const value = unwrapValue(node);
+  if (Node.isCallExpression(value)) {
+    const callee = value.getExpression();
+    return Node.isPropertyAccessExpression(callee) && /^to(Upper|Lower)Case$/.test(callee.getName())
+      ? isMethodRead(callee.getExpression())
+      : false;
+  }
+  if (Node.isPropertyAccessExpression(value)) return value.getName() === 'method';
+  return Node.isIdentifier(value) && value.getText() === 'method';
+};
+
+/** A string literal's verb, when it is one. */
+const verbOf = (node: TsNode | undefined): string | undefined => {
+  if (node === undefined || !Node.isStringLiteral(node) && !Node.isNoSubstitutionTemplateLiteral(node)) return undefined;
+  const verb = node.getLiteralText().toUpperCase();
+  return KNOWN_METHODS.has(verb) ? verb : undefined;
+};
+
+const EQUALITY: ReadonlySet<SyntaxKind> = new Set([
+  SyntaxKind.EqualsEqualsEqualsToken,
+  SyntaxKind.EqualsEqualsToken,
+  SyntaxKind.ExclamationEqualsEqualsToken,
+  SyntaxKind.ExclamationEqualsToken,
+]);
+
+/** The verbs one comparison or one `case` names, by how it is written. */
+const COMPARED: ReadonlyMap<SyntaxKind, (node: TsNode) => string | undefined> = new Map([
+  [
+    SyntaxKind.BinaryExpression,
+    (node: TsNode) => {
+      if (!Node.isBinaryExpression(node) || !EQUALITY.has(node.getOperatorToken().getKind())) return undefined;
+      const [left, right] = [node.getLeft(), node.getRight()];
+      if (isMethodRead(left)) return verbOf(right);
+      return isMethodRead(right) ? verbOf(left) : undefined;
+    },
+  ],
+  [
+    SyntaxKind.CaseClause,
+    (node: TsNode) => {
+      const owner = node.getParent()?.getParent();
+      return Node.isCaseClause(node) && owner !== undefined && Node.isSwitchStatement(owner) && isMethodRead(owner.getExpression())
+        ? verbOf(node.getExpression())
+        : undefined;
+    },
+  ],
+]);
+
+/**
+ * The verbs a handler compares its request's method to, in the order written.
+ *
+ * Remix sends every verb but GET to a route's `action`, and an action that
+ * answers more than one says which by comparing `request.method` to them. Only
+ * literals count: a method compared to a name is a verb this cannot know.
+ */
+export const methodsCompared = (body: TsNode): string[] => {
+  const found = new Set<string>();
+  body.forEachDescendant((node) => {
+    const verb = COMPARED.get(node.getKind())?.(node);
+    if (verb !== undefined) found.add(verb);
+  });
+  return [...found];
+};
+
 /** The action a form posts to when it names none. */
 const DEFAULT_ACTION = 'default';
 
@@ -867,6 +934,12 @@ export const readVerbFile = (
      * SvelteKit's `actions`, every one of them a POST (P42).
      */
     actions?: ReadonlyMap<string, string>;
+    /**
+     * Exports whose verbs are the ones the handler compares `request.method`
+     * to, where it compares it to any: a Remix `action` that branches on
+     * `'DELETE'` and `'PUT'` answers those, not a POST (P43).
+     */
+    narrowed?: ReadonlySet<string>;
   },
 ): void => {
   const exported = sourceFile.getExportedDeclarations();
@@ -908,15 +981,19 @@ export const readVerbFile = (
     const at = reachOf(declaration, sourceFile, name, ctx.repoDir);
     const reading = verbReading(declaration);
     const read = reading?.bodyRead === true;
-    options.emit({
-      method,
-      path: options.path,
-      ...(options.rawPath === undefined ? {} : { rawPath: options.rawPath }),
-      at,
-      ...(reading === undefined ? {} : { handler: reading.fn }),
-      handlerVia: reading?.via ?? 'unread',
-      bodyRead: read,
-    });
+    const compared =
+      options.narrowed?.has(name) === true && reading?.via === 'function' ? methodsCompared(reading.fn.body) : [];
+    for (const answered of compared.length > 0 ? compared : [method]) {
+      options.emit({
+        method: answered,
+        path: options.path,
+        ...(options.rawPath === undefined ? {} : { rawPath: options.rawPath }),
+        at,
+        ...(reading === undefined ? {} : { handler: reading.fn }),
+        handlerVia: reading?.via ?? 'unread',
+        bodyRead: read,
+      });
+    }
     // The entry is still emitted, and the handler with it where there was one:
     // the route exists, the wrapper call is where the framework enters, and
     // dropping either would lose a fact that was read. What was missing was
