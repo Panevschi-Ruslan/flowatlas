@@ -26,6 +26,9 @@ else of note: that is the state being read.
 | `lendBook`, `returnBook` | `auditLog(…)` | write `audit_events` | a function of the repository's own, its table named in the configuration |
 | `returnBook` | `kit.remove('loans', …)` | delete `loans` | a namespace import of the kit |
 | `archive` | ``insert(`loans_${year}`, loan)`` | write `?` | the table is worked out at run time: the query is kept, with a `dynamic-table-name` row |
+| `joinLibrary` | `db.insert(MEMBERS, …)` | write `members` | `db` is what the kit's `createClient()` returned, the factory named on the row (P39) |
+| `leaveLibrary` | `db.remove('members', …)` | delete `members` | the same client |
+| `queueWelcome` | `outbox.insert('welcome', …)` | - | an object of the repository's own, not a client the factory made |
 | `lookalike` | `findOne('members')` | - | a local of the same name shadows the import, so it is not the kit's |
 
 Every query is recorded with `source: "configured"` and `declared` confidence.

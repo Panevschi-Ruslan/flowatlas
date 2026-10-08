@@ -1443,7 +1443,7 @@ it.
 | `auto` | boolean | `true` | detect which adapters apply from each repository's manifest |
 | `force` | object | `{}` | use these adapters regardless of what was detected |
 | `db.localBaseClasses` | (string \| object)[] | `[]` | classes of your own that behave like a repository, so calls through them are data access — including classes a workspace package of yours declares. An entry may be `{ "name": "BaseRepository", "tableProperty": "collectionName" }` to say which property each class extending it sets to its table |
-| `db.tables` | object[] | `[]` | functions your data access goes through that name their table at the call — `insert('orders', row)` from a data kit of your own, installed or not: `{ "name", "package"?, "table": argIndex \| "name", "op"?: "read" \| "write" \| "delete" }` (see [Tables named in configuration](#tables-named-in-configuration)) |
+| `db.tables` | object[] | `[]` | functions your data access goes through that name their table at the call — `insert('orders', row)` from a data kit of your own, installed or not: `{ "name", "package"?, "factory"?, "table": argIndex \| "name", "op"?: "read" \| "write" \| "delete" }`; with `factory`, `name` is a method of the client that factory returns (see [Tables named in configuration](#tables-named-in-configuration)) |
 | `frontend.localClientClasses` | string[] | `[]` | classes of your own that make HTTP requests, so `get`/`post`/… called on them are requests |
 | `broker.custom` | object[] | `[]` | an in-house message bus, described so its publishers and handlers are found |
 | `starters` | object[] | `[]` | a helper of your own that starts a workflow or invokes a function by its deployed name, described so the start is joined to what it starts (see [Code that starts a workflow or a function](#code-that-starts-a-workflow-or-a-function)) |
@@ -1602,6 +1602,20 @@ through a constant, or `table` itself when it is a name. The query is recorded
 with `source: "configured"` and `declared` confidence; a table the argument
 does not name as a string keeps the query and gets a `dynamic-table-name` row
 (`fixtures/data-kit-tables`).
+
+Where the kit hands out a client and the table is an argument of its methods -
+`const db = createClient(); db.insert('orders', row)` - name the factory on the
+row and the method as `name` (P39):
+
+```jsonc
+{ "factory": "createClient", "package": "@acme/data-kit", "name": "insert", "table": 0, "op": "write" }
+```
+
+A call is matched when its receiver is what that factory's call returned: the
+call itself (`createClient().insert(…)`), awaited or not, or a variable or class
+field initialised with it, followed a few names back. The factory is matched by
+the import as above; an object of the repository's own with a method of the same
+name is not the client.
 
 Two things a wrapper can hide are not configuration, and no key reaches them.
 The library has to be among the service's dependencies — directly or along the

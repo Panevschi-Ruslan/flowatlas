@@ -6,6 +6,12 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+A row under `adapters.db.tables` may name a `factory`: `name` is then a method
+of the client that factory returns, so `const db = createClient();
+db.insert('orders', row)` from a data kit nobody installed is a query of
+`orders`. The receiver is followed back to the factory's call through a
+variable, a class field, an `await` or a chain.
+
 SvelteKit and Remix routes are read as ways in. A SvelteKit `+server.ts` under
 `src/routes` answers at its directories' address (groups drop out, `[id]`,
 `[[id]]` and `[id=matcher]` are params, `[...rest]` the rest), and a Remix flat

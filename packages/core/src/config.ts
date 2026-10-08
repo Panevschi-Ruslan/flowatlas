@@ -775,6 +775,12 @@ export const dbTableAccessSchema = z.strictObject({
   name: z.string().min(1),
   /** The package that exports it, matched by the import; absent for a function of the repository's own. */
   package: z.string().min(1).optional(),
+  /**
+   * A function of the same package that makes a client, where `name` is a
+   * method of what it returns: `const db = createClient(); db.insert('orders')`
+   * (P39). The call is matched by following the receiver to that factory's call.
+   */
+  factory: z.string().min(1).optional(),
   /** The argument that is the table's name, or the table itself for a function that always touches one. */
   table: z.union([z.number().int().min(0), z.string().min(1)]),
   op: z.enum(['read', 'write', 'delete']).optional(),
