@@ -45,7 +45,7 @@ describe('parseConfig', () => {
         broker: { custom: [] },
         starters: [],
         infra: { modules: [] },
-        db: { localBaseClasses: [] },
+        db: { localBaseClasses: [], tables: [] },
         frontend: { localClientClasses: [] },
       },
       output: DEFAULT_OUTPUT,
@@ -74,7 +74,7 @@ describe('parseConfig', () => {
       broker: { custom: [] },
       starters: [],
       infra: { modules: [] },
-      db: { localBaseClasses: [] },
+      db: { localBaseClasses: [], tables: [] },
       frontend: { localClientClasses: [] },
     });
     expect(parseConfig({ types: {} }).types).toEqual({ maxDepth: DEFAULT_TYPE_MAX_DEPTH });

@@ -766,6 +766,22 @@ export const entryProcedureSchema = z.strictObject({
  * A literal in a description that holds expressions: a string is an expression
  * in the infrastructure language, anything else is the value it says.
  */
+/**
+ * One function a project's data access goes through, named so that its calls
+ * become queries of the table each one names (P37): `insert('orders', row)`
+ * from a data kit nobody installed.
+ */
+export const dbTableAccessSchema = z.strictObject({
+  name: z.string().min(1),
+  /** The package that exports it, matched by the import; absent for a function of the repository's own. */
+  package: z.string().min(1).optional(),
+  /** The argument that is the table's name, or the table itself for a function that always touches one. */
+  table: z.union([z.number().int().min(0), z.string().min(1)]),
+  op: z.enum(['read', 'write', 'delete']).optional(),
+});
+
+export type DbTableAccess = z.infer<typeof dbTableAccessSchema>;
+
 const expressionValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
 /** `type.name` or `data.type.name`, the address a resource has inside its module. */
@@ -890,8 +906,17 @@ export const flowatlasConfigSchema = z
                 ]),
               )
               .default([]),
+            /**
+             * Functions that touch a table the call names, from a package that
+             * may not be installed: `insert('orders', row)` from a data kit of
+             * the project's own (P37). Matched like an answer helper - by the
+             * import in the calling file, or by a declaration of that name in
+             * the repository - and the table is the string argument at index
+             * `table`, or `table` itself when it is a name.
+             */
+            tables: z.array(dbTableAccessSchema).default([]),
           })
-          .default({ localBaseClasses: [] }),
+          .default({ localBaseClasses: [], tables: [] }),
         frontend: z
           .strictObject({
             /**
@@ -918,7 +943,7 @@ export const flowatlasConfigSchema = z
         broker: { custom: [] },
         starters: [],
         infra: { modules: [] },
-        db: { localBaseClasses: [] },
+        db: { localBaseClasses: [], tables: [] },
         frontend: { localClientClasses: [] },
       }),
     /** Directory for generated artefacts, relative to the configuration file. */

@@ -127,6 +127,7 @@ export {
   customBrokerSchema,
   customProducerSchema,
   customSubscriberSchema,
+  dbTableAccessSchema,
   entryHttpAppTypesSchema,
   entryHttpMiddlewareSchema,
   entryHttpMountSchema,
@@ -149,6 +150,7 @@ export type {
   CustomConsumerConfig,
   CustomProducerConfig,
   CustomSubscriberConfig,
+  DbTableAccess,
   EntryHttpConfig,
   EntryHttpDescription,
   EntryProcedureConfig,
@@ -386,6 +388,7 @@ export {
 } from './envelope.js';
 export type { Envelope } from './envelope.js';
 export {
+  callsHelper,
   CLAIMED_META,
   extendReading,
   FAILURES_META,

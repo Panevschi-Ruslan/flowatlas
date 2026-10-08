@@ -542,7 +542,8 @@ const calledBy = (callee: TsNode): { name: string; root: string } | undefined =>
 const fromPackage = (specifier: string, pkg: string): boolean => specifier === pkg || specifier.startsWith(`${pkg}/`);
 
 /**
- * Whether a call is one to a helper (P30).
+ * Whether a call is one to a helper (P30), or to any function a configuration
+ * names the same way - a data kit's `insert('orders', row)` (P37).
  *
  * A helper of a package is matched by the import in the calling file, which is
  * there whether or not the package is installed: a name imported from it under
@@ -550,7 +551,17 @@ const fromPackage = (specifier: string, pkg: string): boolean => specifier === p
  * A helper of the project's is matched by name and by being declared outside
  * any installed package.
  */
-const callsHelper = (site: TsNode, helper: { name: string; package?: string | undefined }): boolean => {
+/**
+ * Whether a name at a call is the one an import binds, and not a local of the
+ * same name declared nearer: `const findOne = …` inside a function shadows the
+ * kit's `findOne` (P37).
+ */
+const boundByImport = (name: TsNode): boolean =>
+  (name.getSymbol()?.getDeclarations() ?? []).some(
+    (declaration) => Node.isImportSpecifier(declaration) || Node.isNamespaceImport(declaration) || Node.isImportClause(declaration),
+  );
+
+export const callsHelper = (site: TsNode, helper: { name: string; package?: string | undefined }): boolean => {
   if (!Node.isCallExpression(site)) return false;
   const callee = site.getExpression();
   const called = calledBy(callee);
@@ -566,12 +577,13 @@ const callsHelper = (site: TsNode, helper: { name: string; package?: string | un
       const named = declaration
         .getNamedImports()
         .some((specifier) => specifier.getName() === helper.name && (specifier.getAliasNode()?.getText() ?? specifier.getName()) === called.name);
-      if (named) return true;
+      if (named && boundByImport(callee)) return true;
       continue;
     }
-    if (called.name !== helper.name) continue;
-    if (declaration.getNamespaceImport()?.getText() === called.root) return true;
-    if (declaration.getDefaultImport()?.getText() === called.root) return true;
+    if (called.name !== helper.name || !Node.isPropertyAccessExpression(callee)) continue;
+    const root = callee.getExpression();
+    if (declaration.getNamespaceImport()?.getText() === called.root && boundByImport(root)) return true;
+    if (declaration.getDefaultImport()?.getText() === called.root && boundByImport(root)) return true;
   }
   return false;
 };

@@ -31,6 +31,13 @@ as an object it gives back. A tRPC procedure says the input its schema checks
 (a zod-style schema's output, a parser's result, or the object itself) and what
 its resolver answers.
 
+`adapters.db.tables` names the functions a data access goes through when they
+name their table at the call - `insert('orders', row)` from a data kit nobody
+installed - so each call becomes a query of that table and the Map shows its
+data boxes. Matched by the import in the calling file, like an answer helper;
+a local that shadows the imported name is no longer taken for the helper, for
+answer and request helpers too.
+
 ## [0.5.1][] - 2026-10-08
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0. Two things

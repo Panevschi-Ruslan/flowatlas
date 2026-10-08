@@ -13,6 +13,7 @@ import {
   makeExternalApiId,
   makeLeafId,
   makeTableId,
+  DECLARED_CONFIDENCE,
   operationOf,
   packageNameOf,
   resolveTypeOrigin,
@@ -55,6 +56,7 @@ import {
 } from './descriptors/index.js';
 import { locateTable } from './descriptors/table.js';
 import { readConfig } from './leaves/config.js';
+import { configuredAccessOf } from './leaves/configured.js';
 import { hostCallOf } from './leaves/fragment.js';
 import { namesNoTable, readSqlArgument, type SqlArgument } from './leaves/sql-argument.js';
 import { handedBackBy } from './leaves/handed-back.js';
@@ -1018,6 +1020,58 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return true;
   };
 
+  /**
+   * A call to a function the configuration names under `adapters.db.tables`:
+   * one query of the table its argument names, drawn as any other query is
+   * (P37). Taken before the libraries' own reading, because the configuration
+   * is the project saying what the call is. A table the argument does not name
+   * as a string keeps the query and gets the ordinary row.
+   */
+  const emitConfigured = (call: CallExpression, scope: Scope): boolean => {
+    const found = configuredAccessOf(call, ctx.config.adapters.db.tables);
+    if (found === undefined) return false;
+    const { id: holderId, file } = scope;
+    const site = siteOf(ctx, call, file);
+    const id = makeLeafId('db_query', ctx.repo, file, site.line, site.column);
+    if (emitted.has(id)) return true;
+    emitted.add(id);
+    const tables = found.table === null ? [] : [found.table];
+    ctx.builder.addNode({
+      id,
+      type: 'db_query',
+      label: `${found.op ?? 'access'} ${found.table ?? '?'}`,
+      repo: ctx.repo,
+      file,
+      line: site.line,
+      meta: {
+        op: found.op,
+        table: found.table,
+        tables,
+        package: found.access.package ?? 'local',
+        method: found.access.name,
+        receiver: call.getExpression().getText().slice(0, 80),
+        source: 'configured',
+      },
+    });
+    scope.ensure();
+    ctx.builder.addEdge({ from: holderId, to: id, type: 'calls', confidence: DECLARED_CONFIDENCE, file, line: site.line });
+    for (const table of tables) {
+      const tableId = makeTableId(ctx.repo, table);
+      ctx.builder.addNode({ id: tableId, type: 'table', label: table, repo: ctx.repo });
+      ctx.builder.addEdge({ from: id, to: tableId, type: 'queries', confidence: DECLARED_CONFIDENCE, file, line: site.line });
+    }
+    if (found.table === null) {
+      ctx.report({
+        file,
+        line: site.line,
+        reason: 'dynamic-table-name',
+        hint: `The table ${found.access.name} touches is argument ${String(found.access.table)}, and it is not a literal or a constant here, so it cannot be read. Name it directly, or annotate the call.`,
+        symbol: call.getExpression().getText().slice(0, 60),
+      });
+    }
+    return true;
+  };
+
   const emitCache = (call: CallExpression, holder: Holder): boolean => {
     const { id: holderId, file } = holder;
     const callee = call.getExpression();
@@ -1492,6 +1546,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   for (const scope of scopesOf(ctx)) {
     forEachCall(scope.body, (call) => {
       const expression = call as unknown as CallExpression;
+      if (emitConfigured(expression, scope)) return;
       if (emitDb(expression, scope)) return;
       if (emitCache(expression, scope)) return;
       emitHttp(expression, scope);

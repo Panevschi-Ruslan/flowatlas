@@ -209,7 +209,7 @@ describe('runInit', () => {
       broker: { custom: [] },
       starters: [],
       infra: { modules: [] },
-      db: { localBaseClasses: [] },
+      db: { localBaseClasses: [], tables: [] },
       frontend: { localClientClasses: [] },
     });
 

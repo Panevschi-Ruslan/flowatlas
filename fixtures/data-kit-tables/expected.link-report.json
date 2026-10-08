@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T19:20:12.127Z",
+  "configHash": "99ae4690aaf0",
+  "services": [
+    {
+      "name": "loans",
+      "repo": ".",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 21,
+      "edges": 22,
+      "types": 1,
+      "unresolved": 2,
+      "durationMs": 490,
+      "packages": {
+        "name": "library-loans",
+        "runtime": [
+          "@acme/data-kit",
+          "express"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 0,
+    "uncalled": [
+      "entry:loans:http:DELETE:/loans/:param",
+      "entry:loans:http:POST:/loans",
+      "entry:loans:http:POST:/loans/archive/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 21,
+    "edges": 22,
+    "types": 1,
+    "unresolved": 2
+  }
+}

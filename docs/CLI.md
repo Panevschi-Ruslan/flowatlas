@@ -1433,6 +1433,7 @@ it.
 | `auto` | boolean | `true` | detect which adapters apply from each repository's manifest |
 | `force` | object | `{}` | use these adapters regardless of what was detected |
 | `db.localBaseClasses` | (string \| object)[] | `[]` | classes of your own that behave like a repository, so calls through them are data access — including classes a workspace package of yours declares. An entry may be `{ "name": "BaseRepository", "tableProperty": "collectionName" }` to say which property each class extending it sets to its table |
+| `db.tables` | object[] | `[]` | functions your data access goes through that name their table at the call — `insert('orders', row)` from a data kit of your own, installed or not: `{ "name", "package"?, "table": argIndex \| "name", "op"?: "read" \| "write" \| "delete" }` (see [Tables named in configuration](#tables-named-in-configuration)) |
 | `frontend.localClientClasses` | string[] | `[]` | classes of your own that make HTTP requests, so `get`/`post`/… called on them are requests |
 | `broker.custom` | object[] | `[]` | an in-house message bus, described so its publishers and handlers are found |
 | `starters` | object[] | `[]` | a helper of your own that starts a workflow or invokes a function by its deployed name, described so the start is joined to what it starts (see [Code that starts a workflow or a function](#code-that-starts-a-workflow-or-a-function)) |
@@ -1557,6 +1558,40 @@ subclass's table. A base named as a plain string
 keeps working as before, and a query through it whose table is not read carries
 a row naming `tableProperty` as the key that would read it
 (`fixtures/nest-mongo-tables`).
+
+#### Tables named in configuration
+
+A data access that goes through a package of your own nobody installed - a
+shared data kit's `insert('orders', row)` - has no type to resolve and no
+library to describe it, so the Map shows no data boxes. Name its functions once
+under `adapters.db.tables` and every call to one is a `db_query` on the table
+its argument names (P37):
+
+```jsonc
+{
+  "adapters": {
+    "db": {
+      "tables": [
+        // `findOne(MEMBERS, { memberId })`: the table is argument 0
+        { "name": "findOne", "package": "@acme/data-kit", "table": 0, "op": "read" },
+        { "name": "insert", "package": "@acme/data-kit", "table": 0, "op": "write" },
+        // a helper of this repository that always writes one table
+        { "name": "auditLog", "table": "audit_events", "op": "write" }
+      ]
+    }
+  }
+}
+```
+
+A function with a `package` is matched by the import in the calling file - by
+name, under any local name, or on a namespace or default import of the package
+- so nothing has to be installed, and a local of the same name that shadows the
+import is not it; one without is matched by a declaration of that name in the
+repository. The table is the string at argument `table`, written in place or
+through a constant, or `table` itself when it is a name. The query is recorded
+with `source: "configured"` and `declared` confidence; a table the argument
+does not name as a string keeps the query and gets a `dynamic-table-name` row
+(`fixtures/data-kit-tables`).
 
 Two things a wrapper can hide are not configuration, and no key reaches them.
 The library has to be among the service's dependencies — directly or along the
