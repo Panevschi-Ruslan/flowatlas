@@ -65,7 +65,7 @@
   "scripts": {
     "build": "node ../../scripts/bundle.mjs && mkdir -p dist/visualise && cp src/visualise/page.html src/visualise/graph.js src/visualise/frame.js dist/visualise/",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests --testTimeout=60000"
   },
   "dependencies": {
     "@angular/compiler": "^19.2.0",

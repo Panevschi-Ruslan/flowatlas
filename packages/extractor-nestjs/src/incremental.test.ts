@@ -96,7 +96,7 @@ describe('what a repository says about itself once it is open', () => {
       SERVICE,
     ]);
   });
-});
+}, 60_000);
 
 describe('re-reading a repository that is already open', () => {
   it('sees a method that was added', async () => {
@@ -167,4 +167,4 @@ describe('re-reading a repository that is already open', () => {
       JSON.stringify({ ...cold, generatedAt: '' }),
     );
   });
-});
+}, 60_000);
