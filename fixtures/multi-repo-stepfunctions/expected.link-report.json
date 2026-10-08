@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T20:48:48.017Z",
+  "builtAt": "2026-10-08T10:50:56.629Z",
   "configHash": "a7b646c99a88",
   "services": [
     {
@@ -12,7 +12,14 @@
       "edges": 14,
       "types": 3,
       "unresolved": 1,
-      "durationMs": 677
+      "durationMs": 546,
+      "packages": {
+        "name": "lending-library-catalogue",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
     },
     {
       "name": "circulation",
@@ -23,7 +30,7 @@
       "edges": 19,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 443
+      "durationMs": 367
     },
     {
       "name": "members",
@@ -34,7 +41,14 @@
       "edges": 10,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 656
+      "durationMs": 537,
+      "packages": {
+        "name": "lending-library-members",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
     }
   ],
   "httpOut": {

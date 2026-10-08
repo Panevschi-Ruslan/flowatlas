@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:30:04.730Z",
+  "builtAt": "2026-10-08T10:51:52.018Z",
   "configHash": "b276b8650687",
   "services": [
     {
@@ -12,7 +12,14 @@
       "edges": 17,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 491
+      "durationMs": 515,
+      "packages": {
+        "name": "api",
+        "runtime": [
+          "socket.io"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "web",
@@ -23,7 +30,15 @@
       "edges": 12,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 478
+      "durationMs": 495,
+      "packages": {
+        "name": "web",
+        "runtime": [
+          "@angular/core",
+          "socket.io-client"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

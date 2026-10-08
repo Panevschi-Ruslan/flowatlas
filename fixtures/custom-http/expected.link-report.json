@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:28:36.828Z",
+  "builtAt": "2026-10-08T10:50:17.782Z",
   "configHash": "d95e219d6b04",
   "services": [
     {
@@ -12,7 +12,14 @@
       "edges": 8,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 440
+      "durationMs": 450,
+      "packages": {
+        "name": "custom-http-api",
+        "runtime": [
+          "minihttp"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

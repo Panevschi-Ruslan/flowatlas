@@ -27,7 +27,13 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import { findTsconfig, listRepoSources } from '@flowatlas/extractor-nestjs';
-import { linkGraphs, writeGraphDb, type LinkResult, type ServiceReport } from '@flowatlas/linker';
+import {
+  linkGraphs,
+  writeGraphDb,
+  type LinkResult,
+  type ServicePackages,
+  type ServiceReport,
+} from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { partialReadNotice } from '../partial-read.js';
 import {
@@ -376,6 +382,25 @@ const reportOf = (
   ...countsOf(graph),
   durationMs,
 });
+
+/**
+ * What a service's manifest says it is built from, for the map's packages
+ * layer: read from the manifest alone, so a package nobody installed is named
+ * the same as one that is. A service with no manifest has nothing to say.
+ */
+export const packagesOf = (manifest: PackageJson | undefined): ServicePackages | undefined => {
+  if (manifest === undefined) return undefined;
+  const names = (...lists: Array<Record<string, string> | undefined>): string[] =>
+    [...new Set(lists.flatMap((list) => (list === undefined ? [] : Object.keys(list))))].sort();
+  const runtime = names(manifest.dependencies, manifest.peerDependencies, manifest.optionalDependencies);
+  const needed = new Set(runtime);
+  const dev = names(manifest.devDependencies).filter((name) => !needed.has(name));
+  return {
+    ...(typeof manifest.name === 'string' && manifest.name !== '' ? { name: manifest.name } : {}),
+    runtime,
+    dev,
+  };
+};
 
 /** A service that was read and whose repository is not in the graph. */
 export interface ReadNothing {
@@ -1049,7 +1074,10 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   });
   const result = linkGraphs(graphs, loaded.config, {
     ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
-    services: extracted.map((item) => item.report),
+    services: extracted.map((item) => {
+      const packages = packagesOf(readPackageJson(loaded.repoDir(item.service)));
+      return packages === undefined ? item.report : { ...item.report, packages };
+    }),
   });
   const linkedAt = Date.now();
 

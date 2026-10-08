@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:28:43.751Z",
+  "builtAt": "2026-10-08T10:50:24.870Z",
   "configHash": "4e88876e469f",
   "services": [
     {
@@ -12,7 +12,14 @@
       "edges": 19,
       "types": 3,
       "unresolved": 1,
-      "durationMs": 510
+      "durationMs": 507,
+      "packages": {
+        "name": "fn-broker-api",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "worker",
@@ -23,7 +30,16 @@
       "edges": 17,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 644
+      "durationMs": 650,
+      "packages": {
+        "name": "fn-broker-worker",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/microservices"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

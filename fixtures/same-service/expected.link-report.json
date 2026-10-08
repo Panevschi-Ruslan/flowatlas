@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:30:02.529Z",
+  "builtAt": "2026-10-08T10:51:49.711Z",
   "configHash": "554932e24a02",
   "services": [
     {
@@ -12,7 +12,15 @@
       "edges": 16,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 475
+      "durationMs": 497,
+      "packages": {
+        "name": "same-service",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

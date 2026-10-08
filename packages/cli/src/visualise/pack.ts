@@ -1,6 +1,7 @@
 import { STEP_OF_META, type GraphEdge, type GraphNode, type TypeEntry } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { stableKeys, type PackedKeys } from './keys.js';
+import { packMap, type PackedMap } from './map-pack.js';
 import { packShapes, type PackedShapes } from './shapes.js';
 
 /**
@@ -68,6 +69,8 @@ export interface PackedGraph {
    * a channel's payload, and the types those reach. See `shapes.ts`.
    */
   shapes: PackedShapes;
+  /** The project at the size of its services, for the Map tab. See `map.ts`. */
+  map: PackedMap;
   report: unknown;
 }
 
@@ -284,6 +287,14 @@ export const packGraph = (input: PackInput): PackedGraph => {
     entryIds,
     keys: stableKeys(input.nodes.map((node) => node.id)),
     steps,
+    map: packMap({
+      nodes: input.nodes,
+      edges,
+      edgeTypes,
+      confidences,
+      services: input.report.services,
+      rows: rowsIn,
+    }),
     shapes: packShapes({
       nodes: input.nodes,
       edges: input.edges,

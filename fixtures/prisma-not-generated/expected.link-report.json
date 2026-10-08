@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:29:57.959Z",
+  "builtAt": "2026-10-08T10:51:43.614Z",
   "configHash": "d95e219d6b04",
   "services": [
     {
@@ -12,7 +12,17 @@
       "edges": 22,
       "types": 1,
       "unresolved": 4,
-      "durationMs": 626
+      "durationMs": 633,
+      "packages": {
+        "name": "@acme/api",
+        "runtime": [
+          "@acme/db",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@prisma/client"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

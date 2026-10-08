@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:29:50.922Z",
+  "builtAt": "2026-10-08T10:51:36.296Z",
   "configHash": "fd4b9f76ed53",
   "services": [
     {
@@ -12,7 +12,15 @@
       "edges": 5,
       "types": 1,
       "unresolved": 5,
-      "durationMs": 488
+      "durationMs": 513,
+      "packages": {
+        "name": "next-hollow-shop",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "widget",
@@ -23,7 +31,12 @@
       "edges": 0,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 416
+      "durationMs": 435,
+      "packages": {
+        "name": "next-hollow-widget",
+        "runtime": [],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:30:07.950Z",
+  "builtAt": "2026-10-08T10:51:55.384Z",
   "configHash": "37634076a802",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 21,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 614
+      "durationMs": 630,
+      "packages": {
+        "name": "api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "web",
@@ -23,7 +32,16 @@
       "edges": 20,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 537
+      "durationMs": 549,
+      "packages": {
+        "name": "web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

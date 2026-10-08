@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:28:34.738Z",
+  "builtAt": "2026-10-08T10:50:15.629Z",
   "configHash": "4f646bdd07da",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 51,
       "types": 14,
       "unresolved": 7,
-      "durationMs": 501
+      "durationMs": 514,
+      "packages": {
+        "name": "library-loans",
+        "runtime": [
+          "@aws-sdk/client-eventbridge",
+          "@aws-sdk/client-sqs",
+          "express"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

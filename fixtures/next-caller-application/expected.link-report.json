@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:24.164Z",
+  "builtAt": "2026-10-08T10:51:35.211Z",
   "configHash": "9864328032dc",
   "services": [
     {
@@ -12,7 +12,14 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 477,
+      "packages": {
+        "name": "next-caller-application-admin",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "shop",
@@ -23,7 +30,15 @@
       "edges": 19,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 509,
+      "packages": {
+        "name": "next-caller-application-shop",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T09:13:29.791Z",
+  "builtAt": "2026-10-08T10:51:48.629Z",
   "configHash": "a81751a6539d",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 14,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 688,
+      "packages": {
+        "name": "admin",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "cart-api",
@@ -23,7 +32,15 @@
       "edges": 3,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 646,
+      "packages": {
+        "name": "cart-api",
+        "runtime": [
+          "@koa/router",
+          "koa"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "catalog-api",
@@ -34,7 +51,14 @@
       "edges": 3,
       "types": 8,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 663,
+      "packages": {
+        "name": "catalog-api",
+        "runtime": [
+          "fastify"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "orders-api",
@@ -45,7 +69,15 @@
       "edges": 22,
       "types": 11,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 715,
+      "packages": {
+        "name": "orders-api",
+        "runtime": [
+          "express",
+          "zod"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "shop",
@@ -56,7 +88,15 @@
       "edges": 2,
       "types": 7,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 674,
+      "packages": {
+        "name": "shop",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

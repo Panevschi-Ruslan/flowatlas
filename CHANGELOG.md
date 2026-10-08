@@ -19,9 +19,10 @@ to do after upgrading:
   version left in a repository, and says it is safe to delete.
 
 Serverless on AWS is read from Terraform and Step Functions definitions; the
-`visualise` page gains a Graph tab you can walk, check with and read types in;
-and what a request carries is read in every framework, not only NestJS. The
-npm page (README and keywords) is brought up to date as well.
+`visualise` page opens on a Map of the whole project and gains a Graph tab you
+can walk, check with and read types in; and what a request carries is read in
+every framework, not only NestJS. The npm page (README and keywords) is brought
+up to date as well.
 
 ### Added
 
@@ -257,6 +258,26 @@ npm page (README and keywords) is brought up to date as well.
   what the original publisher put. The `subscription-forward-unread` row remains
   only for a schedule, a queue or a pipe that puts what it takes on a bus
   (`fixtures/lambda-terraform-bus-forward`).
+- **A Map tab in `visualise`, and the page opens on it.** One box per service,
+  in columns by what it is for - front ends, APIs and ways in, channels,
+  workers and workflows, libraries, data, the outside, packages - joined by
+  what passes between them: requests, messages, workflow starts, function
+  invokes, queries, outside calls and calls, each link counted, weighted by how
+  many edges it stands for and dashed when one of them is a guess. A service's
+  tables are one data box beside it; a channel is a box of its own, so one with
+  no consumer is visible. Services whose names share a prefix (`pay-api-*`,
+  `core.jobs.*`) form a family that opens and closes, closed by default on a map
+  of more than forty boxes, and a large open family wraps into a block. A box
+  opens its details - ways in, busiest classes, what it reaches and what reaches
+  it, what it is built from - and a link lists the edges behind it, each end
+  opening in the Graph tab. A packages layer draws what the manifests say: a
+  service depending on the package another publishes is joined to it, a
+  package two services use is a box, development dependencies on request;
+  `build` records each service's manifest in the link report for it. The map
+  marks rows to act on, channels with one end, routes nothing calls, services
+  not read, and services that reach each other; filters by kind of link; draws
+  one box and what it touches on a double-click; and keeps its view in a link
+  (`#map/…`, by name), with full screen and SVG and PNG export.
 - **A Graph tab in `visualise`.** The page draws the neighbourhood of any node:
   what reaches it to the left, what it reaches to the right, one column per hop,
   coloured by service, marked by type, and with every edge styled by how far it

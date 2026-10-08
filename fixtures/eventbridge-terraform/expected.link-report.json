@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:28:38.432Z",
+  "builtAt": "2026-10-08T10:50:19.393Z",
   "configHash": "fb8d35696f3a",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 40,
       "types": 11,
       "unresolved": 1,
-      "durationMs": 508
+      "durationMs": 496,
+      "packages": {
+        "name": "lending-library-circulation",
+        "runtime": [
+          "@aws-sdk/client-eventbridge"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
     }
   ],
   "httpOut": {

@@ -374,7 +374,10 @@ flowatlas visualise --out map.html --title "Ledger"
 One file with the graph inside it: no server and nothing to install. It asks
 Google Fonts for two typefaces and falls back to your own if it cannot reach
 them, so it reads offline and is not free of a third party until that is
-inlined. It opens on the reconciliation, lists every way in, follows
+inlined. It opens on a Map of the whole project - one box per service, in
+columns by what it is for, joined by what passes between them and counted, with
+families of services that open and close and a layer for the packages they are
+built from - then lists every way in, follows
 any one of them across service boundaries, and has a tab each for every crossing
 and for everything that did not join. A fourth tab, Graph, draws the
 neighbourhood of any node you search for, with its details one click away, and

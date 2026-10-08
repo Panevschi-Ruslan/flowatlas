@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:50.842Z",
+  "builtAt": "2026-10-08T10:50:49.067Z",
   "configHash": "ca43abf5e7cd",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 6
+      "durationMs": 3
     },
     {
       "name": "billing",
@@ -23,7 +23,7 @@
       "edges": 5,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 7
+      "durationMs": 3
     },
     {
       "name": "orders",
@@ -34,7 +34,16 @@
       "edges": 7,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 0
+      "durationMs": 614,
+      "packages": {
+        "name": "orders",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/microservices"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

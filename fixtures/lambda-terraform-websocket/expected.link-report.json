@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:28:58.847Z",
+  "builtAt": "2026-10-08T10:50:41.934Z",
   "configHash": "81e46563e880",
   "services": [
     {
@@ -12,7 +12,14 @@
       "edges": 10,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 440
+      "durationMs": 470,
+      "packages": {
+        "name": "lending-library-reading-room",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
     }
   ],
   "httpOut": {

@@ -1419,6 +1419,79 @@
     .g-rail b { border-left: 0; padding-left: 0; }
   }
 
+  /* ── the map ────────────────────────────────────────────────────────── */
+
+  /* The whole project at the size of its services. The list of ways in steps
+     aside, since the map wants the width. Boxes are the Graph tab's boxes,
+     one size larger; links take their kind's colour and their weight from
+     how many edges they stand for. */
+  :root.is-map .work { grid-template-columns: minmax(0, 1fr); }
+  :root.is-map #ways { display: none; }
+
+  .map { display: flex; flex-direction: column; min-width: 0; }
+  .map .g-canvas { height: 640px; }
+  @media (max-width: 640px) { .map .g-canvas { height: 460px; } }
+  .map .g-details { max-height: 640px; }
+
+  .m-col { fill: var(--faint); font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .m-frame { fill: color-mix(in srgb, var(--accent-soft) 35%, transparent); stroke: var(--rule); stroke-dasharray: 3 3; }
+  .m-frame-head { cursor: pointer; }
+  .m-frame-head text { fill: var(--muted); font-family: var(--f-mono); font-size: 11px; }
+  .m-frame-head:hover text { fill: var(--accent); }
+
+  .m-unit { cursor: pointer; outline: none; }
+  .m-box { fill: var(--paper); stroke: var(--rule); stroke-width: 1; }
+  .m-sheet { fill: var(--paper); stroke: var(--rule); }
+  .m-rule { fill: var(--hue); }
+  .m-unit:hover .m-box { fill: var(--raise); stroke: var(--muted); }
+  .m-unit.is-open .m-box { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.6; }
+  .m-unit.is-focus .m-box { stroke: var(--accent); stroke-width: 2; }
+  .m-unit:focus-visible .m-box { stroke: var(--ink); stroke-width: 2; stroke-dasharray: 4 2; }
+  .m-unit.is-cycle .m-box { stroke: var(--bad); }
+  .m-name { fill: var(--ink); font-family: var(--f-mono); font-size: 12px; font-weight: 500; }
+  .m-sub { fill: var(--muted); font-family: var(--f-ui); font-size: 10.5px; }
+  .m-badge circle { fill: var(--bad); }
+  .m-badge.is-warn circle { fill: var(--warn); }
+  .m-badge text { fill: var(--raise); font-family: var(--f-mono); font-size: 10px; font-weight: 600; }
+
+  .m-link { fill: none; stroke: var(--kind); stroke-opacity: 0.55; stroke-linecap: round; }
+  .m-link.is-heuristic { stroke-dasharray: 6 4; }
+  .m-link.is-dev { stroke-dasharray: 1.5 4; }
+  .m-link.is-cycle { stroke: var(--bad); stroke-opacity: 0.8; }
+  .m-hit { fill: none; stroke: transparent; stroke-width: 12; cursor: pointer; pointer-events: stroke; }
+  .m-hit:hover + .m-link, .m-link.is-on, .m-link.is-open { stroke-opacity: 1; }
+  .m-link.is-open { stroke-width: 4 !important; }
+  #m-world.is-tracing .m-unit, #m-world.is-tracing .m-link { opacity: 0.18; }
+  #m-world.is-tracing .m-unit.is-on, #m-world.is-tracing .m-link.is-on { opacity: 1; }
+  .m-unit, .m-link { transition: opacity 120ms ease-out; }
+  @media (prefers-reduced-motion: reduce) { .m-unit, .m-link { transition: none; } }
+
+  .m-k-http { --kind: var(--s-0); }
+  .m-k-message { --kind: var(--s-3); }
+  .m-k-workflow { --kind: var(--s-4); }
+  .m-k-invoke { --kind: var(--s-2); }
+  .m-k-db { --kind: var(--muted); }
+  .m-k-external { --kind: var(--s-1); }
+  .m-k-calls { --kind: var(--faint); }
+  .m-k-package { --kind: var(--accent); }
+  .chip.m-chip { border-left: 3px solid var(--kind); }
+
+  .m-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  .m-list li { display: flex; gap: 6px; align-items: baseline; min-width: 0; }
+  .m-list .m-what { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--f-mono); font-size: 11.5px; }
+  .m-list .m-n { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+  .m-list button { all: unset; cursor: pointer; color: var(--accent); }
+  .m-list button:hover, .m-list button:focus-visible { text-decoration: underline; }
+  .m-note { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+  .m-swatch { display: inline-block; width: 14px; height: 3px; border-radius: 2px; background: var(--kind); vertical-align: middle; }
+
+  :root.is-full .map { flex: 1; min-height: 0; }
+  :root.is-full .map .g-stage { grid-template-columns: minmax(0, 1fr) var(--drawer-w, 330px); }
+  :root.is-full .map .g-details { max-height: none; }
+  @media (max-width: 900px) {
+    :root.is-full .map .g-stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 40%; }
+  }
+
   /* Full screen: the drawing takes the window; everything above it steps
      aside, and the details panel lays over the drawing from the right. */
   :root.is-full,
@@ -1559,6 +1632,7 @@
       <div class="panel-head">
         <h2 id="walk-title">The walk</h2>
         <div class="tabs" role="tablist">
+          <button class="tab" role="tab" data-view="map" aria-selected="false">Map</button>
           <button class="tab" role="tab" data-view="walk" aria-selected="true">Walk</button>
           <button class="tab" role="tab" data-view="crossings" aria-selected="false">Crossings</button>
           <button class="tab" role="tab" data-view="missing" aria-selected="false">Not joined</button>
@@ -1581,6 +1655,61 @@
         </label>
       </div>
       <div class="walk" id="walk"></div>
+      <div class="map" id="map-view" hidden>
+        <div class="g-bar">
+          <span class="hint">links</span>
+          <span id="m-kinds" class="g-filters" style="padding:0;border:0"></span>
+          <label class="hint g-pick"><input type="checkbox" id="m-packages"> packages</label>
+          <label class="hint g-pick" id="m-dev-pick" hidden><input type="checkbox" id="m-dev"> development too</label>
+          <label class="hint g-pick">check
+            <select id="m-mark">
+              <option value="">nothing</option>
+              <option value="problems">rows to act on</option>
+              <option value="dead">channels with one end</option>
+              <option value="uncalled">routes nothing calls</option>
+              <option value="cycles">services that reach each other</option>
+              <option value="unread">services not read</option>
+            </select>
+          </label>
+          <span class="g-split" role="group" aria-label="Clusters">
+            <button class="tool" id="m-open-all" title="Open every cluster">Open all</button>
+            <button class="tool" id="m-close-all" title="Close every cluster">Close all</button>
+          </span>
+          <button class="tool" id="m-whole" hidden>Whole map</button>
+          <div class="g-tools">
+            <button class="tool" id="m-copy" title="Copy a link to this view"><span>Copy link</span></button>
+            <span class="hint">export</span>
+            <span class="g-split" role="group" aria-label="Export the map">
+              <button class="tool" id="m-svg-out" title="Save the map as an SVG file">SVG</button>
+              <button class="tool" id="m-png-out" title="Save the map as a PNG picture">PNG</button>
+            </span>
+            <button class="tool" id="m-full" aria-pressed="false" title="Full screen (F)">
+              <span>Full screen</span> <kbd>F</kbd>
+            </button>
+          </div>
+        </div>
+        <div class="g-stage" id="m-stage">
+          <div class="g-canvas" id="m-canvas">
+            <svg id="m-svg" role="group" aria-roledescription="map of services">
+              <defs>
+                <marker id="m-arrow" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="9" markerHeight="9"
+                  markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+                  <path d="M0 0.8 L8 4 L0 7.2 z" fill="context-stroke"></path>
+                </marker>
+              </defs>
+              <g id="m-world"></g>
+            </svg>
+            <p class="g-notice" id="m-notice" role="status" hidden></p>
+            <div class="g-zoom">
+              <button class="tool" id="m-zoom-in" aria-label="Zoom in">+</button>
+              <button class="tool" id="m-zoom-out" aria-label="Zoom out">&minus;</button>
+              <button class="tool" id="m-fit">Fit</button>
+            </div>
+          </div>
+          <aside class="g-details" id="m-details" aria-label="Map details"></aside>
+        </div>
+        <p class="g-status" id="m-status" role="status"></p>
+      </div>
       <div class="graph" id="graph-view" hidden>
         <div class="g-bar">
           <div class="g-find">
@@ -1691,6 +1820,9 @@ __GRAPH_LOGIC__
 
 /* The frame's logic - links, touch, pictures - written in from frame.js. */
 __FRAME_LOGIC__
+
+/* The map's logic - services, links, layout, checks - written in from map.js. */
+__MAP_LOGIC__
 
   (() => {
     const data = JSON.parse(document.getElementById('graph').textContent);
@@ -4508,11 +4640,710 @@ __FRAME_LOGIC__
       }
     });
 
+    /* ── the map ─────────────────────────────────────────────────────── */
+
+    /* The whole project at the size of its services: what is drawn comes from
+       map.js (mapView, mapLayout), this part draws it and answers clicks. A
+       box opens its details; a closed cluster opens; a link lists the edges
+       it stands for; double-click draws only a box and what it touches. */
+    const mapModel = createMap(data.map);
+    const mapWrap = document.getElementById('m-canvas');
+    const mapSvg = document.getElementById('m-svg');
+    const mapWorld = document.getElementById('m-world');
+    const mapDetails = document.getElementById('m-details');
+    const mapStatus = document.getElementById('m-status');
+    const mapNotice = document.getElementById('m-notice');
+    const mapState = {
+      toggled: new Set(), hidden: new Set(), packages: false, dev: false,
+      focus: null, selected: null, link: null, mark: null,
+    };
+    let mapDrawn = null;
+    let mapFit = true;
+
+    const COLUMN_SAYS = {
+      front: 'front ends', api: 'APIs and ways in', channel: 'channels', worker: 'workers and workflows',
+      library: 'libraries', data: 'data', external: 'outside', package: 'packages',
+    };
+    const KIND_SAYS = {
+      http: 'requests', message: 'messages', workflow: 'workflow starts', invoke: 'function invokes',
+      db: 'queries', external: 'outside calls', calls: 'calls', package: 'depends on',
+    };
+    const MARK_SAYS = {
+      problems: 'rows to act on', dead: 'channels with one end', uncalled: 'routes nothing calls',
+      cycles: 'in a cycle', unread: 'not read',
+    };
+
+    const boxOfUnit = (unit) => mapModel.boxes[unit.members[0]];
+    const boxKind = (i) => MAP_BOX_KINDS[mapModel.boxes[i].k];
+    /* A family as its members are named: `pay-api-*` for services sharing a
+       prefix, `@scope/*` for packages, a channel family by what carries it. */
+    const clusterLabel = (id) => {
+      const cluster = mapModel.clusters.get(id);
+      const kind = MAP_BOX_KINDS[cluster.kind];
+      return kind === 'channel' ? cluster.key : kind === 'package' ? cluster.key + '/*' : cluster.key + '*';
+    };
+    const unitName = (unit) => {
+      if (unit.closed) return clusterLabel(unit.cluster);
+      const box = boxOfUnit(unit);
+      return MAP_BOX_KINDS[box.k] === 'data' ? box.n + ' data' : box.n;
+    };
+    const repoIndex = new Map(repos.map((name, i) => [name, i]));
+    const unitHue = (unit) => {
+      const box = boxOfUnit(unit);
+      const kind = MAP_BOX_KINDS[box.k];
+      if (kind === 'service' || kind === 'data') return repoIndex.has(box.n) ? hueOf(repoIndex.get(box.n)) : 'var(--faint)';
+      if (kind === 'channel') return 'var(--s-3)';
+      if (kind === 'external') return 'var(--s-1)';
+      return 'var(--accent)';
+    };
+    const summed = (unit, key) => unit.members.reduce((sum, i) => sum + (mapModel.boxes[i].s[key] || 0), 0);
+    const unitSub = (unit) => {
+      if (unit.closed) {
+        const kind = boxKind(unit.members[0]);
+        const what = { service: 'services', channel: 'channels', package: 'packages' }[kind] || 'boxes';
+        return plural(unit.members.length, what.slice(0, -1), what) + ' · click to open';
+      }
+      const box = boxOfUnit(unit);
+      const s = box.s;
+      switch (MAP_BOX_KINDS[box.k]) {
+        case 'service': return s.unread ? 'not read' : plural(s.ways || 0, 'way in', 'ways in') + ' · ' + plural(s.nodes || 0, 'node', 'nodes');
+        case 'channel': return `${s.producers} in → ${s.consumers} out`;
+        case 'data': return plural(s.tables || 0, 'table', 'tables');
+        case 'external': return 'outside the project';
+        default: return 'used by ' + plural(s.users || 0, 'service', 'services');
+      }
+    };
+
+    const mapHashNow = () => formatMapHash({
+      selected: mapState.link === null ? mapState.selected : null,
+      link: mapState.link,
+      focus: mapState.focus, toggled: mapState.toggled, hidden: mapState.hidden,
+      mark: mapState.mark, packages: mapState.packages, dev: mapState.dev,
+    });
+    const writeMapHash = () => {
+      if (view !== 'map') return;
+      const next = mapHashNow();
+      if (location.hash !== next) history.replaceState(null, '', location.pathname + location.search + next);
+    };
+
+    /* The camera: one transform on the world, like the Graph tab's. */
+    const mapCamera = (() => {
+      let x = 0, y = 0, k = 1;
+      const apply = () => mapWorld.setAttribute('transform', `translate(${x} ${y}) scale(${k})`);
+      const bound = (value) => Math.min(2.4, Math.max(0.08, value));
+      const size = () => ({ w: mapWrap.clientWidth || 900, h: mapWrap.clientHeight || 600 });
+      const zoomAt = (px, py, factor) => {
+        const next = bound(k * factor);
+        x = px - ((px - x) * next) / k;
+        y = py - ((py - y) * next) / k;
+        k = next;
+        apply();
+      };
+      return {
+        zoomAt,
+        zoom(factor) { const { w, h } = size(); zoomAt(w / 2, h / 2, factor); },
+        pan(dx, dy) { x += dx; y += dy; apply(); },
+        /* The whole map, as large as fits but never larger than life. */
+        fit(laid) {
+          const screen = size();
+          const pad = 40;
+          const w = laid.width + pad * 2;
+          const h = laid.height + pad * 2 + 40;
+          k = bound(Math.min(1, screen.w / w, screen.h / h));
+          x = (screen.w - laid.width * k) / 2;
+          y = (screen.h - (laid.height + 40) * k) / 2 + 40 * k;
+          apply();
+        },
+      };
+    })();
+
+    const mapPath = (a, b) => {
+      // Left to right between columns; back the other way from the left side;
+      // within a column, out and back on the right.
+      const ay = a.y + a.h / 2, by = b.y + b.h / 2;
+      if (b.x > a.x) {
+        const x1 = a.x + a.w, x2 = b.x, dx = (x2 - x1) / 2;
+        return `M${x1} ${ay} C${x1 + dx} ${ay} ${x2 - dx} ${by} ${x2} ${by}`;
+      }
+      if (b.x < a.x) {
+        const x1 = a.x, x2 = b.x + b.w, dx = Math.max(60, (x1 - x2) / 2);
+        return `M${x1} ${ay} C${x1 - dx} ${ay} ${x2 + dx} ${by} ${x2} ${by}`;
+      }
+      const x1 = a.x + a.w, bend = 40 + Math.min(80, Math.abs(by - ay) / 4);
+      return `M${x1} ${ay} C${x1 + bend} ${ay} ${x1 + bend} ${by} ${x1} ${by}`;
+    };
+
+    function drawMap(refit) {
+      const shown = mapView(mapModel, mapState, confidences);
+      const laid = mapLayout(mapModel, shown);
+      const cycles = mapCycles(shown);
+      const marks = mapState.mark ? mapMarks(mapModel, shown, mapState.mark, cycles) : new Map();
+      mapDrawn = { view: shown, laid, cycles };
+      if (mapState.selected !== null && !shown.units.has(mapState.selected)) mapState.selected = null;
+      if (mapState.link !== null && !shown.links.some((link) => link.id === mapState.link)) mapState.link = null;
+
+      const out = [];
+      for (const column of laid.columns) {
+        out.push(svgEl('text', { class: 'm-col', x: column.x, y: -22 }, COLUMN_SAYS[column.name]));
+      }
+      for (const frame of laid.frames) {
+        const cluster = mapModel.clusters.get(frame.cluster);
+        const group = svgEl('g', { class: 'm-frame-group' });
+        group.append(svgEl('rect', { class: 'm-frame', x: frame.x, y: frame.y, width: frame.w, height: frame.h, rx: 4 }));
+        const head = svgEl('g', {
+          class: 'm-frame-head', 'data-cluster': frame.cluster, tabindex: 0, role: 'button',
+          'aria-label': `Close ${clusterLabel(frame.cluster)}, ${cluster.members.length} boxes`,
+        });
+        head.append(svgEl('text', { x: frame.x + 8, y: frame.y + 16 },
+          `${clusterLabel(frame.cluster)} · ${cluster.members.length}  ▾ close`));
+        group.append(head);
+        out.push(group);
+      }
+      const linkLayer = svgEl('g', { class: 'm-links' });
+      for (const link of shown.links) {
+        const a = laid.placed.get(link.from), b = laid.placed.get(link.to);
+        if (!a || !b) continue;
+        const d = mapPath(a, b);
+        const conf = link.worst >= 0 ? confidences[link.worst] : '';
+        const width = Math.min(6, 1.2 + Math.log2(link.count));
+        const cls = ['m-link', 'm-k-' + link.kind,
+          conf === 'heuristic' ? 'is-heuristic' : '', link.kind === 'package' && link.dev ? 'is-dev' : '',
+          mapState.mark === 'cycles' && cycles.links.has(link.id) ? 'is-cycle' : '',
+          mapState.link === link.id ? 'is-open' : ''].filter(Boolean).join(' ');
+        const say = `${unitName(shown.units.get(link.from))} → ${unitName(shown.units.get(link.to))}: ` +
+          `${plural(link.count, KIND_SAYS[link.kind] === 'depends on' ? 'package' : 'edge', KIND_SAYS[link.kind] === 'depends on' ? 'packages' : 'edges')}, ${link.kind}` +
+          (conf ? `, ${conf} at worst` : '');
+        const hit = svgEl('path', { class: 'm-hit', d, 'data-link': link.id });
+        hit.append(svgEl('title', {}, say));
+        linkLayer.append(hit,
+          svgEl('path', { class: cls, d, 'stroke-width': width, 'marker-end': 'url(#m-arrow)', 'data-for': link.id }));
+      }
+      out.push(linkLayer);
+      for (const [id, unit] of shown.units) {
+        const at = laid.placed.get(id);
+        const name = unitName(unit);
+        const group = svgEl('g', {
+          class: ['m-unit', unit.closed ? 'is-cluster' : '', mapState.selected === id ? 'is-open' : '',
+            shown.focus === id ? 'is-focus' : '', mapState.mark === 'cycles' && cycles.units.has(id) ? 'is-cycle' : '']
+            .filter(Boolean).join(' '),
+          'data-unit': id, tabindex: 0, role: 'button',
+          'aria-label': `${name}, ${unitSub(unit)}`,
+          style: `--hue: ${unitHue(unit)}`,
+          transform: `translate(${at.x} ${at.y})`,
+        });
+        if (unit.closed) {
+          group.append(svgEl('rect', { class: 'm-sheet', x: 6, y: -6, width: at.w, height: at.h, rx: 3 }));
+          group.append(svgEl('rect', { class: 'm-sheet', x: 3, y: -3, width: at.w, height: at.h, rx: 3 }));
+        }
+        group.append(svgEl('rect', { class: 'm-box', width: at.w, height: at.h, rx: 3 }));
+        group.append(svgEl('rect', { class: 'm-rule', width: 4, height: at.h, rx: 1 }));
+        group.append(svgEl('text', { class: 'm-name', x: 13, y: 19 }, middle(name, 27)));
+        group.append(svgEl('text', { class: 'm-sub', x: 13, y: 35 }, middle(unitSub(unit), 36)));
+        const marked = marks.get(id);
+        if (marked) {
+          const badge = svgEl('g', { class: 'm-badge' + (mapState.mark === 'problems' || mapState.mark === 'cycles' ? '' : ' is-warn'),
+            transform: `translate(${at.w - 4} 4)` });
+          const text = mapState.mark === 'cycles' ? '↻' : String(marked);
+          badge.append(svgEl('circle', { r: 9 + Math.max(0, text.length - 2) * 3 }),
+            svgEl('text', { 'text-anchor': 'middle', 'dominant-baseline': 'central' }, text));
+          badge.append(svgEl('title', {}, `${marked} ${MARK_SAYS[mapState.mark]}`));
+          group.append(badge);
+        }
+        group.append(svgEl('title', {}, name));
+        out.push(group);
+      }
+      mapWorld.replaceChildren(...out);
+      if (refit || mapFit) { mapCamera.fit(laid); mapFit = false; }
+
+      document.getElementById('m-whole').hidden = shown.focus === null;
+      document.getElementById('m-dev-pick').hidden = !mapState.packages;
+      const services = mapModel.boxes.filter((box) => MAP_BOX_KINDS[box.k] === 'service').length;
+      const markCount = [...marks.values()].reduce((sum, n) => sum + n, 0);
+      mapStatus.textContent = `${plural(services, 'service', 'services')} · ${plural(shown.units.size, 'box', 'boxes')} drawn · ` +
+        `${plural(shown.links.length, 'link', 'links')}` +
+        (shown.focus ? ` · only ${unitName(shown.units.get(shown.focus))} and what it touches` : '') +
+        (mapState.mark ? ` · ${plural(markCount, 'mark', 'marks')}: ${MARK_SAYS[mapState.mark]}` : '');
+      drawMapDetails();
+      writeMapHash();
+    }
+
+    /* ── the map's details ── */
+
+    const toGraph = (v, text) => v >= 0
+      ? `<a href="#graph/${keys.keyOf(v)}" title="Open in the Graph tab">${esc(text)}</a>`
+      : esc(text);
+    const unitButton = (id, text) => `<button data-go-unit="${esc(id)}">${esc(text)}</button>`;
+    const linkButton = (id, text) => `<button data-go-link="${esc(id)}">${esc(text)}</button>`;
+    const linksOf = (id) => {
+      const shown = mapDrawn.view;
+      const outward = shown.links.filter((link) => link.from === id).sort((a, b) => b.count - a.count);
+      const inward = shown.links.filter((link) => link.to === id).sort((a, b) => b.count - a.count);
+      const row = (link, other) => `<li><span class="m-swatch m-k-${link.kind}"></span>` +
+        `<span class="m-what">${linkButton(link.id, unitName(shown.units.get(other)))}</span>` +
+        `<span class="m-n">${link.count} ${esc(link.kind)}</span></li>`;
+      return (outward.length ? `<section><h4>Reaches · ${outward.length}</h4><ul class="m-list">` +
+          outward.map((link) => row(link, link.to)).join('') + '</ul></section>' : '') +
+        (inward.length ? `<section><h4>Reached by · ${inward.length}</h4><ul class="m-list">` +
+          inward.map((link) => row(link, link.from)).join('') + '</ul></section>' : '');
+    };
+    const LIST_CAP = 40;
+    const capped = (items, render, cap = LIST_CAP) =>
+      items.slice(0, cap).map(render).join('') +
+      (items.length > cap ? `<li><span class="m-n">${(items.length - cap).toLocaleString()} more</span></li>` : '');
+
+    const mapHead = (title, sub, actions) =>
+      `<header><div class="g-head"><h3>${esc(title)}</h3>` +
+      '<button class="g-close" data-map-close aria-label="Close" title="Close (Escape)">&times;</button></div>' +
+      `<div class="g-place">${sub}</div>` + (actions ? `<div class="g-actions">${actions}</div>` : '') + '</header>';
+
+    const serviceDetails = (unit) => {
+      const i = unit.members[0];
+      const box = mapModel.boxes[i];
+      const s = box.s;
+      const reported = (data.report.services || []).find((service) => service.name === box.n);
+      const counts = Object.keys(s).filter((key) => key.startsWith('e:'))
+        .map((key) => `${s[key]} ${key.slice(2)}`).join(' · ');
+      const manifest = data.map.manifests[i];
+      const pkgName = (p) => data.map.packages[p];
+      const published = new Map();
+      for (const [at, other] of Object.entries(data.map.manifests)) {
+        if (other.name) published.set(other.name, mapModel.boxes[Number(at)]);
+      }
+      const pkgRow = (p) => {
+        const name = pkgName(p);
+        const by = published.get(name);
+        return `<li><span class="m-what">${esc(name)}</span>` +
+          (by ? `<span class="m-n">${unitButton(boxId(by), 'from ' + by.n)}</span>` : '') + '</li>';
+      };
+      const inside = serviceInside(data, box.n);
+      const focusing = mapState.focus === unit.id;
+      const actions =
+        (box.a >= 0 ? `<a class="tool" href="#graph/${keys.keyOf(box.a)}">Open in Graph</a>` : '') +
+        `<button class="tool" data-map-focus="${esc(unit.id)}">${focusing ? 'Whole map' : 'Only this and what it touches'}</button>` +
+        (unit.cluster ? `<button class="tool" data-map-toggle="${esc(unit.cluster)}">Close ${esc(clusterLabel(unit.cluster))}</button>` : '');
+      return mapHead(box.n, `${esc(COLUMN_SAYS[MAP_COLUMNS[box.c]])}${reported ? ' · ' + esc(reported.type) : ''}`, actions) +
+        '<section><dl class="g-meta">' +
+        `<dt>nodes</dt><dd>${(s.nodes || 0).toLocaleString()}</dd>` +
+        `<dt>ways in</dt><dd>${(s.ways || 0).toLocaleString()}${counts ? ' · ' + esc(counts) : ''}</dd>` +
+        `<dt>rows to act on</dt><dd>${(s.problems || 0).toLocaleString()}</dd>` +
+        (s.uncalled ? `<dt>routes nothing calls</dt><dd>${s.uncalled.toLocaleString()}</dd>` : '') +
+        (s.unread ? '<dt>read</dt><dd>no: nothing could read it</dd>' : '') +
+        '</dl></section>' +
+        linksOf(unit.id) +
+        (inside.ways.length ? `<section><h4>Ways in · ${(inside.ways.length + inside.waysLeft).toLocaleString()}</h4><ul class="m-list">` +
+          inside.ways.map((v) => `<li><span class="m-what">${toGraph(v, nodes[v][LB])}</span>` +
+            `<span class="m-n">${esc(kinds[nodes[v][KD]])}</span></li>`).join('') +
+          (inside.waysLeft ? `<li><span class="m-n">${inside.waysLeft.toLocaleString()} more</span></li>` : '') + '</ul></section>' : '') +
+        (inside.classes.length ? '<section><h4>Busiest classes</h4><ul class="m-list">' +
+          inside.classes.map((c) => `<li><span class="m-what">${esc(c.name)}</span><span class="m-n">${c.edges} edges</span></li>`).join('') +
+          '</ul></section>' : '') +
+        (manifest ? `<section><h4>Built from${manifest.name ? ' · published as ' + esc(manifest.name) : ''}</h4>` +
+          `<p class="g-place">${plural(manifest.runtime.length, 'package', 'packages')} at run time, ` +
+          `${plural(manifest.dev.length, 'more', 'more')} for development</p>` +
+          `<ul class="m-list">${capped(manifest.runtime, pkgRow)}</ul></section>` : '');
+    };
+
+    const clusterDetails = (unit) => {
+      const cluster = mapModel.clusters.get(unit.cluster);
+      const rows = unit.members.map((i) => mapModel.boxes[i])
+        .sort((a, b) => (a.n < b.n ? -1 : 1))
+        .map((box) => `<li><span class="m-what">${unitButton(boxId(box), box.n)}</span>` +
+          `<span class="m-n">${box.s.ways ? box.s.ways + ' ways in' : ''}</span></li>`).join('');
+      return mapHead(clusterLabel(unit.cluster), `${plural(unit.members.length, 'box', 'boxes')} in ${esc(COLUMN_SAYS[MAP_COLUMNS[cluster.column]])}` +
+          (unit.inside ? ` · ${unit.inside.toLocaleString()} edges between them` : ''),
+        `<button class="tool" data-map-toggle="${esc(unit.cluster)}">Open</button>` +
+        `<button class="tool" data-map-focus="${esc(unit.id)}">${mapState.focus === unit.id ? 'Whole map' : 'Only this and what it touches'}</button>`) +
+        '<section><dl class="g-meta">' +
+        `<dt>ways in</dt><dd>${summed(unit, 'ways').toLocaleString()}</dd>` +
+        `<dt>rows to act on</dt><dd>${summed(unit, 'problems').toLocaleString()}</dd>` +
+        '</dl></section>' + linksOf(unit.id) +
+        `<section><h4>In it</h4><ul class="m-list">${rows}</ul></section>`;
+    };
+
+    const otherDetails = (unit) => {
+      const box = boxOfUnit(unit);
+      const kind = MAP_BOX_KINDS[box.k];
+      const s = box.s;
+      const facts = {
+        channel: `<dt>producers</dt><dd>${s.producers}</dd><dt>consumers</dt><dd>${s.consumers}</dd>` +
+          (s.producers === 0 || s.consumers === 0 ? `<dt>check</dt><dd>${s.producers === 0 ? 'nothing publishes to it' : 'nothing consumes it'}</dd>` : ''),
+        data: `<dt>tables</dt><dd>${(s.tables || 0).toLocaleString()}</dd>`,
+        external: '<dt>where</dt><dd>outside the project</dd>',
+        package: `<dt>used by</dt><dd>${plural(s.users || 0, 'service', 'services')}</dd>`,
+      }[kind] || '';
+      const what = { channel: 'a channel', data: `the tables ${esc(box.n)} reads and writes`, external: 'an outside API', package: 'a package' }[kind];
+      const actions = (box.a >= 0 ? `<a class="tool" href="#graph/${keys.keyOf(box.a)}">Open in Graph</a>` : '') +
+        `<button class="tool" data-map-focus="${esc(unit.id)}">${mapState.focus === unit.id ? 'Whole map' : 'Only this and what it touches'}</button>`;
+      return mapHead(unitName(unit), what, actions) +
+        `<section><dl class="g-meta">${facts}</dl></section>` + linksOf(unit.id);
+    };
+
+    const EDGE_CAP = 200;
+    const linkDetails = (link) => {
+      const shown = mapDrawn.view;
+      const from = shown.units.get(link.from), to = shown.units.get(link.to);
+      const rows = [];
+      const packages = [];
+      for (const i of link.links) {
+        const raw = mapModel.links[i];
+        if (raw.k === MAP_LINK_KINDS.indexOf('package')) {
+          packages.push(`${mapModel.boxes[raw.f].n} → ${raw.p || mapModel.boxes[raw.t].n}${raw.d ? ' (development)' : ''}`);
+        }
+        for (const e of raw.e || []) rows.push(e);
+      }
+      const edgeRow = (e) => {
+        const [a, b, , c] = data.edges[e];
+        const where = files[nodes[a][FL]] ? `${files[nodes[a][FL]]}:${nodes[a][LN]}` : '';
+        return `<li><span class="m-what" title="${esc(nodes[a][LB] + ' → ' + nodes[b][LB])}">` +
+          `${toGraph(a, nodes[a][LB])} → ${toGraph(b, nodes[b][LB])}</span>` +
+          `<span class="m-n" title="${esc(where)}">${esc(confidences[c])}</span></li>`;
+      };
+      const conf = link.best >= 0 ? (link.best === link.worst ? confidences[link.best] : `${confidences[link.best]} to ${confidences[link.worst]}`) : '';
+      return mapHead(`${unitName(from)} → ${unitName(to)}`,
+        `${esc(KIND_SAYS[link.kind])} · ${plural(link.count, 'edge', 'edges')}${conf ? ' · ' + esc(conf) : ''}`,
+        `${unitButton(link.from, 'From: ' + unitName(from))} ${unitButton(link.to, 'To: ' + unitName(to))}`.replace(/<button /g, '<button class="tool" ')) +
+        (packages.length ? `<section><h4>Packages</h4><ul class="m-list">${capped(packages, (p) => `<li><span class="m-what">${esc(p)}</span></li>`)}</ul></section>` : '') +
+        (rows.length ? `<section><h4>Edges · ${rows.length.toLocaleString()}</h4><ul class="m-list">` +
+          capped(rows, edgeRow, EDGE_CAP) + '</ul><p class="g-place">Each end opens in the Graph tab.</p></section>' : '');
+    };
+
+    const overview = () => {
+      const shown = mapDrawn.view;
+      const byKind = new Map();
+      for (const link of shown.links) byKind.set(link.kind, (byKind.get(link.kind) || 0) + link.count);
+      const columns = new Map();
+      for (const unit of shown.units.values()) {
+        const name = MAP_COLUMNS[unit.column];
+        columns.set(name, (columns.get(name) || 0) + unit.members.length);
+      }
+      return '<header><div class="g-head"><h3>The whole project</h3></div>' +
+        '<p class="m-note">Click a box for what it is and what it touches, a link for the edges behind it, ' +
+        'a stacked box to open its family. Double-click draws one box and what it touches.</p></header>' +
+        '<section><h4>Boxes</h4><dl class="g-meta">' +
+        MAP_COLUMNS.filter((name) => columns.has(name))
+          .map((name) => `<dt>${esc(COLUMN_SAYS[name])}</dt><dd>${columns.get(name).toLocaleString()}</dd>`).join('') +
+        '</dl></section>' +
+        (byKind.size ? '<section><h4>Links, by what passes</h4><ul class="m-list">' +
+          MAP_LINK_KINDS.filter((kind) => byKind.has(kind)).map((kind) =>
+            `<li><span class="m-swatch m-k-${kind}"></span><span class="m-what">${esc(KIND_SAYS[kind])}</span>` +
+            `<span class="m-n">${byKind.get(kind).toLocaleString()}</span></li>`).join('') + '</ul></section>' : '');
+    };
+
+    function drawMapDetails() {
+      const shown = mapDrawn.view;
+      let html;
+      if (mapState.link !== null) html = linkDetails(shown.links.find((link) => link.id === mapState.link));
+      else if (mapState.selected !== null) {
+        const unit = shown.units.get(mapState.selected);
+        html = unit.closed ? clusterDetails(unit) : boxKind(unit.members[0]) === 'service' ? serviceDetails(unit) : otherDetails(unit);
+      } else html = overview();
+      mapDetails.innerHTML = html;
+    }
+
+    /* ── what a person does on the map ── */
+
+    const mapSay = {
+      say(html) {
+        mapNotice.innerHTML = `<span>${html}</span><button class="g-close" aria-label="Dismiss" title="Dismiss">&times;</button>`;
+        mapNotice.hidden = false;
+      },
+      clear() { mapNotice.hidden = true; mapNotice.replaceChildren(); },
+    };
+    mapNotice.addEventListener('click', (event) => { if (event.target.closest('button')) mapSay.clear(); });
+
+    const selectUnit = (id) => {
+      // A box inside a closed cluster opens the cluster first.
+      const i = mapModel.byId.get(id);
+      if (i !== undefined) {
+        const box = mapModel.boxes[i];
+        if (box.g !== '' && !isOpen(mapModel, clusterId(box), mapState.toggled)) toggleCluster(clusterId(box), false);
+        if (MAP_BOX_KINDS[box.k] === 'package' && !mapState.packages) mapState.packages = true;
+      }
+      mapState.selected = id;
+      mapState.link = null;
+      drawMap(false);
+      const el = mapWorld.querySelector(`[data-unit="${CSS.escape(id)}"]`);
+      if (el) el.focus({ preventScroll: true });
+    };
+    const toggleCluster = (id, redraw = true) => {
+      if (mapState.toggled.has(id)) mapState.toggled.delete(id); else mapState.toggled.add(id);
+      if (mapState.selected === id) mapState.selected = null;
+      if (redraw) drawMap(false);
+    };
+    const toggleFocus = (id) => {
+      mapState.focus = mapState.focus === id ? null : id;
+      mapState.selected = id;
+      mapState.link = null;
+      drawMap(true);
+    };
+
+    let mapDragged = false;
+    mapSvg.addEventListener('click', (event) => {
+      if (mapDragged) { mapDragged = false; return; }
+      const head = event.target.closest('.m-frame-head');
+      if (head) { toggleCluster(head.dataset.cluster); return; }
+      const hit = event.target.closest('.m-hit');
+      if (hit) { mapState.link = hit.dataset.link; mapState.selected = null; drawMap(false); return; }
+      const unitEl = event.target.closest('.m-unit');
+      if (!unitEl) return;
+      const unit = mapDrawn.view.units.get(unitEl.dataset.unit);
+      if (unit.closed) toggleCluster(unit.cluster);
+      else { mapState.selected = unit.id; mapState.link = null; drawMap(false); }
+    });
+    mapSvg.addEventListener('dblclick', (event) => {
+      const unitEl = event.target.closest('.m-unit');
+      if (unitEl) toggleFocus(unitEl.dataset.unit);
+    });
+    mapSvg.addEventListener('keydown', (event) => {
+      const unitEl = event.target.closest('.m-unit, .m-frame-head');
+      if (!unitEl || (event.key !== 'Enter' && event.key !== ' ')) return;
+      event.preventDefault();
+      if (unitEl.classList.contains('m-frame-head')) { toggleCluster(unitEl.dataset.cluster); return; }
+      const unit = mapDrawn.view.units.get(unitEl.dataset.unit);
+      if (unit.closed) toggleCluster(unit.cluster);
+      else selectUnit(unit.id);
+    });
+    /* Hovering a box lights what it touches. */
+    mapSvg.addEventListener('pointerover', (event) => {
+      const unitEl = event.target.closest('.m-unit');
+      for (const el of mapWorld.querySelectorAll('.is-on')) el.classList.remove('is-on');
+      if (!unitEl) { mapWorld.classList.remove('is-tracing'); return; }
+      const id = unitEl.dataset.unit;
+      mapWorld.classList.add('is-tracing');
+      unitEl.classList.add('is-on');
+      for (const link of mapDrawn.view.links) {
+        if (link.from !== id && link.to !== id) continue;
+        const other = link.from === id ? link.to : link.from;
+        mapWorld.querySelector(`[data-for="${CSS.escape(link.id)}"]`)?.classList.add('is-on');
+        mapWorld.querySelector(`[data-unit="${CSS.escape(other)}"]`)?.classList.add('is-on');
+      }
+    });
+    mapSvg.addEventListener('pointerleave', () => {
+      mapWorld.classList.remove('is-tracing');
+      for (const el of mapWorld.querySelectorAll('.is-on')) el.classList.remove('is-on');
+    });
+
+    mapDetails.addEventListener('click', (event) => {
+      const el = event.target.closest('[data-go-unit], [data-go-link], [data-map-focus], [data-map-toggle], [data-map-close]');
+      if (!el) return;
+      if (el.dataset.goUnit !== undefined) selectUnit(el.dataset.goUnit);
+      else if (el.dataset.goLink !== undefined) { mapState.link = el.dataset.goLink; mapState.selected = null; drawMap(false); }
+      else if (el.dataset.mapFocus !== undefined) toggleFocus(el.dataset.mapFocus);
+      else if (el.dataset.mapToggle !== undefined) toggleCluster(el.dataset.mapToggle);
+      else { mapState.selected = null; mapState.link = null; drawMap(false); }
+    });
+
+    /* The bar: kinds of link, the packages layer, what is checked, clusters. */
+    const mapKinds = document.getElementById('m-kinds');
+    const drawKindChips = () => {
+      const present = new Set(mapModel.links.map((link) => MAP_LINK_KINDS[link.k]));
+      mapKinds.innerHTML = MAP_LINK_KINDS.filter((kind) => present.has(kind) && kind !== 'package').map((kind) =>
+        `<button class="chip m-chip m-k-${kind}" data-kind="${kind}" aria-pressed="${!mapState.hidden.has(kind)}" ` +
+        `title="Show or hide ${esc(KIND_SAYS[kind])}">${esc(kind)}</button>`).join('');
+    };
+    mapKinds.addEventListener('click', (event) => {
+      const chip = event.target.closest('[data-kind]');
+      if (!chip) return;
+      const kind = chip.dataset.kind;
+      if (mapState.hidden.has(kind)) mapState.hidden.delete(kind); else mapState.hidden.add(kind);
+      drawKindChips();
+      drawMap(false);
+    });
+    const packagesBox = document.getElementById('m-packages');
+    const devBox = document.getElementById('m-dev');
+    const markSel = document.getElementById('m-mark');
+    packagesBox.addEventListener('change', () => { mapState.packages = packagesBox.checked; drawMap(true); });
+    devBox.addEventListener('change', () => { mapState.dev = devBox.checked; drawMap(true); });
+    markSel.addEventListener('change', () => { mapState.mark = markSel.value || null; drawMap(false); });
+    const setAll = (open) => {
+      mapState.toggled.clear();
+      for (const id of mapModel.clusters.keys()) if (openByDefault(mapModel, id) !== open) mapState.toggled.add(id);
+      drawMap(true);
+    };
+    document.getElementById('m-open-all').addEventListener('click', () => setAll(true));
+    document.getElementById('m-close-all').addEventListener('click', () => setAll(false));
+    document.getElementById('m-whole').addEventListener('click', () => { mapState.focus = null; drawMap(true); });
+    document.getElementById('m-zoom-in').addEventListener('click', () => mapCamera.zoom(1.25));
+    document.getElementById('m-zoom-out').addEventListener('click', () => mapCamera.zoom(0.8));
+    document.getElementById('m-fit').addEventListener('click', () => mapCamera.fit(mapDrawn.laid));
+
+    /* Pan and zoom: a drag, a wheel, two fingers - the Graph tab's gestures. */
+    const mapFingers = new Map();
+    let mapAnchor = null;
+    const mapLocal = (event) => {
+      const box = mapWrap.getBoundingClientRect();
+      return { x: event.clientX - box.left, y: event.clientY - box.top };
+    };
+    mapWrap.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0 || event.target.closest('.g-zoom, .g-notice')) return;
+      if (event.pointerType !== 'touch') mapFingers.clear();
+      mapFingers.set(event.pointerId, mapLocal(event));
+      if (mapFingers.size === 1) { mapAnchor = mapLocal(event); mapDragged = false; }
+      else { mapDragged = true; mapWrap.classList.add('is-panning'); }
+    });
+    mapWrap.addEventListener('pointermove', (event) => {
+      if (!mapFingers.has(event.pointerId)) return;
+      const here = mapLocal(event);
+      if (mapFingers.size >= 2) {
+        const before = [...mapFingers.values()].slice(0, 2);
+        mapFingers.set(event.pointerId, here);
+        const move = pinch(before, [...mapFingers.values()].slice(0, 2));
+        mapCamera.pan(move.dx, move.dy);
+        mapCamera.zoomAt(move.at.x, move.at.y, move.factor);
+        return;
+      }
+      mapFingers.set(event.pointerId, here);
+      const dx = here.x - mapAnchor.x, dy = here.y - mapAnchor.y;
+      if (!mapDragged && Math.hypot(dx, dy) < 4) return;
+      if (!mapDragged) { mapDragged = true; mapWrap.setPointerCapture(event.pointerId); mapWrap.classList.add('is-panning'); }
+      mapCamera.pan(dx, dy);
+      mapAnchor = here;
+    });
+    const mapLift = (event) => {
+      mapFingers.delete(event.pointerId);
+      if (mapFingers.size === 1) mapAnchor = [...mapFingers.values()][0];
+      if (mapFingers.size === 0) mapWrap.classList.remove('is-panning');
+    };
+    mapWrap.addEventListener('pointerup', mapLift);
+    mapWrap.addEventListener('pointercancel', mapLift);
+    mapWrap.addEventListener('wheel', (event) => {
+      event.preventDefault();
+      if (event.ctrlKey || event.metaKey) {
+        const box = mapWrap.getBoundingClientRect();
+        mapCamera.zoomAt(event.clientX - box.left, event.clientY - box.top, Math.exp(-event.deltaY * 0.004));
+      } else mapCamera.pan(-event.deltaX, -event.deltaY);
+    }, { passive: false });
+
+    /* Full screen, the page's own, as on the Graph tab. */
+    const mapFullBtn = document.getElementById('m-full');
+    let mapFull = false;
+    const setMapFull = (next) => {
+      if (next === mapFull) return;
+      mapFull = next;
+      root.classList.toggle('is-full', mapFull);
+      mapFullBtn.setAttribute('aria-pressed', String(mapFull));
+      mapFullBtn.querySelector('span').textContent = mapFull ? 'Leave full screen' : 'Full screen';
+      mapFullBtn.querySelector('kbd').textContent = mapFull ? 'Esc' : 'F';
+      if (mapDrawn) requestAnimationFrame(() => mapCamera.fit(mapDrawn.laid));
+    };
+    mapFullBtn.addEventListener('click', () => setMapFull(!mapFull));
+    document.addEventListener('keydown', (event) => {
+      if (view !== 'map' || event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
+      if ((event.key === 'f' || event.key === 'F') && !typing(event.target)) {
+        event.preventDefault();
+        setMapFull(!mapFull);
+      } else if (event.key === 'Escape') {
+        if (!mapNotice.hidden) mapSay.clear();
+        else if (mapState.link !== null || mapState.selected !== null) { mapState.link = null; mapState.selected = null; drawMap(false); }
+        else if (mapState.focus !== null) { mapState.focus = null; drawMap(true); }
+        else if (mapFull) setMapFull(false);
+        else return;
+        event.preventDefault();
+      }
+    });
+
+    /* Copy link and pictures. */
+    const mapCopyBtn = document.getElementById('m-copy');
+    mapCopyBtn.addEventListener('click', async () => {
+      const link = location.href.split('#')[0] + mapHashNow();
+      if (await copyText(link)) flash(mapCopyBtn, 'Copied');
+      else window.prompt('Copy this link', link);
+    });
+    const mapPicture = () => {
+      const box = mapWorld.getBBox();
+      const width = Math.ceil(box.width + PICTURE_PAD * 2);
+      const height = Math.ceil(box.height + PICTURE_PAD * 2);
+      const copy = mapSvg.cloneNode(true);
+      const from = [...mapSvg.querySelectorAll('*')];
+      const to = [...copy.querySelectorAll('*')];
+      const dropped = [];
+      from.forEach((el, n) => {
+        const out = to[n];
+        const style = getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden' || el.classList.contains('m-hit')) { dropped.push(out); return; }
+        out.setAttribute('style', PICTURE_STYLES.map((name) => `${name}:${style.getPropertyValue(name)}`).join(';'));
+        for (const attr of [...out.attributes]) {
+          if (/^(class|tabindex|role|aria-|data-)/.test(attr.name)) out.removeAttribute(attr.name);
+        }
+      });
+      for (const el of dropped) el.remove();
+      for (const attr of [...copy.attributes]) copy.removeAttribute(attr.name);
+      copy.setAttribute('xmlns', SVG_NS);
+      copy.setAttribute('width', String(width));
+      copy.setAttribute('height', String(height));
+      copy.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      copy.querySelector('#m-world').setAttribute('transform', `translate(${PICTURE_PAD - box.x} ${PICTURE_PAD - box.y})`);
+      copy.prepend(svgEl('title', {}, `${document.title}: map`),
+        svgEl('rect', { width, height, fill: getComputedStyle(mapWrap).backgroundColor }));
+      return { text: '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(copy), width, height };
+    };
+    const mapSvgOut = document.getElementById('m-svg-out');
+    const mapPngOut = document.getElementById('m-png-out');
+    mapSvgOut.addEventListener('click', () => {
+      save(new Blob([mapPicture().text], { type: 'image/svg+xml' }), pictureName(document.title, 'map', 'svg'));
+      flash(mapSvgOut, 'Saved');
+    });
+    mapPngOut.addEventListener('click', async () => {
+      try {
+        const shot = mapPicture();
+        const scale = pictureScale(shot.width, shot.height, Math.max(2, window.devicePixelRatio || 1));
+        const image = new Image();
+        image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(shot.text);
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(shot.width * scale);
+        canvas.height = Math.round(shot.height * scale);
+        const context = canvas.getContext('2d');
+        context.scale(scale, scale);
+        context.drawImage(image, 0, 0, shot.width, shot.height);
+        const blob = await new Promise((done) => canvas.toBlob(done, 'image/png'));
+        if (blob === null) throw new Error('the browser would not encode the picture');
+        save(blob, pictureName(document.title, 'map', 'png'));
+        flash(mapPngOut, 'Saved');
+      } catch (error) {
+        mapPngOut.title = 'Could not save the picture: ' + (error && error.message ? error.message : error);
+        flash(mapPngOut, 'Failed', false);
+      }
+    });
+
+    /* A link's view, by name: what it names and this page does not hold is said. */
+    const mapController = {
+      show() { titleEl.textContent = 'The whole project'; drawKindChips(); packagesBox.checked = mapState.packages; devBox.checked = mapState.dev;
+        markSel.value = mapState.mark || ''; drawMap(mapFit); },
+      apply(asked) {
+        mapSay.clear();
+        mapState.toggled = new Set(asked.toggled.filter((id) => mapModel.clusters.has(id)));
+        mapState.hidden = new Set(asked.hidden);
+        mapState.packages = asked.packages;
+        mapState.dev = asked.dev;
+        mapState.mark = asked.mark;
+        mapState.link = asked.link;
+        const known = (id) => id !== null && (mapModel.byId.has(id) || mapModel.clusters.has(id));
+        const missing = [asked.selected, asked.focus].filter((id) => id !== null && !known(id));
+        mapState.selected = known(asked.selected) ? asked.selected : null;
+        mapState.focus = known(asked.focus) ? asked.focus : null;
+        // A box inside a cluster the link leaves closed opens that cluster, so
+        // what the link names is drawn as itself.
+        for (const id of [mapState.selected, mapState.focus]) {
+          const i = id === null ? undefined : mapModel.byId.get(id);
+          if (i === undefined) continue;
+          const box = mapModel.boxes[i];
+          if (box.g !== '' && !isOpen(mapModel, clusterId(box), mapState.toggled)) mapState.toggled.add(clusterId(box));
+        }
+        mapFit = true;
+        if (missing.length > 0) {
+          mapSay.say('This link names ' + missing.map((id) => `<code>${esc(id)}</code>`).join(' and ') +
+            ', which this page does not hold: it was removed or renamed after the link was made.');
+        }
+      },
+    };
+
     /* ── wiring ──────────────────────────────────────────────────────── */
 
     const controls = document.getElementById('walk-controls');
     const legendEl = document.getElementById('legend');
     const tabs = [...document.querySelectorAll('.tab')];
+    const mapViewEl = document.getElementById('map-view');
     let view = 'walk';
 
     const WALK_LEGEND =
@@ -4537,20 +5368,37 @@ __FRAME_LOGIC__
       '<span><b>keys</b> arrows move &middot; Enter opens &middot; + expands &middot; O who else &middot; W unfolds plumbing &middot; ' +
       'T types &middot; E opens a type all the way &middot; F full screen &middot; Escape closes &middot; double-click centres</span>';
 
+    const swatch = (kind) => `<span class="m-swatch m-k-${kind}"></span>`;
+    const MAP_LEGEND =
+      '<span><b>columns</b> left to right as a request travels: front ends, APIs, channels, workers, ' +
+      'libraries, data, the outside, packages</span>' +
+      `<span>${swatch('http')} requests &middot; ${swatch('message')} messages &middot; ${swatch('workflow')} workflow starts ` +
+      `&middot; ${swatch('invoke')} invokes &middot; ${swatch('db')} queries &middot; ${swatch('external')} outside &middot; ` +
+      `${swatch('calls')} calls &middot; ${swatch('package')} depends on</span>` +
+      '<span><b>thicker</b> more edges &middot; <b>dashed</b> a guess among them</span>' +
+      '<span><b>stacked box</b> a family of names, closed; click to open &middot; <b>frame</b> an open family; ' +
+      'its name closes it</span>' +
+      '<span><b>keys</b> Tab moves &middot; Enter opens &middot; F full screen &middot; Escape closes &middot; ' +
+      'double-click draws one box and what it touches</span>';
+
     function showView(name, asked) {
       if (name !== 'graph') fullScreen.set(false);
+      if (name !== 'map') setMapFull(false);
       view = name;
+      root.classList.toggle('is-map', name === 'map');
       for (const tab of tabs) tab.setAttribute('aria-selected', String(tab.dataset.view === name));
       controls.hidden = name !== 'walk';
-      walkEl.hidden = name === 'graph';
+      walkEl.hidden = name === 'graph' || name === 'map';
       graphView.hidden = name !== 'graph';
-      legendEl.innerHTML = name === 'graph' ? GRAPH_LEGEND : WALK_LEGEND;
-      if (name !== 'graph' && location.hash.startsWith('#graph')) {
+      mapViewEl.hidden = name !== 'map';
+      legendEl.innerHTML = name === 'graph' ? GRAPH_LEGEND : name === 'map' ? MAP_LEGEND : WALK_LEGEND;
+      if ((name !== 'graph' && location.hash.startsWith('#graph')) || (name !== 'map' && location.hash.startsWith('#map'))) {
         history.replaceState(null, '', location.pathname + location.search);
       }
       if (name === 'walk') drawWalk();
       else if (name === 'crossings') drawCrossings();
       else if (name === 'missing') drawMissing();
+      else if (name === 'map') mapController.show();
       else graph.show(asked);
     }
 
@@ -4560,6 +5408,12 @@ __FRAME_LOGIC__
        made before nodes had keys names a position, and still opens whatever
        sits there; a key this page does not hold is said, not guessed at. */
     const followHash = () => {
+      const mapAsked = parseMapHash(location.hash);
+      if (mapAsked !== null) {
+        mapController.apply(mapAsked);
+        if (view === 'map') mapController.show(); else showView('map');
+        return true;
+      }
       const asked = parseHash(location.hash, keys);
       if (asked === null) return false;
       notice.clear();
@@ -4626,6 +5480,6 @@ __FRAME_LOGIC__
 
     current = entryIx.find((i) => reachesCrossing[i]) ?? entryIx[0];
     drawEntries();
-    if (!followHash()) showView('walk');
+    if (!followHash()) showView('map');
   })();
 </script>

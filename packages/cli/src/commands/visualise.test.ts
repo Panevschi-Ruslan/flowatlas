@@ -106,6 +106,15 @@ describe('writing the graph as a page', () => {
     expect(page).toContain('export const pinch');
   });
 
+  it('writes the map’s logic in beside them, and ships the map it draws', () => {
+    expect(page).not.toContain('__MAP_LOGIC__');
+    expect(page).toContain('export const mapLayout');
+    expect(page).toContain('export const parseMapHash');
+    const { map } = dataOf(page);
+    expect(map.boxes.length).toBeGreaterThan(0);
+    expect(Array.isArray(map.links)).toBe(true);
+  });
+
   it('names every node by a key of its own, the same key in the next build', () => {
     const { nodes, keys } = dataOf(page);
     const keyAt = (i: number): string =>

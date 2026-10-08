@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:28:35.853Z",
+  "builtAt": "2026-10-08T10:50:16.777Z",
   "configHash": "00bbce722abb",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 22,
       "types": 3,
       "unresolved": 3,
-      "durationMs": 572
+      "durationMs": 590,
+      "packages": {
+        "name": "bot-registry",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "telegraf"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

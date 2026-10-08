@@ -721,9 +721,56 @@ Writes the whole graph as one self-contained page. Also spelled `visualize`.
 
 No server and nothing to install. Two typefaces come from Google Fonts, with a
 fallback, so the page reads offline but is not free of a third party. The page opens on the
-reconciliation, lists every way in, follows any one of them across service
+reconciliation and the Map, lists every way in, follows any one of them across service
 boundaries, and has a tab each for every crossing and for everything that did not
 join.
+
+The **Map** tab is the whole project at the size of its services:
+
+- **Boxes.** One per service, in a column by what it is for, left to right as a
+  request travels: front ends (screens, no routes), APIs and ways in (routes,
+  bot commands, procedures), channels, workers and workflows (reached only by
+  messages, schedules, invokes or workflows), libraries (reached by nothing but
+  the code that imports them), data (a service's tables, one box beside it), the
+  outside (APIs on other hosts), and packages. A channel is a box of its own, so
+  a channel with no consumer, or no producer, shows as a dead end.
+- **Links.** Every edge whose two ends belong to different boxes is part of the
+  link between them, merged by kind - requests, messages, workflow starts,
+  function invokes, queries, outside calls, calls - and counted. A link is as
+  thick as the edges it stands for and dashed when any of them is `heuristic`.
+  Guards, imports and settings keys are not links.
+- **Families.** Services in one column whose names share a prefix - the longest
+  one three or more of them share, written as they write it (`pay-api-*`,
+  `core.jobs.*`) - are a family; channels are a family by what carries them, and
+  packages by their scope. A family is one stacked box until it is opened; on a
+  map of more than forty boxes every family starts closed. An open family is
+  framed, its name closes it, and one of more than fourteen wraps into a block.
+  *Open all* and *Close all* do every family. Within a column, boxes are ordered
+  by where what they touch sits, a few sweeps each way, so the same graph always
+  draws the same map.
+- **Details.** A box opens its details: a service's counts, ways in by kind,
+  rows to act on, routes nothing calls, what it reaches and what reaches it,
+  its ways in (each opening in the Graph tab), its busiest classes, and what it
+  is built from. A link lists the edges it stands for, each end opening in the
+  Graph tab. *Open in Graph* centres the Graph tab on the box. Double-click, or
+  *Only this and what it touches*, draws one box and its neighbours.
+- **Packages.** A layer, off by default, from each service's `package.json`,
+  which `build` records in the link report (`services[].packages`: its name, and
+  what it needs at run time and for development). A service depending on the
+  package another service publishes is joined to that service; a package two
+  or more services use is a box, with a link from each; development
+  dependencies are drawn on request. A package nobody installed is named the
+  same as one that is.
+- **Checks.** *check* marks, per box: rows to act on, channels with one end,
+  routes nothing calls, services nothing could read, or services that reach
+  each other at run time (a cycle, its links drawn red). The chips hide a kind
+  of link.
+- **The frame.** Drag or a wheel pans, ctrl or a pinch zooms, *Fit* shows it
+  all; `F` or the button is full screen; Escape closes the details, then a
+  one-box view, then full screen. The address keeps the view by name -
+  `#map/s=<box>&l=<link>&f=<box>&t=<families toggled>&h=<kinds hidden>&m=<check>&p=1&d=1` -
+  so a link opens the same view in the next build; a box it names that is gone
+  is said. *Copy link*, and SVG and PNG export, as on the Graph tab.
 
 The **Graph** tab draws the neighbourhood of one node rather than the whole
 graph, which on a real project is ten thousand boxes and says nothing:

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:44.012Z",
+  "builtAt": "2026-10-08T10:50:26.518Z",
   "configHash": "a2182287a03c",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 12,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 0
+      "durationMs": 651,
+      "packages": {
+        "name": "api",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "worker",
@@ -23,7 +32,16 @@
       "edges": 14,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 0
+      "durationMs": 649,
+      "packages": {
+        "name": "worker",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

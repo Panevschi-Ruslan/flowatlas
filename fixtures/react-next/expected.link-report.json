@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:30:01.072Z",
+  "builtAt": "2026-10-08T10:51:46.884Z",
   "configHash": "fe6ade849f35",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 50,
       "types": 2,
       "unresolved": 2,
-      "durationMs": 530
+      "durationMs": 550,
+      "packages": {
+        "name": "react-next-shop",
+        "runtime": [
+          "@prisma/client",
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "web",
@@ -23,7 +32,14 @@
       "edges": 14,
       "types": 2,
       "unresolved": 2,
-      "durationMs": 499
+      "durationMs": 523,
+      "packages": {
+        "name": "react-next-web",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

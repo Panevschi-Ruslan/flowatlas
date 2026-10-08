@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:29:53.387Z",
+  "builtAt": "2026-10-08T10:51:38.860Z",
   "configHash": "ef851b9ed9cb",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 7,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 472
+      "durationMs": 482,
+      "packages": {
+        "name": "@next-reexport/web",
+        "runtime": [
+          "@next-reexport/handlers",
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

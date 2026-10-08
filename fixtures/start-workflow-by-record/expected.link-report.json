@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:28:29.324Z",
+  "builtAt": "2026-10-08T10:51:56.487Z",
   "configHash": "f38fa4940897",
   "services": [
     {
@@ -12,7 +12,19 @@
       "edges": 11,
       "types": 4,
       "unresolved": 5,
-      "durationMs": 491
+      "durationMs": 525,
+      "packages": {
+        "name": "lending-library-loans",
+        "runtime": [
+          "@library/jobs",
+          "@library/notify",
+          "@library/orchestration",
+          "@library/problems"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
     }
   ],
   "httpOut": {

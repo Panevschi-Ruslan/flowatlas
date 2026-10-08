@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:28:55.347Z",
+  "builtAt": "2026-10-08T10:50:38.039Z",
   "configHash": "852e202a9e98",
   "services": [
     {
@@ -12,7 +12,14 @@
       "edges": 7,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 449
+      "durationMs": 468,
+      "packages": {
+        "name": "lending-library-catalogue",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
     }
   ],
   "httpOut": {

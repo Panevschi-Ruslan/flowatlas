@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:28:17.968Z",
+  "builtAt": "2026-10-08T10:51:44.704Z",
   "configHash": "215085ceb5c6",
   "services": [
     {
@@ -12,7 +12,15 @@
       "edges": 26,
       "types": 2,
       "unresolved": 7,
-      "durationMs": 506
+      "durationMs": 523,
+      "packages": {
+        "name": "react-client-base",
+        "runtime": [
+          "express",
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

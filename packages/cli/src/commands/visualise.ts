@@ -26,15 +26,16 @@ const part = (name: string): string => {
 /**
  * The page, with the graph view's logic written into it.
  *
- * The logic is two modules of its own - what to draw, and the frame around it -
- * so that a test can import exactly the text the browser runs; the page holds
- * both inline, in one module script, so the result is still one file with
- * nothing to fetch.
+ * The logic is three modules of its own - what to draw, the frame around it,
+ * and the map of the whole project - so that a test can import exactly the
+ * text the browser runs; the page holds all three inline, in one module
+ * script, so the result is still one file with nothing to fetch.
  */
 const template = (): string =>
   part('page.html')
     .replace('__GRAPH_LOGIC__', () => part('graph.js'))
-    .replace('__FRAME_LOGIC__', () => part('frame.js'));
+    .replace('__FRAME_LOGIC__', () => part('frame.js'))
+    .replace('__MAP_LOGIC__', () => part('map.js'));
 
 /**
  * A name for the project, since the configuration does not carry one.

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:28:31.090Z",
+  "builtAt": "2026-10-08T10:50:11.924Z",
   "configHash": "3a270910539f",
   "services": [
     {
@@ -12,7 +12,17 @@
       "edges": 56,
       "types": 9,
       "unresolved": 1,
-      "durationMs": 552
+      "durationMs": 568,
+      "packages": {
+        "name": "angular-client-wrapper",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

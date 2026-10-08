@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:07.536Z",
+  "builtAt": "2026-10-08T10:51:13.103Z",
   "configHash": "168204fe61cf",
   "services": [
     {
@@ -12,7 +12,18 @@
       "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 646,
+      "packages": {
+        "name": "@member-angular/api",
+        "runtime": [
+          "@member-angular/mailer",
+          "@member-angular/sdk",
+          "@member-angular/widgets",
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

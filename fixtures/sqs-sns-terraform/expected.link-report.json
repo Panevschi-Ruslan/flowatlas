@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:30:06.786Z",
+  "builtAt": "2026-10-08T10:51:54.177Z",
   "configHash": "462b9b0bf7ba",
   "services": [
     {
@@ -12,7 +12,18 @@
       "edges": 39,
       "types": 8,
       "unresolved": 4,
-      "durationMs": 487
+      "durationMs": 509,
+      "packages": {
+        "name": "lending-library-returns",
+        "runtime": [
+          "@aws-sdk/client-sns",
+          "@aws-sdk/client-sqs",
+          "aws-sdk"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
     }
   ],
   "httpOut": {

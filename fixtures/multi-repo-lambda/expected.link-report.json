@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:29:11.366Z",
+  "builtAt": "2026-10-08T10:50:55.503Z",
   "configHash": "c86d8fb4c4cb",
   "services": [
     {
@@ -12,7 +12,14 @@
       "edges": 8,
       "types": 3,
       "unresolved": 2,
-      "durationMs": 495
+      "durationMs": 517,
+      "packages": {
+        "name": "lending-library-holds",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
     },
     {
       "name": "loans",
@@ -23,7 +30,7 @@
       "edges": 12,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 513
+      "durationMs": 522
     },
     {
       "name": "platform",
@@ -34,7 +41,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 323
+      "durationMs": 326
     }
   ],
   "httpOut": {

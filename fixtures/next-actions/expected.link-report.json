@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:29:48.849Z",
+  "builtAt": "2026-10-08T10:51:34.130Z",
   "configHash": "1f65cc337532",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 15,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 466
+      "durationMs": 485,
+      "packages": {
+        "name": "next-actions-shop",
+        "runtime": [
+          "next",
+          "next-safe-action",
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

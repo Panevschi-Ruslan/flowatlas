@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:25.272Z",
+  "builtAt": "2026-10-08T10:51:37.340Z",
   "configHash": "ef851b9ed9cb",
   "services": [
     {
@@ -12,7 +12,16 @@
       "edges": 9,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0
+      "durationMs": 473,
+      "packages": {
+        "name": "@next-monorepo/web",
+        "runtime": [
+          "@next-monorepo/orders-lib",
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

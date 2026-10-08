@@ -108,7 +108,7 @@ lists them all, generated from their READMEs.
 | `flowatlas contracts` | what each service sends against what the other declares |
 | `flowatlas doctor` | what could not be read, and what has drifted |
 | `flowatlas diff <base>` | what a branch changes and who would notice |
-| `flowatlas visualise` | the whole graph as one page you can open, with a graph to walk and every type on hover |
+| `flowatlas visualise` | the whole graph as one page you can open: a map of the services, a graph to walk, every type on hover |
 | `flowatlas mcp` | serve it to an agent over stdio |
 
 `flowatlas --help` lists all twenty.

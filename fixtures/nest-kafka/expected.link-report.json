@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:32:04.485Z",
+  "builtAt": "2026-10-08T10:51:09.526Z",
   "configHash": "7360f535f4dc",
   "services": [
     {
@@ -12,7 +12,20 @@
       "edges": 53,
       "types": 7,
       "unresolved": 6,
-      "durationMs": 658
+      "durationMs": 631,
+      "packages": {
+        "name": "nest-kafka",
+        "runtime": [
+          "@fixture/events",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "@nestjs/microservices",
+          "kafkajs",
+          "rxjs"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

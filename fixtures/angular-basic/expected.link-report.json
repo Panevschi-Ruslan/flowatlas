@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-06T11:31:35.805Z",
+  "builtAt": "2026-10-08T10:50:10.767Z",
   "configHash": "b1d164ec2ac5",
   "services": [
     {
@@ -12,7 +12,17 @@
       "edges": 32,
       "types": 2,
       "unresolved": 6,
-      "durationMs": 0
+      "durationMs": 515,
+      "packages": {
+        "name": "angular-basic",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:28:52.230Z",
+  "builtAt": "2026-10-08T10:50:34.859Z",
   "configHash": "8efb81aeaad3",
   "services": [
     {
@@ -12,7 +12,17 @@
       "edges": 25,
       "types": 5,
       "unresolved": 3,
-      "durationMs": 472
+      "durationMs": 494,
+      "packages": {
+        "name": "lending-library-desk-entrypoints",
+        "runtime": [
+          "@aws-sdk/client-sqs",
+          "@lending/batch"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
     }
   ],
   "httpOut": {

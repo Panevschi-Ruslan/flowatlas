@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:28:33.698Z",
+  "builtAt": "2026-10-08T10:50:14.568Z",
   "configHash": "207cd8675ce6",
   "services": [
     {
@@ -12,7 +12,17 @@
       "edges": 14,
       "types": 1,
       "unresolved": 6,
-      "durationMs": 453
+      "durationMs": 467,
+      "packages": {
+        "name": "library-catalogue",
+        "runtime": [
+          "@aws-sdk/client-eventbridge",
+          "@aws-sdk/client-sqs",
+          "aws-sdk",
+          "express"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:28:53.258Z",
+  "builtAt": "2026-10-08T10:50:35.918Z",
   "configHash": "7ae9fc79441a",
   "services": [
     {
@@ -12,7 +12,14 @@
       "edges": 5,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 483
+      "durationMs": 501,
+      "packages": {
+        "name": "lending-library-catalogue",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
     },
     {
       "name": "kiosk",
@@ -23,7 +30,14 @@
       "edges": 6,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 483
+      "durationMs": 489,
+      "packages": {
+        "name": "lending-library-kiosk",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
     }
   ],
   "httpOut": {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:27:07.457Z",
+  "builtAt": "2026-10-08T10:50:30.298Z",
   "configHash": "37634076a802",
   "services": [
     {
@@ -12,7 +12,18 @@
       "edges": 39,
       "types": 4,
       "unresolved": 4,
-      "durationMs": 635
+      "durationMs": 676,
+      "packages": {
+        "name": "api",
+        "runtime": [
+          "@hono/zod-validator",
+          "@nestjs/common",
+          "@nestjs/core",
+          "hono",
+          "zod"
+        ],
+        "dev": []
+      }
     },
     {
       "name": "web",
@@ -23,7 +34,16 @@
       "edges": 9,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 523
+      "durationMs": 557,
+      "packages": {
+        "name": "web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
     }
   ],
   "httpOut": {
