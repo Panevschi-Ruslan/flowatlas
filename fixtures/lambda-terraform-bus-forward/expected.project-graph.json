@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:27:12.966Z",
+  "builtAt": "2026-10-08T09:12:42.626Z",
   "services": [
     {
       "name": "circulation",
@@ -706,7 +706,8 @@
       "file": "src/loans/renew-loan.ts",
       "line": 6,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{loanId:string}"
       }
     },
     {

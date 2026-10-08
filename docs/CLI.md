@@ -1389,6 +1389,7 @@ it.
 | `entry.registries` | object[] | `[]` | a table of handlers you keep yourself, described so each registration is a way in |
 | `entry.http` | object[] | `[]` | an HTTP framework nothing here ships an adapter for, described so its routes are read |
 | `entry.procedures` | object[] | `[]` | a framework whose ways in are the keys of a tree of object literals, described so each one is read |
+| `entry.request` | object | — | your own helpers that build every answer or parse every body, read beside every framework's own places (see [An answer built by a helper](#an-answer-built-by-a-helper)) |
 | `infra.modules` | object[] | `[]` | a Terraform module whose source is not in the repository, described so the functions and routes declared through it are read |
 
 **Detection reads the workspace, not only the leaf manifest.** A service that is
@@ -1958,9 +1959,18 @@ declared by a package `validators` names - zod, valibot, yup and superstruct are
 always listed); and a cast or an annotation (`req.body as CreateOrder`), which is
 recorded under `meta.claimed` because nothing checks it. A framework's own
 default - `any`, `unknown`, a dictionary of strings, a type `defaults` names - is
-no type, and two different claims for one part are none either. An answer sent
-with a literal status of 400 or more is kept apart under `meta.failures`; one
-whose status is not a literal is left out. The shipped frameworks - Express,
+no type, and two different claims for one part are none either. A validator
+that hands back a result rather than the value names where the value sits in it
+(`"at": ["data"]` for zod's `safeParse`, which is listed). An answer sent with a
+status of 400 or more is kept apart under `meta.failures` - a status written as
+a number, or as a constant or enum member whose value the checker knows; one
+whose status the code works out at run time could be either, and is kept under
+`meta.statusUnknown`, neither the answer nor a failure. A Koa-style status
+assigned beside the answer (`ctx.status = 404`) is read with `statusAt`. Path
+params a handler reads that nothing types are named by the path as written -
+`/orders/:id` gives `{ id: string }` - because every framework hands them over as
+text. What middleware leaves for the handler, such as Express's `res.locals`, is
+not part of what the caller sent and is not read. The shipped frameworks - Express,
 Fastify, Koa, Hono, both Next.js routers, Medusa, and a Lambda behind an API
 Gateway - are rows of this shape in
 `packages/adapters-entry/src/request-readings.ts`.
@@ -2001,6 +2011,46 @@ live elsewhere — and it reads exactly like a repository whose routes are decla
 in a way no reader here knows, such as a file-system router nobody has described.
 The reader cannot tell those two apart; what it can do is say which two it cannot
 tell apart, rather than counting the repository as clean.
+
+### An answer built by a helper
+
+Many codebases never call the framework's answering method in a handler: they
+return what a helper of their own builds - `return respond(201, order)` in a
+Lambda, `sendOk(res, order)` in an Express app - and parse bodies the same way.
+The framework's description finds nothing there, and every route reads as
+stating no answer. Say once, under `adapters.entry.request`, what those helpers
+are, and they are read beside every framework's own places (P30):
+
+```jsonc
+"adapters": {
+  "entry": {
+    "request": {
+      "answers": [
+        // `return respond(201, order)`: the answer is argument 1, the status argument 0
+        { "by": "helper", "name": "respond", "package": "@acme/http-kit", "statusArg": 0, "arg": 1 },
+        // `sendOk(res, order)`: a helper of this repository that always answers 200
+        { "by": "helper", "name": "sendOk", "arg": 1, "status": 200 }
+      ],
+      "helpers": [
+        // `readJson<CreateOrder>(event)`: hands back the body, typed by what the call asks for
+        { "name": "readJson", "package": "@acme/http-kit", "part": "body" }
+      ]
+    }
+  }
+}
+```
+
+A helper with a `package` is matched by the import in the handler's own file -
+`import { respond } from '@acme/http-kit'`, under any local name, or
+`kit.respond` on a namespace or default import of it - so the package does not
+have to be installed; one without is matched by a declaration of that name in
+the repository, and a function of the same name declared anywhere else is not
+it. An answer may sit in an object handed to the helper (`"at": ["body"]`). A
+body helper's result is typed by a type argument written at the call, else by
+what it is declared to return, and is recorded as claimed unless `"claim":
+false` says the helper checks what it parses. `param` and `arg` say which of the
+handler's parameters is the request and which argument of the helper it must
+be handed, so a call on anything else is not read as one.
 
 ### Where a NestJS route's address comes from
 

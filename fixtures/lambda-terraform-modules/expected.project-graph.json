@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:27:15.000Z",
+  "builtAt": "2026-10-08T09:12:43.772Z",
   "services": [
     {
       "name": "catalogue",
@@ -453,7 +453,9 @@
       "file": "src/handlers/get-borrower.ts",
       "line": 4,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{borrowerId:string}",
+        "statusUnknown": "object|type:catalogue#Borrower"
       }
     },
     {
@@ -476,7 +478,9 @@
       "file": "src/handlers/get-title.ts",
       "line": 4,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{isbn:string}",
+        "statusUnknown": "object|type:catalogue#Title"
       }
     },
     {

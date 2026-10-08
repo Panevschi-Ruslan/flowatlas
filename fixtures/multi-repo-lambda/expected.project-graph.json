@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:27:30.179Z",
+  "builtAt": "2026-10-08T09:12:52.088Z",
   "services": [
     {
       "name": "platform",
@@ -589,7 +589,8 @@
       "file": "src/handlers/cancel-hold.ts",
       "line": 4,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{holdId:string}"
       }
     },
     {
@@ -646,7 +647,8 @@
       "file": "functions/get-loan/index.ts",
       "line": 4,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{loanId:string}"
       }
     },
     {

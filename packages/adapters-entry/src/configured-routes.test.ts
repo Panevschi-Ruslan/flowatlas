@@ -240,7 +240,7 @@ describe('what a request carries, in the same description (P29)', () => {
       expect(dialect.request?.validators.map((validator) => validator.package)).toContain('zod');
     }
     expect(EXPRESS.request?.parts.body).toEqual([{ param: 0, at: ['body'], text: false }]);
-    expect(KOA.request?.answers).toEqual([{ by: 'assign', param: 0, at: ['body'] }]);
+    expect(KOA.request?.answers).toEqual([{ by: 'assign', param: 0, at: ['body'], statusAt: ['status'] }]);
   });
 
   it('hands a route the reading its description gives, and none where it gives none', () => {

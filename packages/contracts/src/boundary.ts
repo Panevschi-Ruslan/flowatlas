@@ -12,6 +12,7 @@ import {
   CLAIMED_META,
   envelopePath,
   REQUEST_READ_META,
+  STATUS_UNKNOWN_META,
   STARTS_META,
   type Envelope,
   type GraphEdge,
@@ -50,6 +51,11 @@ export interface Exchange {
    * one nothing there states rather than a signature that declares none.
    */
   described?: boolean;
+  /**
+   * What the handler answers with a status its code works out (P30): a shape
+   * that could be its answer or a failure, so nothing is compared with it.
+   */
+  statusUnknown?: string;
 }
 
 /** References that name no shape, so there is nothing to compare against. */
@@ -235,9 +241,10 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
     { service: callerService, asked: edge, symbol: caller },
   );
   const response = both('response', { ...replied.sender, ...claimedOf(handles[0], 'response') }, replied.receiver);
+  const unknownStatus = handles[0]?.meta?.[STATUS_UNKNOWN_META];
   return [
     { ...request, ...described },
-    { ...response, ...described },
+    { ...response, ...described, ...(typeof unknownStatus === 'string' ? { statusUnknown: unknownStatus } : {}) },
   ];
 };
 

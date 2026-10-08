@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "express-path-array",
-  "generatedAt": "2026-10-08T07:26:58.975Z",
+  "generatedAt": "2026-10-08T09:12:32.815Z",
   "nodes": [
     {
       "id": "entry:express-path-array:http:GET:/api/i/:param",
@@ -171,7 +171,8 @@
       "file": "src/items.controller.ts",
       "line": 9,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{id:string}"
       },
       "returns": "{id:string}"
     },
@@ -195,7 +196,8 @@
       "file": "src/items.controller.ts",
       "line": 9,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{id:string}"
       },
       "returns": "{id:string}"
     },

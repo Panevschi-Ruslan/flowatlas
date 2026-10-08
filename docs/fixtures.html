@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>135 fixtures</span>
-    <span>305 snapshot files</span>
+    <span>136 fixtures</span>
+    <span>308 snapshot files</span>
     <span>13 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -370,7 +370,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, wired in Terraform <span class="count" data-total="16">16</span></h2>
+    <h2>Serverless, wired in Terraform <span class="count" data-total="17">17</span></h2>
     <ul>
       <li class="fixture" data-search="eventbridge-terraform serverless, wired in terraform a lending library's circulation service: lambda functions behind an http api that talk to each other over an eventbridge bus.">
         <div class="head">
@@ -379,6 +379,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A lending library's circulation service: Lambda functions behind an HTTP API that talk to each other over an EventBridge bus.</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="lambda-answer-helper serverless, wired in terraform lambda functions behind a rest api whose every answer is built by a helper of the project's - `respond(status, body)` from `@acme/http-kit`, a shared package the repository declares and nobody installed.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-answer-helper">lambda-answer-helper</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>Lambda functions behind a REST API whose every answer is built by a helper of the project's - <code>respond(status, body)</code> from <code>@acme/http-kit</code>, a shared package the repository declares and nobody installed.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="lambda-functions-beside-src serverless, wired in terraform lambda handlers kept in `functions/`, beside the code they share in `src/`, which is how a serverless project commonly lays itself out (r170).">
         <div class="head">

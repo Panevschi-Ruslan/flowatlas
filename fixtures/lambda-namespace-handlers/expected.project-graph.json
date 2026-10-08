@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:27:10.873Z",
+  "builtAt": "2026-10-08T09:12:41.481Z",
   "services": [
     {
       "name": "desk",
@@ -798,7 +798,8 @@
       "file": "src/operations/holds.ts",
       "line": 9,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{holdId:string}"
       }
     },
     {
@@ -846,7 +847,8 @@
       "file": "src/operations/loans.ts",
       "line": 29,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{loanId:string}"
       }
     },
     {

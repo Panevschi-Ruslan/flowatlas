@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:28:21.718Z",
+  "builtAt": "2026-10-08T09:23:38.172Z",
   "services": [
     {
       "name": "orders-api",
@@ -199,12 +199,12 @@
       }
     },
     {
-      "id": "cart-api#src/server.ts:GET /:id@26",
+      "id": "cart-api#src/server.ts:DELETE /:id/lines/:sku@31",
       "type": "function",
-      "label": "GET /:id@26",
+      "label": "DELETE /:id/lines/:sku@31",
       "repo": "cart-api",
       "file": "src/server.ts",
-      "line": 26,
+      "line": 31,
       "meta": {
         "signature": {
           "params": [
@@ -218,12 +218,31 @@
       }
     },
     {
-      "id": "cart-api#src/server.ts:POST /:id/lines@18",
+      "id": "cart-api#src/server.ts:GET /:id@42",
       "type": "function",
-      "label": "POST /:id/lines@18",
+      "label": "GET /:id@42",
       "repo": "cart-api",
       "file": "src/server.ts",
-      "line": 18,
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "cart-api#src/server.ts:POST /:id/lines@22",
+      "type": "function",
+      "label": "POST /:id/lines@22",
+      "repo": "cart-api",
+      "file": "src/server.ts",
+      "line": 22,
       "meta": {
         "signature": {
           "params": [
@@ -302,12 +321,30 @@
       }
     },
     {
+      "id": "entry:cart-api:http:DELETE:/carts/:param/lines/:param",
+      "type": "entry",
+      "label": "DELETE /carts/:param/lines/:param",
+      "repo": "cart-api",
+      "file": "src/server.ts",
+      "line": 31,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/carts/:param/lines/:param",
+        "rawPath": "/carts/:id/lines/:sku",
+        "adapter": "koa-routes",
+        "registration": "router.delete",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
       "id": "entry:cart-api:http:GET:/carts/:param",
       "type": "entry",
       "label": "GET /carts/:param",
       "repo": "cart-api",
       "file": "src/server.ts",
-      "line": 26,
+      "line": 42,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -325,7 +362,7 @@
       "label": "POST /carts/:param/lines",
       "repo": "cart-api",
       "file": "src/server.ts",
-      "line": 18,
+      "line": 22,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -397,7 +434,7 @@
       "label": "GET /orders",
       "repo": "orders-api",
       "file": "src/orders.routes.ts",
-      "line": 43,
+      "line": 44,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -415,7 +452,7 @@
       "label": "GET /orders/:param",
       "repo": "orders-api",
       "file": "src/orders.routes.ts",
-      "line": 16,
+      "line": 17,
       "kind": "http",
       "meta": {
         "method": "GET",
@@ -428,12 +465,48 @@
       }
     },
     {
+      "id": "entry:orders-api:http:GET:/orders/:param/status",
+      "type": "entry",
+      "label": "GET /orders/:param/status",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 71,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param/status",
+        "rawPath": "/orders/:id/status",
+        "adapter": "express-routes",
+        "registration": "ordersRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders-api:http:GET:/orders/:param/summary",
+      "type": "entry",
+      "label": "GET /orders/:param/summary",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 64,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param/summary",
+        "rawPath": "/orders/:id/summary",
+        "adapter": "express-routes",
+        "registration": "ordersRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
       "id": "entry:orders-api:http:PATCH:/orders/:param",
       "type": "entry",
       "label": "PATCH /orders/:param",
       "repo": "orders-api",
       "file": "src/orders.routes.ts",
-      "line": 29,
+      "line": 30,
       "kind": "http",
       "meta": {
         "method": "PATCH",
@@ -451,7 +524,7 @@
       "label": "POST /orders",
       "repo": "orders-api",
       "file": "src/orders.routes.ts",
-      "line": 10,
+      "line": 11,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -464,12 +537,30 @@
       }
     },
     {
+      "id": "entry:orders-api:http:POST:/orders/:param/refunds",
+      "type": "entry",
+      "label": "POST /orders/:param/refunds",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 52,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/refunds",
+        "rawPath": "/orders/:id/refunds",
+        "adapter": "express-routes",
+        "registration": "ordersRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
       "id": "entry:orders-api:http:POST:/orders/import",
       "type": "entry",
       "label": "POST /orders/import",
       "repo": "orders-api",
       "file": "src/orders.routes.ts",
-      "line": 36,
+      "line": 37,
       "kind": "http",
       "meta": {
         "method": "POST",
@@ -525,12 +616,58 @@
       "kind": "function"
     },
     {
-      "id": "orders-api#src/orders.routes.ts:GET /:id@16",
+      "id": "orders-api#src/orders.routes.ts:GET /:id/status@71",
       "type": "function",
-      "label": "GET /:id@16",
+      "label": "GET /:id/status@71",
       "repo": "orders-api",
       "file": "src/orders.routes.ts",
-      "line": 16,
+      "line": 71,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<type:express#ParamsDictionary,any,any,type:express#ParsedQs>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders.routes.ts:GET /:id/summary@64",
+      "type": "function",
+      "label": "GET /:id/summary@64",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 64,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<type:express#ParamsDictionary,any,any,type:express#ParsedQs>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders.routes.ts:GET /:id@17",
+      "type": "function",
+      "label": "GET /:id@17",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 17,
       "meta": {
         "signature": {
           "params": [
@@ -548,12 +685,12 @@
       }
     },
     {
-      "id": "orders-api#src/orders.routes.ts:GET /@43",
+      "id": "orders-api#src/orders.routes.ts:GET /@44",
       "type": "function",
-      "label": "GET /@43",
+      "label": "GET /@44",
       "repo": "orders-api",
       "file": "src/orders.routes.ts",
-      "line": 43,
+      "line": 44,
       "meta": {
         "signature": {
           "params": [
@@ -571,12 +708,12 @@
       }
     },
     {
-      "id": "orders-api#src/orders.routes.ts:PATCH /:id@29",
+      "id": "orders-api#src/orders.routes.ts:PATCH /:id@30",
       "type": "function",
-      "label": "PATCH /:id@29",
+      "label": "PATCH /:id@30",
       "repo": "orders-api",
       "file": "src/orders.routes.ts",
-      "line": 29,
+      "line": 30,
       "meta": {
         "signature": {
           "params": [
@@ -594,12 +731,35 @@
       }
     },
     {
-      "id": "orders-api#src/orders.routes.ts:POST /@10",
+      "id": "orders-api#src/orders.routes.ts:POST /:id/refunds@52",
       "type": "function",
-      "label": "POST /@10",
+      "label": "POST /:id/refunds@52",
       "repo": "orders-api",
       "file": "src/orders.routes.ts",
-      "line": 10,
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<type:express#ParamsDictionary,any,any,type:express#ParsedQs>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders.routes.ts:POST /@11",
+      "type": "function",
+      "label": "POST /@11",
+      "repo": "orders-api",
+      "file": "src/orders.routes.ts",
+      "line": 11,
       "meta": {
         "signature": {
           "params": [
@@ -617,12 +777,12 @@
       }
     },
     {
-      "id": "orders-api#src/orders.routes.ts:POST /import@36",
+      "id": "orders-api#src/orders.routes.ts:POST /import@37",
       "type": "function",
-      "label": "POST /import@36",
+      "label": "POST /import@37",
       "repo": "orders-api",
       "file": "src/orders.routes.ts",
-      "line": 36,
+      "line": 37,
       "meta": {
         "signature": {
           "params": [
@@ -688,6 +848,29 @@
             }
           ],
           "returns": "type:orders-api#Order|undefined"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/respond.ts:sendOk",
+      "type": "function",
+      "label": "sendOk",
+      "repo": "orders-api",
+      "file": "src/respond.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "res",
+              "type": "type:express#Response<any>"
+            },
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
         }
       }
     },
@@ -764,13 +947,13 @@
       "repo": "orders-api",
       "meta": {
         "stats": {
-          "files": 4,
-          "filesRead": 4,
+          "files": 5,
+          "filesRead": 5,
           "filesUnreadable": 0,
           "classes": 0,
           "skippedExternalCalls": {
-            "express": 8,
-            "zod": 1
+            "express": 16,
+            "zod": 2
           }
         },
         "adapters": {
@@ -1095,27 +1278,44 @@
       "line": 19
     },
     {
+      "from": "entry:cart-api:http:DELETE:/carts/:param/lines/:param",
+      "to": "cart-api#src/server.ts:DELETE /:id/lines/:sku@31",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:cart-api#Cart",
+      "file": "src/server.ts",
+      "line": 31,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string;sku:string}",
+        "failures": {
+          "404": "type:cart-api#LineMissing"
+        }
+      }
+    },
+    {
       "from": "entry:cart-api:http:GET:/carts/:param",
-      "to": "cart-api#src/server.ts:GET /:id@26",
+      "to": "cart-api#src/server.ts:GET /:id@42",
       "type": "handles",
       "confidence": "static",
       "file": "src/server.ts",
-      "line": 26,
+      "line": 42,
       "meta": {
         "requestRead": true
       }
     },
     {
       "from": "entry:cart-api:http:POST:/carts/:param/lines",
-      "to": "cart-api#src/server.ts:POST /:id/lines@18",
+      "to": "cart-api#src/server.ts:POST /:id/lines@22",
       "type": "handles",
       "confidence": "static",
       "returns": "type:cart-api#Cart",
       "file": "src/server.ts",
-      "line": 18,
+      "line": 22,
       "meta": {
         "requestRead": true,
         "body": "type:cart-api#AddLine",
+        "params": "{id:string}",
         "claimed": [
           "body"
         ]
@@ -1174,11 +1374,11 @@
     },
     {
       "from": "entry:orders-api:http:GET:/orders",
-      "to": "orders-api#src/orders.routes.ts:GET /@43",
+      "to": "orders-api#src/orders.routes.ts:GET /@44",
       "type": "handles",
       "confidence": "static",
       "file": "src/orders.routes.ts",
-      "line": 43,
+      "line": 44,
       "meta": {
         "requestRead": true
       }
@@ -1199,12 +1399,12 @@
     },
     {
       "from": "entry:orders-api:http:GET:/orders/:param",
-      "to": "orders-api#src/orders.routes.ts:GET /:id@16",
+      "to": "orders-api#src/orders.routes.ts:GET /:id@17",
       "type": "handles",
       "confidence": "static",
       "returns": "type:orders-api#Order",
       "file": "src/orders.routes.ts",
-      "line": 16,
+      "line": 17,
       "meta": {
         "requestRead": true,
         "params": "{id:string}",
@@ -1214,7 +1414,7 @@
       }
     },
     {
-      "from": "entry:orders-api:http:PATCH:/orders/:param",
+      "from": "entry:orders-api:http:GET:/orders/:param/status",
       "to": "orders-api#src/app.ts:express.json()",
       "type": "guarded_by",
       "confidence": "static",
@@ -1228,16 +1428,71 @@
       }
     },
     {
-      "from": "entry:orders-api:http:PATCH:/orders/:param",
-      "to": "orders-api#src/orders.routes.ts:PATCH /:id@29",
+      "from": "entry:orders-api:http:GET:/orders/:param/status",
+      "to": "orders-api#src/orders.routes.ts:GET /:id/status@71",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.routes.ts",
+      "line": 71,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}",
+        "statusUnknown": "{open:boolean}"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:GET:/orders/:param/summary",
+      "to": "orders-api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:GET:/orders/:param/summary",
+      "to": "orders-api#src/orders.routes.ts:GET /:id/summary@64",
       "type": "handles",
       "confidence": "static",
       "returns": "{id:string;total:number}",
       "file": "src/orders.routes.ts",
-      "line": 29,
+      "line": 64,
       "meta": {
         "requestRead": true,
-        "body": "{total:number;note?:string}"
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:PATCH:/orders/:param",
+      "to": "orders-api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:PATCH:/orders/:param",
+      "to": "orders-api#src/orders.routes.ts:PATCH /:id@30",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string;total:number}",
+      "file": "src/orders.routes.ts",
+      "line": 30,
+      "meta": {
+        "requestRead": true,
+        "body": "{total:number;note?:string}",
+        "params": "{id:string}"
       }
     },
     {
@@ -1256,18 +1511,49 @@
     },
     {
       "from": "entry:orders-api:http:POST:/orders",
-      "to": "orders-api#src/orders.routes.ts:POST /@10",
+      "to": "orders-api#src/orders.routes.ts:POST /@11",
       "type": "handles",
       "confidence": "static",
       "returns": "type:orders-api#Order",
       "file": "src/orders.routes.ts",
-      "line": 10,
+      "line": 11,
       "meta": {
         "requestRead": true,
         "body": "type:orders-api#CreateOrder"
       }
     },
     {
+      "from": "entry:orders-api:http:POST:/orders/:param/refunds",
+      "to": "orders-api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:POST:/orders/:param/refunds",
+      "to": "orders-api#src/orders.routes.ts:POST /:id/refunds@52",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string;reason:string}",
+      "file": "src/orders.routes.ts",
+      "line": 52,
+      "meta": {
+        "requestRead": true,
+        "body": "{reason:string}",
+        "params": "{id:string}",
+        "failures": {
+          "400": "type:orders-api#Problem"
+        }
+      }
+    },
+    {
       "from": "entry:orders-api:http:POST:/orders/import",
       "to": "orders-api#src/app.ts:express.json()",
       "type": "guarded_by",
@@ -1283,12 +1569,12 @@
     },
     {
       "from": "entry:orders-api:http:POST:/orders/import",
-      "to": "orders-api#src/orders.routes.ts:POST /import@36",
+      "to": "orders-api#src/orders.routes.ts:POST /import@37",
       "type": "handles",
       "confidence": "static",
       "returns": "{imported:number}",
       "file": "src/orders.routes.ts",
-      "line": 36,
+      "line": 37,
       "meta": {
         "requestRead": true,
         "body": "type:orders-api#ImportedOrders",
@@ -1329,7 +1615,7 @@
       }
     },
     {
-      "from": "orders-api#src/orders.routes.ts:GET /:id@16",
+      "from": "orders-api#src/orders.routes.ts:GET /:id/status@71",
       "to": "orders-api#src/orders.store.ts:store.find",
       "type": "calls",
       "confidence": "static",
@@ -1338,20 +1624,57 @@
       ],
       "returns": "type:orders-api#Order|undefined",
       "file": "src/orders.routes.ts",
-      "line": 17
+      "line": 72
     },
     {
-      "from": "orders-api#src/orders.routes.ts:GET /@43",
+      "from": "orders-api#src/orders.routes.ts:GET /:id/summary@64",
+      "to": "orders-api#src/orders.store.ts:store.find",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:orders-api#Order|undefined",
+      "file": "src/orders.routes.ts",
+      "line": 65
+    },
+    {
+      "from": "orders-api#src/orders.routes.ts:GET /:id/summary@64",
+      "to": "orders-api#src/respond.ts:sendOk",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:express#Response<any>",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/orders.routes.ts",
+      "line": 66
+    },
+    {
+      "from": "orders-api#src/orders.routes.ts:GET /:id@17",
+      "to": "orders-api#src/orders.store.ts:store.find",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:orders-api#Order|undefined",
+      "file": "src/orders.routes.ts",
+      "line": 18
+    },
+    {
+      "from": "orders-api#src/orders.routes.ts:GET /@44",
       "to": "orders-api#src/orders.store.ts:store.all",
       "type": "calls",
       "confidence": "static",
       "params": [],
       "returns": "any",
       "file": "src/orders.routes.ts",
-      "line": 44
+      "line": 45
     },
     {
-      "from": "orders-api#src/orders.routes.ts:POST /@10",
+      "from": "orders-api#src/orders.routes.ts:POST /@11",
       "to": "orders-api#src/orders.store.ts:store.add",
       "type": "calls",
       "confidence": "static",
@@ -1360,7 +1683,7 @@
       ],
       "returns": "type:orders-api#Order",
       "file": "src/orders.routes.ts",
-      "line": 11
+      "line": 12
     },
     {
       "from": "ui_action:admin#src/app/admin.component.ts:10:13",
@@ -1573,6 +1896,23 @@
         {
           "name": "lines",
           "type": "type:cart-api#AddLine[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:cart-api#LineMissing": {
+      "name": "LineMissing",
+      "kind": "object",
+      "declaredIn": "cart-api#src/server.ts",
+      "structuralHash": "23952defb7b751d8",
+      "fields": [
+        {
+          "name": "reason",
+          "type": "string",
           "optional": false
         }
       ],

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:26:59.769Z",
+  "builtAt": "2026-10-08T09:12:33.109Z",
   "services": [
     {
       "name": "api",
@@ -783,7 +783,8 @@
       "file": "src/orders/orders.routes.ts",
       "line": 25,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{orderId:string}"
       }
     },
     {

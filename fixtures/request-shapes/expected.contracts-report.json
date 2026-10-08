@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 6,
-  "generatedAt": "2026-10-08T07:28:21.995Z",
+  "generatedAt": "2026-10-08T09:13:30.075Z",
   "edges": [
     {
       "edge": {
@@ -24,7 +24,7 @@
       "receiver": {
         "service": "orders-api",
         "typeId": "type:orders-api#CreateOrder",
-        "symbol": "orders-api#src/orders.routes.ts:POST /@10"
+        "symbol": "orders-api#src/orders.routes.ts:POST /@11"
       },
       "findings": [
         {
@@ -49,7 +49,7 @@
           "receiver": {
             "service": "orders-api",
             "typeId": "type:orders-api#CreateOrder",
-            "symbol": "orders-api#src/orders.routes.ts:POST /@10"
+            "symbol": "orders-api#src/orders.routes.ts:POST /@11"
           },
           "typeId": "type:orders-api#CreateOrder",
           "field": "customerId",
@@ -75,7 +75,7 @@
       "sender": {
         "service": "orders-api",
         "typeId": "type:orders-api#Order",
-        "symbol": "orders-api#src/orders.routes.ts:POST /@10"
+        "symbol": "orders-api#src/orders.routes.ts:POST /@11"
       },
       "receiver": {
         "service": "admin",
@@ -96,7 +96,7 @@
           "sender": {
             "service": "orders-api",
             "typeId": "type:orders-api#Order",
-            "symbol": "orders-api#src/orders.routes.ts:POST /@10"
+            "symbol": "orders-api#src/orders.routes.ts:POST /@11"
           },
           "receiver": {
             "service": "admin",
@@ -136,7 +136,7 @@
       "receiver": {
         "service": "orders-api",
         "typeId": "type:orders-api#ImportedOrders",
-        "symbol": "orders-api#src/orders.routes.ts:POST /import@36",
+        "symbol": "orders-api#src/orders.routes.ts:POST /import@37",
         "claimed": true
       },
       "findings": [
@@ -162,7 +162,7 @@
           "receiver": {
             "service": "orders-api",
             "typeId": "type:orders-api#ImportedOrders",
-            "symbol": "orders-api#src/orders.routes.ts:POST /import@36",
+            "symbol": "orders-api#src/orders.routes.ts:POST /import@37",
             "claimed": true
           },
           "typeId": "type:orders-api#ImportedOrders",
@@ -223,7 +223,7 @@
       "receiver": {
         "service": "orders-api",
         "typeId": "type:orders-api#CreateOrder",
-        "symbol": "orders-api#src/orders.routes.ts:POST /@10"
+        "symbol": "orders-api#src/orders.routes.ts:POST /@11"
       },
       "typeId": "type:orders-api#CreateOrder",
       "field": "customerId",
@@ -247,7 +247,7 @@
       "sender": {
         "service": "orders-api",
         "typeId": "type:orders-api#Order",
-        "symbol": "orders-api#src/orders.routes.ts:POST /@10"
+        "symbol": "orders-api#src/orders.routes.ts:POST /@11"
       },
       "receiver": {
         "service": "admin",
@@ -285,7 +285,7 @@
       "receiver": {
         "service": "orders-api",
         "typeId": "type:orders-api#ImportedOrders",
-        "symbol": "orders-api#src/orders.routes.ts:POST /import@36",
+        "symbol": "orders-api#src/orders.routes.ts:POST /import@37",
         "claimed": true
       },
       "typeId": "type:orders-api#ImportedOrders",
@@ -333,7 +333,7 @@
       "edgeKey": "ui_api_call:admin#src/app/admin-api.service.ts:46:12|hits|entry:orders-api:http:GET:/orders",
       "direction": "response",
       "reason": "no-type-on-sender",
-      "message": "orders-api#src/orders.routes.ts:GET /@43 answers through the response it is handed, and states no type for the answer",
+      "message": "orders-api#src/orders.routes.ts:GET /@44 answers through the response it is handed, and states no type for the answer",
       "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
     },
     {

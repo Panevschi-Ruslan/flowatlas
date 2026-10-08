@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:27:07.457Z",
+  "builtAt": "2026-10-08T09:12:37.878Z",
   "services": [
     {
       "name": "api",
@@ -1143,7 +1143,8 @@
       "file": "src/admin/admin.routes.ts",
       "line": 22,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{orderId:string}"
       }
     },
     {
@@ -1198,7 +1199,8 @@
       "file": "src/stream/sse.ts",
       "line": 18,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{depotId:string}"
       }
     },
     {
@@ -1224,7 +1226,8 @@
       "file": "src/stream/sse.ts",
       "line": 11,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{depotId:string}"
       }
     },
     {
@@ -1415,6 +1418,7 @@
       "meta": {
         "requestRead": true,
         "body": "type:api#NoteChange",
+        "params": "{noteId:string}",
         "claimed": [
           "body"
         ]

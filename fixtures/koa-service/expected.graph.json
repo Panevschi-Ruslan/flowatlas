@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "koa-service",
-  "generatedAt": "2026-10-08T07:27:09.643Z",
+  "generatedAt": "2026-10-08T09:12:40.126Z",
   "nodes": [
     {
       "id": "db_query:koa-service#src/orders/orders.repository.ts:12:12",
@@ -434,7 +434,8 @@
       "file": "src/orders/orders.routes.ts",
       "line": 27,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{orderId:string}"
       }
     },
     {

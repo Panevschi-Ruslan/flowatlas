@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:27:13.973Z",
+  "builtAt": "2026-10-08T09:12:43.197Z",
   "services": [
     {
       "name": "catalogue",
@@ -241,7 +241,8 @@
       "file": "src/items/get-item.ts",
       "line": 5,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{itemId:string}"
       }
     },
     {

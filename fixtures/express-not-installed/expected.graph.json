@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "express-not-installed",
-  "generatedAt": "2026-10-08T07:26:58.535Z",
+  "generatedAt": "2026-10-08T09:12:32.355Z",
   "nodes": [
     {
       "id": "entry:express-not-installed:http:GET:/admin",
@@ -321,7 +321,8 @@
       "file": "src/videos.controller.ts",
       "line": 8,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{id:string}"
       },
       "returns": "{id:unknown}"
     },

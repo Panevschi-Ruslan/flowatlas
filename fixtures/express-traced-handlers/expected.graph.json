@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "express-traced-handlers",
-  "generatedAt": "2026-10-08T07:27:00.499Z",
+  "generatedAt": "2026-10-08T09:12:33.896Z",
   "nodes": [
     {
       "id": "entry:express-traced-handlers:http:GET:/loans",
@@ -306,7 +306,8 @@
       "file": "src/routes/loans.ts",
       "line": 31,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{id:string}"
       },
       "returns": "{id:string}"
     },
@@ -331,7 +332,8 @@
       "file": "src/routes/loans.ts",
       "line": 39,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{id:string}"
       },
       "returns": "{id:string}"
     },

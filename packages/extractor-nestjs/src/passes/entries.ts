@@ -8,8 +8,10 @@ import {
   isInlineHandler,
   makeSymbolId,
   messageTypeAt,
+  extendReading,
   readRequest,
   READS_META,
+  routeOf,
   routeShapeEdge,
   type EntryHandler,
   type EntryNode,
@@ -123,7 +125,8 @@ const requestOf = (
 ): ReturnType<typeof routeShapeEdge> | undefined => {
   const declaration = handler.method ?? handler.fn?.declaration;
   if (entry.request === undefined || declaration === undefined) return undefined;
-  const shape = readRequest(declaration, entry.request, (type, site) => ctx.types.collectType(type, site));
+  const reading = extendReading(entry.request, ctx.config.adapters.entry.request);
+  const shape = readRequest(declaration, reading, (type, site) => ctx.types.collectType(type, site), routeOf(entry));
   return shape === undefined ? undefined : routeShapeEdge(shape);
 };
 

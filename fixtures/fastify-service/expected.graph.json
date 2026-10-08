@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "fastify-service",
-  "generatedAt": "2026-10-08T07:27:01.426Z",
+  "generatedAt": "2026-10-08T09:12:34.866Z",
   "nodes": [
     {
       "id": "db_query:fastify-service#src/orders/orders.repository.ts:12:12",
@@ -549,7 +549,8 @@
       "file": "src/orders/orders.routes.ts",
       "line": 29,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{orderId:string}"
       }
     },
     {

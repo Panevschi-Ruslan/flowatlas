@@ -839,6 +839,13 @@ export const flowatlasConfigSchema = z
             http: z.array(entryHttpSchema).default([]),
             /** Frameworks whose ways in are the keys of a tree of object literals. */
             procedures: z.array(entryProcedureSchema).default([]),
+            /**
+             * Places, helpers and answers of the project's own, read beside every
+             * framework's: a helper that builds every answer, one that parses
+             * every body (P30). Where a request's parts and its answer are read
+             * at all, these are read too.
+             */
+            request: requestReadingSchema.optional(),
           })
           .default({ registries: [], http: [], procedures: [] }),
         broker: z

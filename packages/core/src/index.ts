@@ -387,12 +387,16 @@ export {
 export type { Envelope } from './envelope.js';
 export {
   CLAIMED_META,
+  extendReading,
   FAILURES_META,
+  pathParamsOf,
   readRequest,
   REQUEST_PARTS,
   REQUEST_READ_META,
   requestReadingSchema,
+  routeOf,
   routeShapeEdge,
+  STATUS_UNKNOWN_META,
 } from './request.js';
 export type { FoundType, RequestPart, RequestReading, RequestReadingDescription, RouteShape } from './request.js';
 export { suppliedTypes } from './supplied.js';

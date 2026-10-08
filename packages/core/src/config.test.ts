@@ -384,3 +384,21 @@ describe('a starter, described (P24)', () => {
     expect(() => parseConfig({ adapters: { starters: [{ ...starter, target: 'queue' }] } })).toThrow();
   });
 });
+
+describe("a project's own request helpers, described (P30)", () => {
+  const request = {
+    helpers: [{ name: 'readJson', package: '@acme/http-kit', part: 'body' }],
+    answers: [{ by: 'helper', name: 'respond', package: '@acme/http-kit', statusArg: 0, arg: 1 }],
+  };
+
+  it('accepts helpers that answer and parse, with their defaults filled in', () => {
+    const parsed = parseConfig({ adapters: { entry: { request } } }).adapters.entry.request;
+    expect(parsed?.answers).toEqual([{ ...request.answers[0], at: [] }]);
+    expect(parsed?.helpers).toEqual([{ ...request.helpers[0], param: 0, arg: 0, claim: true }]);
+  });
+
+  it('refuses a helper that answers with a status no response has', () => {
+    const answers = [{ ...request.answers[0], statusArg: undefined, status: 1200 }];
+    expect(() => parseConfig({ adapters: { entry: { request: { answers } } } })).toThrow();
+  });
+});

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:28:29.324Z",
+  "builtAt": "2026-10-08T09:13:33.835Z",
   "services": [
     {
       "name": "lending",
@@ -422,7 +422,8 @@
       "file": "src/handlers/resume-run.ts",
       "line": 5,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{runId:string}"
       }
     },
     {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:27:16.050Z",
+  "builtAt": "2026-10-08T09:12:44.350Z",
   "services": [
     {
       "name": "circulation",
@@ -687,7 +687,8 @@
       "file": "src/catalogue/get-item.ts",
       "line": 6,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{itemId:string}"
       }
     },
     {
@@ -712,7 +713,8 @@
       "file": "src/loans/get-loan.ts",
       "line": 5,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{loanId:string}"
       }
     },
     {
@@ -751,7 +753,8 @@
       "file": "src/loans/renew-loan.ts",
       "line": 5,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{loanId:string}"
       }
     },
     {

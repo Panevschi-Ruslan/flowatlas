@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
+import { sendOk } from './respond';
 import { store } from './orders.store';
 import type { CreateOrder, ImportedOrders, Order, Problem } from './orders.types';
 
@@ -42,4 +43,32 @@ ordersRouter.post('/import', (req: Request, res: Response) => {
 // is still read, and says that it states nothing.
 ordersRouter.get('/', (req: Request, res: Response) => {
   res.json(store.all());
+});
+
+const RefundRequest = z.object({ reason: z.string() });
+
+// A body checked without throwing: the shape is what the result holds at
+// `data` once it says it succeeded, and the refusal before it is a failure.
+ordersRouter.post('/:id/refunds', (req: Request, res: Response) => {
+  const result = RefundRequest.safeParse(req.body);
+  if (!result.success) {
+    const problem: Problem = { message: 'a refund needs a reason' };
+    res.status(400).json(problem);
+    return;
+  }
+  res.status(202).json({ id: String(req.params.id), reason: result.data.reason });
+});
+
+// An answer built by the project's own helper, which the configuration
+// describes: what it is handed is the answer, under the status it always sends.
+ordersRouter.get('/:id/summary', (req: Request, res: Response) => {
+  const found = store.find(String(req.params.id));
+  sendOk(res, { id: String(req.params.id), total: found?.total ?? 0 });
+});
+
+// A status worked out at run time: the answer could be either, so it is kept
+// apart from both.
+ordersRouter.get('/:id/status', (req: Request, res: Response) => {
+  const found = store.find(String(req.params.id));
+  res.status(found === undefined ? Number(req.query.missing ?? 404) : 200).json({ open: found !== undefined });
 });

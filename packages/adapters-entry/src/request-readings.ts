@@ -25,8 +25,12 @@ import { requestReadingSchema, type RequestReading, type RequestReadingDescripti
 export const VALIDATORS: NonNullable<RequestReadingDescription['validators']> = [
   // `Schema.parse(input)`, `await Schema.parseAsync(input)`.
   { package: 'zod', methods: ['parse', 'parseAsync'], arg: 0 },
+  // `Schema.safeParse(input).data`, once `success` is checked (P30).
+  { package: 'zod', methods: ['safeParse', 'safeParseAsync'], arg: 0, at: ['data'] },
   // `parse(Schema, input)`, `v.parse(Schema, input)`.
   { package: 'valibot', methods: ['parse', 'parseAsync'], arg: 1 },
+  // `safeParse(Schema, input).output` (P30).
+  { package: 'valibot', methods: ['safeParse', 'safeParseAsync'], arg: 1, at: ['output'] },
   // `await schema.validate(input)`, `schema.validateSync(input)`, `schema.cast(input)`.
   { package: 'yup', methods: ['validate', 'validateSync', 'cast'], arg: 0 },
   // `create(input, Struct)`, `mask(input, Struct)`.
@@ -60,7 +64,8 @@ const NODE_HEADERS = 'IncomingHttpHeaders';
  * `Request<Params, ResBody, ReqBody, Query>` types the parts where a route says
  * so and leaves them `any` and dictionaries where it does not; `res.json(x)`
  * answers, `res.status(n)` in front of it says with what. What a handler
- * returns is not the answer.
+ * returns is not the answer. `res.locals` is what middleware hands the handler,
+ * not what the caller sent, and is not read as part of the request.
  */
 export const EXPRESS_REQUEST: RequestReadingDescription = {
   parts: partsAt(0),
@@ -86,7 +91,7 @@ export const FASTIFY_REQUEST: RequestReadingDescription = {
 /**
  * Koa, where the request is one context: the body a parser put on
  * `ctx.request.body`, the router's `ctx.params`, and the answer assigned to
- * `ctx.body`.
+ * `ctx.body`, with the status assigned to `ctx.status` before it.
  */
 export const KOA_REQUEST: RequestReadingDescription = {
   parts: {
@@ -95,14 +100,17 @@ export const KOA_REQUEST: RequestReadingDescription = {
     query: [{ param: 0, at: ['query'] }],
     headers: [{ param: 0, at: ['headers'] }],
   },
-  answers: [{ by: 'assign', param: 0, at: ['body'] }],
+  answers: [{ by: 'assign', param: 0, at: ['body'], statusAt: ['status'] }],
   defaults: [NODE_HEADERS, 'ParsedUrlQuery'],
 };
 
 /**
  * Hono: a part is asked for. `c.req.valid('json')` hands back what a validator
  * in front of the route checked, typed by it; `c.req.json<T>()` hands back what
- * the code says, which nothing checks. `c.json(x, status)` answers.
+ * the code says, which nothing checks. `c.req.param()`, `query()` and `header()`
+ * hand back the part unchecked - the params typed by the route's path, the
+ * others dictionaries of text that say nothing (P30). `c.json(x, status)`
+ * answers.
  */
 export const HONO_REQUEST: RequestReadingDescription = {
   calls: [
@@ -113,6 +121,9 @@ export const HONO_REQUEST: RequestReadingDescription = {
       byArgument: { json: 'body', form: 'body', query: 'query', param: 'params', header: 'headers' },
     },
     { param: 0, at: ['req'], method: 'json', part: 'body', claim: true },
+    { param: 0, at: ['req'], method: 'param', part: 'params' },
+    { param: 0, at: ['req'], method: 'query', part: 'query' },
+    { param: 0, at: ['req'], method: 'header', part: 'headers' },
   ],
   answers: [{ by: 'call', param: 0, methods: ['json', 'text'], statusArg: 1 }],
 };

@@ -38,7 +38,21 @@ const missing = (direction: Direction, side: 'sender' | 'receiver'): UncheckedNo
  * way, so the sentence names what it does not state and the hint points at
  * where such a handler states it.
  */
-const unstated = (direction: Direction, side: 'sender' | 'receiver', subject: string): UncheckedNote | undefined => {
+const unstated = (
+  direction: Direction,
+  side: 'sender' | 'receiver',
+  subject: string,
+  statusUnknown?: string,
+): UncheckedNote | undefined => {
+  // It does answer with a shape, under a status its code works out, which could
+  // be the answer or a failure (P30). Comparing it as the answer would be a
+  // guess; saying it states nothing would be wrong.
+  if (direction === 'response' && side === 'sender' && statusUnknown !== undefined) {
+    return {
+      message: `${subject} answers ${statusUnknown} under a status its code works out, so whether that is its answer or a failure is not known`,
+      hint: 'Write the status as a number, or as a constant or enum member whose value the checker knows, beside each answer.',
+    };
+  }
   if (direction === 'response' && side === 'sender') {
     return {
       message: `${subject} answers through the response it is handed, and states no type for the answer`,
@@ -61,9 +75,10 @@ export const uncheckedNote = (
   direction: Direction = 'request',
   detail?: string,
   described = false,
+  statusUnknown?: string,
 ): UncheckedNote => {
   if (described && (reason === 'no-type-on-sender' || reason === 'no-type-on-receiver')) {
-    const said = unstated(direction, reason === 'no-type-on-sender' ? 'sender' : 'receiver', subject);
+    const said = unstated(direction, reason === 'no-type-on-sender' ? 'sender' : 'receiver', subject, statusUnknown);
     if (said !== undefined) return said;
   }
   switch (reason) {

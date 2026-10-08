@@ -6,6 +6,10 @@ export interface AddLine {
   quantity: number;
 }
 
+export interface LineMissing {
+  reason: string;
+}
+
 export interface Cart {
   id: string;
   lines: AddLine[];
@@ -19,6 +23,18 @@ router.post('/:id/lines', async (ctx) => {
   const line = ctx.request.body as AddLine;
   const cart: Cart = { id: ctx.params.id ?? 'c1', lines: [line] };
   ctx.status = 201;
+  ctx.body = cart;
+});
+
+// A failure: the status assigned in the branch before the body that answers
+// it, and the answer after the branch sent with no status but the default.
+router.delete('/:id/lines/:sku', async (ctx) => {
+  if (ctx.params.sku === undefined) {
+    ctx.status = 404;
+    ctx.body = { reason: 'no such line' } as LineMissing;
+    return;
+  }
+  const cart: Cart = { id: ctx.params.id ?? 'c1', lines: [] };
   ctx.body = cart;
 });
 

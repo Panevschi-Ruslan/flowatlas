@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "lending-library-loans",
-  "generatedAt": "2026-10-08T07:27:16.785Z",
+  "generatedAt": "2026-10-08T09:12:45.116Z",
   "nodes": [
     {
       "id": "entry:lending-library-loans:http:GET:/loans/:param",
@@ -548,7 +548,8 @@
       "file": "src/loans/get-loan.ts",
       "line": 5,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{loanId:string}"
       }
     },
     {
@@ -627,7 +628,8 @@
       "file": "src/loans/renew-loan.ts",
       "line": 10,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{loanId:string}"
       }
     },
     {

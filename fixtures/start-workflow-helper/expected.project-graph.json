@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:28:31.475Z",
+  "builtAt": "2026-10-08T09:13:34.992Z",
   "services": [
     {
       "name": "lending",
@@ -611,7 +611,8 @@
       "file": "src/handlers/renew-loan.ts",
       "line": 6,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{loanId:string}"
       }
     },
     {

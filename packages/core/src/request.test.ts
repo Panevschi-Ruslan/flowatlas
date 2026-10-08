@@ -3,11 +3,14 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { GraphBuilder } from './builder.js';
 import {
   CLAIMED_META,
+  extendReading,
   FAILURES_META,
+  pathParamsOf,
   readRequest,
   REQUEST_READ_META,
   requestReadingSchema,
   routeShapeEdge,
+  STATUS_UNKNOWN_META,
   type RequestReadingDescription,
 } from './request.js';
 import { TypeCollector } from './types/collector.js';
@@ -22,7 +25,10 @@ const HANDED: RequestReadingDescription = {
   },
   answers: [{ by: 'call', param: 1, methods: ['json', 'send'], statusMethods: ['status'] }],
   defaults: ['Headers'],
-  validators: [{ package: 'checker-lib', methods: ['parse'], arg: 0 }],
+  validators: [
+    { package: 'checker-lib', methods: ['parse'], arg: 0 },
+    { package: 'checker-lib', methods: ['safeParse'], arg: 0, at: ['data'] },
+  ],
 };
 
 const FRAMEWORK = `
@@ -41,7 +47,10 @@ export interface Res<Answer = any> {
 `;
 
 const CHECKER = `
-export interface Schema<T> { parse(input: unknown): T }
+export interface Schema<T> {
+  parse(input: unknown): T;
+  safeParse(input: unknown): { success: true; data: T } | { success: false; error: Error };
+}
 export declare function object<T>(shape: T): Schema<T>;
 `;
 
@@ -87,6 +96,11 @@ export const failing = (req: Req, res: Res, found: Order | undefined, code: numb
   if (found.total < 0) return res.status(code).json('unknown status');
   return res.status(200).json(found);
 };
+export const safe = (req: Req, res: Res) => {
+  const result = CreateSchema.safeParse(req.body);
+  if (!result.success) return res.status(400).json({ message: 'bad' } as Problem);
+  return res.json(result.data);
+};
 export const twoAnswers = (req: Req, res: Res, found: Order | undefined) => {
   if (found === undefined) return res.json(null);
   if (found.total > 10) return res.json({ big: true });
@@ -111,7 +125,12 @@ const CONTEXT = `
 export interface CreateOrder { total: number }
 export interface Order { id: string }
 interface Ctx {
-  req: { valid(target: string): CreateOrder; json<T = any>(): Promise<T> };
+  req: {
+    valid(target: string): CreateOrder;
+    json<T = any>(): Promise<T>;
+    param(): Record<string, string>;
+    param(name: string): string;
+  };
   json(body: unknown, status?: number): unknown;
   body: unknown;
 }
@@ -121,6 +140,7 @@ export const asked = async (c: Ctx) => {
   return c.json(body);
 };
 export const assigned = (ctx: Ctx) => { ctx.body = { id: 'y' } as Order; };
+export const byPath = (c: Ctx) => c.json({ id: c.req.param('id') } satisfies Order);
 export declare const Answer: { json<T>(body: T, init?: { status?: number }): unknown };
 export const named = () => Answer.json({ id: 'z' }, { status: 202 });
 `;
@@ -181,10 +201,20 @@ describe('what a request carries, read the way its framework puts it', () => {
     expect(read(handlers, 'disagreeing')?.parts.body).toBeUndefined();
   });
 
-  it('keeps an answer sent with a failure apart, and leaves out one whose status is not a number', () => {
-    expect(read(handlers, 'failing')).toMatchObject({
+  it('keeps an answer sent with a failure apart, and one whose status the code works out apart from both', () => {
+    expect(read(handlers, 'failing')).toEqual({
+      parts: {},
       response: { ref: 'type:shop#Order', claimed: false },
       failures: { '404': 'type:shop#Problem' },
+      statusUnknown: 'string',
+    });
+  });
+
+  it("takes the checked value out of a validator's result, once the result says it succeeded", () => {
+    expect(read(handlers, 'safe')).toEqual({
+      parts: { body: { ref: 'type:shop#CreateOrder', claimed: false } },
+      response: { ref: 'type:shop#CreateOrder', claimed: false },
+      failures: { '400': 'type:shop#Problem' },
     });
   });
 
@@ -233,6 +263,22 @@ describe('what a request carries, read the way its framework puts it', () => {
     expect(read(context, 'named', description)?.response).toEqual({ ref: '{id:string}', claimed: false });
   });
 
+  it('names the path params a handler reads by the path, when nothing types them', () => {
+    const context = project.createSourceFile('/src/context.ts', CONTEXT);
+    const reading = requestReadingSchema.parse({ calls: [{ param: 0, at: ['req'], method: 'param', part: 'params' }] });
+    const collect = (type: Parameters<TypeCollector['collectType']>[0], site: Parameters<TypeCollector['collectType']>[1]) =>
+      collector.collectType(type, site);
+    const handler = context.getVariableDeclarationOrThrow('byPath');
+    expect(readRequest(handler, reading, collect, { path: '/orders/:id/lines/:line?' })?.parts.params).toEqual({
+      ref: '{id:string;line?:string}',
+      claimed: false,
+    });
+    // No path, nothing named; a handler that reads no params gets none.
+    expect(readRequest(handler, reading, collect)?.parts.params).toBeUndefined();
+    const other = context.getVariableDeclarationOrThrow('assigned');
+    expect(readRequest(other, reading, collect, { path: '/orders/:id' })?.parts.params).toBeUndefined();
+  });
+
   it('writes a shape on the edge under the keys a route has always used', () => {
     const shape = read(handlers, 'cast');
     expect(shape).toBeDefined();
@@ -243,5 +289,176 @@ describe('what a request carries, read the way its framework puts it', () => {
     });
     const failing = read(handlers, 'failing');
     expect(routeShapeEdge(failing!).meta?.[FAILURES_META]).toEqual({ '404': 'type:shop#Problem' });
+    expect(routeShapeEdge(failing!).meta?.[STATUS_UNKNOWN_META]).toBe('string');
+  });
+});
+
+/**
+ * A handler that answers through a helper of its project's, and parses its
+ * body through another, from a package nobody installed (P30). The imports are
+ * all the helpers' calls have to be matched by.
+ */
+const HELPED = `
+import { respond as answer, readJson } from '@acme/http-kit';
+import * as kit from '@acme/http-kit';
+export interface Event { body: string | null; pathParameters: Record<string, string | undefined> | null }
+export interface CreateOrder { total: number }
+export interface Order { id: string; total: number }
+export interface Problem { message: string }
+export enum Status { Created = 201, Gone = 410 }
+const OK = 200;
+const sendOk = (res: unknown, body: unknown): unknown => body;
+
+export const viaHelper = async (event: Event) => {
+  const order = JSON.parse(event.body ?? '{}') as CreateOrder;
+  if (order.total < 0) return answer(400, { message: 'negative' } as Problem);
+  const made: Order = { id: 'o1', total: order.total };
+  return answer(201, made);
+};
+export const viaNamespace = async (event: Event) => kit.respond(OK, { id: 'o2', total: 1 } as Order);
+export const viaEnum = async (event: Event, gone: boolean) =>
+  gone ? answer(Status.Gone, { message: 'x' } as Problem) : answer(Status.Created, { id: 'o3', total: 2 } as Order);
+export const computed = async (event: Event, code: number) => answer(code, { id: 'o4', total: 3 } as Order);
+export const parsedByHelper = async (event: Event) => {
+  const order = readJson<CreateOrder>(event);
+  return answer(202, { id: 'o5', total: order.total } as Order);
+};
+export const bodyParsed = async (event: Event) => {
+  const order = event.body as unknown as CreateOrder;
+  return answer(200, { id: 'o6', total: order.total } as Order);
+};
+export const lookalike = async (event: Event) => {
+  const respond = (status: number, body: unknown) => ({ statusCode: status, body });
+  return respond(200, { id: 'o7', total: 4 } as Order);
+};
+export const local = (req: unknown, res: unknown) => {
+  sendOk(res, { id: 'o8', total: 5 } as Order);
+};
+`;
+
+const KOA_LIKE = `
+export interface Order { id: string }
+export interface Problem { message: string }
+interface Ctx { status: number; body: unknown; params: Record<string, string> }
+export const created = (ctx: Ctx) => {
+  ctx.status = 201;
+  ctx.body = { id: 'k1' } as Order;
+};
+export const missing = (ctx: Ctx, found: boolean) => {
+  if (!found) {
+    ctx.status = 404;
+    ctx.body = { message: 'gone' } as Problem;
+    return;
+  }
+  ctx.body = { id: ctx.params.id } as Order;
+};
+`;
+
+describe("a project's own helpers, read beside its framework's places (P30)", () => {
+  let project: Project;
+  let collector: TypeCollector;
+
+  beforeEach(() => {
+    project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: true } });
+    const builder = new GraphBuilder({ repo: 'shop', generatedAt: '2026-01-01T00:00:00.000Z' });
+    collector = new TypeCollector({ builder, repo: 'shop' });
+  });
+
+  const GATEWAY_LIKE: RequestReadingDescription = {
+    parts: {
+      body: [{ param: 0, at: ['body'], text: true }],
+      params: [{ param: 0, at: ['pathParameters'] }],
+    },
+    answers: [{ by: 'return', at: ['body'], text: true, statusAt: ['statusCode'] }],
+  };
+  const PROJECT: RequestReadingDescription = {
+    helpers: [{ name: 'readJson', package: '@acme/http-kit', part: 'body' }],
+    answers: [
+      { by: 'helper', name: 'respond', package: '@acme/http-kit', statusArg: 0, arg: 1 },
+      { by: 'helper', name: 'sendOk', arg: 1, status: 200 },
+    ],
+  };
+
+  const read = (source: string, name: string, path?: string) => {
+    const file = project.createSourceFile('/src/handlers.ts', source, { overwrite: true });
+    const reading = extendReading(requestReadingSchema.parse(GATEWAY_LIKE), requestReadingSchema.parse(PROJECT));
+    return readRequest(
+      file.getVariableDeclarationOrThrow(name),
+      reading,
+      (type, site) => collector.collectType(type, site),
+      path === undefined ? {} : { path },
+    );
+  };
+
+  it('reads the answer a helper of an uninstalled package is handed, with the status it is handed', () => {
+    expect(read(HELPED, 'viaHelper')).toEqual({
+      parts: { body: { ref: 'type:shop#CreateOrder', claimed: true } },
+      response: { ref: 'type:shop#Order', claimed: false },
+      failures: { '400': 'type:shop#Problem' },
+    });
+  });
+
+  it('matches the helper through a namespace import, and a status written as a constant', () => {
+    expect(read(HELPED, 'viaNamespace')?.response).toEqual({ ref: 'type:shop#Order', claimed: true });
+  });
+
+  it('reads a status written as an enum member by the value the checker knows', () => {
+    expect(read(HELPED, 'viaEnum')).toMatchObject({
+      response: { ref: 'type:shop#Order' },
+      failures: { '410': 'type:shop#Problem' },
+    });
+  });
+
+  it('keeps an answer whose status the code works out apart from the answer and the failures', () => {
+    expect(read(HELPED, 'computed')).toEqual({ parts: {}, failures: {}, statusUnknown: 'type:shop#Order' });
+  });
+
+  it("reads a body a helper hands back by the type argument the call asks for, as a claim", () => {
+    expect(read(HELPED, 'parsedByHelper')?.parts.body).toEqual({ ref: 'type:shop#CreateOrder', claimed: true });
+  });
+
+  it('reads a body a parser in front already turned into a shape, by the cast on the read', () => {
+    expect(read(HELPED, 'bodyParsed')?.parts.body).toEqual({ ref: 'type:shop#CreateOrder', claimed: true });
+  });
+
+  it("does not take a function of the same name that is not the package's for the helper", () => {
+    expect(read(HELPED, 'lookalike')?.response).toBeUndefined();
+  });
+
+  it("matches a helper of the project's own by its declaration, with the status it always answers", () => {
+    expect(read(HELPED, 'local')?.response).toEqual({ ref: 'type:shop#Order', claimed: true });
+  });
+
+  it('reads a status assigned before the answer, in the block the answer is in or one around it', () => {
+    project.createSourceFile('/src/koa.ts', KOA_LIKE);
+    const reading = requestReadingSchema.parse({
+      parts: { params: [{ param: 0, at: ['params'] }] },
+      answers: [{ by: 'assign', param: 0, at: ['body'], statusAt: ['status'] }],
+    });
+    const file = project.getSourceFileOrThrow('/src/koa.ts');
+    const collect = (type: Parameters<TypeCollector['collectType']>[0], site: Parameters<TypeCollector['collectType']>[1]) =>
+      collector.collectType(type, site);
+    expect(readRequest(file.getVariableDeclarationOrThrow('created'), reading, collect)).toMatchObject({
+      response: { ref: 'type:shop#Order' },
+      failures: {},
+    });
+    expect(readRequest(file.getVariableDeclarationOrThrow('missing'), reading, collect, { path: '/orders/:id' })).toEqual({
+      parts: { params: { ref: '{id:string}', claimed: false } },
+      response: { ref: 'type:shop#Order', claimed: true },
+      failures: { '404': 'type:shop#Problem' },
+    });
+  });
+});
+
+describe('the params a path names', () => {
+  it('reads every spelling a framework writes a param in', () => {
+    expect(pathParamsOf('/orders/:id/lines/:line?')).toBe('{id:string;line?:string}');
+    expect(pathParamsOf('/files/{proxy+}')).toBe('{proxy:string}');
+    expect(pathParamsOf('/blog/[...slug]')).toBe('{slug:string}');
+    expect(pathParamsOf('/orders/{orderId}')).toBe('{orderId:string}');
+  });
+
+  it('names nothing for a path without params', () => {
+    expect(pathParamsOf('/orders')).toBeUndefined();
   });
 });

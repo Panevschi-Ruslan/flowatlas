@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:28:21.718Z",
+  "builtAt": "2026-10-08T09:13:29.791Z",
   "configHash": "a81751a6539d",
   "services": [
     {
@@ -12,18 +12,18 @@
       "edges": 14,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 630
+      "durationMs": 0
     },
     {
       "name": "cart-api",
       "repo": "./cart-api",
       "type": "koa",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 5,
-      "edges": 2,
-      "types": 3,
+      "nodes": 7,
+      "edges": 3,
+      "types": 4,
       "unresolved": 0,
-      "durationMs": 619
+      "durationMs": 0
     },
     {
       "name": "catalog-api",
@@ -34,18 +34,18 @@
       "edges": 3,
       "types": 8,
       "unresolved": 0,
-      "durationMs": 615
+      "durationMs": 0
     },
     {
       "name": "orders-api",
       "repo": "./orders-api",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 15,
-      "edges": 13,
+      "nodes": 22,
+      "edges": 22,
       "types": 11,
       "unresolved": 0,
-      "durationMs": 654
+      "durationMs": 0
     },
     {
       "name": "shop",
@@ -56,7 +56,7 @@
       "edges": 2,
       "types": 7,
       "unresolved": 0,
-      "durationMs": 628
+      "durationMs": 0
     }
   ],
   "httpOut": {
@@ -82,29 +82,33 @@
     "noProducers": []
   },
   "routes": {
-    "total": 12,
+    "total": 16,
     "called": 4,
     "uncalled": [
+      "entry:cart-api:http:DELETE:/carts/:param/lines/:param",
       "entry:cart-api:http:GET:/carts/:param",
       "entry:cart-api:http:POST:/carts/:param/lines",
       "entry:catalog-api:http:DELETE:/items/:param",
       "entry:catalog-api:http:POST:/items",
       "entry:orders-api:http:GET:/orders/:param",
+      "entry:orders-api:http:GET:/orders/:param/status",
+      "entry:orders-api:http:GET:/orders/:param/summary",
       "entry:orders-api:http:PATCH:/orders/:param",
+      "entry:orders-api:http:POST:/orders/:param/refunds",
       "entry:shop:http:ALL:/api/health",
       "entry:shop:http:POST:/api/carts"
     ],
     "duplicated": []
   },
   "types": {
-    "total": 33,
+    "total": 34,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
-    "nodes": 52,
-    "edges": 38,
-    "types": 33,
+    "nodes": 61,
+    "edges": 48,
+    "types": 34,
     "unresolved": 0
   }
 }

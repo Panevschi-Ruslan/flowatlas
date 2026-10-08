@@ -323,6 +323,21 @@ only one of them moved.
   states is at most a warning and says so, and a handler that answers through
   the response it is handed is said to state no type for the answer rather than
   to declare none. `contracts.json` is format 5: a party may carry `claimed`.
+- **An answer built by a helper.** `adapters.entry.request` describes the
+  project's own helpers once - `return respond(201, order)`, `sendOk(res,
+  order)`, `readJson<CreateOrder>(event)` - and they are read beside every
+  framework's own places. A helper of a package is matched by the import in the
+  calling file, so the package need not be installed.
+  `fixtures/lambda-answer-helper`.
+- **More of what a request carries.** zod's and valibot's `safeParse`, read
+  through the result's `data` / `output`; a status written as a constant or an
+  enum member; Koa's `ctx.status` beside `ctx.body`; Hono's `c.req.param()`;
+  path params a handler reads that nothing types, named by the path as written;
+  and a body a parser in front already turned into a shape, read through the
+  cast on `event.body`. An answer whose status the code works out at run time
+  is kept apart as `meta.statusUnknown` instead of being dropped, and
+  `contracts` says so for a route that answers only that way. A route that may
+  answer with a shape or a plain value is compared arm by arm.
 - **What a function takes and gives back, in the Graph tab.** The details panel
   shows a method's parameters by name and type and what it returns
   (`create(dto: CreateOrder, note?: string) → Order`), a route's body, path

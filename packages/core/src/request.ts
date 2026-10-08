@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { pathFrom, sameKeys } from './envelope.js';
 import type { GraphEdge } from './model/edges.js';
 import { functionLikeOf, type FunctionLike } from './types/signatures.js';
-import type { TypeRef } from './types/type-ref.js';
+import { formatTypeRef, type TypeRef } from './types/type-ref.js';
 
 /**
  * What a request carries and what it is answered with, read from a handler a
@@ -63,6 +63,40 @@ export const requestCallSchema = z.strictObject({
   claim: z.boolean().default(false),
 });
 
+/**
+ * A function a handler calls by name: one of the project's own, or one a
+ * package exports (P30).
+ *
+ * With `package`, the call is matched by the import that brings the name in -
+ * `import { respond } from '@acme/http-kit'`, or `http.respond` on a namespace
+ * imported from it - which needs nothing installed, since the import is
+ * written in the handler's own file. Without it, by a declaration of that name
+ * in the repository.
+ */
+const helperFields = {
+  name: z.string().min(1),
+  package: z.string().min(1).optional(),
+};
+
+/**
+ * A function that hands back a part of the request: `parseBody(event)`,
+ * `readJson<CreateOrder>(req)`.
+ *
+ * `arg` is the argument that must be the request - read off parameter `param`
+ * of the handler - so a helper of that name called on anything else is not
+ * mistaken for a read. What it hands back is typed by a type argument written
+ * at the call, else by what it is declared to return; `claim` says that is only
+ * what the code asks for, which is true of a helper that parses without
+ * checking and is the default.
+ */
+export const requestHelperSchema = z.strictObject({
+  ...helperFields,
+  part: partSchema,
+  param: z.number().int().min(0).default(0),
+  arg: z.number().int().min(0).default(0),
+  claim: z.boolean().default(true),
+});
+
 /** Where a status code is written beside an answer, when it is. */
 const statusFields = {
   /** Methods in front of the answering one that set the status: `res.status(404).json(…)`. */
@@ -74,13 +108,15 @@ const statusFields = {
 };
 
 /**
- * How a handler answers, in the four ways a framework lets it.
+ * How a handler answers, in the four ways a framework lets it and the one a
+ * project adds.
  *
  * `call` a method on `at` of a parameter is handed the answer (`res.json(x)`);
  * `named` a function the framework exports is (`Response.json(x)`); `assign`
  * the answer is assigned to `at` of a parameter (`ctx.body = x`); `return` the
  * handler returns it, or returns an object with it at `at`, as text when the
- * platform carries it as text (`{ statusCode, body: JSON.stringify(x) }`).
+ * platform carries it as text (`{ statusCode, body: JSON.stringify(x) }`); and
+ * `helper` a function the project wrote builds it (P30).
  */
 export const requestAnswerSchema = z.discriminatedUnion('by', [
   z.strictObject({
@@ -101,6 +137,22 @@ export const requestAnswerSchema = z.discriminatedUnion('by', [
     by: z.literal('assign'),
     param: z.number().int().min(0),
     at: z.array(z.string().min(1)).min(1),
+    /** Where the status is assigned beside it: `ctx.status = 201` before `ctx.body = x`. */
+    statusAt: z.array(z.string().min(1)).min(1).optional(),
+  }),
+  /**
+   * A function of the project's that builds the answer: `return respond(201,
+   * order)`, `sendOk(res, order)`. The answer is argument `arg`, or the value
+   * at `at` of an object written there; the status is argument `statusArg`, or
+   * `status` when the helper always answers with one.
+   */
+  z.strictObject({
+    by: z.literal('helper'),
+    ...helperFields,
+    arg: z.number().int().min(0).default(0),
+    at: keysSchema,
+    statusArg: z.number().int().min(0).optional(),
+    status: z.number().int().min(100).max(599).optional(),
   }),
   z.strictObject({
     by: z.literal('return'),
@@ -113,18 +165,26 @@ export const requestAnswerSchema = z.discriminatedUnion('by', [
 /**
  * A validation library: a call to one of `methods` declared by `package`,
  * handed a part of the request at argument `arg`, hands back the part as the
- * library checked it - `schema.parse(req.body)`, `parse(schema, req.body)`.
+ * library checked it - `schema.parse(req.body)`, `parse(schema, req.body)` - or
+ * a result holding it at `at`.
  */
 export const requestValidatorSchema = z.strictObject({
   package: z.string().min(1),
   methods: z.array(z.string().min(1)).min(1),
   arg: z.number().int().min(0).default(0),
+  /**
+   * Where the checked value sits in what the call hands back, when it is not
+   * the whole of it: `['data']` for `schema.safeParse(x).data`.
+   */
+  at: keysSchema,
 });
 
 /** Where a framework puts what a request carries and how a handler answers it. */
 export const requestReadingSchema = z.strictObject({
   parts: z.partialRecord(partSchema, z.array(requestPlaceSchema)).default({}),
   calls: z.array(requestCallSchema).default([]),
+  /** Functions of the project's that hand back a part of the request (P30). */
+  helpers: z.array(requestHelperSchema).default([]),
   answers: z.array(requestAnswerSchema).default([]),
   /**
    * Type names the framework gives a part when the code said nothing narrower:
@@ -141,6 +201,7 @@ type RequestPlace = z.infer<typeof requestPlaceSchema>;
 type RequestCall = z.infer<typeof requestCallSchema>;
 type RequestAnswer = z.infer<typeof requestAnswerSchema>;
 type RequestValidator = z.infer<typeof requestValidatorSchema>;
+type RequestHelper = z.infer<typeof requestHelperSchema>;
 
 /**
  * The key of a `handles` edge's `meta` set when the route's request and answer
@@ -155,6 +216,12 @@ export const CLAIMED_META = 'claimed';
 /** The key of a `handles` edge's `meta` holding the answers sent with a failure status, by status. */
 export const FAILURES_META = 'failures';
 
+/**
+ * The key of a `handles` edge's `meta` holding what is answered with a status
+ * the code computes, so it could be a success or a failure (P30).
+ */
+export const STATUS_UNKNOWN_META = 'statusUnknown';
+
 /** One part or the answer, as found: its type and whether only a cast says so. */
 export interface FoundType {
   ref: TypeRef;
@@ -167,6 +234,8 @@ export interface RouteShape {
   response?: FoundType;
   /** Answers sent with a literal status of 400 or more, by status. */
   failures: Record<string, TypeRef>;
+  /** What is answered with a status the code computes, which could be either. */
+  statusUnknown?: TypeRef;
 }
 
 /** A type found in the source, before it is collected. */
@@ -263,8 +332,11 @@ const declaredIn = (declaration: TsNode, pkg: string): boolean => {
   return file.includes(`/node_modules/${pkg}/`) || file.includes(`/node_modules/@types/${pkg}/`);
 };
 
-/** The validator call a value is handed to, when it is handed to one. */
-const validatedBy = (value: TsNode, validators: readonly RequestValidator[]): TsNode | undefined => {
+/** The validator call a value is handed to, and the validator, when it is handed to one. */
+const validatedBy = (
+  value: TsNode,
+  validators: readonly RequestValidator[],
+): { call: TsNode; validator: RequestValidator } | undefined => {
   const parent = value.getParent();
   if (parent === undefined || !Node.isCallExpression(parent)) return undefined;
   const callee = parent.getExpression();
@@ -272,9 +344,27 @@ const validatedBy = (value: TsNode, validators: readonly RequestValidator[]): Ts
   const position = parent.getArguments().indexOf(value as never);
   for (const validator of validators) {
     if (!validator.methods.includes(method) || position !== validator.arg) continue;
-    if (calleeDeclarations(callee).some((declaration) => declaredIn(declaration, validator.package))) return parent;
+    if (calleeDeclarations(callee).some((declaration) => declaredIn(declaration, validator.package))) {
+      return { call: parent, validator };
+    }
   }
   return undefined;
+};
+
+/**
+ * The type at a key of a type that may be a choice: `safeParse` hands back a
+ * success holding `data` or a failure holding none, and the value is the one
+ * member that says something there.
+ */
+const keyedType = (type: Type, at: readonly string[], site: TsNode): Type | undefined => {
+  if (at.length === 0) return type;
+  const members = type.isUnion() ? type.getUnionTypes() : [type];
+  const found = new Map<string, Type>();
+  for (const member of members) {
+    const value = typeAt(member, at, site)?.getNonNullableType();
+    if (value !== undefined && saysSomething(value, new Set())) found.set(value.getText(), value);
+  }
+  return found.size === 1 ? [...found.values()][0] : undefined;
 };
 
 /**
@@ -285,8 +375,9 @@ const saidOf = (value: TsNode, validators: readonly RequestValidator[]): Candida
   const outer = outermost(value);
   const checked = validatedBy(outer, validators);
   if (checked !== undefined) {
-    const site = outermost(checked);
-    return { type: settled(site.getType()), site, claimed: false };
+    const site = outermost(checked.call);
+    const type = keyedType(settled(site.getType()), checked.validator.at, site);
+    return type === undefined ? undefined : { type, site, claimed: false };
   }
   let parent = outer.getParent();
   // `req.body as unknown as CreateOrder` claims the last type it is cast to.
@@ -348,29 +439,48 @@ const parsedBy = (value: TsNode): TsNode | undefined => {
     : undefined;
 };
 
+/** What a function reads at one place: what it found, and whether it reads the place at all. */
+interface AtPlace {
+  found: Candidate[];
+  read: boolean;
+}
+
 /** What a function reads at one place, as the parameter declares it or as the code says it. */
 const atPlace = (
   fn: FunctionLike,
   place: RequestPlace,
   reading: RequestReading,
   defaults: ReadonlySet<string>,
-): Candidate[] => {
+): AtPlace => {
   const parameter = fn.getParameters()[place.param];
-  if (parameter === undefined) return [];
+  if (parameter === undefined) return { found: [], read: false };
   const declared = typeAt(parameter.getType(), place.at, fn);
   if (declared !== undefined) {
     const value = settled(declared);
     const isText = value.getNonNullableType().isString();
-    if (saysSomething(value, defaults) && !(place.text && isText)) return [{ type: value, site: parameter, claimed: false }];
+    if (saysSomething(value, defaults) && !(place.text && isText)) {
+      return { found: [{ type: value, site: parameter, claimed: false }], read: true };
+    }
   }
-  const out: Candidate[] = [];
-  for (const read of readsOf(fn, parameter, place.at)) {
-    const value = place.text ? parsedBy(read) : read;
-    if (value === undefined) continue;
-    const said = saidOf(value, reading.validators);
-    if (said !== undefined) out.push(said);
+  const found: Candidate[] = [];
+  const reads = readsOf(fn, parameter, place.at);
+  for (const read of reads) {
+    const parsed = place.text ? parsedBy(read) : read;
+    const said = parsed === undefined ? undefined : saidOf(parsed, reading.validators);
+    if (said !== undefined) {
+      found.push(said);
+      continue;
+    }
+    // A body parser in front of the function - a middleware that turns the
+    // text into the value - hands it the shape rather than the text, and the
+    // code says which with a cast on the read itself (P30). Text cast to text
+    // is not that.
+    if (place.text && parsed === undefined) {
+      const direct = saidOf(read, reading.validators);
+      if (direct !== undefined && !direct.type.getNonNullableType().isString()) found.push(direct);
+    }
   }
-  return out;
+  return { found, read: reads.length > 0 };
 };
 
 /** What a function reads through the calls that hand back a part. */
@@ -379,11 +489,11 @@ const byCalls = (
   call: RequestCall,
   reading: RequestReading,
   defaults: ReadonlySet<string>,
-): Array<{ part: RequestPart; found: Candidate }> => {
+): Array<{ part: RequestPart; found?: Candidate }> => {
   const parameter = fn.getParameters()[call.param];
   const body = fn.getBody();
   if (parameter === undefined || body === undefined) return [];
-  const out: Array<{ part: RequestPart; found: Candidate }> = [];
+  const out: Array<{ part: RequestPart; found?: Candidate }> = [];
   for (const site of body.getDescendantsOfKind(SyntaxKind.CallExpression)) {
     const callee = site.getExpression();
     if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== call.method) continue;
@@ -397,6 +507,11 @@ const byCalls = (
       part = key === undefined ? undefined : call.byArgument[key];
     } else if (args.length === 0) {
       part = call.part;
+    } else if (call.part !== undefined) {
+      // `c.req.param('id')` reads one of the part's values: a read of the part,
+      // though what it hands back is one value of it, not its shape.
+      out.push({ part: call.part });
+      continue;
     }
     if (part === undefined) continue;
     const said = saidOf(site, reading.validators);
@@ -405,7 +520,93 @@ const byCalls = (
       continue;
     }
     const own = settled(site.getReturnType());
-    if (saysSomething(own, defaults)) out.push({ part, found: { type: own, site, claimed: call.claim } });
+    out.push({ part, ...(saysSomething(own, defaults) ? { found: { type: own, site, claimed: call.claim } } : {}) });
+  }
+  return out;
+};
+
+/** The name a call is made by, and the name its callee is reached from: `respond` and `respond`, or `respond` and `http`. */
+const calledBy = (callee: TsNode): { name: string; root: string } | undefined => {
+  if (Node.isIdentifier(callee)) return { name: callee.getText(), root: callee.getText() };
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const object = callee.getExpression();
+  return Node.isIdentifier(object) ? { name: callee.getName(), root: object.getText() } : undefined;
+};
+
+/** Whether a module specifier is a package or a path inside it. */
+const fromPackage = (specifier: string, pkg: string): boolean => specifier === pkg || specifier.startsWith(`${pkg}/`);
+
+/**
+ * Whether a call is one to a helper (P30).
+ *
+ * A helper of a package is matched by the import in the calling file, which is
+ * there whether or not the package is installed: a name imported from it under
+ * whatever local name, or a property of a namespace or default import of it.
+ * A helper of the project's is matched by name and by being declared outside
+ * any installed package.
+ */
+const callsHelper = (site: TsNode, helper: { name: string; package?: string | undefined }): boolean => {
+  if (!Node.isCallExpression(site)) return false;
+  const callee = site.getExpression();
+  const called = calledBy(callee);
+  if (called === undefined) return false;
+  if (helper.package === undefined) {
+    if (called.name !== helper.name) return false;
+    const declarations = calleeDeclarations(callee);
+    return declarations.length > 0 && declarations.every((declaration) => !declaration.getSourceFile().getFilePath().includes('/node_modules/'));
+  }
+  for (const declaration of site.getSourceFile().getImportDeclarations()) {
+    if (!fromPackage(declaration.getModuleSpecifierValue(), helper.package)) continue;
+    if (called.root === called.name && Node.isIdentifier(callee)) {
+      const named = declaration
+        .getNamedImports()
+        .some((specifier) => specifier.getName() === helper.name && (specifier.getAliasNode()?.getText() ?? specifier.getName()) === called.name);
+      if (named) return true;
+      continue;
+    }
+    if (called.name !== helper.name) continue;
+    if (declaration.getNamespaceImport()?.getText() === called.root) return true;
+    if (declaration.getDefaultImport()?.getText() === called.root) return true;
+  }
+  return false;
+};
+
+/** Every call in a function's body, the body itself first when it is one. */
+const callsIn = (fn: FunctionLike): TsNode[] => {
+  const body = fn.getBody();
+  if (body === undefined) return [];
+  const calls: TsNode[] = body.getDescendantsOfKind(SyntaxKind.CallExpression);
+  if (Node.isCallExpression(body)) calls.unshift(body);
+  return calls;
+};
+
+/** What a function reads through helpers of the project's that hand back a part (P30). */
+const byHelpers = (
+  fn: FunctionLike,
+  helper: RequestHelper,
+  reading: RequestReading,
+  defaults: ReadonlySet<string>,
+): Array<{ part: RequestPart; found?: Candidate }> => {
+  const parameter = fn.getParameters()[helper.param];
+  if (parameter === undefined) return [];
+  const out: Array<{ part: RequestPart; found?: Candidate }> = [];
+  for (const site of callsIn(fn)) {
+    if (!Node.isCallExpression(site) || !callsHelper(site, helper)) continue;
+    const handed = site.getArguments()[helper.arg];
+    if (handed === undefined || pathFrom(innermost(handed), parameter) === undefined) continue;
+    const said = saidOf(site, reading.validators);
+    if (said !== undefined) {
+      out.push({ part: helper.part, found: said });
+      continue;
+    }
+    const [asked] = site.getTypeArguments();
+    if (asked !== undefined) {
+      const type = asked.getType();
+      out.push({ part: helper.part, ...(saysSomething(type, defaults) ? { found: { type, site, claimed: helper.claim } } : {}) });
+      continue;
+    }
+    const own = settled(site.getReturnType());
+    out.push({ part: helper.part, ...(saysSomething(own, defaults) ? { found: { type: own, site, claimed: helper.claim } } : {}) });
   }
   return out;
 };
@@ -427,11 +628,27 @@ const agreed = (found: readonly Candidate[], collect: Collect): FoundType | unde
   return undefined;
 };
 
-/** A status written as a number, or nothing where it is not one. */
+/** Whether a status says the request failed. */
+const failing = (status: number): boolean => status >= 400;
+
+/**
+ * A status written as a number, or as a name the checker knows the number of -
+ * an enum member, a constant (P30). A name that could be one of several numbers
+ * stands for them when they all succeed or all fail, since that is all an
+ * answer's status decides here; otherwise it is not known.
+ */
 const literalStatus = (node: TsNode | undefined): number | undefined => {
   if (node === undefined) return undefined;
   const at = innermost(node);
-  return Node.isNumericLiteral(at) ? Number(at.getLiteralValue()) : undefined;
+  if (Node.isNumericLiteral(at)) return Number(at.getLiteralValue());
+  const type = at.getType();
+  const values = (type.isUnion() ? type.getUnionTypes() : [type]).map((member) =>
+    member.isNumberLiteral() ? Number(member.getLiteralValue()) : undefined,
+  );
+  const [first] = values;
+  if (first === undefined || values.some((value) => value === undefined)) return undefined;
+  const numbers = values as number[];
+  return numbers.every(failing) || !numbers.some(failing) ? first : undefined;
 };
 
 /** What is said about an answer's status: a number, `null` when nothing is, or `undefined` when it is not a number. */
@@ -508,8 +725,7 @@ const sentBy = (fn: FunctionLike, answers: readonly RequestAnswer[]): Sent[] => 
   const parameters = fn.getParameters();
   const sent: Sent[] = [];
   const answering = new Set<TsNode>();
-  const calls = body.getDescendantsOfKind(SyntaxKind.CallExpression);
-  if (Node.isCallExpression(body)) calls.unshift(body);
+  const calls = callsIn(fn).filter(Node.isCallExpression);
 
   for (const answer of answers) {
     if (answer.by === 'call') {
@@ -547,10 +763,36 @@ const sentBy = (fn: FunctionLike, answers: readonly RequestAnswer[]): Sent[] => 
     if (answer.by === 'assign') {
       const parameter = parameters[answer.param];
       if (parameter === undefined) continue;
-      for (const site of body.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
-        if (site.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) continue;
+      const assignments = body
+        .getDescendantsOfKind(SyntaxKind.BinaryExpression)
+        .filter((site) => site.getOperatorToken().getKind() === SyntaxKind.EqualsToken);
+      const assignedAt = (site: TsNode & { getLeft(): TsNode }, at: readonly string[]): boolean => {
         const path = pathFrom(site.getLeft(), parameter);
-        if (path !== undefined && sameKeys(path, answer.at)) sent.push({ value: site.getRight(), status: null, handed: false });
+        return path !== undefined && sameKeys(path, at);
+      };
+      const statuses = answer.statusAt === undefined ? [] : assignments.filter((site) => assignedAt(site, answer.statusAt ?? []));
+      for (const site of assignments) {
+        if (!assignedAt(site, answer.at)) continue;
+        sent.push({ value: site.getRight(), status: statusBefore(site, statuses), handed: false });
+      }
+    }
+    if (answer.by === 'helper') {
+      for (const site of calls) {
+        if (!callsHelper(site, answer)) continue;
+        answering.add(site);
+        const args = site.getArguments();
+        const handed = args[answer.arg];
+        const value = handed === undefined ? undefined : answer.at.length === 0 ? handed : valueAt(handed, answer.at);
+        if (value === undefined) continue;
+        const status: Status =
+          answer.status !== undefined
+            ? answer.status
+            : answer.statusArg === undefined
+              ? null
+              : args[answer.statusArg] === undefined
+                ? null
+                : literalStatus(args[answer.statusArg]);
+        sent.push({ value, status, handed: answer.at.length === 0 });
       }
     }
   }
@@ -583,6 +825,22 @@ const sentBy = (fn: FunctionLike, answers: readonly RequestAnswer[]): Sent[] => 
     }
   }
   return sent;
+};
+
+/**
+ * The status assigned before an answer, in the block it is assigned in or one
+ * around it: `ctx.status = 201; ctx.body = order`. The nearest one before it
+ * wins, as it does when the code runs; none means none was said.
+ */
+const statusBefore = (answer: TsNode, statuses: ReadonlyArray<TsNode & { getRight(): TsNode }>): Status => {
+  let found: (TsNode & { getRight(): TsNode }) | undefined;
+  for (const status of statuses) {
+    if (status.getStart() >= answer.getStart()) continue;
+    const block = status.getFirstAncestor((node) => Node.isBlock(node));
+    if (block !== undefined && !answer.getAncestors().includes(block)) continue;
+    if (found === undefined || status.getStart() > found.getStart()) found = status;
+  }
+  return found === undefined ? null : literalStatus(found.getRight());
 };
 
 /** Whether a call is a link of a chain one of the answering calls ends. */
@@ -628,43 +886,62 @@ export const readRequest = (
   declaration: TsNode,
   reading: RequestReading,
   collect: Collect,
+  route: { path?: string } = {},
 ): RouteShape | undefined => {
   const fn = functionLikeOf(declaration);
   if (fn === undefined) return undefined;
   const defaults = new Set(reading.defaults);
 
   const found = new Map<RequestPart, Candidate[]>();
+  const read = new Set<RequestPart>();
+  const add = (part: RequestPart, candidates: readonly Candidate[]): void => {
+    read.add(part);
+    if (candidates.length > 0) found.set(part, [...(found.get(part) ?? []), ...candidates]);
+  };
   for (const part of REQUEST_PARTS) {
     for (const place of reading.parts[part] ?? []) {
       const here = atPlace(fn, place, reading, defaults);
-      if (here.length === 0) continue;
-      found.set(part, [...(found.get(part) ?? []), ...here]);
+      if (here.read) read.add(part);
+      if (here.found.length === 0) continue;
+      add(part, here.found);
       // The first place that holds the part is where the framework keeps it.
       break;
     }
   }
   for (const call of reading.calls) {
-    for (const { part, found: candidate } of byCalls(fn, call, reading, defaults)) {
-      found.set(part, [...(found.get(part) ?? []), candidate]);
-    }
+    for (const each of byCalls(fn, call, reading, defaults)) add(each.part, each.found === undefined ? [] : [each.found]);
+  }
+  for (const helper of reading.helpers) {
+    for (const each of byHelpers(fn, helper, reading, defaults)) add(each.part, each.found === undefined ? [] : [each.found]);
   }
   const parts: Partial<Record<RequestPart, FoundType>> = {};
   for (const part of REQUEST_PARTS) {
     const agreedOn = agreed(found.get(part) ?? [], collect);
     if (agreedOn !== undefined) parts[part] = agreedOn;
   }
+  // Path params nothing typed are still named by the path, and every framework
+  // hands them over as text: a handler that reads them reads that (P30).
+  if (parts.params === undefined && read.has('params') && route.path !== undefined) {
+    const named = pathParamsOf(route.path);
+    if (named !== undefined) parts.params = { ref: named, claimed: false };
+  }
 
   const success = new Set<TypeRef>();
+  const unknown = new Set<TypeRef>();
   let claimed = false;
   const failures: Record<string, Set<TypeRef>> = {};
   for (const sent of sentBy(fn, reading.answers)) {
-    // A status that is not a number could be either; precision first.
-    if (sent.status === undefined) continue;
     const type = answerType(sent, defaults);
     if (type === undefined) continue;
     const ref = collect(type.type, type.site);
     if (SAYS_NOTHING.has(ref)) continue;
-    if (sent.status !== null && sent.status >= 400) {
+    // A status the code computes could be either, so the answer is kept apart
+    // from both rather than guessed into one (P30).
+    if (sent.status === undefined) {
+      unknown.add(ref);
+      continue;
+    }
+    if (sent.status !== null && failing(sent.status)) {
       (failures[String(sent.status)] ??= new Set()).add(ref);
       continue;
     }
@@ -672,6 +949,7 @@ export const readRequest = (
     claimed ||= type.claimed;
   }
   const response = oneOf(success);
+  const statusUnknown = oneOf(unknown);
   return {
     parts,
     ...(response === undefined ? {} : { response: { ref: response, claimed } }),
@@ -680,6 +958,66 @@ export const readRequest = (
         .sort(([a], [b]) => Number(a) - Number(b))
         .map(([status, refs]) => [status, oneOf(refs) as TypeRef]),
     ),
+    ...(statusUnknown === undefined ? {} : { statusUnknown }),
+  };
+};
+
+/**
+ * A segment of a path that names a param, in each spelling frameworks use:
+ * `:id` and `:id?`, `{id}` and `{proxy+}`, `[id]` and `[...slug]`.
+ */
+const PATH_PARAM = /^(?::([A-Za-z_$][\w$]*)(\?)?|\{([A-Za-z_$][\w$]*)\+?\}|\[(?:\.\.\.)?([A-Za-z_$][\w$]*)\])$/;
+
+/** The params a path names, as an object of strings, or nothing when it names none. */
+export const pathParamsOf = (path: string): TypeRef | undefined => {
+  const fields = new Map<string, boolean>();
+  for (const segment of path.split('/')) {
+    const match = PATH_PARAM.exec(segment);
+    if (match === null) continue;
+    const name = match[1] ?? match[3] ?? match[4];
+    if (name !== undefined) fields.set(name, match[2] === '?');
+  }
+  if (fields.size === 0) return undefined;
+  return formatTypeRef({
+    kind: 'object',
+    fields: [...fields.entries()]
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([name, optional]) => ({ name, optional, type: { kind: 'primitive', name: 'string' } })),
+  });
+};
+
+/**
+ * The route a way in stands for, as the reading uses it: the path as written
+ * at its registration, where the reader kept it, so its params keep their
+ * names. Only that one - the path a way in is keyed by has every param renamed
+ * `:param`, and naming a handler's params from it would invent the name.
+ */
+export const routeOf = (entry: { meta?: Record<string, unknown> | undefined }): { path?: string } => {
+  const path = entry.meta?.['rawPath'];
+  return typeof path === 'string' ? { path } : {};
+};
+
+/**
+ * A framework's reading with a project's own added to it (P30).
+ *
+ * A project that answers through its own helper does so whatever framework
+ * calls the handler, so what it describes once under
+ * `adapters.entry.request` is read beside every framework's own places.
+ */
+export const extendReading = (reading: RequestReading, extra: RequestReading | undefined): RequestReading => {
+  if (extra === undefined) return reading;
+  const parts: RequestReading['parts'] = {};
+  for (const part of REQUEST_PARTS) {
+    const places = [...(reading.parts[part] ?? []), ...(extra.parts[part] ?? [])];
+    if (places.length > 0) parts[part] = places;
+  }
+  return {
+    parts,
+    calls: [...reading.calls, ...extra.calls],
+    helpers: [...reading.helpers, ...extra.helpers],
+    answers: [...reading.answers, ...extra.answers],
+    defaults: [...reading.defaults, ...extra.defaults],
+    validators: [...extra.validators, ...reading.validators],
   };
 };
 
@@ -700,6 +1038,7 @@ export const routeShapeEdge = (shape: RouteShape): Pick<GraphEdge, 'meta'> & { r
       ...Object.fromEntries(REQUEST_PARTS.flatMap((part) => (shape.parts[part] === undefined ? [] : [[part, shape.parts[part]?.ref]]))),
       ...(claimed.length === 0 ? {} : { [CLAIMED_META]: claimed }),
       ...(Object.keys(shape.failures).length === 0 ? {} : { [FAILURES_META]: shape.failures }),
+      ...(shape.statusUnknown === undefined ? {} : { [STATUS_UNKNOWN_META]: shape.statusUnknown }),
     },
     ...(shape.response === undefined ? {} : { returns: shape.response.ref }),
   };

@@ -12,5 +12,12 @@
       "apiTarget": { "ordersUrl": "orders-api", "catalogUrl": "catalog-api" }
     }
   ],
+  "adapters": {
+    "entry": {
+      "request": {
+        "answers": [{ "by": "helper", "name": "sendOk", "arg": 1, "status": 200 }]
+      }
+    }
+  },
   "output": ".flowatlas"
 }

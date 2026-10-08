@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T09:12:40.422Z",
+  "configHash": "282b0556a44c",
+  "services": [
+    {
+      "name": "stations",
+      "repo": ".",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 22,
+      "edges": 18,
+      "types": 8,
+      "unresolved": 5,
+      "durationMs": 0
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 5,
+    "called": 0,
+    "uncalled": [
+      "entry:stations:http:GET:/rentals/:param",
+      "entry:stations:http:GET:/stations",
+      "entry:stations:http:GET:/stations/:param",
+      "entry:stations:http:POST:/rentals",
+      "entry:stations:http:POST:/rentals/:param/return"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 8,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 22,
+    "edges": 18,
+    "types": 8,
+    "unresolved": 5
+  }
+}

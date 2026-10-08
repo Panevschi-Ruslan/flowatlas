@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "express-wrapped-handler",
-  "generatedAt": "2026-10-08T07:27:00.962Z",
+  "generatedAt": "2026-10-08T09:12:34.381Z",
   "nodes": [
     {
       "id": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param",
@@ -315,7 +315,8 @@
       "file": "src/controllers/videos.ts",
       "line": 44,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{id:string}"
       },
       "returns": "{id:string}"
     },
@@ -338,7 +339,8 @@
       "file": "src/controllers/videos.ts",
       "line": 44,
       "meta": {
-        "requestRead": true
+        "requestRead": true,
+        "params": "{id:string}"
       },
       "returns": "{id:string}"
     },

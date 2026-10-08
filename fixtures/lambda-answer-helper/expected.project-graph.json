@@ -1,0 +1,875 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-08T09:12:40.422Z",
+  "services": [
+    {
+      "name": "stations",
+      "repo": ".",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:stations:http:GET:/rentals/:param",
+      "type": "entry",
+      "label": "GET /rentals/:param",
+      "repo": "stations",
+      "file": "infra/api.tf",
+      "line": 57,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/rentals/:param",
+        "rawPath": "/rentals/{rentalId}",
+        "deployedBy": "terraform",
+        "api": "bikes-dev-api",
+        "function": "bikes-dev-get-rental",
+        "declaredAs": "aws_api_gateway_method.get_rental",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stations:http:GET:/stations",
+      "type": "entry",
+      "label": "GET /stations",
+      "repo": "stations",
+      "file": "infra/api.tf",
+      "line": 89,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/stations",
+        "rawPath": "/stations",
+        "deployedBy": "terraform",
+        "api": "bikes-dev-api",
+        "function": "bikes-dev-list-stations",
+        "declaredAs": "aws_api_gateway_method.list_stations",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stations:http:GET:/stations/:param",
+      "type": "entry",
+      "label": "GET /stations/:param",
+      "repo": "stations",
+      "file": "infra/api.tf",
+      "line": 105,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/stations/:param",
+        "rawPath": "/stations/{stationId}",
+        "deployedBy": "terraform",
+        "api": "bikes-dev-api",
+        "function": "bikes-dev-get-station",
+        "declaredAs": "aws_api_gateway_method.get_station",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stations:http:POST:/rentals",
+      "type": "entry",
+      "label": "POST /rentals",
+      "repo": "stations",
+      "file": "infra/api.tf",
+      "line": 41,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/rentals",
+        "rawPath": "/rentals",
+        "deployedBy": "terraform",
+        "api": "bikes-dev-api",
+        "function": "bikes-dev-start-rental",
+        "declaredAs": "aws_api_gateway_method.start_rental",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stations:http:POST:/rentals/:param/return",
+      "type": "entry",
+      "label": "POST /rentals/:param/return",
+      "repo": "stations",
+      "file": "infra/api.tf",
+      "line": 73,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/rentals/:param/return",
+        "rawPath": "/rentals/{rentalId}/return",
+        "deployedBy": "terraform",
+        "api": "bikes-dev-api",
+        "function": "bikes-dev-end-rental",
+        "declaredAs": "aws_api_gateway_method.end_rental",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stations:invoke:bikes-dev-end-rental",
+      "type": "entry",
+      "label": "bikes-dev-end-rental",
+      "repo": "stations",
+      "file": "infra/functions.tf",
+      "line": 44,
+      "kind": "invoke",
+      "meta": {
+        "key": "bikes-dev-end-rental",
+        "deployedBy": "terraform",
+        "name": "bikes-dev-end-rental",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.end_rental",
+        "handler": "end-rental.handler",
+        "sourceDirectory": "src/rentals",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stations:invoke:bikes-dev-get-rental",
+      "type": "entry",
+      "label": "bikes-dev-get-rental",
+      "repo": "stations",
+      "file": "infra/functions.tf",
+      "line": 35,
+      "kind": "invoke",
+      "meta": {
+        "key": "bikes-dev-get-rental",
+        "deployedBy": "terraform",
+        "name": "bikes-dev-get-rental",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.get_rental",
+        "handler": "get-rental.handler",
+        "sourceDirectory": "src/rentals",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stations:invoke:bikes-dev-get-station",
+      "type": "entry",
+      "label": "bikes-dev-get-station",
+      "repo": "stations",
+      "file": "infra/functions.tf",
+      "line": 62,
+      "kind": "invoke",
+      "meta": {
+        "key": "bikes-dev-get-station",
+        "deployedBy": "terraform",
+        "name": "bikes-dev-get-station",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.get_station",
+        "handler": "get-station.handler",
+        "sourceDirectory": "src/stations",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stations:invoke:bikes-dev-list-stations",
+      "type": "entry",
+      "label": "bikes-dev-list-stations",
+      "repo": "stations",
+      "file": "infra/functions.tf",
+      "line": 53,
+      "kind": "invoke",
+      "meta": {
+        "key": "bikes-dev-list-stations",
+        "deployedBy": "terraform",
+        "name": "bikes-dev-list-stations",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.list_stations",
+        "handler": "list-stations.handler",
+        "sourceDirectory": "src/stations",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stations:invoke:bikes-dev-start-rental",
+      "type": "entry",
+      "label": "bikes-dev-start-rental",
+      "repo": "stations",
+      "file": "infra/functions.tf",
+      "line": 26,
+      "kind": "invoke",
+      "meta": {
+        "key": "bikes-dev-start-rental",
+        "deployedBy": "terraform",
+        "name": "bikes-dev-start-rental",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.start_rental",
+        "handler": "start-rental.handler",
+        "sourceDirectory": "src/rentals",
+        "handlerVia": "wrapped",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "repo:stations",
+      "type": "repo",
+      "label": "stations",
+      "repo": "stations",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "stations#src/lib/rentals.ts:allStations",
+      "type": "function",
+      "label": "allStations",
+      "repo": "stations",
+      "file": "src/lib/rentals.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:stations#Station[]"
+        }
+      }
+    },
+    {
+      "id": "stations#src/lib/rentals.ts:endRental",
+      "type": "function",
+      "label": "endRental",
+      "repo": "stations",
+      "file": "src/lib/rentals.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "rentalId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:stations#Receipt"
+        }
+      }
+    },
+    {
+      "id": "stations#src/lib/rentals.ts:findRental",
+      "type": "function",
+      "label": "findRental",
+      "repo": "stations",
+      "file": "src/lib/rentals.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "rentalId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:stations#Rental|undefined"
+        }
+      }
+    },
+    {
+      "id": "stations#src/lib/rentals.ts:startRental",
+      "type": "function",
+      "label": "startRental",
+      "repo": "stations",
+      "file": "src/lib/rentals.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "riderId",
+              "type": "string"
+            },
+            {
+              "name": "stationId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:stations#Rental|undefined"
+        }
+      }
+    },
+    {
+      "id": "stations#src/rentals/end-rental.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stations",
+      "file": "src/rentals/end-rental.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "stations#src/rentals/get-rental.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stations",
+      "file": "src/rentals/get-rental.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "stations#src/rentals/start-rental.ts:jsonBodyParser()",
+      "type": "middleware",
+      "label": "jsonBodyParser()",
+      "repo": "stations",
+      "file": "src/rentals/start-rental.ts",
+      "line": 22,
+      "kind": "call"
+    },
+    {
+      "id": "stations#src/rentals/start-rental.ts:start",
+      "type": "function",
+      "label": "start",
+      "repo": "stations",
+      "file": "src/rentals/start-rental.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "stations#src/stations/get-station.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stations",
+      "file": "src/stations/get-station.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "stations#src/stations/get-station.ts:respond",
+      "type": "function",
+      "label": "respond",
+      "repo": "stations",
+      "file": "src/stations/get-station.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "statusCode",
+              "type": "number"
+            },
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "stations#src/stations/list-stations.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stations",
+      "file": "src/stations/list-stations.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:stations:http:GET:/rentals/:param",
+      "to": "stations#src/rentals/get-rental.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:stations#Rental",
+      "file": "src/rentals/get-rental.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true,
+        "params": "{rentalId:string}",
+        "failures": {
+          "404": "type:stations#Refusal"
+        }
+      }
+    },
+    {
+      "from": "entry:stations:http:GET:/stations",
+      "to": "stations#src/stations/list-stations.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stations/list-stations.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "statusUnknown": "type:stations#Station[]"
+      }
+    },
+    {
+      "from": "entry:stations:http:GET:/stations/:param",
+      "to": "stations#src/stations/get-station.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stations/get-station.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "params": "{stationId:string}"
+      }
+    },
+    {
+      "from": "entry:stations:http:POST:/rentals",
+      "to": "stations#src/rentals/start-rental.ts:jsonBodyParser()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/rentals/start-rental.ts",
+      "line": 22,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "use"
+      }
+    },
+    {
+      "from": "entry:stations:http:POST:/rentals",
+      "to": "stations#src/rentals/start-rental.ts:start",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:stations#Rental",
+      "file": "src/rentals/start-rental.ts",
+      "line": 12,
+      "meta": {
+        "requestRead": true,
+        "body": "type:stations#StartRental",
+        "claimed": [
+          "body"
+        ],
+        "failures": {
+          "409": "type:stations#Refusal"
+        }
+      }
+    },
+    {
+      "from": "entry:stations:http:POST:/rentals/:param/return",
+      "to": "stations#src/rentals/end-rental.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:stations#Receipt",
+      "file": "src/rentals/end-rental.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "body": "type:stations#EndRental",
+        "params": "{rentalId:string}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:stations:invoke:bikes-dev-end-rental",
+      "to": "stations#src/rentals/end-rental.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/rentals/end-rental.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:stations:invoke:bikes-dev-get-rental",
+      "to": "stations#src/rentals/get-rental.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/rentals/get-rental.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:stations:invoke:bikes-dev-get-station",
+      "to": "stations#src/stations/get-station.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stations/get-station.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:stations:invoke:bikes-dev-list-stations",
+      "to": "stations#src/stations/list-stations.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stations/list-stations.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:stations:invoke:bikes-dev-start-rental",
+      "to": "stations#src/rentals/start-rental.ts:jsonBodyParser()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/rentals/start-rental.ts",
+      "line": 22,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "use"
+      }
+    },
+    {
+      "from": "entry:stations:invoke:bikes-dev-start-rental",
+      "to": "stations#src/rentals/start-rental.ts:start",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/rentals/start-rental.ts",
+      "line": 12
+    },
+    {
+      "from": "stations#src/rentals/end-rental.ts:handler",
+      "to": "stations#src/lib/rentals.ts:endRental",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:stations#Receipt",
+      "file": "src/rentals/end-rental.ts",
+      "line": 13
+    },
+    {
+      "from": "stations#src/rentals/get-rental.ts:handler",
+      "to": "stations#src/lib/rentals.ts:findRental",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:stations#Rental|undefined",
+      "file": "src/rentals/get-rental.ts",
+      "line": 9
+    },
+    {
+      "from": "stations#src/rentals/start-rental.ts:start",
+      "to": "stations#src/lib/rentals.ts:startRental",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "type:stations#Rental|undefined",
+      "file": "src/rentals/start-rental.ts",
+      "line": 14
+    },
+    {
+      "from": "stations#src/stations/get-station.ts:handler",
+      "to": "stations#src/lib/rentals.ts:allStations",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:stations#Station[]",
+      "file": "src/stations/get-station.ts",
+      "line": 12
+    },
+    {
+      "from": "stations#src/stations/get-station.ts:handler",
+      "to": "stations#src/stations/get-station.ts:respond",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number",
+        "unknown"
+      ],
+      "returns": "type:@types/aws-lambda#APIGatewayProxyResult",
+      "file": "src/stations/get-station.ts",
+      "line": 13
+    },
+    {
+      "from": "stations#src/stations/list-stations.ts:handler",
+      "to": "stations#src/lib/rentals.ts:allStations",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:stations#Station[]",
+      "file": "src/stations/list-stations.ts",
+      "line": 8
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:stations#EndRental": {
+      "name": "EndRental",
+      "kind": "object",
+      "declaredIn": "stations#src/lib/types.ts",
+      "structuralHash": "df0aeea081c3d333",
+      "fields": [
+        {
+          "name": "stationId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:stations#Receipt": {
+      "name": "Receipt",
+      "kind": "object",
+      "declaredIn": "stations#src/lib/types.ts",
+      "structuralHash": "7ed948a37b7e89fd",
+      "fields": [
+        {
+          "name": "rentalId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "minutes",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "charge",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:stations#Refusal": {
+      "name": "Refusal",
+      "kind": "object",
+      "declaredIn": "stations#src/lib/types.ts",
+      "structuralHash": "23952defb7b751d8",
+      "fields": [
+        {
+          "name": "reason",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:stations#Rental": {
+      "name": "Rental",
+      "kind": "object",
+      "declaredIn": "stations#src/lib/types.ts",
+      "structuralHash": "6f9eb0e7c0b6b4c4",
+      "fields": [
+        {
+          "name": "rentalId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "riderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "bikeId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "startedAt",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:stations#StartRental": {
+      "name": "StartRental",
+      "kind": "object",
+      "declaredIn": "stations#src/lib/types.ts",
+      "structuralHash": "4ee5d680d97393f6",
+      "fields": [
+        {
+          "name": "riderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "stationId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:stations#Station": {
+      "name": "Station",
+      "kind": "object",
+      "declaredIn": "stations#src/lib/types.ts",
+      "structuralHash": "384ea919254a5ad7",
+      "fields": [
+        {
+          "name": "stationId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "bikesFree",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/rentals/end-rental.ts",
+      "line": 11,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "stations"
+    },
+    {
+      "file": "src/rentals/end-rental.ts",
+      "line": 12,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "handler -> kit.readJson",
+      "service": "stations"
+    },
+    {
+      "file": "src/rentals/get-rental.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "stations"
+    },
+    {
+      "file": "src/rentals/start-rental.ts",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "stations"
+    },
+    {
+      "file": "src/stations/list-stations.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "stations"
+    }
+  ]
+}

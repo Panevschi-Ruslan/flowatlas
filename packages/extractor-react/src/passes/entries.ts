@@ -6,7 +6,9 @@ import {
   isFunctionHandler,
   isInlineHandler,
   makeSymbolId,
+  extendReading,
   readRequest,
+  routeOf,
   routeShapeEdge,
   type EntryHandler,
   type EntryNode,
@@ -66,7 +68,8 @@ const requestOf = (
   handler: IndexedFunction,
 ): ReturnType<typeof routeShapeEdge> | undefined => {
   if (entry.request === undefined) return undefined;
-  const shape = readRequest(handler.fn.declaration, entry.request, (type, site) => ctx.types.collectType(type, site));
+  const reading = extendReading(entry.request, ctx.config.adapters.entry.request);
+  const shape = readRequest(handler.fn.declaration, reading, (type, site) => ctx.types.collectType(type, site), routeOf(entry));
   return shape === undefined ? undefined : routeShapeEdge(shape);
 };
 

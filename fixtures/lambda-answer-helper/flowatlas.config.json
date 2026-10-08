@@ -1,0 +1,18 @@
+{
+  "services": [
+    { "name": "stations", "repo": ".", "type": "lambda" }
+  ],
+  "adapters": {
+    "entry": {
+      "request": {
+        "helpers": [
+          { "name": "readJson", "package": "@acme/http-kit", "part": "body" }
+        ],
+        "answers": [
+          { "by": "helper", "name": "respond", "package": "@acme/http-kit", "statusArg": 0, "arg": 1 }
+        ]
+      }
+    }
+  },
+  "output": ".flowatlas"
+}

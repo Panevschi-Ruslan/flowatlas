@@ -35,16 +35,22 @@ ones the other Angular fixtures use.
 | `orders-api` | `PATCH /orders/:param` | `{ total; note? }` | `{ id; total }` | `UpdateOrder.parse(req.body)`: a validator's output is the shape |
 | `orders-api` | `POST /orders/import` | `ImportedOrders`, claimed | `{ imported }` | `req.body as ImportedOrders`: a cast, which nothing checks |
 | `orders-api` | `GET /orders` | — | — | `any` both ways: nothing stated |
+| `orders-api` | `POST /orders/:param/refunds` | `{ reason }`, params `{ id: string }` | `{ id; reason }`, `400` → `Problem` | `RefundRequest.safeParse(req.body)`: the result's `data` is the shape (P30) |
+| `orders-api` | `GET /orders/:param/summary` | params `{ id: string }` | `{ id; total }` | `sendOk(res, …)`, the project's own helper, described in `flowatlas.config.json` (P30) |
+| `orders-api` | `GET /orders/:param/status` | params `{ id: string }` | — | the status is worked out at run time: `{ open }` is kept as `statusUnknown` (P30) |
 | `catalog-api` | `POST /items` | `CreateItem` | `Item` | `app.post<{ Body; Reply }>`; `reply.code(201).send(item)` |
 | `catalog-api` | `GET /items/:param` | params `{ id: string }` | `Item` | `FastifyRequest<{ Params }>`; the returned value |
 | `catalog-api` | `DELETE /items/:param` | — | — | nothing stated, nothing sent |
 | `cart-api` | `POST /carts/:param/lines` | `AddLine`, claimed | `Cart` | `ctx.request.body as AddLine`; `ctx.body = cart` |
 | `cart-api` | `GET /carts/:param` | — | — | the answer is `any` |
+| `cart-api` | `DELETE /carts/:param/lines/:param` | params `{ id; sku }` | `Cart`, `404` → `LineMissing` | `ctx.status = 404` assigned in the branch before its `ctx.body` (P30) |
 | `shop` | `POST /api/carts` | `CartInput`, claimed | `CartCreated`, `422` → `{ error }` | `(await request.json()) as CartInput`; `NextResponse.json(…, { status })` |
 | `shop` | `ALL /api/health` | — | `Health` | `pages/api`: `NextApiResponse<Health>` holds `res.json` to it |
 
 A framework's default - `any`, `unknown`, a dictionary of strings, Node's
-`IncomingHttpHeaders` - is recorded as nothing, never as a type.
+`IncomingHttpHeaders` - is recorded as nothing, never as a type. Path params a
+handler reads that nothing types are named by the path as written - `:id` is
+`{ id: string }` - since every framework hands them over as text (P30).
 
 ## What `contracts` says about it
 
